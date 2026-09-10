@@ -107,31 +107,39 @@
 
     // 5. 랭킹 목록 조회: game.js가 요구하는 { rows: [...] } 구조로 반환
     board: async () => {
-      const s = await ready();
-      const { collection, getDocs, query, orderBy, limit } = s.fs;
-      const q = query(
-        collection(s.db, "rankings"),
-        orderBy("score", "desc"),
-        limit(100)
-      );
-      const snapshot = await getDocs(q);
-      const rows = [];
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        rows.push({
-          id: doc.id,
-          name: data.name || 'ANONYMOUS',
-          score: Number(data.score || 0),
-          elapsedMs: Number(data.elapsedMs || data.time || 0),
-          stage: Number(data.stage || 10),
-          outcome: data.outcome || 'clear'
+      try {
+        const s = await ready();
+        const { collection, getDocs, query, orderBy, limit } = s.fs;
+        const q = query(
+          collection(s.db, "rankings"),
+          orderBy("score", "desc"),
+          limit(100)
+        );
+        const snapshot = await getDocs(q);
+        const rows = [];
+        
+        snapshot.forEach(doc => {
+          const data = doc.data() || {};
+          rows.push({
+            id: doc.id,
+            name: data.name || 'ANONYMOUS',
+            score: Number(data.score || 0),
+            elapsedMs: Number(data.elapsedMs || data.time || 0),
+            stage: Number(data.stage || 10),
+            outcome: data.outcome || 'clear'
+          });
         });
-      });
 
-      // 점수 동점 시 시간 순 정렬
-      rows.sort((a, b) => b.score - a.score || a.elapsedMs - b.elapsedMs);
+        // 점수 동점 시 시간 순 정렬 (점수는 높은 순, 시간은 빠른 순)
+        rows.sort((a, b) => b.score - a.score || a.elapsedMs - b.elapsedMs);
 
-      return { rows };
+        // game.js가 요구하는 { rows } 구조 반환 (rows가 확실히 배열이도록 보장)
+        return { rows: Array.isArray(rows) ? rows : [] };
+      } catch (err) {
+        console.error("랭킹 조회 실패:", err);
+        // 에러가 나도 game.js가 뻗지 않도록 빈 rows 객체 반환
+        return { rows: [] };
+      }
     }
   });
 })();
