@@ -106,7 +106,7 @@
     },
 
     // 5. 랭킹 목록 조회: game.js가 요구하는 { rows: [...] } 구조로 반환
-   board: async () => {
+  board: async () => {
       try {
         const s = await ready();
         const { collection, getDocs, query, orderBy, limit } = s.fs;
@@ -133,15 +133,31 @@
         // 점수 동점 시 시간 순 정렬
         rows.sort((a, b) => b.score - a.score || a.elapsedMs - b.elapsedMs);
 
-        // 만약 game.js가 { rows: [...] } 형태를 원할 경우를 대비해 프로퍼티도 붙여주고,
-        // 동시에 배열 자체이기도 하므로 .entries() 호출이 완벽히 가능합니다.
-        rows.rows = rows; 
-        return rows;
-      } catch (err) {
+        // game.js가 { rows: [...] } 구조를 원할 경우와 
+        // rows 자체에 .entries()를 찾을 경우를 모두 만족하도록 안전 장치 추가
+        const resultObj = {
+          rows: rows,
+          entries: function* () {
+            for (let i = 0; i < rows.length; i++) {
+              yield [i, rows[i]];
+            }
+          },
+          [Symbol.iterator]: function* () {
+            yield* rows;
+          }
+        };
+
+        // 혹시 rows 배열 자체에 직접 .entries()를 찾는 경우를 대비해 배열에도 심어줌
+        rows.rows = rows;
+        rows.entries = resultObj.entries;
+
+        return resultObj;
+      } `catch` (err) {
         console.error("랭킹 조회 실패:", err);
         const emptyRows = [];
-        emptyRows.rows = emptyRows;
-        return emptyRows;
+        emptyRows.rows = [];
+        emptyRows.entries = function* () {};
+        return { rows: [], entries: function* () {} };
       }
     }
   });
