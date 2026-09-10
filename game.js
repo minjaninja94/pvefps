@@ -81,12 +81,85 @@ function fireEnemy(e,arms){const origin=[e.p[0],e.scale*1.37,e.p[2]],delta=pos.m
 function advanceSector(){if(enemies.some(e=>!e.dead))return;if(!sectorCleared){sectorCleared=true;score+=1000;if(mode==='ranked')checkpointRank();bolts.length=lasers.length=sweeps.length=scheduled.length=playerOrdnance.length=0;magazines=[30,12];ammo=weapon===2?rpgAmmo:magazines[weapon];reload=0;if(wave===totalStages()){announce('모든 구역 확보',2);intermission=2;}else{gates[wave-1].open=true;announce('구역 확보 · 녹색 통로로 전진',4);}updateHud();}if(wave===totalStages()){intermission-=lastDt;if(intermission<=0)finish(true);}else if(pos[2]<-30-(wave-1)*60-1)waveStart();}
 let lastDt=0;
 function updateHud(){$('hp').innerHTML=Math.max(0,Math.ceil(hp))+' <em>/ 100</em>';$('hpbar').style.width=hp+'%';$('hpbar').style.background=hp<30?'#f07e55':'#b9f97b';$('ammo').innerHTML=ammo+' <em>/ '+(weapon===2?'5':'∞')+'</em>';$('weaponlabel').textContent=WEAPONS[weapon].name;$('inventory').textContent='1 소총 · 2 권총 · 3 RPG '+rpgAmmo+'/5 · G 수류탄 '+grenades+'/4 · F 주먹';$('gunstatus').textContent=reload>0?'재장전 중…':weapon===2?'탄약 보급품을 주워 사용':weapon===1?'9 MM · SEMI':'5.56 × 45 MM';$('wave').textContent='WAVE '+String(wave).padStart(2,'0');$('remaining').textContent=sectorCleared?'구역 확보 · 다음 구역으로 전진':'적 '+enemies.filter(e=>!e.dead).length+'기 남음';$('sectorlabel').textContent='SECTOR '+String(wave).padStart(2,'0')+' / '+String(totalStages()).padStart(2,'0')+' · '+(mode==='ranked'?'RANKED':'FOUNDRY');$('healinfo').textContent='회복 드롭 '+Math.round(dropChance(hp)*100)+'% · 키트 +'+[50,30,20][difficulty]+' HP';}
-async function start(){if(state==='starting')return;stopRobotSounds();sound(60,.01,0);prepareRobotAudio();if(mode==='ranked'){state='starting';lock();$('start').disabled=true;$('start').textContent='랭킹 연결 중…';try{const data=await rankApi('/api/runs',{method:'POST',body:JSON.stringify({version:3})});rankRun=data.id;rankCheckpoints=[];rankStart=performance.now();rankSync=Promise.resolve();rankError='';rankResult=null;difficulty=2;}catch(e){state='menu';document.exitPointerLock?.();$('end').classList.add('hidden');$('menu').classList.remove('hidden');$('rankstatus').textContent='랭킹 서버에 연결할 수 없습니다. 일반 모드는 플레이할 수 있습니다.';$('start').disabled=false;$('start').textContent='작전 시작 ↗';return;}$('start').disabled=false;$('start').textContent='작전 시작 ↗';}else rankRun=null;runEpoch++;score=0;weapon=0;magazines=[30,12];rpgAmmo=grenades=0;punchTimer=meleeCooldown=grenadeCooldown=0;playerOrdnance.length=0;sprintBlend=0;sprinting=false;sprintTouch=false;scheduled.length=lasers.length=sweeps.length=0;fire=aim=false;keys.clear();enemies.length=debris.length=bolts.length=particles.length=pickups.length=0;for(const g of gates)g.open=false;sectorCleared=false;threatTimer=0;threatSource=null;wave=0;hp=100;ammo=30;reload=0;kills=broken=shots=hits=elapsed=0;pos=[0,1.7,19];yaw=pitch=jumpV=0;intermission=cooldown=0;state='play';$('rankform').classList.add('hidden');$('submitstatus').textContent='';for(const id of ['menu','pause','end'])$(id).classList.add('hidden');$('hud').classList.remove('hidden');if(touch)$('touch').classList.remove('hidden');waveStart();lock();sound(350,.2,.03);}
+
+// [Firebase 연동 적용] 기존 fetch 기반 rankApi 대체
+async function start(){
+  if(state==='starting')return;
+  stopRobotSounds();
+  sound(60,.01,0);
+  prepareRobotAudio();
+  
+  if(mode==='ranked'){
+    state='starting';
+    lock();
+    $('start').disabled=true;
+    $('start').textContent='랭킹 연결 중…';
+    try {
+      rankRun = 'run_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+      rankCheckpoints = [];
+      rankStart = performance.now();
+      rankSync = Promise.resolve();
+      rankError = '';
+      rankResult = null;
+      difficulty = 2;
+    } catch(e) {
+      state='menu';
+      document.exitPointerLock?.();
+      $('end').classList.add('hidden');
+      $('menu').classList.remove('hidden');
+      $('rankstatus').textContent='랭킹 초기화 실패: '+e.message;
+      $('start').disabled=false;
+      $('start').textContent='작전 시작 ↗';
+      return;
+    }
+    $('start').disabled=false;
+    $('start').textContent='작전 시작 ↗';
+  } else {
+    rankRun = null;
+  }
+
+  runEpoch++;
+  score=0;
+  weapon=0;
+  magazines=[30,12];
+  rpgAmmo=grenades=0;
+  punchTimer=meleeCooldown=grenadeCooldown=0;
+  playerOrdnance.length=0;
+  sprintBlend=0;
+  sprinting=false;
+  sprintTouch=false;
+  scheduled.length=lasers.length=sweeps.length=0;
+  fire=aim=false;
+  keys.clear();
+  enemies.length=debris.length=bolts.length=particles.length=pickups.length=0;
+  for(const g of gates)g.open=false;
+  sectorCleared=false;
+  threatTimer=0;
+  threatSource=null;
+  wave=0;
+  hp=100;
+  ammo=30;
+  reload=0;
+  kills=broken=shots=hits=elapsed=0;
+  pos=[0,1.7,19];
+  yaw=pitch=jumpV=0;
+  intermission=cooldown=0;
+  state='play';
+  $('rankform').classList.add('hidden');
+  $('submitstatus').textContent='';
+  for(const id of ['menu','pause','end'])$(id).classList.add('hidden');
+  $('hud').classList.remove('hidden');
+  if(touch)$('touch').classList.remove('hidden');
+  waveStart();
+  lock();
+  sound(350,.2,.03);
+}
+
 function lock(){if(touch||document.pointerLockElement===canvas)return;try{const p=canvas.requestPointerLock();if(p&&p.catch)p.catch(()=>{lockedFallback=true;announce('화면을 드래그해 조준하세요',4);});}catch{lockedFallback=true;}}
 function pause(){stopRobotSounds();if(state!=='play')return;state='pause';sprinting=false;sprintTouch=false;fire=aim=false;keys.clear();joystick=[0,0];$('pause').classList.remove('hidden');$('touch').classList.add('hidden');document.exitPointerLock?.();}
 function resume(){state='play';$('pause').classList.add('hidden');if(touch)$('touch').classList.remove('hidden');lock();}
 function toMenu(){stopRobotSounds();runEpoch++;scheduled.length=lasers.length=sweeps.length=playerOrdnance.length=0;state='menu';fire=false;keys.clear();document.exitPointerLock?.();for(const id of ['pause','end','hud','touch'])$(id).classList.add('hidden');$('menu').classList.remove('hidden');enemies.length=bolts.length=debris.length=particles.length=pickups.length=0;for(const g of gates)g.open=false;wave=1;spawn(0,0,-1);spawn(1,5,-5);spawn(2,11,-10);}
-function finish(win){if(state!=='play')return;state='end';stopRobotSounds();sprinting=false;sprintTouch=false;if(mode==='ranked')elapsed=(performance.now()-rankStart)/1000;fire=false;document.exitPointerLock?.();$('end').classList.remove('hidden');$('touch').classList.add('hidden');$('resultlabel').textContent=win?'SECTOR SECURED':'OPERATOR DOWN';$('resulttitle').textContent=win?'구역 확보 완료.':'작전 종료.';$('stats').innerHTML=`${wave} / ${totalStages()} 스테이지 · ${score.toLocaleString()}점 · ${kills}기 제압 · ${broken}개 부위 파괴<br>명중률 ${shots?Math.round(hits/shots*100):0}% · ${Math.floor(elapsed/60)}분 ${Math.floor(elapsed%60)}초`;sound(win?660:100,.5,.06);if(win&&mode==='ranked')prepareRankResult();}
+function finish(win){if(state!=='play')return;state='end';stopRobotSounds();sprinting=false;sprintTouch=false;if(mode==='ranked')elapsed=(performance.now()-rankStart)/1000;fire=false;document.exitPointerLock?.();$('end').classList.add('hidden');$('touch').classList.add('hidden');$('resultlabel').textContent=win?'SECTOR SECURED':'OPERATOR DOWN';$('resulttitle').textContent=win?'구역 확보 완료.':'작전 종료.';$('stats').innerHTML=`${wave} / ${totalStages()} 스테이지 · ${score.toLocaleString()}점 · ${kills}기 제압 · ${broken}개 부위 파괴<br>명중률 ${shots?Math.round(hits/shots*100):0}% · ${Math.floor(elapsed/60)}분 ${Math.floor(elapsed%60)}초`;sound(win?660:100,.5,.06);if(win&&mode==='ranked')prepareRankResult();}
 function beginReload(){if(state!=='play'||weapon===2||reload>0||ammo===WEAPONS[weapon].capacity)return;reload=WEAPONS[weapon].reload;fire=false;updateHud();sound(850,.12,.035,true);}
 function rayBox(o,d,b){if(b.open)return null;if(b.a){const c=Math.cos(b.a),s=Math.sin(b.a),x=o[0]-b.p[0],z=o[2]-b.p[2];o=[c*x-s*z+b.p[0],o[1],s*x+c*z+b.p[2]];d=[c*d[0]-s*d[2],d[1],s*d[0]+c*d[2]];}let tmin=0,tmax=500;for(let i=0;i<3;i++){let lo=b.p[i]-b.s[i]/2,hi=b.p[i]+b.s[i]/2;if(Math.abs(d[i])<1e-7){if(o[i]<lo||o[i]>hi)return null;}else{let a=(lo-o[i])/d[i],v=(hi-o[i])/d[i];if(a>v)[a,v]=[v,a];tmin=Math.max(tmin,a);tmax=Math.min(tmax,v);if(tmin>tmax)return null;}}return tmin;}
 function trace(o,d,includeEnemies=true,max=100){let closest=max,obj=null;for(const b of world){if(!b.blocksShots||b.open)continue;const t=rayBox(o,d,b);if(t!==null&&t<closest){closest=t;obj=b;}}if(includeEnemies)for(const e of enemies)if(!e.dead)for(const p of e.parts)if(p.hp>0){const t=rayBox(o,d,partBox(e,p));if(t!==null&&t<closest){closest=t;obj=p;}}return {t:closest,obj};}
@@ -159,13 +232,87 @@ const head=box([e.p[0],2.62*S,e.p[2]],[.4*S,.65*S,.4*S],e.type.c,e.angle);draw(h
 function drawRing(p,r,c,time){for(let i=0;i<40;i++){const a=i/40*Math.PI*2;draw(box([p[0]+Math.sin(a)*r,.055,p[2]+Math.cos(a)*r],[.28,.055,.28],c,a,.7+Math.sin(time*.015)*.25));}}
 function drawBossAttacks(time){for(const a of sweeps)if(!a.owner.dead){const e=a.owner,r=3+activeParts(e,'팔').length*3;drawRing(e.p,r,C.amber,time);for(let i=0;i<8;i++){const a=e.angle+i*.16;draw(box([e.p[0]+Math.sin(a)*r*.7,1.2,e.p[2]+Math.cos(a)*r*.7],[.24,.20,r*.55],C.amber,a,1));}}for(const l of lasers){const {origin,dir,length}=beamData(l);for(let t=0;t<length;t+=.8)draw(box(origin.map((v,j)=>v+dir[j]*t),[1.7,1.3,.8],[1,.025,.065],l.angle+l.age*.35,1.6));}}
 function formatTime(ms){const total=Math.floor(ms/1000);return Math.floor(total/60)+':'+String(total%60).padStart(2,'0')+'.'+Math.floor(ms%1000/100);}
-async function rankApi(path,options={}){const response=await fetch(path,{...options,headers:{'Content-Type':'application/json',...options.headers},signal:AbortSignal.timeout(10000)});let data;try{data=await response.json();}catch{throw Error('랭킹 서버가 필요합니다.');}if(!response.ok)throw Error(data.error||'기록을 처리하지 못했습니다.');return data;}
-function checkpointRank(){rankCheckpoints.push({stage:wave,...stageStats,kills:[...stageStats.kills],synced:false});const id=rankRun,epoch=runEpoch,entries=rankCheckpoints;rankSync=rankSync.catch(()=>{}).then(()=>syncRank(id,epoch,entries));rankSync.catch(()=>{});}
-async function syncRank(id=rankRun,epoch=runEpoch,entries=rankCheckpoints){if(epoch!==runEpoch)return;for(const entry of entries){if(entry.synced)continue;const {synced,...payload}=entry;await rankApi('/api/runs/'+id+'/stage',{method:'POST',body:JSON.stringify(payload)});if(epoch!==runEpoch)return;entry.synced=true;}}
-async function prepareRankResult(){const epoch=runEpoch,id=rankRun,entries=rankCheckpoints;$('rankform').classList.remove('hidden');$('submitrank').disabled=true;$('submitstatus').textContent='클리어 기록 확인 중…';try{await rankSync.catch(()=>{});await syncRank(id,epoch,entries);if(epoch!==runEpoch)return;const r=await rankApi('/api/runs/'+id);if(epoch!==runEpoch)return;rankResult=r;$('stats').textContent=r.score.toLocaleString()+'점 · '+formatTime(r.elapsedMs)+' · 10 / 10 클리어';$('submitstatus').textContent='이름을 입력해 랭킹에 남기세요.';$('submitrank').disabled=false;}catch(e){if(epoch===runEpoch)$('submitstatus').textContent='기록 동기화 실패: '+e.message+' 서버 연결을 확인하세요.';}}
-async function showLeaderboard(){if(state==='play')pause();$('leaderboard').classList.remove('hidden');$('boardstatus').textContent='기록 불러오는 중…';$('boardrows').replaceChildren();try{const r=await rankApi('/api/leaderboard');$('boardstatus').textContent=r.rows.length?'점수 높은 순 · 동점은 빠른 클리어 순':'아직 등록된 기록이 없습니다.';r.rows.forEach((row,i)=>{const tr=document.createElement('tr');for(const text of [String(i+1),row.name,row.score.toLocaleString(),formatTime(row.elapsedMs)]){const td=document.createElement('td');td.textContent=text;tr.appendChild(td);}$('boardrows').appendChild(tr);});}catch(e){$('boardstatus').textContent='랭킹을 불러오지 못했습니다. '+e.message;}}
+
+// [Firebase 연동 적용] 체크포인트 및 랭킹 데이터 전송 함수들 대체
+function checkpointRank(){
+  rankCheckpoints.push({stage:wave,...stageStats,kills:[...stageStats.kills],synced:false});
+  // Firebase에서는 스테이지 클리어마다 백그라운드 동기화 수행 가능
+  if (typeof window.FirebaseRanking?.saveStageCheckpoint === 'function') {
+    window.FirebaseRanking.saveStageCheckpoint(rankRun, rankCheckpoints);
+  }
+}
+
+async function prepareRankResult(){
+  const epoch=runEpoch, id=rankRun;
+  $('rankform').classList.remove('hidden');
+  $('submitrank').disabled=true;
+  $('submitstatus').textContent='클리어 기록 확인 중…';
+  try {
+    if(epoch!==runEpoch) return;
+    rankResult = { score, elapsedMs: elapsed * 1000, wave };
+    $('stats').textContent = score.toLocaleString() + '점 · ' + formatTime(rankResult.elapsedMs) + ' · 10 / 10 클리어';
+    $('submitstatus').textContent = '이름을 입력해 랭킹에 남기세요.';
+    $('submitrank').disabled = false;
+  } catch(e) {
+    if(epoch===runEpoch) $('submitstatus').textContent='기록 확인 실패: '+e.message;
+  }
+}
+
+async function showLeaderboard(){
+  if(state==='play') pause();
+  $('leaderboard').classList.remove('hidden');
+  $('boardstatus').textContent='기록 불러오는 중…';
+  $('boardrows').replaceChildren();
+  try {
+    if (typeof window.FirebaseRanking?.getLeaderboard !== 'function') {
+      throw new Error('Firebase 랭킹 모듈을 찾을 수 없습니다.');
+    }
+    const rows = await window.FirebaseRanking.getLeaderboard();
+    $('boardstatus').textContent = rows.length ? '점수 높은 순 · 동점은 빠른 클리어 순' : '아직 등록된 기록이 없습니다.';
+    rows.forEach((row, i) => {
+      const tr = document.createElement('tr');
+      for(const text of [String(i+1), row.name, Number(row.score).toLocaleString(), formatTime(row.elapsedMs)]) {
+        const td = document.createElement('td');
+        td.textContent = text;
+        tr.appendChild(td);
+      }
+      $('boardrows').appendChild(tr);
+    });
+  } catch(e) {
+    $('boardstatus').textContent='랭킹을 불러오지 못했습니다. '+e.message;
+  }
+}
+
 $('retrysync').onclick=prepareRankResult;
-$('rankform').onsubmit=async event=>{event.preventDefault();if(!rankResult)return;const name=$('playername').value.trim();if(!name||[...name].length>16){$('submitstatus').textContent='이름을 1~16자로 입력하세요.';return;}$('submitrank').disabled=true;try{await rankApi('/api/leaderboard',{method:'POST',body:JSON.stringify({id:rankRun,name})});$('submitstatus').textContent='등록 완료';await showLeaderboard();}catch(e){$('submitstatus').textContent=e.message;$('submitrank').disabled=false;}};
+
+$('rankform').onsubmit=async event=>{
+  event.preventDefault();
+  if(!rankResult) return;
+  const name=$('playername').value.trim();
+  if(!name||[...name].length>16){
+    $('submitstatus').textContent='이름을 1~16자로 입력하세요.';
+    return;
+  }
+  $('submitrank').disabled=true;
+  try {
+    if (typeof window.FirebaseRanking?.saveScore !== 'function') {
+      throw new Error('Firebase 점수 저장 함수가 정의되지 않았습니다.');
+    }
+    await window.FirebaseRanking.saveScore({
+      id: rankRun,
+      name: name,
+      score: rankResult.score,
+      elapsedMs: rankResult.elapsedMs,
+      checkpoints: rankCheckpoints
+    });
+    $('submitstatus').textContent='등록 완료';
+    await showLeaderboard();
+  } catch(e) {
+    $('submitstatus').textContent=e.message;
+    $('submitrank').disabled=false;
+  }
+};
+
 document.querySelectorAll('[data-mode]').forEach(button=>button.onclick=()=>{mode=button.dataset.mode;difficulty=mode==='ranked'?2:chosenDifficulty;document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b===button));document.querySelectorAll('[data-d]').forEach(b=>b.disabled=mode==='ranked');$('modedesc').textContent=mode==='ranked'?'10 스테이지 · 5/10 보스 · 고정 극한 난이도 · 클리어 기록 등록':'5 스테이지 · 난이도 선택';$('rankstatus').textContent='';});$('openboard').onclick=showLeaderboard;$('closeboard').onclick=()=>$('leaderboard').classList.add('hidden');$('refreshboard').onclick=showLeaderboard;
 
 let last=performance.now();function frame(t){const dt=Math.min((t-last)/1000,.04);last=t;update(dt);render(t);requestAnimationFrame(frame);}toMenu();requestAnimationFrame(frame);
