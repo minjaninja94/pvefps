@@ -106,7 +106,7 @@
     },
 
     // 5. 랭킹 목록 조회: game.js가 요구하는 { rows: [...] } 구조로 반환
-    board: async () => {
+   board: async () => {
       try {
         const s = await ready();
         const { collection, getDocs, query, orderBy, limit } = s.fs;
@@ -130,15 +130,18 @@
           });
         });
 
-        // 점수 동점 시 시간 순 정렬 (점수는 높은 순, 시간은 빠른 순)
+        // 점수 동점 시 시간 순 정렬
         rows.sort((a, b) => b.score - a.score || a.elapsedMs - b.elapsedMs);
 
-        // game.js가 요구하는 { rows } 구조 반환 (rows가 확실히 배열이도록 보장)
-        return { rows: Array.isArray(rows) ? rows : [] };
+        // 만약 game.js가 { rows: [...] } 형태를 원할 경우를 대비해 프로퍼티도 붙여주고,
+        // 동시에 배열 자체이기도 하므로 .entries() 호출이 완벽히 가능합니다.
+        rows.rows = rows; 
+        return rows;
       } catch (err) {
         console.error("랭킹 조회 실패:", err);
-        // 에러가 나도 game.js가 뻗지 않도록 빈 rows 객체 반환
-        return { rows: [] };
+        const emptyRows = [];
+        emptyRows.rows = emptyRows;
+        return emptyRows;
       }
     }
   });
