@@ -1,17 +1,12 @@
 {
-  "name": "iron-sector",
+  "name": "pvefps-ranking",
   "private": true,
-  "type": "module",
-  "scripts": {
-    "build": "node scripts/build.mjs",
-    "db:generate": "drizzle-kit generate",
-    "start": "node scripts/serve.mjs"
-  },
-  "devDependencies": {
-    "drizzle-orm": "0.45.2",
-    "drizzle-kit": "0.31.10"
-  },
+  "main": "index.js",
   "engines": {
-    "node": ">=22.13.0"
+    "node": "22"
+  },
+  "dependencies": {
+    "firebase-admin": "14.4.0",
+    "firebase-functions": "7.3.2"
   }
 }

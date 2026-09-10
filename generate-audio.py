@@ -3,7 +3,7 @@ import math,random,wave,struct
 from pathlib import Path
 RATE=22050
 root=Path('dist/audio');root.mkdir(parents=True,exist_ok=True)
-profiles={'scout':(83,270,.42),'soldier':(58,155,.64),'heavy':(37,89,.95),'boss':(28,64,1.25)}
+profiles={'scout':(83,270,.42),'soldier':(58,155,.64),'heavy':(37,89,.95),'boss':(28,64,1.25),'lizard':(48,190,.7),'walker':(42,120,.9),'super':(96,330,.48)}
 def generate(kind,event,base,servo,weight):
  duration={'move':.65,'alert':1.1,'attack':.72,'death':1.8,'sweep':1.4,'missiles':1.6,'laser':3.1,'burst':.95,'blades':1.1}[event]
  rng=random.Random(kind+event);lo=0;hi=0;phase=0;result=[]
@@ -19,7 +19,14 @@ def generate(kind,event,base,servo,weight):
   elif event=='alert':
    env=(.25+.75*math.sin(math.pi*min(1,t/duration))**2)
    value=(.24*math.sin(2*math.pi*base*t)+.24*math.sin(2*math.pi*(servo*.58*t+14*t*t))+.11*metal+.13*grain)*env
-  elif event=='attack':value=.6*thump+.28*grain*math.exp(-t/.17)+.22*metal+.12*motor
+  elif event=='attack':
+   if kind in ('scout','super'):
+    # Two original electro-mechanical blade strikes, not a game audio sample.
+    value=0
+    for offset in (0,.115):
+     u=t-offset
+     if u>=0:value+=(.36*math.sin(2*math.pi*(145*u+70*u*u))+.3*grain+.18*math.sin(2*math.pi*940*u))*math.exp(-u*17)
+   else:value=.6*thump+.28*grain*math.exp(-t/.17)+.22*metal+.12*motor
   elif event=='death':value=.45*thump+.38*grain*math.exp(-t/.45)+.22*math.sin(2*math.pi*(servo*t-28*t*t))*math.exp(-t/.65)
   elif event=='laser':
    env=math.sin(math.pi*t/duration)**.5

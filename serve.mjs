@@ -1,16 +1,5 @@
-import http from 'node:http';import {DatabaseSync} from 'node:sqlite';import {readFileSync,readdirSync,mkdirSync} from 'node:fs';import worker from '../dist/server/index.js';
-mkdirSync('.data',{recursive:true});const sqlite=new DatabaseSync('.data/ranking.sqlite');sqlite.exec('PRAGMA foreign_keys=ON');sqlite.exec('CREATE TABLE IF NOT EXISTS local_migrations(name TEXT PRIMARY KEY)');
-for(const name of readdirSync('drizzle').filter(n=>n.endsWith('.sql')).sort())if(!sqlite.prepare('SELECT name FROM local_migrations WHERE name=?').get(name)){sqlite.exec('BEGIN');try{sqlite.exec(readFileSync('drizzle/'+name,'utf8'));sqlite.prepare('INSERT INTO local_migrations(name) VALUES(?)').run(name);sqlite.exec('COMMIT');}catch(e){sqlite.exec('ROLLBACK');throw e;}}
-const DB={
- prepare(query){
-  return {bind(...values){
-   const stmt=sqlite.prepare(query);
-   return {
-    async first(){return stmt.get(...values)||null;},
-    async all(){return {results:stmt.all(...values)};},
-    async run(){const r=stmt.run(...values);return {meta:{changes:Number(r.changes)}};}
-   };
-  }};
- }
-};
-const port=Number(process.env.PORT||8080);http.createServer(async(req,res)=>{try{const chunks=[];let length=0;for await(const c of req){length+=c.length;if(length>8192){res.writeHead(413);res.end();return;}chunks.push(c);}const headers=new Headers();for(const [k,v]of Object.entries(req.headers))if(v)headers.set(k,Array.isArray(v)?v.join(','):v);const request=new Request('http://localhost:'+port+req.url,{method:req.method,headers,...(!['GET','HEAD'].includes(req.method)?{body:Buffer.concat(chunks)}:{})});const response=await worker.fetch(request,{DB});res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}catch(e){console.error(e);res.writeHead(500);res.end('Server error');}}).listen(port,'127.0.0.1',()=>console.log('IRON SECTOR http://localhost:'+port));
+import http from 'node:http';
+import {readFile} from 'node:fs/promises';
+import path from 'node:path';
+const root=path.resolve('dist'),types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.wav':'audio/wav'};
+http.createServer(async(req,res)=>{try{const name=decodeURIComponent(new URL(req.url,'http://localhost').pathname),file=path.resolve(root,'.'+(name==='/'?'/index.html':name));if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}const content=await readFile(file);res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream','Cache-Control':'no-cache'});res.end(content);}catch{res.writeHead(404).end('Not found');}}).listen(8080,'127.0.0.1',()=>console.log('Game: http://localhost:8080 (local records; online App Check requires the configured public domain)'));

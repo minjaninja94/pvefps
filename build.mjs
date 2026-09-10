@@ -1,7 +1,6 @@
-import {readFile,mkdir,writeFile,cp,readdir} from 'node:fs/promises';
-const assets={};for(const [name,type]of [['index.html','text/html; charset=utf-8'],['style.css','text/css; charset=utf-8'],['game.js','text/javascript; charset=utf-8']])assets['/'+name]={type,body:await readFile('dist/'+name,'utf8')};
-for(const name of await readdir('dist/audio'))if(name.endsWith('.wav'))assets['/audio/'+name]={type:'audio/wav',base64:(await readFile('dist/audio/'+name)).toString('base64')};
-await mkdir('dist/server',{recursive:true});await mkdir('dist/.openai',{recursive:true});
-const api=await readFile('worker/api.js','utf8');
-await writeFile('dist/server/index.js',api+'\nconst assets='+JSON.stringify(assets)+';\nexport default {async fetch(request,env){const response=await api(request,env);if(response)return response;const path=new URL(request.url).pathname;const asset=assets[path===\"/\"?\"/index.html\":path];if(!asset)return new Response(\"Not found\",{status:404});if(![\"GET\",\"HEAD\"].includes(request.method))return new Response(\"Method not allowed\",{status:405});return new Response(request.method===\"HEAD\"?null:(asset.base64?Uint8Array.from(atob(asset.base64),c=>c.charCodeAt(0)):asset.body),{headers:{\"Content-Type\":asset.type,\"Cache-Control\":\"no-cache\",\"X-Content-Type-Options\":\"nosniff\"}});}};\n');
-try{await cp('.openai/hosting.json','dist/.openai/hosting.json');}catch(error){if(error.code!=='ENOENT')throw error;await writeFile('dist/.openai/hosting.json',JSON.stringify({d1:'DB',r2:null}));}await cp('drizzle','dist/.openai/drizzle',{recursive:true});console.log('Built static game + ranking Worker + D1 migrations.');
+import {readFile,access} from 'node:fs/promises';
+import {spawnSync} from 'node:child_process';
+const html=await readFile('dist/index.html','utf8');
+for(const script of ['dist/game.js','dist/cloud-ranking.js','dist/firebase-config.js']){const p=spawnSync(process.execPath,['--check',script],{stdio:'inherit'});if(p.status)process.exit(p.status);}
+for(const match of html.matchAll(/(?:src|href)="([^"#]+)"/g)){const value=match[1];if(!value.includes(':')&&value!=='./')await access('dist/'+value);}
+console.log('Static game assets and JavaScript verified. No DB secrets are bundled.');

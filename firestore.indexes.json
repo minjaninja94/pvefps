@@ -1,0 +1,1 @@
+{"indexes":[{"collectionGroup":"rankBoardV5","queryScope":"COLLECTION","fields":[{"fieldPath":"score","order":"DESCENDING"},{"fieldPath":"elapsedMs","order":"ASCENDING"}]}],"fieldOverrides":[{"collectionGroup":"rankRunsV5","fieldPath":"expiresAt","ttl":true,"indexes":[]},{"collectionGroup":"stages","fieldPath":"expiresAt","ttl":true,"indexes":[]}]}

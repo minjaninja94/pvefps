@@ -1,0 +1,1 @@
+{"functions":[{"source":"functions","codebase":"pvefps-ranking","ignore":["node_modules",".git","firebase-debug.log","firebase-debug.*.log"]}],"firestore":{"rules":"firestore.rules","indexes":"firestore.indexes.json"},"storage":{"rules":"storage.rules"},"emulators":{"firestore":{"port":8081},"functions":{"port":5001},"auth":{"port":9099},"ui":{"enabled":false}}}
