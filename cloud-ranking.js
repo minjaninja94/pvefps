@@ -47,7 +47,7 @@
   }
 
   window.IronCloud = Object.freeze({
-    // 1. 게임 시작: game.js가 { id: '...' } 객체를 받도록 구현
+    // 1. 게임 시작
     start: async (nonce) => {
       const id = nonce || (Date.now().toString(36) + '-' + Math.random().toString(36).slice(2));
       sessions.set(id, {
@@ -59,7 +59,7 @@
       return { id };
     },
 
-    // 2. 체크포인트: 스테이지 완료 상황 수집
+    // 2. 체크포인트
     checkpoint: async (id, entry) => {
       const session = sessions.get(id) || { id, checkpoints: [], startTime: Date.now() };
       session.checkpoints.push(entry);
@@ -70,7 +70,7 @@
       return { outcome: session.status || 'playing' };
     },
 
-    // 3. 작전 종료 (사망 또는 클리어)
+    // 3. 작전 종료
     finish: async (id) => {
       const session = sessions.get(id);
       if (session && session.status === 'playing') {
@@ -79,7 +79,7 @@
       return { outcome: session ? session.status : 'clear' };
     },
 
-    // 4. 최종 결과 등록: Firestore 'rankings' 컬렉션에 추가
+    // 4. 최종 결과 등록
     submit: async (id, name) => {
       const s = await ready();
       const { collection, addDoc } = s.fs;
@@ -105,8 +105,8 @@
       return { score: score };
     },
 
-    // 5. 랭킹 목록 조회: game.js가 요구하는 { rows: [...] } 구조로 반환
-  board: async () => {
+    // 5. 랭킹 목록 조회
+    board: async () => {
       try {
         const s = await ready();
         const { collection, getDocs, query, orderBy, limit } = s.fs;
@@ -133,31 +133,19 @@
         // 점수 동점 시 시간 순 정렬
         rows.sort((a, b) => b.score - a.score || a.elapsedMs - b.elapsedMs);
 
-        // game.js가 { rows: [...] } 구조를 원할 경우와 
-        // rows 자체에 .entries()를 찾을 경우를 모두 만족하도록 안전 장치 추가
-        const resultObj = {
+        // game.js가 { rows } 객체를 받든, .entries() 순회를 돌리든 모두 호환되도록 반환
+        return {
           rows: rows,
-          entries: function* () {
-            for (let i = 0; i < rows.length; i++) {
-              yield [i, rows[i]];
-            }
-          },
-          [Symbol.iterator]: function* () {
-            yield* rows;
-          }
+          entries: function() { return rows.entries(); },
+          [Symbol.iterator]: function() { return rows[Symbol.iterator](); }
         };
-
-        // 혹시 rows 배열 자체에 직접 .entries()를 찾는 경우를 대비해 배열에도 심어줌
-        rows.rows = rows;
-        rows.entries = resultObj.entries;
-
-        return resultObj;
-      } `catch` (err) {
+      } catch (err) {
         console.error("랭킹 조회 실패:", err);
-        const emptyRows = [];
-        emptyRows.rows = [];
-        emptyRows.entries = function* () {};
-        return { rows: [], entries: function* () {} };
+        return {
+          rows: [],
+          entries: function() { return [].entries(); },
+          [Symbol.iterator]: function() { return [][Symbol.iterator](); }
+        };
       }
     }
   });
