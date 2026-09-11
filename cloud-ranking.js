@@ -4,13 +4,14 @@
   async function ready() {
     if (readyPromise) return readyPromise;
     readyPromise = (async () => {
+      if (window.IronFirebase) return window.IronFirebase.ready();
       const c = window.IRON_FIREBASE;
-      const [{ initializeApp }, firestoreSDK] = await Promise.all([
+      const [{ initializeApp, getApps }, firestoreSDK] = await Promise.all([
         import('https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js'),
         import('https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js')
       ]);
 
-      const app = initializeApp({
+      const app = getApps().find(a => a.name === '[DEFAULT]') || initializeApp({
         apiKey: c.apiKey,
         authDomain: c.authDomain,
         projectId: c.projectId,
@@ -92,7 +93,7 @@
       const outcome = session.status || lastEntry.outcome || 'clear';
 
       const recordData = {
-        name: (name || 'ANONYMOUS').trim(),
+        name: (name || 'ANONYMOUS').trim().slice(0, 16) || 'ANONYMOUS',
         score: Number(score),
         elapsedMs: Number(elapsedMs),
         stage: Number(stage),
@@ -117,7 +118,7 @@
         );
         const snapshot = await getDocs(q);
         const rows = [];
-        
+
         snapshot.forEach(doc => {
           const data = doc.data() || {};
           rows.push({

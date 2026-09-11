@@ -1,7 +1,93 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Functions Admin SDK is the only access path. No browser can list private runs or edit scores.
+    function signed() { return request.auth != null; }
+    function now() { return request.time.toMillis(); }
+    // Keep the existing public board and record fields. New records are append-only.
+    match /rankings/{record} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['name','score','elapsedMs','stage','outcome','createdAt'])
+        && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 16
+        && request.resource.data.score is number && request.resource.data.score >= 0 && request.resource.data.score <= 5000000
+        && request.resource.data.elapsedMs is number && request.resource.data.elapsedMs >= 0 && request.resource.data.elapsedMs <= 86400000
+        && request.resource.data.stage is int && request.resource.data.stage >= 1 && request.resource.data.stage <= 10
+        && request.resource.data.outcome in ['clear','dead']
+        && request.resource.data.createdAt is number && request.resource.data.createdAt <= now()+60000 && request.resource.data.createdAt >= now()-300000;
+      allow update, delete: if false;
+    }
+    match /mpRooms/{roomId} {
+      function member(r) { return signed() && request.auth.uid in r.members; }
+      function person(p) { return p.keys().hasOnly(['name','team','ready','connected','vote','seen'])
+        && p.name is string && p.name.size() >= 1 && p.name.size() <= 16
+        && p.team in [1,2] && p.ready is bool && p.connected is bool && p.vote is string && p.vote.size() <= 40
+        && p.seen is number && p.seen <= now()+60000 && p.seen >= now()-150000; }
+      function shape(r) { return r.keys().hasOnly(['version','host','mode','difficulty','title','capacity','status','created','lease','proposal','session','members'])
+        && r.version == 1 && r.host is string && r.mode in ['coop','pvp'] && r.difficulty in [0,1,2]
+        && r.title is string && r.title.size() <= 32 && r.capacity == (r.mode == 'coop' ? 4 : 8)
+        && r.status in ['lobby','playing','closed'] && r.members is map && r.members.size() <= r.capacity
+        && r.created is number && r.lease is number && r.lease <= now()+210000; }
+      function sameSettings(a,b) { return a.version==b.version && a.host==b.host && a.mode==b.mode && a.difficulty==b.difficulty && a.title==b.title && a.capacity==b.capacity && a.created==b.created; }
+      function selfOnly(a,b) { return b.members.diff(a.members).affectedKeys().hasOnly([request.auth.uid]); }
+      function okAt(r,keys,i,voting) { return keys.size()<=i || (r.members[keys[i]].ready && r.members[keys[i]].connected && (!voting || r.members[keys[i]].vote==r.proposal.id)); }
+      function allReady(r,voting) { let k=r.members.keys(); return k.size()>=2 && okAt(r,k,0,voting) && okAt(r,k,1,voting) && okAt(r,k,2,voting) && okAt(r,k,3,voting) && okAt(r,k,4,voting) && okAt(r,k,5,voting) && okAt(r,k,6,voting) && okAt(r,k,7,voting); }
+      function teamAt(r,k,i,t) { return k.size() > i && r.members[k[i]].team==t ? 1 : 0; }
+      function teamCount(r,t) { let k=r.members.keys(); return teamAt(r,k,0,t)+teamAt(r,k,1,t)+teamAt(r,k,2,t)+teamAt(r,k,3,t)+teamAt(r,k,4,t)+teamAt(r,k,5,t)+teamAt(r,k,6,t)+teamAt(r,k,7,t); }
+      function teamsOK(r) { return r.mode=='coop' || (teamCount(r,1)>=1 && teamCount(r,2)>=1 && teamCount(r,1)<=4 && teamCount(r,2)<=4); }
+      function pruneAt(a,b,k,i) { return k.size()<=i || (k[i] in b.members ? a.members[k[i]]==b.members[k[i]] : a.members[k[i]].seen<=now()-150000); }
+      function pruning(a,b) { let k=a.members.keys();return b.members.keys().hasOnly(k) && pruneAt(a,b,k,0) && pruneAt(a,b,k,1) && pruneAt(a,b,k,2) && pruneAt(a,b,k,3) && pruneAt(a,b,k,4) && pruneAt(a,b,k,5) && pruneAt(a,b,k,6) && pruneAt(a,b,k,7); }
+      function proposalOK(a,b) {
+        return b.proposal==a.proposal
+          || (b.proposal==null && (request.auth.uid==a.host || !(request.auth.uid in b.members) || a.proposal.by==request.auth.uid))
+          || (a.proposal==null && b.proposal is map && b.proposal.keys().hasOnly(['id','by','until','roster']) && b.proposal.id is string && b.proposal.id.size()<=40 && b.proposal.by==request.auth.uid && b.proposal.until>now() && b.proposal.until<=now()+30000 && b.proposal.roster is string && b.proposal.roster.size()<=1024 && allReady(a,false) && teamsOK(a));
+      }
+      allow read: if signed();
+      allow create: if signed() && shape(request.resource.data) && request.resource.data.host==request.auth.uid
+        && request.resource.data.members.keys().hasOnly([request.auth.uid]) && request.resource.data.members.size()==1
+        && person(request.resource.data.members[request.auth.uid]) && request.resource.data.members[request.auth.uid].ready==false
+        && request.resource.data.status=='lobby' && request.resource.data.proposal==null && request.resource.data.session==null
+        && request.resource.data.created>=now()-60000 && request.resource.data.created<=now()+60000 && request.resource.data.lease>now();
+      allow update: if signed() && shape(request.resource.data) && sameSettings(resource.data,request.resource.data)
+        && (
+          // Join atomically; a single transaction cannot claim another player's slot.
+          (!(request.auth.uid in resource.data.members) && resource.data.status=='lobby' && resource.data.proposal==null && resource.data.lease>now()
+            && selfOnly(resource.data,request.resource.data) && request.resource.data.members.size()==resource.data.members.size()+1
+            && person(request.resource.data.members[request.auth.uid]) && request.resource.data.members[request.auth.uid].ready==false
+            && request.resource.data.members[request.auth.uid].connected==false
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+            && (request.resource.data.mode=='coop' || teamCount(request.resource.data,request.resource.data.members[request.auth.uid].team)<=4))
+          || (member(resource.data)
+            && (selfOnly(resource.data,request.resource.data) || request.auth.uid==resource.data.host && pruning(resource.data,request.resource.data))
+            && (!(request.auth.uid in request.resource.data.members) || person(request.resource.data.members[request.auth.uid]))
+            && proposalOK(resource.data,request.resource.data)
+            && (request.resource.data.lease==resource.data.lease || request.auth.uid==resource.data.host)
+            && (
+              (request.resource.data.status==resource.data.status && request.resource.data.session==resource.data.session
+                && (resource.data.status=='lobby' || !(request.auth.uid in request.resource.data.members))
+                && (resource.data.proposal==null || !(request.auth.uid in request.resource.data.members) || request.resource.data.members[request.auth.uid].team==resource.data.members[request.auth.uid].team)
+                && (request.resource.data.mode=='coop' || !(request.auth.uid in request.resource.data.members) || teamCount(request.resource.data,request.resource.data.members[request.auth.uid].team)<=4))
+              || (request.auth.uid==resource.data.host && request.resource.data.status=='closed' && request.resource.data.session==resource.data.session)
+              || (request.auth.uid==resource.data.host && resource.data.status=='lobby' && request.resource.data.status=='playing'
+                && resource.data.members==request.resource.data.members && resource.data.proposal==request.resource.data.proposal
+                && allReady(resource.data,true) && teamsOK(resource.data) && resource.data.proposal.until>now()
+                && request.resource.data.session.keys().hasOnly(['id','seed','starts','count'])
+                && request.resource.data.session.id==resource.data.proposal.id && request.resource.data.session.seed is int
+                && request.resource.data.session.count==resource.data.members.size() && request.resource.data.session.starts>now() && request.resource.data.session.starts<=now()+10000)
+            ))
+        );
+      allow delete: if signed() && request.auth.uid==resource.data.host;
+      match /signals/{guest} {
+        function room() { return get(/databases/$(database)/documents/mpRooms/$(roomId)).data; }
+        function participant() { return signed() && (request.auth.uid==room().host || request.auth.uid==guest) && guest in room().members; }
+        allow read: if participant();
+        allow create, update: if participant() && room().status=='lobby' && room().lease>now()
+          && request.resource.data.keys().hasOnly(['offer','answer','expires'])
+          && request.resource.data.offer is string && request.resource.data.offer.size()<=40000
+          && request.resource.data.answer is string && request.resource.data.answer.size()<=40000
+          && request.resource.data.expires is number && request.resource.data.expires<=now()+210000
+          && (request.auth.uid==room().host || resource.data.offer==request.resource.data.offer && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answer']));
+        allow delete: if participant();
+      }
+    }
     match /{document=**} { allow read, write: if false; }
   }
 }
