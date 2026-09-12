@@ -8,7 +8,7 @@ function boot(uid='a',host=true){
  const math=Object.create(Math);let seed=8;math.random=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
  const ctx={console,Math:math,Date,Float32Array,Uint32Array,Map,Set,performance:{now:()=>timer},crypto:{randomUUID:()=>String(++seed),getRandomValues:a=>(a[0]=123,a)},sessionStorage:{getItem(){return null;},setItem(){}},localStorage:{getItem(){return null;},setItem(){}},requestAnimationFrame(){},fetch:async()=>({ok:false}),devicePixelRatio:1,innerWidth:1440,innerHeight:900,window:{IronMultiplayer:net,addEventListener(){}},document:{getElementById:el,querySelectorAll:()=>[],createElement:()=>({...el('elem'+(++seed)),children:[]}),addEventListener(){},exitPointerLock(){}}};ctx.globalThis=ctx;
  vm.createContext(ctx);for(const file of ['multiplayer-policy.js','multiplayer-combat.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),ctx);
- const source=fs.readFileSync(path.join(root,'game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.t={multiplayer,start,toMenu,render,update,enemies,world,obstacles,gates,spawnQueue,reinforcements,shockwaves,bolts,lasers,sweeps,pickups,playerOrdnance,spawn,spawnBoss,partBox,applyDamage,fireEnemy,damagePlayer,emitShockwave,updateHud,keys,WEAPONS,setPos:p=>pos=p,setAim:(y,p)=>{yaw=y;pitch=p;},get:()=>({pos,hp,shield,wave,mode,state,score}),setWave:n=>wave=n};})();`);
+ const source=fs.readFileSync(path.join(root,'game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.t={multiplayer,start,toMenu,render,update,particles,enemies,world,obstacles,gates,spawnQueue,reinforcements,shockwaves,bolts,lasers,sweeps,pickups,playerOrdnance,spawn,spawnBoss,partBox,applyDamage,fireEnemy,damagePlayer,emitShockwave,updateHud,keys,WEAPONS,setPos:p=>pos=p,setAim:(y,p)=>{yaw=y;pitch=p;},get:()=>({pos,hp,shield,wave,mode,state,score}),setWave:n=>wave=n};})();`);
  vm.runInContext(source,ctx);return {t:ctx.t,net,packets,ctx,P:ctx.window.IronLobbyPolicy,els,advance:d=>timer+=d};
 }
 const room=(mode,n=2)=>({mode,difficulty:1,host:'a',members:Object.fromEntries(Array.from({length:n},(_,i)=>[String.fromCharCode(97+i),{name:'Player '+i,team:i%2+1}])),session:{id:'test',seed:123,count:n,starts:0}});
@@ -21,6 +21,22 @@ const room=(mode,n=2)=>({mode,difficulty:1,host:'a',members:Object.fromEntries(A
  assert.deepEqual(JSON.parse(JSON.stringify(a.t.world.filter(o=>o.randomCover))),JSON.parse(JSON.stringify(b.t.world.filter(o=>o.randomCover))),'seeded barricades agree');
  for(let i=0;i<90;i++)a.t.update(1/60);assert.ok(a.t.enemies.length>0);const enemy=a.t.enemies[0];assert.equal(enemy.max,enemy.type.hp*4,'4-player body health');assert.equal(enemy.parts[1].max,enemy.type.head*4,'4-player part health');
  const snapshot=a.packets.filter(p=>p.type==='snapshot').at(-1);bm.receive('a',snapshot);assert.equal(b.t.enemies.length,snapshot.enemies.length);b.t.render(1000);a.t.render(1000);assert.equal(b.t.get().mode,'coop');
+ // Guest confirmation must show hits even when its predicted shot already played sound.
+ const replica=b.t.enemies[0],target={enemy:replica.netId,part:replica.parts[0].name};
+ const shot={kind:'shot',id:'b',weapon:0,origin:[0,1.7,5],dir:[0,0,-1],range:5,hit:false};
+ b.t.particles.length=0;bm.receive('a',{type:'combat',data:shot});
+ assert.equal(b.t.particles.length,0,'rifle shot does not draw an eye-origin tracer');
+ bm.receive('a',{type:'combat',data:{...shot,hit:true,target}});
+ assert.equal(b.els.get('hit').textContent,'×');assert.equal(b.els.get('hit').style.opacity,'1','silent guest confirmation shows center hit marker');
+ assert.ok(b.t.particles.length>0,'confirmed impact creates sparks');
+ assert.ok(replica.parts[0].hitFlashUntil>0,'hit armor flashes on guest');
+ b.els.get('hit').style.opacity='0';
+ bm.receive('a',{type:'combat',data:{...shot,weapon:3,pellet:true,hit:true,target}});
+ assert.equal(b.els.get('hit').style.opacity,'1','later shotgun pellets also confirm hits');
+ assert.ok(b.t.particles.filter(p=>p.s[2]>1).every(p=>p.s[2]<=12&&p.s[0]<=.009),'shotgun fan stays short and thin');
+ b.advance(50);bm.receive('a',{...snapshot,tick:snapshot.tick+1});
+ assert.equal(b.t.enemies[0].parts[0].hitFlashUntil,110,'snapshot preserves unexpired local impact flash');
+ b.t.render(1050);
  const bp=bm.players.get('b');b.t.keys.add('KeyW');for(let i=0;i<6;i++)b.t.update(1/60);assert.ok(bp.p[2]<19,'client prediction before host response');for(const p of b.packets.filter(p=>p.type==='input'))am.receive('b',p);for(let i=0;i<8;i++)a.t.update(1/60);assert.ok(am.players.get('b').ack>=6,'host acknowledges guest input');bm.receive('a',a.packets.filter(p=>p.type==='snapshot').at(-1));assert.ok(Number.isFinite(bp.p[2]));
  a.t.enemies.length=a.t.spawnQueue.length=a.t.reinforcements.length=0;const boss=a.t.spawnBoss(0,0,true);am.simulate();assert.equal(boss.max,8500*4);assert.equal(boss.parts.find(p=>p.name==='가슴 코어').max,800*4);
  const first=am.players.get('a'),second=am.players.get('b');first.p=[0,1.7,6];second.p=[0,1.7,3];first.shield=second.shield=0;first.invuln=second.invuln=0;a.t.world.length=a.t.obstacles.length=0;a.t.emitShockwave([0,0,0],7,22,12,boss);for(let i=0;i<40;i++)am.simulate();assert.ok(second.hp<100,'AoE damages guest');

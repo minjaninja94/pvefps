@@ -54,12 +54,13 @@
       if(p.weapon===2){withPlayer(p,()=>{const b=A.makeRocket();b.shooter=p.id;A.ordnance.push(b);});event({kind:'shot',id:p.id,weapon:p.weapon,origin:p.p,dir:direction(p),range:1});return;}
       const d=direction(p),right=[Math.cos(p.yaw),0,-Math.sin(p.yaw)];let first=null,landed=false;
       for(let i=0;i<(p.weapon===3?9:1);i++){
+        landed=false;
         const spread=p.weapon===3?(i-4)/4*(p.aim?.08:.13):(Math.random()-.5)*(p.aim?.0018:.009),ray=A.norm(d.map((v,j)=>v+right[j]*spread));
         const h=hit(p,ray,p.weapon===3?24:100);first ||= h;
         const amount=p.weapon===3?A.shotgunDamage(h.t,!!h.obj?.e?.type.melee):w.damage;
-        if(h.player){damage(h.player,amount*(h.head?1.3:1),p.p,p);landed=true;}
-        else if(h.obj?.e){withPlayer(p,()=>A.applyDamage(h.obj,amount*(h.obj.name==='머리'?1.3:1)));landed=true;}
-        event({kind:'shot',id:p.id,weapon:p.weapon,origin:[...p.p],dir:ray,range:h.t,pellet:i>0,hit:landed});
+        if(h.player){const before=h.player.hp+h.player.shield;damage(h.player,amount*(h.head?1.3:1),p.p,p);landed=h.player.hp+h.player.shield<before;}
+        else if(h.obj?.e){const before=h.obj.hp;withPlayer(p,()=>A.applyDamage(h.obj,amount*(h.obj.name==='머리'?1.3:1)));landed=h.obj.hp<before;}
+        event({kind:'shot',id:p.id,weapon:p.weapon,origin:[...p.p],dir:ray,range:h.t,pellet:i>0,hit:landed,target:landed&&h.obj?.e?{enemy:h.obj.e.netId,part:h.obj.name}:null});
       }
     }
     function hit(p,d,max){
@@ -140,7 +141,7 @@
       if(data.type!=='snapshot'||!Number.isInteger(data.tick)||data.tick<=(M.lastSnapshot||-1)||!Array.isArray(data.players)||data.players.length>8||!Array.isArray(data.enemies)||data.enemies.length>100)return;
       M.lastSnapshot=data.tick;M.time=data.time;M.teams=data.teams;M.history.push({at:performance.now(),players:data.players});if(M.history.length>4)M.history.shift();
       for(const wire of data.players){const p=M.players.get(wire.id);if(!p)continue;const oldP=p.p,respawned=p.hp<=0&&wire.hp>0;Object.assign(p,wire);if(p.id===net.uid){if(respawned){M.pending=[];A.setCamera(p);}M.pending=M.pending.filter(i=>i.seq>p.ack);for(const input of M.pending)movement(p,input);if(dist(oldP,p.p)<.03)p.p=oldP;}}
-      const list=data.enemies.map(w=>{const e={...w};e.parts=w.parts.map(p=>({...p,p:p.local,e}));return e;});A.replaceEnemies(list);const lookup=id=>list.find(e=>e.netId===id);
+      const list=data.enemies.map(w=>{const old=A.enemies.find(x=>x.netId===w.netId),e={...w};e.parts=w.parts.map(p=>({...p,p:p.local,e,hitFlashUntil:old?.parts.find(q=>q.name===p.name)?.hitFlashUntil||0}));return e;});A.replaceEnemies(list);const lookup=id=>list.find(e=>e.netId===id);
       for(const [key,target]of [['bolts',A.bolts],['ordnance',A.ordnance],['pickups',A.pickups]]){target.splice(0,target.length,...data[key]);}
       for(const [key,target]of [['lasers',A.lasers],['sweeps',A.sweeps],['shockwaves',A.shockwaves]])target.splice(0,target.length,...data[key].map(x=>({...x,owner:lookup(x.owner)})).filter(x=>x.owner||key==='shockwaves'));
       A.setStage(data.game);A.syncSelf(self());
