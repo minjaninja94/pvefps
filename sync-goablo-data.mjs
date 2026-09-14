@@ -1,0 +1,2 @@
+import {readFile,writeFile} from 'node:fs/promises';
+const names={characters:'characters',specs:'specializations',skills:'skills',monsters:'monsters',weapons:'weapons',items:'legendary'};const db={};for(const [key,file] of Object.entries(names))db[key]=JSON.parse(await readFile(new URL(`goablo/data/${file}.json`,import.meta.url),'utf8'));await writeFile(new URL('goablo/data/database.js',import.meta.url),'export const DB='+JSON.stringify(db)+';\n');console.log('GOABLO data synchronized.');

@@ -1,0 +1,146 @@
+[
+  {
+    "id": "W01",
+    "name": "단검",
+    "damage": 11.0,
+    "speed": 1.8,
+    "crit": 0.1,
+    "range": 1.5,
+    "description": "빠른 콤보/급소"
+  },
+  {
+    "id": "W02",
+    "name": "한손검",
+    "damage": 15.5,
+    "speed": 1.35,
+    "crit": 0.05,
+    "range": 1.8,
+    "description": "균형"
+  },
+  {
+    "id": "W03",
+    "name": "한손도끼",
+    "damage": 18.0,
+    "speed": 1.2,
+    "crit": 0.07,
+    "range": 1.7,
+    "description": "출혈"
+  },
+  {
+    "id": "W04",
+    "name": "철퇴",
+    "damage": 20.0,
+    "speed": 1.05,
+    "crit": 0.05,
+    "range": 1.6,
+    "description": "기절/방어 파괴"
+  },
+  {
+    "id": "W05",
+    "name": "양손검",
+    "damage": 31.0,
+    "speed": 0.75,
+    "crit": 0.05,
+    "range": 2.4,
+    "description": "광역 휩쓸기"
+  },
+  {
+    "id": "W06",
+    "name": "양손도끼",
+    "damage": 36.0,
+    "speed": 0.65,
+    "crit": 0.08,
+    "range": 2.3,
+    "description": "처형/출혈"
+  },
+  {
+    "id": "W07",
+    "name": "양손망치",
+    "damage": 42.0,
+    "speed": 0.55,
+    "crit": 0.05,
+    "range": 2.1,
+    "description": "충격파/넉백"
+  },
+  {
+    "id": "W08",
+    "name": "창",
+    "damage": 25.0,
+    "speed": 0.9,
+    "crit": 0.06,
+    "range": 3.0,
+    "description": "관통"
+  },
+  {
+    "id": "W09",
+    "name": "장창",
+    "damage": 28.0,
+    "speed": 0.8,
+    "crit": 0.05,
+    "range": 3.6,
+    "description": "긴 사거리"
+  },
+  {
+    "id": "W10",
+    "name": "낫",
+    "damage": 29.0,
+    "speed": 0.8,
+    "crit": 0.06,
+    "range": 2.7,
+    "description": "광역/시체 연계"
+  },
+  {
+    "id": "W11",
+    "name": "마법봉",
+    "damage": 12.0,
+    "speed": 1.6,
+    "crit": 0.07,
+    "range": 8.0,
+    "description": "자원/시전"
+  },
+  {
+    "id": "W12",
+    "name": "지팡이",
+    "damage": 23.0,
+    "speed": 0.9,
+    "crit": 0.05,
+    "range": 8.0,
+    "description": "주문 증폭"
+  },
+  {
+    "id": "W13",
+    "name": "해골봉",
+    "damage": 13.5,
+    "speed": 1.4,
+    "crit": 0.05,
+    "range": 7.0,
+    "description": "소환/저주"
+  },
+  {
+    "id": "W14",
+    "name": "활",
+    "damage": 15.5,
+    "speed": 1.35,
+    "crit": 0.07,
+    "range": 11.0,
+    "description": "속사"
+  },
+  {
+    "id": "W15",
+    "name": "장궁",
+    "damage": 24.0,
+    "speed": 0.9,
+    "crit": 0.1,
+    "range": 14.0,
+    "description": "저격"
+  },
+  {
+    "id": "W16",
+    "name": "석궁",
+    "damage": 33.0,
+    "speed": 0.65,
+    "crit": 0.12,
+    "range": 13.0,
+    "description": "관통/고치명"
+  }
+]

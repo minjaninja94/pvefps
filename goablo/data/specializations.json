@@ -1,0 +1,194 @@
+[
+  {
+    "id": "S01",
+    "characterId": "C01",
+    "name": "거병",
+    "description": "대형 무기/차지/넓은 타격/강인도",
+    "tag": "MELEE",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S02",
+    "characterId": "C01",
+    "name": "광전",
+    "description": "쌍수/연속 공격/광기/저체력 위험보상",
+    "tag": "BLEED",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S03",
+    "characterId": "C01",
+    "name": "파쇄",
+    "description": "망치·도끼/경직/방어파괴/처형",
+    "tag": "STAGGER",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S04",
+    "characterId": "C01",
+    "name": "무기술",
+    "description": "2~3무기 실시간 교체/연계 콤보",
+    "tag": "WEAPON",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S05",
+    "characterId": "C02",
+    "name": "성광",
+    "description": "전투형 성직자/치유/빛 공격/과치유 폭발",
+    "tag": "LIGHT",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S06",
+    "characterId": "C02",
+    "name": "심판",
+    "description": "죄인 표식/죄업 축적/집행",
+    "tag": "JUDGMENT",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S07",
+    "characterId": "C02",
+    "name": "광신",
+    "description": "자해/생명력 희생/킬 회복/고위험 고화력",
+    "tag": "BLOOD",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S08",
+    "characterId": "C02",
+    "name": "수호",
+    "description": "방패/패링/반격/가시",
+    "tag": "SHIELD",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S09",
+    "characterId": "C03",
+    "name": "해골군단",
+    "description": "소환 슬롯 편성/해골 병종 운영",
+    "tag": "SUMMON",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S10",
+    "characterId": "C03",
+    "name": "좀비감염",
+    "description": "감염 → 사망 → 좀비 부활 → 재감염",
+    "tag": "POISON",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S11",
+    "characterId": "C03",
+    "name": "혈마법",
+    "description": "HP를 자원으로 사용/흡혈/고화력",
+    "tag": "BLOOD",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S12",
+    "characterId": "C03",
+    "name": "혼령",
+    "description": "처치 영혼 저장/궤도/대량 방출",
+    "tag": "SPIRIT",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S13",
+    "characterId": "C04",
+    "name": "화염",
+    "description": "연소 → 발화 → 전염",
+    "tag": "FIRE",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S14",
+    "characterId": "C04",
+    "name": "냉기",
+    "description": "냉각 → 동결 → 분쇄",
+    "tag": "COLD",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S15",
+    "characterId": "C04",
+    "name": "폭풍",
+    "description": "정전기/과충전/연쇄방전/고속이동",
+    "tag": "LIGHTNING",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S16",
+    "characterId": "C04",
+    "name": "공간왜곡",
+    "description": "중력/공간/시간/텔레포트",
+    "tag": "SPACE",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S17",
+    "characterId": "C05",
+    "name": "연사",
+    "description": "공격속도/연속적중/탄막",
+    "tag": "PROJECTILE",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S18",
+    "characterId": "C05",
+    "name": "저격",
+    "description": "거리/차지/약점/보스 단일딜",
+    "tag": "SNIPER",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S19",
+    "characterId": "C05",
+    "name": "마탄",
+    "description": "특수 화살촉/장전/탄종 조합",
+    "tag": "PROJECTILE",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S20",
+    "characterId": "C05",
+    "name": "고용주",
+    "description": "고용 슬롯/고용고아 지휘/수집",
+    "tag": "SUMMON",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S21",
+    "characterId": "C06",
+    "name": "암살",
+    "description": "은신 → 약점 → 암살 → 재은신",
+    "tag": "STEALTH",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S22",
+    "characterId": "C06",
+    "name": "독술",
+    "description": "독 조합/반응/전염",
+    "tag": "POISON",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S23",
+    "characterId": "C06",
+    "name": "그림자",
+    "description": "지연 분신/스킬 복제/위치교환",
+    "tag": "SHADOW",
+    "passive": "선택 특화 스킬 피해 +12%"
+  },
+  {
+    "id": "S24",
+    "characterId": "C06",
+    "name": "쌍수곡예",
+    "description": "회피/대시/콤보 등급/고속 근접",
+    "tag": "DASH",
+    "passive": "선택 특화 스킬 피해 +12%"
+  }
+]
