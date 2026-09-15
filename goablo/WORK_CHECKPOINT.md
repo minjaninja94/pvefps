@@ -17,7 +17,7 @@
 - 저장소: https://github.com/minjaninja94/pvefps
 - 브랜치: main
 - 기존 개발 기준 커밋: 249fa506883dbb6c2a103c5ba0ea812e411da447
-- 최신 구현/테스트 커밋: 7a0f8ae3c4eae88d7d6d4e41fb62b729dd173d86
+- 최신 구현/테스트 커밋: d87a4d2cc83ec295b5bc1c8eedba04c2ffc39956
 - Node.js, npm, Python 정적 서버 및 Chromium/Playwright 헤드리스 실행이 정상이다.
 - WebGL 2.0 렌더러, 캐릭터 선택, Act 1 던전 진입을 실제 브라우저에서 확인했다.
 - 플레이어/몬스터 아틀라스가 HTTP 200으로 로드되고 문서의 `data-sprite-status`가 `ready`임을 확인했다.
@@ -42,6 +42,7 @@
 - 2dcaf346d3a2a9be965d76ffe7be53e8dfcde863: 개발 요구사항 v0.2를 Sprite Master와 queue의 최우선 생성 입력으로 연결. 독자 디자인, corpse 필수, 런타임 통합 후 완료 처리 규칙 추가.
 - 158790fc2bba8f87c9bc6195dcfd10c66a3dd0da: 무기 드롭에 클래스 호환 무기 ID를 부여하고 장착·해제 시 활성 기본 공격 무기를 동기화. 임의 무기 선택 드롭다운 제거 및 기존 저장 데이터 자동 보정. 무기 시스템 테스트 4개 추가.
 - 7a0f8ae3c4eae88d7d6d4e41fb62b729dd173d86: 16종 무기의 기본 공격을 개별 모션, 근접 도달 거리·범위·상태 효과 또는 투사체 속도·크기·색상·관통 속성으로 분리해 런타임에 연결. 전 무기 프로필 완전성 테스트 추가.
+- d87a4d2cc83ec295b5bc1c8eedba04c2ffc39956: 적 스프라이트 레이캐스트에 화면 좌표 보조 판정을 추가해 클릭 허용 범위를 확대. 마우스 오버 시 금색 링·조준 커서·체력바, 클릭 시 붉은 선택 링·펄스·효과음 적용. 스프라이트를 바닥에서 소폭 올리고 투명 이미지의 깊이 쓰기를 꺼 바닥에 눕거나 묻혀 보이는 현상 수정. 브라우저 테스트에 실제 호버·클릭 검증 추가.
 - 검증 명령: `npm --prefix goablo test` — 11개 통과, 실패 0개.
 - 브라우저 검증 명령: `npm --prefix goablo run test:browser` — WebGL 2.0, 두 런타임 아틀라스 HTTP 200, Act 1·2 완료와 Act 3 귀환, 오류 0개.
 
