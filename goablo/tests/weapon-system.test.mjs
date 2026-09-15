@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DB} from '../data/database.js';
-import {CLASS_WEAPON_IDS,assignWeaponIdentity,defaultWeaponIndex,equippedWeaponIndex,nextClassWeaponIndex,syncEquippedWeapon} from '../weapon-system.js';
+import {CLASS_WEAPON_IDS,assignWeaponIdentity,basicAttackProfile,defaultWeaponIndex,equippedWeaponIndex,nextClassWeaponIndex,syncEquippedWeapon} from '../weapon-system.js';
 
 test('each class starts with its intended weapon',()=>{
  const expected={C01:'W05',C02:'W04',C03:'W13',C04:'W12',C05:'W14',C06:'W01'};
@@ -31,4 +31,18 @@ test('weapon swap stays inside the current class weapon pool',()=>{
   index=nextClassWeaponIndex(DB,'C01',index);
   assert.ok(CLASS_WEAPON_IDS.C01.includes(DB.weapons[index].id));
  }
+});
+
+test('all weapons define an explicit basic attack motion and geometry',()=>{
+ const profiles=DB.weapons.map((weapon,index)=>basicAttackProfile(DB,index));
+ assert.equal(profiles.length,16);
+ for(const profile of profiles){
+  assert.ok(profile.motion);
+  assert.ok(profile.duration>0);
+  assert.ok(profile.range>0);
+  if(profile.projectile){assert.ok(profile.speed>0);assert.ok(profile.size>0);}
+  else{assert.ok(profile.reach>0);assert.ok(profile.radius>0);}
+ }
+ assert.notEqual(profiles[0].motion,profiles[6].motion);
+ assert.equal(profiles[15].pierce,true);
 });
