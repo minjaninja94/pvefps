@@ -17,7 +17,7 @@
 - 저장소: https://github.com/minjaninja94/pvefps
 - 브랜치: main
 - 기존 개발 기준 커밋: 249fa506883dbb6c2a103c5ba0ea812e411da447
-- 최신 구현/테스트 커밋: b6e12cb63cf8cdf098f45400ccae7c5a8f267415
+- 최신 구현/테스트 커밋: 2dcaf346d3a2a9be965d76ffe7be53e8dfcde863
 - Node.js, npm, Python 정적 서버 및 Chromium/Playwright 헤드리스 실행이 정상이다.
 - WebGL 2.0 렌더러, 캐릭터 선택, Act 1 던전 진입을 실제 브라우저에서 확인했다.
 - 플레이어/몬스터 아틀라스가 HTTP 200으로 로드되고 문서의 `data-sprite-status`가 `ready`임을 확인했다.
@@ -38,7 +38,9 @@
 - a8d2e17aa9b50dd10d34ed34bf6818bf4d80d374: PNG 규격, 플레이어 행, Act 1 몬스터 행/행동, B01 및 애니메이션 열을 검사하는 Node 테스트 4개 추가.
 - e1627d96ff8047e8f7048544a8a8ab766110020b: 재현 가능한 Playwright 브라우저 시나리오 추가. Act 1의 1·2층 정리, B01 보스층, death→corpse 프레임, Act 2 귀환을 자동 검증.
 - b6e12cb63cf8cdf098f45400ccae7c5a8f267415: B02를 `거미어미고아`로 정합화하고 Act 2 3층의 8행 스프라이트 보스로 연결. 거미줄 감속, 5행 새끼 거미 4마리 소환, 보스 death/corpse 프레임 추가 검증.
-- 검증 명령: `npm --prefix goablo test` — 5개 통과, 실패 0개.
+- 6609aba463023d725c333808c3a80c76aebb6ab7: 첨부된 개발 요구사항 DOCX 14페이지를 `GOABLO_WORK_REQUIREMENTS_V0.2.md`로 변환. 0~17절과 표 구조 보존.
+- 2dcaf346d3a2a9be965d76ffe7be53e8dfcde863: 개발 요구사항 v0.2를 Sprite Master와 queue의 최우선 생성 입력으로 연결. 독자 디자인, corpse 필수, 런타임 통합 후 완료 처리 규칙 추가.
+- 검증 명령: `npm --prefix goablo test` — 6개 통과, 실패 0개.
 - 브라우저 검증 명령: `npm --prefix goablo run test:browser` — WebGL 2.0, 두 런타임 아틀라스 HTTP 200, Act 1·2 완료와 Act 3 귀환, 오류 0개.
 
 ## 사용자 제공 자료
@@ -46,6 +48,7 @@
 다음 자료를 실제로 읽고 저장소에 보존했다.
 
 - `GOABLO_SPRITE_MASTER(1).md`: 2.5D ARPG, 투명 PNG, 시체 유지, 런타임 네임드 변형 등 공통 규격.
+- `GOABLO_WORK_REQUIREMENTS_V0.2.md`: 첨부 DOCX에서 변환한 최신 개발 요구사항. Sprite Master와 queue가 생성 우선순위 1번으로 참조.
 - `GOABLO_sprite_queue(1).json`: 플레이어 6종, Act 1 일반 몬스터 6종, B01/B02와 런타임 8열 프레임 정의. 현재 제공분은 `integrated`로 기록.
 - `file_00000000856882099666f57bd54d2176.png`: 1448×1086 RGB 플레이어 아틀라스, 8열×6행, 마젠타 런타임 크로마키.
 - `file_0000000079208209bcc6152b2280e786.png`: 1182×1330 RGBA 몬스터 아틀라스, 8열×9행, 투명 배경. 게임 런타임 원본.
