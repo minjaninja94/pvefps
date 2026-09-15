@@ -86,6 +86,35 @@ try{
   await page.locator('#enterBtn').click();
   state=await snapshot();
   assert.deepEqual({town:state.town,act:state.act,floor:state.floor},{town:true,act:2,floor:0});
+
+  for(const expectedFloor of [1,2]){
+    await page.locator('#enterBtn').click();
+    state=await snapshot();
+    assert.deepEqual({act:state.act,floor:state.floor},{act:2,floor:expectedFloor});
+    await defeatAll();
+    assert.equal((await snapshot()).cleared,true);
+  }
+
+  await page.locator('#enterBtn').click();
+  state=await snapshot();
+  const spiderMother=state.enemies.find(enemy=>enemy.boss);
+  assert.deepEqual({act:state.act,floor:state.floor,name:spiderMother.name,behavior:spiderMother.behavior,row:spiderMother.row},{act:2,floor:3,name:'거미어미고아',behavior:'spiderboss',row:8});
+  await page.evaluate(()=>globalThis.__goabloTest.protectPlayer());
+  await step(8);
+  state=await snapshot();
+  const spiderMinions=state.enemies.filter(enemy=>!enemy.boss&&enemy.behavior==='web'&&enemy.row===5);
+  assert.ok(spiderMinions.length>=4);
+
+  await defeatAll();
+  state=await snapshot();
+  assert.ok(state.corpses.some(corpse=>corpse.boss&&corpse.row===8&&corpse.state==='death'&&corpse.frame===6));
+  await step(.6);
+  state=await snapshot();
+  assert.ok(state.corpses.some(corpse=>corpse.boss&&corpse.row===8&&corpse.state==='corpse'&&corpse.frame===7));
+  await page.locator('#enterBtn').click();
+  state=await snapshot();
+  assert.deepEqual({town:state.town,act:state.act,floor:state.floor},{town:true,act:3,floor:0});
+
   assert.equal(state.spriteStatus,'ready');
   assert.equal(assets.get('file_00000000856882099666f57bd54d2176.png'),200);
   assert.equal(assets.get('file_0000000079208209bcc6152b2280e786.png'),200);
@@ -93,7 +122,7 @@ try{
 
   const webgl=await page.locator('#world').evaluate(canvas=>(canvas.getContext('webgl2')||canvas.getContext('webgl'))?.getParameter(7938));
   assert.ok(webgl);
-  console.log(JSON.stringify({webgl,assets:Object.fromEntries(assets),act1Completed:true,finalState:state,errors},null,2));
+  console.log(JSON.stringify({webgl,assets:Object.fromEntries(assets),act1Completed:true,act2Completed:true,spiderMinions:spiderMinions.length,finalState:state,errors},null,2));
 }finally{
   await browser.close();
   await new Promise(resolve=>server.close(resolve));

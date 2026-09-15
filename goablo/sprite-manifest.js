@@ -15,7 +15,7 @@ export const SPRITE_MANIFEST={
     rows:9,
     chromaKey:false,
     normalRows:[0,1,2,3,4,5,6],
-    rowByMonsterId:{GOA_001:0,GOA_002:2,GOA_008:3,GOA_006:5,GOA_B01:7},
+    rowByMonsterId:{GOA_001:0,GOA_002:2,GOA_008:3,GOA_006:5,GOA_B01:7,GOA_B02:8},
     rowLabels:['좀비고아','역병 변이체','해골고아','구울고아','시체 먹는 고아','묘지 고아 거미','관에서 나온 고아','역병군주고아','거미어미고아'],
     act1Roster:[
       {id:'A1_001',name:'좀비고아',dbIndex:0,row:0},

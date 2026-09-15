@@ -253,15 +253,15 @@
   },
   {
     "id": "GOA_B02",
-    "name": "악마군주고아",
+    "name": "거미어미고아",
     "category": "보스",
-    "description": "화염/돌진/소환",
-    "behavior": "demonboss",
+    "description": "거미줄/새끼 거미 소환",
+    "behavior": "spiderboss",
     "boss": true,
     "hp": 2250,
     "speed": 2.2,
     "damage": 30.1,
-    "color": "#ef865c"
+    "color": "#8e7aa6"
   },
   {
     "id": "GOA_B03",

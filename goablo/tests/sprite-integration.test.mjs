@@ -69,3 +69,12 @@ test('Act 1 boss and animation columns match the queue',()=>{
     assert.deepEqual(SPRITE_MANIFEST.animations[state].frames,frames);
   }
 });
+
+test('Act 2 uses the integrated spider mother boss sprite',()=>{
+  const queuedBoss=queue.bosses.find(entry=>entry.id==='B02');
+  const boss=DB.monsters.find(entry=>entry.id==='GOA_B02');
+  assert.equal(queuedBoss.status,'integrated');
+  assert.deepEqual({name:boss.name,behavior:boss.behavior},{name:queuedBoss.name,behavior:'spiderboss'});
+  assert.equal(monsterSpriteRow(boss.id,21,true),queuedBoss.row);
+  assert.equal(queuedBoss.row,8);
+});
