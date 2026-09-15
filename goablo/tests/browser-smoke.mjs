@@ -57,6 +57,11 @@ try{
     assert.ok(state.enemies.every(enemy=>enemy.atlas==='monsters'&&rows.includes(enemy.row)&&['idle','walk'].includes(enemy.state)&&[0,1,2].includes(enemy.frame)));
 
     if(expectedFloor===1){
+      const continuity=await page.evaluate(()=>globalThis.__goabloTest.probeHitContinuity());
+      assert.ok(continuity.before>0);
+      assert.equal(continuity.afterNormal,continuity.before);
+      assert.equal(continuity.afterHeavy,0);
+      assert.equal(continuity.heavyHitUntil,true);
       await page.waitForTimeout(100);
       const point=await page.evaluate(()=>globalThis.__goabloTest.firstEnemyScreenPoint());
       await page.locator('#world').dispatchEvent('pointermove',{clientX:point.x,clientY:point.y});
