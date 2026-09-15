@@ -283,6 +283,14 @@ function updateEnemyLabels(){
  }
 }
 document.querySelector('.controls').textContent='좌클릭 이동·적 공격 · Shift+좌클릭 제자리 공격 · WASD 이동 · 우클릭 스킬 · SPACE 회피 · Q 회복 · E 줍기';
+if(new URLSearchParams(location.search).get('test')==='1'){
+ const actorState=(mesh,enemy)=>({name:enemy?.def.name,boss:!!enemy?.def.boss,behavior:enemy?.def.behavior,atlas:mesh?.userData.spriteAtlas,row:mesh?.userData.spriteRow,state:mesh?.userData.spriteState,frame:mesh?.userData.spriteFrame});
+ globalThis.__goabloTest=Object.freeze({
+  snapshot:()=>({started,paused,town,act,floor,clock,cleared,spriteStatus:document.documentElement.dataset.spriteStatus,bossBarHidden:$('bossbar').hidden,enemies:enemies.filter(e=>!e.dead).map(e=>actorState(e.mesh,e)),corpses:corpses.map(c=>({...actorState(c.mesh,c.enemy),life:c.life}))}),
+  defeatAll:()=>{for(const e of [...enemies])if(!e.dead)killEnemy(e,null);},
+  step:seconds=>{for(let elapsed=0;elapsed<seconds;elapsed+=1/60)update(1/60);}
+ });
+}
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();}window.addEventListener('resize',resize);resize();buildWorld(true);chooseClass(0);
 let last=performance.now();function frame(now){requestAnimationFrame(frame);let dt=Math.min((now-last)/1000,.05);last=now;if(hitstop>0){hitstop-=dt;dt*=.12;}update(dt);let center=started?hero.position:new THREE.Vector3(-2,0,0);const desired=new THREE.Vector3(center.x+18,24,center.z+21);camera.position.lerp(desired,1-Math.exp(-dt*5));const look=center.clone();look.y=.3;if(settings.shake&&shake>0){look.x+=rnd(-shake,shake);look.z+=rnd(-shake,shake);shake=Math.max(0,shake-dt);}camera.lookAt(look);sun.position.set(center.x-12,24,center.z+10);sun.target.position.copy(center);updateEnemyLabels();renderer.render(scene,camera);}requestAnimationFrame(frame);
 if(document.modelContext?.registerTool){try{document.modelContext.registerTool({name:'read_goablo_progress',description:'현재 고아블로 캐릭터와 여정 진행 상태를 읽습니다.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true},execute:()=>({started,town,act,floor,character:p?.classId,level:p?.level,hp:p?.hp,inventory:p?.inventory.length})});}catch{}}
