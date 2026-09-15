@@ -56,6 +56,24 @@ try{
     assert.equal(state.enemies.length,14+expectedFloor*4+1);
     assert.ok(state.enemies.every(enemy=>enemy.atlas==='monsters'&&rows.includes(enemy.row)&&['idle','walk'].includes(enemy.state)&&[0,1,2].includes(enemy.frame)));
 
+    if(expectedFloor===1){
+      await page.waitForTimeout(100);
+      const point=await page.evaluate(()=>globalThis.__goabloTest.firstEnemyScreenPoint());
+      await page.locator('#world').dispatchEvent('pointermove',{clientX:point.x,clientY:point.y});
+      await page.waitForTimeout(50);
+      let targeting=await page.evaluate(()=>globalThis.__goabloTest.targeting());
+      assert.equal(targeting.hover,point.name);
+      assert.equal(targeting.hoverMarker,true);
+      assert.equal(await page.locator('#world').evaluate(canvas=>canvas.style.cursor),'crosshair');
+      const clickPoint=await page.evaluate(()=>globalThis.__goabloTest.firstEnemyScreenPoint());
+      await page.locator('#world').dispatchEvent('pointerdown',{button:0,clientX:clickPoint.x,clientY:clickPoint.y});
+      await page.locator('#world').dispatchEvent('pointerup',{button:0,clientX:clickPoint.x,clientY:clickPoint.y});
+      await page.waitForTimeout(50);
+      targeting=await page.evaluate(()=>globalThis.__goabloTest.targeting());
+      assert.equal(targeting.selected,clickPoint.name);
+      assert.equal(targeting.selectedMarker,true);
+    }
+
     await defeatAll();
     state=await snapshot();
     assert.equal(state.cleared,true);

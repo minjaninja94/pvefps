@@ -5,7 +5,7 @@ import {assignWeaponIdentity,basicAttackProfile,defaultWeaponIndex,nextClassWeap
 let spriteLibrary=null;try{spriteLibrary=await loadSpriteLibrary(THREE);}catch(error){console.warn('GOABLO sprite fallback enabled',error);}
 document.documentElement.dataset.spriteStatus=spriteLibrary?'ready':'fallback';
 const $=id=>document.getElementById(id),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rnd=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.length)],distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
-let moveGoal=null,attackTarget=null;
+let moveGoal=null,attackTarget=null,hoverTarget=null;
 const SAVE='goablo-save-v1';let selected=0,started=false,paused=false,town=true,act=1,floor=0,kills=0,cleared=false,clock=0,spawnSerial=0;
 let p,hero,previewHero,enemies=[],allies=[],shots=[],effects=[],zones=[],drops=[],corpses=[],floaters=[],timers=[],keys={},mouse={x:0,y:0,down:false},aim=new THREE.Vector3(0,0,-5),target=null;
 let settings={vfx:1,sound:true,shake:true,difficulty:1},shake=0,hitstop=0,toastTime=0,msgTime=0,autosave=0,uiTime=0,boss=null,combo=0,lastFusion='',lastCast=0,weaponCycle=0;
@@ -32,7 +32,7 @@ function person(color,kind='human',scale=1,spriteSpec=null){if(spriteSpec&&sprit
  const cape=mesh(new THREE.ConeGeometry(.44,1.1,4,1,true),color,0,.9,.2,g);cape.scale.z=.5;g.scale.setScalar(scale);return g;}
 const classKinds=['warrior','church','skeleton','mage','archer','thief'];
 function disposeGroup(g){g.userData.spriteMaterial?.dispose();g.traverse(o=>{if(o.isMesh)o.geometry.dispose()});g.removeFromParent();}
-function clearBattle(){moveGoal=null;attackTarget=null;for(const e of enemies)e.healthLabel?.remove();for(const e of enemies)disposeGroup(e.mesh);for(const a of allies)disposeGroup(a.mesh);for(const x of [...shots,...effects,...drops]){x.mesh?.removeFromParent();x.mesh?.geometry?.dispose();if(x.disposable)x.mesh?.material.dispose();}for(const z of zones){z.mesh?.removeFromParent();z.mesh?.geometry?.dispose();z.mesh?.material.dispose();}enemies=[];allies=[];shots=[];effects=[];zones=[];drops=[];corpses=[];timers=[];boss=null;$('bossbar').hidden=true;}
+function clearBattle(){moveGoal=null;attackTarget=null;hoverTarget=null;for(const e of enemies)e.healthLabel?.remove();for(const e of enemies)disposeGroup(e.mesh);for(const a of allies)disposeGroup(a.mesh);for(const x of [...shots,...effects,...drops]){x.mesh?.removeFromParent();x.mesh?.geometry?.dispose();if(x.disposable)x.mesh?.material.dispose();}for(const z of zones){z.mesh?.removeFromParent();z.mesh?.geometry?.dispose();z.mesh?.material.dispose();}enemies=[];allies=[];shots=[];effects=[];zones=[];drops=[];corpses=[];timers=[];boss=null;$('bossbar').hidden=true;}
 function buildWorld(isTown){clearBattle();disposeGroup(world);scene.add(world);while(world.children.length)world.remove(world.children[0]);
  scene.background.set(isTown?'#172628':'#171c23');scene.fog.color.copy(scene.background);
  const floorMat=isTown?'#35443e':'#343b3b';box(62,.5,62,'#1f2a29',0,-.55,0);
@@ -50,6 +50,8 @@ function message(a,b=''){ $('centerMessage').innerHTML=a+(b?'<small>'+b+'</small
 let audio;function sound(freq=140,len=.08,type='triangle',vol=.05){if(!settings.sound)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.setValueAtTime(freq,audio.currentTime);o.frequency.exponentialRampToValueAtTime(Math.max(20,freq*.35),audio.currentTime+len);g.gain.setValueAtTime(vol,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+len);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+len);}catch{}}
 function burst(x,z,color='#d3bd8a',n=10,power=1){for(let i=0;i<Math.ceil(n*settings.vfx)&&effects.length<260;i++){const m=mesh(new THREE.IcosahedronGeometry(rnd(.04,.12)*power),color,x,.7,z,scene,true);effects.push({mesh:m,life:rnd(.2,.6),max:.6,vx:rnd(-4,4)*power,vy:rnd(2,5)*power,vz:rnd(-4,4)*power});}}
 function ring(x,z,r,color='#d2b575',life=.45){const m=new THREE.Mesh(new THREE.RingGeometry(.9*r,r,48),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.8,side:THREE.DoubleSide,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(x,.08,z);scene.add(m);effects.push({mesh:m,life,max:life,ring:true,disposable:true});}
+function targetMarker(color,inner=.72){const marker=new THREE.Mesh(new THREE.RingGeometry(inner,1,48),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.9,side:THREE.DoubleSide,depthTest:false,depthWrite:false}));marker.rotation.x=-Math.PI/2;marker.position.y=.11;marker.renderOrder=5;marker.visible=false;scene.add(marker);return marker;}
+const hoverMarker=targetMarker('#f4d477',.78),selectedMarker=targetMarker('#ff754f',.7);
 function beam(x,z,tx,tz,color='#e6d49b',width=.1){const len=Math.hypot(tx-x,tz-z);const m=mesh(new THREE.CylinderGeometry(width,width,len,6),color,(tx+x)/2,.9,(tz+z)/2,scene,true);m.rotation.z=Math.PI/2;m.rotation.y=-Math.atan2(tz-z,tx-x);effects.push({mesh:m,life:.16,max:.16});}
 function number(n,x,z,crit=false,color){const el=document.createElement('span');el.className='damageNum'+(crit?' crit':'');el.textContent=typeof n==='number'?Math.round(n):n;if(color)el.style.color=color;$('floats').append(el);floaters.push({el,x,z,y:1.8,life:1});}
 function charSkills(){return DB.skills.filter(s=>s.characterId===p.classId)}
@@ -79,7 +81,7 @@ function damageEnemy(e,base,s,options={}){if(!e||e.dead)return 0;e.labelUntil=cl
  let rings=tagItems(tag);p.hp=Math.min(p.maxHp,p.hp+d*.03*rings.filter(i=>i.effect==='흡혈').length);p.res=clamp(p.res+2*rings.filter(i=>i.effect==='자원').length,0,p.maxRes);
  if(st.eq.some(i=>i.effect==='연계'&&(i.tag===tag))){p.buffs.link=Math.min(5,(p.buffs.link||0)+1);p.buffs.linktime=6;}
  if(e.hp<=0)killEnemy(e,s);return d;}
-function killEnemy(e,s){if(e.dead)return;e.dead=true;e.healthLabel?.remove();if(attackTarget===e)attackTarget=null;const x=e.x,z=e.z;burst(x,z,e.def.color,e.def.boss?38:9,1.3);if(e.mesh.userData.spriteFrames){corpses.push({x,z,life:18,mesh:e.mesh,enemy:e});animateSpriteActor(e.mesh,'death',0,e.id);}else{e.mesh.removeFromParent();corpses.push({x,z,life:18});}kills++;p.gold+=Math.round(rnd(3,8)*(e.def.boss?20:1));p.xp+=e.def.boss?180:16+e.index;p.souls=Math.min(30,p.souls+1);p.res=Math.min(p.maxRes,p.res+5);if(p.buffs.laststand)p.hp=Math.min(p.maxHp,p.hp+20);
+function killEnemy(e,s){if(e.dead)return;e.dead=true;e.healthLabel?.remove();if(attackTarget===e)attackTarget=null;if(hoverTarget===e)hoverTarget=null;const x=e.x,z=e.z;burst(x,z,e.def.color,e.def.boss?38:9,1.3);if(e.mesh.userData.spriteFrames){corpses.push({x,z,life:18,mesh:e.mesh,enemy:e});animateSpriteActor(e.mesh,'death',0,e.id);}else{e.mesh.removeFromParent();corpses.push({x,z,life:18});}kills++;p.gold+=Math.round(rnd(3,8)*(e.def.boss?20:1));p.xp+=e.def.boss?180:16+e.index;p.souls=Math.min(30,p.souls+1);p.res=Math.min(p.maxRes,p.res+5);if(p.buffs.laststand)p.hp=Math.min(p.maxHp,p.hp+20);
  if(e.status.infect&&allies.length<10)summon('zombie',x,z);if(e.def.behavior==='explode')addZone(x,z,3,1.3,e.damage*2,'#e59054',true,'explosion',.7);
  if(tagItems(s?.tag||'MELEE').some(i=>i.effect==='폭발')){ring(x,z,3,'#e2a272');for(const other of enemies)if(!other.dead&&distance(other,e)<3)damageEnemy(other,stats().damage*.4,null);}
  if(e.def.boss){dropItem(x,z,true);dropItem(x+1,z,true);p.completed++;p.highest=Math.max(p.highest,act+1);}else if(Math.random()<.24)dropItem(x,z);if(Math.random()<.09&&p.potions<9)p.potions++;
@@ -249,17 +251,18 @@ function updatePointer(e){
 }
 function pointedEnemy(){
  const living=enemies.filter(e=>!e.dead),hits=ray.intersectObjects(living.map(e=>e.mesh),true);
- if(!hits.length)return null;
- let obj=hits[0].object;
- while(obj){const enemy=living.find(e=>e.mesh===obj);if(enemy)return enemy;obj=obj.parent;}
- return null;
+ if(hits.length){let obj=hits[0].object;while(obj){const enemy=living.find(e=>e.mesh===obj);if(enemy)return enemy;obj=obj.parent;}}
+ let best=null,bestDistance=Infinity;
+ for(const enemy of living){const point=new THREE.Vector3(enemy.x,enemy.mesh.userData.labelHeight*.5,enemy.z).project(camera);if(point.z< -1||point.z>1)continue;const screenDistance=Math.hypot(point.x-mouse.x,point.y-mouse.y),threshold=enemy.def.boss?.16:.105;if(screenDistance<threshold&&screenDistance<bestDistance){best=enemy;bestDistance=screenDistance;}}
+ return best;
 }
 function setClickGoal(){
  const enemy=pointedEnemy();
- if(enemy){attackTarget=enemy;moveGoal=null;enemy.labelUntil=clock+4;}
+ if(enemy){const fresh=attackTarget!==enemy||clock-(enemy.selectedAt||0)>.25;attackTarget=enemy;moveGoal=null;enemy.labelUntil=clock+4;if(fresh){enemy.selectedAt=clock;ring(enemy.x,enemy.z,enemy.def.boss?2.2:1.25,'#ffb35c',.28);sound(260,.045,'square',.018);}}
  else{attackTarget=null;moveGoal={x:clamp(aim.x,-28,28),z:clamp(aim.z,-28,28)};}
 }
-$('world').addEventListener('pointermove',e=>{updatePointer(e);if(started&&!paused&&mouse.down&&!keys.shift)setClickGoal();});
+$('world').addEventListener('pointermove',e=>{updatePointer(e);hoverTarget=started&&!paused&&!town?pointedEnemy():null;$('world').style.cursor=hoverTarget?'crosshair':'';if(hoverTarget)hoverTarget.labelUntil=clock+.12;if(started&&!paused&&mouse.down&&!keys.shift)setClickGoal();});
+$('world').addEventListener('pointerleave',()=>{hoverTarget=null;$('world').style.cursor='';});
 $('world').addEventListener('pointerdown',e=>{
  updatePointer(e);if(!started||paused)return;
  if(e.button===0){mouse.down=true;keys.shift=e.shiftKey;if(e.shiftKey){moveGoal=null;attackTarget=null;basic();}else setClickGoal();}
@@ -267,7 +270,7 @@ $('world').addEventListener('pointerdown',e=>{
 });window.addEventListener('pointerup',()=>mouse.down=false);$('world').addEventListener('contextmenu',e=>e.preventDefault());window.addEventListener('beforeunload',save);
 function updateEnemyLabels(){
  for(const e of enemies){
-  const visible=started&&!town&&!e.dead&&(e===attackTarget||e.labelUntil>clock);
+  const visible=started&&!town&&!e.dead&&(e===hoverTarget||e===attackTarget||e.labelUntil>clock);
   if(!visible){if(e.healthLabel)e.healthLabel.hidden=true;continue;}
   if(!e.healthLabel){
    const label=document.createElement('div');label.className='enemyHealthLabel';
@@ -283,16 +286,22 @@ function updateEnemyLabels(){
   e.healthFill.style.width=clamp(e.hp/e.maxHp*100,0,100)+'%';
  }
 }
+function updateTargetMarkers(){
+ const place=(marker,enemy,base)=>{marker.visible=!!enemy&&!enemy.dead;if(!marker.visible)return;const scale=(enemy.def.boss?1.75:1)*(base+Math.sin(clock*7)*.06);marker.position.set(enemy.x,.11,enemy.z);marker.scale.setScalar(scale);};
+ place(hoverMarker,hoverTarget,.95);place(selectedMarker,attackTarget,1.08);
+}
 document.querySelector('.controls').textContent='좌클릭 이동·적 공격 · Shift+좌클릭 제자리 공격 · WASD 이동 · 우클릭 스킬 · SPACE 회피 · Q 회복 · E 줍기';
 if(new URLSearchParams(location.search).get('test')==='1'){
  const actorState=(mesh,enemy)=>({name:enemy?.def.name,boss:!!enemy?.def.boss,behavior:enemy?.def.behavior,atlas:mesh?.userData.spriteAtlas,row:mesh?.userData.spriteRow,state:mesh?.userData.spriteState,frame:mesh?.userData.spriteFrame});
  globalThis.__goabloTest=Object.freeze({
-  snapshot:()=>({started,paused,town,act,floor,clock,cleared,spriteStatus:document.documentElement.dataset.spriteStatus,bossBarHidden:$('bossbar').hidden,enemies:enemies.filter(e=>!e.dead).map(e=>actorState(e.mesh,e)),corpses:corpses.map(c=>({...actorState(c.mesh,c.enemy),life:c.life}))}),
+ snapshot:()=>({started,paused,town,act,floor,clock,cleared,spriteStatus:document.documentElement.dataset.spriteStatus,bossBarHidden:$('bossbar').hidden,enemies:enemies.filter(e=>!e.dead).map(e=>actorState(e.mesh,e)),corpses:corpses.map(c=>({...actorState(c.mesh,c.enemy),life:c.life}))}),
+  firstEnemyScreenPoint:()=>{for(const enemy of enemies){if(enemy.dead)continue;const point=new THREE.Vector3(enemy.x,enemy.mesh.userData.labelHeight*.5,enemy.z).project(camera),x=(point.x*.5+.5)*innerWidth,y=(-point.y*.5+.5)*innerHeight;if(point.z>-1&&point.z<1&&x>60&&x<innerWidth-60&&y>60&&y<innerHeight-60)return {x,y,name:enemy.def.name};}return null;},
+  targeting:()=>({hover:hoverTarget?.def.name||null,selected:attackTarget?.def.name||null,hoverMarker:hoverMarker.visible,selectedMarker:selectedMarker.visible}),
   defeatAll:()=>{for(const e of [...enemies])if(!e.dead)killEnemy(e,null);},
   protectPlayer:()=>{p.buffs.invulnerable=30;},
   step:seconds=>{for(let elapsed=0;elapsed<seconds;elapsed+=1/60)update(1/60);}
  });
 }
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();}window.addEventListener('resize',resize);resize();buildWorld(true);chooseClass(0);
-let last=performance.now();function frame(now){requestAnimationFrame(frame);let dt=Math.min((now-last)/1000,.05);last=now;if(hitstop>0){hitstop-=dt;dt*=.12;}update(dt);let center=started?hero.position:new THREE.Vector3(-2,0,0);const desired=new THREE.Vector3(center.x+18,24,center.z+21);camera.position.lerp(desired,1-Math.exp(-dt*5));const look=center.clone();look.y=.3;if(settings.shake&&shake>0){look.x+=rnd(-shake,shake);look.z+=rnd(-shake,shake);shake=Math.max(0,shake-dt);}camera.lookAt(look);sun.position.set(center.x-12,24,center.z+10);sun.target.position.copy(center);updateEnemyLabels();renderer.render(scene,camera);}requestAnimationFrame(frame);
+let last=performance.now();function frame(now){requestAnimationFrame(frame);let dt=Math.min((now-last)/1000,.05);last=now;if(hitstop>0){hitstop-=dt;dt*=.12;}update(dt);let center=started?hero.position:new THREE.Vector3(-2,0,0);const desired=new THREE.Vector3(center.x+18,24,center.z+21);camera.position.lerp(desired,1-Math.exp(-dt*5));const look=center.clone();look.y=.3;if(settings.shake&&shake>0){look.x+=rnd(-shake,shake);look.z+=rnd(-shake,shake);shake=Math.max(0,shake-dt);}camera.lookAt(look);sun.position.set(center.x-12,24,center.z+10);sun.target.position.copy(center);updateEnemyLabels();updateTargetMarkers();renderer.render(scene,camera);}requestAnimationFrame(frame);
 if(document.modelContext?.registerTool){try{document.modelContext.registerTool({name:'read_goablo_progress',description:'현재 고아블로 캐릭터와 여정 진행 상태를 읽습니다.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true},execute:()=>({started,town,act,floor,character:p?.classId,level:p?.level,hp:p?.hp,inventory:p?.inventory.length})});}catch{}}
