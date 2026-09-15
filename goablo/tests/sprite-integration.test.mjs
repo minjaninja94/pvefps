@@ -88,11 +88,13 @@ test('Act 2 uses the integrated spider mother boss sprite',()=>{
   assert.equal(queuedBoss.row,8);
 });
 
-test('Act 2 venom stinger uses its generated eight-frame strip',()=>{
-  const queued=queue.acts.find(entry=>entry.act===2).jobs[0];
-  const profile=act2MonsterProfile(4);
-  assert.deepEqual({status:queued.status,source:queued.source,atlas:queued.atlas,row:queued.row},{status:'integrated',source:SPRITE_MANIFEST.act2Venom.image,atlas:'act2Venom',row:0});
-  assert.deepEqual(profile,{id:'A2_001',name:'독침고아',dbIndex:4,row:0,atlas:'act2Venom'});
-  assert.deepEqual(pngHeader(queued.source),{width:2176,height:724,bitDepth:8,colorType:6});
-  assert.equal(SPRITE_MANIFEST.act2Venom.columns,8);
+test('all six Act 2 monsters use the generated atlas',()=>{
+  const jobs=queue.acts.find(entry=>entry.act===2).jobs;
+  assert.deepEqual(pngHeader(SPRITE_MANIFEST.act2Monsters.image),{width:1182,height:1330,bitDepth:8,colorType:6});
+  assert.deepEqual({columns:SPRITE_MANIFEST.act2Monsters.columns,rows:SPRITE_MANIFEST.act2Monsters.rows},{columns:8,rows:6});
+  jobs.forEach((job,index)=>{
+    const profile=act2MonsterProfile(index);
+    assert.deepEqual({id:profile.id,name:profile.name,row:profile.row,atlas:profile.atlas},{id:job.id,name:job.name,row:index,atlas:'act2Monsters'});
+    assert.deepEqual({status:job.status,source:job.source,atlas:job.atlas,row:job.row},{status:'integrated',source:SPRITE_MANIFEST.act2Monsters.image,atlas:'act2Monsters',row:index});
+  });
 });

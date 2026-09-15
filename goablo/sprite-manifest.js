@@ -27,12 +27,19 @@ export const SPRITE_MANIFEST={
     ],
     act1Boss:{id:'B01',name:'역병군주고아',dbIndex:20,row:7}
   },
-  act2Venom:{
-    image:'assets/sprites/act2-a2-001-venom-stinger.png',
+  act2Monsters:{
+    image:'assets/sprites/act2-monsters.png',
     columns:8,
-    rows:1,
+    rows:6,
     chromaKey:false,
-    roster:[{id:'A2_001',name:'독침고아',dbIndex:4,row:0,atlas:'act2Venom'}]
+    roster:[
+      {id:'A2_001',name:'독침고아',dbIndex:4,row:0,atlas:'act2Monsters'},
+      {id:'A2_002',name:'기생고아',dbIndex:11,row:1,atlas:'act2Monsters'},
+      {id:'A2_003',name:'유충고아',dbIndex:7,row:2,atlas:'act2Monsters'},
+      {id:'A2_004',name:'다리 많은 고아',dbIndex:3,row:3,atlas:'act2Monsters'},
+      {id:'A2_005',name:'산성고아',dbIndex:13,row:4,atlas:'act2Monsters'},
+      {id:'A2_006',name:'벌레 숙주 고아',dbIndex:15,row:5,atlas:'act2Monsters'}
+    ]
   },
   animations:{
     idle:{frames:[0,1],fps:2.2},

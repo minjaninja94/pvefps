@@ -180,8 +180,8 @@
             "needle_tail"
           ],
           "status": "integrated",
-          "source": "assets/sprites/act2-a2-001-venom-stinger.png",
-          "atlas": "act2Venom",
+          "source": "assets/sprites/act2-monsters.png",
+          "atlas": "act2Monsters",
           "row": 0
         },
         {
@@ -192,7 +192,10 @@
             "parasite_growth",
             "asymmetric"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act2-monsters.png",
+          "atlas": "act2Monsters",
+          "row": 1
         },
         {
           "id": "A2_003",
@@ -202,7 +205,10 @@
             "larval",
             "soft_body"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act2-monsters.png",
+          "atlas": "act2Monsters",
+          "row": 2
         },
         {
           "id": "A2_004",
@@ -212,7 +218,10 @@
             "many_legs",
             "segmented"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act2-monsters.png",
+          "atlas": "act2Monsters",
+          "row": 3
         },
         {
           "id": "A2_005",
@@ -222,7 +231,10 @@
             "acid_sac",
             "dripping_mouth"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act2-monsters.png",
+          "atlas": "act2Monsters",
+          "row": 4
         },
         {
           "id": "A2_006",
@@ -232,7 +244,10 @@
             "egg_sacs",
             "ruptured_torso"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act2-monsters.png",
+          "atlas": "act2Monsters",
+          "row": 5
         }
       ]
     },
