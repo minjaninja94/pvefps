@@ -1,0 +1,34 @@
+name: GOABLO sprite inspection
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/goablo-sprite-inspection.yml"
+      - "goablo/tools/inspect-sprites.mjs"
+      - "goablo/file_0000*.png"
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Decode and inspect sprite PNGs
+        run: node goablo/tools/inspect-sprites.mjs
+      - name: Store inspection output
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add goablo/sprite-inspection.json goablo/.sprite-preview-*.txt
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(goablo): record sprite inspection output"
+            git push
+          fi
