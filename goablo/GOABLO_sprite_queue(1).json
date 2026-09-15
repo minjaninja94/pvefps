@@ -1,0 +1,486 @@
+{
+  "version": "1.0",
+  "master": "GOABLO_SPRITE_MASTER_V1",
+  "rules": {
+    "process_in_order": true,
+    "no_intermediate_reports": true,
+    "reuse_base": true,
+    "named_runtime_only": true,
+    "skip_completed": true
+  },
+  "players": [
+    {
+      "id": "P01",
+      "name": "힘쎈고아",
+      "base": "PLAYER",
+      "traits": [
+        "large_build",
+        "oversized_weapon"
+      ]
+    },
+    {
+      "id": "P02",
+      "name": "교회고아",
+      "base": "PLAYER",
+      "traits": [
+        "cleric",
+        "shield_mace"
+      ]
+    },
+    {
+      "id": "P03",
+      "name": "뼈고아",
+      "base": "PLAYER",
+      "traits": [
+        "gaunt",
+        "necromantic"
+      ]
+    },
+    {
+      "id": "P04",
+      "name": "마법고아",
+      "base": "PLAYER",
+      "traits": [
+        "robe",
+        "arcane"
+      ]
+    },
+    {
+      "id": "P05",
+      "name": "활고아",
+      "base": "PLAYER",
+      "traits": [
+        "light_build",
+        "bow"
+      ]
+    },
+    {
+      "id": "P06",
+      "name": "도둑고아",
+      "base": "PLAYER",
+      "traits": [
+        "hood",
+        "dagger",
+        "agile"
+      ]
+    }
+  ],
+  "acts": [
+    {
+      "act": 1,
+      "theme": "버려진 묘지·역병",
+      "jobs": [
+        {
+          "id": "A1_001",
+          "name": "좀비고아",
+          "base": "ZOMBIE",
+          "traits": [
+            "long_arms",
+            "crooked_neck"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A1_002",
+          "name": "해골고아",
+          "base": "SKELETON",
+          "traits": [
+            "oversized_skull",
+            "broken_bones"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A1_003",
+          "name": "구울고아",
+          "base": "ZOMBIE",
+          "traits": [
+            "all_fours",
+            "wide_mouth"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A1_004",
+          "name": "묘지 고아 거미",
+          "base": "SPIDER",
+          "traits": [
+            "bloated_abdomen",
+            "exposed_bone"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A1_005",
+          "name": "시체 먹는 고아",
+          "base": "HUMANOID",
+          "traits": [
+            "bloody_mouth",
+            "hunched"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A1_006",
+          "name": "관에서 나온 고아",
+          "base": "ZOMBIE",
+          "traits": [
+            "coffin_debris",
+            "burial_cloth"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "act": 2,
+      "theme": "꿈틀대는 지하·벌레굴",
+      "jobs": [
+        {
+          "id": "A2_001",
+          "name": "독침고아",
+          "base": "INSECT",
+          "traits": [
+            "venom_sac",
+            "needle_tail"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A2_002",
+          "name": "기생고아",
+          "base": "FLESH",
+          "traits": [
+            "parasite_growth",
+            "asymmetric"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A2_003",
+          "name": "유충고아",
+          "base": "INSECT",
+          "traits": [
+            "larval",
+            "soft_body"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A2_004",
+          "name": "다리 많은 고아",
+          "base": "INSECT",
+          "traits": [
+            "many_legs",
+            "segmented"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A2_005",
+          "name": "산성고아",
+          "base": "INSECT",
+          "traits": [
+            "acid_sac",
+            "dripping_mouth"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A2_006",
+          "name": "벌레 숙주 고아",
+          "base": "FLESH",
+          "traits": [
+            "egg_sacs",
+            "ruptured_torso"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "act": 3,
+      "theme": "타락한 성당",
+      "jobs": [
+        {
+          "id": "A3_001",
+          "name": "광신도고아",
+          "base": "HUMANOID",
+          "traits": [
+            "fanatic",
+            "ragged_cleric"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A3_002",
+          "name": "타락 수도고아",
+          "base": "HUMANOID",
+          "traits": [
+            "blindfold",
+            "corrupted_robes"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A3_003",
+          "name": "날개고아",
+          "base": "ANGEL",
+          "traits": [
+            "damaged_wings",
+            "gaunt"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A3_004",
+          "name": "눈먼고아",
+          "base": "HUMANOID",
+          "traits": [
+            "covered_eyes",
+            "sensory_growths"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A3_005",
+          "name": "성당 고아 악마",
+          "base": "DEMON",
+          "traits": [
+            "horns",
+            "church_relics"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A3_006",
+          "name": "타락 사제고아",
+          "base": "HUMANOID",
+          "traits": [
+            "bone_ornaments",
+            "covered_face"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "act": 4,
+      "theme": "죽은 왕국·전쟁터",
+      "jobs": [
+        {
+          "id": "A4_001",
+          "name": "해골 고아 기사",
+          "base": "KNIGHT",
+          "traits": [
+            "skeletal",
+            "rusted_armor"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A4_002",
+          "name": "궁수고아",
+          "base": "SKELETON",
+          "traits": [
+            "broken_bow",
+            "ragged_quiver"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A4_003",
+          "name": "방패고아",
+          "base": "KNIGHT",
+          "traits": [
+            "large_shield",
+            "damaged_armor"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A4_004",
+          "name": "처형고아",
+          "base": "HUMANOID",
+          "traits": [
+            "executioner",
+            "oversized_blade"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A4_005",
+          "name": "목없는 고아 기사",
+          "base": "KNIGHT",
+          "traits": [
+            "headless",
+            "heavy_armor"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A4_006",
+          "name": "시체 병사고아",
+          "base": "ZOMBIE",
+          "traits": [
+            "battlefield_corpse",
+            "embedded_weapons"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "act": 5,
+      "theme": "육체성채·지옥",
+      "jobs": [
+        {
+          "id": "A5_001",
+          "name": "칼날고아",
+          "base": "FLESH",
+          "traits": [
+            "blade_growths",
+            "metal_flesh"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A5_002",
+          "name": "살덩이고아",
+          "base": "FLESH",
+          "traits": [
+            "bloated_meat",
+            "multiple_limbs"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A5_003",
+          "name": "촉수고아",
+          "base": "FLESH",
+          "traits": [
+            "tentacles",
+            "central_mouth"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A5_004",
+          "name": "폭발고아",
+          "base": "DEMON",
+          "traits": [
+            "swollen_belly",
+            "unstable_flesh"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A5_005",
+          "name": "꿰맨고아",
+          "base": "FLESH",
+          "traits": [
+            "stitched_bodies",
+            "mismatched_limbs"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "A5_006",
+          "name": "지옥마법사고아",
+          "base": "DEMON",
+          "traits": [
+            "ritual_horns",
+            "burned_robes"
+          ],
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "bosses": [
+    {
+      "id": "B01",
+      "name": "역병군주고아",
+      "base": "FLESH",
+      "scale": 3.0,
+      "status": "pending"
+    },
+    {
+      "id": "B02",
+      "name": "거미어미고아",
+      "base": "SPIDER",
+      "scale": 3.2,
+      "status": "pending"
+    },
+    {
+      "id": "B03",
+      "name": "천개의다리고아",
+      "base": "INSECT",
+      "scale": 3.5,
+      "status": "pending"
+    },
+    {
+      "id": "B04",
+      "name": "타락천사고아",
+      "base": "ANGEL",
+      "scale": 3.0,
+      "status": "pending"
+    },
+    {
+      "id": "B05",
+      "name": "유혹하는고아",
+      "base": "DEMON",
+      "scale": 2.7,
+      "status": "pending"
+    },
+    {
+      "id": "B06",
+      "name": "목없는고아기사",
+      "base": "KNIGHT",
+      "scale": 3.0,
+      "status": "pending"
+    },
+    {
+      "id": "B07",
+      "name": "칼날군주고아",
+      "base": "FLESH",
+      "scale": 3.3,
+      "status": "pending"
+    },
+    {
+      "id": "B08",
+      "name": "육체수집가고아",
+      "base": "FLESH",
+      "scale": 3.6,
+      "status": "pending"
+    },
+    {
+      "id": "B09",
+      "name": "심연의촉수고아",
+      "base": "FLESH",
+      "scale": 3.8,
+      "status": "pending"
+    },
+    {
+      "id": "B10",
+      "name": "악마군주고아",
+      "base": "DEMON",
+      "scale": 3.5,
+      "status": "pending"
+    },
+    {
+      "id": "B11",
+      "name": "해골왕고아",
+      "base": "SKELETON",
+      "scale": 3.2,
+      "status": "pending"
+    },
+    {
+      "id": "B12",
+      "name": "고아들의왕",
+      "base": "DEMON",
+      "scale": 4.0,
+      "status": "pending"
+    }
+  ]
+}
