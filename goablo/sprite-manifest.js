@@ -27,6 +27,13 @@ export const SPRITE_MANIFEST={
     ],
     act1Boss:{id:'B01',name:'역병군주고아',dbIndex:20,row:7}
   },
+  act2Venom:{
+    image:'assets/sprites/act2-a2-001-venom-stinger.png',
+    columns:8,
+    rows:1,
+    chromaKey:false,
+    roster:[{id:'A2_001',name:'독침고아',dbIndex:4,row:0,atlas:'act2Venom'}]
+  },
   animations:{
     idle:{frames:[0,1],fps:2.2},
     walk:{frames:[0,1,2],fps:7},

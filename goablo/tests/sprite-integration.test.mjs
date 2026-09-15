@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 
 import {DB} from '../data/database.js';
 import {SPRITE_MANIFEST} from '../sprite-manifest.js';
-import {act1BossProfile,act1MonsterProfile,monsterSpriteRow,playerSpriteRow} from '../sprite-system.js';
+import {act1BossProfile,act1MonsterProfile,act2MonsterProfile,monsterSpriteRow,playerSpriteRow} from '../sprite-system.js';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const queue=JSON.parse(fs.readFileSync(path.join(root,'GOABLO_sprite_queue(1).json'),'utf8'));
@@ -86,4 +86,13 @@ test('Act 2 uses the integrated spider mother boss sprite',()=>{
   assert.deepEqual({name:boss.name,behavior:boss.behavior},{name:queuedBoss.name,behavior:'spiderboss'});
   assert.equal(monsterSpriteRow(boss.id,21,true),queuedBoss.row);
   assert.equal(queuedBoss.row,8);
+});
+
+test('Act 2 venom stinger uses its generated eight-frame strip',()=>{
+  const queued=queue.acts.find(entry=>entry.act===2).jobs[0];
+  const profile=act2MonsterProfile(4);
+  assert.deepEqual({status:queued.status,source:queued.source,atlas:queued.atlas,row:queued.row},{status:'integrated',source:SPRITE_MANIFEST.act2Venom.image,atlas:'act2Venom',row:0});
+  assert.deepEqual(profile,{id:'A2_001',name:'독침고아',dbIndex:4,row:0,atlas:'act2Venom'});
+  assert.deepEqual(pngHeader(queued.source),{width:2176,height:724,bitDepth:8,colorType:6});
+  assert.equal(SPRITE_MANIFEST.act2Venom.columns,8);
 });

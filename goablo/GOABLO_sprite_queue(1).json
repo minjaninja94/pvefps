@@ -179,7 +179,10 @@
             "venom_sac",
             "needle_tail"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act2-a2-001-venom-stinger.png",
+          "atlas": "act2Venom",
+          "row": 0
         },
         {
           "id": "A2_002",

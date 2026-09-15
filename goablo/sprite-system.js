@@ -38,8 +38,8 @@ function splitAtlas(THREE,canvas,def){
   return {frames,aspect:cellWidth/cellHeight};
 }
 export async function loadSpriteLibrary(THREE){
-  const entries=await Promise.all(['players','monsters'].map(async key=>{
-    const def=SPRITE_MANIFEST[key],image=await loadImage(def.image),atlas=splitAtlas(THREE,atlasCanvas(image,def.chromaKey),def);
+  const entries=await Promise.all(Object.entries(SPRITE_MANIFEST).filter(([,def])=>def.image).map(async ([key,def])=>{
+    const image=await loadImage(def.image),atlas=splitAtlas(THREE,atlasCanvas(image,def.chromaKey),def);
     return [key,{...atlas,definition:def}];
   }));
   return {ready:true,...Object.fromEntries(entries)};
@@ -54,6 +54,7 @@ export function monsterSpriteRow(id,index,boss=false){
 }
 export function act1MonsterProfile(slot){const roster=SPRITE_MANIFEST.monsters.act1Roster;return roster[slot%roster.length];}
 export function act1BossProfile(){return SPRITE_MANIFEST.monsters.act1Boss;}
+export function act2MonsterProfile(dbIndex){return SPRITE_MANIFEST.act2Venom.roster.find(profile=>profile.dbIndex===dbIndex)||null;}
 export function createSpriteActor(THREE,library,{atlas,row,scale=1,boss=false,kind='human'}){
   const sheet=library?.[atlas],frames=sheet?.frames?.[row];if(!frames)return null;
   const group=new THREE.Group(),height=(atlas==='players'?2.75:boss?3.15:2.5)*scale;
