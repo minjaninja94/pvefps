@@ -172,8 +172,8 @@ function enemyAttack(e,dt){const d=e.def,b=d.behavior;let tx=hero.position.x,tz=
  if(e.status.freeze||e.status.stagger)return;
  if(dis<(d.boss?34:28)&&dis>(ranged?9:1.65*d.boss+1.25)){let sign=ranged&&dis<6?-1:1;let dx=(tx-e.x)/dis,dz=(tz-e.z)/dis;e.x+=dx*speed*dt*sign;e.z+=dz*speed*dt*sign;e.mesh.rotation.y=Math.atan2(-dx,-dz);}
  e.cd-=dt;if(e.cd>0||dis>35)return;
- if(d.boss){e.cd=2.6;let stage=e.hp/e.maxHp<.45?2:1;e.phase++;if(e.phase%3===0){let n=b==='skeletonboss'||b==='spiderboss'?4:2;for(let i=0;i<n;i++){if(b==='spiderboss'){const minion=act1MonsterProfile(3);spawnMonster(minion.dbIndex,e.x+rnd(-4,4),e.z+rnd(-4,4),minion);}else spawnMonster(b==='skeletonboss'?1:b==='plagueboss'?0:(e.phase+i)%15,e.x+rnd(-4,4),e.z+rnd(-4,4));}ring(e.x,e.z,5,d.color);}
- else if(e.phase%3===1){for(let i=0;i<stage+1;i++){let px=tx+rnd(-2,2),pz=tz+rnd(-2,2);addZone(px,pz,b==='angelboss'?4:3.5,2,e.damage*1.6,d.color,true,b==='spiderboss'?'web':b,.9);ring(px,pz,3.5,d.color,.9);}}
+ if(d.boss){let stage=e.hp/e.maxHp<.45?2:1;if(b==='spiderboss'&&stage===2&&!e.enraged){e.enraged=true;e.phase=0;message('거미어미고아가 격노했다','거미줄이 빠르게 퍼집니다');ring(e.x,e.z,7,'#d7efad',1.2);burst(e.x,e.z,'#a8cf74',28,1.6);}e.cd=b==='spiderboss'&&stage===2?1.9:2.6;e.phase++;if(e.phase%3===0){let n=b==='skeletonboss'||b==='spiderboss'?4:2;for(let i=0;i<n;i++){if(b==='spiderboss'){const minion=act1MonsterProfile(3);spawnMonster(minion.dbIndex,e.x+rnd(-4,4),e.z+rnd(-4,4),minion);}else spawnMonster(b==='skeletonboss'?1:b==='plagueboss'?0:(e.phase+i)%15,e.x+rnd(-4,4),e.z+rnd(-4,4));}ring(e.x,e.z,5,d.color);}
+ else if(e.phase%3===1){for(let i=0;i<stage+1;i++){let px=tx+rnd(-2,2),pz=tz+rnd(-2,2),radius=b==='spiderboss'?(stage===2?4:3.5):b==='angelboss'?4:3.5,delay=b==='spiderboss'&&stage===2?.7:.9;addZone(px,pz,radius,b==='spiderboss'?3:2,e.damage*1.6,d.color,true,b==='spiderboss'?'web':b,delay);ring(px,pz,radius,'#d7efad',delay);}}
  else if(b==='demonboss'||b==='kingboss'){const ex=e.x,ez=e.z;beam(ex,ez,tx,tz,'#cb6858',.04);schedule(.75,()=>{if(e.dead)return;e.x=clamp(tx,-28,28);e.z=clamp(tz,-28,28);ring(e.x,e.z,4,d.color);if(distance(e,hero.position)<4)hurt(e.damage*1.7,e);});}
  else{for(let i=0;i<8*stage;i++){let a=i*Math.PI*2/(8*stage);projectile(e.x,e.z,e.x+Math.cos(a)*20,e.z+Math.sin(a)*20,e.damage,null,{enemy:true,color:d.color,speed:7,web:b==='spiderboss'});}}return;}
  if(b==='consume'){let corpse=corpses.find(c=>distance(c,e)<6&&c.life>0);if(corpse&&e.hp<e.maxHp){e.hp=Math.min(e.maxHp,e.hp+e.maxHp*.2);corpse.life=0;number('섭취',e.x,e.z);e.cd=3;return;}}
@@ -292,12 +292,13 @@ function updateTargetMarkers(){
 }
 document.querySelector('.controls').textContent='좌클릭 이동·적 공격 · Shift+좌클릭 제자리 공격 · WASD 이동 · 우클릭 스킬 · SPACE 회피 · Q 회복 · E 줍기';
 if(new URLSearchParams(location.search).get('test')==='1'){
- const actorState=(mesh,enemy)=>({name:enemy?.def.name,boss:!!enemy?.def.boss,behavior:enemy?.def.behavior,atlas:mesh?.userData.spriteAtlas,row:mesh?.userData.spriteRow,state:mesh?.userData.spriteState,frame:mesh?.userData.spriteFrame});
+ const actorState=(mesh,enemy)=>({name:enemy?.def.name,boss:!!enemy?.def.boss,behavior:enemy?.def.behavior,enraged:!!enemy?.enraged,atlas:mesh?.userData.spriteAtlas,row:mesh?.userData.spriteRow,state:mesh?.userData.spriteState,frame:mesh?.userData.spriteFrame});
  globalThis.__goabloTest=Object.freeze({
- snapshot:()=>({started,paused,town,act,floor,clock,cleared,spriteStatus:document.documentElement.dataset.spriteStatus,bossBarHidden:$('bossbar').hidden,enemies:enemies.filter(e=>!e.dead).map(e=>actorState(e.mesh,e)),corpses:corpses.map(c=>({...actorState(c.mesh,c.enemy),life:c.life}))}),
+  snapshot:()=>({started,paused,town,act,floor,clock,cleared,spriteStatus:document.documentElement.dataset.spriteStatus,bossBarHidden:$('bossbar').hidden,enemies:enemies.filter(e=>!e.dead).map(e=>actorState(e.mesh,e)),zones:zones.map(z=>({tag:z.tag,r:z.r,delay:z.delay,enemy:z.enemy})),corpses:corpses.map(c=>({...actorState(c.mesh,c.enemy),life:c.life}))}),
   firstEnemyScreenPoint:()=>{for(const enemy of enemies){if(enemy.dead)continue;const point=new THREE.Vector3(enemy.x,enemy.mesh.userData.labelHeight*.5,enemy.z).project(camera),x=(point.x*.5+.5)*innerWidth,y=(-point.y*.5+.5)*innerHeight;if(point.z>-1&&point.z<1&&x>60&&x<innerWidth-60&&y>60&&y<innerHeight-60)return {x,y,name:enemy.def.name};}return null;},
   targeting:()=>({hover:hoverTarget?.def.name||null,selected:attackTarget?.def.name||null,hoverMarker:hoverMarker.visible,selectedMarker:selectedMarker.visible}),
   probeHitContinuity:()=>{p.buffs.invulnerable=0;p.buffs.evade=0;p.cd.basic=0;basic();const before=hero.userData.attack;hurt(p.maxHp*.03,{def:{boss:false}});const afterNormal=hero.userData.attack;p.cd.basic=0;basic();hurt(p.maxHp*.03,{def:{boss:true}});return {before,afterNormal,afterHeavy:hero.userData.attack,heavyHitUntil:hero.userData.hitUntil>clock};},
+  triggerBossEnrage:()=>{if(!boss||boss.dead)return false;boss.hp=boss.maxHp*.44;boss.cd=0;update(.01);return true;},
   defeatAll:()=>{for(const e of [...enemies])if(!e.dead)killEnemy(e,null);},
   protectPlayer:()=>{p.buffs.invulnerable=30;},
   step:seconds=>{for(let elapsed=0;elapsed<seconds;elapsed+=1/60)update(1/60);}

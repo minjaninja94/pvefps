@@ -123,6 +123,12 @@ try{
   const spiderMother=state.enemies.find(enemy=>enemy.boss);
   assert.deepEqual({act:state.act,floor:state.floor,name:spiderMother.name,behavior:spiderMother.behavior,row:spiderMother.row},{act:2,floor:3,name:'거미어미고아',behavior:'spiderboss',row:8});
   await page.evaluate(()=>globalThis.__goabloTest.protectPlayer());
+  assert.equal(await page.evaluate(()=>globalThis.__goabloTest.triggerBossEnrage()),true);
+  state=await snapshot();
+  assert.equal(state.enemies.find(enemy=>enemy.boss).enraged,true);
+  const warningWebs=state.zones.filter(zone=>zone.enemy&&zone.tag==='web'&&zone.delay>0);
+  assert.equal(warningWebs.length,3);
+  assert.ok(warningWebs.every(zone=>zone.r===4&&zone.delay<=.7));
   await step(8);
   state=await snapshot();
   const spiderMinions=state.enemies.filter(enemy=>!enemy.boss&&enemy.behavior==='web'&&enemy.row===5);
