@@ -16,7 +16,10 @@
       "traits": [
         "large_build",
         "oversized_weapon"
-      ]
+      ],
+      "status": "integrated",
+      "source": "file_00000000856882099666f57bd54d2176.png",
+      "row": 0
     },
     {
       "id": "P02",
@@ -25,7 +28,10 @@
       "traits": [
         "cleric",
         "shield_mace"
-      ]
+      ],
+      "status": "integrated",
+      "source": "file_00000000856882099666f57bd54d2176.png",
+      "row": 1
     },
     {
       "id": "P03",
@@ -34,7 +40,10 @@
       "traits": [
         "gaunt",
         "necromantic"
-      ]
+      ],
+      "status": "integrated",
+      "source": "file_00000000856882099666f57bd54d2176.png",
+      "row": 2
     },
     {
       "id": "P04",
@@ -43,7 +52,10 @@
       "traits": [
         "robe",
         "arcane"
-      ]
+      ],
+      "status": "integrated",
+      "source": "file_00000000856882099666f57bd54d2176.png",
+      "row": 3
     },
     {
       "id": "P05",
@@ -52,7 +64,10 @@
       "traits": [
         "light_build",
         "bow"
-      ]
+      ],
+      "status": "integrated",
+      "source": "file_00000000856882099666f57bd54d2176.png",
+      "row": 4
     },
     {
       "id": "P06",
@@ -62,7 +77,10 @@
         "hood",
         "dagger",
         "agile"
-      ]
+      ],
+      "status": "integrated",
+      "source": "file_00000000856882099666f57bd54d2176.png",
+      "row": 5
     }
   ],
   "acts": [
@@ -78,7 +96,9 @@
             "long_arms",
             "crooked_neck"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "file_0000000079208209bcc6152b2280e786.png",
+          "row": 0
         },
         {
           "id": "A1_002",
@@ -88,7 +108,9 @@
             "oversized_skull",
             "broken_bones"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "file_0000000079208209bcc6152b2280e786.png",
+          "row": 1
         },
         {
           "id": "A1_003",
@@ -98,7 +120,9 @@
             "all_fours",
             "wide_mouth"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "file_0000000079208209bcc6152b2280e786.png",
+          "row": 2
         },
         {
           "id": "A1_004",
@@ -108,7 +132,9 @@
             "bloated_abdomen",
             "exposed_bone"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "file_0000000079208209bcc6152b2280e786.png",
+          "row": 5
         },
         {
           "id": "A1_005",
@@ -118,7 +144,9 @@
             "bloody_mouth",
             "hunched"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "file_0000000079208209bcc6152b2280e786.png",
+          "row": 3
         },
         {
           "id": "A1_006",
@@ -128,7 +156,9 @@
             "coffin_debris",
             "burial_cloth"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "file_0000000079208209bcc6152b2280e786.png",
+          "row": 6
         }
       ]
     },
@@ -402,15 +432,19 @@
       "id": "B01",
       "name": "역병군주고아",
       "base": "FLESH",
-      "scale": 3.0,
-      "status": "pending"
+      "scale": 3,
+      "status": "integrated",
+      "source": "file_0000000079208209bcc6152b2280e786.png",
+      "row": 7
     },
     {
       "id": "B02",
       "name": "거미어미고아",
       "base": "SPIDER",
       "scale": 3.2,
-      "status": "pending"
+      "status": "integrated",
+      "source": "file_0000000079208209bcc6152b2280e786.png",
+      "row": 8
     },
     {
       "id": "B03",
@@ -423,7 +457,7 @@
       "id": "B04",
       "name": "타락천사고아",
       "base": "ANGEL",
-      "scale": 3.0,
+      "scale": 3,
       "status": "pending"
     },
     {
@@ -437,7 +471,7 @@
       "id": "B06",
       "name": "목없는고아기사",
       "base": "KNIGHT",
-      "scale": 3.0,
+      "scale": 3,
       "status": "pending"
     },
     {
@@ -479,8 +513,44 @@
       "id": "B12",
       "name": "고아들의왕",
       "base": "DEMON",
-      "scale": 4.0,
+      "scale": 4,
       "status": "pending"
     }
-  ]
+  ],
+  "runtime": {
+    "grid": {
+      "columns": 8,
+      "playerRows": 6,
+      "monsterRows": 9
+    },
+    "animations": {
+      "idle": [
+        0,
+        1
+      ],
+      "walk": [
+        0,
+        1,
+        2
+      ],
+      "attack": [
+        3,
+        4
+      ],
+      "hit": [
+        5
+      ],
+      "death": [
+        6
+      ],
+      "corpse": [
+        7
+      ]
+    },
+    "notes": [
+      "플레이어 원본은 런타임 마젠타 크로마키 처리",
+      "몬스터는 투명 PNG 사용, 마젠타 원본은 보존",
+      "Act 1 네임드 변형은 런타임 tint/aura를 사용"
+    ]
+  }
 }

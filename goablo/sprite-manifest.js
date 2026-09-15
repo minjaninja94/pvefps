@@ -1,0 +1,29 @@
+export const SPRITE_MANIFEST={
+  version:1,
+  players:{
+    image:'file_00000000856882099666f57bd54d2176.png',
+    columns:8,
+    rows:6,
+    chromaKey:true,
+    rowByClassId:{C01:0,C02:1,C03:2,C04:3,C05:4,C06:5},
+    labels:['힘쎈고아','교회고아','뼈고아','마법고아','활고아','도둑고아']
+  },
+  monsters:{
+    image:'file_0000000079208209bcc6152b2280e786.png',
+    sourceImage:'file_00000000b7388207b0cc35754ac3753e.png',
+    columns:8,
+    rows:9,
+    chromaKey:false,
+    normalRows:[0,1,2,3,4,5,6],
+    rowByMonsterId:{GOA_001:0,GOA_002:1,GOA_008:2,GOA_006:5,GOA_B01:7},
+    rowLabels:['좀비고아','해골고아','구울고아','시체 먹는 고아','역병 변이체','묘지 고아 거미','관에서 나온 고아','역병군주고아','거미어미고아']
+  },
+  animations:{
+    idle:{frames:[0,1],fps:2.2},
+    walk:{frames:[0,1,2],fps:7},
+    attack:{frames:[3,4],fps:10},
+    hit:{frames:[5],fps:1},
+    death:{frames:[6],fps:1},
+    corpse:{frames:[7],fps:1}
+  }
+};
