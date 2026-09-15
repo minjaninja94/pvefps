@@ -60,7 +60,7 @@ export function createSpriteActor(THREE,library,{atlas,row,scale=1,boss=false,ki
   const shadow=new THREE.Mesh(new THREE.CircleGeometry(.48*scale,20),new THREE.MeshBasicMaterial({color:'#050707',transparent:true,opacity:.42,depthWrite:false}));
   shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;group.add(shadow);
   const weapon=new THREE.Object3D();group.add(weapon);
-  Object.assign(group.userData,{kind,head:sprite,legs:[],weapon,sprite,spriteFrames:frames,spriteMaterial:material,spriteFrame:-1,spriteState:'idle',spritePhase:Math.random()*10});
+  Object.assign(group.userData,{kind,head:sprite,legs:[],weapon,sprite,spriteFrames:frames,spriteMaterial:material,spriteFrame:-1,spriteState:'idle',spritePhase:Math.random()*10,labelHeight:height});
   return group;
 }
 export function animateSpriteActor(actor,state,time,phase=0){
