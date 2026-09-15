@@ -1,0 +1,44 @@
+name: GOABLO tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/goablo-tests.yml"
+      - "build.mjs"
+      - "goablo/**"
+  pull_request:
+    paths:
+      - ".github/workflows/goablo-tests.yml"
+      - "build.mjs"
+      - "goablo/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: goablo-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: goablo/package-lock.json
+      - name: Install test dependencies
+        run: npm ci --prefix goablo
+      - name: Install Chromium
+        run: npx --prefix goablo playwright install --with-deps chromium
+      - name: Run unit and integration tests
+        run: npm --prefix goablo test
+      - name: Check game entrypoints and syntax
+        run: node build.mjs
+      - name: Run WebGL browser progression test
+        run: npm --prefix goablo run test:browser
