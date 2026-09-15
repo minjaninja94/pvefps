@@ -16,7 +16,16 @@ export const SPRITE_MANIFEST={
     chromaKey:false,
     normalRows:[0,1,2,3,4,5,6],
     rowByMonsterId:{GOA_001:0,GOA_002:2,GOA_008:3,GOA_006:5,GOA_B01:7},
-    rowLabels:['좀비고아','역병 변이체','해골고아','구울고아','시체 먹는 고아','묘지 고아 거미','관에서 나온 고아','역병군주고아','거미어미고아']
+    rowLabels:['좀비고아','역병 변이체','해골고아','구울고아','시체 먹는 고아','묘지 고아 거미','관에서 나온 고아','역병군주고아','거미어미고아'],
+    act1Roster:[
+      {id:'A1_001',name:'좀비고아',dbIndex:0,row:0},
+      {id:'A1_002',name:'해골고아',dbIndex:1,row:2},
+      {id:'A1_003',name:'구울고아',dbIndex:3,row:3},
+      {id:'A1_004',name:'묘지 고아 거미',dbIndex:5,row:5},
+      {id:'A1_005',name:'시체 먹는 고아',dbIndex:7,row:4},
+      {id:'A1_006',name:'관에서 나온 고아',dbIndex:8,row:6}
+    ],
+    act1Boss:{id:'B01',name:'역병군주고아',dbIndex:20,row:7}
   },
   animations:{
     idle:{frames:[0,1],fps:2.2},

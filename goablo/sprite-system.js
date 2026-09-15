@@ -52,6 +52,8 @@ export function monsterSpriteRow(id,index,boss=false){
   const rows=SPRITE_MANIFEST.monsters.normalRows;
   return rows[index%rows.length];
 }
+export function act1MonsterProfile(slot){const roster=SPRITE_MANIFEST.monsters.act1Roster;return roster[slot%roster.length];}
+export function act1BossProfile(){return SPRITE_MANIFEST.monsters.act1Boss;}
 export function createSpriteActor(THREE,library,{atlas,row,scale=1,boss=false,kind='human'}){
   const sheet=library?.[atlas],frames=sheet?.frames?.[row];if(!frames)return null;
   const group=new THREE.Group(),height=(atlas==='players'?2.75:boss?3.15:2.5)*scale;
