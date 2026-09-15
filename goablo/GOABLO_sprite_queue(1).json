@@ -1,12 +1,17 @@
 {
   "version": "1.0",
   "master": "GOABLO_SPRITE_MASTER_V1",
+  "requirements": "GOABLO_WORK_REQUIREMENTS_V0.2.md",
   "rules": {
     "process_in_order": true,
     "no_intermediate_reports": true,
     "reuse_base": true,
     "named_runtime_only": true,
-    "skip_completed": true
+    "skip_completed": true,
+    "requirements_first": true,
+    "original_design_only": true,
+    "corpse_required": true,
+    "runtime_integration_required": true
   },
   "players": [
     {

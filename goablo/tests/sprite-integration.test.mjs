@@ -10,6 +10,15 @@ import {act1BossProfile,act1MonsterProfile,monsterSpriteRow,playerSpriteRow} fro
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const queue=JSON.parse(fs.readFileSync(path.join(root,'GOABLO_sprite_queue(1).json'),'utf8'));
+const spriteMaster=fs.readFileSync(path.join(root,'GOABLO_SPRITE_MASTER(1).md'),'utf8');
+
+test('sprite generation rules reference the latest requirements',()=>{
+  assert.equal(queue.requirements,'GOABLO_WORK_REQUIREMENTS_V0.2.md');
+  assert.ok(fs.existsSync(path.join(root,queue.requirements)));
+  assert.deepEqual({requirementsFirst:queue.rules.requirements_first,originalDesign:queue.rules.original_design_only,corpse:queue.rules.corpse_required,runtimeIntegration:queue.rules.runtime_integration_required},{requirementsFirst:true,originalDesign:true,corpse:true,runtimeIntegration:true});
+  assert.match(spriteMaster,/GOABLO_WORK_REQUIREMENTS_V0\.2\.md/);
+  assert.match(spriteMaster,/manifest 등록, 게임 연결, death에서 corpse 전환과 실행 검증/);
+});
 
 function pngHeader(file){
   const bytes=fs.readFileSync(path.join(root,file));
