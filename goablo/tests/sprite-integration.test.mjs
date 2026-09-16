@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 
 import {DB} from '../data/database.js';
 import {SPRITE_MANIFEST} from '../sprite-manifest.js';
-import {act1BossProfile,act1MonsterProfile,act2MonsterProfile,monsterSpriteRow,playerSpriteRow,spriteCellRect} from '../sprite-system.js';
+import {act1BossProfile,act1MonsterProfile,act2MonsterProfile,atlasComponentSlot,monsterSpriteRow,playerSpriteRow} from '../sprite-system.js';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const queue=JSON.parse(fs.readFileSync(path.join(root,'GOABLO_sprite_queue(1).json'),'utf8'));
@@ -40,12 +40,12 @@ test('sprite atlases match the runtime grid and expected source formats',()=>{
   assert.equal(SPRITE_MANIFEST.monsters.rows,queue.runtime.grid.monsterRows);
 });
 
-test('Act 1 atlas trims the next monster row from each frame',()=>{
+test('Act 1 atlas isolates each monster instead of slicing overlapping rows',()=>{
   const definition=SPRITE_MANIFEST.monsters;
-  const rect=spriteCellRect(definition,1182,1330,0,0);
-  assert.equal(definition.bleedGuardBottom,10);
-  assert.equal(rect.sourceHeight,1330/9-10);
-  assert.ok(rect.sourceY+rect.sourceHeight<(1330/9));
+  assert.equal(definition.isolateComponents,true);
+  assert.deepEqual(atlasComponentSlot(definition,1182,1330,80,68),{row:0,column:0});
+  assert.deepEqual(atlasComponentSlot(definition,1182,1330,1094,1258),{row:8,column:7});
+  assert.ok(definition.componentOutputSize>=180);
 });
 
 test('all six player classes use their queued atlas rows',()=>{

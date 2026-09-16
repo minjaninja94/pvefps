@@ -27,7 +27,60 @@ export function spriteCellRect(def,width,height,row,column){
   const bleedGuardBottom=Math.max(0,Math.min(def.bleedGuardBottom||0,cellHeight-1));
   return {sourceX:column*cellWidth,sourceY:row*cellHeight,sourceWidth:cellWidth,sourceHeight:cellHeight-bleedGuardBottom,cellWidth,cellHeight};
 }
+export function atlasComponentSlot(def,width,height,centerX,centerY){
+  const column=Math.max(0,Math.min(def.columns-1,Math.round(centerX/(width/def.columns)-.5)));
+  const row=Math.max(0,Math.min(def.rows-1,Math.round(centerY/(height/def.rows)-.5)));
+  return {row,column};
+}
+function componentFrames(THREE,canvas,def){
+  const source=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height),pixels=source.data,width=canvas.width,height=canvas.height;
+  const labels=new Int32Array(width*height),queue=new Int32Array(width*height),components=[];
+  let label=0;
+  for(let start=0;start<labels.length;start++){
+    if(labels[start]||pixels[start*4+3]<=8)continue;
+    label++;let head=0,tail=0,area=0,sumX=0,sumY=0,minX=width,minY=height,maxX=0,maxY=0;
+    labels[start]=label;queue[tail++]=start;
+    while(head<tail){
+      const index=queue[head++],x=index%width,y=(index/width)|0;area++;sumX+=x;sumY+=y;
+      if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;
+      for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){
+        if(!ox&&!oy)continue;const nx=x+ox,ny=y+oy;if(nx<0||nx>=width||ny<0||ny>=height)continue;
+        const next=ny*width+nx;if(!labels[next]&&pixels[next*4+3]>8){labels[next]=label;queue[tail++]=next;}
+      }
+    }
+    if(area>=(def.componentMinArea||20))components.push({label,area,centerX:sumX/area,centerY:sumY/area,minX,minY,maxX,maxY});
+  }
+  const assigned=Array.from({length:def.rows},()=>Array(def.columns).fill(null));
+  for(const component of components){
+    const {row,column}=atlasComponentSlot(def,width,height,component.centerX,component.centerY),previous=assigned[row][column];
+    if(!previous||component.area>previous.area)assigned[row][column]=component;
+  }
+  const outputSize=def.componentOutputSize||180,padding=def.componentPadding||4,frames=[];
+  for(let row=0;row<def.rows;row++){
+    const rowComponents=assigned[row],maxWidth=Math.max(...rowComponents.map(item=>item?item.maxX-item.minX+1:1)),maxHeight=Math.max(...rowComponents.map(item=>item?item.maxY-item.minY+1:1));
+    const scale=Math.min((outputSize-padding*2)/maxWidth,(outputSize-padding*2)/maxHeight),cells=[];
+    for(const component of rowComponents){
+      const cell=document.createElement('canvas');cell.width=outputSize;cell.height=outputSize;
+      if(component){
+        const cropWidth=component.maxX-component.minX+1,cropHeight=component.maxY-component.minY+1,clean=document.createElement('canvas');clean.width=cropWidth;clean.height=cropHeight;
+        const cleanContext=clean.getContext('2d'),cleanImage=cleanContext.createImageData(cropWidth,cropHeight);
+        for(let y=0;y<cropHeight;y++)for(let x=0;x<cropWidth;x++){
+          const sourceIndex=(component.minY+y)*width+component.minX+x;if(labels[sourceIndex]!==component.label)continue;
+          const sourceOffset=sourceIndex*4,targetOffset=(y*cropWidth+x)*4;
+          cleanImage.data[targetOffset]=pixels[sourceOffset];cleanImage.data[targetOffset+1]=pixels[sourceOffset+1];cleanImage.data[targetOffset+2]=pixels[sourceOffset+2];cleanImage.data[targetOffset+3]=pixels[sourceOffset+3];
+        }
+        cleanContext.putImageData(cleanImage,0,0);
+        const drawWidth=cropWidth*scale,drawHeight=cropHeight*scale;
+        cell.getContext('2d').drawImage(clean,(outputSize-drawWidth)/2,outputSize-padding-drawHeight,drawWidth,drawHeight);
+      }
+      const texture=new THREE.CanvasTexture(cell);texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearMipmapLinearFilter;texture.generateMipmaps=true;cells.push(texture);
+    }
+    frames.push(cells);
+  }
+  return {frames,aspect:1};
+}
 function splitAtlas(THREE,canvas,def){
+  if(def.isolateComponents)return componentFrames(THREE,canvas,def);
   const frames=[],cellWidth=canvas.width/def.columns,cellHeight=canvas.height/def.rows;
   for(let row=0;row<def.rows;row++){
     const cells=[];
