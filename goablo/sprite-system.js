@@ -22,14 +22,19 @@ function atlasCanvas(image,chromaKey){
   }
   return canvas;
 }
+export function spriteCellRect(def,width,height,row,column){
+  const cellWidth=width/def.columns,cellHeight=height/def.rows;
+  const bleedGuardBottom=Math.max(0,Math.min(def.bleedGuardBottom||0,cellHeight-1));
+  return {sourceX:column*cellWidth,sourceY:row*cellHeight,sourceWidth:cellWidth,sourceHeight:cellHeight-bleedGuardBottom,cellWidth,cellHeight};
+}
 function splitAtlas(THREE,canvas,def){
   const frames=[],cellWidth=canvas.width/def.columns,cellHeight=canvas.height/def.rows;
   for(let row=0;row<def.rows;row++){
     const cells=[];
     for(let column=0;column<def.columns;column++){
       const cell=document.createElement('canvas');cell.width=Math.ceil(cellWidth);cell.height=Math.ceil(cellHeight);
-      const ctx=cell.getContext('2d');
-      ctx.drawImage(canvas,column*cellWidth,row*cellHeight,cellWidth,cellHeight,0,0,cell.width,cell.height);
+      const ctx=cell.getContext('2d'),rect=spriteCellRect(def,canvas.width,canvas.height,row,column);
+      ctx.drawImage(canvas,rect.sourceX,rect.sourceY,rect.sourceWidth,rect.sourceHeight,0,0,cell.width,Math.ceil(rect.sourceHeight));
       const texture=new THREE.CanvasTexture(cell);texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearMipmapLinearFilter;texture.generateMipmaps=true;
       cells.push(texture);
     }
