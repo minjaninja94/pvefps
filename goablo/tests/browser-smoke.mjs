@@ -107,6 +107,7 @@ try{
   assert.equal(state.bossBarHidden,true);
 
   await page.locator('#enterBtn').click();
+  await page.locator('#merchantNext').click();
   state=await snapshot();
   assert.deepEqual({town:state.town,act:state.act,floor:state.floor},{town:true,act:2,floor:0});
 
@@ -141,6 +142,7 @@ try{
   state=await snapshot();
   assert.ok(state.corpses.some(corpse=>corpse.boss&&corpse.row===8&&corpse.state==='corpse'&&corpse.frame===7));
   await page.locator('#enterBtn').click();
+  await page.locator('#merchantNext').click();
   state=await snapshot();
   assert.deepEqual({town:state.town,act:state.act,floor:state.floor},{town:true,act:3,floor:0});
 
