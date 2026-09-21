@@ -263,7 +263,10 @@
             "fanatic",
             "ragged_cleric"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act3-monsters.png",
+          "atlas": "act3Monsters",
+          "row": 0
         },
         {
           "id": "A3_002",
@@ -273,7 +276,10 @@
             "blindfold",
             "corrupted_robes"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act3-monsters.png",
+          "atlas": "act3Monsters",
+          "row": 1
         },
         {
           "id": "A3_003",
@@ -283,7 +289,10 @@
             "damaged_wings",
             "gaunt"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act3-monsters.png",
+          "atlas": "act3Monsters",
+          "row": 2
         },
         {
           "id": "A3_004",
@@ -293,7 +302,10 @@
             "covered_eyes",
             "sensory_growths"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act3-monsters.png",
+          "atlas": "act3Monsters",
+          "row": 3
         },
         {
           "id": "A3_005",
@@ -303,7 +315,10 @@
             "horns",
             "church_relics"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act3-monsters.png",
+          "atlas": "act3Monsters",
+          "row": 4
         },
         {
           "id": "A3_006",
@@ -313,7 +328,10 @@
             "bone_ornaments",
             "covered_face"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act3-monsters.png",
+          "atlas": "act3Monsters",
+          "row": 5
         }
       ]
     },

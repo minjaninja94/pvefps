@@ -96,11 +96,11 @@ function splitAtlas(THREE,canvas,def){
   return {frames,aspect:cellWidth/cellHeight};
 }
 export async function loadSpriteLibrary(THREE){
-  const entries=await Promise.all(Object.entries(SPRITE_MANIFEST).filter(([,def])=>def.image).map(async ([key,def])=>{
-    const image=await loadImage(def.image),atlas=splitAtlas(THREE,atlasCanvas(image,def.chromaKey),def);
-    return [key,{...atlas,definition:def}];
+  const loaded=await Promise.all(Object.entries(SPRITE_MANIFEST).filter(([,def])=>def.image).map(async ([key,def])=>{
+    try{const image=await loadImage(def.image),atlas=splitAtlas(THREE,atlasCanvas(image,def.chromaKey),def);return [key,{...atlas,definition:def}];}
+    catch(error){console.warn(`GOABLO sprite atlas fallback: ${key}`,error);return null;}
   }));
-  return {ready:true,...Object.fromEntries(entries)};
+  const entries=loaded.filter(Boolean);return {ready:entries.length>0,...Object.fromEntries(entries)};
 }
 export function playerSpriteRow(classId){return SPRITE_MANIFEST.players.rowByClassId[classId]??0;}
 export function monsterSpriteRow(id,index,boss=false){
@@ -113,6 +113,7 @@ export function monsterSpriteRow(id,index,boss=false){
 export function act1MonsterProfile(slot){const roster=SPRITE_MANIFEST.monsters.act1Roster;return roster[slot%roster.length];}
 export function act1BossProfile(){return SPRITE_MANIFEST.monsters.act1Boss;}
 export function act2MonsterProfile(slot){const roster=SPRITE_MANIFEST.act2Monsters.roster;return roster[slot%roster.length];}
+export function act3MonsterProfile(slot){const roster=SPRITE_MANIFEST.act3Monsters.roster;return roster[slot%roster.length];}
 export function createSpriteActor(THREE,library,{atlas,row,scale=1,boss=false,kind='human'}){
   const sheet=library?.[atlas],frames=sheet?.frames?.[row];if(!frames)return null;
   const group=new THREE.Group(),height=(atlas==='players'?2.75:boss?3.15:2.5)*scale;

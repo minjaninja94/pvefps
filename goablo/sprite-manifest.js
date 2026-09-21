@@ -45,6 +45,20 @@ export const SPRITE_MANIFEST={
       {id:'A2_006',name:'벌레 숙주 고아',dbIndex:15,row:5,atlas:'act2Monsters'}
     ]
   },
+  act3Monsters:{
+    image:'assets/sprites/act3-monsters.png',
+    columns:8,
+    rows:6,
+    chromaKey:false,
+    roster:[
+      {id:'A3_001',name:'광신도고아',dbIndex:9,row:0,atlas:'act3Monsters'},
+      {id:'A3_002',name:'타락 수도고아',dbIndex:12,row:1,atlas:'act3Monsters'},
+      {id:'A3_003',name:'날개고아',dbIndex:2,row:2,atlas:'act3Monsters'},
+      {id:'A3_004',name:'눈먼고아',dbIndex:3,row:3,atlas:'act3Monsters'},
+      {id:'A3_005',name:'성당 고아 악마',dbIndex:13,row:4,atlas:'act3Monsters'},
+      {id:'A3_006',name:'타락 사제고아',dbIndex:15,row:5,atlas:'act3Monsters'}
+    ]
+  },
   animations:{
     idle:{frames:[0,1],fps:2.2},
     walk:{frames:[0,1,2],fps:7},
