@@ -510,7 +510,10 @@
       "name": "천개의다리고아",
       "base": "INSECT",
       "scale": 3.5,
-      "status": "pending"
+      "status": "integrated",
+      "source": "assets/sprites/b03-thousand-legs.png",
+      "atlas": "bossB03",
+      "row": 0
     },
     {
       "id": "B04",

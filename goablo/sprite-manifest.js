@@ -84,6 +84,10 @@ export const SPRITE_MANIFEST={
       {id:'A5_006',name:'지옥마법사고아',dbIndex:18,row:5,atlas:'act5Monsters'}
     ]
   },
+  bossB03:{
+    image:'assets/sprites/b03-thousand-legs.png',columns:8,rows:1,chromaKey:false,
+    profile:{id:'B03',name:'천개의다리고아',dbIndex:22,row:0,atlas:'bossB03',behavior:'centipedeboss',boss:true}
+  },
   animations:{
     idle:{frames:[0,1],fps:2.2},
     walk:{frames:[0,1,2],fps:7},
