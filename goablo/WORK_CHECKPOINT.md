@@ -21,6 +21,15 @@
 - 로컬의 기존 Act 1 PNG가 별도 수정 상태이므로 이번 커밋에서 제외하고 보존.
 - 다음: Act 3 보스 아트/행동 또는 각인 시스템. 기존 FPS 변경 없음.
 
+## 2026-09-21 Act 4 몬스터 업데이트
+
+- `ACT4_SPRITE_GENERATION.md`에 죽은 왕국·전쟁터 일반 몬스터 6종의 실루엣, 공격, 피격, 사망과 시체 특징을 먼저 확정.
+- 한 번의 이미지 생성으로 `assets/sprites/act4-monsters.png` 8열×6행 투명 아틀라스를 제작하고 웹용 팔레트 PNG로 최적화.
+- 해골 고아 기사, 궁수고아, 방패고아, 처형고아, 목없는 고아 기사, 시체 병사고아를 knight/ranged/shield/hook/rage/revive 행동과 연결.
+- Act 4 일반층과 보스층 잡몹이 `act4Monsters`를 사용하며 공통 death·corpse 열을 유지.
+- 최소 검증: `node --test goablo/tests/act4-sprite.test.mjs`, `node build.mjs`. 전체 브라우저 테스트는 생략.
+- 다음: Act 5 일반 몬스터 6종 일괄 아틀라스. 보스 제작은 일반 몬스터 Act 큐 완료 뒤 진행.
+
 갱신일: 2026-09-15
 
 ## 저장 원칙

@@ -347,7 +347,10 @@
             "skeletal",
             "rusted_armor"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act4-monsters.png",
+          "atlas": "act4Monsters",
+          "row": 0
         },
         {
           "id": "A4_002",
@@ -357,7 +360,10 @@
             "broken_bow",
             "ragged_quiver"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act4-monsters.png",
+          "atlas": "act4Monsters",
+          "row": 1
         },
         {
           "id": "A4_003",
@@ -367,7 +373,10 @@
             "large_shield",
             "damaged_armor"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act4-monsters.png",
+          "atlas": "act4Monsters",
+          "row": 2
         },
         {
           "id": "A4_004",
@@ -377,7 +386,10 @@
             "executioner",
             "oversized_blade"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act4-monsters.png",
+          "atlas": "act4Monsters",
+          "row": 3
         },
         {
           "id": "A4_005",
@@ -387,7 +399,10 @@
             "headless",
             "heavy_armor"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act4-monsters.png",
+          "atlas": "act4Monsters",
+          "row": 4
         },
         {
           "id": "A4_006",
@@ -397,7 +412,10 @@
             "battlefield_corpse",
             "embedded_weapons"
           ],
-          "status": "pending"
+          "status": "integrated",
+          "source": "assets/sprites/act4-monsters.png",
+          "atlas": "act4Monsters",
+          "row": 5
         }
       ]
     },

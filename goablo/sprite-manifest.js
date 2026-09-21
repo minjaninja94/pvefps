@@ -59,6 +59,20 @@ export const SPRITE_MANIFEST={
       {id:'A3_006',name:'타락 사제고아',dbIndex:15,row:5,atlas:'act3Monsters'}
     ]
   },
+  act4Monsters:{
+    image:'assets/sprites/act4-monsters.png',
+    columns:8,
+    rows:6,
+    chromaKey:false,
+    roster:[
+      {id:'A4_001',name:'해골 고아 기사',dbIndex:17,row:0,atlas:'act4Monsters'},
+      {id:'A4_002',name:'궁수고아',dbIndex:2,row:1,atlas:'act4Monsters'},
+      {id:'A4_003',name:'방패고아',dbIndex:8,row:2,atlas:'act4Monsters'},
+      {id:'A4_004',name:'처형고아',dbIndex:16,row:3,atlas:'act4Monsters'},
+      {id:'A4_005',name:'목없는 고아 기사',dbIndex:9,row:4,atlas:'act4Monsters'},
+      {id:'A4_006',name:'시체 병사고아',dbIndex:10,row:5,atlas:'act4Monsters'}
+    ]
+  },
   animations:{
     idle:{frames:[0,1],fps:2.2},
     walk:{frames:[0,1,2],fps:7},
