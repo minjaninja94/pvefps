@@ -30,6 +30,13 @@
 - 최소 검증: `node --test goablo/tests/act4-sprite.test.mjs`, `node build.mjs`. 전체 브라우저 테스트는 생략.
 - 다음: Act 5 일반 몬스터 6종 일괄 아틀라스. 보스 제작은 일반 몬스터 Act 큐 완료 뒤 진행.
 
+## 2026-09-21 Act 5 몬스터 업데이트
+
+- 육체성채·지옥 일반 몬스터 6종을 문서화한 뒤 한 번의 이미지 생성으로 `assets/sprites/act5-monsters.png` 8열×6행 투명 아틀라스 제작.
+- 칼날고아, 살덩이고아, 촉수고아, 폭발고아, 꿰맨고아, 지옥마법사고아를 rage/consume/hook/explode/golem/teleport 행동과 연결.
+- Act 5 일반층과 보스층 잡몹에 아틀라스 및 death·corpse 열 적용. 최소 단위 테스트와 구문 검사만 실행.
+- Act 1~5 일반 몬스터 아틀라스 큐 완료. 다음: 미통합 보스 아트와 전용 패턴을 Act 순서대로 제작.
+
 갱신일: 2026-09-15
 
 ## 저장 원칙

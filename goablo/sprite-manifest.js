@@ -73,6 +73,17 @@ export const SPRITE_MANIFEST={
       {id:'A4_006',name:'시체 병사고아',dbIndex:10,row:5,atlas:'act4Monsters'}
     ]
   },
+  act5Monsters:{
+    image:'assets/sprites/act5-monsters.png',columns:8,rows:6,chromaKey:false,
+    roster:[
+      {id:'A5_001',name:'칼날고아',dbIndex:9,row:0,atlas:'act5Monsters'},
+      {id:'A5_002',name:'살덩이고아',dbIndex:7,row:1,atlas:'act5Monsters'},
+      {id:'A5_003',name:'촉수고아',dbIndex:16,row:2,atlas:'act5Monsters'},
+      {id:'A5_004',name:'폭발고아',dbIndex:11,row:3,atlas:'act5Monsters'},
+      {id:'A5_005',name:'꿰맨고아',dbIndex:19,row:4,atlas:'act5Monsters'},
+      {id:'A5_006',name:'지옥마법사고아',dbIndex:18,row:5,atlas:'act5Monsters'}
+    ]
+  },
   animations:{
     idle:{frames:[0,1],fps:2.2},
     walk:{frames:[0,1,2],fps:7},

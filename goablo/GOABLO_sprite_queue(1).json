@@ -431,7 +431,7 @@
             "blade_growths",
             "metal_flesh"
           ],
-          "status": "pending"
+          "status": "integrated", "source": "assets/sprites/act5-monsters.png", "atlas": "act5Monsters", "row": 0
         },
         {
           "id": "A5_002",
@@ -441,7 +441,7 @@
             "bloated_meat",
             "multiple_limbs"
           ],
-          "status": "pending"
+          "status": "integrated", "source": "assets/sprites/act5-monsters.png", "atlas": "act5Monsters", "row": 1
         },
         {
           "id": "A5_003",
@@ -451,7 +451,7 @@
             "tentacles",
             "central_mouth"
           ],
-          "status": "pending"
+          "status": "integrated", "source": "assets/sprites/act5-monsters.png", "atlas": "act5Monsters", "row": 2
         },
         {
           "id": "A5_004",
@@ -461,7 +461,7 @@
             "swollen_belly",
             "unstable_flesh"
           ],
-          "status": "pending"
+          "status": "integrated", "source": "assets/sprites/act5-monsters.png", "atlas": "act5Monsters", "row": 3
         },
         {
           "id": "A5_005",
@@ -471,7 +471,7 @@
             "stitched_bodies",
             "mismatched_limbs"
           ],
-          "status": "pending"
+          "status": "integrated", "source": "assets/sprites/act5-monsters.png", "atlas": "act5Monsters", "row": 4
         },
         {
           "id": "A5_006",
@@ -481,7 +481,7 @@
             "ritual_horns",
             "burned_robes"
           ],
-          "status": "pending"
+          "status": "integrated", "source": "assets/sprites/act5-monsters.png", "atlas": "act5Monsters", "row": 5
         }
       ]
     }

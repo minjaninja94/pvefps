@@ -115,6 +115,7 @@ export function act1BossProfile(){return SPRITE_MANIFEST.monsters.act1Boss;}
 export function act2MonsterProfile(slot){const roster=SPRITE_MANIFEST.act2Monsters.roster;return roster[slot%roster.length];}
 export function act3MonsterProfile(slot){const roster=SPRITE_MANIFEST.act3Monsters.roster;return roster[slot%roster.length];}
 export function act4MonsterProfile(slot){const roster=SPRITE_MANIFEST.act4Monsters.roster;return roster[slot%roster.length];}
+export function act5MonsterProfile(slot){const roster=SPRITE_MANIFEST.act5Monsters.roster;return roster[slot%roster.length];}
 export function createSpriteActor(THREE,library,{atlas,row,scale=1,boss=false,kind='human'}){
   const sheet=library?.[atlas],frames=sheet?.frames?.[row];if(!frames)return null;
   const group=new THREE.Group(),height=(atlas==='players'?2.75:boss?3.15:2.5)*scale;
