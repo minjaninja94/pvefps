@@ -520,63 +520,90 @@
       "name": "타락천사고아",
       "base": "ANGEL",
       "scale": 3,
-      "status": "pending"
+      "status": "integrated",
+      "source": "assets/sprites/b04-fallen-angel.png",
+      "atlas": "bossB04",
+      "row": 0
     },
     {
       "id": "B05",
       "name": "유혹하는고아",
       "base": "DEMON",
       "scale": 2.7,
-      "status": "pending"
+      "status": "integrated",
+      "source": "assets/sprites/b05-temptress.png",
+      "atlas": "bossB05",
+      "row": 0
     },
     {
       "id": "B06",
       "name": "목없는고아기사",
       "base": "KNIGHT",
       "scale": 3,
-      "status": "pending"
+      "status": "integrated",
+      "source": "assets/sprites/b06-headless-knight.png",
+      "atlas": "bossB06",
+      "row": 0
     },
     {
       "id": "B07",
       "name": "칼날군주고아",
       "base": "FLESH",
       "scale": 3.3,
-      "status": "pending"
+      "status": "integrated",
+      "source": "assets/sprites/b07-blade-lord.png",
+      "atlas": "bossB07",
+      "row": 0
     },
     {
       "id": "B08",
       "name": "육체수집가고아",
       "base": "FLESH",
       "scale": 3.6,
-      "status": "pending"
+      "status": "integrated",
+      "source": "assets/sprites/b08-flesh-collector.png",
+      "atlas": "bossB08",
+      "row": 0
     },
     {
       "id": "B09",
       "name": "심연의촉수고아",
       "base": "FLESH",
       "scale": 3.8,
-      "status": "pending"
+      "status": "integrated",
+      "source": "assets/sprites/b09-abyss-tentacle.png",
+      "atlas": "bossB09",
+      "row": 0
     },
     {
       "id": "B10",
       "name": "악마군주고아",
       "base": "DEMON",
       "scale": 3.5,
-      "status": "pending"
+      "status": "integrated",
+      "source": "assets/sprites/b10-demon-lord.png",
+      "atlas": "bossB10",
+      "row": 0
     },
     {
       "id": "B11",
       "name": "해골왕고아",
       "base": "SKELETON",
       "scale": 3.2,
-      "status": "pending"
+      "status": "integrated",
+      "source": "assets/sprites/b11-skeleton-king.png",
+      "atlas": "bossB11",
+      "row": 0
     },
     {
       "id": "B12",
       "name": "고아들의왕",
       "base": "DEMON",
       "scale": 4,
-      "status": "pending"
+      "status": "integrated",
+      "source": "assets/sprites/b12-orphan-king.png",
+      "atlas": "bossB12",
+      "row": 0
     }
   ],
   "runtime": {

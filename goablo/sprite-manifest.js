@@ -88,6 +88,15 @@ export const SPRITE_MANIFEST={
     image:'assets/sprites/b03-thousand-legs.png',columns:8,rows:1,chromaKey:false,
     profile:{id:'B03',name:'천개의다리고아',dbIndex:22,row:0,atlas:'bossB03',behavior:'centipedeboss',boss:true}
   },
+  bossB04:{image:'assets/sprites/b04-fallen-angel.png',columns:8,rows:1,chromaKey:false,profile:{id:'B04',name:'타락천사고아',dbIndex:23,row:0,atlas:'bossB04',behavior:'fallenangelboss',boss:true,scale:3}},
+  bossB05:{image:'assets/sprites/b05-temptress.png',columns:8,rows:1,chromaKey:false,profile:{id:'B05',name:'유혹하는고아',dbIndex:24,row:0,atlas:'bossB05',behavior:'temptressboss',boss:true,scale:2.7}},
+  bossB06:{image:'assets/sprites/b06-headless-knight.png',columns:8,rows:1,chromaKey:false,profile:{id:'B06',name:'목없는고아기사',dbIndex:23,row:0,atlas:'bossB06',behavior:'dullahanboss',boss:true,scale:3}},
+  bossB07:{image:'assets/sprites/b07-blade-lord.png',columns:8,rows:1,chromaKey:false,profile:{id:'B07',name:'칼날군주고아',dbIndex:24,row:0,atlas:'bossB07',behavior:'bladelordboss',boss:true,scale:3.3}},
+  bossB08:{image:'assets/sprites/b08-flesh-collector.png',columns:8,rows:1,chromaKey:false,profile:{id:'B08',name:'육체수집가고아',dbIndex:20,row:0,atlas:'bossB08',behavior:'collectorboss',boss:true,scale:3.6}},
+  bossB09:{image:'assets/sprites/b09-abyss-tentacle.png',columns:8,rows:1,chromaKey:false,profile:{id:'B09',name:'심연의촉수고아',dbIndex:21,row:0,atlas:'bossB09',behavior:'abyssboss',boss:true,scale:3.8}},
+  bossB10:{image:'assets/sprites/b10-demon-lord.png',columns:8,rows:1,chromaKey:false,profile:{id:'B10',name:'악마군주고아',dbIndex:24,row:0,atlas:'bossB10',behavior:'demonlordboss',boss:true,scale:3.5}},
+  bossB11:{image:'assets/sprites/b11-skeleton-king.png',columns:8,rows:1,chromaKey:false,profile:{id:'B11',name:'해골왕고아',dbIndex:22,row:0,atlas:'bossB11',behavior:'bonekingboss',boss:true,scale:3.2}},
+  bossB12:{image:'assets/sprites/b12-orphan-king.png',columns:8,rows:1,chromaKey:false,profile:{id:'B12',name:'고아들의왕',dbIndex:24,row:0,atlas:'bossB12',behavior:'orphankingboss',boss:true,scale:4}},
   animations:{
     idle:{frames:[0,1],fps:2.2},
     walk:{frames:[0,1,2],fps:7},
