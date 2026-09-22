@@ -14,8 +14,8 @@ test('dungeon branches and keeps boss farthest from start',()=>{
 
 test('rooms and corridors form walkable exploration space',()=>{
   const layout=createDungeonLayout(4,1);
-  assert.ok(layout.rooms.every(room=>room.w>=17&&room.h>=13));
-  assert.ok(layout.corridorWidth>=8);assert.ok(corridorRects(layout).length>=layout.connections.length);
+  assert.ok(layout.rooms.every(room=>room.w>=26&&room.h>=20));
+  assert.ok(layout.corridorWidth>=13);assert.ok(corridorRects(layout).length>=layout.connections.length);
   assert.equal(isWalkable(layout,0,33),true);assert.equal(isWalkable(layout,0,25),true);
   assert.equal(isWalkable(layout,50,50),false);
 });
@@ -45,4 +45,6 @@ test('runtime renders discovery map and gates dormant rooms',()=>{
   assert.match(game,/if\(exitRoom\)makeFloorReady\(false\)/);
   assert.match(game,/floor===3&&e\.def\.boss/);
   assert.doesNotMatch(game,/if\(!enemies\.some\(x=>!x\.dead\)\)/);
+  assert.match(game,/scene\.fog\.density=isTown\?\.014:\.0075/);
+  assert.match(game,/const caveLight=/);assert.match(game,/new THREE\.PointLight\(color,power,range/);
 });

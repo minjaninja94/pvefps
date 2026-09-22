@@ -4,24 +4,24 @@ function seeded(seed){let value=seed>>>0;return()=>{value+=0x6d2b79f5;let mixed=
 export function createDungeonLayout(act,floor){
   const random=seeded(act*1009+floor*9176),branch=random()<.5,jitter=()=>Math.round((random()-.5)*4);
   const rooms=[
-    {id:'start',type:'start',x:0,z:34,w:20,h:15,depth:0,shape:'ellipse'},
-    {id:'gate',type:'battle',x:jitter(),z:20,w:22,h:17,depth:1,shape:'ellipse'},
-    {id:'west',type:ROOM_TYPES[Math.floor(random()*4)],x:-22+jitter(),z:8+jitter(),w:23,h:19,depth:2,shape:'ellipse'},
-    {id:'east',type:ROOM_TYPES[Math.floor(random()*4)],x:22+jitter(),z:8+jitter(),w:23,h:19,depth:2,shape:'ellipse'},
-    {id:'cross',type:'battle',x:jitter(),z:-7,w:28,h:22,depth:3,shape:'ellipse'},
-    {id:'deepWest',type:branch?'named':'reward',x:-23+jitter(),z:-24+jitter(),w:24,h:20,depth:4,shape:'ellipse'},
-    {id:'deepEast',type:branch?'trap':'named',x:23+jitter(),z:-24+jitter(),w:24,h:20,depth:4,shape:'ellipse'},
-    {id:'boss',type:'boss',x:jitter(),z:-42,w:30,h:24,depth:5,shape:'ellipse'}
+    {id:'start',type:'start',x:0,z:34,w:26,h:20,depth:0,shape:'ellipse'},
+    {id:'gate',type:'battle',x:jitter(),z:20,w:29,h:23,depth:1,shape:'ellipse'},
+    {id:'west',type:ROOM_TYPES[Math.floor(random()*4)],x:-22+jitter(),z:8+jitter(),w:30,h:25,depth:2,shape:'ellipse'},
+    {id:'east',type:ROOM_TYPES[Math.floor(random()*4)],x:22+jitter(),z:8+jitter(),w:30,h:25,depth:2,shape:'ellipse'},
+    {id:'cross',type:'battle',x:jitter(),z:-7,w:36,h:29,depth:3,shape:'ellipse'},
+    {id:'deepWest',type:branch?'named':'reward',x:-23+jitter(),z:-24+jitter(),w:31,h:26,depth:4,shape:'ellipse'},
+    {id:'deepEast',type:branch?'trap':'named',x:23+jitter(),z:-24+jitter(),w:31,h:26,depth:4,shape:'ellipse'},
+    {id:'boss',type:'boss',x:jitter(),z:-42,w:38,h:30,depth:5,shape:'ellipse'}
   ];
   const connections=[['start','gate'],['gate','west'],['gate','east'],['west','east'],['west','cross'],['east','cross'],['west','deepWest'],['east','deepEast'],['cross','deepWest'],['cross','deepEast'],['deepWest','deepEast'],['deepWest','boss'],['deepEast','boss']];
-  return {rooms,connections,discovered:new Set(['start']),activeRooms:new Set(['start']),seed:act*1009+floor*9176,bounds:{minX:-42,maxX:42,minZ:-56,maxZ:45},corridorWidth:8.4};
+  return {rooms,connections,discovered:new Set(['start']),activeRooms:new Set(['start']),seed:act*1009+floor*9176,bounds:{minX:-45,maxX:45,minZ:-59,maxZ:47},corridorWidth:13.5};
 }
 
 export function createAbyssLayout(tier,floor){
   const level=Math.max(1,Math.floor(tier)||1),layout=createDungeonLayout(1000+level,floor),growth=Math.min(6,Math.floor((level-1)/5));
   for(const room of layout.rooms){if(room.id==='start')continue;room.w+=Math.min(6,growth);room.h+=Math.min(4,growth);}
   layout.connections.push(['gate','cross'],['west','deepEast'],['east','deepWest']);
-  layout.corridorWidth=9.2;layout.seed=level*7919+floor*104729;layout.mode='abyss';layout.tier=level;
+  layout.corridorWidth=15;layout.seed=level*7919+floor*104729;layout.mode='abyss';layout.tier=level;
   return layout;
 }
 

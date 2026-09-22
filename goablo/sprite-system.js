@@ -133,7 +133,7 @@ export function createAtlasGround(THREE,library,{atlas,row,column,radius=2,y=.05
 export function createSpriteActor(THREE,library,{atlas,row,scale=1,boss=false,kind='human'}){
   const sheet=library?.[atlas],frames=sheet?.frames?.[row];if(!frames)return null;
   const group=new THREE.Group(),height=(atlas==='players'?2.75:boss?3.15:2.5)*scale;
-  const material=new THREE.SpriteMaterial({map:frames[0],transparent:true,alphaTest:.08,depthWrite:false,toneMapped:true});
+  const material=new THREE.SpriteMaterial({map:frames[0],transparent:true,alphaTest:.08,depthWrite:false,toneMapped:false});
   const sprite=new THREE.Sprite(material);sprite.center.set(.5,0);sprite.position.y=.1*scale;sprite.scale.set(height*sheet.aspect,height,1);sprite.renderOrder=2;group.add(sprite);
   const shadow=new THREE.Mesh(new THREE.CircleGeometry(.48*scale,20),new THREE.MeshBasicMaterial({color:'#050707',transparent:true,opacity:.42,depthWrite:false}));
   shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;group.add(shadow);
