@@ -32,3 +32,10 @@ test('runtime consumes item icons for drops, inventory and equipped appearance',
   assert.match(game,/function refreshEquipmentAppearance/);assert.match(game,/refreshEquipmentAppearance\(\);bagPanel/);
   assert.match(game,/class=\"entry itemCard\"/);assert.match(game,/rarityColor\(i\.rarity\)/);
 });
+
+test('runtime renders all class specializations and skill icons together',()=>{
+  const game=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
+  assert.match(game,/showPanel\('전체 스킬트리'/);assert.match(game,/class=\"skillTreeAll\"/);
+  assert.match(game,/specs\.map\(spec=>/);assert.match(game,/skillIconCell\(DB,skill\)/);
+  assert.match(game,/specIconCell\(DB,spec\)/);assert.match(game,/skillIconCell\(DB,s\),'skillIcon'/);
+});
