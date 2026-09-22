@@ -26,3 +26,7 @@ test('B04-B12 queue entries are integrated',()=>{
   const queue=JSON.parse(fs.readFileSync(new URL('../GOABLO_sprite_queue(1).json',import.meta.url),'utf8'));
   for(const [id] of expected){const boss=queue.bosses.find(item=>item.id===id);assert.equal(boss.status,'integrated');assert.equal(boss.atlas,'boss'+id);assert.equal(boss.row,0);}
 });
+
+test('B04-B11 use dedicated eight-frame attack motion rows',()=>{for(let act=4;act<=11;act++){const profile=bossProfileForAct(act),def=SPRITE_MANIFEST[profile.attackAtlas];assert.ok(def);assert.equal(def.columns,8);assert.ok(profile.attackRow>=0&&profile.attackRow<def.rows);const png=fs.readFileSync(new URL('../'+def.image,import.meta.url));assert.equal(png[25],6);}});
+
+test('boss frames anchor their lowest opaque pixel to the ground',()=>{const runtime=fs.readFileSync(new URL('../sprite-system.js',import.meta.url),'utf8'),game=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');assert.match(runtime,/textureGroundAnchor/);assert.match(runtime,/spriteGrounding:boss/);assert.match(runtime,/sprite\.center\.y=data\.spriteFrames\[frame\]\.userData\.groundAnchor/);assert.match(game,/sprite\.center\.y=motion\.frames\[frame\]\.userData\.groundAnchor/);});

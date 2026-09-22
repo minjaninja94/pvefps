@@ -19,3 +19,5 @@ test('B03 queue entry records the runtime asset',()=>{
   assert.equal(boss.source,'assets/sprites/b03-thousand-legs.png');
   assert.equal(boss.atlas,'bossB03');
 });
+
+test('B03 has a dedicated eight-frame combat motion row',()=>{const profile=b03BossProfile(),def=SPRITE_MANIFEST[profile.attackAtlas];assert.deepEqual([def.columns,def.rows,profile.attackRow],[8,5,0]);const png=fs.readFileSync(new URL('../'+def.image,import.meta.url));assert.equal(png[25],6);});

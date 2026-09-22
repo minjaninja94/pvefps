@@ -22,6 +22,7 @@ function atlasCanvas(image,chromaKey){
   }
   return canvas;
 }
+function textureGroundAnchor(canvas){const data=canvas.getContext('2d',{willReadFrequently:true}).getImageData(0,0,canvas.width,canvas.height).data;let maxY=-1;for(let y=canvas.height-1;y>=0&&maxY<0;y--)for(let x=0;x<canvas.width;x++)if(data[(y*canvas.width+x)*4+3]>12){maxY=y;break;}return maxY<0?0:(canvas.height-1-maxY)/canvas.height;}
 export function spriteCellRect(def,width,height,row,column){
   const cellWidth=width/def.columns,cellHeight=height/def.rows;
   const bleedGuardBottom=Math.max(0,Math.min(def.bleedGuardBottom||0,cellHeight-1));
@@ -73,7 +74,7 @@ function componentFrames(THREE,canvas,def){
         const drawWidth=cropWidth*scale,drawHeight=cropHeight*scale;
         cell.getContext('2d').drawImage(clean,(outputSize-drawWidth)/2,outputSize-padding-drawHeight,drawWidth,drawHeight);
       }
-      const texture=new THREE.CanvasTexture(cell);texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearMipmapLinearFilter;texture.generateMipmaps=true;cells.push(texture);
+      const texture=new THREE.CanvasTexture(cell);texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearMipmapLinearFilter;texture.generateMipmaps=true;texture.userData.groundAnchor=textureGroundAnchor(cell);cells.push(texture);
     }
     frames.push(cells);
   }
@@ -88,7 +89,7 @@ function splitAtlas(THREE,canvas,def){
       const cell=document.createElement('canvas');cell.width=Math.ceil(cellWidth);cell.height=Math.ceil(cellHeight);
       const ctx=cell.getContext('2d'),rect=spriteCellRect(def,canvas.width,canvas.height,row,column);
       ctx.drawImage(canvas,rect.sourceX,rect.sourceY,rect.sourceWidth,rect.sourceHeight,0,0,cell.width,Math.ceil(rect.sourceHeight));
-      const texture=new THREE.CanvasTexture(cell);texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearMipmapLinearFilter;texture.generateMipmaps=true;
+      const texture=new THREE.CanvasTexture(cell);texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearMipmapLinearFilter;texture.generateMipmaps=true;texture.userData.groundAnchor=textureGroundAnchor(cell);
       cells.push(texture);
     }
     frames.push(cells);
@@ -134,17 +135,17 @@ export function createSpriteActor(THREE,library,{atlas,row,scale=1,boss=false,ki
   const sheet=library?.[atlas],frames=sheet?.frames?.[row];if(!frames)return null;
   const group=new THREE.Group(),height=(atlas==='players'?2.75:boss?3.15:2.5)*scale;
   const material=new THREE.SpriteMaterial({map:frames[0],transparent:true,alphaTest:.08,depthWrite:false,toneMapped:false});
-  const sprite=new THREE.Sprite(material);sprite.center.set(.5,0);sprite.position.y=.1*scale;sprite.scale.set(height*sheet.aspect,height,1);sprite.renderOrder=2;group.add(sprite);
+  const sprite=new THREE.Sprite(material);sprite.center.set(.5,boss?(frames[0].userData.groundAnchor||0):0);sprite.position.y=boss?.02:.1*scale;sprite.scale.set(height*sheet.aspect,height,1);sprite.renderOrder=2;group.add(sprite);
   const shadow=new THREE.Mesh(new THREE.CircleGeometry(.48*scale,20),new THREE.MeshBasicMaterial({color:'#050707',transparent:true,opacity:.42,depthWrite:false}));
   shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;group.add(shadow);
   const weapon=new THREE.Object3D();group.add(weapon);
-  Object.assign(group.userData,{kind,head:sprite,legs:[],weapon,sprite,spriteAtlas:atlas,spriteRow:row,spriteFrames:frames,spriteMaterial:material,spriteFrame:-1,spriteState:'idle',spritePhase:Math.random()*10,labelHeight:height+.1*scale});
+  Object.assign(group.userData,{kind,head:sprite,legs:[],weapon,sprite,spriteAtlas:atlas,spriteRow:row,spriteFrames:frames,spriteMaterial:material,spriteGrounding:boss,spriteFrame:-1,spriteState:'idle',spritePhase:Math.random()*10,labelHeight:height+.1*scale});
   return group;
 }
 export function animateSpriteActor(actor,state,time,phase=0){
   const data=actor?.userData,anim=SPRITE_MANIFEST.animations[state]||SPRITE_MANIFEST.animations.idle;
   if(!data?.spriteFrames)return;
   const frame=anim.frames[Math.floor((time+(data.spritePhase||phase))*anim.fps)%anim.frames.length];
-  if(frame!==data.spriteFrame){data.spriteFrame=frame;data.spriteMaterial.map=data.spriteFrames[frame];data.spriteMaterial.needsUpdate=true;}
+  if(frame!==data.spriteFrame){data.spriteFrame=frame;data.spriteMaterial.map=data.spriteFrames[frame];if(data.spriteGrounding)data.sprite.center.y=data.spriteFrames[frame].userData.groundAnchor||0;data.spriteMaterial.needsUpdate=true;}
   data.spriteState=state;
 }
