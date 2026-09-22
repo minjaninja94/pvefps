@@ -8,12 +8,14 @@ test('dungeon branches and keeps boss farthest from start',()=>{
   assert.equal(roomById(layout,'start').depth,0);assert.equal(farthestRoom(layout).type,'boss');
   assert.ok(layout.connections.some(([a,b])=>a==='gate'&&b==='west'));
   assert.ok(layout.connections.some(([a,b])=>a==='gate'&&b==='east'));
+  assert.ok(layout.connections.length>=layout.rooms.length+4);
+  assert.ok(layout.connections.some(([a,b])=>a==='deepWest'&&b==='deepEast'));
 });
 
 test('rooms and corridors form walkable exploration space',()=>{
   const layout=createDungeonLayout(4,1);
   assert.ok(layout.rooms.every(room=>room.w>=17&&room.h>=13));
-  assert.ok(layout.corridorWidth>=6);assert.ok(corridorRects(layout).length>=layout.connections.length);
+  assert.ok(layout.corridorWidth>=8);assert.ok(corridorRects(layout).length>=layout.connections.length);
   assert.equal(isWalkable(layout,0,33),true);assert.equal(isWalkable(layout,0,25),true);
   assert.equal(isWalkable(layout,50,50),false);
 });
@@ -38,4 +40,7 @@ test('runtime renders discovery map and gates dormant rooms',()=>{
   assert.match(game,/dungeonLayout\.activeRooms\.has\(e\.roomId\)/);
   assert.match(game,/isWalkable\(dungeonLayout,desiredPosition\.x,desiredPosition\.z\)/);
   assert.match(game,/closestWalkable\(dungeonLayout,bounded\.x,bounded\.z\)/);
+  assert.match(game,/if\(exitRoom\)makeFloorReady\(false\)/);
+  assert.match(game,/floor===3&&e\.def\.boss/);
+  assert.doesNotMatch(game,/if\(!enemies\.some\(x=>!x\.dead\)\)/);
 });
