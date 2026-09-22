@@ -48,6 +48,14 @@ export const SUMMON_ROWS=Object.freeze({
 
 export function summonSpriteRow(kind){return SUMMON_ROWS[kind]??0;}
 
+export const HIRELING_PROFILES=Object.freeze({
+  hire0:{row:0,name:'갈고리창 고아',role:'돌격꾼',trait:'적을 들이받아 경직'},
+  hire1:{row:1,name:'문짝방패 고아',role:'방패벽',trait:'받는 피해 55% 감소'},
+  hire2:{row:2,name:'못박이 고아',role:'석궁수',trait:'적을 관통하는 쇠뇌'},
+  hire3:{row:3,name:'두칼 고아',role:'광전사',trait:'빈사 시 공격 속도와 피해 증가'}
+});
+export function hirelingProfile(kind){return HIRELING_PROFILES[kind]||null;}
+
 const ZONE_CELLS=Object.freeze({
   FIRE:[0,0],POISON:[0,1],WEB:[0,2],COLD:[0,3],LIGHTNING:[0,4],HEAL:[0,5],LIGHT:[0,5],BLOOD:[0,6],GRAVITY:[0,7],SPACE:[0,7],SHADOW:[0,7],
   TRAP:[1,0],BLADE:[1,1],TENTACLE:[1,2],PLAGUE:[1,3],FLESH:[1,4],METEOR:[1,5],ARROWSTORM:[1,6],MAGIC:[1,7],CHARM:[0,6],KINGARENA:[0,7],EXPLOSION:[1,4]

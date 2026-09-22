@@ -29,7 +29,7 @@ test('item table rows, rarity colors and inline atlas styles are stable',()=>{
 test('runtime consumes item icons for drops, inventory and equipped appearance',()=>{
   const game=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
   assert.match(game,/function createDropVisual/);assert.match(game,/itemIconCell\(item\)/);
-  assert.match(game,/function refreshEquipmentAppearance/);assert.match(game,/refreshEquipmentAppearance\(\);bagPanel/);
+  assert.match(game,/function refreshEquipmentAppearance/);assert.match(game,/refreshEquipmentAppearance\(\);bagPanel/);assert.doesNotMatch(game,/visual\.userData\.equipmentAppearance/);assert.match(game,/material\.color\.lerp/);
   assert.match(game,/class=\"entry itemCard\"/);assert.match(game,/rarityColor\(i\.rarity\)/);
 });
 
