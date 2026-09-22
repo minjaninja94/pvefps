@@ -25,3 +25,10 @@ test('item table rows, rarity colors and inline atlas styles are stable',()=>{
   assert.equal(weapon.row,0);assert.equal(ring.row,7);assert.notEqual(iconStyle(weapon,{rotate:true}),iconStyle(ring,{rotate:true}));
   assert.equal(rarityColor('전설'),'#e7a84b');assert.match(iconStyle(weapon),/item-icons-atlas\.png/);
 });
+
+test('runtime consumes item icons for drops, inventory and equipped appearance',()=>{
+  const game=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
+  assert.match(game,/function createDropVisual/);assert.match(game,/itemIconCell\(item\)/);
+  assert.match(game,/function refreshEquipmentAppearance/);assert.match(game,/refreshEquipmentAppearance\(\);bagPanel/);
+  assert.match(game,/class=\"entry itemCard\"/);assert.match(game,/rarityColor\(i\.rarity\)/);
+});
