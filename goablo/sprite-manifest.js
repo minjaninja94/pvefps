@@ -97,6 +97,10 @@ export const SPRITE_MANIFEST={
   bossB10:{image:'assets/sprites/b10-demon-lord.png',columns:8,rows:1,chromaKey:false,profile:{id:'B10',name:'악마군주고아',dbIndex:24,row:0,atlas:'bossB10',behavior:'demonlordboss',boss:true,scale:3.5}},
   bossB11:{image:'assets/sprites/b11-skeleton-king.png',columns:8,rows:1,chromaKey:false,profile:{id:'B11',name:'해골왕고아',dbIndex:22,row:0,atlas:'bossB11',behavior:'bonekingboss',boss:true,scale:3.2}},
   bossB12:{image:'assets/sprites/b12-orphan-king.png',columns:8,rows:1,chromaKey:false,profile:{id:'B12',name:'고아들의왕',dbIndex:24,row:0,atlas:'bossB12',behavior:'orphankingboss',boss:true,scale:4,hp:4500,damage:38}},
+  environment:{image:'assets/sprites/environment-atlas.png',columns:8,rows:5,chromaKey:false},
+  enemyVfx:{image:'assets/sprites/enemy-vfx-atlas.png',columns:8,rows:4,chromaKey:false},
+  friendlyVfx:{image:'assets/sprites/friendly-vfx-atlas.png',columns:8,rows:4,chromaKey:false},
+  summons:{image:'assets/sprites/summons-atlas.png',columns:8,rows:8,chromaKey:false},
   animations:{
     idle:{frames:[0,1],fps:2.2},
     walk:{frames:[0,1,2],fps:7},

@@ -118,6 +118,13 @@ export function act4MonsterProfile(slot){const roster=SPRITE_MANIFEST.act4Monste
 export function act5MonsterProfile(slot){const roster=SPRITE_MANIFEST.act5Monsters.roster;return roster[slot%roster.length];}
 export function b03BossProfile(){return SPRITE_MANIFEST.bossB03.profile;}
 export function bossProfileForAct(act){const id=Math.max(3,Math.min(12,act));return SPRITE_MANIFEST['bossB'+String(id).padStart(2,'0')]?.profile||null;}
+export function atlasTexture(library,atlas,row,column){return library?.[atlas]?.frames?.[row]?.[column]||null;}
+export function createAtlasBillboard(THREE,library,{atlas,row,column,height=2,width=height,y=.06,opacity=1}){
+  const texture=atlasTexture(library,atlas,row,column);if(!texture)return null;
+  const material=new THREE.SpriteMaterial({map:texture,transparent:true,alphaTest:.04,depthWrite:false,toneMapped:true,opacity});
+  const sprite=new THREE.Sprite(material);sprite.center.set(.5,0);sprite.position.y=y;sprite.scale.set(width,height,1);sprite.renderOrder=1;
+  sprite.userData.ownedSpriteMaterial=true;return sprite;
+}
 export function createSpriteActor(THREE,library,{atlas,row,scale=1,boss=false,kind='human'}){
   const sheet=library?.[atlas],frames=sheet?.frames?.[row];if(!frames)return null;
   const group=new THREE.Group(),height=(atlas==='players'?2.75:boss?3.15:2.5)*scale;
