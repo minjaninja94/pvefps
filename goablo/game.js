@@ -1,7 +1,7 @@
 import {POTION_LEVELS,potionIndex,upgradePotion,MERCHANT_SLOTS,gambleItem} from './merchant-system.js';
 import * as THREE from './vendor/three.module.js';
 import {DB} from './data/database.js';
-import {loadSpriteLibrary,playerSpriteRow,monsterSpriteRow,act1MonsterProfile,act1BossProfile,act2MonsterProfile,act3MonsterProfile,act4MonsterProfile,act5MonsterProfile,bossProfileForAct,atlasTexture,createAtlasBillboard,createAtlasGround,createSpriteActor,animateSpriteActor} from './sprite-system.js';
+import {loadSpriteLibrary,playerSpriteRow,monsterSpriteRow,act1MonsterProfile,act1BossProfile,act2MonsterProfile,act3MonsterProfile,act4MonsterProfile,act5MonsterProfile,bossProfileForAct,createAtlasBillboard,createAtlasGround,createSpriteActor,animateSpriteActor} from './sprite-system.js';
 import {assignWeaponIdentity,basicAttackProfile,defaultWeaponIndex,nextClassWeaponIndex,syncEquippedWeapon} from './weapon-system.js';
 import {ENGRAVING_CATALYSTS,engravingSlots,ensureEngravingState,grantActCatalyst,applyEngraving,engravingBonuses} from './engraving-system.js';
 import {finalBossPhase,finalBossDamageMultiplier,finalBossWindowDuration,finalBossArenaPattern} from './final-boss-system.js';
@@ -44,13 +44,12 @@ function clearBattle(){moveGoal=null;attackTarget=null;hoverTarget=null;hoverDro
 function renderDungeonLayout(){
  const colors={start:'#68766e',battle:'#616b65',trap:'#6b6258',reward:'#716e58',named:'#6a5d62',boss:'#705955'};
  const caveLight=(x,z,color='#e7bd73',power=22,range=21)=>{const glow=mesh(new THREE.IcosahedronGeometry(.16,1),color,x,2.8,z,world,true);glow.userData.caveLight=true;const light=new THREE.PointLight(color,power,range,1.55);light.position.set(x,3.1,z);world.add(light);return light;};
- for(const [index,rect] of corridorRects(dungeonLayout).entries()){box(rect.w,.18,rect.h,index%2?'#59635d':'#626b64',rect.x,.01,rect.z);if(index%2===0)caveLight(rect.x,rect.z,index%4?'#e8b66e':'#83bfc0',16,18);}
+ for(const [index,rect] of corridorRects(dungeonLayout).entries()){box(rect.w,.14,rect.h,index%2?'#59635d':'#626b64',rect.x,-.075,rect.z);if(index%2===0)caveLight(rect.x,rect.z,index%4?'#e8b66e':'#83bfc0',16,18);}
  const place=(kind,x,z,height=2.6,width=height)=>{const cell=environmentCell(act,kind),sprite=createAtlasBillboard(THREE,spriteLibrary,{atlas:'environment',...cell,height,width,y:.07});if(sprite){sprite.position.x=x;sprite.position.z=z;world.add(sprite);}return sprite;};
- const decal=(kind,room)=>{const cell=environmentCell(act,kind),texture=atlasTexture(spriteLibrary,'environment',cell.row,cell.column);if(!texture)return;const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,opacity:.52,alphaTest:.03,depthWrite:false,toneMapped:false}),ground=new THREE.Mesh(new THREE.PlaneGeometry(Math.min(room.w,13),Math.min(room.h,11)),material);ground.rotation.x=-Math.PI/2;ground.position.set(room.x,.165,room.z);ground.renderOrder=1;ground.userData.ownedMaterial=true;world.add(ground);};
  for(const [index,room] of dungeonLayout.rooms.entries()){
-  const floorMesh=mesh(new THREE.CylinderGeometry(1,1,.22,28),colors[room.type],room.x,.04,room.z);floorMesh.scale.set(room.w*.5,1,room.h*.5);
+  const floorMesh=mesh(new THREE.CylinderGeometry(1,1,.14,28),colors[room.type],room.x,-.075,room.z);floorMesh.scale.set(room.w*.5,1,room.h*.5);
   for(let i=0;i<8;i++){const angle=i/8*Math.PI*2+rnd(-.08,.08),radius=rnd(.98,1.05),x=room.x+Math.cos(angle)*room.w*.5*radius,z=room.z+Math.sin(angle)*room.h*.5*radius,rock=mesh(new THREE.DodecahedronGeometry(rnd(.4,.9),0),i%3?'#36403c':'#48514a',x,rnd(.12,.38),z);rock.scale.set(rnd(.8,1.35),rnd(.6,1.25),rnd(.8,1.35));rock.rotation.set(rnd(-.2,.2),rnd(0,Math.PI),rnd(-.15,.15));}
-  decal(index%2?'floorAlt':'floor',room);if(room.type==='boss'||room.type==='start')place('gate',room.x,room.z-room.h*.42,2.5,4);place('clutter',room.x-room.w*.39,room.z+room.h*.3,1.45);
+  if(room.type==='boss'||room.type==='start')place('gate',room.x,room.z-room.h*.42,2.5,4);place('clutter',room.x-room.w*.39,room.z+room.h*.3,1.45);
   caveLight(room.x-room.w*.22,room.z,room.type==='boss'?'#d46a58':index%2?'#e8b66e':'#8bc6c0',25,24);caveLight(room.x+room.w*.22,room.z,index%2?'#8bc6c0':'#e8b66e',20,22);
   if(room.type==='trap')place('trap',room.x,room.z,2.2);else if(room.type==='reward')place('reward',room.x,room.z,2.8);else if(room.type==='boss'||room.type==='named')place('landmark',room.x+room.w*.24,room.z+room.h*.16,3.2);
  }

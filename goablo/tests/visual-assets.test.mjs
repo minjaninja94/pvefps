@@ -47,3 +47,5 @@ test('persistent zones and wide attacks resolve distinct ground cells',()=>{
   assert.deepEqual(areaVfxCell('BLOOD'),{row:2,column:6});
   assert.deepEqual(areaVfxCell('FIRE'),{row:3,column:0});
 });
+
+test('3D cave floors stay below persistent skill zones',()=>{const game=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');assert.doesNotMatch(game,/const decal=/);assert.doesNotMatch(game,/atlasTexture\(spriteLibrary,'environment'/);assert.match(game,/CylinderGeometry\(1,1,\.14,28\).*,-\.075,/s);assert.match(game,/CircleGeometry\(r,40\).*position\.set\(x,\.04,z\)/s);});
