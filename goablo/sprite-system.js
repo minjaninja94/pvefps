@@ -33,11 +33,11 @@ export function atlasComponentSlot(def,width,height,centerX,centerY){
   return {row,column};
 }
 function componentFrames(THREE,canvas,def){
-  const source=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height),pixels=source.data,width=canvas.width,height=canvas.height;
+  const source=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height),pixels=source.data,width=canvas.width,height=canvas.height,alphaThreshold=def.componentAlphaThreshold||8;
   const labels=new Int32Array(width*height),queue=new Int32Array(width*height),components=[];
   let label=0;
   for(let start=0;start<labels.length;start++){
-    if(labels[start]||pixels[start*4+3]<=8)continue;
+    if(labels[start]||pixels[start*4+3]<=alphaThreshold)continue;
     label++;let head=0,tail=0,area=0,sumX=0,sumY=0,minX=width,minY=height,maxX=0,maxY=0;
     labels[start]=label;queue[tail++]=start;
     while(head<tail){
@@ -45,7 +45,7 @@ function componentFrames(THREE,canvas,def){
       if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;
       for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){
         if(!ox&&!oy)continue;const nx=x+ox,ny=y+oy;if(nx<0||nx>=width||ny<0||ny>=height)continue;
-        const next=ny*width+nx;if(!labels[next]&&pixels[next*4+3]>8){labels[next]=label;queue[tail++]=next;}
+        const next=ny*width+nx;if(!labels[next]&&pixels[next*4+3]>alphaThreshold){labels[next]=label;queue[tail++]=next;}
       }
     }
     if(area>=(def.componentMinArea||20))components.push({label,area,centerX:sumX/area,centerY:sumY/area,minX,minY,maxX,maxY});

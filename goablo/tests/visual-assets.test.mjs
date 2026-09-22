@@ -16,7 +16,7 @@ test('environment, attack and summon atlases are transparent runtime sheets',()=
   }
 });
 
-test('act and abyss portals use a padded transparent 4 by 2 atlas',()=>{const def=SPRITE_MANIFEST.portals,header=pngHeader(def.image);assert.deepEqual([header.width,header.height,header.colorType],[1024,512,6]);assert.deepEqual([def.columns,def.rows],[4,2]);assert.equal(header.width%def.columns,0);assert.equal(header.height%def.rows,0);});
+test('act and abyss portals isolate complete shapes instead of hard-cropping cells',()=>{const def=SPRITE_MANIFEST.portals,header=pngHeader(def.image);assert.deepEqual([header.width,header.height,header.colorType],[1024,512,6]);assert.deepEqual([def.columns,def.rows],[4,2]);assert.equal(def.isolateComponents,true);assert.ok(def.componentPadding>=24);assert.ok(def.componentAlphaThreshold>=32);});
 
 test('all five Acts and special room landmarks have stable map cells',()=>{
   assert.deepEqual(environmentCell(1,'floor'),{row:0,column:0});
@@ -37,7 +37,7 @@ test('every summon behavior resolves to an atlas row',()=>{
   assert.deepEqual(['skeleton','archer','mage','knight','hire0','hire1','hire2','hire3','shadow','zombie'].map(summonSpriteRow),[0,1,2,3,4,3,1,5,6,7]);
 });
 
-test('four human hirelings use a dedicated transparent animation atlas',()=>{const def=SPRITE_MANIFEST.hirelingSummons,header=pngHeader(def.image);assert.deepEqual([header.width,header.height,header.colorType],[1536,768,6]);assert.deepEqual([def.columns,def.rows,def.chromaKey],[8,4,false]);assert.deepEqual(['hire0','hire1','hire2','hire3'].map(kind=>hirelingProfile(kind).row),[0,1,2,3]);assert.deepEqual(['hire0','hire1','hire2','hire3'].map(kind=>hirelingProfile(kind).name),['갈고리창 고아','문짝방패 고아','못박이 고아','두칼 고아']);});
+test('four human hirelings isolate full silhouettes with safe padding',()=>{const def=SPRITE_MANIFEST.hirelingSummons,header=pngHeader(def.image);assert.deepEqual([header.width,header.height,header.colorType],[1536,768,6]);assert.deepEqual([def.columns,def.rows,def.chromaKey],[8,4,false]);assert.equal(def.isolateComponents,true);assert.ok(def.componentPadding>=20);assert.ok(def.componentAlphaThreshold>=24);assert.deepEqual(['hire0','hire1','hire2','hire3'].map(kind=>hirelingProfile(kind).row),[0,1,2,3]);assert.deepEqual(['hire0','hire1','hire2','hire3'].map(kind=>hirelingProfile(kind).name),['갈고리창 고아','문짝방패 고아','못박이 고아','두칼 고아']);});
 
 test('persistent zones and wide attacks resolve distinct ground cells',()=>{
   assert.deepEqual(zoneVfxCell('fire'),{row:0,column:0});
