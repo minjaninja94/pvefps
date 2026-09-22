@@ -102,6 +102,10 @@ export const SPRITE_MANIFEST={
   friendlyVfx:{image:'assets/sprites/friendly-vfx-atlas.png',columns:8,rows:4,chromaKey:false},
   areaVfx:{image:'assets/sprites/area-vfx-atlas.png',columns:8,rows:4,chromaKey:false},
   summons:{image:'assets/sprites/summons-atlas.png',columns:8,rows:8,chromaKey:false},
+  itemIcons:{image:'assets/sprites/item-icons-atlas.png',columns:8,rows:8,chromaKey:false},
+  skillIcons1:{image:'assets/sprites/skill-icons-1.png',columns:8,rows:8,chromaKey:false},
+  skillIcons2:{image:'assets/sprites/skill-icons-2.png',columns:8,rows:8,chromaKey:false},
+  skillIcons3:{image:'assets/sprites/skill-icons-3.png',columns:8,rows:8,chromaKey:false},
   animations:{
     idle:{frames:[0,1],fps:2.2},
     walk:{frames:[0,1,2],fps:7},
