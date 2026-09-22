@@ -50,22 +50,21 @@ function componentFrames(THREE,canvas,def){
     }
     if(area>=(def.componentMinArea||20))components.push({label,area,centerX:sumX/area,centerY:sumY/area,minX,minY,maxX,maxY});
   }
-  const assigned=Array.from({length:def.rows},()=>Array(def.columns).fill(null));
+  const assigned=Array.from({length:def.rows},()=>Array.from({length:def.columns},()=>[]));
   for(const component of components){
-    const {row,column}=atlasComponentSlot(def,width,height,component.centerX,component.centerY),previous=assigned[row][column];
-    if(!previous||component.area>previous.area)assigned[row][column]=component;
+    const {row,column}=atlasComponentSlot(def,width,height,component.centerX,component.centerY);assigned[row][column].push(component);
   }
   const outputSize=def.componentOutputSize||180,padding=def.componentPadding||4,frames=[];
   for(let row=0;row<def.rows;row++){
-    const rowComponents=assigned[row],maxWidth=Math.max(...rowComponents.map(item=>item?item.maxX-item.minX+1:1)),maxHeight=Math.max(...rowComponents.map(item=>item?item.maxY-item.minY+1:1));
+    const rowComponents=assigned[row],groups=rowComponents.map(items=>items.length?{items,minX:Math.min(...items.map(item=>item.minX)),minY:Math.min(...items.map(item=>item.minY)),maxX:Math.max(...items.map(item=>item.maxX)),maxY:Math.max(...items.map(item=>item.maxY))}:null),maxWidth=Math.max(...groups.map(group=>group?group.maxX-group.minX+1:1)),maxHeight=Math.max(...groups.map(group=>group?group.maxY-group.minY+1:1));
     const scale=Math.min((outputSize-padding*2)/maxWidth,(outputSize-padding*2)/maxHeight),cells=[];
-    for(const component of rowComponents){
+    for(const group of groups){
       const cell=document.createElement('canvas');cell.width=outputSize;cell.height=outputSize;
-      if(component){
-        const cropWidth=component.maxX-component.minX+1,cropHeight=component.maxY-component.minY+1,clean=document.createElement('canvas');clean.width=cropWidth;clean.height=cropHeight;
+      if(group){
+        const cropWidth=group.maxX-group.minX+1,cropHeight=group.maxY-group.minY+1,clean=document.createElement('canvas');clean.width=cropWidth;clean.height=cropHeight,groupLabels=new Set(group.items.map(item=>item.label));
         const cleanContext=clean.getContext('2d'),cleanImage=cleanContext.createImageData(cropWidth,cropHeight);
         for(let y=0;y<cropHeight;y++)for(let x=0;x<cropWidth;x++){
-          const sourceIndex=(component.minY+y)*width+component.minX+x;if(labels[sourceIndex]!==component.label)continue;
+          const sourceIndex=(group.minY+y)*width+group.minX+x;if(!groupLabels.has(labels[sourceIndex]))continue;
           const sourceOffset=sourceIndex*4,targetOffset=(y*cropWidth+x)*4;
           cleanImage.data[targetOffset]=pixels[sourceOffset];cleanImage.data[targetOffset+1]=pixels[sourceOffset+1];cleanImage.data[targetOffset+2]=pixels[sourceOffset+2];cleanImage.data[targetOffset+3]=pixels[sourceOffset+3];
         }
