@@ -1,0 +1,9 @@
+#explorationHud{position:relative;margin-top:9px;padding:9px 10px 10px;background:#091313e8;border:1px solid #8da49a55;text-align:left;min-width:180px;box-shadow:0 6px 20px #0008}
+#explorationHud>div:first-child{display:flex;justify-content:space-between;gap:10px;align-items:center}
+#explorationHud span{color:#b9c8c1;font-size:10px;letter-spacing:.4px}
+#explorationHud b{color:#e0c17f;font-size:10px;font-weight:600}
+#explorationHud>i{display:block;height:3px;margin-top:7px;background:#283532;overflow:hidden}
+#explorationHud>i>em{display:block;width:0;height:100%;background:linear-gradient(90deg,#668f82,#e0bd73);transition:width .25s}
+#objectiveArrow{position:absolute;right:-25px;top:17px;width:22px;height:22px;display:grid;place-items:center;color:#e6c77f;background:#101b1be8;border:1px solid #a98b55;border-radius:50%;font-size:12px;transform-origin:50% 50%;transition:transform .2s}
+#objectiveArrow[hidden],#explorationHud[hidden]{display:none}
+@media(max-width:700px){#explorationHud{min-width:150px;padding:7px}#explorationHud b{display:none}}

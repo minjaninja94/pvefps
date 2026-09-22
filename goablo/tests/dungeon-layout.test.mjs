@@ -49,3 +49,5 @@ test('runtime renders discovery map and gates dormant rooms',()=>{
   assert.match(game,/const caveLight=/);assert.match(game,/new THREE\.PointLight\(color,power,range/);
   assert.match(game,/heroVisibilityLight/);assert.match(game,/visibilityMarker/);
 });
+
+test('exploration HUD tracks discovery and objective portals without kill gates',()=>{const game=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8'),html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');for(const id of ['explorationHud','explorationText','objectiveText','explorationFill','objectiveArrow'])assert.match(html,new RegExp(`id="${id}"`));assert.match(game,/function updateExplorationHud\(\)/);assert.match(game,/dungeonLayout\.discovered\.size/);assert.match(game,/for\(const portal of portals\)point/);assert.doesNotMatch(game,/enemies\.every\([^)]*dead/);});
