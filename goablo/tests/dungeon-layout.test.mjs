@@ -47,4 +47,5 @@ test('runtime renders discovery map and gates dormant rooms',()=>{
   assert.doesNotMatch(game,/if\(!enemies\.some\(x=>!x\.dead\)\)/);
   assert.match(game,/scene\.fog\.density=isTown\?\.014:\.0075/);
   assert.match(game,/const caveLight=/);assert.match(game,/new THREE\.PointLight\(color,power,range/);
+  assert.match(game,/heroVisibilityLight/);assert.match(game,/visibilityMarker/);
 });
