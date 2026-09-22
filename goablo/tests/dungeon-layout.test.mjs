@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createDungeonLayout,roomById,isWalkable,farthestRoom,explorationSpawnRooms} from '../dungeon-layout.js';
+import {createDungeonLayout,roomById,roomAt,roomInteriorAt,corridorRects,isWalkable,closestWalkable,farthestRoom,explorationSpawnRooms} from '../dungeon-layout.js';
 import fs from 'node:fs';
 
 test('dungeon branches and keeps boss farthest from start',()=>{
@@ -12,8 +12,18 @@ test('dungeon branches and keeps boss farthest from start',()=>{
 
 test('rooms and corridors form walkable exploration space',()=>{
   const layout=createDungeonLayout(4,1);
-  assert.equal(isWalkable(layout,0,20),true);assert.equal(isWalkable(layout,0,15),true);
-  assert.equal(isWalkable(layout,27,27),false);
+  assert.ok(layout.rooms.every(room=>room.w>=17&&room.h>=13));
+  assert.ok(layout.corridorWidth>=6);assert.ok(corridorRects(layout).length>=layout.connections.length);
+  assert.equal(isWalkable(layout,0,33),true);assert.equal(isWalkable(layout,0,25),true);
+  assert.equal(isWalkable(layout,50,50),false);
+});
+
+test('room discovery and combat activation use different cave thresholds',()=>{
+  const layout=createDungeonLayout(1,1),start=roomById(layout,'start'),edgeX=start.x+start.w/2-.4;
+  assert.equal(roomAt(layout,edgeX,start.z,.6)?.id,'start');
+  assert.equal(roomInteriorAt(layout,edgeX,start.z,1.8),null);
+  assert.equal(roomInteriorAt(layout,start.x,start.z,1.8)?.id,'start');
+  const snapped=closestWalkable(layout,100,100);assert.equal(isWalkable(layout,snapped.x,snapped.z),true);
 });
 
 test('normal spawns avoid entrance, reward and boss rooms',()=>{
@@ -24,6 +34,8 @@ test('normal spawns avoid entrance, reward and boss rooms',()=>{
 test('runtime renders discovery map and gates dormant rooms',()=>{
   const game=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
   assert.match(game,/renderDungeonLayout/);assert.match(game,/updateExploration/);
-  assert.match(game,/dungeonLayout\.discovered\.has\(e\.roomId\)/);
-  assert.match(game,/isWalkable\(dungeonLayout,nextPosition\.x,nextPosition\.z\)/);
+  assert.match(game,/roomInteriorAt\(dungeonLayout,hero\.position\.x,hero\.position\.z,1\.8\)/);
+  assert.match(game,/dungeonLayout\.activeRooms\.has\(e\.roomId\)/);
+  assert.match(game,/isWalkable\(dungeonLayout,desiredPosition\.x,desiredPosition\.z\)/);
+  assert.match(game,/closestWalkable\(dungeonLayout,bounded\.x,bounded\.z\)/);
 });
