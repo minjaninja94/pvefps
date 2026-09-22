@@ -1,5 +1,6 @@
 export const ABYSS_CAMPAIGN_ACT=12;
 export const ABYSS_RANKING_KEY='goablo-abyss-ranking-v1';
+export const ABYSS_MUTATORS=[{id:'swift',name:'재빠른 고아들',description:'적 이동 속도 +12%'},{id:'fortified',name:'단단한 네임드',description:'네임드 생명력 +25%'},{id:'volcanic',name:'시체 화산',description:'네임드 처치 시 지연 폭발 장판'}];
 
 export function ensureAbyssState(player){
   player.abyssUnlocked??=false;
@@ -14,6 +15,7 @@ export function abyssDifficulty(tier){
   const level=Math.max(1,Number(tier)||1);
   return {health:1+(level-1)*.24,damage:1+(level-1)*.12,eliteChance:Math.min(.65,.08+level*.035),loot:1+(level-1)*.08};
 }
+export function abyssMutators(tier){const count=Math.min(ABYSS_MUTATORS.length,Math.floor(Math.max(1,Number(tier)||1)/5));return ABYSS_MUTATORS.slice(0,count);}
 
 export function formatClearTime(seconds){
   const total=Math.max(0,Math.floor(Number(seconds)||0));
