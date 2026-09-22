@@ -33,6 +33,8 @@ test('runtime consumes item icons for drops, inventory and equipped appearance',
   assert.match(game,/class=\"entry itemCard\"/);assert.match(game,/rarityColor\(i\.rarity\)/);
 });
 
+test('world loot and portals support mouse labels and click interaction',()=>{const game=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');for(const token of ['function worldLabel(','function pointedWorld(','function lootOne(','function createExitPortal(','function usePortal(','updateWorldLabels();'])assert.ok(game.includes(token),token);assert.match(game,/atlas:'portals'/);assert.match(game,/if\(drop\).*lootTarget=drop/);assert.match(game,/if\(portal\).*portalTarget=portal/);});
+
 test('runtime renders all class specializations and skill icons together',()=>{
   const game=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
   assert.match(game,/showPanel\('전체 스킬트리'/);assert.match(game,/class=\"skillTreeAll\"/);
