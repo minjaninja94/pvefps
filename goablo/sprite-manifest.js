@@ -100,6 +100,7 @@ export const SPRITE_MANIFEST={
   environment:{image:'assets/sprites/environment-atlas.png',columns:8,rows:5,chromaKey:false},
   enemyVfx:{image:'assets/sprites/enemy-vfx-atlas.png',columns:8,rows:4,chromaKey:false},
   friendlyVfx:{image:'assets/sprites/friendly-vfx-atlas.png',columns:8,rows:4,chromaKey:false},
+  areaVfx:{image:'assets/sprites/area-vfx-atlas.png',columns:8,rows:4,chromaKey:false},
   summons:{image:'assets/sprites/summons-atlas.png',columns:8,rows:8,chromaKey:false},
   animations:{
     idle:{frames:[0,1],fps:2.2},

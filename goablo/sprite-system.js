@@ -125,6 +125,11 @@ export function createAtlasBillboard(THREE,library,{atlas,row,column,height=2,wi
   const sprite=new THREE.Sprite(material);sprite.center.set(.5,0);sprite.position.y=y;sprite.scale.set(width,height,1);sprite.renderOrder=1;
   sprite.userData.ownedSpriteMaterial=true;return sprite;
 }
+export function createAtlasGround(THREE,library,{atlas,row,column,radius=2,y=.055,opacity=.45}){
+  const texture=atlasTexture(library,atlas,row,column);if(!texture)return null;
+  const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,alphaTest:.025,depthWrite:false,toneMapped:true,opacity,side:THREE.DoubleSide});
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(radius*2,radius*2),material);ground.rotation.x=-Math.PI/2;ground.position.y=y;ground.renderOrder=1;ground.userData.ownedMaterial=true;return ground;
+}
 export function createSpriteActor(THREE,library,{atlas,row,scale=1,boss=false,kind='human'}){
   const sheet=library?.[atlas],frames=sheet?.frames?.[row];if(!frames)return null;
   const group=new THREE.Group(),height=(atlas==='players'?2.75:boss?3.15:2.5)*scale;

@@ -47,3 +47,16 @@ export const SUMMON_ROWS=Object.freeze({
 });
 
 export function summonSpriteRow(kind){return SUMMON_ROWS[kind]??0;}
+
+const ZONE_CELLS=Object.freeze({
+  FIRE:[0,0],POISON:[0,1],WEB:[0,2],COLD:[0,3],LIGHTNING:[0,4],HEAL:[0,5],LIGHT:[0,5],BLOOD:[0,6],GRAVITY:[0,7],SPACE:[0,7],SHADOW:[0,7],
+  TRAP:[1,0],BLADE:[1,1],TENTACLE:[1,2],PLAGUE:[1,3],FLESH:[1,4],METEOR:[1,5],ARROWSTORM:[1,6],MAGIC:[1,7],CHARM:[0,6],KINGARENA:[0,7],EXPLOSION:[1,4]
+});
+const AREA_CELLS=Object.freeze({
+  MELEE:[2,0],WEAPON:[2,1],SHIELD:[2,2],STAGGER:[2,3],COLD:[2,4],LIGHTNING:[2,5],BLOOD:[2,6],SPACE:[2,7],SHADOW:[2,7],STEALTH:[2,7],
+  FIRE:[3,0],POISON:[3,1],WEB:[3,2],LIGHT:[3,3],JUDGMENT:[3,3],SUMMON:[3,4],SPIRIT:[3,4],FLESH:[3,5],ABYSS:[3,6],KING:[3,7],PROJECTILE:[2,0],SNIPER:[2,0]
+});
+
+function mappedCell(map,key,fallback){const cell=map[String(key||'').toUpperCase()]||fallback;return {row:cell[0],column:cell[1]};}
+export function zoneVfxCell(tag='magic'){return mappedCell(ZONE_CELLS,tag,ZONE_CELLS.MAGIC);}
+export function areaVfxCell(tag='MELEE'){return mappedCell(AREA_CELLS,tag,AREA_CELLS.MELEE);}
