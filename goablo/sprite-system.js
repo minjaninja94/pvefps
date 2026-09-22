@@ -118,6 +118,7 @@ export function act2MonsterProfile(slot){const roster=SPRITE_MANIFEST.act2Monste
 export function act3MonsterProfile(slot){const roster=SPRITE_MANIFEST.act3Monsters.roster;return roster[slot%roster.length];}
 export function act4MonsterProfile(slot){const roster=SPRITE_MANIFEST.act4Monsters.roster;return roster[slot%roster.length];}
 export function act5MonsterProfile(slot){const roster=SPRITE_MANIFEST.act5Monsters.roster;return roster[slot%roster.length];}
+export function mixedMonsterProfile(slot){const roster=[...SPRITE_MANIFEST.monsters.act1Roster,...SPRITE_MANIFEST.act2Monsters.roster,...SPRITE_MANIFEST.act3Monsters.roster,...SPRITE_MANIFEST.act4Monsters.roster,...SPRITE_MANIFEST.act5Monsters.roster];return roster[slot%roster.length];}
 export function b03BossProfile(){return SPRITE_MANIFEST.bossB03.profile;}
 export function bossProfileForAct(act){const id=Math.max(3,Math.min(12,act));return SPRITE_MANIFEST['bossB'+String(id).padStart(2,'0')]?.profile||null;}
 export function atlasTexture(library,atlas,row,column){return library?.[atlas]?.frames?.[row]?.[column]||null;}
