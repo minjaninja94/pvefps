@@ -16,6 +16,8 @@ test('environment, attack and summon atlases are transparent runtime sheets',()=
   }
 });
 
+test('act and abyss portals use a transparent 4 by 2 atlas',()=>{const def=SPRITE_MANIFEST.portals,header=pngHeader(def.image);assert.deepEqual([header.width,header.height,header.colorType],[1536,1024,6]);assert.deepEqual([def.columns,def.rows],[4,2]);});
+
 test('all five Acts and special room landmarks have stable map cells',()=>{
   assert.deepEqual(environmentCell(1,'floor'),{row:0,column:0});
   assert.deepEqual(environmentCell(5,'reward'),{row:4,column:7});

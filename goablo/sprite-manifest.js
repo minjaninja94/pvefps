@@ -106,6 +106,7 @@ export const SPRITE_MANIFEST={
   skillIcons1:{image:'assets/sprites/skill-icons-1.png',columns:8,rows:8,chromaKey:false},
   skillIcons2:{image:'assets/sprites/skill-icons-2.png',columns:8,rows:8,chromaKey:false},
   skillIcons3:{image:'assets/sprites/skill-icons-3.png',columns:8,rows:8,chromaKey:false},
+  portals:{image:'assets/sprites/portal-atlas.png',columns:4,rows:2,chromaKey:false},
   animations:{
     idle:{frames:[0,1],fps:2.2},
     walk:{frames:[0,1,2],fps:7},
