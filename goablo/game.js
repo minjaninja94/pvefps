@@ -5,7 +5,7 @@ import {loadSpriteLibrary,playerSpriteRow,monsterSpriteRow,act1MonsterProfile,ac
 import {assignWeaponIdentity,basicAttackProfile,defaultWeaponIndex,nextClassWeaponIndex,syncEquippedWeapon} from './weapon-system.js';
 import {ENGRAVING_CATALYSTS,engravingSlots,ensureEngravingState,grantActCatalyst,applyEngraving,engravingBonuses} from './engraving-system.js';
 import {finalBossPhase,finalBossDamageMultiplier,finalBossWindowDuration,finalBossArenaPattern} from './final-boss-system.js';
-import {createDungeonLayout,roomById,roomAt,roomInteriorAt,corridorRects,isWalkable,closestWalkable,explorationSpawnRooms} from './dungeon-layout.js';
+import {createDungeonLayout,createAbyssLayout,roomById,roomAt,roomInteriorAt,corridorRects,isWalkable,closestWalkable,explorationSpawnRooms} from './dungeon-layout.js';
 import {environmentCell,friendlyVfxCell,enemyVfxCell,summonSpriteRow,zoneVfxCell,areaVfxCell} from './visual-assets.js';
 import {itemIconCell,skillIconCell,specIconCell,iconStyle,rarityColor} from './icon-system.js';
 import {ABYSS_CAMPAIGN_ACT,ABYSS_RANKING_KEY,ensureAbyssState,abyssDifficulty,formatClearTime,completeAbyss,rankAbyssRecords} from './abyss-system.js';
@@ -67,7 +67,7 @@ function updateExploration(){
  if(room.type==='reward'){dropItem(room.x-1,room.z,true);dropItem(room.x+1,room.z,act>=5);}
  if(exitRoom)makeFloorReady(false);
 }
-function buildWorld(isTown){clearBattle();disposeGroup(world);scene.add(world);while(world.children.length)world.remove(world.children[0]);dungeonLayout=isTown?null:createDungeonLayout(act,floor);dungeonSpawnCursor=0;scene.background.set(isTown?'#172628':'#0c1113');scene.fog.color.copy(scene.background);
+function buildWorld(isTown){clearBattle();disposeGroup(world);scene.add(world);while(world.children.length)world.remove(world.children[0]);dungeonLayout=isTown?null:abyssMode?createAbyssLayout(abyssTier,floor):createDungeonLayout(act,floor);dungeonSpawnCursor=0;scene.background.set(isTown?'#172628':'#0c1113');scene.fog.color.copy(scene.background);
  box(isTown?62:104,.5,isTown?62:104,isTown?'#1f2a29':'#080c0d',0,-.55,isTown?0:-4);
  if(isTown){for(let x=-28;x<=28;x+=4)for(let z=-28;z<=28;z+=4){let c=new THREE.Color('#35443e').multiplyScalar(rnd(.8,1.1));box(3.94,.2,3.94,c.getHexString().padStart(6,'0').replace(/^/,'#'),x,-.2+rnd(-.015,.015),z);}for(let i=-28;i<=28;i+=4){box(3.9,2.7,1.1,'#47514a',i,1,-30);box(1.1,2.7,3.9,'#47514a',-30,1,i);}for(const [x,z] of [[-18,-18],[18,-18],[-18,18],[18,18],[-10,-10],[10,-10]]){box(1.7,.35,1.7,'#626b5a',x,0,z);mesh(new THREE.CylinderGeometry(.6,.8,4.3,7),'#566254',x,2.1,z);box(1.6,.3,1.6,'#778071',x,4.3,z);mesh(new THREE.IcosahedronGeometry(.25),'#d3a563',x,4.7,z,world,true);const l=new THREE.PointLight('#e6af67',16,8);l.position.set(x,4.8,z);world.add(l);}for(let i=0;i<55;i++){let x=rnd(-28,28),z=rnd(-28,28);if(Math.abs(x)<5&&Math.abs(z)<7)continue;mesh(new THREE.DodecahedronGeometry(rnd(.12,.6),0),'#48554b',x,.1,z).rotation.set(rnd(0,3),rnd(0,3),0);}let seal=mesh(new THREE.TorusGeometry(4,.065,6,60),'#c8a967',0,.02,0,world,true);seal.rotation.x=Math.PI/2;for(let i=0;i<8;i++){const a=i*Math.PI/4;box(.15,.05,1.3,'#bdaa77',Math.sin(a)*4.8,0,Math.cos(a)*4.8).rotation.y=a;}const portal=mesh(new THREE.TorusGeometry(1.8,.14,8,48),'#8ecac0',0,2,-9,world,true);portal.rotation.z=.1;portal.userData.portal=true;box(4,.5,2,'#657367',0,.1,-9);}else renderDungeonLayout();
 }

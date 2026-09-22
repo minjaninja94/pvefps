@@ -17,6 +17,14 @@ export function createDungeonLayout(act,floor){
   return {rooms,connections,discovered:new Set(['start']),activeRooms:new Set(['start']),seed:act*1009+floor*9176,bounds:{minX:-42,maxX:42,minZ:-56,maxZ:45},corridorWidth:8.4};
 }
 
+export function createAbyssLayout(tier,floor){
+  const level=Math.max(1,Math.floor(tier)||1),layout=createDungeonLayout(1000+level,floor),growth=Math.min(6,Math.floor((level-1)/5));
+  for(const room of layout.rooms){if(room.id==='start')continue;room.w+=Math.min(6,growth);room.h+=Math.min(4,growth);}
+  layout.connections.push(['gate','cross'],['west','deepEast'],['east','deepWest']);
+  layout.corridorWidth=9.2;layout.seed=level*7919+floor*104729;layout.mode='abyss';layout.tier=level;
+  return layout;
+}
+
 export function roomById(layout,id){return layout?.rooms.find(room=>room.id===id)||null;}
 export function roomAt(layout,x,z,padding=0){
   return layout?.rooms.find(room=>{const rx=Math.max(.1,room.w/2+padding),rz=Math.max(.1,room.h/2+padding);return room.shape==='ellipse'?((x-room.x)/rx)**2+((z-room.z)/rz)**2<=1:Math.abs(x-room.x)<=rx&&Math.abs(z-room.z)<=rz;})||null;

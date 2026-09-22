@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createDungeonLayout,roomById,roomAt,roomInteriorAt,corridorRects,isWalkable,closestWalkable,farthestRoom,explorationSpawnRooms} from '../dungeon-layout.js';
+import {createDungeonLayout,createAbyssLayout,roomById,roomAt,roomInteriorAt,corridorRects,isWalkable,closestWalkable,farthestRoom,explorationSpawnRooms} from '../dungeon-layout.js';
 import fs from 'node:fs';
 
 test('dungeon branches and keeps boss farthest from start',()=>{
@@ -32,6 +32,8 @@ test('normal spawns avoid entrance, reward and boss rooms',()=>{
   const rooms=explorationSpawnRooms(createDungeonLayout(2,1));
   assert.ok(rooms.length>=4);assert.ok(rooms.every(room=>!['start','reward','boss'].includes(room.type)));
 });
+
+test('abyss layout stays open and grows in fixed bands',()=>{const low=createAbyssLayout(1,1),high=createAbyssLayout(31,1);assert.equal(low.mode,'abyss');assert.ok(low.connections.length>createDungeonLayout(1,1).connections.length);assert.ok(high.rooms.find(r=>r.id==='cross').w>low.rooms.find(r=>r.id==='cross').w);assert.ok(high.corridorWidth>=9);});
 
 test('runtime renders discovery map and gates dormant rooms',()=>{
   const game=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
