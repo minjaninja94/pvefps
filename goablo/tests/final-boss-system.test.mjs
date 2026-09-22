@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {finalBossPhase,finalBossDamageMultiplier,finalBossWindowDuration,finalBossArenaPattern} from '../final-boss-system.js';
+import {SPRITE_MANIFEST} from '../sprite-manifest.js';
 
 test('orphan king has four deterministic health phases',()=>{
   assert.deepEqual([finalBossPhase(100,100),finalBossPhase(74,100),finalBossPhase(49,100),finalBossPhase(24,100)],[1,2,3,4]);
@@ -21,5 +22,7 @@ test('each phase materially changes arena hazard positions',()=>{
 
 test('runtime connects final boss phase, arena and damage window rules',()=>{
   const game=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
-  assert.match(game,/shiftFinalBossPhase/);assert.match(game,/finalBossDamageMultiplier/);assert.match(game,/vulnerableUntil/);
+  assert.match(game,/shiftFinalBossPhase/);assert.match(game,/finalBossDamageMultiplier/);assert.match(game,/vulnerableUntil/);assert.match(game,/playBossMotion\(e,kingStage-1/);assert.match(game,/왕의 화염 의식/);assert.match(game,/왕의 처형 돌진/);assert.match(game,/핏빛 징집/);
 });
+
+test('orphan king has a transparent eight-frame attack row for every phase',()=>{const def=SPRITE_MANIFEST.bossB12Attacks,bytes=fs.readFileSync(new URL('../'+def.image,import.meta.url));assert.deepEqual([bytes.readUInt32BE(16),bytes.readUInt32BE(20),bytes[25]],[1536,768,6]);assert.deepEqual([def.columns,def.rows],[8,4]);});
