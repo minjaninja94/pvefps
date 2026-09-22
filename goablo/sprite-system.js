@@ -113,6 +113,7 @@ export function monsterSpriteRow(id,index,boss=false){
 }
 export function act1MonsterProfile(slot){const roster=SPRITE_MANIFEST.monsters.act1Roster;return roster[slot%roster.length];}
 export function act1BossProfile(){return SPRITE_MANIFEST.monsters.act1Boss;}
+export function act2BossProfile(){return SPRITE_MANIFEST.monsters.act2Boss;}
 export function act2MonsterProfile(slot){const roster=SPRITE_MANIFEST.act2Monsters.roster;return roster[slot%roster.length];}
 export function act3MonsterProfile(slot){const roster=SPRITE_MANIFEST.act3Monsters.roster;return roster[slot%roster.length];}
 export function act4MonsterProfile(slot){const roster=SPRITE_MANIFEST.act4Monsters.roster;return roster[slot%roster.length];}

@@ -29,7 +29,8 @@ export const SPRITE_MANIFEST={
       {id:'A1_005',name:'시체 먹는 고아',dbIndex:7,row:4},
       {id:'A1_006',name:'관에서 나온 고아',dbIndex:8,row:6}
     ],
-    act1Boss:{id:'B01',name:'역병군주고아',dbIndex:20,row:7}
+    act1Boss:{id:'B01',name:'역병군주고아',dbIndex:20,row:7,atlas:'monsters',attackAtlas:'bossAttacksB01B02',attackRow:0,behavior:'plagueboss',boss:true},
+    act2Boss:{id:'B02',name:'거미어미고아',dbIndex:21,row:8,atlas:'monsters',attackAtlas:'bossAttacksB01B02',attackRow:1,behavior:'spiderboss',boss:true}
   },
   act2Monsters:{
     image:'assets/sprites/act2-monsters.png',
@@ -84,6 +85,7 @@ export const SPRITE_MANIFEST={
       {id:'A5_006',name:'지옥마법사고아',dbIndex:18,row:5,atlas:'act5Monsters'}
     ]
   },
+  bossAttacksB01B02:{image:'assets/sprites/boss-attacks-b01-b02.png',columns:8,rows:2,chromaKey:false},
   bossB03:{
     image:'assets/sprites/b03-thousand-legs.png',columns:8,rows:1,chromaKey:false,
     profile:{id:'B03',name:'천개의다리고아',dbIndex:22,row:0,atlas:'bossB03',attackAtlas:'bossAttacksB03B07',attackRow:0,behavior:'centipedeboss',boss:true}

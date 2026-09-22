@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 
 import {DB} from '../data/database.js';
 import {SPRITE_MANIFEST} from '../sprite-manifest.js';
-import {act1BossProfile,act1MonsterProfile,act2MonsterProfile,atlasComponentSlot,monsterSpriteRow,playerSpriteRow} from '../sprite-system.js';
+import {act1BossProfile,act1MonsterProfile,act2BossProfile,act2MonsterProfile,atlasComponentSlot,monsterSpriteRow,playerSpriteRow} from '../sprite-system.js';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const queue=JSON.parse(fs.readFileSync(path.join(root,'GOABLO_sprite_queue(1).json'),'utf8'));
@@ -81,6 +81,7 @@ test('Act 1 boss and animation columns match the queue',()=>{
   assert.deepEqual({id:boss.id,name:boss.name,row:boss.row},{id:queuedBoss.id,name:queuedBoss.name,row:queuedBoss.row});
   assert.equal(DB.monsters[boss.dbIndex].id,'GOA_B01');
   assert.equal(monsterSpriteRow('GOA_B01',boss.dbIndex,true),boss.row);
+  assert.deepEqual([boss.attackAtlas,boss.attackRow],['bossAttacksB01B02',0]);
 
   for(const [state,frames] of Object.entries(queue.runtime.animations)){
     assert.deepEqual(SPRITE_MANIFEST.animations[state].frames,frames);
@@ -94,6 +95,9 @@ test('Act 2 uses the integrated spider mother boss sprite',()=>{
   assert.deepEqual({name:boss.name,behavior:boss.behavior},{name:queuedBoss.name,behavior:'spiderboss'});
   assert.equal(monsterSpriteRow(boss.id,21,true),queuedBoss.row);
   assert.equal(queuedBoss.row,8);
+  const profile=act2BossProfile(),attack=SPRITE_MANIFEST[profile.attackAtlas];
+  assert.deepEqual([profile.id,profile.row,profile.attackRow,attack.columns,attack.rows],['B02',8,1,8,2]);
+  assert.deepEqual(pngHeader(attack.image),{width:1536,height:512,bitDepth:8,colorType:6});
 });
 
 test('all six Act 2 monsters use the generated atlas',()=>{
