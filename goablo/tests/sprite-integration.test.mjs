@@ -97,7 +97,7 @@ test('Act 2 uses the integrated spider mother boss sprite',()=>{
   assert.equal(queuedBoss.row,8);
   const profile=act2BossProfile(),attack=SPRITE_MANIFEST[profile.attackAtlas];
   assert.deepEqual([profile.id,profile.row,profile.attackRow,attack.columns,attack.rows],['B02',8,1,8,2]);
-  assert.deepEqual(pngHeader(attack.image),{width:1536,height:512,bitDepth:8,colorType:6});
+  assert.deepEqual(pngHeader(attack.image),{width:2048,height:512,bitDepth:8,colorType:6});
 });
 
 test('all six Act 2 monsters use the generated atlas',()=>{

@@ -25,4 +25,4 @@ test('runtime connects final boss phase, arena and damage window rules',()=>{
   assert.match(game,/shiftFinalBossPhase/);assert.match(game,/finalBossDamageMultiplier/);assert.match(game,/vulnerableUntil/);assert.match(game,/playBossMotion\(e,kingStage-1/);assert.match(game,/왕의 화염 의식/);assert.match(game,/왕의 처형 돌진/);assert.match(game,/핏빛 징집/);
 });
 
-test('orphan king has a transparent eight-frame attack row for every phase',()=>{const def=SPRITE_MANIFEST.bossB12Attacks,bytes=fs.readFileSync(new URL('../'+def.image,import.meta.url));assert.deepEqual([bytes.readUInt32BE(16),bytes.readUInt32BE(20),bytes[25]],[1536,768,6]);assert.deepEqual([def.columns,def.rows],[8,4]);});
+test('orphan king has a transparent eight-frame attack row for every phase',()=>{const def=SPRITE_MANIFEST.bossB12Attacks,bytes=fs.readFileSync(new URL('../'+def.image,import.meta.url));assert.deepEqual([bytes.readUInt32BE(16),bytes.readUInt32BE(20),bytes[25]],[2048,1024,6]);assert.deepEqual([def.columns,def.rows],[8,4]);});
