@@ -22,7 +22,7 @@ test('each deeper floor materially raises enemy pressure',()=>{
 
 test('every skill cast consumes the generated effect atlases',()=>{
   const game=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
-  assert.match(game,/skillCastVfx\(s,x,z,tx,tz\)/);
+  assert.match(game,/skillCastVfx\(s,x,z,tx,tz,scale\)/);
   assert.match(game,/atlas:'friendlyVfx'/);
   assert.match(game,/atlas:'areaVfx'/);
   assert.doesNotMatch(game,/id="difficultySetting"/);
