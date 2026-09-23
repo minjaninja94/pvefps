@@ -3,6 +3,11 @@ const familyBank=family=>({notice:[asset(family,'alert')],attack:[asset(family,'
 export const CREATURE_FAMILIES=Object.freeze(['zombie','ghoul','insect','angel','human']);
 export const CREATURE_VOICE_BANKS=Object.freeze(Object.fromEntries(CREATURE_FAMILIES.map(family=>[family,Object.freeze(familyBank(family))])));
 export const CREATURE_VOICE_FILES=Object.freeze([...new Set(Object.values(CREATURE_VOICE_BANKS).flatMap(bank=>Object.values(bank).flat()))]);
+export const LOOT_RARITIES=Object.freeze(['일반','마법','희귀','전설','유니크','부모급']);
+export const LOOT_SOUND_FILES=Object.freeze(Object.fromEntries(LOOT_RARITIES.map((rarity,index)=>[rarity,`assets/audio/loot/drop-${index}.wav`])));
+
+export function lootSoundFile(rarity){return LOOT_SOUND_FILES[rarity]||LOOT_SOUND_FILES['일반'];}
+export function lootSoundStrength(rarity){return Math.max(0,LOOT_RARITIES.indexOf(rarity));}
 
 export function creatureFamily(def={}){
  const signature=`${def.name||''} ${def.category||''} ${def.behavior||''}`.toLowerCase();
