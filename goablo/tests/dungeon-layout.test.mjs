@@ -35,11 +35,12 @@ test('normal spawns avoid entrance, reward and boss rooms',()=>{
 
 test('abyss layout stays open and grows in fixed bands',()=>{const low=createAbyssLayout(1,1),high=createAbyssLayout(31,1);assert.equal(low.mode,'abyss');assert.ok(low.connections.length>createDungeonLayout(1,1).connections.length);assert.ok(high.rooms.find(r=>r.id==='cross').w>low.rooms.find(r=>r.id==='cross').w);assert.ok(high.corridorWidth>=9);});
 
-test('runtime renders discovery map and gates dormant rooms',()=>{
+test('runtime renders discovery map while enemy awareness is independent from room events',()=>{
   const game=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
   assert.match(game,/renderDungeonLayout/);assert.match(game,/updateExploration/);
   assert.match(game,/roomInteriorAt\(dungeonLayout,hero\.position\.x,hero\.position\.z,1\.8\)/);
-  assert.match(game,/dungeonLayout\.activeRooms\.has\(e\.roomId\)/);
+  assert.match(game,/updateEnemyAwareness\(\)/);
+  assert.doesNotMatch(game,/activeRooms\.has\(e\.roomId\)\)return/);
   assert.match(game,/isWalkable\(dungeonLayout,desiredPosition\.x,desiredPosition\.z\)/);
   assert.match(game,/closestWalkable\(dungeonLayout,bounded\.x,bounded\.z\)/);
   assert.match(game,/if\(exitRoom\)makeFloorReady\(false\)/);
