@@ -1,20 +1,21 @@
-export const CREATURE_VOICE_BANKS=Object.freeze({
- notice:['../walker-alert.wav','../lizard-alert.wav','../heavy-alert.wav','../soldier-alert.wav','../scout-alert.wav'],
- attack:['../walker-attack.wav','../lizard-attack.wav','../heavy-attack.wav','../soldier-attack.wav','../scout-attack.wav'],
- hit:['../lizard-attack.wav','../walker-attack.wav','../heavy-attack.wav'],
- death:['../walker-death.wav','../lizard-death.wav','../heavy-death.wav','../soldier-death.wav','../scout-death.wav'],
- bossNotice:['../boss-alert.wav'],
- bossAttack:['../boss-attack.wav','../boss-blades.wav','../boss-sweep.wav'],
- bossSpecial:['../boss-burst.wav','../boss-missiles.wav','../boss-laser.wav'],
- bossDeath:['../boss-death.wav'],
- playerHit:['../soldier-death.wav','../scout-death.wav']
-});
+const asset=(family,event)=>`assets/audio/creatures/${family}-${event}.wav`;
+const familyBank=family=>({notice:[asset(family,'alert')],attack:[asset(family,'attack')],hit:[asset(family,'attack')],special:[asset(family,'alert'),asset(family,'attack')],death:[asset(family,'death')]});
+export const CREATURE_FAMILIES=Object.freeze(['zombie','ghoul','insect','angel','human']);
+export const CREATURE_VOICE_BANKS=Object.freeze(Object.fromEntries(CREATURE_FAMILIES.map(family=>[family,Object.freeze(familyBank(family))])));
+export const CREATURE_VOICE_FILES=Object.freeze([...new Set(Object.values(CREATURE_VOICE_BANKS).flatMap(bank=>Object.values(bank).flat()))]);
 
-export const CREATURE_VOICE_FILES=Object.freeze([...new Set(Object.values(CREATURE_VOICE_BANKS).flat())]);
+export function creatureFamily(def={}){
+ const signature=`${def.name||''} ${def.category||''} ${def.behavior||''}`.toLowerCase();
+ if(/천사|angel/.test(signature))return 'angel';
+ if(/거미|독침|벌레|박쥐|spider|centipede|web|poison|bat/.test(signature))return 'insect';
+ if(/구울|흡혈|ghoul|vampire|demon|악마/.test(signature))return 'ghoul';
+ if(/좀비|해골|언데드|zombie|skeleton|plague|revive/.test(signature))return 'zombie';
+ return 'human';
+}
 
-export function voiceBank(event,boss=false){
- const key=boss?({notice:'bossNotice',attack:'bossAttack',special:'bossSpecial',death:'bossDeath'}[event]||'bossAttack'):event;
- return CREATURE_VOICE_BANKS[key]||CREATURE_VOICE_BANKS.attack;
+export function voiceBank(event,family='zombie'){
+ const bank=CREATURE_VOICE_BANKS[family]||CREATURE_VOICE_BANKS.zombie;
+ return bank[event]||bank.attack;
 }
 
 export function voiceCooldown(event,boss=false){
