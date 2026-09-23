@@ -33,6 +33,16 @@ test('friendly and enemy attacks resolve projectile and impact sprites',()=>{
   assert.deepEqual(enemyVfxCell('abyss',true),{row:3,column:7});
 });
 
+test('projectiles and chain links render atlas assets without primitive geometry',()=>{
+  const game=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
+  const beam=game.slice(game.indexOf('function beam('),game.indexOf('function number('));
+  const projectile=game.slice(game.indexOf('function projectile('),game.indexOf('function summon('));
+  assert.match(beam,/createAtlasBillboard/);assert.match(beam,/friendlyVfxCell/);assert.match(beam,/enemyVfxCell/);
+  assert.doesNotMatch(beam,/CylinderGeometry|BoxGeometry|SphereGeometry|IcosahedronGeometry/);
+  assert.match(projectile,/assetOnlyProjectile/);assert.doesNotMatch(projectile,/IcosahedronGeometry|SphereGeometry|BoxGeometry/);
+  assert.match(game,/kind:'LIGHTNING',chain:true/);
+});
+
 test('every summon behavior resolves to an atlas row',()=>{
   assert.deepEqual(['skeleton','archer','mage','knight','hire0','hire1','hire2','hire3','shadow','zombie'].map(summonSpriteRow),[0,1,2,3,4,3,1,5,6,7]);
 });
