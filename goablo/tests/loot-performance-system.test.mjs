@@ -1,2 +1,8 @@
-}«Z––­†
-nZ?µë-³ùh¢Ú^­ú+™©ÜzÌ¬µé­zËfŽÇhzÉèµìb²Ø§@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {WORLD_RENDER_LIMITS,abyssLootProfile,spreadDropPosition,dropCullIndex} from '../loot-performance-system.js';
+
+test('abyss legendary abundance ramps slowly and matches the previous high-floor rate at tier 100',()=>{const first=abyssLootProfile(1),twenty=abyssLootProfile(20),hundred=abyssLootProfile(100),later=abyssLootProfile(180);assert.deepEqual(first,{normalDropChance:.24,normalLegendaryChance:.06,eliteDropChance:.3,eliteLegendaryChance:.12});assert.ok(twenty.normalLegendaryChance<.1);assert.ok(twenty.eliteLegendaryChance<.22);assert.equal(hundred.normalDropChance,.24*2.52);assert.equal(hundred.normalLegendaryChance,.38);assert.equal(hundred.eliteDropChance,1);assert.equal(hundred.eliteLegendaryChance,1);assert.deepEqual(later,hundred);});
+test('overlapping drops spread apart and cleanup removes oldest low rarity first',()=>{const existing=[{x:2,z:3},{x:2,z:3}],position=spreadDropPosition(existing,2,3);assert.ok(Math.hypot(position.x-2,position.z-3)>.3);const drops=[{item:{rarity:'ì „ì„¤'},createdAt:1},{item:{rarity:'ì¼ë°˜'},createdAt:3},{item:{rarity:'ì¼ë°˜'},createdAt:2}];assert.equal(dropCullIndex(drops),2);});
+test('runtime applies bounded world sprites, loot lights and transient effects',()=>{const game=readFileSync(new URL('../game.js',import.meta.url),'utf8');assert.ok(WORLD_RENDER_LIMITS.drops<=30);assert.ok(WORLD_RENDER_LIMITS.corpses<=20);for(const token of ['trimWorldDrops()','addCorpse(','WORLD_RENDER_LIMITS.dropLights','effects.length<SKILL_VFX_LIMITS.transientEffects'])assert.ok(game.includes(token));});

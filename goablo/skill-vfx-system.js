@@ -20,4 +20,4 @@ export function skillVfxRoute(mode){
  return 'self';
 }
 
-export const SKILL_VFX_LIMITS=Object.freeze({transientEffects:190,dynamicLights:12,projectileLights:16});
+export const SKILL_VFX_LIMITS=Object.freeze({transientEffects:160,dynamicLights:10,projectileLights:12});

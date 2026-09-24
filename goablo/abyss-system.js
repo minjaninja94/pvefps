@@ -13,7 +13,8 @@ export function ensureAbyssState(player){
 
 export function abyssDifficulty(tier){
   const level=Math.max(1,Number(tier)||1);
-  return {health:1+(level-1)*.24,damage:1+(level-1)*.12,eliteChance:Math.min(.65,.08+level*.035),loot:1+(level-1)*.08};
+  const linear=Math.max(0,Math.min(1,(level-1)/99)),lootProgress=linear*linear*(3-2*linear);
+  return {health:1+(level-1)*.24,damage:1+(level-1)*.12,eliteChance:Math.min(.65,.08+level*.035),loot:1+1.52*lootProgress};
 }
 export function abyssMutators(tier){const count=Math.min(ABYSS_MUTATORS.length,Math.floor(Math.max(1,Number(tier)||1)/5));return ABYSS_MUTATORS.slice(0,count);}
 
