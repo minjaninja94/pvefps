@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {CREATURE_FAMILIES,CREATURE_VOICE_BANKS,CREATURE_VOICE_FILES,creatureFamily,voiceBank,voiceCooldown} from '../audio-system.js';
-import {ACT_MUSIC_TRACKS,musicTrackForAct} from '../music-system.js';
+import {START_MENU_MUSIC,ACT_MUSIC_TRACKS,musicTrackForAct} from '../music-system.js';
 
 test('every creature voice bank points to a valid WAV sample',()=>{
  assert.equal(CREATURE_VOICE_FILES.length,15);
@@ -29,13 +29,13 @@ test('combat uses decoded positional voices and transient lights',()=>{
  assert.doesNotMatch(game,/createOscillator|function sound\(/);
 });
 
-test('every Act has a valid original looping music asset',()=>{
+test('menu and every Act use MP3 looping music assets',()=>{
+ assert.equal(START_MENU_MUSIC,'assets/audio/music/Cold_Weight_in_the_Hallway.mp3');
  assert.equal(ACT_MUSIC_TRACKS.length,5);
  for(const [index,relativePath] of ACT_MUSIC_TRACKS.entries()){
-  const bytes=fs.readFileSync(new URL('../'+relativePath,import.meta.url));
-  assert.equal(bytes.subarray(0,4).toString(),'OggS',relativePath);assert.ok(bytes.length>250000,relativePath);
+  assert.match(relativePath,/\.mp3$/);assert.doesNotMatch(relativePath,/\.ogg/);
   assert.equal(musicTrackForAct(index+1),relativePath);
  }
  const game=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
- assert.match(game,/backgroundMusic\.loop=true/);assert.match(game,/setBackgroundMusic\(false\)/);assert.match(game,/setBackgroundMusic\(true\)/);
+ assert.match(game,/backgroundMusic\.loop=true/);assert.match(game,/menu\?START_MENU_MUSIC/);assert.match(game,/startMenuMusic/);assert.match(game,/setBackgroundMusic\(false\)/);assert.match(game,/setBackgroundMusic\(true\)/);
 });
