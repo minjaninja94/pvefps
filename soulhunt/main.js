@@ -702,12 +702,12 @@ function applyBossArmIK(dt){
      const rig=dorsalArms[side==='left'?0:1],rw=new THREE.Vector3();rig.wrist.getWorldPosition(rw);
      const dir=rw.clone().sub(shoulder);
      if(dir.lengthSq()<1e-6)dir.set(sx,-1,0);
-     const d=Math.min(reach*.93,dir.length());
+     const d=Math.min(reach*.72,dir.length()*.48);
      dir.normalize();
      handTarget=shoulder.clone().addScaledVector(dir,d);
      const outward=new THREE.Vector3(sx,0,0).applyQuaternion(boss.quaternion);
-     elbowTarget=shoulder.clone().addScaledVector(dir,d*.52).addScaledVector(outward,reach*.18);
-     elbowTarget.y+=reach*.08;
+     elbowTarget=shoulder.clone().addScaledVector(dir,d*.52).addScaledVector(outward,reach*.26);
+     elbowTarget.y+=reach*.06;
    }else{
      const localDown=new THREE.Vector3(sx*reach*.15,-reach*.84,.06).applyQuaternion(boss.quaternion);
      const localElbow=new THREE.Vector3(sx*reach*.3,-reach*.42,.04).applyQuaternion(boss.quaternion);
@@ -950,47 +950,38 @@ function tryBuildBossMonsterArms(){
  for(const side of ['left','right']){
    const sx=side==='left'?-1:1;
    const root=new THREE.Group();
-   const fleshA=cloneAnimeArmPart(side);
-   const fleshB=cloneAnimeArmPart(side);
-   const fleshC=cloneAnimeArmPart(side);
-   if(!fleshA||!fleshB||!fleshC)continue;
-   const armorA=new THREE.Group(),armorB=new THREE.Group(),armorC=new THREE.Group();
-   const finalHand=makeMonsterHand(sx);
-   fleshA.userData.baseThickness=.82;
-   fleshB.userData.baseThickness=.96;
-   fleshC.userData.baseThickness=1.08;
-   boss.add(root);root.add(fleshA,fleshB,fleshC,armorA,armorB,armorC,finalHand);
+   const fleshA=cloneAnimeArmPart(side),fleshB=cloneAnimeArmPart(side);
+   if(!fleshA||!fleshB)continue;
+   const armorA=new THREE.Group(),armorB=new THREE.Group();
+   const joint=new THREE.Group(),finalHand=makeMonsterHand(sx);
 
-   const armorGroups=[armorA,armorB,armorC];
-   armorGroups.forEach((ag,gi)=>{
-     for(let i=0;i<4;i++){
-       const plate=cloneMonsterSpikeVisual();
-       if(!plate)continue;
-       plate.position.set((i%2?1:-1)*.22,(i-1.5)*.24,(gi-1)*.06);
-       plate.scale.set(.3+.05*gi,.22+.04*gi,.3+.05*gi);
-       plate.rotation.set((i%2?1:-1)*.22,i*.68,(i%2?1:-1)*.36);
-       ag.add(plate);
-     }
-   });
+   fleshA.userData.baseThickness=1.24;
+   fleshB.userData.baseThickness=1.42;
+   finalHand.scale.setScalar(1.42);
 
-   // Extra back-facing spikes make each segment read as a mutated arm, not a floating spike chain.
-   for(const [ag,scale] of [[armorA,.34],[armorB,.4],[armorC,.46]]){
+   const jointMat=new THREE.MeshStandardMaterial({color:0x6f3b3c,roughness:.68,metalness:.03});
+   const jointMass=new THREE.Mesh(new THREE.SphereGeometry(.42,10,8),jointMat);
+   jointMass.castShadow=jointMass.receiveShadow=true;joint.add(jointMass);
+
+   boss.add(root);root.add(fleshA,fleshB,armorA,armorB,joint,finalHand);
+
+   for(const [ag,gi] of [[armorA,0],[armorB,1]]){
      for(let i=-1;i<=1;i++){
        const spike=cloneMonsterSpikeVisual();
        if(!spike)continue;
-       spike.position.set(i*.18,.08,-.28);
-       spike.scale.set(scale*.55,scale,scale*.55);
-       spike.rotation.x=-.55;spike.rotation.z=i*.18;
+       spike.position.set(i*.22,.04,-.24);
+       spike.scale.set(.28+.06*gi,.5+.08*gi,.28+.06*gi);
+       spike.rotation.x=-.42;spike.rotation.z=i*.22;
        ag.add(spike);
      }
    }
 
    bossMonsterArms.push({
-     side,sx,root,fleshA,fleshB,fleshC,armorA,armorB,armorC,finalHand,
+     side,sx,root,fleshA,fleshB,armorA,armorB,joint,finalHand,
      hand:animeBossBones[side+'Hand'],rig:dorsalArms[side==='left'?0:1]
    });
  }
- console.info('Bellamore: multi-segment flesh monster arms built');
+ console.info('Bellamore: two-stage visible female monster arms built');
 }
 function updateBossMonsterArmVisuals(){
  if(!bossMonsterArms.length)return;
@@ -998,27 +989,25 @@ function updateBossMonsterArmVisuals(){
  for(const a of bossMonsterArms){
    const handW=new THREE.Vector3(),wristW=new THREE.Vector3();
    a.hand.getWorldPosition(handW);a.rig.wrist.getWorldPosition(wristW);
-   const p0=boss.worldToLocal(handW.clone()),p3=boss.worldToLocal(wristW.clone());
+   const p0=boss.worldToLocal(handW.clone()),p2=boss.worldToLocal(wristW.clone());
+   const p1=p0.clone().lerp(p2,.5);
+   p1.x+=a.sx*.42;
+   p1.y+=.16;
+   p1.z+=.22;
 
-   // Three articulated extension points: deliberately bent so it reads as a long mutated arm.
-   const p1=p0.clone().lerp(p3,.28);
-   const p2=p0.clone().lerp(p3,.63);
-   p1.y+=.2;p1.x+=a.sx*.26;p1.z+=.12;
-   p2.y+=.1;p2.x+=a.sx*.34;p2.z+=.18;
+   orientSegment(a.fleshA,p0,p1,a.fleshA.userData.baseThickness||1.24);
+   orientSegment(a.fleshB,p1,p2,a.fleshB.userData.baseThickness||1.42);
+   orientSegment(a.armorA,p0,p1,1.16);
+   orientSegment(a.armorB,p1,p2,1.28);
 
-   orientSegment(a.fleshA,p0,p1,a.fleshA.userData.baseThickness||.82);
-   orientSegment(a.fleshB,p1,p2,a.fleshB.userData.baseThickness||.96);
-   orientSegment(a.fleshC,p2,p3,a.fleshC.userData.baseThickness||1.08);
-   orientSegment(a.armorA,p0,p1,.95);
-   orientSegment(a.armorB,p1,p2,1.0);
-   orientSegment(a.armorC,p2,p3,1.06);
-
-   a.finalHand.position.copy(p3);
-   const dir=p3.clone().sub(p2).normalize();
+   a.joint.position.copy(p1);
+   a.joint.scale.setScalar(1.0);
+   a.finalHand.position.copy(p2);
+   const dir=p2.clone().sub(p1).normalize();
    a.finalHand.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
 
    const active=state?.bossState?.startsWith?.('arm_');
-   const pulse=active?1.06+Math.sin(state.time*18)*.028:1;
+   const pulse=active?1.08+Math.sin(state.time*14)*.025:1;
    a.root.scale.setScalar(pulse);
  }
 }
