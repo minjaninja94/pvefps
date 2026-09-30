@@ -1327,7 +1327,7 @@ document.body.appendChild(potionHud);
 
 const state={
  hp:100,posture:0,stamina:100,staminaMax:100,staminaRegenDelay:0,exhausted:0,potions:3,potionTimer:0,potionHealDone:false,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollElapsed:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
- bossMaxHp:11200,bossHp:11200,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',bossBustImpulse:0,time:0,shake:0,hitstop:0,
+ bossMaxHp:11200,bossHp:11200,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',bossBustImpulse:0,potionPunishQueued:false,potionPunishKind:'spike_triple',time:0,shake:0,hitstop:0,
  headHp:100,legHp:150,tailHp:130,tailBroken:false,legBroken:false,headBroken:false,danger:false,reaction:0,reactionZone:'body'
 };
 function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeout(flash.t);flash.t=setTimeout(()=>ui.msg.style.opacity='0',d*1000)}
@@ -1647,13 +1647,21 @@ function tryDrinkPotion(){
  state.staminaRegenDelay=Math.max(state.staminaRegenDelay,.9);
  flash(`에스트 사용 · 남은 수 ${state.potions}`,.55);
 
- // Healing at range is punishable: Bellamore answers with a quick spike volley.
- if(state.bossHp>0&&state.bossStagger<=0&&(state.bossState==='idle'||state.bossTimer>.55)){
-   state.bossState='spike_triple';
-   state.bossTimer=1.18;
-   state.bossPatternStep=0;
-   state.bossHit=false;
-   state.bossFxStamp='';
+ // Flask reading is probabilistic, not a guaranteed AI cheat.
+ // While Bellamore is already committed to a pattern she notices the heal more often,
+ // but the current action is never cancelled; the ranged punish is queued as the next action.
+ if(state.bossHp>0&&state.bossStagger<=0&&state.bossState!=='dead'){
+   const activePattern=state.bossState!=='idle'&&state.bossState!=='stagger';
+   const recoveryWindow=state.bossState==='idle'&&state.bossTimer>.58;
+   let reactChance=activePattern?.68:(recoveryWindow?.38:.26);
+   if(dist()>9)reactChance+=.08;
+   reactChance=clamp(reactChance,0,.78);
+   if(Math.random()<reactChance){
+     state.potionPunishQueued=true;
+     state.potionPunishKind=Math.random()<.7?'spike_triple':'spike_fan';
+     // In idle/recovery she becomes a little more alert, but still does not fire instantly.
+     if(state.bossState==='idle')state.bossTimer=Math.min(state.bossTimer,.72);
+   }
  }
 }
 function tryAttack(){
@@ -1723,7 +1731,7 @@ function hitBoss(base,posture=12){
  if(zone==='tail'){dmg*=1.2;state.tailHp-=base;if(!state.tailBroken&&state.tailHp<=0){state.tailBroken=true;tailPivot.visible=false;flash('꼬리 절단',.7);state.bossPosture+=24}}
  if(state.bossStagger>0){dmg*=1.75;pd*=1.8}
  state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture+=pd;state.shake=zone==='head'||zone==='spike' ? .18 : .13;hitStop(zone==='head'||zone==='spike' ? .072 : .055);spawnSparks(player.position.clone().lerp(boss.position,.62).add(new THREE.Vector3(0,zone==='head' ? 2.15 : 1.15,0)),zone==='head' ? 14 : 8,zone==='head' ? 5.5 : 4.2);
- if(state.bossHp===0){state.bossState='dead';setDanger(false);flash('토벌 완료',1.2)}
+ if(state.bossHp===0){state.bossState='dead';state.potionPunishQueued=false;setDanger(false);flash('토벌 완료',1.2)}
  else if(state.bossPosture>=100){state.bossStagger=2.15;state.bossPosture=50;state.bossState='stagger';flash('자세 붕괴',.52)}
 }
 
@@ -1731,7 +1739,12 @@ function chooseBossAttack(){
  if(state.bossHp<=0)return;
  setDanger(false);
  const dorsal=['arm_cross','arm_double_slam','arm_sweep','arm_uppercut','arm_grab','arm_barrage','arm_guardbreak','arm_crush','spike_triple','spike_fan','bounce_quake'];
- state.bossState=dorsal[Math.floor(Math.random()*dorsal.length)];
+ if(state.potionPunishQueued){
+   state.bossState=state.potionPunishKind||'spike_triple';
+   state.potionPunishQueued=false;
+ }else{
+   state.bossState=dorsal[Math.floor(Math.random()*dorsal.length)];
+ }
  state.bossTimer={
    arm_cross:1.26,arm_double_slam:1.46,arm_sweep:1.32,arm_uppercut:1.16,
    arm_grab:1.5,arm_barrage:1.92,arm_guardbreak:1.46,arm_crush:1.58,
