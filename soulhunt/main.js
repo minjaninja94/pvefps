@@ -1760,7 +1760,7 @@ function chooseBossAttack(){
    arm_grab:1.5,arm_barrage:1.92,arm_guardbreak:1.46,arm_crush:1.58,
    spike_triple:1.36,spike_fan:1.42,bounce_quake:3.45
  }[state.bossState];
- state.bossHit=false;state.bossPatternStep=0;state.bossFxStamp='';
+ state.bossHit=false;state.bossPatternStep=0;state.bossFxStamp='';resetBossSweepTrace();
  state.bossAttackTarget.copy(player.position);state.bossAttackTarget.y=0;state.bossAttackTargetLocked=false;
  if(state.bossState==='arm_grab'||state.bossState==='arm_crush')setDanger(true);
 }
@@ -1785,26 +1785,6 @@ const BOSS_ACTIVE_VOLUME={
  arm_grab:{range:3.85,dot:.28},arm_barrage:{range:4.25,dot:.05},
  arm_guardbreak:{range:4.5,dot:.08},arm_crush:{range:4.2,dot:-.08}
 };
-const bossArmTargetMarker=new THREE.Mesh(
- new THREE.RingGeometry(.72,1.0,48),
- new THREE.MeshBasicMaterial({color:0xdf5138,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide})
-);
-bossArmTargetMarker.rotation.x=-Math.PI/2;
-bossArmTargetMarker.position.y=.04;
-bossArmTargetMarker.visible=false;
-scene.add(bossArmTargetMarker);
-
-function updateBossAttackTargetMarker(){
- const slam=state.bossState==='arm_double_slam'||state.bossState==='arm_guardbreak';
- if(!slam||state.bossHp<=0){bossArmTargetMarker.visible=false;return}
- bossArmTargetMarker.visible=true;
- bossArmTargetMarker.position.set(state.bossAttackTarget.x,.04,state.bossAttackTarget.z);
- const pulse=1+Math.sin(state.time*11)*.075;
- const radius=state.bossState==='arm_guardbreak'?1.72:2.02;
- bossArmTargetMarker.scale.setScalar(radius*pulse);
- bossArmTargetMarker.material.opacity=.34+.2*Math.pow(Math.sin(state.time*8),2);
-}
-
 function solveDorsalArmToWorld(arm,targetWorld,alpha=.86){
  if(!arm?.shoulder||!arm?.upperPivot||!arm?.elbow||!arm?.wrist)return;
  for(let i=0;i<3;i++){
@@ -1855,6 +1835,59 @@ function wristsReachedSlamTarget(radius=1.35){
  return close===dorsalArms.length;
 }
 
+const bossSweepPrevWrist=[new THREE.Vector3(),new THREE.Vector3()];
+const bossSweepPrevValid=[false,false];
+function resetBossSweepTrace(){
+ bossSweepPrevValid[0]=false;bossSweepPrevValid[1]=false;
+}
+function sweepHandTarget(arm,progress,doubleSweep=false){
+ const center=state.bossAttackTarget.clone();
+ center.y=1.05;
+ const forward=new THREE.Vector3(Math.sin(boss.rotation.y),0,Math.cos(boss.rotation.y));
+ const right=new THREE.Vector3(forward.z,0,-forward.x);
+ const p=THREE.MathUtils.smootherstep(clamp(progress,0,1),0,1);
+ const span=doubleSweep?5.9:7.2;
+ let lateral;
+ if(doubleSweep){
+   // Both hands start wide and carve through the player's forward space toward the opposite side.
+   lateral=arm.sx<0
+     ? THREE.MathUtils.lerp(-span,span*.76,p)
+     : THREE.MathUtils.lerp(span,-span*.76,p);
+ }else{
+   // Single-arm sweep crosses the entire frontal lane, not just the boss's immediate side.
+   lateral=THREE.MathUtils.lerp(-span,span,p);
+ }
+ center.addScaledVector(right,lateral);
+ // Keep the hand low enough that the forearm visibly cuts through player height.
+ center.y+=Math.sin(p*Math.PI)*.42;
+ return center;
+}
+function bossSweptArmImpact(indices,radius,dmg,posture,unblockable=false){
+ if(state.bossHit)return;
+ const ids=Array.isArray(indices)?indices:[indices];
+ const pp=player.position.clone();pp.y+=1.0;
+ const hitRadius=radius*BOSS_ARM_RADIUS_SCALE;
+ let touched=false;
+ for(const i of ids){
+   const elbow=new THREE.Vector3(),wrist=new THREE.Vector3();
+   dorsalArms[i].elbow.getWorldPosition(elbow);
+   dorsalArms[i].wrist.getWorldPosition(wrist);
+
+   // Visible forearm contact.
+   if(pointSegmentDistance(pp,elbow,wrist)<=hitRadius)touched=true;
+
+   // Swept hand path prevents fast animation from tunnelling through the player between frames.
+   if(!touched&&bossSweepPrevValid[i]&&pointSegmentDistance(pp,bossSweepPrevWrist[i],wrist)<=hitRadius*1.08)touched=true;
+
+   bossSweepPrevWrist[i].copy(wrist);
+   bossSweepPrevValid[i]=true;
+   if(touched)break;
+ }
+ if(!touched)return;
+ state.bossHit=true;
+ if(state.invuln>0){state.shake=Math.max(state.shake,.09);flash('회피',.16);return}
+ hurtPlayer(dmg,posture,unblockable);
+}
 function bossArmImpact(indices,radius,dmg,posture,unblockable=false){
  if(state.bossHit)return;
  const ids=Array.isArray(indices)?indices:[indices];
@@ -1903,24 +1936,26 @@ function animateBossTelegraph(dt){
    L(body.rotation,'x',-.12,9);L(chest.rotation,'x',-.18,10);L(head.rotation,'x',.08,9);
  }
  // Dorsal-arm attacks: every wind-up has a distinct silhouette.
- else if(st==='arm_cross'&&t>.48){
-   // Both hands spread far outside the body, then scissor inward.
-   dorsalArms[0].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[0].shoulder.rotation.y,-.72,1-Math.exp(-dt*12));
-   dorsalArms[1].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[1].shoulder.rotation.y,.72,1-Math.exp(-dt*12));
-   dorsalArms[0].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[0].upperPivot.rotation.z,-1.05,1-Math.exp(-dt*14));
-   dorsalArms[1].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[1].upperPivot.rotation.z,1.05,1-Math.exp(-dt*14));
-   L(body.rotation,'x',-.18,10);L(chest.rotation,'x',-.2,10);L(head.rotation,'x',.1,9);
+ else if(st==='arm_cross'&&t>.56){
+   // Double sweep wind-up: both arms spread extremely wide before carving across the entire front.
+   dorsalArms[0].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[0].shoulder.rotation.y,-1.42,1-Math.exp(-dt*11));
+   dorsalArms[1].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[1].shoulder.rotation.y,1.42,1-Math.exp(-dt*11));
+   dorsalArms[0].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[0].upperPivot.rotation.z,-1.28,1-Math.exp(-dt*13));
+   dorsalArms[1].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[1].upperPivot.rotation.z,1.28,1-Math.exp(-dt*13));
+   dorsalArms[0].elbow.rotation.z=.48;dorsalArms[1].elbow.rotation.z=-.48;
+   L(body.rotation,'x',-.12,10);L(chest.rotation,'x',-.16,10);L(head.rotation,'x',.08,9);
  }else if(st==='arm_double_slam'&&t>.46){
    // Both arms visibly tower over the shell.
    for(const a of dorsalArms){a.shoulder.rotation.x=THREE.MathUtils.lerp(a.shoulder.rotation.x,-1.42,1-Math.exp(-dt*11));a.upperPivot.rotation.x=THREE.MathUtils.lerp(a.upperPivot.rotation.x,-1.68,1-Math.exp(-dt*11));a.elbow.rotation.x=THREE.MathUtils.lerp(a.elbow.rotation.x,-.48,1-Math.exp(-dt*11))}
    body.position.y=THREE.MathUtils.lerp(body.position.y,2.5,1-Math.exp(-dt*8));L(chest.rotation,'x',.3,9);L(head.rotation,'x',-.14,9);
- }else if(st==='arm_sweep'&&t>.5){
-   // Left arm coils behind the body; right arm extends as a counterweight.
-   L(body.rotation,'y',-.62,11);
-   dorsalArms[0].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[0].shoulder.rotation.y,-1.55,1-Math.exp(-dt*13));
-   dorsalArms[0].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[0].upperPivot.rotation.z,-.5,1-Math.exp(-dt*13));
-   dorsalArms[1].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[1].shoulder.rotation.y,-.2,1-Math.exp(-dt*10));
-   L(chest.rotation,'z',-.28,11);L(head.rotation,'z',.16,10);
+ }else if(st==='arm_sweep'&&t>.62){
+   // One-arm sweep wind-up: left arm winds far behind the torso before crossing the player's whole lane.
+   L(body.rotation,'y',-.86,10);
+   dorsalArms[0].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[0].shoulder.rotation.y,-1.92,1-Math.exp(-dt*12));
+   dorsalArms[0].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[0].upperPivot.rotation.z,-1.12,1-Math.exp(-dt*13));
+   dorsalArms[0].elbow.rotation.z=THREE.MathUtils.lerp(dorsalArms[0].elbow.rotation.z,.7,1-Math.exp(-dt*13));
+   dorsalArms[1].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[1].shoulder.rotation.y,.36,1-Math.exp(-dt*9));
+   L(chest.rotation,'z',-.34,11);L(head.rotation,'z',.18,10);
  }else if(st==='arm_uppercut'&&t>.36){
    // Right fist disappears low beside the rib cage before exploding upward.
    const a=dorsalArms[1];a.shoulder.rotation.z=THREE.MathUtils.lerp(a.shoulder.rotation.z,-1.55,1-Math.exp(-dt*14));a.elbow.rotation.z=THREE.MathUtils.lerp(a.elbow.rotation.z,-1.6,1-Math.exp(-dt*14));a.wrist.rotation.x=THREE.MathUtils.lerp(a.wrist.rotation.x,.55,1-Math.exp(-dt*14));L(body.rotation,'z',-.24,10);L(chest.rotation,'z',-.34,11);L(head.rotation,'z',.2,10);
@@ -1959,16 +1994,23 @@ function updateBoss(dt){
  else if(state.bossStagger>0)setBossVisualAction('idle');
  else setBossVisualAction('attack');
  animateBossTelegraph(bossMotionDt);updateBossWarningGlow();animateGiantessPresence(bossMotionDt);updateBossMonsterArmVisuals();
- if(state.bossState==='arm_double_slam'||state.bossState==='arm_guardbreak'){
-   const lockAt=state.bossState==='arm_double_slam'?.62:.54;
+ if(['arm_double_slam','arm_guardbreak','arm_cross','arm_sweep'].includes(state.bossState)){
+   const lockAt={
+     arm_double_slam:.62,
+     arm_guardbreak:.54,
+     arm_cross:.62,
+     arm_sweep:.68
+   }[state.bossState];
    if(!state.bossAttackTargetLocked){
      state.bossAttackTarget.copy(player.position);state.bossAttackTarget.y=0;
-     if(state.bossTimer<=lockAt)state.bossAttackTargetLocked=true;
+     if(state.bossTimer<=lockAt){
+       state.bossAttackTargetLocked=true;
+       resetBossSweepTrace();
+     }
    }
  }else{
    state.bossAttackTargetLocked=false;
  }
- updateBossAttackTargetMarker();
  if(state.reaction>0){
    state.reaction=Math.max(0,state.reaction-dt);
    const k=Math.sin((state.reaction/.16)*Math.PI);
@@ -2055,15 +2097,17 @@ function updateBoss(dt){
    if(state.bossTimer<.47)bossImpact(4.65,25,31,false);
    if(state.bossTimer<=0){tailPivot.rotation.y=0;state.bossState='idle';state.bossTimer=.62}
  }else if(state.bossState==='arm_cross'){
-   if(state.bossTimer<=.48){
-     const p=clamp(1-state.bossTimer/.48,0,1),e=Math.sin(p*Math.PI*.9);
-     dorsalArms[0].shoulder.rotation.y=-.72+p*.9;dorsalArms[1].shoulder.rotation.y=.72-p*.9;
-     dorsalArms[0].upperPivot.rotation.z=-1.05+e*2.75;dorsalArms[1].upperPivot.rotation.z=1.05-e*2.75;
-     dorsalArms[0].elbow.rotation.z=e*1.0;dorsalArms[1].elbow.rotation.z=-e*1.0;
-     trailArms(1.05);
-     if(inBossHitWindow(state.bossTimer,.26,.17))bossArmImpact([0,1],1.55,24,30,false);
+   if(state.bossTimer<=.56){
+     const p=clamp(1-state.bossTimer/.56,0,1);
+     for(const a of dorsalArms){
+       const target=sweepHandTarget(a,p,true);
+       solveDorsalArmToWorld(a,target,.93);
+       spawnArmTrail(a,1.3);
+     }
+     // Long active band: the two forearms sweep a broad frontal zone, but only visible limb paths can hit.
+     if(p>=.16&&p<=.9)bossSweptArmImpact([0,1],1.42,28,34,false);
    }
-   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.1}
+   if(state.bossTimer<=0){resetBossSweepTrace();resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.18}
  }else if(state.bossState==='arm_double_slam'){
    if(state.bossTimer<=.46){
      const p=clamp(1-state.bossTimer/.46,0,1);
@@ -2080,18 +2124,19 @@ function updateBoss(dt){
        });
      }
    }
-   if(state.bossTimer<=0){bossArmTargetMarker.visible=false;resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.35}
+   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.35}
  }else if(state.bossState==='arm_sweep'){
-   if(state.bossTimer<=.5){
-     const p=clamp(1-state.bossTimer/.5,0,1),e=Math.sin(p*Math.PI*.9);
-     dorsalArms[0].shoulder.rotation.y=-1.55+e*3.0;
-     dorsalArms[0].upperPivot.rotation.z=-.5+e*1.15;
-     dorsalArms[0].elbow.rotation.z=e*.5;
-     dorsalArms[1].shoulder.rotation.y=-.2+e*.7;
-     spawnArmTrail(dorsalArms[0],1.25);
-     if(inBossHitWindow(state.bossTimer,.27,.17))bossArmImpact(0,1.55,28,36,false);
+   if(state.bossTimer<=.62){
+     const p=clamp(1-state.bossTimer/.62,0,1),a=dorsalArms[0];
+     const target=sweepHandTarget(a,p,false);
+     solveDorsalArmToWorld(a,target,.95);
+     // Counter-arm stays opened so the silhouette reads as one deliberate massive swing.
+     dorsalArms[1].shoulder.rotation.y=.32-Math.sin(p*Math.PI)*.28;
+     body.rotation.y=-.42+THREE.MathUtils.smoothstep(p,.18,.82)*.84;
+     spawnArmTrail(a,1.42);
+     if(p>=.12&&p<=.92)bossSweptArmImpact(0,1.5,32,39,false);
    }
-   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.15}
+   if(state.bossTimer<=0){resetBossSweepTrace();resetDorsalArms(1);body.rotation.y=0;state.bossState='idle';state.bossTimer=1.22}
  }else if(state.bossState==='arm_uppercut'){
    if(state.bossTimer<=.36){
      const p=clamp(1-state.bossTimer/.36,0,1),e=Math.sin(p*Math.PI*.86);
@@ -2136,7 +2181,7 @@ function updateBoss(dt){
        });
      }
    }
-   if(state.bossTimer<=0){bossArmTargetMarker.visible=false;resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.32}
+   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.32}
  }else if(state.bossState==='arm_crush'){
    if(state.bossTimer<=.42){
      const p=clamp(1-state.bossTimer/.42,0,1),e=Math.sin(p*Math.PI*.86);
