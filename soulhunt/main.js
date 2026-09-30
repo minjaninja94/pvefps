@@ -11,7 +11,7 @@ renderer.localClippingEnabled=true;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x08090a);
 scene.fog=new THREE.FogExp2(0x08090a,.03);
-const camera=new THREE.PerspectiveCamera(58,1,.1,140);
+const camera=new THREE.PerspectiveCamera(58,1,.1,260);
 const clock=new THREE.Clock();
 const assetLoader=new GLTFLoader();
 
@@ -425,7 +425,13 @@ function setPlayerVisualAction(name,fade=.12){
  playerActionName=name;
 }
 
-const boss=new THREE.Group();scene.add(boss);
+const BOSS_GIANT_SCALE=4.5;
+const BOSS_ENGAGE_SCALE=3.0;
+const BOSS_ARM_RADIUS_SCALE=2.0;
+const BOSS_SHOCKWAVE_SCALE=2.35;
+const boss=new THREE.Group();
+boss.scale.setScalar(BOSS_GIANT_SCALE);
+scene.add(boss);
 const shell=mat(0x24292d,.7,.34),shellDark=mat(0x111518,.56,.58),carapace=mat(0x555d63,.76,.3),meat=mat(0x4e211d,.02,.9),horn=mat(0xb7aa94,.12,.58);
 const skin=new THREE.MeshStandardMaterial({color:0xd9a99e,roughness:.58,metalness:.01});
 const skinShadow=new THREE.MeshStandardMaterial({color:0xb97e76,roughness:.66,metalness:.01});
@@ -1021,7 +1027,7 @@ function makeBossSpikeProjectile(){
  const root=cloneMonsterSpikeVisual();
  if(root){
    root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=false}});
-   root.scale.setScalar(.34);
+   root.scale.setScalar(.58);
    return root;
  }
  const fallback=new THREE.Mesh(
@@ -1433,17 +1439,18 @@ function updateDustFX(dt){
 }
 const bossShockwaves=[];
 function spawnBossShockwave(radius=4.8,dmg=24){
+ const actualRadius=radius*BOSS_SHOCKWAVE_SCALE;
  const p=boss.position.clone();p.y=.045;
  const ring=new THREE.Mesh(
    new THREE.RingGeometry(.62,.84,48),
    new THREE.MeshBasicMaterial({color:0xd9c8aa,transparent:true,opacity:.72,depthWrite:false,side:THREE.DoubleSide})
  );
  ring.rotation.x=-Math.PI/2;ring.position.copy(p);scene.add(ring);
- bossShockwaves.push({ring,life:.62,max:.62,radius});
+ bossShockwaves.push({ring,life:.62,max:.62,radius:actualRadius});
 
  const dx=player.position.x-boss.position.x,dz=player.position.z-boss.position.z;
  const groundDist=Math.hypot(dx,dz);
- if(groundDist<=radius){
+ if(groundDist<=actualRadius){
    if(state.invuln>0)flash('충격파 회피',.16);
    else hurtPlayer(dmg,28,false);
  }
@@ -1572,7 +1579,7 @@ function animateGiantessPresence(dt){
      bossLowerMixer.timeScale=0;
    }else{
      bossLowerMixer.timeScale=1;
-     const desired=state.bossStagger>0?'idle_hitreact1':(state.bossState==='idle'&&dist()>4.15?'walk':'idle');
+     const desired=state.bossStagger>0?'idle_hitreact1':(state.bossState==='idle'&&dist()>4.15*BOSS_ENGAGE_SCALE?'walk':'idle');
      setBossLowerAction(desired);
      bossLowerMixer.update(dt);
    }
@@ -1719,7 +1726,7 @@ function hitBoss(base,posture=12){
    const d=p.distanceTo(playerHitPoint);
    if(d<spikeDist){spikeDist=d;spikeTarget=s}
  }
- const zone=(spikeTarget&&spikeDist<2.25)?'spike':hitZone();
+ const zone=(spikeTarget&&spikeDist<2.25*(BOSS_GIANT_SCALE*.45))?'spike':hitZone();
  let dmg=base,pd=posture;state.reaction=.16;state.reactionZone=zone;
  if(zone==='spike'){
    dmg*=1.12;pd*=2.15;spikeTarget.hp-=base;
@@ -1755,7 +1762,7 @@ function chooseBossAttack(){
 }
 function inBossHitWindow(t,from,to){return t<=from&&t>=to}
 function bossImpact(range,dmg,posture,unblockable=false){
- if(!state.bossHit&&dist()<range){
+ if(!state.bossHit&&dist()<range*BOSS_ENGAGE_SCALE){
    state.bossHit=true;
    if(state.invuln>0){state.shake=Math.max(state.shake,.07);flash('회피',.16);return}
    hurtPlayer(dmg,posture,unblockable);
@@ -1778,12 +1785,13 @@ function bossArmImpact(indices,radius,dmg,posture,unblockable=false){
  if(state.bossHit)return;
  const ids=Array.isArray(indices)?indices:[indices];
  const pp=player.position.clone();pp.y+=1.0;
+ const hitRadius=radius*BOSS_ARM_RADIUS_SCALE;
  let touched=false;
  for(const i of ids){
    const elbow=new THREE.Vector3(),wrist=new THREE.Vector3();
    dorsalArms[i].elbow.getWorldPosition(elbow);
    dorsalArms[i].wrist.getWorldPosition(wrist);
-   if(pointSegmentDistance(pp,elbow,wrist)<=radius||wrist.distanceTo(pp)<=radius*1.12){touched=true;break}
+   if(pointSegmentDistance(pp,elbow,wrist)<=hitRadius||wrist.distanceTo(pp)<=hitRadius*1.12){touched=true;break}
  }
  // Fallback volume exists only during the already-short active frame. It prevents a stationary
  // player from being mysteriously safe when the visual anime arm and invisible rig diverge slightly.
@@ -1792,7 +1800,7 @@ function bossArmImpact(indices,radius,dmg,posture,unblockable=false){
    if(cfg){
      const toP=flatDir(boss.position,player.position);
      const forward=new THREE.Vector3(Math.sin(boss.rotation.y),0,Math.cos(boss.rotation.y));
-     touched=dist()<=cfg.range&&forward.dot(toP)>=cfg.dot;
+     touched=dist()<=cfg.range*BOSS_ENGAGE_SCALE&&forward.dot(toP)>=cfg.dot;
    }
  }
  if(!touched)return;
@@ -1882,7 +1890,7 @@ const BOSS_AIM_RANGE={
 function updateBoss(dt){
  const bossMotionDt=state.bossState?.startsWith?.('arm_')?dt/bossAttackScale(state.bossState):dt;
  if(state.bossHp<=0)setBossVisualAction('dead');
- else if(state.bossState==='idle')setBossVisualAction(dist()>4.2?'walk':'idle');
+ else if(state.bossState==='idle')setBossVisualAction(dist()>4.2*BOSS_ENGAGE_SCALE?'walk':'idle');
  else if(state.bossStagger>0)setBossVisualAction('idle');
  else setBossVisualAction('attack');
  animateBossTelegraph(bossMotionDt);updateBossWarningGlow();animateGiantessPresence(bossMotionDt);updateBossMonsterArmVisuals();
@@ -1919,16 +1927,16 @@ function updateBoss(dt){
    const cutoff=BOSS_AIM_CUTOFF[state.bossState]??0;
    if(state.bossTimer>cutoff){
      boss.rotation.y=THREE.MathUtils.lerp(boss.rotation.y,face,1-Math.exp(-bossMotionDt*4.2));
-     const targetRange=BOSS_AIM_RANGE[state.bossState]??3.2;
-     if(d>targetRange+.18)boss.position.addScaledVector(dir,bossMotionDt*Math.min(2.35,(d-targetRange)*1.55));
+     const targetRange=(BOSS_AIM_RANGE[state.bossState]??3.2)*BOSS_ENGAGE_SCALE;
+     if(d>targetRange+.45)boss.position.addScaledVector(dir,bossMotionDt*Math.min(3.0,(d-targetRange)*1.25));
    }
  }
  if(state.bossState==='idle'){
    state.bossTimer-=dt;
    const recoveryWindow=state.bossTimer>.58;
    if(!recoveryWindow){
-     if(d>4.45)boss.position.addScaledVector(dir,dt*(state.legBroken?1.55:2.2));
-     else if(d<2.35)boss.position.addScaledVector(dir,-dt*.28);
+     if(d>4.45*BOSS_ENGAGE_SCALE)boss.position.addScaledVector(dir,dt*(state.legBroken?2.0:2.8));
+     else if(d<2.35*BOSS_ENGAGE_SCALE)boss.position.addScaledVector(dir,-dt*.42);
    }else{
      // Vordt/Aldrich-style punish window: boss commits and briefly stays put.
      boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*1.4));
@@ -2063,7 +2071,7 @@ function updateBoss(dt){
      const cycle=clamp((elapsed-.24)/.9,0,2.999);
      const jumpIndex=Math.floor(cycle),local=cycle-jumpIndex;
      const air=Math.sin(local*Math.PI);
-     boss.position.y=air*1.45;
+     boss.position.y=air*1.45*BOSS_ENGAGE_SCALE;
 
      // Slight forward drift on each leap; committed landing creates the punishable shockwave.
      if(local<.58){
@@ -2169,7 +2177,7 @@ function updatePlayer(dt){
    state.attack-=dt/playerAttackScale();const p=1-state.attack/dur;
    applyWeaponAttackPose(w,step,p);
    const hitAt=[0,.23,.25,.31][step]/w.speed,range=[0,3.15,3.25,3.45][step]*w.reach,damage=[0,22,25,36][step]*w.damage*gripDamage,post=[0,11,13,20][step]*w.posture*gripPosture;
-   if(!state.attackHit&&state.attack<hitAt&&dist()<range){
+   if(!state.attackHit&&state.attack<hitAt&&dist()<range*(BOSS_GIANT_SCALE*.82)){
      state.attackHit=true;
      hitBoss(damage,post);
      hitStop(.018*w.hitstop+(step===3 ? .018 : 0));
@@ -2254,7 +2262,7 @@ function updateLockMarker(){
  if(!ui.lockDot)return;
  const show=input.lock&&state.bossHp>0;
  if(!show){ui.lockDot.classList.remove('on');return}
- const p=boss.position.clone().add(new THREE.Vector3(0,4.35,.15)).project(camera);
+ const p=boss.position.clone().add(new THREE.Vector3(0,4.35*BOSS_GIANT_SCALE,.15)).project(camera);
  const visible=p.z>-1&&p.z<1&&Math.abs(p.x)<1.15&&Math.abs(p.y)<1.15;
  if(!visible){ui.lockDot.classList.remove('on');return}
  ui.lockDot.style.left=((p.x*.5+.5)*innerWidth)+'px';
@@ -2270,13 +2278,13 @@ function updateCamera(dt){
    const d=dist(),armAttack=state.bossState.startsWith('arm_');
    const toBoss=flatDir(player.position,boss.position);
    const right=new THREE.Vector3(toBoss.z,0,-toBoss.x);
-   const backDist=clamp(6.55+d*.2,6.8,9.3)+(armAttack?.45:0);
-   const height=2.45+clamp(d*.075,.1,1.0)+(armAttack?.22:0);
-   desiredPos.copy(target).addScaledVector(toBoss,-backDist).addScaledVector(right,.34).add(new THREE.Vector3(0,height,0));
-   const bossFocus=boss.position.clone().add(new THREE.Vector3(0,4.0,0));
-   const focusWeight=clamp(.44+d*.012,.45,.58);
+   const backDist=clamp(10.5+d*.45,13.5,25)+(armAttack?1.4:0);
+   const height=4.4+clamp(d*.15,.8,4.8)+(armAttack?.65:0);
+   desiredPos.copy(target).addScaledVector(toBoss,-backDist).addScaledVector(right,.55).add(new THREE.Vector3(0,height,0));
+   const bossFocus=boss.position.clone().add(new THREE.Vector3(0,4.0*BOSS_GIANT_SCALE,0));
+   const focusWeight=clamp(.58+d*.008,.58,.72);
    desiredLook.copy(target).lerp(bossFocus,focusWeight);
-   wantedFov=armAttack?64:60;
+   wantedFov=armAttack?68:64;
  }else{
    const f=new THREE.Vector3(Math.sin(input.camYaw),0,Math.cos(input.camYaw)).normalize();
    const right=new THREE.Vector3(f.z,0,-f.x);
