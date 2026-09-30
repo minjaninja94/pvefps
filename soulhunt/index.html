@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Soulhunt Combat Test</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="hud">
+    <div class="bar"><span>HP</span><i id="hp"></i></div>
+    <div class="bar posture"><span>POSTURE</span><i id="posture"></i></div>
+    <div id="boss">
+      <b>철갑수 · 테스트 개체</b>
+      <div class="bossbar"><i id="bossHp"></i></div>
+      <div class="bossbar posture"><i id="bossPosture"></i></div>
+    </div>
+    <div id="hint">WASD 이동 · Shift 달리기 · Space 구르기 · LMB 공격 · RMB 가드/튕겨내기 · Q 락온</div>
+    <div id="message"></div>
+  </div>
+  <canvas id="game"></canvas>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
