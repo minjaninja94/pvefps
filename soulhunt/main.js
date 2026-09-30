@@ -638,50 +638,89 @@ function updateBoss(dt){
    if(state.bossTimer<.47)bossImpact(4.65,25,31,false);
    if(state.bossTimer<=0){tailPivot.rotation.y=0;state.bossState='idle';state.bossTimer=.62}
  }else if(state.bossState==='arm_cross'){
-   const p=1-state.bossTimer/.92,s=Math.sin(clamp(p,0,1)*Math.PI);
-   dorsalArms[0].upperPivot.rotation.z=s*1.9;dorsalArms[1].upperPivot.rotation.z=-s*1.9;
-   dorsalArms[0].elbow.rotation.z=s*1.05;dorsalArms[1].elbow.rotation.z=-s*1.05;
-   if(state.bossTimer<.42)bossImpact(4.1,24,30,false);
-   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.6}
- }else if(state.bossState==='arm_double_slam'){
-   const p=1-state.bossTimer/1.08;
-   for(const a of dorsalArms){a.shoulder.rotation.x=-Math.sin(clamp(p,0,.55)/.55*Math.PI)*.85;a.upperPivot.rotation.x=-Math.sin(clamp(p,0,1)*Math.PI)*1.55}
-   if(state.bossTimer<.38)bossImpact(4.4,36,48,false);
-   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.85}
- }else if(state.bossState==='arm_sweep'){
-   const p=1-state.bossTimer/.98,s=Math.sin(clamp(p,0,1)*Math.PI);
-   dorsalArms[0].shoulder.rotation.y=-1.35+s*2.7;dorsalArms[1].shoulder.rotation.y=1.35-s*2.7;
-   dorsalArms[0].upperPivot.rotation.z=.7;dorsalArms[1].upperPivot.rotation.z=-.7;
-   if(state.bossTimer<.5)bossImpact(5.0,28,36,false);
-   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.68}
- }else if(state.bossState==='arm_uppercut'){
-   const p=1-state.bossTimer/.82,s=Math.sin(clamp(p,0,1)*Math.PI);
-   const a=dorsalArms[1];a.shoulder.rotation.z=-.5+s*1.5;a.elbow.rotation.z=-s*1.15;body.rotation.x=-s*.08;
-   if(state.bossTimer<.32)bossImpact(3.7,30,42,false);
-   if(state.bossTimer<=0){resetDorsalArms(1);body.rotation.x=0;state.bossState='idle';state.bossTimer=.62}
- }else if(state.bossState==='arm_grab'){
-   const p=1-state.bossTimer/1.18,s=Math.sin(clamp(p,0,1)*Math.PI);
-   const a=dorsalArms[0];a.shoulder.rotation.x=-.45;a.shoulder.rotation.y=-s*.95;a.elbow.rotation.z=s*1.35;
-   if(state.bossTimer<.36)bossImpact(3.25,42,58,true);
-   if(state.bossTimer<=0){setDanger(false);resetDorsalArms(1);state.bossState='idle';state.bossTimer=.95}
- }else if(state.bossState==='arm_barrage'){
-   const p=1-state.bossTimer/1.42,phase=Math.floor(p*6),s=Math.sin((p*6-phase)*Math.PI);
-   const idx=phase%2;dorsalArms[idx].upperPivot.rotation.z=(idx? -1:1)*s*1.7;dorsalArms[idx].elbow.rotation.z=(idx?-.7:.7)*s;
-   if(phase!==state.bossPatternStep){state.bossPatternStep=phase;state.bossHit=false}
-   if(s>.72)bossImpact(3.8,14,18,false);
+   if(state.bossTimer<=.48){
+     const p=clamp(1-state.bossTimer/.48,0,1),e=Math.sin(p*Math.PI*.9);
+     dorsalArms[0].shoulder.rotation.y=-.72+p*.9;dorsalArms[1].shoulder.rotation.y=.72-p*.9;
+     dorsalArms[0].upperPivot.rotation.z=-1.05+e*2.75;dorsalArms[1].upperPivot.rotation.z=1.05-e*2.75;
+     dorsalArms[0].elbow.rotation.z=e*1.0;dorsalArms[1].elbow.rotation.z=-e*1.0;
+     trailArms(1.05);
+     if(state.bossTimer<.28)bossImpact(4.1,24,30,false);
+   }
    if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.72}
- }else if(state.bossState==='arm_guardbreak'){
-   const p=1-state.bossTimer/1.05,s=Math.sin(clamp(p,0,1)*Math.PI);
-   dorsalArms[0].upperPivot.rotation.x=-1.1*s;dorsalArms[1].upperPivot.rotation.x=-1.1*s;
-   dorsalArms[0].shoulder.rotation.z=.55*s;dorsalArms[1].shoulder.rotation.z=-.55*s;
-   if(state.bossTimer<.3)bossImpact(4.0,22,72,false);
-   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.9}
- }else if(state.bossState==='arm_crush'){
-   const p=1-state.bossTimer/1.22,s=Math.sin(clamp(p,0,1)*Math.PI);
-   dorsalArms[0].shoulder.rotation.y=-.9*s;dorsalArms[1].shoulder.rotation.y=.9*s;
-   dorsalArms[0].elbow.rotation.z=.95*s;dorsalArms[1].elbow.rotation.z=-.95*s;
-   if(state.bossTimer<.4)bossImpact(3.3,46,64,true);
+ }else if(state.bossState==='arm_double_slam'){
+   if(state.bossTimer<=.46){
+     const p=clamp(1-state.bossTimer/.46,0,1),e=Math.sin(p*Math.PI*.72);
+     for(const a of dorsalArms){a.shoulder.rotation.x=-1.42+e*2.0;a.upperPivot.rotation.x=-1.68+e*2.25;a.elbow.rotation.x=-.48+e*.75}
+     trailArms(1.2);
+     if(state.bossTimer<.3){
+       bossFxOnce('double-slam',()=>{spawnDustBurst(bossGroundPoint(2.0),1.75);state.shake=Math.max(state.shake,.24)});
+       bossImpact(4.4,36,48,false);
+     }
+   }
+   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.96}
+ }else if(state.bossState==='arm_sweep'){
+   if(state.bossTimer<=.5){
+     const p=clamp(1-state.bossTimer/.5,0,1),e=Math.sin(p*Math.PI*.9);
+     dorsalArms[0].shoulder.rotation.y=-1.55+e*3.0;
+     dorsalArms[0].upperPivot.rotation.z=-.5+e*1.15;
+     dorsalArms[0].elbow.rotation.z=e*.5;
+     dorsalArms[1].shoulder.rotation.y=-.2+e*.7;
+     spawnArmTrail(dorsalArms[0],1.25);
+     if(state.bossTimer<.3)bossImpact(5.0,28,36,false);
+   }
+   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.78}
+ }else if(state.bossState==='arm_uppercut'){
+   if(state.bossTimer<=.36){
+     const p=clamp(1-state.bossTimer/.36,0,1),e=Math.sin(p*Math.PI*.86);
+     const a=dorsalArms[1];a.shoulder.rotation.z=-1.55+e*2.7;a.elbow.rotation.z=-1.6+e*2.35;a.wrist.rotation.x=.55-e*.85;
+     body.rotation.z=-.24+e*.34;spawnArmTrail(a,1.3);
+     if(state.bossTimer<.22)bossImpact(3.7,30,42,false);
+   }
+   if(state.bossTimer<=0){resetDorsalArms(1);body.rotation.z=0;state.bossState='idle';state.bossTimer=.72}
+ }else if(state.bossState==='arm_grab'){
+   if(state.bossTimer<=.4){
+     const p=clamp(1-state.bossTimer/.4,0,1),e=Math.sin(p*Math.PI*.82);
+     const a=dorsalArms[0];a.shoulder.rotation.x=-.72+e*.92;a.shoulder.rotation.y=-1.48+e*1.5;a.elbow.rotation.z=1.55-e*1.2;a.wrist.rotation.y=-.7+e*.85;
+     spawnArmTrail(a,1.15);
+     if(state.bossTimer<.24)bossImpact(3.25,42,58,true);
+   }
    if(state.bossTimer<=0){setDanger(false);resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.0}
+ }else if(state.bossState==='arm_barrage'){
+   if(state.bossTimer<=1.32){
+     const active=clamp((1.32-state.bossTimer)/1.06,0,.999),phase=Math.floor(active*6),local=(active*6)-phase,s=Math.sin(local*Math.PI);
+     const idx=phase%2,a=dorsalArms[idx],sign=idx?-1:1;
+     a.upperPivot.rotation.z=sign*(.72+s*1.25);a.elbow.rotation.z=sign*(.58+s*.78);a.shoulder.rotation.y=sign*s*.42;
+     spawnArmTrail(a,1.0);
+     if(phase!==state.bossPatternStep){state.bossPatternStep=phase;state.bossHit=false;state.bossFxStamp=''}
+     if(s>.74){
+       bossFxOnce('barrage-'+phase,()=>spawnDustBurst(bossGroundPoint(1.45),.55));
+       bossImpact(3.8,14,18,false);
+     }
+   }
+   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.86}
+ }else if(state.bossState==='arm_guardbreak'){
+   if(state.bossTimer<=.38){
+     const p=clamp(1-state.bossTimer/.38,0,1),e=Math.sin(p*Math.PI*.72);
+     for(const a of dorsalArms){a.shoulder.rotation.x=-1.5+e*2.05;a.upperPivot.rotation.x=-.65+e*.9;a.elbow.rotation.x=-1.05+e*1.3}
+     trailArms(1.35);
+     if(state.bossTimer<.24){
+       bossFxOnce('guardbreak',()=>{spawnDustBurst(bossGroundPoint(1.7),1.35);state.shake=Math.max(state.shake,.2)});
+       bossImpact(4.0,22,72,false);
+     }
+   }
+   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.0}
+ }else if(state.bossState==='arm_crush'){
+   if(state.bossTimer<=.42){
+     const p=clamp(1-state.bossTimer/.42,0,1),e=Math.sin(p*Math.PI*.86);
+     dorsalArms[0].shoulder.rotation.y=-1.72+e*1.85;dorsalArms[1].shoulder.rotation.y=1.72-e*1.85;
+     dorsalArms[0].elbow.rotation.z=1.15-e*.72;dorsalArms[1].elbow.rotation.z=-1.15+e*.72;
+     trailArms(1.2);
+     if(state.bossTimer<.25){
+       bossFxOnce('crush',()=>spawnDustBurst(bossGroundPoint(1.25),.9));
+       bossImpact(3.3,46,64,true);
+     }
+   }
+   if(state.bossTimer<=0){setDanger(false);resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.08}
  }else if(state.bossState==='peril'){
    // red perilous pounce: cannot be guarded/deflected; lateral roll is the intended answer.
    head.rotation.x=-.55;body.rotation.x=.12;
