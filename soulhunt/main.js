@@ -897,6 +897,10 @@ async function loadAnimeBossUpper(){
        const node=humanoid?.getNormalizedBoneNode?.(hName);
        if(node)cacheAnimeBossBone(key,node);
      }
+     for(const armBone of ['leftUpperArm','rightUpperArm']){
+       const b=animeBossBones[armBone];
+       if(b)b.scale.set(.00001,.00001,.00001);
+     }
      setTimeout(tryBuildBossMonsterArms,0);
 
      // Centaur construction: keep the entire authored upper body visible, collapse only the human legs.
@@ -1055,9 +1059,9 @@ function tryBuildBossMonsterArms(){
    const hand=cloneBossDonorPart(side,'hand');
    if(!upper||!lower||!hand)continue;
 
-   upper.userData.baseThickness=1.08;
-   lower.userData.baseThickness=1.0;
-   hand.userData.baseScale=.92;
+   upper.userData.baseThickness=1.34;
+   lower.userData.baseThickness=1.22;
+   hand.userData.baseScale=.82;
 
    const upperArmor=new THREE.Group(),lowerArmor=new THREE.Group(),elbowArmor=new THREE.Group();
    for(const [ag,gi] of [[upperArmor,0],[lowerArmor,1]]){
@@ -1065,14 +1069,14 @@ function tryBuildBossMonsterArms(){
        const spike=cloneMonsterSpikeVisual();
        if(!spike)continue;
        spike.position.set(i*.17,.04,-.22);
-       spike.scale.set(.22+.04*gi,.34+.06*gi,.22+.04*gi);
+       spike.scale.set(.14+.025*gi,.24+.04*gi,.14+.025*gi);
        spike.rotation.x=-.38;spike.rotation.z=i*.2;
        ag.add(spike);
      }
    }
    const elbowSpike=cloneMonsterSpikeVisual();
    if(elbowSpike){
-     elbowSpike.scale.set(.38,.6,.38);
+     elbowSpike.scale.set(.24,.4,.24);
      elbowSpike.rotation.x=-.6;
      elbowArmor.add(elbowSpike);
    }
@@ -1095,8 +1099,8 @@ function updateBossMonsterArmVisuals(){
    const p0=boss.worldToLocal(sw.clone()),p1=boss.worldToLocal(ew.clone()),p2=boss.worldToLocal(ww.clone());
 
    // Donor upper/lower limbs exactly follow the original boss combat rig.
-   orientSegment(a.upper,p0,p1,a.upper.userData.baseThickness||1.08);
-   orientSegment(a.lower,p1,p2,a.lower.userData.baseThickness||1.0);
+   orientSegment(a.upper,p0,p1,a.upper.userData.baseThickness||1.34);
+   orientSegment(a.lower,p1,p2,a.lower.userData.baseThickness||1.22);
    orientSegment(a.upperArmor,p0,p1,1.0);
    orientSegment(a.lowerArmor,p1,p2,.94);
 
@@ -1106,7 +1110,7 @@ function updateBossMonsterArmVisuals(){
    a.hand.position.copy(p2);
    const foreDir=p2.clone().sub(p1).normalize();
    a.hand.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),foreDir);
-   a.hand.scale.setScalar(a.hand.userData.baseScale||.92);
+   a.hand.scale.setScalar(a.hand.userData.baseScale||.82);
 
    const active=state?.bossState?.startsWith?.('arm_');
    const pulse=active?1.025+Math.sin(state.time*12)*.012:1;
