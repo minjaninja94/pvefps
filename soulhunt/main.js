@@ -1360,7 +1360,7 @@ function tryRoll(){
    state.rollDir.addScaledVector(toBoss,z).addScaledVector(right,x);
  }else{
    const forward=new THREE.Vector3(Math.sin(player.rotation.y),0,Math.cos(player.rotation.y));
-   const strafe=new THREE.Vector3(forward.z,0,-forward.x);
+   const strafe=new THREE.Vector3(-forward.z,0,forward.x);
    state.rollDir.addScaledVector(forward,z).addScaledVector(strafe,x);
  }
  // Neutral dodge is a backstep away from the locked target / camera facing.
@@ -1854,7 +1854,7 @@ function updatePlayer(dt){
      move.addScaledVector(toBoss,z).addScaledVector(right,x).normalize();
    }else{
      const forward=new THREE.Vector3(Math.sin(player.rotation.y),0,Math.cos(player.rotation.y));
-     const strafe=new THREE.Vector3(forward.z,0,-forward.x);
+     const strafe=new THREE.Vector3(-forward.z,0,forward.x);
      move.addScaledVector(forward,z).addScaledVector(strafe,x).normalize();
    }
    const sprint=(input.keys.has('ShiftLeft')||input.keys.has('ShiftRight'))&&state.stamina>0&&state.exhausted<=0;
