@@ -219,7 +219,7 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
    const handTarget=shoulder.clone().add(playerLocalVector(delta));
    const elbowDelta=new THREE.Vector3(sx*reach*.28,-reach*.4,delta.z*.42);
    const elbowTarget=shoulder.clone().add(playerLocalVector(elbowDelta));
-   solveArmCCD(playerVrmBones,side,handTarget,elbowTarget,1-Math.exp(-dt*18));
+   solveArmCCD(playerVrmBones,side,handTarget,elbowTarget,1-Math.exp(-dt*32));
  }
 }
 
@@ -656,7 +656,7 @@ function applyBossArmIK(dt){
      handTarget=shoulder.clone().add(localDown);
      elbowTarget=shoulder.clone().add(localElbow);
    }
-   solveArmCCD(animeBossBones,side,handTarget,elbowTarget,1-Math.exp(-dt*15));
+   solveArmCCD(animeBossBones,side,handTarget,elbowTarget,1-Math.exp(-dt*24));
  }
 }
 
@@ -1723,33 +1723,25 @@ function updateBoss(dt){
 }
 
 function applyWeaponAttackPose(w,step,p){
- const s=Math.sin(clamp(p,0,1)*Math.PI),m=w.motion;
+ const t=clamp(p,0,1),s=Math.sin(t*Math.PI),side=step===2?-1:1;
+ weaponPivot.position.set(0,0,0);
+
+ // The hands/arms now create the attack arc. Weapon-local motion is intentionally small
+ // so the weapon stays seated in the palm instead of spinning independently around it.
  if(w.id==='straight'){
-   if(step===1){weaponPivot.rotation.set(-1.05+s*2.2,0,-.34+s*.72);player.rotation.z=-s*.1}
-   if(step===2){weaponPivot.rotation.set(.9-s*2.4,0,.42-s*.86);player.rotation.z=s*.12}
-   if(step===3){weaponPivot.rotation.set(-1.35+s*2.85,s*.25,0);player.rotation.x=-s*.07}
+   weaponPivot.rotation.set(-.08+s*.12,side*s*.035,-side*s*.12);
  }else if(w.id==='greatsword'){
-   if(step===1){weaponPivot.rotation.set(-1.5+s*2.75,-.28+s*.25,-.55+s*.9);playerBody.rotation.z=-s*.18}
-   if(step===2){weaponPivot.rotation.set(1.15-s*2.9,.35-s*.4,.55-s*1.0);playerBody.rotation.z=s*.2}
-   if(step===3){weaponPivot.rotation.set(-1.8+s*3.45,0,s*.22);player.rotation.x=-s*.12}
+   weaponPivot.rotation.set(-.16+s*.18,side*s*.055,-side*s*.1);
  }else if(w.id==='hammer'){
-   weaponPivot.rotation.y=0;
-   if(step===1){weaponPivot.rotation.x=-1.85+s*3.15;weaponPivot.rotation.z=-.22+s*.3;playerBody.rotation.x=-s*.12}
-   if(step===2){weaponPivot.rotation.x=-1.4+s*2.8;weaponPivot.rotation.y=-.5+s*1.0;player.rotation.z=s*.14}
-   if(step===3){weaponPivot.rotation.x=-2.1+s*3.8;playerBody.rotation.x=-s*.18}
+   weaponPivot.rotation.set(-.22+s*.16,side*s*.04,-side*s*.07);
  }else if(w.id==='spear'){
-   const thrust=Math.sin(clamp(p,0,1)*Math.PI);
-   weaponPivot.rotation.set(-.08,-.05,.05);weaponPivot.position.z=-thrust*(step===3?1.05:.72);playerBody.rotation.x=-thrust*.08;
+   weaponPivot.rotation.set(-.03,0,side*s*.025);
  }else if(w.id==='katana'){
-   if(step===1){weaponPivot.rotation.set(-.85+s*2.55,-.4+s*.55,-.58+s*.95);player.rotation.z=-s*.09}
-   if(step===2){weaponPivot.rotation.set(.7-s*2.65,.35-s*.65,.55-s*1.1);player.rotation.z=s*.11}
-   if(step===3){weaponPivot.rotation.set(-1.2+s*3.2,-.25+s*.5,0);player.rotation.x=-s*.09}
+   weaponPivot.rotation.set(-.12+s*.1,side*s*.05,-side*s*.15);
  }else{
-   if(step===1){weaponPivot.rotation.set(-1.35+s*2.75,-.15,-.48+s*.82);playerBody.rotation.z=-s*.15}
-   if(step===2){weaponPivot.rotation.set(.95-s*2.55,.3,.5-s*.9);playerBody.rotation.z=s*.16}
-   if(step===3){weaponPivot.rotation.set(-1.65+s*3.25,0,.18*s);player.rotation.x=-s*.1}
+   weaponPivot.rotation.set(-.16+s*.12,side*s*.045,-side*s*.11);
  }
- weaponPivot.scale.setScalar((twoHanded?1.06:1)*(1+(m-1)*.03));
+ weaponPivot.scale.setScalar(twoHanded?1.06:1);
 }
 function updatePlayer(dt){
  if(state.dead){setPlayerVisualAction('dead');if(playerMixer)playerMixer.update(dt);return;}
