@@ -112,45 +112,115 @@ function toggleGrip(){if(state?.attack>0||state?.rolling>0)return;twoHanded=!two
 buildWeapon();
 player.position.set(0,0,8);
 
-let knightVisual=null;
-assetLoader.load('./assets/models/player/adult-knight-base.glb',gltf=>{
-  knightVisual=gltf.scene;
-  knightVisual.name='AdultProportionKnightBase';
-  knightVisual.rotation.y=Math.PI;
-  knightVisual.updateMatrixWorld(true);
+let knightVisual=null,playerVrm=null,playerVrmRoot=null;
+const playerVrmBones={},playerVrmRest={};
+function cachePlayerVrmBone(name,node){
+ if(!node)return;
+ playerVrmBones[name]=node;
+ playerVrmRest[name]={rotation:node.rotation.clone(),position:node.position.clone(),scale:node.scale.clone()};
+}
+function setPlayerVrmBone(name,rx=0,ry=0,rz=0,speed=12,dt=.016){
+ const b=playerVrmBones[name],base=playerVrmRest[name];
+ if(!b||!base)return;
+ b.rotation.x=THREE.MathUtils.lerp(b.rotation.x,base.rotation.x+rx,1-Math.exp(-dt*speed));
+ b.rotation.y=THREE.MathUtils.lerp(b.rotation.y,base.rotation.y+ry,1-Math.exp(-dt*speed));
+ b.rotation.z=THREE.MathUtils.lerp(b.rotation.z,base.rotation.z+rz,1-Math.exp(-dt*speed));
+}
 
-  // Normalize the imported model to an ordinary adult ~1.85m tall.
-  let box=new THREE.Box3().setFromObject(knightVisual,true);
-  const size=new THREE.Vector3();box.getSize(size);
-  const targetHeight=1.85;
-  const scale=targetHeight/Math.max(size.y,.001);
-  knightVisual.scale.setScalar(scale);
-  knightVisual.updateMatrixWorld(true);
-  box=new THREE.Box3().setFromObject(knightVisual,true);
-  knightVisual.position.y-=box.min.y;
+// Do not show the squat primitive/KayKit body while the real player asset streams in.
+player.children.filter(o=>o.isMesh).forEach(m=>m.visible=false);
 
-  knightVisual.traverse(o=>{
-    if(o.isMesh){
-      o.castShadow=true;o.receiveShadow=true;
-      // Fix Quaternius export's near-black skin artifact without flattening clothes.
-      const mats=Array.isArray(o.material)?o.material:[o.material];
-      for(const m of mats){
-        if(!m||!m.color)continue;
-        const n=(m.name||'').toLowerCase();
-        if(n.includes('skin')&&m.color.r<.08&&m.color.g<.08&&m.color.b<.08)m.color.set(0xb98268);
-        m.metalness=Math.min(m.metalness??0,.25);
-      }
-    }
-  });
+(async()=>{
+ try{
+   const {VRMLoaderPlugin,VRMUtils}=await import('@pixiv/three-vrm');
+   const loader=new GLTFLoader();loader.register(parser=>new VRMLoaderPlugin(parser));
+   loader.load('./assets/models/player/vroid-male.vrm',gltf=>{
+     const vrm=gltf.userData?.vrm||null;
+     if(vrm)VRMUtils.rotateVRM0(vrm);
+     const root=vrm?.scene||gltf.scene;
+     root.updateMatrixWorld(true);
+     let box=new THREE.Box3().setFromObject(root,true),size=new THREE.Vector3();box.getSize(size);
+     const targetHeight=1.98;
+     const uniform=targetHeight/Math.max(size.y,.001);
+     root.scale.set(uniform*.94,uniform*1.035,uniform*.94); // tall/slender ~8-head game silhouette
+     root.updateMatrixWorld(true);
+     box=new THREE.Box3().setFromObject(root,true);
+     root.position.y-=box.min.y;
+     root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
 
-  // Hide the squat procedural knight immediately after the adult model is ready.
-  player.children.filter(o=>o.isMesh).forEach(m=>m.visible=false);
-  player.add(knightVisual);
-  setupKnightAnimations(gltf);
-  console.info('Adult-proportion CC0 player loaded', {height:targetHeight,clips:gltf.animations.map(a=>a.name)});
-},undefined,err=>console.warn('Adult player asset unavailable; procedural knight remains active.',err));
+     knightVisual=root;playerVrmRoot=root;playerVrm=vrm;
+     player.add(root);
 
-// Adult Quaternius character animation state machine. Falls back to procedural poses when clips are absent.
+     const humanoid=vrm?.humanoid;
+     for(const name of ['hips','spine','chest','upperChest','neck','head',
+       'leftShoulder','rightShoulder','leftUpperArm','rightUpperArm','leftLowerArm','rightLowerArm','leftHand','rightHand',
+       'leftUpperLeg','rightUpperLeg','leftLowerLeg','rightLowerLeg','leftFoot','rightFoot']){
+       const node=humanoid?.getNormalizedBoneNode?.(name);
+       if(node)cachePlayerVrmBone(name,node);
+     }
+
+     weaponPivot.position.set(.5,1.43,.04);
+     shieldPivot.position.set(-.5,1.4,.08);
+     console.info('Tall CC0 VRoid male player loaded', {height:targetHeight});
+   },undefined,err=>console.warn('Tall VRoid player unavailable.',err));
+ }catch(err){console.warn('three-vrm unavailable for player.',err)}
+})();
+
+function animateVroidPlayer(dt){
+ if(!playerVrmRoot)return;
+ const {x,z}=getMoveAxes(),moving=!!(x||z);
+ const sprint=(input.keys.has('ShiftLeft')||input.keys.has('ShiftRight'))&&moving&&state.stamina>0&&state.exhausted<=0;
+ const speed=sprint?10.5:6.8,phase=state.time*speed;
+ let hipsX=0,hipsY=0,hipsZ=0,spineX=0,spineY=0,spineZ=0;
+ let luz=-1.12,ruz=1.12,lux=0,rux=0,luy=0,ruy=0,llx=.16,rlx=.16;
+ let lulx=0,rulx=0,lllx=0,rllx=0;
+
+ if(state.dead){
+   spineZ=.8;hipsZ=.35;luz=-.55;ruz=.55;
+ }else if(state.stagger>0){
+   spineX=-.18;spineZ=Math.sin(state.time*24)*.08;hipsX=.08;
+ }else if(state.rolling>0){
+   spineX=-.5;luz=-.65;ruz=.65;llx=-.9;rlx=-.9;
+ }else if(state.attack>0){
+   const w=currentWeapon(),dur=[0,.46,.5,.62][state.attackStep]/w.speed*(twoHanded?.96:1.04);
+   const p=clamp(1-state.attack/Math.max(dur,.001),0,1),s=Math.sin(p*Math.PI),step=state.attackStep;
+   spineY=(step===2?-1:1)*s*.28;spineX=-s*.1;
+   rux=-.35+s*1.25;ruz=.45+s*.55;ruy=(step===2?-1:1)*s*.45;rlx=-.75+s*.95;
+   if(twoHanded){lux=rux*.72;luz=-.2-s*.35;luy=ruy*.72;llx=-.65+s*.8}
+ }else if(input.guard){
+   spineX=-.06;
+   luz=-.35;lux=-.55;luy=-.3;llx=-.8;
+   ruz=.52;rux=-.35;ruy=.22;rlx=-.65;
+ }else if(moving){
+   const amp=sprint?.62:.42,swing=Math.sin(phase)*amp;
+   lulx=swing;rulx=-swing;
+   lllx=Math.max(0,-Math.sin(phase))*(sprint?.78:.5);
+   rllx=Math.max(0,Math.sin(phase))*(sprint?.78:.5);
+   lux=-swing*.55;rux=swing*.55;
+   luz=-1.12;ruz=1.12;
+   hipsY=Math.sin(phase*2)*.025;spineZ=-Math.sin(phase)*.025;
+ }else{
+   const breathe=Math.sin(state.time*1.6);
+   spineX=breathe*.012;spineY=Math.sin(state.time*.45)*.01;
+   luz=-1.12+breathe*.008;ruz=1.12-breathe*.008;
+ }
+
+ setPlayerVrmBone('hips',hipsX,hipsY,hipsZ,11,dt);
+ setPlayerVrmBone('spine',spineX*.45,spineY*.45,spineZ*.45,11,dt);
+ setPlayerVrmBone('chest',spineX*.72,spineY*.72,spineZ*.72,12,dt);
+ setPlayerVrmBone('upperChest',spineX,spineY,spineZ,13,dt);
+ setPlayerVrmBone('leftUpperArm',lux,luy,luz,14,dt);
+ setPlayerVrmBone('rightUpperArm',rux,ruy,ruz,14,dt);
+ setPlayerVrmBone('leftLowerArm',llx,0,0,14,dt);
+ setPlayerVrmBone('rightLowerArm',rlx,0,0,14,dt);
+ setPlayerVrmBone('leftUpperLeg',lulx,0,0,14,dt);
+ setPlayerVrmBone('rightUpperLeg',rulx,0,0,14,dt);
+ setPlayerVrmBone('leftLowerLeg',lllx,0,0,14,dt);
+ setPlayerVrmBone('rightLowerLeg',rllx,0,0,14,dt);
+ playerVrm?.update?.(dt);
+}
+
+// Legacy clip helper kept for fallback assets; the VRoid player is bone-animated procedurally.
 let playerMixer=null,playerActions={},playerActionName='';
 function pickClip(clips,terms){
  const lower=clips.map(x=>({clip:x,name:(x.name||'').toLowerCase()}));
@@ -1293,6 +1363,6 @@ function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=i
 function loop(){
  let dt=Math.min(clock.getDelta(),.033);state.time+=dt;
  if(state.hitstop>0){state.hitstop-=dt;dt=0}else{updatePlayer(dt);updateBoss(dt)}
-if(playerMixer)playerMixer.update(Math.max(dt,.001));updateArmTrails(Math.max(dt,.001));updateDustFX(Math.max(dt,.001));updateSparks(Math.max(dt,.001));updateCamera(Math.max(dt,.001));updateUI();renderer.render(scene,camera);requestAnimationFrame(loop);
+if(playerMixer)playerMixer.update(Math.max(dt,.001));animateVroidPlayer(Math.max(dt,.001));updateArmTrails(Math.max(dt,.001));updateDustFX(Math.max(dt,.001));updateSparks(Math.max(dt,.001));updateCamera(Math.max(dt,.001));updateUI();renderer.render(scene,camera);requestAnimationFrame(loop);
 }
 loop();
