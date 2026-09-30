@@ -1005,6 +1005,64 @@ function cloneMonsterSpikeVisual(){
  });
  return root;
 }
+const bossSpikeProjectiles=[];
+function makeBossSpikeProjectile(){
+ const root=cloneMonsterSpikeVisual();
+ if(root){
+   root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=false}});
+   root.scale.setScalar(.34);
+   return root;
+ }
+ const fallback=new THREE.Mesh(
+   new THREE.ConeGeometry(.16,.9,7),
+   new THREE.MeshStandardMaterial({color:0x352c34,roughness:.66,metalness:.08})
+ );
+ fallback.castShadow=true;
+ return fallback;
+}
+function spawnBossSpikeProjectile(origin,dir,speed=11.5,dmg=19){
+ const obj=makeBossSpikeProjectile();
+ const d=dir.clone().normalize();
+ obj.position.copy(origin);
+ obj.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d);
+ scene.add(obj);
+ bossSpikeProjectiles.push({obj,vel:d.multiplyScalar(speed),dmg,life:4.2});
+}
+function bossSpikeMuzzle(){
+ const p=new THREE.Vector3(0,3.65,.85);
+ boss.localToWorld(p);
+ return p;
+}
+function fireSpikeAtPlayer(angle=0,speed=11.5,dmg=19){
+ const origin=bossSpikeMuzzle();
+ const target=player.position.clone().add(new THREE.Vector3(0,1.0,0));
+ const dir=target.sub(origin).normalize().applyAxisAngle(new THREE.Vector3(0,1,0),angle);
+ spawnBossSpikeProjectile(origin,dir,speed,dmg);
+}
+function fireSpikeFan(){
+ const angles=[-.56,-.38,-.2,0,.2,.38,.56];
+ for(const a of angles)fireSpikeAtPlayer(a,9.8,16);
+ spawnSparks(bossSpikeMuzzle(),18,4.2);
+}
+function updateBossSpikeProjectiles(dt){
+ const playerPoint=player.position.clone().add(new THREE.Vector3(0,1.0,0));
+ for(let i=bossSpikeProjectiles.length-1;i>=0;i--){
+   const p=bossSpikeProjectiles[i];
+   p.life-=dt;
+   p.obj.position.addScaledVector(p.vel,dt);
+   p.obj.rotation.y+=dt*8;
+   if(p.obj.position.distanceTo(playerPoint)<.72){
+     if(state.invuln<=0)hurtPlayer(p.dmg,18,false);
+     else flash('회피',.14);
+     p.life=0;
+   }
+   if(p.life<=0||p.obj.position.length()>45){
+     scene.remove(p.obj);
+     p.obj.traverse?.(o=>{if(o.isMesh){o.geometry?.dispose?.();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose?.());else o.material?.dispose?.()}});
+     bossSpikeProjectiles.splice(i,1);
+   }
+ }
+}
 function orientSegment(group,a,b,thickness=1){
  const dir=new THREE.Vector3().subVectors(b,a),len=Math.max(.001,dir.length());
  group.position.copy(a).add(b).multiplyScalar(.5);
@@ -1604,11 +1662,12 @@ function hitBoss(base,posture=12){
 function chooseBossAttack(){
  if(state.bossHp<=0)return;
  setDanger(false);
- const dorsal=['arm_cross','arm_double_slam','arm_sweep','arm_uppercut','arm_grab','arm_barrage','arm_guardbreak','arm_crush'];
+ const dorsal=['arm_cross','arm_double_slam','arm_sweep','arm_uppercut','arm_grab','arm_barrage','arm_guardbreak','arm_crush','spike_triple','spike_fan'];
  state.bossState=dorsal[Math.floor(Math.random()*dorsal.length)];
  state.bossTimer={
    arm_cross:1.26,arm_double_slam:1.46,arm_sweep:1.32,arm_uppercut:1.16,
-   arm_grab:1.5,arm_barrage:1.92,arm_guardbreak:1.46,arm_crush:1.58
+   arm_grab:1.5,arm_barrage:1.92,arm_guardbreak:1.46,arm_crush:1.58,
+   spike_triple:1.36,spike_fan:1.42
  }[state.bossState];
  state.bossHit=false;state.bossPatternStep=0;state.bossFxStamp='';
  if(state.bossState==='arm_grab'||state.bossState==='arm_crush')setDanger(true);
@@ -1687,6 +1746,9 @@ function animateBossTelegraph(dt){
    body.position.y=THREE.MathUtils.lerp(body.position.y,1.28,1-Math.exp(-dt*12));L(body.rotation,'x',-.36,14);L(head.rotation,'x',-.82,14);
  }
 
+ if((st==='spike_triple'||st==='spike_fan')&&t>.62){
+   L(body.rotation,'x',-.12,9);L(chest.rotation,'x',-.18,10);L(head.rotation,'x',.08,9);
+ }
  // Dorsal-arm attacks: every wind-up has a distinct silhouette.
  else if(st==='arm_cross'&&t>.48){
    // Both hands spread far outside the body, then scissor inward.
@@ -1770,7 +1832,9 @@ function updateBoss(dt){
  }
  const d=dist(),dir=flatDir(boss.position,player.position),face=Math.atan2(dir.x,dir.z);
  if(state.bossState==='idle'&&state.bossTimer<=.58)boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*5));
- else if(state.bossState.startsWith('arm_')){
+ else if(state.bossState==='spike_triple'||state.bossState==='spike_fan'){
+   if(state.bossTimer>.58)boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*5.5));
+ }else if(state.bossState.startsWith('arm_')){
    const cutoff=BOSS_AIM_CUTOFF[state.bossState]??0;
    if(state.bossTimer>cutoff){
      boss.rotation.y=THREE.MathUtils.lerp(boss.rotation.y,face,1-Math.exp(-bossMotionDt*4.2));
@@ -1910,6 +1974,28 @@ function updateBoss(dt){
      }
    }
    if(state.bossTimer<=0){setDanger(false);resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.48}
+ }else if(state.bossState==='spike_triple'){
+   // Three discrete shots: readable, rollable, and ideal for punishing a flask at range.
+   const shots=[
+     {step:0,t:.96,angle:0},
+     {step:1,t:.64,angle:-.055},
+     {step:2,t:.32,angle:.055}
+   ];
+   for(const s of shots){
+     if(state.bossPatternStep===s.step&&state.bossTimer<=s.t){
+       fireSpikeAtPlayer(s.angle,12.4,18);
+       spawnSparks(bossSpikeMuzzle(),9,3.2);
+       state.bossPatternStep++;
+     }
+   }
+   if(state.bossTimer<=0){state.bossState='idle';state.bossTimer=1.0;state.bossPatternStep=0}
+ }else if(state.bossState==='spike_fan'){
+   // Wide seven-spike fan denies straight backpedaling but leaves gaps to roll through.
+   if(state.bossPatternStep===0&&state.bossTimer<=.72){
+     fireSpikeFan();
+     state.bossPatternStep=1;
+   }
+   if(state.bossTimer<=0){state.bossState='idle';state.bossTimer=1.18;state.bossPatternStep=0}
  }else if(state.bossState==='peril'){
    // red perilous pounce: cannot be guarded/deflected; lateral roll is the intended answer.
    head.rotation.x=-.55;body.rotation.x=.12;
@@ -2123,6 +2209,6 @@ function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=i
 function loop(){
  let dt=Math.min(clock.getDelta(),.033);state.time+=dt;
  if(state.hitstop>0){state.hitstop-=dt;dt=0}else{updatePlayer(dt);updateBoss(dt)}
-if(playerMixer)playerMixer.update(Math.max(dt,.001));animateVroidPlayer(Math.max(dt,.001));updateArmTrails(Math.max(dt,.001));updateDustFX(Math.max(dt,.001));updateSparks(Math.max(dt,.001));updateCamera(Math.max(dt,.001));updateUI();renderer.render(scene,camera);requestAnimationFrame(loop);
+if(playerMixer)playerMixer.update(Math.max(dt,.001));animateVroidPlayer(Math.max(dt,.001));updateArmTrails(Math.max(dt,.001));updateDustFX(Math.max(dt,.001));updateSparks(Math.max(dt,.001));updateBossSpikeProjectiles(Math.max(dt,.001));updateCamera(Math.max(dt,.001));updateUI();renderer.render(scene,camera);requestAnimationFrame(loop);
 }
 loop();
