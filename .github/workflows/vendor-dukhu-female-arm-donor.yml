@@ -1,0 +1,40 @@
+name: Vendor Dukhu Soul Female Arm Donor
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/vendor-dukhu-female-arm-donor.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download CC0 VRoid female arm donor
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p soulhunt/assets/models/boss
+          curl -L --fail "https://raw.githubusercontent.com/ruslanmv/3D-Avatar-Chatbot/master/vendor/avatars/fem_vroid.vrm" \
+            -o soulhunt/assets/models/boss/female-arm-donor.vrm
+          cat > soulhunt/assets/models/boss/FEMALE_ARM_DONOR_SOURCE.md <<'EOF'
+          Source: ruslanmv/3D-Avatar-Chatbot vendor/avatars/fem_vroid.vrm
+          Catalog entry: "VRoid Female" / source "VRoid (CC0)"
+          Use: arm-only mesh donor for Bellamore monster-arm extensions.
+          EOF
+      - name: Commit donor
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add soulhunt/assets/models/boss
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "assets(dukhu-soul): vendor CC0 female arm donor"
+            git push
+          fi
