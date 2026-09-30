@@ -568,8 +568,9 @@ function extractArmOnlyPart(bodyNode,side){
 
  const belongs=v=>{
    let sum=0;
-   for(let k=0;k<4;k++){
-     const bi=skinIndex.getComponent(v,k),w=skinWeight.getComponent(v,k);
+   const si=skinIndex.array,sw=skinWeight.array,size=Math.min(4,skinIndex.itemSize,skinWeight.itemSize);
+   for(let k=0;k<size;k++){
+     const bi=si[v*skinIndex.itemSize+k],w=sw[v*skinWeight.itemSize+k];
      if(allowed.has(bi))sum+=w;
    }
    return sum>.34;
