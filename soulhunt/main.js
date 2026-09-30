@@ -456,12 +456,38 @@ assetLoader.load('./assets/models/boss/centaur-beast.glb',gltf=>{
  console.info('Bellamore: CC0 centaur beast lower body loaded');
 },undefined,err=>console.warn('Centaur beast lower body unavailable.',err));
 
+const bossSpikeTargets=[];
+assetLoader.load('./assets/models/boss/monster-spikes.glb',gltf=>{
+ const source=gltf.scene;
+ const placements=[
+   {p:[0,2.32,-1.55],r:[-.48,0,0],s:[1.25,1.6,1.15]},
+   {p:[0,2.46,-.72],r:[-.4,0,0],s:[1.15,1.45,1.05]},
+   {p:[-1.42,2.55,-.2],r:[-.25,.2,-.38],s:[.82,1.25,.8]},
+   {p:[1.42,2.55,-.2],r:[-.25,-.2,.38],s:[.82,1.25,.8]},
+   {p:[-.72,4.48,.12],r:[.15,.1,-.5],s:[.42,.95,.42]},
+   {p:[.72,4.48,.12],r:[.15,-.1,.5],s:[.42,.95,.42]}
+ ];
+ placements.forEach((cfg,i)=>{
+   const root=source.clone(true);
+   root.position.set(...cfg.p);root.rotation.set(...cfg.r);root.scale.set(...cfg.s);
+   root.traverse(o=>{
+     if(o.isMesh){
+       o.castShadow=true;o.receiveShadow=true;
+       if(o.material){o.material=o.material.clone();o.material.color?.multiplyScalar?.(.38);o.material.roughness=.7}
+     }
+   });
+   boss.add(root);
+   bossSpikeTargets.push({obj:root,hp:i<2?90:65,max:i<2?90:65,broken:false});
+ });
+ console.info('Bellamore: external CC0 spike armor attached');
+},undefined,err=>console.warn('Boss spike asset unavailable.',err));
+
 
 // Her actual gigantic arms. Combat hit ranges stay unchanged; only the visual reach is oversized.
 const dorsalArms=[];
 for(const sx of [-1,1]){
   const shoulder=new THREE.Group();
-  shoulder.position.set(sx*1.25,4.12,.62);
+  shoulder.position.set(sx*1.46,4.2,.72);
   shoulder.rotation.z=-sx*.2;
   boss.add(shoulder);
 
@@ -480,7 +506,7 @@ for(const sx of [-1,1]){
   part(upperPivot,new THREE.BoxGeometry(1.18,.34,.5),shellDark,[sx*.92,-.18,-.18],[0,0,sx*.12]);
 
   const elbow=new THREE.Group();
-  elbow.position.set(sx*1.96,-.7,.04);
+  elbow.position.set(sx*2.42,-.76,.16);
   upperPivot.add(elbow);
   part(elbow,new THREE.SphereGeometry(.34,10,8),skinShadow,[0,0,0]);
   part(elbow,new THREE.DodecahedronGeometry(.38,0),carapace,[0,.08,-.12],[0,0,0],[1.12,.7,1]);
@@ -489,7 +515,7 @@ for(const sx of [-1,1]){
   part(elbow,new THREE.BoxGeometry(1.3,.42,.62),warningFlesh,[sx*.9,-.12,-.12],[0,0,sx*.1]);
 
   const wrist=new THREE.Group();
-  wrist.position.set(sx*1.92,-.54,.06);
+  wrist.position.set(sx*2.34,-.6,.2);
   elbow.add(wrist);
 
   const hand=part(wrist,new THREE.SphereGeometry(.54,12,9),skin,[sx*.34,-.08,.12],[0,0,0],[1.25,.72,1.0]);
@@ -498,6 +524,7 @@ for(const sx of [-1,1]){
   // Monster talons sell the hybrid nature, but are visual only.
   for(let f=-1;f<=1;f++)part(wrist,new THREE.ConeGeometry(.095,.92,7),horn,[sx*.9,-.2,f*.23],[0,0,sx*Math.PI/2]);
 
+  shoulder.traverse(o=>{if(o.isMesh)o.visible=false});
   dorsalArms.push({sx,shoulder,upperPivot,elbow,wrist,hand,rest:{shoulderZ:-sx*.2,upperZ:sx*.12}});
 }
 function resetDorsalArms(dt=1){
@@ -638,89 +665,74 @@ function updateBossWarningGlow(){
 }
 
 function animateGiantessPresence(dt){
- const st=state.bossState;
- const attacking=st!=='idle'&&st!=='stagger';
+ const st=state.bossState,t=state.bossTimer;
  const dangerous=st==='arm_grab'||st==='arm_crush'||st==='peril';
 
- // Procedural fallback motion.
- const hairSpeed=attacking?7.5:2.0;
- for(let i=0;i<hairLocks.length;i++){
-   const h=hairLocks[i],side=i<2?-1:1;
-   h.rotation.z=THREE.MathUtils.lerp(h.rotation.z,side*.06+Math.sin(state.time*hairSpeed+i)*.055,1-Math.exp(-dt*7));
-   h.rotation.x=THREE.MathUtils.lerp(h.rotation.x,attacking?.1:0,1-Math.exp(-dt*6));
- }
- if(st==='idle'){
-   const breathe=Math.sin(state.time*1.55);
-   chest.scale.y=1.08+breathe*.018;
-   chest.rotation.z=Math.sin(state.time*.72)*.018;
-   waist.rotation.z=Math.sin(state.time*.58)*.012;
-   head.rotation.y=Math.sin(state.time*.55)*.055;
-   head.rotation.x=Math.sin(state.time*.82)*.018;
-   bustL.position.y=3.62+breathe*.025;bustR.position.y=3.62+breathe*.025;
- }else chest.scale.y=THREE.MathUtils.lerp(chest.scale.y,1.08,1-Math.exp(-dt*8));
-
- const targetEye=dangerous?3.0:(attacking?1.7:1.25);
- eyeMat.emissiveIntensity=THREE.MathUtils.lerp(eyeMat.emissiveIntensity,targetEye,1-Math.exp(-dt*10));
- if(dangerous){jaw.rotation.x=THREE.MathUtils.lerp(jaw.rotation.x,.34,1-Math.exp(-dt*12));head.rotation.z+=Math.sin(state.time*13)*.006}
-
- if(!bossWomanVisual)return;
-
- // High-detail MPFB rig: torso and face clearly telegraph before custom giant-arm hit frames.
- let spineX=0,spineY=0,spineZ=0,headX=0,headY=0,headZ=0,hipsZ=0;
- if(st==='idle'){
-   spineX=Math.sin(state.time*1.4)*.012;
-   spineZ=Math.sin(state.time*.7)*.014;
-   headY=Math.sin(state.time*.52)*.045;
-   headX=Math.sin(state.time*.82)*.012;
- }else if(st==='arm_cross'){spineX=-.16;headX=.09;}
- else if(st==='arm_double_slam'||st==='arm_guardbreak'){spineX=.3;headX=-.16;}
- else if(st==='arm_sweep'){spineZ=-.3;hipsZ=.12;headZ=.17;}
- else if(st==='arm_uppercut'){spineZ=-.34;hipsZ=-.12;headZ=.2;}
- else if(st==='arm_grab'){spineY=.2;headY=-.2;spineX=-.08;}
- else if(st==='arm_barrage'){spineX=-.14;spineZ=Math.sin(state.time*16)*.04;}
- else if(st==='arm_crush'){spineX=-.26;headX=.12;}
-
- setBoneOffset('Hips',0,0,hipsZ,8,dt);
- setBoneOffset('Spine1',spineX*.45,spineY*.45,spineZ*.45,9,dt);
- setBoneOffset('Spine2',spineX,spineY,spineZ,10,dt);
- setBoneOffset('Neck',headX*.35,headY*.45,headZ*.35,10,dt);
- setBoneOffset('Head',headX,headY,headZ,11,dt);
-
- const pony=Math.sin(state.time*(attacking?8:2.1))*(attacking?.1:.03);
- setBoneOffset('PonytailRoot',-spineX*.15,0,-spineZ*.22+pony*.3,7,dt);
- setBoneOffset('Ponytail1',-spineX*.3,0,-spineZ*.35+pony,7,dt);
- setBoneOffset('Ponytail2',-spineX*.4,0,-spineZ*.5+pony*1.25,6,dt);
- setBoneOffset('Ponytail3',-spineX*.5,0,-spineZ*.65+pony*1.5,5,dt);
-
- // Facial tells: smiling at rest; eyes widen and mouth opens only before danger attacks.
- const smile=st==='idle'?.28:.06;
- setBossMorph('mouthSmileLeft',smile,7,dt);setBossMorph('mouthSmileRight',smile,7,dt);
- setBossMorph('eyeWideLeft',dangerous?.55:0,12,dt);setBossMorph('eyeWideRight',dangerous?.55:0,12,dt);
- setBossMorph('browInnerUp',dangerous?.38:0,12,dt);
- setBossMorph('jawOpen',dangerous?.34:(st==='arm_double_slam'||st==='arm_guardbreak'?.14:0),12,dt);
- setBossMorph('mouthFrownLeft',dangerous?.12:0,10,dt);setBossMorph('mouthFrownRight',dangerous?.12:0,10,dt);
- const blink=(st==='idle'&&Math.sin(state.time*1.85)>0.985)?1:0;
- setBossMorph('eyeBlinkLeft',blink,18,dt);setBossMorph('eyeBlinkRight',blink,18,dt);
-
  if(animeHeadPivot){
-   let rx=0,ry=0,rz=0;
-   if(st==='idle'){ry=Math.sin(state.time*.55)*.055;rx=Math.sin(state.time*.8)*.018}
-   else if(st==='arm_sweep'){rz=.18;ry=-.08}
-   else if(st==='arm_uppercut'){rz=.2;rx=-.05}
-   else if(st==='arm_grab'){ry=-.2;rx=.06}
-   else if(st==='arm_double_slam'||st==='arm_guardbreak'){rx=-.16}
-   else if(st==='arm_cross'||st==='arm_crush'){rx=.08}
-   animeHeadPivot.rotation.x=THREE.MathUtils.lerp(animeHeadPivot.rotation.x,rx,1-Math.exp(-dt*10));
-   animeHeadPivot.rotation.y=THREE.MathUtils.lerp(animeHeadPivot.rotation.y,ry,1-Math.exp(-dt*10));
-   animeHeadPivot.rotation.z=THREE.MathUtils.lerp(animeHeadPivot.rotation.z,rz,1-Math.exp(-dt*10));
- }
- if(animeBossVRM){
-   const em=animeBossVRM.expressionManager;
-   if(em){
-     const idle=st==='idle',danger=dangerous;
-     try{em.setValue('happy',idle?.22:0);em.setValue('surprised',danger?.36:0);em.setValue('angry',danger?.16:0)}catch(_){}
+   let torsoX=0,torsoY=0,torsoZ=0,headX=0,headY=0,headZ=0;
+   let lz=-1.18,rz=1.18,lx=0,rx=0,ly=0,ry=0,llx=.12,rlx=.12,lly=0,rly=0;
+
+   if(st==='idle'){
+     torsoX=Math.sin(state.time*1.4)*.014;torsoZ=Math.sin(state.time*.72)*.018;
+     headY=Math.sin(state.time*.52)*.05;headX=Math.sin(state.time*.8)*.018;
+     lz+=Math.sin(state.time*1.25)*.025;rz-=Math.sin(state.time*1.25)*.025;
+   }else if(st==='arm_cross'){
+     torsoX=-.12;headX=.06;
+     if(t>.48){lz=-.18;rz=.18;ly=-.55;ry=.55;llx=-.32;rlx=-.32}
+     else{const s=Math.sin(clamp((.48-t)/.38,0,1)*Math.PI);lz=-.18-s*1.5;rz=.18+s*1.5;ly=-.55+s*1.35;ry=.55-s*1.35;torsoX=-.12+s*.25}
+   }else if(st==='arm_double_slam'||st==='arm_guardbreak'){
+     torsoX=.28;headX=-.14;
+     if(t>.42){lz=.72;rz=-.72;llx=-.55;rlx=-.55}
+     else{const s=Math.sin(clamp((.42-t)/.34,0,1)*Math.PI);lz=.72-s*2.35;rz=-.72+s*2.35;llx=-.55+s*.7;rlx=-.55+s*.7;torsoX=.28-s*.48}
+   }else if(st==='arm_sweep'){
+     torsoZ=-.3;headZ=.16;
+     if(t>.5){lz=-.08;ly=-1.22;llx=-.18}
+     else{const s=Math.sin(clamp((.5-t)/.42,0,1)*Math.PI);lz=-.08-s*.9;ly=-1.22+s*2.65;torsoZ=-.3+s*.62}
+   }else if(st==='arm_uppercut'){
+     torsoZ=-.3;headZ=.18;
+     if(t>.36){rz=1.42;ry=-.82;rlx=-1.05}
+     else{const s=Math.sin(clamp((.36-t)/.3,0,1)*Math.PI);rz=1.42-s*2.2;ry=-.82+s*1.15;rlx=-1.05+s*1.45;torsoZ=-.3+s*.5}
+   }else if(st==='arm_grab'){
+     torsoY=.18;headY=-.18;
+     if(t>.4){lz=-.22;ly=-1.08;llx=-.52}
+     else{const s=Math.sin(clamp((.4-t)/.32,0,1)*Math.PI);lz=-.22-s*.55;ly=-1.08+s*.72;llx=-.52+s*.7}
+   }else if(st==='arm_barrage'){
+     torsoX=-.1;
+     const phase=Math.floor(clamp((1.42-t)/1.1,0,.999)*6),pulse=Math.sin((clamp((1.42-t)/1.1,0,.999)*6-phase)*Math.PI);
+     if(phase%2===0){lz=-.42-pulse*.82;ly=-pulse*.72;llx=-.65+pulse*.65}
+     else{rz=.42+pulse*.82;ry=pulse*.72;rlx=-.65+pulse*.65}
+     torsoZ=(phase%2?1:-1)*pulse*.08;
+   }else if(st==='arm_crush'){
+     torsoX=-.2;headX=.08;
+     if(t>.42){lz=-.06;rz=.06;ly=-1.18;ry=1.18;llx=-.28;rlx=-.28}
+     else{const s=Math.sin(clamp((.42-t)/.34,0,1)*Math.PI);ly=-1.18+s*1.22;ry=1.18-s*1.22;lz=-.06-s*.72;rz=.06+s*.72;torsoX=-.2+s*.32}
    }
-   animeBossVRM.update(dt);
+
+   setAnimeBossBone('spine',torsoX*.35,torsoY*.35,torsoZ*.35,9,dt);
+   setAnimeBossBone('chest',torsoX*.65,torsoY*.65,torsoZ*.65,10,dt);
+   setAnimeBossBone('upperChest',torsoX,torsoY,torsoZ,11,dt);
+   setAnimeBossBone('neck',headX*.35,headY*.4,headZ*.35,10,dt);
+   setAnimeBossBone('head',headX,headY,headZ,11,dt);
+   setAnimeBossBone('leftUpperArm',lx,ly,lz,13,dt);
+   setAnimeBossBone('rightUpperArm',rx,ry,rz,13,dt);
+   setAnimeBossBone('leftLowerArm',llx,lly,0,14,dt);
+   setAnimeBossBone('rightLowerArm',rlx,rly,0,14,dt);
+
+   const em=animeBossVRM?.expressionManager;
+   if(em){
+     try{
+       em.setValue('happy',st==='idle'?.18:0);
+       em.setValue('surprised',dangerous?.42:0);
+       em.setValue('angry',dangerous?.22:(st==='arm_barrage'?.12:0));
+     }catch(_){}
+   }
+   animeBossVRM?.update?.(dt);
+ }
+
+ if(bossLowerMixer){
+   const desired=state.bossHp<=0?'death':(state.bossStagger>0?'idle_hitreact1':(state.bossState==='idle'&&dist()>4.15?'walk':'idle'));
+   setBossLowerAction(desired);
+   bossLowerMixer.update(dt);
  }
 }
 function updateSparks(dt){
@@ -818,12 +830,26 @@ function hitZone(){
 }
 function hitBoss(base,posture=12){
  if(state.bossHp<=0)return;
- const zone=hitZone();let dmg=base,pd=posture;state.reaction=.16;state.reactionZone=zone;
+ let spikeTarget=null,spikeDist=Infinity;
+ const playerHitPoint=player.position.clone().add(new THREE.Vector3(0,1.15,0));
+ for(const s of bossSpikeTargets){
+   if(s.broken)continue;
+   const p=new THREE.Vector3();s.obj.getWorldPosition(p);
+   const d=p.distanceTo(playerHitPoint);
+   if(d<spikeDist){spikeDist=d;spikeTarget=s}
+ }
+ const zone=(spikeTarget&&spikeDist<2.25)?'spike':hitZone();
+ let dmg=base,pd=posture;state.reaction=.16;state.reactionZone=zone;
+ if(zone==='spike'){
+   dmg*=1.12;pd*=2.15;spikeTarget.hp-=base;
+   state.bossPosture+=posture*.45;
+   if(spikeTarget.hp<=0&&!spikeTarget.broken){spikeTarget.broken=true;spikeTarget.obj.visible=false;flash('가시 갑각 파괴',.5);state.bossPosture+=18}
+ }
  if(zone==='head'){dmg*=1.45;pd*=1.7;state.headHp-=base;if(!state.headBroken&&state.headHp<=0){state.headBroken=true;head.material=meat;flash('머리 갑각 파괴',.6);state.bossPosture+=32}}
  if(zone==='leg'){state.legHp-=base*.8;if(!state.legBroken&&state.legHp<=0){state.legBroken=true;flash('앞발 부위 파괴',.6);state.bossStagger=1.4;state.bossState='stagger'}}
  if(zone==='tail'){dmg*=1.2;state.tailHp-=base;if(!state.tailBroken&&state.tailHp<=0){state.tailBroken=true;tailPivot.visible=false;flash('꼬리 절단',.7);state.bossPosture+=24}}
  if(state.bossStagger>0){dmg*=1.75;pd*=1.8}
- state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture+=pd;state.shake=zone==='head' ? .18 : .13;hitStop(zone==='head' ? .072 : .055);spawnSparks(player.position.clone().lerp(boss.position,.62).add(new THREE.Vector3(0,zone==='head' ? 2.15 : 1.15,0)),zone==='head' ? 14 : 8,zone==='head' ? 5.5 : 4.2);
+ state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture+=pd;state.shake=zone==='head'||zone==='spike' ? .18 : .13;hitStop(zone==='head'||zone==='spike' ? .072 : .055);spawnSparks(player.position.clone().lerp(boss.position,.62).add(new THREE.Vector3(0,zone==='head' ? 2.15 : 1.15,0)),zone==='head' ? 14 : 8,zone==='head' ? 5.5 : 4.2);
  if(state.bossHp===0){state.bossState='dead';setDanger(false);flash('토벌 완료',1.2)}
  else if(state.bossPosture>=100){state.bossStagger=2.15;state.bossPosture=50;state.bossState='stagger';flash('자세 붕괴',.52)}
 }
@@ -944,8 +970,8 @@ const BOSS_AIM_CUTOFF={
  arm_grab:.34,arm_barrage:1.42,arm_guardbreak:.34,arm_crush:.36
 };
 const BOSS_AIM_RANGE={
- arm_cross:3.35,arm_double_slam:3.1,arm_sweep:3.6,arm_uppercut:3.0,
- arm_grab:2.85,arm_barrage:3.2,arm_guardbreak:3.05,arm_crush:2.95
+ arm_cross:4.15,arm_double_slam:3.85,arm_sweep:4.55,arm_uppercut:3.65,
+ arm_grab:3.45,arm_barrage:3.85,arm_guardbreak:3.8,arm_crush:3.6
 };
 function updateBoss(dt){
  if(state.bossHp<=0)setBossVisualAction('dead');
@@ -1029,7 +1055,7 @@ function updateBoss(dt){
      dorsalArms[0].upperPivot.rotation.z=-1.05+e*2.75;dorsalArms[1].upperPivot.rotation.z=1.05-e*2.75;
      dorsalArms[0].elbow.rotation.z=e*1.0;dorsalArms[1].elbow.rotation.z=-e*1.0;
      trailArms(1.05);
-     if(inBossHitWindow(state.bossTimer,.26,.17))bossArmImpact([0,1],1.34,24,30,false);
+     if(inBossHitWindow(state.bossTimer,.26,.17))bossArmImpact([0,1],1.55,24,30,false);
    }
    if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.72}
  }else if(state.bossState==='arm_double_slam'){
@@ -1039,7 +1065,7 @@ function updateBoss(dt){
      trailArms(1.2);
      if(inBossHitWindow(state.bossTimer,.26,.16)){
        bossFxOnce('double-slam',()=>{spawnDustBurst(bossGroundPoint(2.0),1.75);state.shake=Math.max(state.shake,.24)});
-       bossArmImpact([0,1],1.42,36,48,false);
+       bossArmImpact([0,1],1.62,36,48,false);
      }
    }
    if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.96}
@@ -1051,7 +1077,7 @@ function updateBoss(dt){
      dorsalArms[0].elbow.rotation.z=e*.5;
      dorsalArms[1].shoulder.rotation.y=-.2+e*.7;
      spawnArmTrail(dorsalArms[0],1.25);
-     if(inBossHitWindow(state.bossTimer,.27,.17))bossArmImpact(0,1.35,28,36,false);
+     if(inBossHitWindow(state.bossTimer,.27,.17))bossArmImpact(0,1.55,28,36,false);
    }
    if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.78}
  }else if(state.bossState==='arm_uppercut'){
@@ -1059,7 +1085,7 @@ function updateBoss(dt){
      const p=clamp(1-state.bossTimer/.36,0,1),e=Math.sin(p*Math.PI*.86);
      const a=dorsalArms[1];a.shoulder.rotation.z=-1.55+e*2.7;a.elbow.rotation.z=-1.6+e*2.35;a.wrist.rotation.x=.55-e*.85;
      body.rotation.z=-.24+e*.34;spawnArmTrail(a,1.3);
-     if(inBossHitWindow(state.bossTimer,.2,.12))bossArmImpact(1,1.24,30,42,false);
+     if(inBossHitWindow(state.bossTimer,.2,.12))bossArmImpact(1,1.45,30,42,false);
    }
    if(state.bossTimer<=0){resetDorsalArms(1);body.rotation.z=0;state.bossState='idle';state.bossTimer=.72}
  }else if(state.bossState==='arm_grab'){
@@ -1067,7 +1093,7 @@ function updateBoss(dt){
      const p=clamp(1-state.bossTimer/.4,0,1),e=Math.sin(p*Math.PI*.82);
      const a=dorsalArms[0];a.shoulder.rotation.x=-.72+e*.92;a.shoulder.rotation.y=-1.48+e*1.5;a.elbow.rotation.z=1.55-e*1.2;a.wrist.rotation.y=-.7+e*.85;
      spawnArmTrail(a,1.15);
-     if(inBossHitWindow(state.bossTimer,.22,.13))bossArmImpact(0,1.28,42,58,true);
+     if(inBossHitWindow(state.bossTimer,.22,.13))bossArmImpact(0,1.48,42,58,true);
    }
    if(state.bossTimer<=0){setDanger(false);resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.0}
  }else if(state.bossState==='arm_barrage'){
@@ -1079,7 +1105,7 @@ function updateBoss(dt){
      if(phase!==state.bossPatternStep){state.bossPatternStep=phase;state.bossHit=false;state.bossFxStamp=''}
      if(s>.93){
        bossFxOnce('barrage-'+phase,()=>spawnDustBurst(bossGroundPoint(1.45),.55));
-       bossArmImpact(idx,1.14,14,18,false);
+       bossArmImpact(idx,1.34,14,18,false);
      }
    }
    if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.86}
@@ -1090,7 +1116,7 @@ function updateBoss(dt){
      trailArms(1.35);
      if(inBossHitWindow(state.bossTimer,.22,.13)){
        bossFxOnce('guardbreak',()=>{spawnDustBurst(bossGroundPoint(1.7),1.35);state.shake=Math.max(state.shake,.2)});
-       bossArmImpact([0,1],1.34,22,72,false);
+       bossArmImpact([0,1],1.55,22,72,false);
      }
    }
    if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.0}
@@ -1102,7 +1128,7 @@ function updateBoss(dt){
      trailArms(1.2);
      if(inBossHitWindow(state.bossTimer,.23,.14)){
        bossFxOnce('crush',()=>spawnDustBurst(bossGroundPoint(1.25),.9));
-       bossArmImpact([0,1],1.32,46,64,true);
+       bossArmImpact([0,1],1.52,46,64,true);
      }
    }
    if(state.bossTimer<=0){setDanger(false);resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.08}
