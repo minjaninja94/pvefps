@@ -147,6 +147,82 @@ function setPlayerVrmBone(name,rx=0,ry=0,rz=0,speed=12,dt=.016){
  b.rotation.y=THREE.MathUtils.lerp(b.rotation.y,base.rotation.y+ry,1-Math.exp(-dt*speed));
  b.rotation.z=THREE.MathUtils.lerp(b.rotation.z,base.rotation.z+rz,1-Math.exp(-dt*speed));
 }
+function rotateBoneEndToward(bone,endNode,targetWorld,alpha){
+ if(!bone||!endNode||!bone.parent||alpha<=0)return;
+ bone.parent.updateWorldMatrix(true,false);bone.updateWorldMatrix(true,false);endNode.updateWorldMatrix(true,false);
+ const bp=new THREE.Vector3(),ep=new THREE.Vector3();
+ bone.getWorldPosition(bp);endNode.getWorldPosition(ep);
+ const current=ep.sub(bp),desired=targetWorld.clone().sub(bp);
+ if(current.lengthSq()<1e-7||desired.lengthSq()<1e-7)return;
+ const delta=new THREE.Quaternion().setFromUnitVectors(current.normalize(),desired.normalize());
+ const bw=new THREE.Quaternion(),pw=new THREE.Quaternion();
+ bone.getWorldQuaternion(bw);bone.parent.getWorldQuaternion(pw);
+ const desiredWorld=delta.multiply(bw);
+ const desiredLocal=pw.invert().multiply(desiredWorld);
+ bone.quaternion.slerp(desiredLocal,clamp(alpha,0,1));
+ bone.updateWorldMatrix(false,true);
+}
+function solveArmCCD(bones,side,handTargetWorld,elbowHintWorld,alpha=.7){
+ const upper=bones[side+'UpperArm'],lower=bones[side+'LowerArm'],hand=bones[side+'Hand'];
+ if(!upper||!lower||!hand)return;
+ for(let i=0;i<2;i++){
+   if(elbowHintWorld)rotateBoneEndToward(upper,lower,elbowHintWorld,alpha*.52);
+   rotateBoneEndToward(lower,hand,handTargetWorld,alpha);
+   rotateBoneEndToward(upper,hand,handTargetWorld,alpha*.72);
+ }
+}
+function getArmReach(bones,side){
+ const upper=bones[side+'UpperArm'],lower=bones[side+'LowerArm'],hand=bones[side+'Hand'];
+ if(!upper||!lower||!hand)return 1;
+ const a=new THREE.Vector3(),b=new THREE.Vector3(),d=new THREE.Vector3();
+ upper.getWorldPosition(a);lower.getWorldPosition(b);hand.getWorldPosition(d);
+ return Math.max(.1,a.distanceTo(b)+b.distanceTo(d));
+}
+function playerLocalVector(v){
+ const q=new THREE.Quaternion();player.getWorldQuaternion(q);return v.clone().applyQuaternion(q);
+}
+function applyPlayerArmIK(dt,phase,moving,sprint){
+ if(!playerVrmBones.leftUpperArm||!playerVrmBones.rightUpperArm)return;
+ player.updateMatrixWorld(true);playerVrmRoot?.updateMatrixWorld(true);
+ const attack=state.attack>0,w=currentWeapon(),step=state.attackStep;
+ for(const side of ['left','right']){
+   const sx=side==='left'?-1:1,upper=playerVrmBones[side+'UpperArm'];
+   const shoulder=new THREE.Vector3();upper.getWorldPosition(shoulder);
+   const reach=getArmReach(playerVrmBones,side);
+   let delta=new THREE.Vector3(sx*reach*.13,-reach*.84,.04);
+   if(moving&&!attack&&!input.guard&&state.rolling<=0){
+     const swing=Math.sin(phase)*(sprint?.18:.12)*reach*(side==='left'?1:-1);
+     delta.z+=swing;delta.y+=Math.abs(swing)*.05;
+   }
+   if(input.guard&&!attack&&state.rolling<=0){
+     delta.set(sx*reach*.12,-reach*.28,reach*.42);
+     if(side==='right')delta.z=reach*.26;
+   }
+   if(state.rolling>0){
+     delta.set(sx*reach*.16,-reach*.18,reach*.28);
+   }
+   if(attack){
+     const dur=[0,.46,.5,.62][step]/w.speed*(twoHanded?.96:1.04);
+     const p=clamp(1-state.attack/Math.max(dur,.001),0,1),s=Math.sin(p*Math.PI),comboSide=step===2?-1:1;
+     if(w.id==='spear'){
+       delta.set(sx*reach*.08,-reach*.34,reach*(.28+.56*s));
+     }else if(w.id==='greatsword'||w.id==='hammer'){
+       delta.set((side==='right'?-comboSide*.28:-comboSide*.12)*reach*sx,-reach*(.2-.22*s),reach*(.24+.42*s));
+     }else{
+       const cross=(side==='right'?-comboSide*.48:-comboSide*.18)*s;
+       delta.set((sx*.08+cross)*reach,-reach*(.4-.22*s),reach*(.2+.48*s));
+     }
+     if(twoHanded&&side==='left'){
+       delta.x-=.08*reach;delta.y+=.04*reach;delta.z-=.04*reach;
+     }
+   }
+   const handTarget=shoulder.clone().add(playerLocalVector(delta));
+   const elbowDelta=new THREE.Vector3(sx*reach*.28,-reach*.4,delta.z*.42);
+   const elbowTarget=shoulder.clone().add(playerLocalVector(elbowDelta));
+   solveArmCCD(playerVrmBones,side,handTarget,elbowTarget,1-Math.exp(-dt*18));
+ }
+}
+
 
 // Do not show the squat primitive/KayKit body while the real player asset streams in.
 player.children.filter(o=>o.isMesh).forEach(m=>m.visible=false);
@@ -283,6 +359,7 @@ function animateVroidPlayer(dt){
  setPlayerVrmBone('rightUpperLeg',rulx,0,0,14,dt);
  setPlayerVrmBone('leftLowerLeg',lllx,0,0,14,dt);
  setPlayerVrmBone('rightLowerLeg',rllx,0,0,14,dt);
+ applyPlayerArmIK(dt,phase,moving,sprint);
 
  if(playerVrmRoot){
    if(state.rolling>0){
@@ -553,6 +630,34 @@ function setAnimeBossBone(name,rx=0,ry=0,rz=0,speed=10,dt=.016){
  b.rotation.x=THREE.MathUtils.lerp(b.rotation.x,base.rotation.x+rx,1-Math.exp(-dt*speed));
  b.rotation.y=THREE.MathUtils.lerp(b.rotation.y,base.rotation.y+ry,1-Math.exp(-dt*speed));
  b.rotation.z=THREE.MathUtils.lerp(b.rotation.z,base.rotation.z+rz,1-Math.exp(-dt*speed));
+}
+function applyBossArmIK(dt){
+ if(!animeBossBones.leftUpperArm||!animeBossBones.rightUpperArm)return;
+ boss.updateMatrixWorld(true);animeHeadPivot?.updateMatrixWorld(true);
+ const attacking=state.bossState?.startsWith?.('arm_');
+ for(const side of ['left','right']){
+   const sx=side==='left'?-1:1,upper=animeBossBones[side+'UpperArm'];
+   const shoulder=new THREE.Vector3();upper.getWorldPosition(shoulder);
+   const reach=getArmReach(animeBossBones,side);
+   let handTarget,elbowTarget;
+   if(attacking&&dorsalArms?.length){
+     const rig=dorsalArms[side==='left'?0:1],rw=new THREE.Vector3();rig.wrist.getWorldPosition(rw);
+     const dir=rw.clone().sub(shoulder);
+     if(dir.lengthSq()<1e-6)dir.set(sx,-1,0);
+     const d=Math.min(reach*.93,dir.length());
+     dir.normalize();
+     handTarget=shoulder.clone().addScaledVector(dir,d);
+     const outward=new THREE.Vector3(sx,0,0).applyQuaternion(boss.quaternion);
+     elbowTarget=shoulder.clone().addScaledVector(dir,d*.52).addScaledVector(outward,reach*.18);
+     elbowTarget.y+=reach*.08;
+   }else{
+     const localDown=new THREE.Vector3(sx*reach*.15,-reach*.84,.06).applyQuaternion(boss.quaternion);
+     const localElbow=new THREE.Vector3(sx*reach*.3,-reach*.42,.04).applyQuaternion(boss.quaternion);
+     handTarget=shoulder.clone().add(localDown);
+     elbowTarget=shoulder.clone().add(localElbow);
+   }
+   solveArmCCD(animeBossBones,side,handTarget,elbowTarget,1-Math.exp(-dt*15));
+ }
 }
 
 async function loadAnimeBossUpper(){
@@ -1130,6 +1235,7 @@ function animateGiantessPresence(dt){
    setAnimeBossBone('rightUpperArm',rx,ry,rz,13,dt);
    setAnimeBossBone('leftLowerArm',llx,lly,0,14,dt);
    setAnimeBossBone('rightLowerArm',rlx,rly,0,14,dt);
+   applyBossArmIK(dt);
 
    const em=animeBossVRM?.expressionManager;
    if(em){
