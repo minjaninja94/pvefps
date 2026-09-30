@@ -1,0 +1,76 @@
+name: Vendor Dukhu Soul Hybrid Art
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/vendor-dukhu-hybrid-art.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download CC0 art
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p soulhunt/assets/models/player soulhunt/assets/models/boss
+          curl -L --fail "https://raw.githubusercontent.com/ruslanmv/3D-Avatar-Chatbot/master/vendor/avatars/masc_vroid.vrm" \
+            -o soulhunt/assets/models/player/vroid-male.vrm
+          curl -L --fail "https://raw.githubusercontent.com/BibliothecaDAO/eternum/f6a50acd184d617fd81e4d8aac6cef462b564a97/apps/game/public/models/characters/quaternius-horse/horse.glb" \
+            -o soulhunt/assets/models/boss/centaur-beast.glb
+          curl -L --fail "https://raw.githubusercontent.com/m22stewa/thatgolfgame/main/assets/kenney-platforms/spike-block-wide.glb" \
+            -o soulhunt/assets/models/boss/monster-spikes.glb
+
+          cat > soulhunt/assets/models/player/VROID_MALE_SOURCE.md <<'EOF'
+          Source: VRoid CC0 sample catalog mirrored by ruslanmv/3D-Avatar-Chatbot.
+          File: masc_vroid.vrm
+          License: CC0 / public domain as documented in the upstream built-in catalog.
+          Use: tall anime-style player body.
+          EOF
+          cat > soulhunt/assets/models/boss/HYBRID_BOSS_SOURCES.md <<'EOF'
+          Quaternius horse: Ultimate Animated Animals, CC0 1.0. Runtime horse GLB via BibliothecaDAO/eternum.
+          Kenney spikes: Platformer Kit, CC0 1.0. Runtime spike-block-wide GLB via m22stewa/thatgolfgame.
+          Use: centaur-like monster lower body and external spike/horn silhouette pieces.
+          EOF
+
+      - name: Inspect rigs
+        shell: bash
+        run: |
+          python -m pip install --quiet pygltflib
+          python - <<'PY'
+          import json
+          from pygltflib import GLTF2
+          out={}
+          for key,path in {
+            'player':'soulhunt/assets/models/player/vroid-male.vrm',
+            'horse':'soulhunt/assets/models/boss/centaur-beast.glb',
+            'spikes':'soulhunt/assets/models/boss/monster-spikes.glb'
+          }.items():
+              g=GLTF2().load_binary(path)
+              out[key]={
+                'nodes':[n.name for n in (g.nodes or []) if n.name],
+                'animations':[a.name for a in (g.animations or [])],
+                'meshes':[m.name for m in (g.meshes or []) if m.name]
+              }
+          with open('soulhunt/assets/models/boss/hybrid-art-meta.json','w',encoding='utf-8') as f:
+              json.dump(out,f,ensure_ascii=False,indent=2)
+          print(json.dumps(out,ensure_ascii=False)[:12000])
+          PY
+
+      - name: Commit art
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add soulhunt/assets/models/player soulhunt/assets/models/boss
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "assets(dukhu-soul): vendor VRoid player and centaur boss kit"
+            git push
+          fi
