@@ -547,9 +547,12 @@ function setBossMorph(name,value,speed=10,dt=.016){
 
 
 const animeBossBones={},animeBossBoneRest={};
-const animeBossArmParts={left:null,right:null};
+const animeBossArmParts={
+ leftUpper:null,leftLower:null,leftHand:null,
+ rightUpper:null,rightLower:null,rightHand:null
+};
 
-function extractArmOnlyPart(bodyNode,side){
+function extractSkinnedPart(bodyNode,side,kind){
  let src=null;
  if(bodyNode?.isSkinnedMesh)src=bodyNode;
  else bodyNode?.traverse?.(o=>{if(!src&&o.isSkinnedMesh)src=o});
@@ -560,9 +563,13 @@ function extractArmOnlyPart(bodyNode,side){
  const bones=src.skeleton.bones||[];
  const sideKey=side==='left'?'_L_':'_R_';
  const allowed=new Set();
+
  bones.forEach((b,i)=>{
    const n=b.name||'';
-   if(n.includes(sideKey)&&(n.includes('UpperArm')||n.includes('LowerArm')))allowed.add(i);
+   if(!n.includes(sideKey))return;
+   if(kind==='upper'&&n.includes('UpperArm'))allowed.add(i);
+   if(kind==='lower'&&n.includes('LowerArm'))allowed.add(i);
+   if(kind==='hand'&&(n.includes('Hand')||n.includes('Thumb')||n.includes('Index')||n.includes('Middle')||n.includes('Ring')||n.includes('Little')))allowed.add(i);
  });
  if(!allowed.size)return null;
 
@@ -573,10 +580,9 @@ function extractArmOnlyPart(bodyNode,side){
      const bi=si[v*skinIndex.itemSize+k],w=sw[v*skinWeight.itemSize+k];
      if(allowed.has(bi))sum+=w;
    }
-   return sum>.34;
+   return sum>(kind==='hand'?.2:.28);
  };
- const srcIndex=geo.index;
- const tri=[];
+ const srcIndex=geo.index,tri=[];
  const count=srcIndex?srcIndex.count:geo.attributes.position.count;
  for(let i=0;i<count;i+=3){
    const a=srcIndex?srcIndex.getX(i):i,b=srcIndex?srcIndex.getX(i+1):i+1,d=srcIndex?srcIndex.getX(i+2):i+2;
@@ -585,27 +591,43 @@ function extractArmOnlyPart(bodyNode,side){
  }
  if(tri.length<12)return null;
 
- geo.setIndex(tri);
- geo.clearGroups();
- geo.computeBoundingBox();
- const bb=geo.boundingBox,center=new THREE.Vector3();bb.getCenter(center);
+ geo.setIndex(tri);geo.clearGroups();geo.computeBoundingBox();
+ const center=new THREE.Vector3();geo.boundingBox.getCenter(center);
  geo.translate(-center.x,-center.y,-center.z);
 
+ // Normalize donor parts to a predictable +Y segment axis.
  const sx=side==='left'?-1:1;
  geo.rotateZ(sx*Math.PI/2);
  geo.computeBoundingBox();
- const bb2=geo.boundingBox;
- const len=Math.max(.001,bb2.max.y-bb2.min.y);
+ const bb=geo.boundingBox,size=new THREE.Vector3();bb.getSize(size);
+ const len=Math.max(.001,kind==='hand'?Math.max(size.x,size.y,size.z):size.y);
  geo.scale(1/len,1/len,1/len);
  geo.computeVertexNormals();
 
  let mat=Array.isArray(src.material)?src.material.find(m=>m?.name?.toLowerCase?.().includes('body'))||src.material[0]:src.material;
  mat=mat?.clone?.()||new THREE.MeshStandardMaterial({color:0xd9a99e,roughness:.58});
  mat.transparent=false;mat.opacity=1;mat.depthWrite=true;mat.depthTest=true;
+
  const mesh=new THREE.Mesh(geo,mat);mesh.castShadow=mesh.receiveShadow=true;
  const group=new THREE.Group();group.add(mesh);
+ group.userData.kind=kind;
  return group;
 }
+function cloneBossDonorPart(side,kind){
+ const src=animeBossArmParts[side+(kind==='upper'?'Upper':kind==='lower'?'Lower':'Hand')];
+ if(!src)return null;
+ const g=src.clone(true);
+ g.traverse(o=>{
+   if(o.isMesh){
+     o.geometry=o.geometry.clone();
+     o.material=o.material?.clone?.()||o.material;
+     if(o.material){o.material.transparent=false;o.material.opacity=1;o.material.depthWrite=true;o.material.depthTest=true}
+     o.castShadow=o.receiveShadow=true;
+   }
+ });
+ return g;
+}
+
 function stripSkinnedBoneRegions(root,patterns,threshold=.34){
  root?.traverse?.(obj=>{
    if(!obj.isSkinnedMesh||!obj.geometry?.attributes?.skinIndex||!obj.geometry?.attributes?.skinWeight||!obj.skeleton)return;
@@ -663,20 +685,71 @@ function stripSkinnedSpatialRegions(root,boneNames,radiusScale=1.0){
    obj.geometry=geo;
  });
 }
-function cloneAnimeArmPart(side){
- const src=animeBossArmParts[side];
- if(!src)return null;
- const g=src.clone(true);
- g.traverse(o=>{
-   if(o.isMesh){
-     o.geometry=o.geometry.clone();
-     o.material=o.material?.clone?.()||o.material;
-     if(o.material){o.material.transparent=false;o.material.opacity=1;o.material.depthWrite=true;o.material.depthTest=true}
-     o.castShadow=o.receiveShadow=true;
-   }
+function stripVisibleBossArms(bodyNode){
+ let src=null;
+ if(bodyNode?.isSkinnedMesh)src=bodyNode;
+ else bodyNode?.traverse?.(o=>{if(!src&&o.isSkinnedMesh)src=o});
+ if(!src||!src.geometry?.attributes?.skinIndex||!src.geometry?.attributes?.skinWeight||!src.skeleton)return;
+
+ const geo=src.geometry.clone(),si=geo.attributes.skinIndex,sw=geo.attributes.skinWeight;
+ const banned=new Set();
+ (src.skeleton.bones||[]).forEach((b,i)=>{
+   const n=(b.name||'').toLowerCase();
+   if(n.includes('upperarm')||n.includes('lowerarm')||n.includes('hand')||
+      n.includes('thumb')||n.includes('index')||n.includes('middle')||n.includes('ring')||n.includes('little'))banned.add(i);
  });
- return g;
+ const armWeighted=v=>{
+   let sum=0,sz=Math.min(4,si.itemSize,sw.itemSize);
+   for(let k=0;k<sz;k++){
+     const bi=si.array[v*si.itemSize+k],w=sw.array[v*sw.itemSize+k];
+     if(banned.has(bi))sum+=w;
+   }
+   return sum>.16;
+ };
+ const oldIndex=geo.index,out=[],count=oldIndex?oldIndex.count:geo.attributes.position.count;
+ for(let i=0;i<count;i+=3){
+   const a=oldIndex?oldIndex.getX(i):i,b=oldIndex?oldIndex.getX(i+1):i+1,d=oldIndex?oldIndex.getX(i+2):i+2;
+   const hit=(armWeighted(a)?1:0)+(armWeighted(b)?1:0)+(armWeighted(d)?1:0);
+   if(hit<2)out.push(a,b,d);
+ }
+ geo.setIndex(out);geo.computeVertexNormals();geo.computeBoundingSphere();
+ src.geometry=geo;
 }
+
+function stripBoneForwardCapsule(root,fromBoneName,toBoneName,extend=1.2,radius=.7){
+ root?.updateMatrixWorld?.(true);
+ const fromBone=root.getObjectByName(fromBoneName),toBone=root.getObjectByName(toBoneName);
+ if(!fromBone||!toBone)return;
+ const fw=new THREE.Vector3(),tw=new THREE.Vector3();
+ fromBone.getWorldPosition(fw);toBone.getWorldPosition(tw);
+ const dir=tw.clone().sub(fw);
+ if(dir.lengthSq()<1e-6)return;
+ dir.normalize();
+ const endWorld=tw.clone().addScaledVector(dir,extend);
+
+ root.traverse(obj=>{
+   if(!obj.isSkinnedMesh||!obj.geometry?.attributes?.position)return;
+   obj.updateMatrixWorld(true);
+   const a=obj.worldToLocal(fw.clone()),b=obj.worldToLocal(endWorld.clone());
+   const geo=obj.geometry.clone(),pos=geo.attributes.position,oldIndex=geo.index,out=[];
+   const ab=b.clone().sub(a),den=Math.max(1e-8,ab.lengthSq());
+   const inCapsule=v=>{
+     const p=new THREE.Vector3().fromBufferAttribute(pos,v),ap=p.clone().sub(a);
+     const t=clamp(ap.dot(ab)/den,0,1);
+     const q=a.clone().addScaledVector(ab,t);
+     return p.distanceToSquared(q)<=radius*radius;
+   };
+   const count=oldIndex?oldIndex.count:pos.count;
+   for(let i=0;i<count;i+=3){
+     const ia=oldIndex?oldIndex.getX(i):i,ib=oldIndex?oldIndex.getX(i+1):i+1,id=oldIndex?oldIndex.getX(i+2):i+2;
+     const hit=(inCapsule(ia)?1:0)+(inCapsule(ib)?1:0)+(inCapsule(id)?1:0);
+     if(hit<1)out.push(ia,ib,id);
+   }
+   geo.setIndex(out);geo.computeVertexNormals();geo.computeBoundingSphere();
+   obj.geometry=geo;
+ });
+}
+
 function cacheAnimeBossBone(name,node){
  if(!node)return;
  animeBossBones[name]=node;
@@ -731,12 +804,20 @@ async function loadFemaleArmDonor(){
      if(!bodyNode){
        root.traverse(o=>{if(!bodyNode&&o.isSkinnedMesh)bodyNode=o});
      }
-     const left=extractArmOnlyPart(bodyNode,'left'),right=extractArmOnlyPart(bodyNode,'right');
-     if(left&&right){
-       animeBossArmParts.left=left;animeBossArmParts.right=right;
+     const parts={
+       leftUpper:extractSkinnedPart(bodyNode,'left','upper'),
+       leftLower:extractSkinnedPart(bodyNode,'left','lower'),
+       leftHand:extractSkinnedPart(bodyNode,'left','hand'),
+       rightUpper:extractSkinnedPart(bodyNode,'right','upper'),
+       rightLower:extractSkinnedPart(bodyNode,'right','lower'),
+       rightHand:extractSkinnedPart(bodyNode,'right','hand')
+     };
+     const ready=Object.values(parts).every(Boolean);
+     if(ready){
+       Object.assign(animeBossArmParts,parts);
        tryBuildBossMonsterArms();
-       console.info('Bellamore: dedicated CC0 female arm donor loaded');
-     }else console.warn('Female arm donor loaded but arm extraction failed');
+       console.info('Bellamore: dedicated CC0 female upper/lower/hand donor parts loaded');
+     }else console.warn('Female arm donor loaded but limb-part extraction failed',parts);
    },undefined,err=>console.warn('Female arm donor unavailable.',err));
  }catch(err){console.warn('three-vrm unavailable for arm donor.',err)}
 }
@@ -767,6 +848,8 @@ async function loadAnimeBossUpper(){
          }
        });
      }
+     // Keep torso/bust/hair/face, but remove the authored arms completely.
+     stripVisibleBossArms(bodyNode);
 
      // Normalize the full anime body, then anchor the hips at the beast/woman seam.
      root.updateMatrixWorld(true);
@@ -860,12 +943,13 @@ assetLoader.load('./assets/models/boss/centaur-beast.glb',gltf=>{
  // Centaur lower body only: aggressively erase the horse head/neck.
  stripSkinnedBoneRegions(bossLowerVisual,['head','neck1','neck2','neck3','ear1','ear2','ear3','ear4'],.08);
  stripSkinnedSpatialRegions(bossLowerVisual,[
-   {name:'Head',r:.72},
-   {name:'Neck3',r:.62},
-   {name:'Neck2',r:.55},
-   {name:'Neck1',r:.48},
-   {name:'Ear1.L',r:.34},{name:'Ear1.R',r:.34}
+   {name:'Head',r:1.0},
+   {name:'Neck3',r:.78},
+   {name:'Neck2',r:.68},
+   {name:'Neck1',r:.58},
+   {name:'Ear1.L',r:.42},{name:'Ear1.R',r:.42}
  ],1.0);
+ stripBoneForwardCapsule(bossLowerVisual,'Neck2','Head',1.45,.82);
  for(const n of ['Head','Neck1','Neck2','Neck3','Ear1.L','Ear2.L','Ear3.L','Ear4.L','Ear1.R','Ear2.R','Ear3.R','Ear4.R']){
    const bone=bossLowerVisual.getObjectByName(n);if(bone){bone.visible=false;bone.scale.setScalar(.00001);}
  }
@@ -946,68 +1030,73 @@ function makeMonsterHand(sx){
 }
 
 function tryBuildBossMonsterArms(){
- if(!monsterSpikeSource||bossMonsterArms.length||!animeBossBones.leftHand||!animeBossBones.rightHand||!animeBossArmParts.left||!animeBossArmParts.right||!dorsalArms?.length)return;
+ if(!monsterSpikeSource||bossMonsterArms.length||!dorsalArms?.length)return;
+ const ready=['leftUpper','leftLower','leftHand','rightUpper','rightLower','rightHand'].every(k=>!!animeBossArmParts[k]);
+ if(!ready)return;
+
  for(const side of ['left','right']){
-   const sx=side==='left'?-1:1;
+   const sx=side==='left'?-1:1,rig=dorsalArms[side==='left'?0:1];
    const root=new THREE.Group();
-   const fleshA=cloneAnimeArmPart(side),fleshB=cloneAnimeArmPart(side);
-   if(!fleshA||!fleshB)continue;
-   const armorA=new THREE.Group(),armorB=new THREE.Group();
-   const joint=new THREE.Group(),finalHand=makeMonsterHand(sx);
+   const upper=cloneBossDonorPart(side,'upper');
+   const lower=cloneBossDonorPart(side,'lower');
+   const hand=cloneBossDonorPart(side,'hand');
+   if(!upper||!lower||!hand)continue;
 
-   fleshA.userData.baseThickness=1.24;
-   fleshB.userData.baseThickness=1.42;
-   finalHand.scale.setScalar(1.42);
+   upper.userData.baseThickness=1.08;
+   lower.userData.baseThickness=1.0;
+   hand.userData.baseScale=.92;
 
-   const jointMat=new THREE.MeshStandardMaterial({color:0x6f3b3c,roughness:.68,metalness:.03});
-   const jointMass=new THREE.Mesh(new THREE.SphereGeometry(.42,10,8),jointMat);
-   jointMass.castShadow=jointMass.receiveShadow=true;joint.add(jointMass);
-
-   boss.add(root);root.add(fleshA,fleshB,armorA,armorB,joint,finalHand);
-
-   for(const [ag,gi] of [[armorA,0],[armorB,1]]){
+   const upperArmor=new THREE.Group(),lowerArmor=new THREE.Group(),elbowArmor=new THREE.Group();
+   for(const [ag,gi] of [[upperArmor,0],[lowerArmor,1]]){
      for(let i=-1;i<=1;i++){
        const spike=cloneMonsterSpikeVisual();
        if(!spike)continue;
-       spike.position.set(i*.22,.04,-.24);
-       spike.scale.set(.28+.06*gi,.5+.08*gi,.28+.06*gi);
-       spike.rotation.x=-.42;spike.rotation.z=i*.22;
+       spike.position.set(i*.17,.04,-.22);
+       spike.scale.set(.22+.04*gi,.34+.06*gi,.22+.04*gi);
+       spike.rotation.x=-.38;spike.rotation.z=i*.2;
        ag.add(spike);
      }
    }
+   const elbowSpike=cloneMonsterSpikeVisual();
+   if(elbowSpike){
+     elbowSpike.scale.set(.38,.6,.38);
+     elbowSpike.rotation.x=-.6;
+     elbowArmor.add(elbowSpike);
+   }
 
-   bossMonsterArms.push({
-     side,sx,root,fleshA,fleshB,armorA,armorB,joint,finalHand,
-     hand:animeBossBones[side+'Hand'],rig:dorsalArms[side==='left'?0:1]
-   });
+   boss.add(root);root.add(upper,lower,hand,upperArmor,lowerArmor,elbowArmor);
+   bossMonsterArms.push({side,sx,root,upper,lower,hand,upperArmor,lowerArmor,elbowArmor,rig});
  }
- console.info('Bellamore: two-stage visible female monster arms built');
+ console.info('Bellamore: donor female arms mapped directly to combat shoulder/elbow/wrist rig');
 }
 function updateBossMonsterArmVisuals(){
  if(!bossMonsterArms.length)return;
  boss.updateMatrixWorld(true);
+
  for(const a of bossMonsterArms){
-   const handW=new THREE.Vector3(),wristW=new THREE.Vector3();
-   a.hand.getWorldPosition(handW);a.rig.wrist.getWorldPosition(wristW);
-   const p0=boss.worldToLocal(handW.clone()),p2=boss.worldToLocal(wristW.clone());
-   const p1=p0.clone().lerp(p2,.5);
-   p1.x+=a.sx*.42;
-   p1.y+=.16;
-   p1.z+=.22;
+   const sw=new THREE.Vector3(),ew=new THREE.Vector3(),ww=new THREE.Vector3();
+   a.rig.shoulder.getWorldPosition(sw);
+   a.rig.elbow.getWorldPosition(ew);
+   a.rig.wrist.getWorldPosition(ww);
 
-   orientSegment(a.fleshA,p0,p1,a.fleshA.userData.baseThickness||1.24);
-   orientSegment(a.fleshB,p1,p2,a.fleshB.userData.baseThickness||1.42);
-   orientSegment(a.armorA,p0,p1,1.16);
-   orientSegment(a.armorB,p1,p2,1.28);
+   const p0=boss.worldToLocal(sw.clone()),p1=boss.worldToLocal(ew.clone()),p2=boss.worldToLocal(ww.clone());
 
-   a.joint.position.copy(p1);
-   a.joint.scale.setScalar(1.0);
-   a.finalHand.position.copy(p2);
-   const dir=p2.clone().sub(p1).normalize();
-   a.finalHand.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
+   // Donor upper/lower limbs exactly follow the original boss combat rig.
+   orientSegment(a.upper,p0,p1,a.upper.userData.baseThickness||1.08);
+   orientSegment(a.lower,p1,p2,a.lower.userData.baseThickness||1.0);
+   orientSegment(a.upperArmor,p0,p1,1.0);
+   orientSegment(a.lowerArmor,p1,p2,.94);
+
+   a.elbowArmor.position.copy(p1);
+   a.elbowArmor.scale.setScalar(.92);
+
+   a.hand.position.copy(p2);
+   const foreDir=p2.clone().sub(p1).normalize();
+   a.hand.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),foreDir);
+   a.hand.scale.setScalar(a.hand.userData.baseScale||.92);
 
    const active=state?.bossState?.startsWith?.('arm_');
-   const pulse=active?1.08+Math.sin(state.time*14)*.025:1;
+   const pulse=active?1.025+Math.sin(state.time*12)*.012:1;
    a.root.scale.setScalar(pulse);
  }
 }
@@ -1323,7 +1412,6 @@ function animateGiantessPresence(dt){
    setAnimeBossBone('rightUpperArm',rx,ry,rz,13,dt);
    setAnimeBossBone('leftLowerArm',llx,lly,0,14,dt);
    setAnimeBossBone('rightLowerArm',rlx,rly,0,14,dt);
-   applyBossArmIK(dt);
 
    const em=animeBossVRM?.expressionManager;
    if(em){
