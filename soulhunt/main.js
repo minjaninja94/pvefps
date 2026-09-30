@@ -53,6 +53,7 @@ const shieldPivot=new THREE.Group();shieldPivot.position.set(-.48,1.32,.05);play
 const shield=part(shieldPivot,new THREE.CylinderGeometry(.48,.48,.11,12),steelDark,[0,0,-.08],[Math.PI/2,0,0],[1,.95,1]);
 part(shieldPivot,new THREE.BoxGeometry(.12,.68,.14),steel,[0,0,.02]);
 const weaponVisual=new THREE.Group();weaponPivot.add(weaponVisual);
+const swordPivot=weaponPivot; // combat-pose compatibility
 
 const WEAPONS=[
  {id:'straight',name:'직검',damage:1.00,posture:1.00,speed:1.00,stamina:1.00,reach:1.00,hitstop:1.00,guard:.58,motion:1.00},
@@ -155,7 +156,13 @@ const shadowMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opa
 for(const [obj,r] of [[player,.72],[boss,2.1]]){const s=new THREE.Mesh(new THREE.CircleGeometry(r,32),shadowMat);s.rotation.x=-Math.PI/2;s.position.y=.012;obj.add(s)}
 
 const input={keys:new Set(),guard:false,lock:true};
-addEventListener('keydown',e=>{input.keys.add(e.code);if(e.code==='KeyQ')input.lock=!input.lock;if(e.code==='Space')tryRoll()});
+addEventListener('keydown',e=>{
+ input.keys.add(e.code);
+ if(e.code==='KeyQ')input.lock=!input.lock;
+ if(e.code==='Space')tryRoll();
+ if(/^Digit[1-6]$/.test(e.code))setWeapon(Number(e.code.slice(5))-1);
+ if(e.code==='KeyT')toggleGrip();
+});
 addEventListener('keyup',e=>input.keys.delete(e.code));
 addEventListener('mousedown',e=>{if(e.button===0)tryAttack();if(e.button===2){input.guard=true;tryDeflect()}});
 addEventListener('mouseup',e=>{if(e.button===2)input.guard=false});
@@ -225,9 +232,12 @@ function tryRoll(){
  player.rotation.y=Math.atan2(state.rollDir.x,state.rollDir.z);
 }
 function startAttack(step){
- const cost=[0,16,18,23][step];
+ const w=currentWeapon(), grip=twoHanded?1.08:1;
+ const cost=[0,16,18,23][step]*w.stamina*grip;
  if(state.stamina<cost)return false;
- state.stamina-=cost;state.attackStep=step;state.attack=[0,.46,.5,.62][step];state.attackHit=false;state.attackQueued=false;state.comboGrace=.18;return true;
+ state.stamina-=cost;state.attackStep=step;
+ state.attack=[0,.46,.5,.62][step]/w.speed*(twoHanded?.96:1.04);
+ state.attackHit=false;state.attackQueued=false;state.comboGrace=.2/w.speed;return true;
 }
 function tryAttack(){
  if(state.dead||state.rolling>0||state.stagger>0)return;
@@ -248,7 +258,14 @@ function hurtPlayer(dmg,posture=20,unblockable=false){
      if(state.bossPosture>=100){state.bossStagger=2.05;state.bossPosture=48;state.bossState='stagger';flash('자세 붕괴',.52)}
      return;
    }
-   state.hp-=dmg*.2;state.posture+=posture*1.25;state.stamina=Math.max(0,state.stamina-24);state.shake=.09;
+   const w=currentWeapon();
+   const shieldGuard=!twoHanded;
+   const absorb=shieldGuard?.82:w.guard;
+   state.hp-=dmg*(1-absorb);
+   state.posture+=posture*(shieldGuard?.72:1.08);
+   state.stamina=Math.max(0,state.stamina-(shieldGuard?16:24*w.stamina));
+   state.shake=.09;
+   flash(shieldGuard?'방패 가드':'무기 가드',.18);
  }else{state.hp-=dmg;state.posture+=posture;state.stagger=.34;state.shake=.23;hitStop(.035)}
  if(state.posture>=100){state.posture=32;state.stagger=.85;flash('자세 무너짐',.4)}
  if(state.hp<=0){state.hp=0;state.dead=true;flash('사망',1.2)}
@@ -370,13 +387,18 @@ function updatePlayer(dt){
  state.invuln=Math.max(0,state.invuln-dt);state.deflect=Math.max(0,state.deflect-dt);state.parryAnim=Math.max(0,state.parryAnim-dt);state.stagger=Math.max(0,state.stagger-dt);state.comboGrace=Math.max(0,state.comboGrace-dt);
  state.guardBlend=THREE.MathUtils.lerp(state.guardBlend,input.guard?1:0,1-Math.exp(-dt*18));
  if(state.attack>0){
-   const dur=[0,.46,.5,.62][state.attackStep],step=state.attackStep;
+   const w=currentWeapon(),gripDamage=twoHanded?1.16:1,gripPosture=twoHanded?1.2:1;
+   const dur=[0,.46,.5,.62][state.attackStep]/w.speed*(twoHanded?.96:1.04),step=state.attackStep;
    state.attack-=dt;const p=1-state.attack/dur;
    if(step===1){swordPivot.rotation.x=-1.15+Math.sin(p*Math.PI)*2.35;swordPivot.rotation.z=-.35+Math.sin(p*Math.PI)*.72;player.rotation.z=Math.sin(p*Math.PI)*-.11}
    if(step===2){swordPivot.rotation.x=.95-Math.sin(p*Math.PI)*2.5;swordPivot.rotation.z=.45-Math.sin(p*Math.PI)*.9;player.rotation.z=Math.sin(p*Math.PI)*.13}
    if(step===3){swordPivot.rotation.x=-1.45+Math.sin(p*Math.PI)*3.0;swordPivot.rotation.y=Math.sin(p*Math.PI)*.35;player.rotation.x=Math.sin(p*Math.PI)*-.08}
-   const hitAt=[0,.23,.25,.31][step],range=[0,3.15,3.25,3.45][step],damage=[0,22,25,36][step],post=[0,11,13,20][step];
-   if(!state.attackHit&&state.attack<hitAt&&dist()<range){state.attackHit=true;hitBoss(damage,post)}
+   const hitAt=[0,.23,.25,.31][step]/w.speed,range=[0,3.15,3.25,3.45][step]*w.reach,damage=[0,22,25,36][step]*w.damage*gripDamage,post=[0,11,13,20][step]*w.posture*gripPosture;
+   if(!state.attackHit&&state.attack<hitAt&&dist()<range){
+     state.attackHit=true;
+     hitBoss(damage,post);
+     hitStop(.018*w.hitstop+(step===3?.018:0));
+   }
    if(state.attack<=0){
      swordPivot.rotation.set(0,0,0);player.rotation.x=0;player.rotation.z=0;
      if(state.attackQueued&&step<3)startAttack(step+1);else if(!state.attackQueued&&state.comboGrace<=0)state.attackStep=0;
