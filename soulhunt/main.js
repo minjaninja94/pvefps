@@ -194,7 +194,7 @@ function animateVroidPlayer(dt){
  const sprint=(input.keys.has('ShiftLeft')||input.keys.has('ShiftRight'))&&moving&&state.stamina>0&&state.exhausted<=0;
  const speed=sprint?10.5:6.8,phase=state.time*speed;
  let hipsX=0,hipsY=0,hipsZ=0,spineX=0,spineY=0,spineZ=0;
- let luz=-1.12,ruz=1.12,lux=0,rux=0,luy=0,ruy=0,llx=.16,rlx=.16;
+ let lsz=-.08,rsz=.08,luz=-1.42,ruz=1.42,lux=.04,rux=.04,luy=0,ruy=0,llx=.28,rlx=.28;
  let lulx=0,rulx=0,lllx=0,rllx=0;
 
  if(state.dead){
@@ -254,19 +254,21 @@ function animateVroidPlayer(dt){
    lulx=swing;rulx=-swing;
    lllx=Math.max(0,-Math.sin(phase))*(sprint?.78:.5);
    rllx=Math.max(0,Math.sin(phase))*(sprint?.78:.5);
-   lux=-swing*.55;rux=swing*.55;
-   luz=-1.12;ruz=1.12;
+   lux=-swing*.52;rux=swing*.52;
+   luz=-1.42;ruz=1.42;llx=.28;rlx=.28;
    hipsY=Math.sin(phase*2)*.025;spineZ=-Math.sin(phase)*.025;
  }else{
    const breathe=Math.sin(state.time*1.6);
    spineX=breathe*.012;spineY=Math.sin(state.time*.45)*.01;
-   luz=-1.12+breathe*.008;ruz=1.12-breathe*.008;
+   luz=-1.42+breathe*.008;ruz=1.42-breathe*.008;llx=.28;rlx=.28;
  }
 
  setPlayerVrmBone('hips',hipsX,hipsY,hipsZ,11,dt);
  setPlayerVrmBone('spine',spineX*.45,spineY*.45,spineZ*.45,11,dt);
  setPlayerVrmBone('chest',spineX*.72,spineY*.72,spineZ*.72,12,dt);
  setPlayerVrmBone('upperChest',spineX,spineY,spineZ,13,dt);
+ setPlayerVrmBone('leftShoulder',0,0,lsz,12,dt);
+ setPlayerVrmBone('rightShoulder',0,0,rsz,12,dt);
  setPlayerVrmBone('leftUpperArm',lux,luy,luz,14,dt);
  setPlayerVrmBone('rightUpperArm',rux,ruy,ruz,14,dt);
  setPlayerVrmBone('leftLowerArm',llx,0,0,14,dt);
@@ -843,12 +845,13 @@ function animateGiantessPresence(dt){
 
  if(animeHeadPivot){
    let torsoX=0,torsoY=0,torsoZ=0,headX=0,headY=0,headZ=0;
-   let lz=-1.18,rz=1.18,lx=0,rx=0,ly=0,ry=0,llx=.12,rlx=.12,lly=0,rly=0;
+   let lsz=-.1,rsz=.1,lz=-1.46,rz=1.46,lx=.04,rx=.04,ly=0,ry=0,llx=.28,rlx=.28,lly=0,rly=0;
 
    if(st==='idle'){
      torsoX=Math.sin(state.time*1.4)*.014;torsoZ=Math.sin(state.time*.72)*.018;
      headY=Math.sin(state.time*.52)*.05;headX=Math.sin(state.time*.8)*.018;
-     lz+=Math.sin(state.time*1.25)*.025;rz-=Math.sin(state.time*1.25)*.025;
+     lz+=Math.sin(state.time*1.25)*.018;rz-=Math.sin(state.time*1.25)*.018;
+     llx=.28;rlx=.28;
    }else if(st==='arm_cross'){
      torsoX=-.12;headX=.06;
      if(t>.48){lz=-.18;rz=.18;ly=-.55;ry=.55;llx=-.32;rlx=-.32}
@@ -886,6 +889,8 @@ function animateGiantessPresence(dt){
    setAnimeBossBone('upperChest',torsoX,torsoY,torsoZ,11,dt);
    setAnimeBossBone('neck',headX*.35,headY*.4,headZ*.35,10,dt);
    setAnimeBossBone('head',headX,headY,headZ,11,dt);
+   setAnimeBossBone('leftShoulder',0,0,lsz,11,dt);
+   setAnimeBossBone('rightShoulder',0,0,rsz,11,dt);
    setAnimeBossBone('leftUpperArm',lx,ly,lz,13,dt);
    setAnimeBossBone('rightUpperArm',rx,ry,rz,13,dt);
    setAnimeBossBone('leftLowerArm',llx,lly,0,14,dt);
