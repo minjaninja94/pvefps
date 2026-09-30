@@ -212,49 +212,67 @@ const tailA=part(tailPivot,new THREE.CapsuleGeometry(.4,1.55,5,9),shell,[0,0,-.8
 const tailB=part(tailPivot,new THREE.CapsuleGeometry(.27,1.6,5,9),shellDark,[0,0,-2.15],[Math.PI/2,0,0]);
 const tailTip=part(tailPivot,new THREE.ConeGeometry(.34,1.4,8),horn,[0,0,-3.42],[Math.PI/2,0,0]);
 
-// Extra dorsal arms: oversized visual silhouette, while attack hit ranges remain unchanged.
+// Extra dorsal arms: deliberately larger than their unchanged combat hit ranges.
 const dorsalArms=[];
 for(const sx of [-1,1]){
   const shoulder=new THREE.Group();
-  shoulder.position.set(sx*1.35,3.45,-.95);
+  shoulder.position.set(sx*1.72,3.62,-.48);
+  shoulder.rotation.z=-sx*.28;
   boss.add(shoulder);
 
-  const shoulderArmor=part(shoulder,new THREE.DodecahedronGeometry(.72,0),shell,[0,0,0],[0,0,sx*.18],[1.35,1.05,1.25]);
-  part(shoulder,new THREE.ConeGeometry(.22,.9,8),horn,[sx*.22,.55,-.05],[0,0,sx*.45]);
+  const shoulderArmor=part(shoulder,new THREE.DodecahedronGeometry(.86,0),carapace,[0,0,0],[0,0,sx*.16],[1.48,1.12,1.32]);
+  part(shoulder,new THREE.ConeGeometry(.28,1.28,8),horn,[sx*.28,.72,-.08],[0,0,sx*.48]);
+  part(shoulder,new THREE.ConeGeometry(.19,1.05,7),horn,[sx*.62,.35,-.42],[Math.PI/2.4,0,sx*.28]);
 
-  const upperPivot=new THREE.Group();upperPivot.position.set(sx*.12,-.05,.1);shoulder.add(upperPivot);
-  const upper=part(upperPivot,new THREE.CapsuleGeometry(.34,1.55,6,10),shellDark,[sx*.78,-.2,.05],[0,0,sx*1.0],[1.05,1,1.05]);
+  const upperPivot=new THREE.Group();
+  upperPivot.position.set(sx*.18,-.04,.08);
+  upperPivot.rotation.z=sx*.18;
+  shoulder.add(upperPivot);
 
-  const elbow=new THREE.Group();elbow.position.set(sx*1.5,-.52,.06);upperPivot.add(elbow);
-  part(elbow,new THREE.SphereGeometry(.38,10,8),shell,[0,0,0],[0,0,0],[1.15,.9,1.1]);
+  // Massive upper arm with a visible flesh gap before the forearm.
+  const upper=part(upperPivot,new THREE.CapsuleGeometry(.43,2.02,7,11),shell,[sx*1.02,-.28,.04],[0,0,sx*1.02],[1.12,1,1.12]);
+  part(upperPivot,new THREE.CapsuleGeometry(.28,.7,5,9),warningFlesh,[sx*1.62,-.6,.05],[0,0,sx*.92],[1.05,1,1.05]);
 
-  const fore=part(elbow,new THREE.CapsuleGeometry(.29,1.55,6,10),meat,[sx*.72,-.15,.08],[0,0,sx*.95],[1.08,1,1.08]);
+  const elbow=new THREE.Group();
+  elbow.position.set(sx*1.92,-.72,.05);
+  upperPivot.add(elbow);
+  part(elbow,new THREE.DodecahedronGeometry(.48,0),carapace,[0,0,0],[0,0,0],[1.24,.95,1.16]);
+  part(elbow,new THREE.ConeGeometry(.14,.82,7),horn,[0,.38,-.18],[.35,0,sx*.15]);
 
-  const wrist=new THREE.Group();wrist.position.set(sx*1.42,-.42,.08);elbow.add(wrist);
-  const hand=part(wrist,new THREE.BoxGeometry(.9,.52,.78),shell,[sx*.28,-.08,.1],[0,0,sx*.18],[1.1,1,1.15]);
+  const fore=part(elbow,new THREE.CapsuleGeometry(.37,2.0,7,11),warningFlesh,[sx*.96,-.22,.08],[0,0,sx*.96],[1.12,1,1.12]);
+  const foreGuard=part(elbow,new THREE.BoxGeometry(1.35,.5,.72),shellDark,[sx*.82,-.12,.08],[0,0,sx*.12]);
 
+  const wrist=new THREE.Group();
+  wrist.position.set(sx*1.88,-.56,.08);
+  elbow.add(wrist);
+
+  const hand=part(wrist,new THREE.DodecahedronGeometry(.62,0),carapace,[sx*.33,-.08,.12],[0,0,sx*.16],[1.32,.82,1.18]);
+  const palm=part(wrist,new THREE.BoxGeometry(.92,.34,.78),warningFlesh,[sx*.42,-.2,.12],[0,0,sx*.12]);
+
+  // Long talons are visual-only: hit ranges remain the existing bossImpact distances.
   for(let f=-1;f<=1;f++){
-    part(wrist,new THREE.ConeGeometry(.085,.68,7),horn,[sx*.72,-.12,f*.22],[0,0,sx*Math.PI/2]);
+    part(wrist,new THREE.ConeGeometry(.11,.95,7),horn,[sx*.92,-.22,f*.27],[0,0,sx*Math.PI/2]);
   }
 
-  // Back-mounted blade fins make the arms readable even when overlapping the torso.
-  part(shoulder,new THREE.ConeGeometry(.12,1.2,7),horn,[sx*.55,.25,-.5],[Math.PI/2.5,0,sx*.3]);
-  part(upperPivot,new THREE.ConeGeometry(.1,.85,7),horn,[sx*.52,.35,-.28],[Math.PI/2.3,0,sx*.2]);
-
-  dorsalArms.push({sx,shoulder,upperPivot,elbow,wrist,hand});
+  dorsalArms.push({
+    sx,shoulder,upperPivot,elbow,wrist,hand,
+    rest:{shoulderZ:-sx*.28,upperZ:sx*.18}
+  });
 }
 function resetDorsalArms(dt=1){
  for(const a of dorsalArms){
    a.shoulder.rotation.x=THREE.MathUtils.lerp(a.shoulder.rotation.x,0,dt);
    a.shoulder.rotation.y=THREE.MathUtils.lerp(a.shoulder.rotation.y,0,dt);
-   a.shoulder.rotation.z=THREE.MathUtils.lerp(a.shoulder.rotation.z,0,dt);
+   a.shoulder.rotation.z=THREE.MathUtils.lerp(a.shoulder.rotation.z,a.rest.shoulderZ,dt);
    a.upperPivot.rotation.x=THREE.MathUtils.lerp(a.upperPivot.rotation.x,0,dt);
    a.upperPivot.rotation.y=THREE.MathUtils.lerp(a.upperPivot.rotation.y,0,dt);
-   a.upperPivot.rotation.z=THREE.MathUtils.lerp(a.upperPivot.rotation.z,0,dt);
+   a.upperPivot.rotation.z=THREE.MathUtils.lerp(a.upperPivot.rotation.z,a.rest.upperZ,dt);
    a.elbow.rotation.x=THREE.MathUtils.lerp(a.elbow.rotation.x,0,dt);
    a.elbow.rotation.y=THREE.MathUtils.lerp(a.elbow.rotation.y,0,dt);
    a.elbow.rotation.z=THREE.MathUtils.lerp(a.elbow.rotation.z,0,dt);
-   a.wrist.rotation.set(0,0,0);
+   a.wrist.rotation.x=THREE.MathUtils.lerp(a.wrist.rotation.x,0,dt);
+   a.wrist.rotation.y=THREE.MathUtils.lerp(a.wrist.rotation.y,0,dt);
+   a.wrist.rotation.z=THREE.MathUtils.lerp(a.wrist.rotation.z,0,dt);
  }
 }
 boss.position.set(0,0,-2);
