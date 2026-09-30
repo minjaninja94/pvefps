@@ -194,7 +194,7 @@ function animateVroidPlayer(dt){
  const sprint=(input.keys.has('ShiftLeft')||input.keys.has('ShiftRight'))&&moving&&state.stamina>0&&state.exhausted<=0;
  const speed=sprint?10.5:6.8,phase=state.time*speed;
  let hipsX=0,hipsY=0,hipsZ=0,spineX=0,spineY=0,spineZ=0;
- let lsz=-.08,rsz=.08,luz=-1.42,ruz=1.42,lux=.04,rux=.04,luy=0,ruy=0,llx=.28,rlx=.28;
+ let lsz=-.18,rsz=.18,luz=-1.62,ruz=1.62,lux=.12,rux=.12,luy=.04,ruy=-.04,llx=.42,rlx=.42;
  let lulx=0,rulx=0,lllx=0,rllx=0;
 
  if(state.dead){
@@ -255,12 +255,12 @@ function animateVroidPlayer(dt){
    lllx=Math.max(0,-Math.sin(phase))*(sprint?.78:.5);
    rllx=Math.max(0,Math.sin(phase))*(sprint?.78:.5);
    lux=-swing*.52;rux=swing*.52;
-   luz=-1.42;ruz=1.42;llx=.28;rlx=.28;
+   luz=-1.62;ruz=1.62;llx=.42;rlx=.42;
    hipsY=Math.sin(phase*2)*.025;spineZ=-Math.sin(phase)*.025;
  }else{
    const breathe=Math.sin(state.time*1.6);
    spineX=breathe*.012;spineY=Math.sin(state.time*.45)*.01;
-   luz=-1.42+breathe*.008;ruz=1.42-breathe*.008;llx=.28;rlx=.28;
+   luz=-1.62+breathe*.008;ruz=1.62-breathe*.008;llx=.42;rlx=.42;
  }
 
  setPlayerVrmBone('hips',hipsX,hipsY,hipsZ,11,dt);
@@ -450,6 +450,78 @@ function setBossMorph(name,value,speed=10,dt=.016){
 
 
 const animeBossBones={},animeBossBoneRest={};
+const animeBossArmParts={left:null,right:null};
+
+function extractArmOnlyPart(bodyNode,side){
+ let src=null;
+ if(bodyNode?.isSkinnedMesh)src=bodyNode;
+ else bodyNode?.traverse?.(o=>{if(!src&&o.isSkinnedMesh)src=o});
+ if(!src||!src.geometry?.attributes?.skinIndex||!src.geometry?.attributes?.skinWeight||!src.skeleton)return null;
+
+ const geo=src.geometry.clone();
+ const skinIndex=geo.attributes.skinIndex,skinWeight=geo.attributes.skinWeight;
+ const bones=src.skeleton.bones||[];
+ const sideKey=side==='left'?'_L_':'_R_';
+ const allowed=new Set();
+ bones.forEach((b,i)=>{
+   const n=b.name||'';
+   if(n.includes(sideKey)&&(n.includes('UpperArm')||n.includes('LowerArm')))allowed.add(i);
+ });
+ if(!allowed.size)return null;
+
+ const belongs=v=>{
+   let sum=0;
+   for(let k=0;k<4;k++){
+     const bi=skinIndex.getComponent(v,k),w=skinWeight.getComponent(v,k);
+     if(allowed.has(bi))sum+=w;
+   }
+   return sum>.34;
+ };
+ const srcIndex=geo.index;
+ const tri=[];
+ const count=srcIndex?srcIndex.count:geo.attributes.position.count;
+ for(let i=0;i<count;i+=3){
+   const a=srcIndex?srcIndex.getX(i):i,b=srcIndex?srcIndex.getX(i+1):i+1,d=srcIndex?srcIndex.getX(i+2):i+2;
+   const hit=(belongs(a)?1:0)+(belongs(b)?1:0)+(belongs(d)?1:0);
+   if(hit>=2)tri.push(a,b,d);
+ }
+ if(tri.length<12)return null;
+
+ geo.setIndex(tri);
+ geo.clearGroups();
+ geo.computeBoundingBox();
+ const bb=geo.boundingBox,center=new THREE.Vector3();bb.getCenter(center);
+ geo.translate(-center.x,-center.y,-center.z);
+
+ const sx=side==='left'?-1:1;
+ geo.rotateZ(sx*Math.PI/2);
+ geo.computeBoundingBox();
+ const bb2=geo.boundingBox;
+ const len=Math.max(.001,bb2.max.y-bb2.min.y);
+ geo.scale(1/len,1/len,1/len);
+ geo.computeVertexNormals();
+
+ let mat=Array.isArray(src.material)?src.material.find(m=>m?.name?.toLowerCase?.().includes('body'))||src.material[0]:src.material;
+ mat=mat?.clone?.()||new THREE.MeshStandardMaterial({color:0xd9a99e,roughness:.58});
+ mat.transparent=false;mat.opacity=1;mat.depthWrite=true;mat.depthTest=true;
+ const mesh=new THREE.Mesh(geo,mat);mesh.castShadow=mesh.receiveShadow=true;
+ const group=new THREE.Group();group.add(mesh);
+ return group;
+}
+function cloneAnimeArmPart(side){
+ const src=animeBossArmParts[side];
+ if(!src)return null;
+ const g=src.clone(true);
+ g.traverse(o=>{
+   if(o.isMesh){
+     o.geometry=o.geometry.clone();
+     o.material=o.material?.clone?.()||o.material;
+     if(o.material){o.material.transparent=false;o.material.opacity=1;o.material.depthWrite=true;o.material.depthTest=true}
+     o.castShadow=o.receiveShadow=true;
+   }
+ });
+ return g;
+}
 function cacheAnimeBossBone(name,node){
  if(!node)return;
  animeBossBones[name]=node;
@@ -522,6 +594,8 @@ async function loadAnimeBossUpper(){
        const node=humanoid?.getNormalizedBoneNode?.(hName);
        if(node)cacheAnimeBossBone(key,node);
      }
+     animeBossArmParts.left=extractArmOnlyPart(bodyNode,'left');
+     animeBossArmParts.right=extractArmOnlyPart(bodyNode,'right');
      setTimeout(tryBuildBossMonsterArms,0);
 
      // Centaur construction: keep the entire authored upper body visible, collapse only the human legs.
@@ -657,15 +731,19 @@ function makeMonsterHand(sx){
 }
 
 function tryBuildBossMonsterArms(){
- if(!monsterSpikeSource||bossMonsterArms.length||!animeBossBones.leftHand||!animeBossBones.rightHand||!dorsalArms?.length)return;
+ if(!monsterSpikeSource||bossMonsterArms.length||!animeBossBones.leftHand||!animeBossBones.rightHand||!animeBossArmParts.left||!animeBossArmParts.right||!dorsalArms?.length)return;
  for(const side of ['left','right']){
    const sx=side==='left'?-1:1;
    const root=new THREE.Group();
-   const fleshA=makeMonsterFleshSegment(.36,.3);
-   const fleshB=makeMonsterFleshSegment(.42,.34);
-   const fleshC=makeMonsterFleshSegment(.48,.38);
+   const fleshA=cloneAnimeArmPart(side);
+   const fleshB=cloneAnimeArmPart(side);
+   const fleshC=cloneAnimeArmPart(side);
+   if(!fleshA||!fleshB||!fleshC)continue;
    const armorA=new THREE.Group(),armorB=new THREE.Group(),armorC=new THREE.Group();
    const finalHand=makeMonsterHand(sx);
+   fleshA.userData.baseThickness=.82;
+   fleshB.userData.baseThickness=.96;
+   fleshC.userData.baseThickness=1.08;
    boss.add(root);root.add(fleshA,fleshB,fleshC,armorA,armorB,armorC,finalHand);
 
    const armorGroups=[armorA,armorB,armorC];
@@ -713,9 +791,9 @@ function updateBossMonsterArmVisuals(){
    p1.y+=.2;p1.x+=a.sx*.26;p1.z+=.12;
    p2.y+=.1;p2.x+=a.sx*.34;p2.z+=.18;
 
-   orientSegment(a.fleshA,p0,p1,1.0);
-   orientSegment(a.fleshB,p1,p2,1.08);
-   orientSegment(a.fleshC,p2,p3,1.14);
+   orientSegment(a.fleshA,p0,p1,a.fleshA.userData.baseThickness||.82);
+   orientSegment(a.fleshB,p1,p2,a.fleshB.userData.baseThickness||.96);
+   orientSegment(a.fleshC,p2,p3,a.fleshC.userData.baseThickness||1.08);
    orientSegment(a.armorA,p0,p1,.95);
    orientSegment(a.armorB,p1,p2,1.0);
    orientSegment(a.armorC,p2,p3,1.06);
@@ -978,13 +1056,13 @@ function animateGiantessPresence(dt){
 
  if(animeHeadPivot){
    let torsoX=0,torsoY=0,torsoZ=0,headX=0,headY=0,headZ=0;
-   let lsz=-.1,rsz=.1,lz=-1.46,rz=1.46,lx=.04,rx=.04,ly=0,ry=0,llx=.28,rlx=.28,lly=0,rly=0;
+   let lsz=-.18,rsz=.18,lz=-1.62,rz=1.62,lx=.08,rx=.08,ly=.03,ry=-.03,llx=.4,rlx=.4,lly=0,rly=0;
 
    if(st==='idle'){
      torsoX=Math.sin(state.time*1.4)*.014;torsoZ=Math.sin(state.time*.72)*.018;
      headY=Math.sin(state.time*.52)*.05;headX=Math.sin(state.time*.8)*.018;
      lz+=Math.sin(state.time*1.25)*.018;rz-=Math.sin(state.time*1.25)*.018;
-     llx=.28;rlx=.28;
+     llx=.4;rlx=.4;
    }else if(st==='arm_cross'){
      torsoX=-.12;headX=.06;
      if(t>.48){lz=-.18;rz=.18;ly=-.55;ry=.55;llx=-.32;rlx=-.32}
