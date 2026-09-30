@@ -1333,7 +1333,7 @@ document.body.appendChild(potionHud);
 
 const state={
  hp:100,posture:0,stamina:100,staminaMax:100,staminaRegenDelay:0,exhausted:0,potions:3,potionTimer:0,potionHealDone:false,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollElapsed:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
- bossMaxHp:11200,bossHp:11200,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',bossBustImpulse:0,potionPunishQueued:false,potionPunishKind:'spike_triple',time:0,shake:0,hitstop:0,
+ bossMaxHp:11200,bossHp:11200,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',bossBustImpulse:0,bossAttackTarget:new THREE.Vector3(),bossAttackTargetLocked:false,potionPunishQueued:false,potionPunishKind:'spike_triple',time:0,shake:0,hitstop:0,
  headHp:100,legHp:150,tailHp:130,tailBroken:false,legBroken:false,headBroken:false,danger:false,reaction:0,reactionZone:'body'
 };
 function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeout(flash.t);flash.t=setTimeout(()=>ui.msg.style.opacity='0',d*1000)}
@@ -1758,6 +1758,7 @@ function chooseBossAttack(){
    spike_triple:1.36,spike_fan:1.42,bounce_quake:3.45
  }[state.bossState];
  state.bossHit=false;state.bossPatternStep=0;state.bossFxStamp='';
+ state.bossAttackTarget.copy(player.position);state.bossAttackTarget.y=0;state.bossAttackTargetLocked=false;
  if(state.bossState==='arm_grab'||state.bossState==='arm_crush')setDanger(true);
 }
 function inBossHitWindow(t,from,to){return t<=from&&t>=to}
@@ -1781,6 +1782,76 @@ const BOSS_ACTIVE_VOLUME={
  arm_grab:{range:3.85,dot:.28},arm_barrage:{range:4.25,dot:.05},
  arm_guardbreak:{range:4.5,dot:.08},arm_crush:{range:4.2,dot:-.08}
 };
+const bossArmTargetMarker=new THREE.Mesh(
+ new THREE.RingGeometry(.72,1.0,48),
+ new THREE.MeshBasicMaterial({color:0xdf5138,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide})
+);
+bossArmTargetMarker.rotation.x=-Math.PI/2;
+bossArmTargetMarker.position.y=.04;
+bossArmTargetMarker.visible=false;
+scene.add(bossArmTargetMarker);
+
+function updateBossAttackTargetMarker(){
+ const slam=state.bossState==='arm_double_slam'||state.bossState==='arm_guardbreak';
+ if(!slam||state.bossHp<=0){bossArmTargetMarker.visible=false;return}
+ bossArmTargetMarker.visible=true;
+ bossArmTargetMarker.position.set(state.bossAttackTarget.x,.04,state.bossAttackTarget.z);
+ const pulse=1+Math.sin(state.time*11)*.075;
+ const radius=state.bossState==='arm_guardbreak'?1.72:2.02;
+ bossArmTargetMarker.scale.setScalar(radius*pulse);
+ bossArmTargetMarker.material.opacity=.34+.2*Math.pow(Math.sin(state.time*8),2);
+}
+
+function solveDorsalArmToWorld(arm,targetWorld,alpha=.86){
+ if(!arm?.shoulder||!arm?.upperPivot||!arm?.elbow||!arm?.wrist)return;
+ for(let i=0;i<3;i++){
+   rotateBoneEndToward(arm.elbow,arm.wrist,targetWorld,alpha);
+   rotateBoneEndToward(arm.upperPivot,arm.wrist,targetWorld,alpha*.82);
+   rotateBoneEndToward(arm.shoulder,arm.wrist,targetWorld,alpha*.38);
+ }
+}
+
+function slamHandTarget(arm,progress=1){
+ const center=state.bossAttackTarget.clone();
+ const forward=new THREE.Vector3(Math.sin(boss.rotation.y),0,Math.cos(boss.rotation.y));
+ const right=new THREE.Vector3(forward.z,0,-forward.x);
+ center.addScaledVector(right,arm.sx*.72);
+ const descend=THREE.MathUtils.smoothstep(clamp(progress,0,1),.08,.82);
+ center.y=.14+(1-descend)*8.6;
+ return center;
+}
+
+function spawnArmGroundImpactFx(target,radius){
+ const ring=new THREE.Mesh(
+   new THREE.RingGeometry(.5,.74,48),
+   new THREE.MeshBasicMaterial({color:0xf2d2a3,transparent:true,opacity:.82,depthWrite:false,side:THREE.DoubleSide})
+ );
+ ring.rotation.x=-Math.PI/2;ring.position.copy(target);ring.position.y=.045;scene.add(ring);
+ bossShockwaves.push({ring,life:.5,max:.5,radius:radius*.8});
+ spawnDustBurst(target.clone(),1.25);
+ state.shake=Math.max(state.shake,.21);
+}
+
+function bossGroundTargetImpact(target,radius,dmg,posture,unblockable=false){
+ if(state.bossHit)return;
+ state.bossHit=true;
+ spawnArmGroundImpactFx(target,radius);
+ const dx=player.position.x-target.x,dz=player.position.z-target.z;
+ if(Math.hypot(dx,dz)>radius)return;
+ if(state.invuln>0){flash('회피',.16);return}
+ hurtPlayer(dmg,posture,unblockable);
+}
+
+function wristsReachedSlamTarget(radius=1.35){
+ let close=0;
+ for(const arm of dorsalArms){
+   const wrist=new THREE.Vector3();arm.wrist.getWorldPosition(wrist);
+   const t=slamHandTarget(arm,1);t.y=.14;
+   if(wrist.distanceTo(t)<=radius)close++;
+ }
+ return close===dorsalArms.length;
+}
+
 function bossArmImpact(indices,radius,dmg,posture,unblockable=false){
  if(state.bossHit)return;
  const ids=Array.isArray(indices)?indices:[indices];
@@ -1792,16 +1863,6 @@ function bossArmImpact(indices,radius,dmg,posture,unblockable=false){
    dorsalArms[i].elbow.getWorldPosition(elbow);
    dorsalArms[i].wrist.getWorldPosition(wrist);
    if(pointSegmentDistance(pp,elbow,wrist)<=hitRadius||wrist.distanceTo(pp)<=hitRadius*1.12){touched=true;break}
- }
- // Fallback volume exists only during the already-short active frame. It prevents a stationary
- // player from being mysteriously safe when the visual anime arm and invisible rig diverge slightly.
- if(!touched){
-   const cfg=BOSS_ACTIVE_VOLUME[state.bossState];
-   if(cfg){
-     const toP=flatDir(boss.position,player.position);
-     const forward=new THREE.Vector3(Math.sin(boss.rotation.y),0,Math.cos(boss.rotation.y));
-     touched=dist()<=cfg.range*BOSS_ENGAGE_SCALE&&forward.dot(toP)>=cfg.dot;
-   }
  }
  if(!touched)return;
  state.bossHit=true;
@@ -1894,6 +1955,16 @@ function updateBoss(dt){
  else if(state.bossStagger>0)setBossVisualAction('idle');
  else setBossVisualAction('attack');
  animateBossTelegraph(bossMotionDt);updateBossWarningGlow();animateGiantessPresence(bossMotionDt);updateBossMonsterArmVisuals();
+ if(state.bossState==='arm_double_slam'||state.bossState==='arm_guardbreak'){
+   const lockAt=state.bossState==='arm_double_slam'?.62:.54;
+   if(!state.bossAttackTargetLocked){
+     state.bossAttackTarget.copy(player.position);state.bossAttackTarget.y=0;
+     if(state.bossTimer<=lockAt)state.bossAttackTargetLocked=true;
+   }
+ }else{
+   state.bossAttackTargetLocked=false;
+ }
+ updateBossAttackTargetMarker();
  if(state.reaction>0){
    state.reaction=Math.max(0,state.reaction-dt);
    const k=Math.sin((state.reaction/.16)*Math.PI);
@@ -1991,15 +2062,21 @@ function updateBoss(dt){
    if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.1}
  }else if(state.bossState==='arm_double_slam'){
    if(state.bossTimer<=.46){
-     const p=clamp(1-state.bossTimer/.46,0,1),e=Math.sin(p*Math.PI*.72);
-     for(const a of dorsalArms){a.shoulder.rotation.x=-1.42+e*2.0;a.upperPivot.rotation.x=-1.68+e*2.25;a.elbow.rotation.x=-.48+e*.75}
-     trailArms(1.2);
-     if(inBossHitWindow(state.bossTimer,.26,.16)){
-       bossFxOnce('double-slam',()=>{spawnDustBurst(bossGroundPoint(2.0),1.75);state.shake=Math.max(state.shake,.24)});
-       bossArmImpact([0,1],1.62,36,48,false);
+     const p=clamp(1-state.bossTimer/.46,0,1);
+     for(const a of dorsalArms){
+       const target=slamHandTarget(a,p);
+       solveDorsalArmToWorld(a,target,.94);
+       spawnArmTrail(a,1.28);
+     }
+     if(inBossHitWindow(state.bossTimer,.19,.08)&&wristsReachedSlamTarget(1.7)){
+       bossFxOnce('double-slam',()=>{
+         const hit=state.bossAttackTarget.clone();hit.y=0;
+         bossGroundTargetImpact(hit,2.35,36,48,false);
+         state.bossBustImpulse=Math.max(state.bossBustImpulse,.7);
+       });
      }
    }
-   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.35}
+   if(state.bossTimer<=0){bossArmTargetMarker.visible=false;resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.35}
  }else if(state.bossState==='arm_sweep'){
    if(state.bossTimer<=.5){
      const p=clamp(1-state.bossTimer/.5,0,1),e=Math.sin(p*Math.PI*.9);
@@ -2042,15 +2119,20 @@ function updateBoss(dt){
    if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.22}
  }else if(state.bossState==='arm_guardbreak'){
    if(state.bossTimer<=.38){
-     const p=clamp(1-state.bossTimer/.38,0,1),e=Math.sin(p*Math.PI*.72);
-     for(const a of dorsalArms){a.shoulder.rotation.x=-1.5+e*2.05;a.upperPivot.rotation.x=-.65+e*.9;a.elbow.rotation.x=-1.05+e*1.3}
-     trailArms(1.35);
-     if(inBossHitWindow(state.bossTimer,.22,.13)){
-       bossFxOnce('guardbreak',()=>{spawnDustBurst(bossGroundPoint(1.7),1.35);state.shake=Math.max(state.shake,.2)});
-       bossArmImpact([0,1],1.55,22,72,false);
+     const p=clamp(1-state.bossTimer/.38,0,1);
+     for(const a of dorsalArms){
+       const target=slamHandTarget(a,p);
+       solveDorsalArmToWorld(a,target,.96);
+       spawnArmTrail(a,1.38);
+     }
+     if(inBossHitWindow(state.bossTimer,.16,.055)&&wristsReachedSlamTarget(1.65)){
+       bossFxOnce('guardbreak',()=>{
+         const hit=state.bossAttackTarget.clone();hit.y=0;
+         bossGroundTargetImpact(hit,1.95,22,72,false);
+       });
      }
    }
-   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.32}
+   if(state.bossTimer<=0){bossArmTargetMarker.visible=false;resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.32}
  }else if(state.bossState==='arm_crush'){
    if(state.bossTimer<=.42){
      const p=clamp(1-state.bossTimer/.42,0,1),e=Math.sin(p*Math.PI*.86);
