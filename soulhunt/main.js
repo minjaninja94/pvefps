@@ -448,7 +448,6 @@ function setBossMorph(name,value,speed=10,dt=.016){
 
 
 const animeBossBones={},animeBossBoneRest={};
-const animeUpperClip=new THREE.Plane(new THREE.Vector3(0,-1,0),2.38);
 function cacheAnimeBossBone(name,node){
  if(!node)return;
  animeBossBones[name]=node;
@@ -481,9 +480,9 @@ async function loadAnimeBossUpper(){
          if(!o.isMesh)return;
          o.castShadow=true;o.receiveShadow=true;
          if(Array.isArray(o.material)){
-           o.material=o.material.map(m=>{const n=m.clone();n.clippingPlanes=[animeUpperClip];n.clipShadows=true;return n});
+           o.material=o.material.map(m=>{const n=m.clone();return n});
          }else if(o.material){
-           o.material=o.material.clone();o.material.clippingPlanes=[animeUpperClip];o.material.clipShadows=true;
+           o.material=o.material.clone();
          }
        });
      }
@@ -492,7 +491,7 @@ async function loadAnimeBossUpper(){
      root.updateMatrixWorld(true);
      const fullBox=new THREE.Box3().setFromObject(root,true);
      const fullSize=new THREE.Vector3();fullBox.getSize(fullSize);
-     const fullHeight=5.45;
+     const fullHeight=6.15;
      root.scale.multiplyScalar(fullHeight/Math.max(fullSize.y,.001));
      root.updateMatrixWorld(true);
 
@@ -501,7 +500,7 @@ async function loadAnimeBossUpper(){
      if(hips){hips.getWorldPosition(hipPos);root.position.sub(hipPos)}
 
      animeHeadPivot=new THREE.Group();
-     animeHeadPivot.position.set(0,2.38,.28);
+     animeHeadPivot.position.set(0,2.72,.62);
      animeHeadPivot.add(root);
      boss.add(animeHeadPivot);
      animeHeadVisual=root;animeBossVRM=vrm;animeHeadReady=true;
@@ -512,11 +511,20 @@ async function loadAnimeBossUpper(){
        leftShoulder:'leftShoulder',rightShoulder:'rightShoulder',
        leftUpperArm:'leftUpperArm',rightUpperArm:'rightUpperArm',
        leftLowerArm:'leftLowerArm',rightLowerArm:'rightLowerArm',
-       leftHand:'leftHand',rightHand:'rightHand'
+       leftHand:'leftHand',rightHand:'rightHand',
+       leftUpperLeg:'leftUpperLeg',rightUpperLeg:'rightUpperLeg',
+       leftLowerLeg:'leftLowerLeg',rightLowerLeg:'rightLowerLeg',
+       leftFoot:'leftFoot',rightFoot:'rightFoot'
      };
      for(const [key,hName] of Object.entries(boneMap)){
        const node=humanoid?.getNormalizedBoneNode?.(hName);
        if(node)cacheAnimeBossBone(key,node);
+     }
+
+     // Centaur construction: keep the entire authored upper body visible, collapse only the human legs.
+     for(const name of ['J_Bip_L_UpperLeg','J_Bip_R_UpperLeg']){
+       const b=root.getObjectByName(name);
+       if(b)b.scale.set(.001,.001,.001);
      }
 
      // Slightly lengthen the actual skinned arms so the visible silhouette matches the wider attack rig.
@@ -560,12 +568,13 @@ assetLoader.load('./assets/models/boss/centaur-beast.glb',gltf=>{
  bossLowerVisual.updateMatrixWorld(true);
  let box=new THREE.Box3().setFromObject(bossLowerVisual,true),size=new THREE.Vector3();box.getSize(size);
  const horizontal=Math.max(size.x,size.z,.001);
- bossLowerVisual.scale.setScalar(5.35/horizontal);
+ bossLowerVisual.scale.setScalar(4.75/horizontal);
  bossLowerVisual.rotation.y=Math.PI;
  bossLowerVisual.updateMatrixWorld(true);
  box=new THREE.Box3().setFromObject(bossLowerVisual,true);
  bossLowerVisual.position.y-=box.min.y;
- bossLowerVisual.position.z=-.5;
+ bossLowerVisual.position.y-=.18;
+ bossLowerVisual.position.z=-.82;
  const neck=bossLowerVisual.getObjectByName('Neck1');
  if(neck)neck.scale.setScalar(.001); // removes horse head/neck while preserving torso and legs
  bossLowerVisual.traverse(o=>{
@@ -596,12 +605,12 @@ const bossSpikeTargets=[];
 assetLoader.load('./assets/models/boss/monster-spikes.glb',gltf=>{
  const source=gltf.scene;
  const placements=[
-   {p:[0,2.32,-1.55],r:[-.48,0,0],s:[1.25,1.6,1.15]},
-   {p:[0,2.46,-.72],r:[-.4,0,0],s:[1.15,1.45,1.05]},
-   {p:[-1.42,2.55,-.2],r:[-.25,.2,-.38],s:[.82,1.25,.8]},
-   {p:[1.42,2.55,-.2],r:[-.25,-.2,.38],s:[.82,1.25,.8]},
-   {p:[-.72,4.48,.12],r:[.15,.1,-.5],s:[.42,.95,.42]},
-   {p:[.72,4.48,.12],r:[.15,-.1,.5],s:[.42,.95,.42]}
+   {p:[0,2.05,-2.05],r:[-.52,0,0],s:[1.15,1.5,1.05]},
+   {p:[0,2.18,-1.28],r:[-.46,0,0],s:[1.0,1.3,.95]},
+   {p:[-1.55,2.1,-.92],r:[-.32,.2,-.5],s:[.72,1.05,.72]},
+   {p:[1.55,2.1,-.92],r:[-.32,-.2,.5],s:[.72,1.05,.72]},
+   {p:[-1.72,1.72,-1.55],r:[-.15,.35,-.72],s:[.5,.82,.5]},
+   {p:[1.72,1.72,-1.55],r:[-.15,-.35,.72],s:[.5,.82,.5]}
  ];
  placements.forEach((cfg,i)=>{
    const root=source.clone(true);
