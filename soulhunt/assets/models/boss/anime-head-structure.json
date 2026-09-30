@@ -1,0 +1,950 @@
+{
+  "nodes": [
+    {
+      "index": 0,
+      "name": "Face",
+      "mesh": 0,
+      "skin": 0,
+      "children": []
+    },
+    {
+      "index": 1,
+      "name": "Body",
+      "mesh": 1,
+      "skin": 1,
+      "children": []
+    },
+    {
+      "index": 2,
+      "name": "Root",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        3
+      ]
+    },
+    {
+      "index": 3,
+      "name": "J_Bip_C_Hips",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        4,
+        80,
+        92
+      ]
+    },
+    {
+      "index": 4,
+      "name": "J_Bip_C_Spine",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        5
+      ]
+    },
+    {
+      "index": 5,
+      "name": "J_Bip_C_Chest",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        6
+      ]
+    },
+    {
+      "index": 6,
+      "name": "J_Bip_C_UpperChest",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        7,
+        9,
+        11,
+        32,
+        56
+      ]
+    },
+    {
+      "index": 7,
+      "name": "J_Sec_L_Bust1",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        8
+      ]
+    },
+    {
+      "index": 8,
+      "name": "J_Sec_L_Bust2",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 9,
+      "name": "J_Sec_R_Bust1",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        10
+      ]
+    },
+    {
+      "index": 10,
+      "name": "J_Sec_R_Bust2",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 11,
+      "name": "J_Bip_C_Neck",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        12
+      ]
+    },
+    {
+      "index": 12,
+      "name": "J_Bip_C_Head",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        13,
+        14,
+        15,
+        18,
+        25
+      ]
+    },
+    {
+      "index": 13,
+      "name": "J_Adj_L_FaceEye",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 14,
+      "name": "J_Adj_R_FaceEye",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 15,
+      "name": "HairJoint-9709362a-e57a-44bf-80b2-23dc7a4f7332",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        16
+      ]
+    },
+    {
+      "index": 16,
+      "name": "HairJoint-a2449148-697f-4c6c-85ed-90e8640faf6e",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        17
+      ]
+    },
+    {
+      "index": 17,
+      "name": "HairJoint-b9f5975b-18e8-4838-b4ef-d8e5d3eedef0",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 18,
+      "name": "HairJoint-7feca626-c9e1-4730-b655-7c21eb0298c4",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        19
+      ]
+    },
+    {
+      "index": 19,
+      "name": "HairJoint-8783fe16-54a5-469d-b4ae-9f86a0bb417d",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        20
+      ]
+    },
+    {
+      "index": 20,
+      "name": "HairJoint-05ff4d99-332d-48f9-923b-41189ad1edbc",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        21
+      ]
+    },
+    {
+      "index": 21,
+      "name": "HairJoint-68ae0f11-224e-432e-ae2a-b603ae78ade7",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        22
+      ]
+    },
+    {
+      "index": 22,
+      "name": "HairJoint-a10c01a4-eb6e-4c14-b7f3-c5e2cfdf657f",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        23
+      ]
+    },
+    {
+      "index": 23,
+      "name": "HairJoint-f49cafa5-c7cb-42ad-9bcf-25c70fdd5975",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        24
+      ]
+    },
+    {
+      "index": 24,
+      "name": "HairJoint-9afc9a09-7eb8-42fb-b5a1-aa655b25d45f",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 25,
+      "name": "HairJoint-6392f781-e1ec-41e0-b62d-4026ca2ae774",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        26
+      ]
+    },
+    {
+      "index": 26,
+      "name": "HairJoint-2f254694-1ceb-4e13-81ce-252b1d83f915",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        27
+      ]
+    },
+    {
+      "index": 27,
+      "name": "HairJoint-61b2bd2a-892d-4349-96bc-4b3819117bcf",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        28
+      ]
+    },
+    {
+      "index": 28,
+      "name": "HairJoint-4f98cee4-d54b-48e2-9e8a-e5694d5854e4",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        29
+      ]
+    },
+    {
+      "index": 29,
+      "name": "HairJoint-4e56f606-bb65-4eda-9a60-604aa8fac14a",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        30
+      ]
+    },
+    {
+      "index": 30,
+      "name": "HairJoint-f778bf2e-eba7-46a5-b5d7-70214485a6b0",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        31
+      ]
+    },
+    {
+      "index": 31,
+      "name": "HairJoint-4c4de6f4-be23-46f8-a810-92025f36e6a3",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 32,
+      "name": "J_Bip_L_Shoulder",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        33
+      ]
+    },
+    {
+      "index": 33,
+      "name": "J_Bip_L_UpperArm",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        34
+      ]
+    },
+    {
+      "index": 34,
+      "name": "J_Bip_L_LowerArm",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        35
+      ]
+    },
+    {
+      "index": 35,
+      "name": "J_Bip_L_Hand",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        36,
+        40,
+        44,
+        48,
+        52
+      ]
+    },
+    {
+      "index": 36,
+      "name": "J_Bip_L_Index1",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        37
+      ]
+    },
+    {
+      "index": 37,
+      "name": "J_Bip_L_Index2",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        38
+      ]
+    },
+    {
+      "index": 38,
+      "name": "J_Bip_L_Index3",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        39
+      ]
+    },
+    {
+      "index": 39,
+      "name": "J_Bip_L_Index3_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 40,
+      "name": "J_Bip_L_Little1",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        41
+      ]
+    },
+    {
+      "index": 41,
+      "name": "J_Bip_L_Little2",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        42
+      ]
+    },
+    {
+      "index": 42,
+      "name": "J_Bip_L_Little3",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        43
+      ]
+    },
+    {
+      "index": 43,
+      "name": "J_Bip_L_Little3_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 44,
+      "name": "J_Bip_L_Middle1",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        45
+      ]
+    },
+    {
+      "index": 45,
+      "name": "J_Bip_L_Middle2",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        46
+      ]
+    },
+    {
+      "index": 46,
+      "name": "J_Bip_L_Middle3",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        47
+      ]
+    },
+    {
+      "index": 47,
+      "name": "J_Bip_L_Middle3_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 48,
+      "name": "J_Bip_L_Ring1",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        49
+      ]
+    },
+    {
+      "index": 49,
+      "name": "J_Bip_L_Ring2",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        50
+      ]
+    },
+    {
+      "index": 50,
+      "name": "J_Bip_L_Ring3",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        51
+      ]
+    },
+    {
+      "index": 51,
+      "name": "J_Bip_L_Ring3_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 52,
+      "name": "J_Bip_L_Thumb1",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        53
+      ]
+    },
+    {
+      "index": 53,
+      "name": "J_Bip_L_Thumb2",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        54
+      ]
+    },
+    {
+      "index": 54,
+      "name": "J_Bip_L_Thumb3",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        55
+      ]
+    },
+    {
+      "index": 55,
+      "name": "J_Bip_L_Thumb3_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 56,
+      "name": "J_Bip_R_Shoulder",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        57
+      ]
+    },
+    {
+      "index": 57,
+      "name": "J_Bip_R_UpperArm",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        58
+      ]
+    },
+    {
+      "index": 58,
+      "name": "J_Bip_R_LowerArm",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        59
+      ]
+    },
+    {
+      "index": 59,
+      "name": "J_Bip_R_Hand",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        60,
+        64,
+        68,
+        72,
+        76
+      ]
+    },
+    {
+      "index": 60,
+      "name": "J_Bip_R_Index1",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        61
+      ]
+    },
+    {
+      "index": 61,
+      "name": "J_Bip_R_Index2",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        62
+      ]
+    },
+    {
+      "index": 62,
+      "name": "J_Bip_R_Index3",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        63
+      ]
+    },
+    {
+      "index": 63,
+      "name": "J_Bip_R_Index3_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 64,
+      "name": "J_Bip_R_Little1",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        65
+      ]
+    },
+    {
+      "index": 65,
+      "name": "J_Bip_R_Little2",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        66
+      ]
+    },
+    {
+      "index": 66,
+      "name": "J_Bip_R_Little3",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        67
+      ]
+    },
+    {
+      "index": 67,
+      "name": "J_Bip_R_Little3_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 68,
+      "name": "J_Bip_R_Middle1",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        69
+      ]
+    },
+    {
+      "index": 69,
+      "name": "J_Bip_R_Middle2",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        70
+      ]
+    },
+    {
+      "index": 70,
+      "name": "J_Bip_R_Middle3",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        71
+      ]
+    },
+    {
+      "index": 71,
+      "name": "J_Bip_R_Middle3_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 72,
+      "name": "J_Bip_R_Ring1",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        73
+      ]
+    },
+    {
+      "index": 73,
+      "name": "J_Bip_R_Ring2",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        74
+      ]
+    },
+    {
+      "index": 74,
+      "name": "J_Bip_R_Ring3",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        75
+      ]
+    },
+    {
+      "index": 75,
+      "name": "J_Bip_R_Ring3_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 76,
+      "name": "J_Bip_R_Thumb1",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        77
+      ]
+    },
+    {
+      "index": 77,
+      "name": "J_Bip_R_Thumb2",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        78
+      ]
+    },
+    {
+      "index": 78,
+      "name": "J_Bip_R_Thumb3",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        79
+      ]
+    },
+    {
+      "index": 79,
+      "name": "J_Bip_R_Thumb3_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 80,
+      "name": "J_Bip_L_UpperLeg",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        81
+      ]
+    },
+    {
+      "index": 81,
+      "name": "J_Bip_L_LowerLeg",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        82,
+        84,
+        86,
+        89
+      ]
+    },
+    {
+      "index": 82,
+      "name": "J_Sec_L_CoatSkirtBack",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        83
+      ]
+    },
+    {
+      "index": 83,
+      "name": "J_Sec_L_CoatSkirtBack_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 84,
+      "name": "J_Sec_L_CoatSkirtFront",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        85
+      ]
+    },
+    {
+      "index": 85,
+      "name": "J_Sec_L_CoatSkirtFront_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 86,
+      "name": "J_Sec_L_CoatSkirtSide1",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        87
+      ]
+    },
+    {
+      "index": 87,
+      "name": "J_Sec_L_CoatSkirtSide2",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        88
+      ]
+    },
+    {
+      "index": 88,
+      "name": "J_Sec_L_CoatSkirtSide2_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 89,
+      "name": "J_Bip_L_Foot",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        90
+      ]
+    },
+    {
+      "index": 90,
+      "name": "J_Bip_L_ToeBase",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        91
+      ]
+    },
+    {
+      "index": 91,
+      "name": "J_Bip_L_ToeBase_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 92,
+      "name": "J_Bip_R_UpperLeg",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        93
+      ]
+    },
+    {
+      "index": 93,
+      "name": "J_Bip_R_LowerLeg",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        94,
+        96,
+        98,
+        101
+      ]
+    },
+    {
+      "index": 94,
+      "name": "J_Sec_R_CoatSkirtBack",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        95
+      ]
+    },
+    {
+      "index": 95,
+      "name": "J_Sec_R_CoatSkirtBack_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 96,
+      "name": "J_Sec_R_CoatSkirtFront",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        97
+      ]
+    },
+    {
+      "index": 97,
+      "name": "J_Sec_R_CoatSkirtFront_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 98,
+      "name": "J_Sec_R_CoatSkirtSide1",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        99
+      ]
+    },
+    {
+      "index": 99,
+      "name": "J_Sec_R_CoatSkirtSide2",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        100
+      ]
+    },
+    {
+      "index": 100,
+      "name": "J_Sec_R_CoatSkirtSide2_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 101,
+      "name": "J_Bip_R_Foot",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        102
+      ]
+    },
+    {
+      "index": 102,
+      "name": "J_Bip_R_ToeBase",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        103
+      ]
+    },
+    {
+      "index": 103,
+      "name": "J_Bip_R_ToeBase_end",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    },
+    {
+      "index": 104,
+      "name": "Hairs",
+      "mesh": null,
+      "skin": null,
+      "children": [
+        105
+      ]
+    },
+    {
+      "index": 105,
+      "name": "Hair001",
+      "mesh": 2,
+      "skin": 2,
+      "children": []
+    },
+    {
+      "index": 106,
+      "name": "secondary",
+      "mesh": null,
+      "skin": null,
+      "children": []
+    }
+  ],
+  "meshes": [
+    {
+      "index": 0,
+      "name": "Face.baked",
+      "primitives": 10
+    },
+    {
+      "index": 1,
+      "name": "Body.baked",
+      "primitives": 5
+    },
+    {
+      "index": 2,
+      "name": "Hair001.baked",
+      "primitives": 132
+    }
+  ]
+}
