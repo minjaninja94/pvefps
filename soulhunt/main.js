@@ -31,8 +31,8 @@ function part(parent,geo,material,pos,rot=[0,0,0],scale=[1,1,1]){
 
 const steel=mat(0x8e969c,.86,.24),cloth=mat(0x262226,.04,.9),dark=mat(0x34373b,.34,.52);
 const player=new THREE.Group();scene.add(player);
-part(player,new THREE.CapsuleGeometry(.43,.9,5,8),cloth,[0,1,0]);
-part(player,new THREE.SphereGeometry(.34,12,8),dark,[0,1.92,0]);
+const playerBody=part(player,new THREE.CapsuleGeometry(.43,.9,5,8),cloth,[0,1,0]);
+const playerHead=part(player,new THREE.SphereGeometry(.34,12,8),dark,[0,1.92,0]);
 const swordPivot=new THREE.Group();swordPivot.position.set(.42,1.35,0);player.add(swordPivot);
 part(swordPivot,new THREE.BoxGeometry(.12,.12,1.78),steel,[.18,-.05,-.72],[.18,0,.08]);
 part(swordPivot,new THREE.BoxGeometry(.55,.08,.12),dark,[.18,-.05,.13],[.18,0,.08]);
@@ -70,7 +70,7 @@ addEventListener('contextmenu',e=>e.preventDefault());
 
 const ui={hp:document.querySelector('#hp'),posture:document.querySelector('#posture'),bossHp:document.querySelector('#bossHp'),bossPosture:document.querySelector('#bossPosture'),msg:document.querySelector('#message'),danger:document.querySelector('#danger'),head:document.querySelector('#headPart'),leg:document.querySelector('#legPart'),tail:document.querySelector('#tailPart')};
 const state={
- hp:100,posture:0,stamina:100,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,stagger:0,dead:false,
+ hp:100,posture:0,stamina:100,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
  bossHp:560,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,time:0,shake:0,hitstop:0,
  headHp:100,legHp:150,tailHp:130,tailBroken:false,legBroken:false,headBroken:false,danger:false,reaction:0,reactionZone:'body'
 };
@@ -101,13 +101,35 @@ function updateSparks(dt){
    if(fx.life<=0){scene.remove(fx.pts);fx.pts.geometry.dispose();fx.pts.material.dispose();sparks.splice(s,1)}
  }
 }
+function getMoveAxes(){
+ let x=0,z=0;
+ if(input.keys.has('KeyA'))x-=1;if(input.keys.has('KeyD'))x+=1;
+ if(input.keys.has('KeyW'))z+=1;if(input.keys.has('KeyS'))z-=1;
+ return {x,z};
+}
+function getCameraBasis(){
+ const f=new THREE.Vector3();camera.getWorldDirection(f);f.y=0;
+ if(!f.lengthSq())f.set(0,0,-1);f.normalize();
+ const r=new THREE.Vector3(-f.z,0,f.x).normalize();
+ return {f,r};
+}
 function tryRoll(){
  if(state.dead||state.rolling>0||state.attack>0||state.stagger>0||state.stamina<24)return;
- let x=0,z=0;if(input.keys.has('KeyA'))x-=1;if(input.keys.has('KeyD'))x+=1;if(input.keys.has('KeyW'))z-=1;if(input.keys.has('KeyS'))z+=1;
- const toBoss=flatDir(player.position,boss.position),right=new THREE.Vector3(toBoss.z,0,-toBoss.x);
- state.rollDir.set(0,0,0).addScaledVector(toBoss,-z).addScaledVector(right,x);
- if(!state.rollDir.lengthSq())state.rollDir.copy(toBoss).multiplyScalar(-1);state.rollDir.normalize();
- state.stamina-=24;state.rolling=.46;state.invuln=.27;
+ const {x,z}=getMoveAxes();
+ const toBoss=flatDir(player.position,boss.position);
+ const right=new THREE.Vector3(toBoss.z,0,-toBoss.x);
+ state.rollDir.set(0,0,0);
+ if(input.lock){
+   state.rollDir.addScaledVector(toBoss,z).addScaledVector(right,x);
+ }else{
+   const basis=getCameraBasis();
+   state.rollDir.addScaledVector(basis.f,z).addScaledVector(basis.r,x);
+ }
+ // Neutral dodge is a backstep away from the locked target / camera facing.
+ if(!state.rollDir.lengthSq())state.rollDir.copy(input.lock?toBoss.clone().multiplyScalar(-1):getCameraBasis().f.clone().multiplyScalar(-1));
+ state.rollDir.normalize();
+ state.stamina-=24;state.rolling=.5;state.invuln=.29;
+ player.rotation.y=Math.atan2(state.rollDir.x,state.rollDir.z);
 }
 function startAttack(step){
  const cost=[0,16,18,23][step];
@@ -123,13 +145,13 @@ function tryAttack(){
  const next=state.comboGrace>0?Math.min(3,state.attackStep+1):1;
  startAttack(next);
 }
-function tryDeflect(){if(!state.dead&&state.stagger<=0)state.deflect=.17}
+function tryDeflect(){if(!state.dead&&state.stagger<=0){state.deflect=.17;state.parryAnim=.22}}
 
 function hurtPlayer(dmg,posture=20,unblockable=false){
  if(state.invuln>0||state.dead)return;
  if(!unblockable&&input.guard){
    if(state.deflect>0){
-     state.bossPosture+=30;state.posture=Math.max(0,state.posture-15);state.shake=.16;hitStop(.055);spawnSparks(player.position.clone().lerp(boss.position,.42).add(new THREE.Vector3(0,1.45,0)),22,7);flash('저스트 튕겨내기',.22);
+     state.bossPosture+=30;state.posture=Math.max(0,state.posture-15);state.shake=.16;state.parryAnim=.28;hitStop(.055);spawnSparks(player.position.clone().lerp(boss.position,.42).add(new THREE.Vector3(0,1.45,0)),22,7);flash('저스트 튕겨내기',.22);
      if(state.bossPosture>=100){state.bossStagger=2.05;state.bossPosture=48;state.bossState='stagger';flash('자세 붕괴',.52)}
      return;
    }
@@ -247,7 +269,8 @@ function updatePlayer(dt){
  state.stamina=Math.min(100,state.stamina+dt*(state.attack||state.rolling?10:29));
  state.posture=Math.max(0,state.posture-dt*(input.guard?5:14));
  state.bossPosture=Math.max(0,state.bossPosture-dt*(state.bossState==='idle'?4.5:1.3));
- state.invuln=Math.max(0,state.invuln-dt);state.deflect=Math.max(0,state.deflect-dt);state.stagger=Math.max(0,state.stagger-dt);state.comboGrace=Math.max(0,state.comboGrace-dt);
+ state.invuln=Math.max(0,state.invuln-dt);state.deflect=Math.max(0,state.deflect-dt);state.parryAnim=Math.max(0,state.parryAnim-dt);state.stagger=Math.max(0,state.stagger-dt);state.comboGrace=Math.max(0,state.comboGrace-dt);
+ state.guardBlend=THREE.MathUtils.lerp(state.guardBlend,input.guard?1:0,1-Math.exp(-dt*18));
  if(state.attack>0){
    const dur=[0,.46,.5,.62][state.attackStep],step=state.attackStep;
    state.attack-=dt;const p=1-state.attack/dur;
@@ -264,18 +287,49 @@ function updatePlayer(dt){
  const toBoss=flatDir(player.position,boss.position);
  if(input.lock&&!state.rolling)player.rotation.y=THREE.MathUtils.lerp(player.rotation.y,Math.atan2(toBoss.x,toBoss.z),dt*12);
  if(state.rolling>0){
-   state.rolling-=dt;player.position.addScaledVector(state.rollDir,dt*8.3);player.rotation.x=-Math.sin((.46-state.rolling)/.46*Math.PI)*.34;
-   if(state.rolling<=0)player.rotation.x=0;return;
+   const total=.5,p=1-state.rolling/total;
+   state.rolling-=dt;
+   const speed=10.2-(p*3.2);
+   player.position.addScaledVector(state.rollDir,dt*speed);
+   const rollArc=Math.sin(clamp(p,0,1)*Math.PI);
+   player.rotation.x=-rollArc*.42;
+   player.rotation.z=Math.sin(clamp(p,0,1)*Math.PI*2)*.07;
+   if(state.rolling<=0){player.rotation.x=0;player.rotation.z=0}
+   return;
  }
  if(state.stagger>0||state.attack>.18)return;
- let x=0,z=0;if(input.keys.has('KeyA'))x-=1;if(input.keys.has('KeyD'))x+=1;if(input.keys.has('KeyW'))z-=1;if(input.keys.has('KeyS'))z+=1;
+ const {x,z}=getMoveAxes();
  if(x||z){
    const right=new THREE.Vector3(toBoss.z,0,-toBoss.x),move=new THREE.Vector3();
-   if(input.lock)move.addScaledVector(toBoss,-z).addScaledVector(right,x).normalize();else move.set(x,0,z).normalize();
+   if(input.lock)move.addScaledVector(toBoss,z).addScaledVector(right,x).normalize();
+   else{const basis=getCameraBasis();move.addScaledVector(basis.f,z).addScaledVector(basis.r,x).normalize();}
    const sprint=input.keys.has('ShiftLeft')||input.keys.has('ShiftRight');player.position.addScaledVector(move,dt*(sprint?5.2:3.15));
    if(!input.lock)player.rotation.y=THREE.MathUtils.lerp(player.rotation.y,Math.atan2(move.x,move.z),dt*10);
  }
  if(player.position.length()>18.8)player.position.setLength(18.8);
+
+ // Clear, readable guard/parry pose.
+ if(state.attack<=0&&state.rolling<=0){
+   if(state.parryAnim>0){
+     const p=state.parryAnim/.28;
+     swordPivot.rotation.x=THREE.MathUtils.lerp(swordPivot.rotation.x,-.55,1-Math.exp(-dt*30));
+     swordPivot.rotation.y=THREE.MathUtils.lerp(swordPivot.rotation.y,-1.0+Math.sin((1-p)*Math.PI)*.7,1-Math.exp(-dt*30));
+     swordPivot.rotation.z=THREE.MathUtils.lerp(swordPivot.rotation.z,.95,1-Math.exp(-dt*30));
+     playerBody.rotation.z=THREE.MathUtils.lerp(playerBody.rotation.z,-.12,1-Math.exp(-dt*24));
+   }else if(state.guardBlend>.01){
+     swordPivot.rotation.x=THREE.MathUtils.lerp(swordPivot.rotation.x,-.35,1-Math.exp(-dt*20));
+     swordPivot.rotation.y=THREE.MathUtils.lerp(swordPivot.rotation.y,-.7,1-Math.exp(-dt*20));
+     swordPivot.rotation.z=THREE.MathUtils.lerp(swordPivot.rotation.z,.72,1-Math.exp(-dt*20));
+     playerBody.rotation.x=THREE.MathUtils.lerp(playerBody.rotation.x,-.09*state.guardBlend,1-Math.exp(-dt*18));
+     playerBody.rotation.z=THREE.MathUtils.lerp(playerBody.rotation.z,-.06*state.guardBlend,1-Math.exp(-dt*18));
+   }else{
+     swordPivot.rotation.x=THREE.MathUtils.lerp(swordPivot.rotation.x,0,1-Math.exp(-dt*16));
+     swordPivot.rotation.y=THREE.MathUtils.lerp(swordPivot.rotation.y,0,1-Math.exp(-dt*16));
+     swordPivot.rotation.z=THREE.MathUtils.lerp(swordPivot.rotation.z,0,1-Math.exp(-dt*16));
+     playerBody.rotation.x=THREE.MathUtils.lerp(playerBody.rotation.x,0,1-Math.exp(-dt*16));
+     playerBody.rotation.z=THREE.MathUtils.lerp(playerBody.rotation.z,0,1-Math.exp(-dt*16));
+   }
+ }
 }
 
 const camPos=new THREE.Vector3();
