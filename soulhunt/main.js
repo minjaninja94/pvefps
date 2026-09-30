@@ -133,6 +133,7 @@ buildWeapon();
 player.position.set(0,0,8);
 
 let knightVisual=null,playerVrm=null,playerVrmRoot=null;
+const playerVrmRootRest={y:0,rotation:new THREE.Euler()};
 const playerVrmBones={},playerVrmRest={};
 function cachePlayerVrmBone(name,node){
  if(!node)return;
@@ -169,6 +170,8 @@ player.children.filter(o=>o.isMesh).forEach(m=>m.visible=false);
      root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
 
      knightVisual=root;playerVrmRoot=root;playerVrm=vrm;
+     playerVrmRootRest.y=root.position.y;
+     playerVrmRootRest.rotation.copy(root.rotation);
      player.add(root);
 
      const humanoid=vrm?.humanoid;
@@ -202,7 +205,10 @@ function animateVroidPlayer(dt){
  }else if(state.stagger>0){
    spineX=-.18;spineZ=Math.sin(state.time*24)*.08;hipsX=.08;
  }else if(state.rolling>0){
-   spineX=-.5;luz=-.65;ruz=.65;llx=-.9;rlx=-.9;
+   const rp=clamp(state.rollElapsed/ROLL_DURATION,0,1),tuck=Math.sin(rp*Math.PI);
+   spineX=-.72-tuck*.28;hipsX=.22;
+   luz=-.58;ruz=.58;llx=-1.05;rlx=-1.05;
+   lulx=-1.05*tuck;rulx=-1.05*tuck;lllx=1.42*tuck;rllx=1.42*tuck;
  }else if(state.attack>0){
    const w=currentWeapon(),dur=[0,.46,.5,.62][state.attackStep]/w.speed*(twoHanded?.96:1.04);
    const p=clamp(1-state.attack/Math.max(dur,.001),0,1),s=Math.sin(p*Math.PI),step=state.attackStep;
@@ -277,6 +283,20 @@ function animateVroidPlayer(dt){
  setPlayerVrmBone('rightUpperLeg',rulx,0,0,14,dt);
  setPlayerVrmBone('leftLowerLeg',lllx,0,0,14,dt);
  setPlayerVrmBone('rightLowerLeg',rllx,0,0,14,dt);
+
+ if(playerVrmRoot){
+   if(state.rolling>0){
+     const rp=clamp(state.rollElapsed/ROLL_DURATION,0,1);
+     playerVrmRoot.rotation.x=playerVrmRootRest.rotation.x-rp*Math.PI*2;
+     playerVrmRoot.rotation.y=playerVrmRootRest.rotation.y;
+     playerVrmRoot.rotation.z=playerVrmRootRest.rotation.z;
+     playerVrmRoot.position.y=playerVrmRootRest.y+Math.sin(rp*Math.PI)*.34;
+   }else{
+     playerVrmRoot.rotation.x=lerpAngle(playerVrmRoot.rotation.x,playerVrmRootRest.rotation.x,1-Math.exp(-dt*16));
+     playerVrmRoot.rotation.z=lerpAngle(playerVrmRoot.rotation.z,playerVrmRootRest.rotation.z,1-Math.exp(-dt*16));
+     playerVrmRoot.position.y=THREE.MathUtils.lerp(playerVrmRoot.position.y,playerVrmRootRest.y,1-Math.exp(-dt*18));
+   }
+ }
  playerVrm?.update?.(dt);
 }
 
@@ -948,7 +968,7 @@ addEventListener('contextmenu',e=>e.preventDefault());
 
 const ui={hp:document.querySelector('#hp'),stamina:document.querySelector('#stamina'),posture:document.querySelector('#posture'),bossHp:document.querySelector('#bossHp'),bossPosture:document.querySelector('#bossPosture'),msg:document.querySelector('#message'),danger:document.querySelector('#danger'),head:document.querySelector('#headPart'),leg:document.querySelector('#legPart'),spike:document.querySelector('#spikePart'),tail:document.querySelector('#tailPart'),weapon:document.querySelector('#weaponHud'),lockDot:document.querySelector('#lockDot')};
 const state={
- hp:100,posture:0,stamina:100,staminaMax:100,staminaRegenDelay:0,exhausted:0,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
+ hp:100,posture:0,stamina:100,staminaMax:100,staminaRegenDelay:0,exhausted:0,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollElapsed:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
  bossHp:560,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',time:0,shake:0,hitstop:0,
  headHp:100,legHp:150,tailHp:130,tailBroken:false,legBroken:false,headBroken:false,danger:false,reaction:0,reactionZone:'body'
 };
@@ -956,6 +976,8 @@ function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeo
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 const PLAYER_ATTACK_MOTION_SCALE=5;
 const BOSS_ATTACK_MOTION_SCALE=5;
+const ROLL_DURATION=.72;
+const ROLL_IFRAMES=.40;
 function lerpAngle(current,target,alpha){
  const delta=Math.atan2(Math.sin(target-current),Math.cos(target-current));
  return current+delta*alpha;
@@ -1178,7 +1200,9 @@ function tryRoll(){
    else state.rollDir.set(-Math.sin(player.rotation.y),0,-Math.cos(player.rotation.y));
  }
  state.rollDir.normalize();
- if(!spendStamina(24,.72))return;state.rolling=.5;state.invuln=.29;
+ if(!spendStamina(24,.72))return;
+ state.rolling=ROLL_DURATION;state.rollElapsed=0;state.invuln=ROLL_IFRAMES;
+ spawnDustBurst(player.position.clone(),.38);
  player.rotation.y=Math.atan2(state.rollDir.x,state.rollDir.z);
 }
 function startAttack(step){
@@ -1641,14 +1665,17 @@ function updatePlayer(dt){
  if(input.lock&&!state.rolling)player.rotation.y=lerpAngle(player.rotation.y,Math.atan2(toBoss.x,toBoss.z),1-Math.exp(-dt*12));
  else if(!input.lock&&!state.rolling)player.rotation.y=lerpAngle(player.rotation.y,input.camYaw,1-Math.exp(-dt*13));
  if(state.rolling>0){
-   const total=.5,p=1-state.rolling/total;
-   state.rolling-=dt;
-   const speed=10.2-(p*3.2);
+   state.rollElapsed=Math.min(ROLL_DURATION,state.rollElapsed+dt);
+   const p=clamp(state.rollElapsed/ROLL_DURATION,0,1);
+   state.rolling=Math.max(0,ROLL_DURATION-state.rollElapsed);
+   const speed=7.25-p*2.35;
    player.position.addScaledVector(state.rollDir,dt*speed);
-   const rollArc=Math.sin(clamp(p,0,1)*Math.PI);
-   player.rotation.x=-rollArc*.42;
-   player.rotation.z=Math.sin(clamp(p,0,1)*Math.PI*2)*.07;
-   if(state.rolling<=0){player.rotation.x=0;player.rotation.z=0}
+   player.rotation.x=0;
+   player.rotation.z=Math.sin(p*Math.PI*2)*.035;
+   if(state.rolling<=0){
+     player.rotation.x=0;player.rotation.z=0;
+     spawnDustBurst(player.position.clone(),.26);
+   }
    return;
  }
  if(state.stagger>0||state.attack>.18)return;
