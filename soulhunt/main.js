@@ -215,9 +215,10 @@ const jaw=part(head,new THREE.BoxGeometry(.58,.12,.11),lipMat,[0,-.28,.65],[.08,
 
 // Long hair frames the face and keeps the head readable against the giant arms.
 const hairCap=part(head,new THREE.SphereGeometry(.82,16,11),hairMat,[0,.08,-.38],[0,0,0],[1.04,1.1,.46]);
+const hairLocks=[];
 for(const sx of [-1,1]){
-  part(head,new THREE.CapsuleGeometry(.15,1.55,5,8),hairMat,[sx*.57,-.58,-.02],[0,0,sx*.09],[1,1,1]);
-  part(head,new THREE.CapsuleGeometry(.12,1.18,5,8),hairMat,[sx*.36,-.72,-.1],[0,0,sx*.05],[1,1,1]);
+  hairLocks.push(part(head,new THREE.CapsuleGeometry(.15,1.55,5,8),hairMat,[sx*.57,-.58,-.02],[0,0,sx*.09],[1,1,1]));
+  hairLocks.push(part(head,new THREE.CapsuleGeometry(.12,1.18,5,8),hairMat,[sx*.36,-.72,-.1],[0,0,sx*.05],[1,1,1]));
 }
 part(head,new THREE.ConeGeometry(.13,.68,7),horn,[-.48,.65,-.18],[.2,0,-.35]);
 part(head,new THREE.ConeGeometry(.13,.68,7),horn,[ .48,.65,-.18],[.2,0,.35]);
@@ -423,10 +424,17 @@ function animateGiantessPresence(dt){
  const attacking=state.bossState!=='idle'&&state.bossState!=='stagger';
  const dangerous=state.bossState==='arm_grab'||state.bossState==='arm_crush'||state.bossState==='peril';
  // Slow breathing and deliberate head movement keep the upper body alive between attacks.
+ const hairSpeed=attacking?7.5:2.0;
+ for(let i=0;i<hairLocks.length;i++){
+   const h=hairLocks[i],side=i<2?-1:1;
+   h.rotation.z=THREE.MathUtils.lerp(h.rotation.z,side*.06+Math.sin(state.time*hairSpeed+i)*.055,1-Math.exp(-dt*7));
+   h.rotation.x=THREE.MathUtils.lerp(h.rotation.x,attacking?.1:0,1-Math.exp(-dt*6));
+ }
  if(state.bossState==='idle'){
    const breathe=Math.sin(state.time*1.55);
    chest.scale.y=1.08+breathe*.018;
    chest.rotation.z=Math.sin(state.time*.72)*.018;
+   waist.rotation.z=Math.sin(state.time*.58)*.012;
    head.rotation.y=Math.sin(state.time*.55)*.055;
    head.rotation.x=Math.sin(state.time*.82)*.018;
    bustL.position.y=3.62+breathe*.025;bustR.position.y=3.62+breathe*.025;
@@ -608,37 +616,38 @@ function animateBossTelegraph(dt){
    dorsalArms[1].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[1].shoulder.rotation.y,.72,1-Math.exp(-dt*12));
    dorsalArms[0].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[0].upperPivot.rotation.z,-1.05,1-Math.exp(-dt*14));
    dorsalArms[1].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[1].upperPivot.rotation.z,1.05,1-Math.exp(-dt*14));
-   L(body.rotation,'x',-.18,10);
+   L(body.rotation,'x',-.18,10);L(chest.rotation,'x',-.2,10);L(head.rotation,'x',.1,9);
  }else if(st==='arm_double_slam'&&t>.46){
    // Both arms visibly tower over the shell.
    for(const a of dorsalArms){a.shoulder.rotation.x=THREE.MathUtils.lerp(a.shoulder.rotation.x,-1.42,1-Math.exp(-dt*11));a.upperPivot.rotation.x=THREE.MathUtils.lerp(a.upperPivot.rotation.x,-1.68,1-Math.exp(-dt*11));a.elbow.rotation.x=THREE.MathUtils.lerp(a.elbow.rotation.x,-.48,1-Math.exp(-dt*11))}
-   body.position.y=THREE.MathUtils.lerp(body.position.y,2.5,1-Math.exp(-dt*8));L(chest.rotation,'x',.22,9);
+   body.position.y=THREE.MathUtils.lerp(body.position.y,2.5,1-Math.exp(-dt*8));L(chest.rotation,'x',.3,9);L(head.rotation,'x',-.14,9);
  }else if(st==='arm_sweep'&&t>.5){
    // Left arm coils behind the body; right arm extends as a counterweight.
    L(body.rotation,'y',-.62,11);
    dorsalArms[0].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[0].shoulder.rotation.y,-1.55,1-Math.exp(-dt*13));
    dorsalArms[0].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[0].upperPivot.rotation.z,-.5,1-Math.exp(-dt*13));
    dorsalArms[1].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[1].shoulder.rotation.y,-.2,1-Math.exp(-dt*10));
+   L(chest.rotation,'z',-.28,11);L(head.rotation,'z',.16,10);
  }else if(st==='arm_uppercut'&&t>.36){
    // Right fist disappears low beside the rib cage before exploding upward.
-   const a=dorsalArms[1];a.shoulder.rotation.z=THREE.MathUtils.lerp(a.shoulder.rotation.z,-1.55,1-Math.exp(-dt*14));a.elbow.rotation.z=THREE.MathUtils.lerp(a.elbow.rotation.z,-1.6,1-Math.exp(-dt*14));a.wrist.rotation.x=THREE.MathUtils.lerp(a.wrist.rotation.x,.55,1-Math.exp(-dt*14));L(body.rotation,'z',-.24,10);
+   const a=dorsalArms[1];a.shoulder.rotation.z=THREE.MathUtils.lerp(a.shoulder.rotation.z,-1.55,1-Math.exp(-dt*14));a.elbow.rotation.z=THREE.MathUtils.lerp(a.elbow.rotation.z,-1.6,1-Math.exp(-dt*14));a.wrist.rotation.x=THREE.MathUtils.lerp(a.wrist.rotation.x,.55,1-Math.exp(-dt*14));L(body.rotation,'z',-.24,10);L(chest.rotation,'z',-.34,11);L(head.rotation,'z',.2,10);
  }else if(st==='arm_grab'&&t>.4){
    // One giant open hand hangs high and forward; red flesh glows as the tell.
-   const a=dorsalArms[0];a.shoulder.rotation.x=THREE.MathUtils.lerp(a.shoulder.rotation.x,-.72,1-Math.exp(-dt*10));a.shoulder.rotation.y=THREE.MathUtils.lerp(a.shoulder.rotation.y,-1.48,1-Math.exp(-dt*10));a.elbow.rotation.z=THREE.MathUtils.lerp(a.elbow.rotation.z,1.55,1-Math.exp(-dt*10));a.wrist.rotation.y=THREE.MathUtils.lerp(a.wrist.rotation.y,-.7,1-Math.exp(-dt*10));L(body.rotation,'y',.22,9);
+   const a=dorsalArms[0];a.shoulder.rotation.x=THREE.MathUtils.lerp(a.shoulder.rotation.x,-.72,1-Math.exp(-dt*10));a.shoulder.rotation.y=THREE.MathUtils.lerp(a.shoulder.rotation.y,-1.48,1-Math.exp(-dt*10));a.elbow.rotation.z=THREE.MathUtils.lerp(a.elbow.rotation.z,1.55,1-Math.exp(-dt*10));a.wrist.rotation.y=THREE.MathUtils.lerp(a.wrist.rotation.y,-.7,1-Math.exp(-dt*10));L(body.rotation,'y',.22,9);L(chest.rotation,'y',.22,9);L(head.rotation,'y',-.18,9);
  }else if(st==='arm_barrage'&&t>1.32){
    // Clear boxing stance before the six alternating strikes.
    dorsalArms[0].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[0].upperPivot.rotation.z,.88,1-Math.exp(-dt*13));
    dorsalArms[1].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[1].upperPivot.rotation.z,-.88,1-Math.exp(-dt*13));
-   dorsalArms[0].elbow.rotation.z=.72;dorsalArms[1].elbow.rotation.z=-.72;L(body.rotation,'x',-.14,10);
+   dorsalArms[0].elbow.rotation.z=.72;dorsalArms[1].elbow.rotation.z=-.72;L(body.rotation,'x',-.14,10);L(chest.rotation,'x',-.18,10);
  }else if(st==='arm_guardbreak'&&t>.38){
    // Hands lock together above the back for a single posture-breaking hammer blow.
    for(const a of dorsalArms){a.shoulder.rotation.x=THREE.MathUtils.lerp(a.shoulder.rotation.x,-1.5,1-Math.exp(-dt*10));a.shoulder.rotation.y=THREE.MathUtils.lerp(a.shoulder.rotation.y,-a.sx*.35,1-Math.exp(-dt*10));a.elbow.rotation.x=THREE.MathUtils.lerp(a.elbow.rotation.x,-1.05,1-Math.exp(-dt*10))}
-   L(body.rotation,'x',.28,9);
+   L(body.rotation,'x',.28,9);L(chest.rotation,'x',.38,9);L(head.rotation,'x',-.18,9);
  }else if(st==='arm_crush'&&t>.42){
    // Arms open like gates on both sides, making the incoming clamp obvious.
    dorsalArms[0].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[0].shoulder.rotation.y,-1.72,1-Math.exp(-dt*10));
    dorsalArms[1].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[1].shoulder.rotation.y,1.72,1-Math.exp(-dt*10));
-   dorsalArms[0].elbow.rotation.z=1.15;dorsalArms[1].elbow.rotation.z=-1.15;L(body.rotation,'x',-.22,10);
+   dorsalArms[0].elbow.rotation.z=1.15;dorsalArms[1].elbow.rotation.z=-1.15;L(body.rotation,'x',-.22,10);L(chest.rotation,'x',-.26,10);L(head.rotation,'x',.12,9);
  }
 }
 function updateBoss(dt){
