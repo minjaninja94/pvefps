@@ -1,0 +1,55 @@
+name: Vendor Dukhu Soul CC0 assets
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/vendor-dukhu-assets.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download CC0 game assets into repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p soulhunt/assets/models/kaykit soulhunt/assets/models/kenney
+
+          KAY="https://raw.githubusercontent.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/main/addons/kaykit_character_pack_adventures"
+          KEN="https://raw.githubusercontent.com/shorepine/kenney/main/3d/mini-dungeon"
+
+          curl -L --fail "$KAY/Characters/gltf/Knight.glb" -o soulhunt/assets/models/kaykit/Knight.glb
+
+          for f in sword_1handed sword_2handed axe_1handed axe_2handed staff shield_round; do
+            curl -L --fail "$KAY/Assets/gltf/$f.gltf" -o "soulhunt/assets/models/kaykit/$f.gltf"
+            curl -L --fail "$KAY/Assets/gltf/$f.bin" -o "soulhunt/assets/models/kaykit/$f.bin"
+          done
+          curl -L --fail "$KAY/Characters/gltf/knight_texture.png" -o soulhunt/assets/models/kaykit/knight_texture.png
+          curl -L --fail "$KEN/weapon-spear.glb" -o soulhunt/assets/models/kenney/weapon-spear.glb
+
+          cat > soulhunt/assets/models/README.md <<'EOF'
+          # Dukhu Soul vendored models
+
+          - KayKit Adventurers 1.0: Knight, swords, axes, staff and shield — CC0 1.0.
+          - Kenney Mini Dungeon: spear — CC0 1.0.
+
+          Runtime always keeps procedural fallback meshes so a missing/unsupported model never blanks the game.
+          EOF
+
+      - name: Commit vendored assets
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add soulhunt/assets/models
+          if git diff --cached --quiet; then
+            echo "No asset changes"
+          else
+            git commit -m "assets(dukhu-soul): vendor CC0 knight and weapon models"
+            git push
+          fi
