@@ -634,6 +634,35 @@ function stripSkinnedBoneRegions(root,patterns,threshold=.34){
    obj.geometry=geo;
  });
 }
+function stripSkinnedSpatialRegions(root,boneNames,radiusScale=1.0){
+ root?.updateMatrixWorld?.(true);
+ root?.traverse?.(obj=>{
+   if(!obj.isSkinnedMesh||!obj.geometry?.attributes?.position)return;
+   obj.updateMatrixWorld(true);
+   const centers=[];
+   for(const cfg of boneNames){
+     const bone=root.getObjectByName(cfg.name);
+     if(!bone)continue;
+     const wp=new THREE.Vector3();bone.getWorldPosition(wp);
+     const lp=obj.worldToLocal(wp.clone());
+     centers.push({p:lp,r:cfg.r*radiusScale});
+   }
+   if(!centers.length)return;
+   const geo=obj.geometry.clone(),pos=geo.attributes.position,idx=geo.index,out=[];
+   const near=v=>{
+     const p=new THREE.Vector3().fromBufferAttribute(pos,v);
+     return centers.some(cn=>p.distanceToSquared(cn.p)<=cn.r*cn.r);
+   };
+   const count=idx?idx.count:pos.count;
+   for(let i=0;i<count;i+=3){
+     const a=idx?idx.getX(i):i,b=idx?idx.getX(i+1):i+1,d=idx?idx.getX(i+2):i+2;
+     const hits=(near(a)?1:0)+(near(b)?1:0)+(near(d)?1:0);
+     if(hits<1)out.push(a,b,d);
+   }
+   geo.setIndex(out);geo.computeVertexNormals();geo.computeBoundingSphere();
+   obj.geometry=geo;
+ });
+}
 function cloneAnimeArmPart(side){
  const src=animeBossArmParts[side];
  if(!src)return null;
@@ -828,10 +857,17 @@ assetLoader.load('./assets/models/boss/centaur-beast.glb',gltf=>{
  bossLowerVisual.position.y-=box.min.y;
  bossLowerVisual.position.y-=.18;
  bossLowerVisual.position.z=-.82;
- // Centaur lower body only: remove horse head/neck/ears from the skinned render.
- stripSkinnedBoneRegions(bossLowerVisual,['head','neck1','neck2','neck3','ear1','ear2','ear3','ear4'],.28);
+ // Centaur lower body only: aggressively erase the horse head/neck.
+ stripSkinnedBoneRegions(bossLowerVisual,['head','neck1','neck2','neck3','ear1','ear2','ear3','ear4'],.08);
+ stripSkinnedSpatialRegions(bossLowerVisual,[
+   {name:'Head',r:.72},
+   {name:'Neck3',r:.62},
+   {name:'Neck2',r:.55},
+   {name:'Neck1',r:.48},
+   {name:'Ear1.L',r:.34},{name:'Ear1.R',r:.34}
+ ],1.0);
  for(const n of ['Head','Neck1','Neck2','Neck3','Ear1.L','Ear2.L','Ear3.L','Ear4.L','Ear1.R','Ear2.R','Ear3.R','Ear4.R']){
-   const bone=bossLowerVisual.getObjectByName(n);if(bone)bone.scale.setScalar(.001);
+   const bone=bossLowerVisual.getObjectByName(n);if(bone){bone.visible=false;bone.scale.setScalar(.00001);}
  }
  bossLowerVisual.traverse(o=>{
    if(o.isMesh){
