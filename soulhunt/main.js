@@ -425,10 +425,10 @@ function setPlayerVisualAction(name,fade=.12){
  playerActionName=name;
 }
 
-const BOSS_GIANT_SCALE=4.5;
-const BOSS_ENGAGE_SCALE=3.0;
-const BOSS_ARM_RADIUS_SCALE=2.0;
-const BOSS_SHOCKWAVE_SCALE=2.35;
+const BOSS_GIANT_SCALE=2.0;
+const BOSS_ENGAGE_SCALE=1.55;
+const BOSS_ARM_RADIUS_SCALE=1.28;
+const BOSS_SHOCKWAVE_SCALE=1.4;
 const boss=new THREE.Group();
 boss.scale.setScalar(BOSS_GIANT_SCALE);
 scene.add(boss);
@@ -1027,7 +1027,7 @@ function makeBossSpikeProjectile(){
  const root=cloneMonsterSpikeVisual();
  if(root){
    root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=false}});
-   root.scale.setScalar(.58);
+   root.scale.setScalar(.42);
    return root;
  }
  const fallback=new THREE.Mesh(
@@ -2278,13 +2278,13 @@ function updateCamera(dt){
    const d=dist(),armAttack=state.bossState.startsWith('arm_');
    const toBoss=flatDir(player.position,boss.position);
    const right=new THREE.Vector3(toBoss.z,0,-toBoss.x);
-   const backDist=clamp(10.5+d*.45,13.5,25)+(armAttack?1.4:0);
-   const height=4.4+clamp(d*.15,.8,4.8)+(armAttack?.65:0);
-   desiredPos.copy(target).addScaledVector(toBoss,-backDist).addScaledVector(right,.55).add(new THREE.Vector3(0,height,0));
+   const backDist=clamp(7.8+d*.28,8.8,14.5)+(armAttack?.75:0);
+   const height=2.9+clamp(d*.1,.25,2.0)+(armAttack?.32:0);
+   desiredPos.copy(target).addScaledVector(toBoss,-backDist).addScaledVector(right,.42).add(new THREE.Vector3(0,height,0));
    const bossFocus=boss.position.clone().add(new THREE.Vector3(0,4.0*BOSS_GIANT_SCALE,0));
-   const focusWeight=clamp(.58+d*.008,.58,.72);
+   const focusWeight=clamp(.5+d*.01,.5,.64);
    desiredLook.copy(target).lerp(bossFocus,focusWeight);
-   wantedFov=armAttack?68:64;
+   wantedFov=armAttack?65:61;
  }else{
    const f=new THREE.Vector3(Math.sin(input.camYaw),0,Math.cos(input.camYaw)).normalize();
    const right=new THREE.Vector3(f.z,0,-f.x);
