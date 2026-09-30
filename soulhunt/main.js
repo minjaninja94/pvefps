@@ -106,7 +106,7 @@ function buildWeapon(){
  }
  applyWeaponGrip();
  weaponPivot.scale.setScalar(twoHanded?1.06:1);
- shield.visible=!twoHanded;
+ shieldPivot.visible=!twoHanded;
  const assetUrl=w.asset;
  if(assetUrl){
    const requested=w.id;
