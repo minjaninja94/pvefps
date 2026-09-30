@@ -143,6 +143,35 @@ const tailPivot=new THREE.Group();tailPivot.position.set(0,1.85,-1.55);boss.add(
 const tailA=part(tailPivot,new THREE.CapsuleGeometry(.38,1.35,5,9),shell,[0,0,-.72],[Math.PI/2,0,0]);
 const tailB=part(tailPivot,new THREE.CapsuleGeometry(.24,1.45,5,9),shellDark,[0,0,-1.9],[Math.PI/2,0,0]);
 const tailTip=part(tailPivot,new THREE.ConeGeometry(.32,1.25,8),horn,[0,0,-3],[Math.PI/2,0,0]);
+
+// Extra dorsal arms: shoulder -> upper arm -> forearm -> hand.
+const dorsalArms=[];
+for(const sx of [-1,1]){
+  const shoulder=new THREE.Group();shoulder.position.set(sx*.82,2.85,-.45);boss.add(shoulder);
+  const shoulderArmor=part(shoulder,new THREE.SphereGeometry(.38,10,8),shell,[0,0,0],[0,0,0],[1.25,.9,1]);
+  const upperPivot=new THREE.Group();upperPivot.position.set(sx*.18,-.02,0);shoulder.add(upperPivot);
+  const upper=part(upperPivot,new THREE.CapsuleGeometry(.22,1.0,5,8),shellDark,[sx*.5,-.18,.05],[0,0,sx*.95]);
+  const elbow=new THREE.Group();elbow.position.set(sx*.95,-.34,.05);upperPivot.add(elbow);
+  const fore=part(elbow,new THREE.CapsuleGeometry(.18,.95,5,8),meat,[sx*.42,-.12,.04],[0,0,sx*.9]);
+  const wrist=new THREE.Group();wrist.position.set(sx*.82,-.25,.04);elbow.add(wrist);
+  const hand=part(wrist,new THREE.BoxGeometry(.56,.34,.5),shell,[sx*.2,-.05,.08],[0,0,sx*.18]);
+  for(let f=-1;f<=1;f++)part(wrist,new THREE.ConeGeometry(.06,.42,6),horn,[sx*.48,-.08,f*.15],[0,0,sx*Math.PI/2]);
+  dorsalArms.push({sx,shoulder,upperPivot,elbow,wrist,hand,base:{shoulder:new THREE.Euler(0,0,0),upper:new THREE.Euler(0,0,0),elbow:new THREE.Euler(0,0,0),wrist:new THREE.Euler(0,0,0)}});
+}
+function resetDorsalArms(dt=1){
+ for(const a of dorsalArms){
+   a.shoulder.rotation.x=THREE.MathUtils.lerp(a.shoulder.rotation.x,0,dt);
+   a.shoulder.rotation.y=THREE.MathUtils.lerp(a.shoulder.rotation.y,0,dt);
+   a.shoulder.rotation.z=THREE.MathUtils.lerp(a.shoulder.rotation.z,0,dt);
+   a.upperPivot.rotation.x=THREE.MathUtils.lerp(a.upperPivot.rotation.x,0,dt);
+   a.upperPivot.rotation.y=THREE.MathUtils.lerp(a.upperPivot.rotation.y,0,dt);
+   a.upperPivot.rotation.z=THREE.MathUtils.lerp(a.upperPivot.rotation.z,0,dt);
+   a.elbow.rotation.x=THREE.MathUtils.lerp(a.elbow.rotation.x,0,dt);
+   a.elbow.rotation.y=THREE.MathUtils.lerp(a.elbow.rotation.y,0,dt);
+   a.elbow.rotation.z=THREE.MathUtils.lerp(a.elbow.rotation.z,0,dt);
+   a.wrist.rotation.set(0,0,0);
+ }
+}
 boss.position.set(0,0,-2);
 
 // Procedural boss visual is the guaranteed browser-safe fallback.
