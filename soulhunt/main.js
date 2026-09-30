@@ -558,11 +558,11 @@ function extractSkinnedPart(bodyNode,side,kind){
  else bodyNode?.traverse?.(o=>{if(!src&&o.isSkinnedMesh)src=o});
  if(!src||!src.geometry?.attributes?.skinIndex||!src.geometry?.attributes?.skinWeight||!src.skeleton)return null;
 
- const geo=src.geometry.clone();
- const skinIndex=geo.attributes.skinIndex,skinWeight=geo.attributes.skinWeight;
- const bones=src.skeleton.bones||[];
- const sideKey=side==='left'?'_L_':'_R_';
- const allowed=new Set();
+ src.updateMatrixWorld(true);src.skeleton.update?.();
+
+ const g=src.geometry,skinIndex=g.attributes.skinIndex,skinWeight=g.attributes.skinWeight;
+ const pos=g.attributes.position,uv=g.attributes.uv||null,bones=src.skeleton.bones||[];
+ const sideKey=side==='left'?'_L_':'_R_',allowed=new Set();
 
  bones.forEach((b,i)=>{
    const n=b.name||'';
@@ -574,43 +574,56 @@ function extractSkinnedPart(bodyNode,side,kind){
  if(!allowed.size)return null;
 
  const belongs=v=>{
-   let sum=0;
-   const si=skinIndex.array,sw=skinWeight.array,size=Math.min(4,skinIndex.itemSize,skinWeight.itemSize);
-   for(let k=0;k<size;k++){
-     const bi=si[v*skinIndex.itemSize+k],w=sw[v*skinWeight.itemSize+k];
+   let sum=0,sz=Math.min(4,skinIndex.itemSize,skinWeight.itemSize);
+   for(let k=0;k<sz;k++){
+     const bi=skinIndex.array[v*skinIndex.itemSize+k],w=skinWeight.array[v*skinWeight.itemSize+k];
      if(allowed.has(bi))sum+=w;
    }
-   return sum>(kind==='hand'?.2:.28);
+   return sum>(kind==='hand'?.16:.2);
  };
- const srcIndex=geo.index,tri=[];
- const count=srcIndex?srcIndex.count:geo.attributes.position.count;
- for(let i=0;i<count;i+=3){
-   const a=srcIndex?srcIndex.getX(i):i,b=srcIndex?srcIndex.getX(i+1):i+1,d=srcIndex?srcIndex.getX(i+2):i+2;
-   const hit=(belongs(a)?1:0)+(belongs(b)?1:0)+(belongs(d)?1:0);
-   if(hit>=2)tri.push(a,b,d);
- }
- if(tri.length<12)return null;
 
- geo.setIndex(tri);geo.clearGroups();geo.computeBoundingBox();
+ const oldIndex=g.index,count=oldIndex?oldIndex.count:pos.count;
+ const outPos=[],outUv=[];
+ const bakeVertex=(vi)=>{
+   const v=new THREE.Vector3().fromBufferAttribute(pos,vi);
+   if(typeof src.applyBoneTransform==='function')src.applyBoneTransform(vi,v);
+   outPos.push(v.x,v.y,v.z);
+   if(uv){outUv.push(uv.getX(vi),uv.getY(vi))}
+ };
+ for(let i=0;i<count;i+=3){
+   const a=oldIndex?oldIndex.getX(i):i,b=oldIndex?oldIndex.getX(i+1):i+1,d=oldIndex?oldIndex.getX(i+2):i+2;
+   const hit=(belongs(a)?1:0)+(belongs(b)?1:0)+(belongs(d)?1:0);
+   if(hit<2)continue;
+   bakeVertex(a);bakeVertex(b);bakeVertex(d);
+ }
+ if(outPos.length<36)return null;
+
+ const geo=new THREE.BufferGeometry();
+ geo.setAttribute('position',new THREE.Float32BufferAttribute(outPos,3));
+ if(outUv.length)geo.setAttribute('uv',new THREE.Float32BufferAttribute(outUv,2));
+ geo.computeVertexNormals();geo.computeBoundingBox();
+
  const center=new THREE.Vector3();geo.boundingBox.getCenter(center);
  geo.translate(-center.x,-center.y,-center.z);
 
- // Normalize donor parts to a predictable +Y segment axis.
- const sx=side==='left'?-1:1;
- geo.rotateZ(sx*Math.PI/2);
+ // VRoid T-pose: left arm points +X, right arm -X. Rotate each donor limb onto +Y.
+ geo.rotateZ(side==='left'?Math.PI/2:-Math.PI/2);
  geo.computeBoundingBox();
- const bb=geo.boundingBox,size=new THREE.Vector3();bb.getSize(size);
+ const size=new THREE.Vector3();geo.boundingBox.getSize(size);
  const len=Math.max(.001,kind==='hand'?Math.max(size.x,size.y,size.z):size.y);
  geo.scale(1/len,1/len,1/len);
  geo.computeVertexNormals();
 
- let mat=Array.isArray(src.material)?src.material.find(m=>m?.name?.toLowerCase?.().includes('body'))||src.material[0]:src.material;
- mat=mat?.clone?.()||new THREE.MeshStandardMaterial({color:0xd9a99e,roughness:.58});
- mat.transparent=false;mat.opacity=1;mat.depthWrite=true;mat.depthTest=true;
-
- const mesh=new THREE.Mesh(geo,mat);mesh.castShadow=mesh.receiveShadow=true;
- const group=new THREE.Group();group.add(mesh);
- group.userData.kind=kind;
+ const srcMat=Array.isArray(src.material)?src.material[0]:src.material;
+ const donorColor=srcMat?.color?.clone?.()||new THREE.Color(0xe0b1aa);
+ const mat=new THREE.MeshStandardMaterial({
+   color:donorColor,roughness:.6,metalness:0,
+   transparent:false,opacity:1,depthWrite:true,depthTest:true,
+   alphaTest:0,side:THREE.DoubleSide
+ });
+ const mesh=new THREE.Mesh(geo,mat);
+ mesh.castShadow=mesh.receiveShadow=true;
+ const group=new THREE.Group();group.add(mesh);group.userData.kind=kind;
  return group;
 }
 function cloneBossDonorPart(side,kind){
