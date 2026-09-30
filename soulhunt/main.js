@@ -615,6 +615,7 @@ function cloneMonsterSpikeVisual(){
    if(o.material){
      o.material=o.material.clone();
      if(o.material.color)o.material.color.setHex(0x24222b);
+     o.material.transparent=false;o.material.opacity=1;o.material.depthWrite=true;o.material.depthTest=true;o.material.alphaTest=0;
      o.material.roughness=.72;o.material.metalness=.18;
    }
  });
@@ -626,43 +627,77 @@ function orientSegment(group,a,b,thickness=1){
  group.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().normalize());
  group.scale.set(thickness,len,thickness);
 }
+function makeMonsterFleshSegment(radiusTop=.36,radiusBottom=.28){
+ const g=new THREE.Group();
+ const fleshMat=new THREE.MeshStandardMaterial({color:0xd6a096,roughness:.62,metalness:.01,transparent:false,opacity:1,depthWrite:true});
+ const core=new THREE.Mesh(new THREE.CylinderGeometry(radiusTop,radiusBottom,1,10,1,false),fleshMat);
+ core.castShadow=core.receiveShadow=true;g.add(core);
+ const jointMat=new THREE.MeshStandardMaterial({color:0x7b4a49,roughness:.7,metalness:.02,transparent:false,opacity:1,depthWrite:true});
+ for(const y of [-.43,.43]){
+   const joint=new THREE.Mesh(new THREE.TorusGeometry((radiusTop+radiusBottom)*.46,.055,6,12),jointMat);
+   joint.rotation.x=Math.PI/2;joint.position.y=y;joint.castShadow=joint.receiveShadow=true;g.add(joint);
+ }
+ return g;
+}
+function makeMonsterHand(sx){
+ const g=new THREE.Group();
+ const palmMat=new THREE.MeshStandardMaterial({color:0xc98f88,roughness:.6,metalness:.01,transparent:false,opacity:1,depthWrite:true});
+ const palm=new THREE.Mesh(new THREE.BoxGeometry(.72,.34,.58),palmMat);
+ palm.castShadow=palm.receiveShadow=true;g.add(palm);
+ const fingerMat=new THREE.MeshStandardMaterial({color:0xb87872,roughness:.64,metalness:.01,transparent:false,opacity:1,depthWrite:true});
+ for(let i=0;i<4;i++){
+   const finger=new THREE.Group();
+   const seg1=new THREE.Mesh(new THREE.CylinderGeometry(.075,.095,.5,8),fingerMat);
+   seg1.rotation.z=sx*Math.PI/2;seg1.position.x=sx*.3;seg1.castShadow=seg1.receiveShadow=true;finger.add(seg1);
+   const claw=new THREE.Mesh(new THREE.ConeGeometry(.085,.42,7),horn);
+   claw.rotation.z=sx*Math.PI/2;claw.position.x=sx*.62;claw.castShadow=claw.receiveShadow=true;finger.add(claw);
+   finger.position.set(0,(i-1.5)*.1,(i-1.5)*.14);g.add(finger);
+ }
+ return g;
+}
+
 function tryBuildBossMonsterArms(){
  if(!monsterSpikeSource||bossMonsterArms.length||!animeBossBones.leftHand||!animeBossBones.rightHand||!dorsalArms?.length)return;
  for(const side of ['left','right']){
    const sx=side==='left'?-1:1;
-   const root=new THREE.Group(),boneA=new THREE.Group(),boneB=new THREE.Group(),claw=new THREE.Group();
-   boss.add(root);root.add(boneA,boneB,claw);
+   const root=new THREE.Group();
+   const fleshA=makeMonsterFleshSegment(.36,.3);
+   const fleshB=makeMonsterFleshSegment(.42,.34);
+   const fleshC=makeMonsterFleshSegment(.48,.38);
+   const armorA=new THREE.Group(),armorB=new THREE.Group(),armorC=new THREE.Group();
+   const finalHand=makeMonsterHand(sx);
+   boss.add(root);root.add(fleshA,fleshB,fleshC,armorA,armorB,armorC,finalHand);
 
-   for(let i=0;i<3;i++){
-     const seg=cloneMonsterSpikeVisual();
-     if(seg){
-       seg.position.y=(i-1)*.34;
-       seg.scale.set(.48,.34,.48);
-       seg.rotation.y=i*.85;
-       boneA.add(seg);
+   const armorGroups=[armorA,armorB,armorC];
+   armorGroups.forEach((ag,gi)=>{
+     for(let i=0;i<4;i++){
+       const plate=cloneMonsterSpikeVisual();
+       if(!plate)continue;
+       plate.position.set((i%2?1:-1)*.22,(i-1.5)*.24,(gi-1)*.06);
+       plate.scale.set(.3+.05*gi,.22+.04*gi,.3+.05*gi);
+       plate.rotation.set((i%2?1:-1)*.22,i*.68,(i%2?1:-1)*.36);
+       ag.add(plate);
+     }
+   });
+
+   // Extra back-facing spikes make each segment read as a mutated arm, not a floating spike chain.
+   for(const [ag,scale] of [[armorA,.34],[armorB,.4],[armorC,.46]]){
+     for(let i=-1;i<=1;i++){
+       const spike=cloneMonsterSpikeVisual();
+       if(!spike)continue;
+       spike.position.set(i*.18,.08,-.28);
+       spike.scale.set(scale*.55,scale,scale*.55);
+       spike.rotation.x=-.55;spike.rotation.z=i*.18;
+       ag.add(spike);
      }
    }
-   for(let i=0;i<3;i++){
-     const seg=cloneMonsterSpikeVisual();
-     if(seg){
-       seg.position.y=(i-1)*.34;
-       seg.scale.set(.54,.38,.54);
-       seg.rotation.y=-i*.72;
-       boneB.add(seg);
-     }
-   }
-   for(let i=-1;i<=1;i++){
-     const tip=cloneMonsterSpikeVisual();
-     if(tip){
-       tip.position.set(i*.18,.28,0);
-       tip.scale.set(.27,.62,.27);
-       tip.rotation.z=sx*(.22+i*.08);
-       claw.add(tip);
-     }
-   }
-   bossMonsterArms.push({side,sx,root,boneA,boneB,claw,hand:animeBossBones[side+'Hand'],rig:dorsalArms[side==='left'?0:1]});
+
+   bossMonsterArms.push({
+     side,sx,root,fleshA,fleshB,fleshC,armorA,armorB,armorC,finalHand,
+     hand:animeBossBones[side+'Hand'],rig:dorsalArms[side==='left'?0:1]
+   });
  }
- console.info('Bellamore: external monster arm extension rig built');
+ console.info('Bellamore: multi-segment flesh monster arms built');
 }
 function updateBossMonsterArmVisuals(){
  if(!bossMonsterArms.length)return;
@@ -670,19 +705,27 @@ function updateBossMonsterArmVisuals(){
  for(const a of bossMonsterArms){
    const handW=new THREE.Vector3(),wristW=new THREE.Vector3();
    a.hand.getWorldPosition(handW);a.rig.wrist.getWorldPosition(wristW);
-   const p0=boss.worldToLocal(handW.clone()),p2=boss.worldToLocal(wristW.clone());
-   const p1=p0.clone().lerp(p2,.48);
-   p1.y+=.14;
-   p1.x+=a.sx*.22;
-   p1.z+=.1;
+   const p0=boss.worldToLocal(handW.clone()),p3=boss.worldToLocal(wristW.clone());
 
-   orientSegment(a.boneA,p0,p1,.82);
-   orientSegment(a.boneB,p1,p2,.94);
-   a.claw.position.copy(p2);
-   const dir=p2.clone().sub(p1).normalize();
-   a.claw.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
+   // Three articulated extension points: deliberately bent so it reads as a long mutated arm.
+   const p1=p0.clone().lerp(p3,.28);
+   const p2=p0.clone().lerp(p3,.63);
+   p1.y+=.2;p1.x+=a.sx*.26;p1.z+=.12;
+   p2.y+=.1;p2.x+=a.sx*.34;p2.z+=.18;
+
+   orientSegment(a.fleshA,p0,p1,1.0);
+   orientSegment(a.fleshB,p1,p2,1.08);
+   orientSegment(a.fleshC,p2,p3,1.14);
+   orientSegment(a.armorA,p0,p1,.95);
+   orientSegment(a.armorB,p1,p2,1.0);
+   orientSegment(a.armorC,p2,p3,1.06);
+
+   a.finalHand.position.copy(p3);
+   const dir=p3.clone().sub(p2).normalize();
+   a.finalHand.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
+
    const active=state?.bossState?.startsWith?.('arm_');
-   const pulse=active?1.08+Math.sin(state.time*18)*.035:1;
+   const pulse=active?1.06+Math.sin(state.time*18)*.028:1;
    a.root.scale.setScalar(pulse);
  }
 }
