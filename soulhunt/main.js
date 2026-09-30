@@ -1316,7 +1316,7 @@ document.body.appendChild(potionHud);
 
 const state={
  hp:100,posture:0,stamina:100,staminaMax:100,staminaRegenDelay:0,exhausted:0,potions:3,potionTimer:0,potionHealDone:false,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollElapsed:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
- bossHp:560,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',time:0,shake:0,hitstop:0,
+ bossMaxHp:11200,bossHp:11200,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',time:0,shake:0,hitstop:0,
  headHp:100,legHp:150,tailHp:130,tailBroken:false,legBroken:false,headBroken:false,danger:false,reaction:0,reactionZone:'body'
 };
 function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeout(flash.t);flash.t=setTimeout(()=>ui.msg.style.opacity='0',d*1000)}
@@ -2201,7 +2201,7 @@ function updateCamera(dt){
 }
 function partText(v,broken,label){return broken?label:(v<45?'손상':'정상')}
 function updateUI(){
- ui.hp.style.width=clamp(state.hp,0,100)+'%';if(ui.stamina){ui.stamina.style.width=(clamp(state.stamina,0,state.staminaMax)/state.staminaMax*100)+'%';ui.stamina.parentElement.classList.toggle('exhausted',state.exhausted>0)}ui.posture.style.width=clamp(state.posture,0,100)+'%';ui.bossHp.style.width=(state.bossHp/560*100)+'%';ui.bossPosture.style.width=clamp(state.bossPosture,0,100)+'%';
+ ui.hp.style.width=clamp(state.hp,0,100)+'%';if(ui.stamina){ui.stamina.style.width=(clamp(state.stamina,0,state.staminaMax)/state.staminaMax*100)+'%';ui.stamina.parentElement.classList.toggle('exhausted',state.exhausted>0)}ui.posture.style.width=clamp(state.posture,0,100)+'%';ui.bossHp.style.width=(clamp(state.bossHp,0,state.bossMaxHp)/state.bossMaxHp*100)+'%';ui.bossPosture.style.width=clamp(state.bossPosture,0,100)+'%';
  ui.head.textContent=partText(state.headHp,state.headBroken,'파괴');ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴');if(ui.spike){const alive=bossSpikeTargets.filter(s=>!s.broken).length,total=bossSpikeTargets.length;ui.spike.textContent=total?(alive?`${alive}/${total}`:'전부 파괴'):'로딩';}ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단');if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
  potionHud.textContent=`R · 포션 ${state.potions}/3`;
 }
