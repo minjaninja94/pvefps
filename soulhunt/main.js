@@ -687,20 +687,48 @@ function setBossVisualAction(){}
 const shadowMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.34,depthWrite:false});
 for(const [obj,r] of [[player,.72],[boss,2.1]]){const s=new THREE.Mesh(new THREE.CircleGeometry(r,32),shadowMat);s.rotation.x=-Math.PI/2;s.position.y=.012;obj.add(s)}
 
-const input={keys:new Set(),guard:false,lock:true};
+const input={keys:new Set(),guard:false,lock:true,camYaw:Math.PI,camPitch:.08,mouseSensitivity:.00225};
+function requestFreeLook(){
+ if(input.lock)return;
+ try{if(document.pointerLockElement!==canvas)canvas.requestPointerLock?.()}catch(_){}
+}
+function setLockOn(v){
+ input.lock=!!v;
+ if(input.lock){
+   if(document.pointerLockElement===canvas)document.exitPointerLock?.();
+   flash('락온',.24);
+ }else{
+   input.camYaw=player.rotation.y;
+   input.camPitch=clamp(input.camPitch,-.32,.48);
+   requestFreeLook();
+   flash('자유 시점',.24);
+ }
+}
 addEventListener('keydown',e=>{
  input.keys.add(e.code);
- if(e.code==='KeyQ')input.lock=!input.lock;
+ if(e.code==='KeyQ')setLockOn(!input.lock);
  if(e.code==='Space')tryRoll();
  if(/^Digit[1-6]$/.test(e.code))setWeapon(Number(e.code.slice(5))-1);
  if(e.code==='KeyT')toggleGrip();
 });
 addEventListener('keyup',e=>input.keys.delete(e.code));
-addEventListener('mousedown',e=>{if(e.button===0)tryAttack();if(e.button===2){input.guard=true;tryDeflect()}});
+addEventListener('mousemove',e=>{
+ if(input.lock||document.pointerLockElement!==canvas)return;
+ input.camYaw-=e.movementX*input.mouseSensitivity;
+ input.camPitch=clamp(input.camPitch-e.movementY*input.mouseSensitivity*.86,-.32,.48);
+});
+document.addEventListener('pointerlockchange',()=>{
+ document.body.classList.toggle('pointer-free',document.pointerLockElement===canvas&&!input.lock);
+});
+canvas.addEventListener('click',()=>{if(!input.lock)requestFreeLook()});
+addEventListener('mousedown',e=>{
+ if(e.button===0){if(!input.lock)requestFreeLook();tryAttack()}
+ if(e.button===2){input.guard=true;tryDeflect()}
+});
 addEventListener('mouseup',e=>{if(e.button===2)input.guard=false});
 addEventListener('contextmenu',e=>e.preventDefault());
 
-const ui={hp:document.querySelector('#hp'),stamina:document.querySelector('#stamina'),posture:document.querySelector('#posture'),bossHp:document.querySelector('#bossHp'),bossPosture:document.querySelector('#bossPosture'),msg:document.querySelector('#message'),danger:document.querySelector('#danger'),head:document.querySelector('#headPart'),leg:document.querySelector('#legPart'),spike:document.querySelector('#spikePart'),tail:document.querySelector('#tailPart'),weapon:document.querySelector('#weaponHud')};
+const ui={hp:document.querySelector('#hp'),stamina:document.querySelector('#stamina'),posture:document.querySelector('#posture'),bossHp:document.querySelector('#bossHp'),bossPosture:document.querySelector('#bossPosture'),msg:document.querySelector('#message'),danger:document.querySelector('#danger'),head:document.querySelector('#headPart'),leg:document.querySelector('#legPart'),spike:document.querySelector('#spikePart'),tail:document.querySelector('#tailPart'),weapon:document.querySelector('#weaponHud'),lockDot:document.querySelector('#lockDot')};
 const state={
  hp:100,posture:0,stamina:100,staminaMax:100,staminaRegenDelay:0,exhausted:0,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
  bossHp:560,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',time:0,shake:0,hitstop:0,
@@ -888,9 +916,11 @@ function getMoveAxes(){
  return {x,z};
 }
 function getCameraBasis(){
- const f=new THREE.Vector3();camera.getWorldDirection(f);f.y=0;
+ const f=new THREE.Vector3();
+ if(!input.lock)f.set(Math.sin(input.camYaw),0,Math.cos(input.camYaw));
+ else{camera.getWorldDirection(f);f.y=0}
  if(!f.lengthSq())f.set(0,0,-1);f.normalize();
- const r=new THREE.Vector3(-f.z,0,f.x).normalize();
+ const r=new THREE.Vector3(f.z,0,-f.x).normalize();
  return {f,r};
 }
 function tryRoll(){
@@ -1360,7 +1390,8 @@ function updatePlayer(dt){
    }
  }
  const toBoss=flatDir(player.position,boss.position);
- if(input.lock&&!state.rolling)player.rotation.y=THREE.MathUtils.lerp(player.rotation.y,Math.atan2(toBoss.x,toBoss.z),dt*12);
+ if(input.lock&&!state.rolling)player.rotation.y=THREE.MathUtils.lerp(player.rotation.y,Math.atan2(toBoss.x,toBoss.z),1-Math.exp(-dt*12));
+ else if(!input.lock&&!state.rolling)player.rotation.y=THREE.MathUtils.lerp(player.rotation.y,input.camYaw,1-Math.exp(-dt*13));
  if(state.rolling>0){
    const total=.5,p=1-state.rolling/total;
    state.rolling-=dt;
@@ -1379,7 +1410,7 @@ function updatePlayer(dt){
    if(input.lock)move.addScaledVector(toBoss,z).addScaledVector(right,x).normalize();
    else{const basis=getCameraBasis();move.addScaledVector(basis.f,z).addScaledVector(basis.r,x).normalize();}
    const sprint=(input.keys.has('ShiftLeft')||input.keys.has('ShiftRight'))&&state.stamina>0&&state.exhausted<=0;player.position.addScaledVector(move,dt*(sprint?5.2:3.15));
-   if(!input.lock)player.rotation.y=THREE.MathUtils.lerp(player.rotation.y,Math.atan2(move.x,move.z),dt*10);
+   // In free-look mode WASD is camera-relative while the body keeps facing the mouse look direction.
  }
  if(player.position.length()>18.8)player.position.setLength(18.8);
 
@@ -1420,21 +1451,62 @@ function updatePlayer(dt){
  }
 }
 
-const camPos=new THREE.Vector3();
+const camPos=new THREE.Vector3(),camLook=new THREE.Vector3();
+function updateLockMarker(){
+ if(!ui.lockDot)return;
+ const show=input.lock&&state.bossHp>0;
+ if(!show){ui.lockDot.classList.remove('on');return}
+ const p=boss.position.clone().add(new THREE.Vector3(0,4.35,.15)).project(camera);
+ const visible=p.z>-1&&p.z<1&&Math.abs(p.x)<1.15&&Math.abs(p.y)<1.15;
+ if(!visible){ui.lockDot.classList.remove('on');return}
+ ui.lockDot.style.left=((p.x*.5+.5)*innerWidth)+'px';
+ ui.lockDot.style.top=((-p.y*.5+.5)*innerHeight)+'px';
+ ui.lockDot.classList.add('on');
+}
 function updateCamera(dt){
- const armAttack=state.bossState.startsWith('arm_');
- const target=player.position.clone().add(new THREE.Vector3(0,1.45,0));
- const toBoss=flatDir(player.position,boss.position);
- const back=input.lock?toBoss.clone().multiplyScalar(-1):new THREE.Vector3(0,0,1);
- const distance=armAttack?9.15:8.05,height=armAttack?4.35:3.8;
- camPos.copy(target).addScaledVector(back,distance).add(new THREE.Vector3(0,height,0));
- camera.position.lerp(camPos,1-Math.exp(-dt*(armAttack?6.2:7.2)));
- const bossLookY=armAttack?4.15:3.65;
- const look=input.lock?target.clone().lerp(boss.position.clone().add(new THREE.Vector3(0,bossLookY,0)),armAttack?.5:.44):target;
- const wantedFov=armAttack?65:61;
- if(Math.abs(camera.fov-wantedFov)>.02){camera.fov=THREE.MathUtils.lerp(camera.fov,wantedFov,1-Math.exp(-dt*7));camera.updateProjectionMatrix()}
- if(state.shake>0){state.shake=Math.max(0,state.shake-dt);camera.position.x+=(Math.random()-.5)*state.shake;camera.position.y+=(Math.random()-.5)*state.shake}
- camera.lookAt(look);
+ const target=player.position.clone().add(new THREE.Vector3(0,1.52,0));
+ let desiredPos=new THREE.Vector3(),desiredLook=new THREE.Vector3();
+ let wantedFov=60;
+
+ if(input.lock){
+   const d=dist(),armAttack=state.bossState.startsWith('arm_');
+   const toBoss=flatDir(player.position,boss.position);
+   const right=new THREE.Vector3(toBoss.z,0,-toBoss.x);
+   const backDist=clamp(6.55+d*.2,6.8,9.3)+(armAttack?.45:0);
+   const height=2.45+clamp(d*.075,.1,1.0)+(armAttack?.22:0);
+   desiredPos.copy(target).addScaledVector(toBoss,-backDist).addScaledVector(right,.34).add(new THREE.Vector3(0,height,0));
+   const bossFocus=boss.position.clone().add(new THREE.Vector3(0,4.0,0));
+   const focusWeight=clamp(.44+d*.012,.45,.58);
+   desiredLook.copy(target).lerp(bossFocus,focusWeight);
+   wantedFov=armAttack?64:60;
+ }else{
+   const f=new THREE.Vector3(Math.sin(input.camYaw),0,Math.cos(input.camYaw)).normalize();
+   const right=new THREE.Vector3(f.z,0,-f.x);
+   const backDist=6.45;
+   const height=2.05+input.camPitch*1.25;
+   desiredPos.copy(target).addScaledVector(f,-backDist).addScaledVector(right,.5).add(new THREE.Vector3(0,height,0));
+   desiredLook.copy(target).addScaledVector(f,5.4);
+   desiredLook.y+=input.camPitch*4.4+.18;
+   wantedFov=input.keys.has('ShiftLeft')||input.keys.has('ShiftRight')?63:60;
+ }
+
+ const posEase=1-Math.exp(-dt*(input.lock?7.2:10.5));
+ const lookEase=1-Math.exp(-dt*(input.lock?8.5:13));
+ if(!camLook.lengthSq())camLook.copy(desiredLook);
+ camera.position.lerp(desiredPos,posEase);
+ camLook.lerp(desiredLook,lookEase);
+
+ if(Math.abs(camera.fov-wantedFov)>.02){
+   camera.fov=THREE.MathUtils.lerp(camera.fov,wantedFov,1-Math.exp(-dt*7));
+   camera.updateProjectionMatrix();
+ }
+ if(state.shake>0){
+   state.shake=Math.max(0,state.shake-dt);
+   camera.position.x+=(Math.random()-.5)*state.shake;
+   camera.position.y+=(Math.random()-.5)*state.shake;
+ }
+ camera.lookAt(camLook);
+ updateLockMarker();
 }
 function partText(v,broken,label){return broken?label:(v<45?'손상':'정상')}
 function updateUI(){
