@@ -12,6 +12,7 @@ scene.background=new THREE.Color(0x08090a);
 scene.fog=new THREE.FogExp2(0x08090a,.03);
 const camera=new THREE.PerspectiveCamera(58,1,.1,140);
 const clock=new THREE.Clock();
+const gltfLoader=new GLTFLoader();
 
 scene.add(new THREE.HemisphereLight(0x75879a,0x1b100d,1.15));
 const moon=new THREE.DirectionalLight(0xd8e2ef,3.6);
@@ -91,7 +92,6 @@ boss.position.set(0,0,-2);
 // CC0 provisional creature visual. Combat logic/hit zones remain our own.
 let bossMixer=null,bossActions={},bossActionName='';
 const primitiveBossMeshes=[body,chest,head,jaw,...legs,tailA,tailB,tailTip];
-const gltfLoader=new GLTFLoader();
 gltfLoader.load('https://gobkit.com/freebies/dino/Carnotaurus.glb',gltf=>{
   const visual=gltf.scene;
   visual.scale.setScalar(1.95);
