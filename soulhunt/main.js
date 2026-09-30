@@ -297,9 +297,9 @@ addEventListener('mousedown',e=>{if(e.button===0)tryAttack();if(e.button===2){in
 addEventListener('mouseup',e=>{if(e.button===2)input.guard=false});
 addEventListener('contextmenu',e=>e.preventDefault());
 
-const ui={hp:document.querySelector('#hp'),posture:document.querySelector('#posture'),bossHp:document.querySelector('#bossHp'),bossPosture:document.querySelector('#bossPosture'),msg:document.querySelector('#message'),danger:document.querySelector('#danger'),head:document.querySelector('#headPart'),leg:document.querySelector('#legPart'),tail:document.querySelector('#tailPart'),weapon:document.querySelector('#weaponHud')};
+const ui={hp:document.querySelector('#hp'),stamina:document.querySelector('#stamina'),posture:document.querySelector('#posture'),bossHp:document.querySelector('#bossHp'),bossPosture:document.querySelector('#bossPosture'),msg:document.querySelector('#message'),danger:document.querySelector('#danger'),head:document.querySelector('#headPart'),leg:document.querySelector('#legPart'),tail:document.querySelector('#tailPart'),weapon:document.querySelector('#weaponHud')};
 const state={
- hp:100,posture:0,stamina:100,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
+ hp:100,posture:0,stamina:100,staminaMax:100,staminaRegenDelay:0,exhausted:0,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
  bossHp:560,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',time:0,shake:0,hitstop:0,
  headHp:100,legHp:150,tailHp:130,tailBroken:false,legBroken:false,headBroken:false,danger:false,reaction:0,reactionZone:'body'
 };
@@ -309,6 +309,23 @@ function flatDir(a,b){const d=new THREE.Vector3().subVectors(b,a);d.y=0;return d
 function dist(){return player.position.distanceTo(boss.position)}
 function setDanger(v){state.danger=v;ui.danger.classList.toggle('on',v)}
 function hitStop(sec){state.hitstop=Math.max(state.hitstop,sec)}
+function spendStamina(amount,delay=.55){
+ if(state.stamina<amount||state.exhausted>0)return false;
+ state.stamina=Math.max(0,state.stamina-amount);
+ state.staminaRegenDelay=Math.max(state.staminaRegenDelay,delay);
+ if(state.stamina<=0){
+   state.exhausted=.75;
+   state.staminaRegenDelay=Math.max(state.staminaRegenDelay,.9);
+ }
+ return true;
+}
+function drainStamina(amount,dt,delay=.18){
+ if(state.exhausted>0)return false;
+ state.stamina=Math.max(0,state.stamina-amount*dt);
+ if(amount>0)state.staminaRegenDelay=Math.max(state.staminaRegenDelay,delay);
+ if(state.stamina<=0){state.exhausted=.75;state.staminaRegenDelay=.9;return false}
+ return true;
+}
 const sparks=[];
 function spawnSparks(origin,count=16,power=5.5){
  const geom=new THREE.BufferGeometry(),pos=new Float32Array(count*3),vel=[];
@@ -402,7 +419,7 @@ function getCameraBasis(){
  return {f,r};
 }
 function tryRoll(){
- if(state.dead||state.rolling>0||state.attack>0||state.stagger>0||state.stamina<24)return;
+ if(state.dead||state.rolling>0||state.attack>0||state.stagger>0||state.exhausted>0)return;
  const {x,z}=getMoveAxes();
  const toBoss=flatDir(player.position,boss.position);
  const right=new THREE.Vector3(-toBoss.z,0,toBoss.x);
@@ -416,14 +433,14 @@ function tryRoll(){
  // Neutral dodge is a backstep away from the locked target / camera facing.
  if(!state.rollDir.lengthSq())state.rollDir.copy(input.lock?toBoss.clone().multiplyScalar(-1):getCameraBasis().f.clone().multiplyScalar(-1));
  state.rollDir.normalize();
- state.stamina-=24;state.rolling=.5;state.invuln=.29;
+ if(!spendStamina(24,.72))return;state.rolling=.5;state.invuln=.29;
  player.rotation.y=Math.atan2(state.rollDir.x,state.rollDir.z);
 }
 function startAttack(step){
  const w=currentWeapon(), grip=twoHanded?1.08:1;
  const cost=[0,16,18,23][step]*w.stamina*grip;
- if(state.stamina<cost)return false;
- state.stamina-=cost;state.attackStep=step;
+ if(!spendStamina(cost,.62))return false;
+ state.attackStep=step;
  state.attack=[0,.46,.5,.62][step]/w.speed*(twoHanded ? .96 : 1.04);
  state.attackHit=false;state.attackQueued=false;state.comboGrace=.2/w.speed;return true;
 }
@@ -436,13 +453,13 @@ function tryAttack(){
  const next=state.comboGrace>0?Math.min(3,state.attackStep+1):1;
  startAttack(next);
 }
-function tryDeflect(){if(!state.dead&&state.stagger<=0){state.deflect=.17;state.parryAnim=.22}}
+function tryDeflect(){if(!state.dead&&state.stagger<=0&&state.exhausted<=0&&spendStamina(5,.32)){state.deflect=.17;state.parryAnim=.22}}
 
 function hurtPlayer(dmg,posture=20,unblockable=false){
  if(state.invuln>0||state.dead)return;
  if(!unblockable&&input.guard){
    if(state.deflect>0){
-     state.bossPosture+=30;state.posture=Math.max(0,state.posture-15);state.shake=.16;state.parryAnim=.28;hitStop(.055);spawnSparks(player.position.clone().lerp(boss.position,.42).add(new THREE.Vector3(0,1.45,0)),22,7);flash('저스트 튕겨내기',.22);
+     state.bossPosture+=30;state.posture=Math.max(0,state.posture-15);state.stamina=Math.min(state.staminaMax,state.stamina+9);state.shake=.16;state.parryAnim=.28;hitStop(.055);spawnSparks(player.position.clone().lerp(boss.position,.42).add(new THREE.Vector3(0,1.45,0)),22,7);flash('저스트 튕겨내기',.22);
      if(state.bossPosture>=100){state.bossStagger=2.05;state.bossPosture=48;state.bossState='stagger';flash('자세 붕괴',.52)}
      return;
    }
@@ -451,9 +468,14 @@ function hurtPlayer(dmg,posture=20,unblockable=false){
    const absorb=shieldGuard ? .82 : w.guard;
    state.hp-=dmg*(1-absorb);
    state.posture+=posture*(shieldGuard ? .72 : 1.08);
-   state.stamina=Math.max(0,state.stamina-(shieldGuard?16:24*w.stamina));
+   const guardCost=shieldGuard?16:24*w.stamina;
+   state.stamina=Math.max(0,state.stamina-guardCost);
+   state.staminaRegenDelay=Math.max(state.staminaRegenDelay,.7);
    state.shake=.09;
-   flash(shieldGuard?'방패 가드':'무기 가드',.18);
+   if(state.stamina<=0){
+     state.exhausted=.9;state.stagger=.78;state.posture=Math.min(100,state.posture+24);
+     flash('가드 붕괴',.38);
+   }else flash(shieldGuard?'방패 가드':'무기 가드',.18);
  }else{state.hp-=dmg;state.posture+=posture;state.stagger=.34;state.shake=.23;hitStop(.035)}
  if(state.posture>=100){state.posture=32;state.stagger=.85;flash('자세 무너짐',.4)}
  if(state.hp<=0){state.hp=0;state.dead=true;flash('사망',1.2)}
@@ -771,7 +793,15 @@ function updatePlayer(dt){
  else if(input.guard)anim='guard';
  else if(moving)anim=sprinting?'run':'walk';
  setPlayerVisualAction(anim);
- state.stamina=Math.min(100,state.stamina+dt*(state.attack||state.rolling?10:29));
+ state.exhausted=Math.max(0,state.exhausted-dt);
+ state.staminaRegenDelay=Math.max(0,state.staminaRegenDelay-dt);
+ const sprintingNow=(input.keys.has('ShiftLeft')||input.keys.has('ShiftRight'))&&moving&&state.attack<=0&&state.rolling<=0&&state.stagger<=0;
+ if(sprintingNow){
+   if(!drainStamina(18,dt,.22))flash('스태미나 고갈',.22);
+ }else if(state.staminaRegenDelay<=0&&!input.guard&&state.attack<=0&&state.rolling<=0&&state.exhausted<=0){
+   const regenRate=state.stamina<30?24:32;
+   state.stamina=Math.min(state.staminaMax,state.stamina+dt*regenRate);
+ }
  state.posture=Math.max(0,state.posture-dt*(input.guard?5:14));
  state.bossPosture=Math.max(0,state.bossPosture-dt*(state.bossState==='idle'?4.5:1.3));
  state.invuln=Math.max(0,state.invuln-dt);state.deflect=Math.max(0,state.deflect-dt);state.parryAnim=Math.max(0,state.parryAnim-dt);state.stagger=Math.max(0,state.stagger-dt);state.comboGrace=Math.max(0,state.comboGrace-dt);
@@ -811,7 +841,7 @@ function updatePlayer(dt){
    const right=new THREE.Vector3(-toBoss.z,0,toBoss.x),move=new THREE.Vector3();
    if(input.lock)move.addScaledVector(toBoss,z).addScaledVector(right,x).normalize();
    else{const basis=getCameraBasis();move.addScaledVector(basis.f,z).addScaledVector(basis.r,x).normalize();}
-   const sprint=input.keys.has('ShiftLeft')||input.keys.has('ShiftRight');player.position.addScaledVector(move,dt*(sprint?5.2:3.15));
+   const sprint=(input.keys.has('ShiftLeft')||input.keys.has('ShiftRight'))&&state.stamina>0&&state.exhausted<=0;player.position.addScaledVector(move,dt*(sprint?5.2:3.15));
    if(!input.lock)player.rotation.y=THREE.MathUtils.lerp(player.rotation.y,Math.atan2(move.x,move.z),dt*10);
  }
  if(player.position.length()>18.8)player.position.setLength(18.8);
@@ -871,7 +901,7 @@ function updateCamera(dt){
 }
 function partText(v,broken,label){return broken?label:(v<45?'손상':'정상')}
 function updateUI(){
- ui.hp.style.width=clamp(state.hp,0,100)+'%';ui.posture.style.width=clamp(state.posture,0,100)+'%';ui.bossHp.style.width=(state.bossHp/560*100)+'%';ui.bossPosture.style.width=clamp(state.bossPosture,0,100)+'%';
+ ui.hp.style.width=clamp(state.hp,0,100)+'%';if(ui.stamina){ui.stamina.style.width=(clamp(state.stamina,0,state.staminaMax)/state.staminaMax*100)+'%';ui.stamina.parentElement.classList.toggle('exhausted',state.exhausted>0)}ui.posture.style.width=clamp(state.posture,0,100)+'%';ui.bossHp.style.width=(state.bossHp/560*100)+'%';ui.bossPosture.style.width=clamp(state.bossPosture,0,100)+'%';
  ui.head.textContent=partText(state.headHp,state.headBroken,'파괴');ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴');ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단');if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
 }
 function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}addEventListener('resize',resize);resize();
