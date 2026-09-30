@@ -172,12 +172,15 @@ function setPlayerVisualAction(name,fade=.12){
 
 const boss=new THREE.Group();scene.add(boss);
 const shell=mat(0x3f4548,.58,.47),shellDark=mat(0x262b2e,.48,.62),meat=mat(0x452d28,.02,.88),horn=mat(0x807561,.18,.65);
-const body=part(boss,new THREE.SphereGeometry(1.55,16,10),shell,[0,2.05,0],[0,0,0],[1.4,.75,1.7]);
-const chest=part(boss,new THREE.SphereGeometry(1.05,14,9),shellDark,[0,1.85,1.55],[0,0,0],[1.25,.9,1.1]);
-const head=part(boss,new THREE.SphereGeometry(.78,14,9),shell,[0,2.15,2.55],[0,0,0],[1.05,.82,1.18]);
+const body=part(boss,new THREE.SphereGeometry(1.55,16,10),shell,[0,2.0,0],[0,0,0],[1.55,.68,1.9]);
+const chest=part(boss,new THREE.SphereGeometry(1.05,14,9),shellDark,[0,2.05,1.55],[0,0,0],[1.35,.82,1.05]);
+const head=part(boss,new THREE.SphereGeometry(.78,14,9),shell,[0,2.28,2.72],[0,0,0],[1.1,.78,1.28]);
 part(boss,new THREE.ConeGeometry(.16,1.15,8),horn,[-.55,2.72,2.68],[Math.PI/2.3,0,.25]);
 part(boss,new THREE.ConeGeometry(.16,1.15,8),horn,[.55,2.72,2.68],[Math.PI/2.3,0,-.25]);
 const jaw=part(boss,new THREE.BoxGeometry(1.05,.25,.7),meat,[0,1.62,2.92],[.08,0,0]);
+for(const x of [-.72,0,.72]){
+  part(boss,new THREE.ConeGeometry(.22,1.15,8),horn,[x,3.0,-.55],[Math.PI/2.25,0,0],[1,1,1]);
+}
 const legs=[];
 for(const sx of [-1,1])for(const z of [.95,-.95]){
   const upper=part(boss,new THREE.CapsuleGeometry(.28,1.05,5,8),shell,[sx*1.25,1.25,z],[0,0,sx*.55]);
@@ -189,19 +192,36 @@ const tailA=part(tailPivot,new THREE.CapsuleGeometry(.38,1.35,5,9),shell,[0,0,-.
 const tailB=part(tailPivot,new THREE.CapsuleGeometry(.24,1.45,5,9),shellDark,[0,0,-1.9],[Math.PI/2,0,0]);
 const tailTip=part(tailPivot,new THREE.ConeGeometry(.32,1.25,8),horn,[0,0,-3],[Math.PI/2,0,0]);
 
-// Extra dorsal arms: shoulder -> upper arm -> forearm -> hand.
+// Extra dorsal arms: oversized visual silhouette, while attack hit ranges remain unchanged.
 const dorsalArms=[];
 for(const sx of [-1,1]){
-  const shoulder=new THREE.Group();shoulder.position.set(sx*.82,2.85,-.45);boss.add(shoulder);
-  const shoulderArmor=part(shoulder,new THREE.SphereGeometry(.38,10,8),shell,[0,0,0],[0,0,0],[1.25,.9,1]);
-  const upperPivot=new THREE.Group();upperPivot.position.set(sx*.18,-.02,0);shoulder.add(upperPivot);
-  const upper=part(upperPivot,new THREE.CapsuleGeometry(.22,1.0,5,8),shellDark,[sx*.5,-.18,.05],[0,0,sx*.95]);
-  const elbow=new THREE.Group();elbow.position.set(sx*.95,-.34,.05);upperPivot.add(elbow);
-  const fore=part(elbow,new THREE.CapsuleGeometry(.18,.95,5,8),meat,[sx*.42,-.12,.04],[0,0,sx*.9]);
-  const wrist=new THREE.Group();wrist.position.set(sx*.82,-.25,.04);elbow.add(wrist);
-  const hand=part(wrist,new THREE.BoxGeometry(.56,.34,.5),shell,[sx*.2,-.05,.08],[0,0,sx*.18]);
-  for(let f=-1;f<=1;f++)part(wrist,new THREE.ConeGeometry(.06,.42,6),horn,[sx*.48,-.08,f*.15],[0,0,sx*Math.PI/2]);
-  dorsalArms.push({sx,shoulder,upperPivot,elbow,wrist,hand,base:{shoulder:new THREE.Euler(0,0,0),upper:new THREE.Euler(0,0,0),elbow:new THREE.Euler(0,0,0),wrist:new THREE.Euler(0,0,0)}});
+  const shoulder=new THREE.Group();
+  shoulder.position.set(sx*1.35,3.45,-.95);
+  boss.add(shoulder);
+
+  const shoulderArmor=part(shoulder,new THREE.DodecahedronGeometry(.72,0),shell,[0,0,0],[0,0,sx*.18],[1.35,1.05,1.25]);
+  part(shoulder,new THREE.ConeGeometry(.22,.9,8),horn,[sx*.22,.55,-.05],[0,0,sx*.45]);
+
+  const upperPivot=new THREE.Group();upperPivot.position.set(sx*.12,-.05,.1);shoulder.add(upperPivot);
+  const upper=part(upperPivot,new THREE.CapsuleGeometry(.34,1.55,6,10),shellDark,[sx*.78,-.2,.05],[0,0,sx*1.0],[1.05,1,1.05]);
+
+  const elbow=new THREE.Group();elbow.position.set(sx*1.5,-.52,.06);upperPivot.add(elbow);
+  part(elbow,new THREE.SphereGeometry(.38,10,8),shell,[0,0,0],[0,0,0],[1.15,.9,1.1]);
+
+  const fore=part(elbow,new THREE.CapsuleGeometry(.29,1.55,6,10),meat,[sx*.72,-.15,.08],[0,0,sx*.95],[1.08,1,1.08]);
+
+  const wrist=new THREE.Group();wrist.position.set(sx*1.42,-.42,.08);elbow.add(wrist);
+  const hand=part(wrist,new THREE.BoxGeometry(.9,.52,.78),shell,[sx*.28,-.08,.1],[0,0,sx*.18],[1.1,1,1.15]);
+
+  for(let f=-1;f<=1;f++){
+    part(wrist,new THREE.ConeGeometry(.085,.68,7),horn,[sx*.72,-.12,f*.22],[0,0,sx*Math.PI/2]);
+  }
+
+  // Back-mounted blade fins make the arms readable even when overlapping the torso.
+  part(shoulder,new THREE.ConeGeometry(.12,1.2,7),horn,[sx*.55,.25,-.5],[Math.PI/2.5,0,sx*.3]);
+  part(upperPivot,new THREE.ConeGeometry(.1,.85,7),horn,[sx*.52,.35,-.28],[Math.PI/2.3,0,sx*.2]);
+
+  dorsalArms.push({sx,shoulder,upperPivot,elbow,wrist,hand});
 }
 function resetDorsalArms(dt=1){
  for(const a of dorsalArms){
@@ -260,6 +280,18 @@ function spawnSparks(origin,count=16,power=5.5){
  geom.setAttribute('position',new THREE.BufferAttribute(pos,3));
  const pts=new THREE.Points(geom,new THREE.PointsMaterial({color:0xffc85a,size:.07,transparent:true,opacity:1,depthWrite:false}));
  scene.add(pts);sparks.push({pts,vel,life:.32});
+}
+const armTrails=[];
+function spawnArmTrail(arm){
+ const p=new THREE.Vector3();arm.wrist.getWorldPosition(p);
+ const mesh=new THREE.Mesh(new THREE.SphereGeometry(.18,8,6),new THREE.MeshBasicMaterial({color:0xff6a44,transparent:true,opacity:.5,depthWrite:false}));
+ mesh.position.copy(p);scene.add(mesh);armTrails.push({mesh,life:.16});
+}
+function updateArmTrails(dt){
+ for(let i=armTrails.length-1;i>=0;i--){
+   const t=armTrails[i];t.life-=dt;t.mesh.scale.multiplyScalar(1+dt*4);t.mesh.material.opacity=clamp(t.life/.16,0,1)*.45;
+   if(t.life<=0){scene.remove(t.mesh);t.mesh.geometry.dispose();t.mesh.material.dispose();armTrails.splice(i,1)}
+ }
 }
 function updateSparks(dt){
  for(let s=sparks.length-1;s>=0;s--){
@@ -472,6 +504,7 @@ function updateBoss(dt){
  boss.rotation.y=THREE.MathUtils.lerp(boss.rotation.y,face,dt*(state.bossState==='tail'?2.2:5));
  if(state.bossState==='idle'){
    state.bossTimer-=dt;
+ if(state.bossState.startsWith('arm_')&&Math.floor(state.time*28)%2===0){spawnArmTrail(dorsalArms[0]);spawnArmTrail(dorsalArms[1]);}
    if(d>4.2)boss.position.addScaledVector(dir,dt*(state.legBroken?1.45:2.05));else if(d<2.8)boss.position.addScaledVector(dir,-dt*.55);
    head.rotation.x=Math.sin(state.time*2.2)*.05;tailPivot.rotation.y=Math.sin(state.time*2.8)*.24;resetDorsalArms(Math.min(1,dt*8));dorsalArms[0].shoulder.rotation.z+=Math.sin(state.time*1.8)*.035;dorsalArms[1].shoulder.rotation.z-=Math.sin(state.time*1.8)*.035;
    if(state.bossTimer<=0)chooseBossAttack();return;
@@ -513,18 +546,18 @@ function updateBoss(dt){
    if(state.bossTimer<=0){tailPivot.rotation.y=0;state.bossState='idle';state.bossTimer=.62}
  }else if(state.bossState==='arm_cross'){
    const p=1-state.bossTimer/.92,s=Math.sin(clamp(p,0,1)*Math.PI);
-   dorsalArms[0].upperPivot.rotation.z=s*1.5;dorsalArms[1].upperPivot.rotation.z=-s*1.5;
-   dorsalArms[0].elbow.rotation.z=s*.8;dorsalArms[1].elbow.rotation.z=-s*.8;
+   dorsalArms[0].upperPivot.rotation.z=s*1.9;dorsalArms[1].upperPivot.rotation.z=-s*1.9;
+   dorsalArms[0].elbow.rotation.z=s*1.05;dorsalArms[1].elbow.rotation.z=-s*1.05;
    if(state.bossTimer<.42)bossImpact(4.1,24,30,false);
    if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.6}
  }else if(state.bossState==='arm_double_slam'){
    const p=1-state.bossTimer/1.08;
-   for(const a of dorsalArms){a.shoulder.rotation.x=-Math.sin(clamp(p,0,.55)/.55*Math.PI)*.85;a.upperPivot.rotation.x=-Math.sin(clamp(p,0,1)*Math.PI)*1.2}
+   for(const a of dorsalArms){a.shoulder.rotation.x=-Math.sin(clamp(p,0,.55)/.55*Math.PI)*.85;a.upperPivot.rotation.x=-Math.sin(clamp(p,0,1)*Math.PI)*1.55}
    if(state.bossTimer<.38)bossImpact(4.4,36,48,false);
    if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.85}
  }else if(state.bossState==='arm_sweep'){
    const p=1-state.bossTimer/.98,s=Math.sin(clamp(p,0,1)*Math.PI);
-   dorsalArms[0].shoulder.rotation.y=-1.1+s*2.2;dorsalArms[1].shoulder.rotation.y=1.1-s*2.2;
+   dorsalArms[0].shoulder.rotation.y=-1.35+s*2.7;dorsalArms[1].shoulder.rotation.y=1.35-s*2.7;
    dorsalArms[0].upperPivot.rotation.z=.7;dorsalArms[1].upperPivot.rotation.z=-.7;
    if(state.bossTimer<.5)bossImpact(5.0,28,36,false);
    if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.68}
@@ -535,12 +568,12 @@ function updateBoss(dt){
    if(state.bossTimer<=0){resetDorsalArms(1);body.rotation.x=0;state.bossState='idle';state.bossTimer=.62}
  }else if(state.bossState==='arm_grab'){
    const p=1-state.bossTimer/1.18,s=Math.sin(clamp(p,0,1)*Math.PI);
-   const a=dorsalArms[0];a.shoulder.rotation.x=-.45;a.shoulder.rotation.y=-s*.95;a.elbow.rotation.z=s*1.05;
+   const a=dorsalArms[0];a.shoulder.rotation.x=-.45;a.shoulder.rotation.y=-s*.95;a.elbow.rotation.z=s*1.35;
    if(state.bossTimer<.36)bossImpact(3.25,42,58,true);
    if(state.bossTimer<=0){setDanger(false);resetDorsalArms(1);state.bossState='idle';state.bossTimer=.95}
  }else if(state.bossState==='arm_barrage'){
    const p=1-state.bossTimer/1.42,phase=Math.floor(p*6),s=Math.sin((p*6-phase)*Math.PI);
-   const idx=phase%2;dorsalArms[idx].upperPivot.rotation.z=(idx? -1:1)*s*1.35;dorsalArms[idx].elbow.rotation.z=(idx?-.7:.7)*s;
+   const idx=phase%2;dorsalArms[idx].upperPivot.rotation.z=(idx? -1:1)*s*1.7;dorsalArms[idx].elbow.rotation.z=(idx?-.7:.7)*s;
    if(phase!==state.bossPatternStep){state.bossPatternStep=phase;state.bossHit=false}
    if(s>.72)bossImpact(3.8,14,18,false);
    if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.72}
@@ -701,6 +734,6 @@ function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=i
 function loop(){
  let dt=Math.min(clock.getDelta(),.033);state.time+=dt;
  if(state.hitstop>0){state.hitstop-=dt;dt=0}else{updatePlayer(dt);updateBoss(dt)}
-if(playerMixer)playerMixer.update(Math.max(dt,.001));updateSparks(Math.max(dt,.001));updateCamera(Math.max(dt,.001));updateUI();renderer.render(scene,camera);requestAnimationFrame(loop);
+if(playerMixer)playerMixer.update(Math.max(dt,.001));updateArmTrails(Math.max(dt,.001));updateSparks(Math.max(dt,.001));updateCamera(Math.max(dt,.001));updateUI();renderer.render(scene,camera);requestAnimationFrame(loop);
 }
 loop();
