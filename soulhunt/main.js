@@ -461,6 +461,14 @@ async function loadAnimeBossUpper(){
        if(node)cacheAnimeBossBone(key,node);
      }
 
+     // Slightly lengthen the actual skinned arms so the visible silhouette matches the wider attack rig.
+     for(const name of ['J_Bip_L_UpperArm','J_Bip_R_UpperArm']){
+       const b=root.getObjectByName(name);if(b)b.scale.multiplyScalar(1.16);
+     }
+     for(const name of ['J_Bip_L_LowerArm','J_Bip_R_LowerArm']){
+       const b=root.getObjectByName(name);if(b)b.scale.multiplyScalar(1.12);
+     }
+
      // Oversize the authored VRoid bust bones instead of overlaying transparent/procedural breasts.
      for(const [name,side] of [['J_Sec_L_Bust1',-1],['J_Sec_R_Bust1',1]]){
        const b=root.getObjectByName(name);
