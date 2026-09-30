@@ -1,4 +1,5 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const canvas=document.querySelector('#game');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
@@ -11,6 +12,7 @@ scene.background=new THREE.Color(0x08090a);
 scene.fog=new THREE.FogExp2(0x08090a,.03);
 const camera=new THREE.PerspectiveCamera(58,1,.1,140);
 const clock=new THREE.Clock();
+const assetLoader=new GLTFLoader();
 
 scene.add(new THREE.HemisphereLight(0x75879a,0x1b100d,1.15));
 const moon=new THREE.DirectionalLight(0xd8e2ef,3.6);
@@ -54,12 +56,12 @@ const weaponVisual=new THREE.Group();weaponPivot.add(weaponVisual);
 const swordPivot=weaponPivot; // combat-pose compatibility
 
 const WEAPONS=[
- {id:'straight',name:'직검',damage:1.00,posture:1.00,speed:1.00,stamina:1.00,reach:1.00,hitstop:1.00,guard:.58,motion:1.00},
- {id:'greatsword',name:'대검',damage:1.58,posture:1.55,speed:.66,stamina:1.48,reach:1.22,hitstop:1.55,guard:.72,motion:1.35},
+ {id:'straight',name:'직검',damage:1.00,posture:1.00,speed:1.00,stamina:1.00,reach:1.00,hitstop:1.00,guard:.58,motion:1.00,asset:'./assets/models/kaykit/sword_1handed.gltf',assetScale:.72},
+ {id:'greatsword',name:'대검',damage:1.58,posture:1.55,speed:.66,stamina:1.48,reach:1.22,hitstop:1.55,guard:.72,motion:1.35,asset:'./assets/models/kaykit/sword_2handed.gltf',assetScale:.78},
  {id:'hammer',name:'해머',damage:1.38,posture:1.92,speed:.59,stamina:1.58,reach:.93,hitstop:1.82,guard:.76,motion:1.52},
- {id:'spear',name:'창',damage:.92,posture:.86,speed:1.08,stamina:.92,reach:1.48,hitstop:.82,guard:.48,motion:.82},
- {id:'katana',name:'태도',damage:1.08,posture:.92,speed:1.18,stamina:.94,reach:1.08,hitstop:.9,guard:.45,motion:.74},
- {id:'axe',name:'전투도끼',damage:1.28,posture:1.36,speed:.78,stamina:1.27,reach:1.02,hitstop:1.32,guard:.65,motion:1.22}
+ {id:'spear',name:'창',damage:.92,posture:.86,speed:1.08,stamina:.92,reach:1.48,hitstop:.82,guard:.48,motion:.82,asset:'./assets/models/kenney/weapon-spear.glb',assetScale:.9},
+ {id:'katana',name:'태도',damage:1.08,posture:.92,speed:1.18,stamina:.94,reach:1.08,hitstop:.9,guard:.45,motion:.74,asset:'./assets/models/kaykit/sword_1handed.gltf',assetScale:.8,assetThin:true},
+ {id:'axe',name:'전투도끼',damage:1.28,posture:1.36,speed:.78,stamina:1.27,reach:1.02,hitstop:1.32,guard:.65,motion:1.22,asset:'./assets/models/kaykit/axe_1handed.gltf',assetScale:.76}
 ];
 let weaponIndex=0,twoHanded=false;
 function currentWeapon(){return WEAPONS[weaponIndex]}
@@ -84,6 +86,20 @@ function buildWeapon(){
  }
  weaponPivot.scale.setScalar(twoHanded?1.06:1);
  shield.visible=!twoHanded;
+ const assetUrl=w.asset;
+ if(assetUrl){
+   const requested=w.id;
+   assetLoader.load(assetUrl,gltf=>{
+     if(currentWeapon().id!==requested)return;
+     clearWeapon();
+     const model=gltf.scene;
+     model.rotation.x=-Math.PI/2;
+     model.scale.setScalar(w.assetScale||.75);
+     if(w.assetThin)model.scale.x*=.62;
+     model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+     weaponVisual.add(model);
+   },undefined,err=>console.warn('Weapon asset unavailable; procedural weapon remains active.',requested,err));
+ }
 }
 function setWeapon(i){
  if(state?.attack>0||state?.rolling>0)return;
@@ -94,6 +110,16 @@ function setWeapon(i){
 function toggleGrip(){if(state?.attack>0||state?.rolling>0)return;twoHanded=!twoHanded;buildWeapon();flash(twoHanded?'양손 잡기 · 무기 가드':'한손 잡기 · 방패 가드',.5)}
 buildWeapon();
 player.position.set(0,0,8);
+
+let knightVisual=null;
+assetLoader.load('./assets/models/kaykit/Knight.glb',gltf=>{
+  knightVisual=gltf.scene;
+  knightVisual.scale.setScalar(.92);
+  knightVisual.rotation.y=Math.PI;
+  knightVisual.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+  player.children.filter(o=>o.isMesh).forEach(m=>m.visible=false);
+  player.add(knightVisual);
+},undefined,err=>console.warn('Local knight asset unavailable; procedural knight remains active.',err));
 
 // Procedural knight drives all combat poses. Keeping these no-op hooks makes the loop robust.
 let playerMixer=null;
