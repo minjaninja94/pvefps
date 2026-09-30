@@ -1,0 +1,62 @@
+name: Vendor Dukhu Soul Adult Player
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/vendor-dukhu-adult-player.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download CC0 Quaternius adult character
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p soulhunt/assets/models/player
+          curl -L --fail "https://raw.githubusercontent.com/MarlonSteiner/clobbertown/main/public/models/characters/casual-male.glb" \
+            -o soulhunt/assets/models/player/adult-knight-base.glb
+          curl -L --fail "https://raw.githubusercontent.com/MarlonSteiner/clobbertown/main/public/models/characters/LICENSE-quaternius-ultimate-animated-character.txt" \
+            -o soulhunt/assets/models/player/LICENSE-quaternius.txt
+          cat > soulhunt/assets/models/player/SOURCE.md <<'EOF'
+          # Adult player base
+
+          Source: Quaternius Ultimate Animated Character Pack, via MarlonSteiner/clobbertown.
+          License: CC0 1.0 Universal.
+          Runtime use: normal adult-proportion player body; project weapon/shield visuals remain separate.
+          EOF
+
+      - name: Inspect animation clips and bounds
+        shell: bash
+        run: |
+          python -m pip install --quiet pygltflib
+          python - <<'PY'
+          import json
+          from pygltflib import GLTF2
+          p='soulhunt/assets/models/player/adult-knight-base.glb'
+          g=GLTF2().load_binary(p)
+          clips=[a.name for a in (g.animations or [])]
+          nodes=[n.name for n in (g.nodes or []) if n.name]
+          with open('soulhunt/assets/models/player/adult-player-meta.json','w',encoding='utf-8') as f:
+              json.dump({'animations':clips,'nodes':nodes},f,ensure_ascii=False,indent=2)
+          print('animations:',clips)
+          print('nodes:',nodes[:80])
+          PY
+
+      - name: Commit player model
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add soulhunt/assets/models/player
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "assets(dukhu-soul): vendor CC0 adult-proportion player"
+            git push
+          fi
