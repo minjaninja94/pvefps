@@ -833,6 +833,10 @@ const state={
 };
 function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeout(flash.t);flash.t=setTimeout(()=>ui.msg.style.opacity='0',d*1000)}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function lerpAngle(current,target,alpha){
+ const delta=Math.atan2(Math.sin(target-current),Math.cos(target-current));
+ return current+delta*alpha;
+}
 function flatDir(a,b){const d=new THREE.Vector3().subVectors(b,a);d.y=0;return d.lengthSq()?d.normalize():d.set(0,0,-1)}
 function dist(){return player.position.distanceTo(boss.position)}
 function setDanger(v){state.danger=v;ui.danger.classList.toggle('on',v)}
@@ -1023,8 +1027,11 @@ function getMoveAxes(){
 }
 function getCameraBasis(){
  const f=new THREE.Vector3();
- if(!input.lock)f.set(Math.sin(input.camYaw),0,Math.cos(input.camYaw));
- else{camera.getWorldDirection(f);f.y=0}
+ if(!input.lock){
+   f.set(Math.sin(player.rotation.y),0,Math.cos(player.rotation.y));
+ }else{
+   camera.getWorldDirection(f);f.y=0;
+ }
  if(!f.lengthSq())f.set(0,0,-1);f.normalize();
  const r=new THREE.Vector3(f.z,0,-f.x).normalize();
  return {f,r};
@@ -1038,11 +1045,15 @@ function tryRoll(){
  if(input.lock){
    state.rollDir.addScaledVector(toBoss,z).addScaledVector(right,x);
  }else{
-   const basis=getCameraBasis();
-   state.rollDir.addScaledVector(basis.f,z).addScaledVector(basis.r,x);
+   const forward=new THREE.Vector3(Math.sin(player.rotation.y),0,Math.cos(player.rotation.y));
+   const strafe=new THREE.Vector3(forward.z,0,-forward.x);
+   state.rollDir.addScaledVector(forward,z).addScaledVector(strafe,x);
  }
  // Neutral dodge is a backstep away from the locked target / camera facing.
- if(!state.rollDir.lengthSq())state.rollDir.copy(input.lock?toBoss.clone().multiplyScalar(-1):getCameraBasis().f.clone().multiplyScalar(-1));
+ if(!state.rollDir.lengthSq()){
+   if(input.lock)state.rollDir.copy(toBoss).multiplyScalar(-1);
+   else state.rollDir.set(-Math.sin(player.rotation.y),0,-Math.cos(player.rotation.y));
+ }
  state.rollDir.normalize();
  if(!spendStamina(24,.72))return;state.rolling=.5;state.invuln=.29;
  player.rotation.y=Math.atan2(state.rollDir.x,state.rollDir.z);
@@ -1503,8 +1514,8 @@ function updatePlayer(dt){
    }
  }
  const toBoss=flatDir(player.position,boss.position);
- if(input.lock&&!state.rolling)player.rotation.y=THREE.MathUtils.lerp(player.rotation.y,Math.atan2(toBoss.x,toBoss.z),1-Math.exp(-dt*12));
- else if(!input.lock&&!state.rolling)player.rotation.y=THREE.MathUtils.lerp(player.rotation.y,input.camYaw,1-Math.exp(-dt*13));
+ if(input.lock&&!state.rolling)player.rotation.y=lerpAngle(player.rotation.y,Math.atan2(toBoss.x,toBoss.z),1-Math.exp(-dt*12));
+ else if(!input.lock&&!state.rolling)player.rotation.y=lerpAngle(player.rotation.y,input.camYaw,1-Math.exp(-dt*13));
  if(state.rolling>0){
    const total=.5,p=1-state.rolling/total;
    state.rolling-=dt;
@@ -1520,10 +1531,15 @@ function updatePlayer(dt){
  const {x,z}=getMoveAxes();
  if(x||z){
    const right=new THREE.Vector3(-toBoss.z,0,toBoss.x),move=new THREE.Vector3();
-   if(input.lock)move.addScaledVector(toBoss,z).addScaledVector(right,x).normalize();
-   else{const basis=getCameraBasis();move.addScaledVector(basis.f,z).addScaledVector(basis.r,x).normalize();}
-   const sprint=(input.keys.has('ShiftLeft')||input.keys.has('ShiftRight'))&&state.stamina>0&&state.exhausted<=0;player.position.addScaledVector(move,dt*(sprint?5.2:3.15));
-   // In free-look mode WASD is camera-relative while the body keeps facing the mouse look direction.
+   if(input.lock){
+     move.addScaledVector(toBoss,z).addScaledVector(right,x).normalize();
+   }else{
+     const forward=new THREE.Vector3(Math.sin(player.rotation.y),0,Math.cos(player.rotation.y));
+     const strafe=new THREE.Vector3(forward.z,0,-forward.x);
+     move.addScaledVector(forward,z).addScaledVector(strafe,x).normalize();
+   }
+   const sprint=(input.keys.has('ShiftLeft')||input.keys.has('ShiftRight'))&&state.stamina>0&&state.exhausted<=0;
+   player.position.addScaledVector(move,dt*(sprint?5.2:3.15));
  }
  if(player.position.length()>18.8)player.position.setLength(18.8);
 
