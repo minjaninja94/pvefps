@@ -954,6 +954,8 @@ const state={
 };
 function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeout(flash.t);flash.t=setTimeout(()=>ui.msg.style.opacity='0',d*1000)}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+const PLAYER_ATTACK_MOTION_SCALE=5;
+const BOSS_ATTACK_MOTION_SCALE=5;
 function lerpAngle(current,target,alpha){
  const delta=Math.atan2(Math.sin(target-current),Math.cos(target-current));
  return current+delta*alpha;
@@ -1341,16 +1343,16 @@ function animateBossTelegraph(dt){
  }else if(st==='tail'&&t>.47){
    L(body.rotation,'y',-.42,10);L(body.rotation,'z',-.14,10);tailPivot.rotation.y=THREE.MathUtils.lerp(tailPivot.rotation.y,-1.5,1-Math.exp(-dt*13));
  }else if(st==='peril'&&t>.44){
-   body.position.y=THREE.MathUtils.lerp(body.position.y,1.28,1-Math.exp(-dt*12));L(body.rotation,'x',-.36,14);L(head.rotation,'x',-.82,14);
+   body.position.y=THREE.MathUtils.lerp(body.position.y,1.28,1-Math.exp(-bossMotionDt*12));L(body.rotation,'x',-.36,14);L(head.rotation,'x',-.82,14);
  }
 
  // Dorsal-arm attacks: every wind-up has a distinct silhouette.
  else if(st==='arm_cross'&&t>.48){
    // Both hands spread far outside the body, then scissor inward.
-   dorsalArms[0].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[0].shoulder.rotation.y,-.72,1-Math.exp(-dt*12));
-   dorsalArms[1].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[1].shoulder.rotation.y,.72,1-Math.exp(-dt*12));
-   dorsalArms[0].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[0].upperPivot.rotation.z,-1.05,1-Math.exp(-dt*14));
-   dorsalArms[1].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[1].upperPivot.rotation.z,1.05,1-Math.exp(-dt*14));
+   dorsalArms[0].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[0].shoulder.rotation.y,-.72,1-Math.exp(-bossMotionDt*12));
+   dorsalArms[1].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[1].shoulder.rotation.y,.72,1-Math.exp(-bossMotionDt*12));
+   dorsalArms[0].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[0].upperPivot.rotation.z,-1.05,1-Math.exp(-bossMotionDt*14));
+   dorsalArms[1].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[1].upperPivot.rotation.z,1.05,1-Math.exp(-bossMotionDt*14));
    L(body.rotation,'x',-.18,10);L(chest.rotation,'x',-.2,10);L(head.rotation,'x',.1,9);
  }else if(st==='arm_double_slam'&&t>.46){
    // Both arms visibly tower over the shell.
@@ -1365,7 +1367,7 @@ function animateBossTelegraph(dt){
    L(chest.rotation,'z',-.28,11);L(head.rotation,'z',.16,10);
  }else if(st==='arm_uppercut'&&t>.36){
    // Right fist disappears low beside the rib cage before exploding upward.
-   const a=dorsalArms[1];a.shoulder.rotation.z=THREE.MathUtils.lerp(a.shoulder.rotation.z,-1.55,1-Math.exp(-dt*14));a.elbow.rotation.z=THREE.MathUtils.lerp(a.elbow.rotation.z,-1.6,1-Math.exp(-dt*14));a.wrist.rotation.x=THREE.MathUtils.lerp(a.wrist.rotation.x,.55,1-Math.exp(-dt*14));L(body.rotation,'z',-.24,10);L(chest.rotation,'z',-.34,11);L(head.rotation,'z',.2,10);
+   const a=dorsalArms[1];a.shoulder.rotation.z=THREE.MathUtils.lerp(a.shoulder.rotation.z,-1.55,1-Math.exp(-bossMotionDt*14));a.elbow.rotation.z=THREE.MathUtils.lerp(a.elbow.rotation.z,-1.6,1-Math.exp(-bossMotionDt*14));a.wrist.rotation.x=THREE.MathUtils.lerp(a.wrist.rotation.x,.55,1-Math.exp(-bossMotionDt*14));L(body.rotation,'z',-.24,10);L(chest.rotation,'z',-.34,11);L(head.rotation,'z',.2,10);
  }else if(st==='arm_grab'&&t>.4){
    // One giant open hand hangs high and forward; red flesh glows as the tell.
    const a=dorsalArms[0];a.shoulder.rotation.x=THREE.MathUtils.lerp(a.shoulder.rotation.x,-.72,1-Math.exp(-dt*10));a.shoulder.rotation.y=THREE.MathUtils.lerp(a.shoulder.rotation.y,-1.48,1-Math.exp(-dt*10));a.elbow.rotation.z=THREE.MathUtils.lerp(a.elbow.rotation.z,1.55,1-Math.exp(-dt*10));a.wrist.rotation.y=THREE.MathUtils.lerp(a.wrist.rotation.y,-.7,1-Math.exp(-dt*10));L(body.rotation,'y',.22,9);L(chest.rotation,'y',.22,9);L(head.rotation,'y',-.18,9);
@@ -1394,11 +1396,12 @@ const BOSS_AIM_RANGE={
  arm_grab:3.45,arm_barrage:3.85,arm_guardbreak:3.8,arm_crush:3.6
 };
 function updateBoss(dt){
+ const bossMotionDt=state.bossState?.startsWith?.('arm_')?dt/BOSS_ATTACK_MOTION_SCALE:dt;
  if(state.bossHp<=0)setBossVisualAction('dead');
  else if(state.bossState==='idle')setBossVisualAction(dist()>4.2?'walk':'idle');
  else if(state.bossStagger>0)setBossVisualAction('idle');
  else setBossVisualAction('attack');
- animateBossTelegraph(dt);updateBossWarningGlow();animateGiantessPresence(dt);updateBossMonsterArmVisuals();
+ animateBossTelegraph(bossMotionDt);updateBossWarningGlow();animateGiantessPresence(bossMotionDt);updateBossMonsterArmVisuals();
  if(state.reaction>0){
    state.reaction=Math.max(0,state.reaction-dt);
    const k=Math.sin((state.reaction/.16)*Math.PI);
@@ -1429,9 +1432,9 @@ function updateBoss(dt){
  else if(state.bossState.startsWith('arm_')){
    const cutoff=BOSS_AIM_CUTOFF[state.bossState]??0;
    if(state.bossTimer>cutoff){
-     boss.rotation.y=THREE.MathUtils.lerp(boss.rotation.y,face,1-Math.exp(-dt*4.2));
+     boss.rotation.y=THREE.MathUtils.lerp(boss.rotation.y,face,1-Math.exp(-bossMotionDt*4.2));
      const targetRange=BOSS_AIM_RANGE[state.bossState]??3.2;
-     if(d>targetRange+.18)boss.position.addScaledVector(dir,dt*Math.min(2.35,(d-targetRange)*1.55));
+     if(d>targetRange+.18)boss.position.addScaledVector(dir,bossMotionDt*Math.min(2.35,(d-targetRange)*1.55));
    }
  }
  if(state.bossState==='idle'){
@@ -1440,7 +1443,7 @@ function updateBoss(dt){
    head.rotation.x=Math.sin(state.time*2.2)*.05;tailPivot.rotation.y=Math.sin(state.time*2.8)*.24;resetDorsalArms(Math.min(1,dt*8));dorsalArms[0].shoulder.rotation.z+=Math.sin(state.time*1.8)*.035;dorsalArms[1].shoulder.rotation.z-=Math.sin(state.time*1.8)*.035;
    if(state.bossTimer<=0)chooseBossAttack();return;
  }
- state.bossTimer-=dt;
+ state.bossTimer-=bossMotionDt;
  if(state.bossState==='rush'){
    if(state.bossTimer>.25)boss.position.addScaledVector(dir,dt*(state.legBroken?5.2:7.4));
    head.rotation.x=-.35;
@@ -1621,7 +1624,7 @@ function updatePlayer(dt){
  if(state.attack>0){
    const w=currentWeapon(),gripDamage=twoHanded?1.16:1,gripPosture=twoHanded?1.2:1;
    const dur=[0,.46,.5,.62][state.attackStep]/w.speed*(twoHanded ? .96 : 1.04),step=state.attackStep;
-   state.attack-=dt;const p=1-state.attack/dur;
+   state.attack-=dt/PLAYER_ATTACK_MOTION_SCALE;const p=1-state.attack/dur;
    applyWeaponAttackPose(w,step,p);
    const hitAt=[0,.23,.25,.31][step]/w.speed,range=[0,3.15,3.25,3.45][step]*w.reach,damage=[0,22,25,36][step]*w.damage*gripDamage,post=[0,11,13,20][step]*w.posture*gripPosture;
    if(!state.attackHit&&state.attack<hitAt&&dist()<range){
@@ -1635,7 +1638,7 @@ function updatePlayer(dt){
    }
  }
  const toBoss=flatDir(player.position,boss.position);
- if(input.lock&&!state.rolling)player.rotation.y=lerpAngle(player.rotation.y,Math.atan2(toBoss.x,toBoss.z),1-Math.exp(-dt*12));
+ if(input.lock&&!state.rolling)player.rotation.y=lerpAngle(player.rotation.y,Math.atan2(toBoss.x,toBoss.z),1-Math.exp(-bossMotionDt*12));
  else if(!input.lock&&!state.rolling)player.rotation.y=lerpAngle(player.rotation.y,input.camYaw,1-Math.exp(-dt*13));
  if(state.rolling>0){
    const total=.5,p=1-state.rolling/total;
@@ -1668,23 +1671,23 @@ function updatePlayer(dt){
  if(state.attack<=0&&state.rolling<=0){
    if(state.parryAnim>0){
      const p=state.parryAnim/.28;
-     swordPivot.rotation.x=THREE.MathUtils.lerp(swordPivot.rotation.x,-.55,1-Math.exp(-dt*30));
-     swordPivot.rotation.y=THREE.MathUtils.lerp(swordPivot.rotation.y,-1.0+Math.sin((1-p)*Math.PI)*.7,1-Math.exp(-dt*30));
-     swordPivot.rotation.z=THREE.MathUtils.lerp(swordPivot.rotation.z,.95,1-Math.exp(-dt*30));
-     playerBody.rotation.z=THREE.MathUtils.lerp(playerBody.rotation.z,-.12,1-Math.exp(-dt*24));
+     swordPivot.rotation.x=THREE.MathUtils.lerp(swordPivot.rotation.x,-.55,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*30));
+     swordPivot.rotation.y=THREE.MathUtils.lerp(swordPivot.rotation.y,-1.0+Math.sin((1-p)*Math.PI)*.7,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*30));
+     swordPivot.rotation.z=THREE.MathUtils.lerp(swordPivot.rotation.z,.95,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*30));
+     playerBody.rotation.z=THREE.MathUtils.lerp(playerBody.rotation.z,-.12,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*24));
    }else if(state.guardBlend>.01){
      if(twoHanded){
-       weaponPivot.rotation.x=THREE.MathUtils.lerp(weaponPivot.rotation.x,-.42,1-Math.exp(-dt*20));
-       weaponPivot.rotation.y=THREE.MathUtils.lerp(weaponPivot.rotation.y,-.72,1-Math.exp(-dt*20));
-       weaponPivot.rotation.z=THREE.MathUtils.lerp(weaponPivot.rotation.z,.78,1-Math.exp(-dt*20));
-       shieldPivot.rotation.y=THREE.MathUtils.lerp(shieldPivot.rotation.y,0,1-Math.exp(-dt*20));
+       weaponPivot.rotation.x=THREE.MathUtils.lerp(weaponPivot.rotation.x,-.42,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*20));
+       weaponPivot.rotation.y=THREE.MathUtils.lerp(weaponPivot.rotation.y,-.72,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*20));
+       weaponPivot.rotation.z=THREE.MathUtils.lerp(weaponPivot.rotation.z,.78,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*20));
+       shieldPivot.rotation.y=THREE.MathUtils.lerp(shieldPivot.rotation.y,0,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*20));
      }else{
-       weaponPivot.rotation.x=THREE.MathUtils.lerp(weaponPivot.rotation.x,-.18,1-Math.exp(-dt*20));
-       weaponPivot.rotation.y=THREE.MathUtils.lerp(weaponPivot.rotation.y,-.15,1-Math.exp(-dt*20));
-       weaponPivot.rotation.z=THREE.MathUtils.lerp(weaponPivot.rotation.z,.22,1-Math.exp(-dt*20));
-       shieldPivot.rotation.x=THREE.MathUtils.lerp(shieldPivot.rotation.x,-.08,1-Math.exp(-dt*24));
-       shieldPivot.rotation.y=THREE.MathUtils.lerp(shieldPivot.rotation.y,-1.0,1-Math.exp(-dt*24));
-       shieldPivot.position.z=THREE.MathUtils.lerp(shieldPivot.position.z,.38,1-Math.exp(-dt*24));
+       weaponPivot.rotation.x=THREE.MathUtils.lerp(weaponPivot.rotation.x,-.18,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*20));
+       weaponPivot.rotation.y=THREE.MathUtils.lerp(weaponPivot.rotation.y,-.15,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*20));
+       weaponPivot.rotation.z=THREE.MathUtils.lerp(weaponPivot.rotation.z,.22,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*20));
+       shieldPivot.rotation.x=THREE.MathUtils.lerp(shieldPivot.rotation.x,-.08,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*24));
+       shieldPivot.rotation.y=THREE.MathUtils.lerp(shieldPivot.rotation.y,-1.0,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*24));
+       shieldPivot.position.z=THREE.MathUtils.lerp(shieldPivot.position.z,.38,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*24));
      }
      playerBody.rotation.x=THREE.MathUtils.lerp(playerBody.rotation.x,-.09*state.guardBlend,1-Math.exp(-dt*18));
      playerBody.rotation.z=THREE.MathUtils.lerp(playerBody.rotation.z,-.06*state.guardBlend,1-Math.exp(-dt*18));
