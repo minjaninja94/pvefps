@@ -212,6 +212,7 @@ const neck=part(boss,new THREE.CapsuleGeometry(.3,.62,5,9),skin,[0,4.55,.72],[0,
 
 // Beautiful adult face as a readable focal point.
 const head=part(boss,new THREE.SphereGeometry(.72,20,14),skin,[0,5.28,.82],[0,0,0],[.92,1.18,.78]);
+head.visible=false;
 const faceMask=part(head,new THREE.SphereGeometry(.64,18,12),skin,[0,-.02,.19],[0,0,0],[.88,1.06,.5]);
 const brow=part(head,new THREE.BoxGeometry(.95,.09,.12),skinShadow,[0,.2,.6],[-.08,0,0]);
 const eyeL=part(head,new THREE.SphereGeometry(.065,10,7),eyeMat,[-.22,.12,.64],[0,0,0],[1.25,.62,.5]);
@@ -251,7 +252,7 @@ const bossWomanBones={};
 const bossWomanRest={};
 const proceduralWoman=[waist,chest,sternum,bustL,bustR,collar,neck,head];
 const womanTorsoClipLow=new THREE.Plane(new THREE.Vector3(0,-1,0),2.58);
-const womanTorsoClipHigh=new THREE.Plane(new THREE.Vector3(0,1,0),-4.58);
+const womanTorsoClipHigh=new THREE.Plane(new THREE.Vector3(0,1,0),-5.45);
 let animeHeadVisual=null,animeHeadPivot=null,animeBossVRM=null,animeHeadReady=false;
 
 function cacheBossWomanBone(name){
@@ -288,7 +289,7 @@ function setBossMorph(name,value,speed=10,dt=.016){
 assetLoader.load('./assets/models/boss/mpfb-female.glb',gltf=>{
  bossWomanVisual=gltf.scene;
  bossWomanVisual.name='BellamoreHighDetailBody';
- bossWomanVisual.position.set(0,.12,.42);
+ bossWomanVisual.position.set(0,.06,.5);
  bossWomanVisual.scale.setScalar(3.0);
  bossWomanVisual.traverse(o=>{
    if(o.isMesh){
@@ -314,13 +315,14 @@ assetLoader.load('./assets/models/boss/mpfb-female.glb',gltf=>{
  for(const name of ['LeftBreast','RightBreast']){
    const b=bossWomanBones[name],base=bossWomanRest[name];
    if(b&&base){
-     b.scale.set(base.scale.x*2.2,base.scale.y*1.72,base.scale.z*2.48);
+     b.scale.set(base.scale.x*3.15,base.scale.y*2.15,base.scale.z*3.65);
      const side=name==='LeftBreast'?-1:1;
-     b.position.x=base.position.x+side*.028;
-     b.position.z=base.position.z+.035;
+     b.position.x=base.position.x+side*.042;
+     b.position.y=base.position.y-.01;
+     b.position.z=base.position.z+.085;
    }
  }
- if(animeHeadReady){
+ {
    const hb=bossWomanBones.Head,hr=bossWomanRest.Head;
    if(hb&&hr)hb.scale.setScalar(.001);
  }
@@ -775,14 +777,23 @@ function bossImpact(range,dmg,posture,unblockable=false){
    hurtPlayer(dmg,posture,unblockable);
  }
 }
+function pointSegmentDistance(p,a,b){
+ const ab=new THREE.Vector3().subVectors(b,a),ap=new THREE.Vector3().subVectors(p,a);
+ const den=ab.lengthSq();
+ const t=den>1e-6?clamp(ap.dot(ab)/den,0,1):0;
+ const q=a.clone().addScaledVector(ab,t);
+ return p.distanceTo(q);
+}
 function bossArmImpact(indices,radius,dmg,posture,unblockable=false){
  if(state.bossHit)return;
  const ids=Array.isArray(indices)?indices:[indices];
+ const pp=player.position.clone();pp.y+=1.0;
  let touched=false;
  for(const i of ids){
-   const p=new THREE.Vector3();dorsalArms[i].wrist.getWorldPosition(p);
-   const pp=player.position.clone();pp.y+=1.0;
-   if(p.distanceTo(pp)<=radius){touched=true;break}
+   const elbow=new THREE.Vector3(),wrist=new THREE.Vector3();
+   dorsalArms[i].elbow.getWorldPosition(elbow);
+   dorsalArms[i].wrist.getWorldPosition(wrist);
+   if(pointSegmentDistance(pp,elbow,wrist)<=radius||wrist.distanceTo(pp)<=radius*1.12){touched=true;break}
  }
  if(!touched)return;
  state.bossHit=true;
@@ -857,6 +868,14 @@ function animateBossTelegraph(dt){
    dorsalArms[0].elbow.rotation.z=1.15;dorsalArms[1].elbow.rotation.z=-1.15;L(body.rotation,'x',-.22,10);L(chest.rotation,'x',-.26,10);L(head.rotation,'x',.12,9);
  }
 }
+const BOSS_AIM_CUTOFF={
+ arm_cross:.36,arm_double_slam:.38,arm_sweep:.4,arm_uppercut:.31,
+ arm_grab:.34,arm_barrage:1.42,arm_guardbreak:.34,arm_crush:.36
+};
+const BOSS_AIM_RANGE={
+ arm_cross:3.35,arm_double_slam:3.1,arm_sweep:3.6,arm_uppercut:3.0,
+ arm_grab:2.85,arm_barrage:3.2,arm_guardbreak:3.05,arm_crush:2.95
+};
 function updateBoss(dt){
  if(state.bossHp<=0)setBossVisualAction('dead');
  else if(state.bossState==='idle')setBossVisualAction(dist()>4.2?'walk':'idle');
@@ -883,6 +902,14 @@ function updateBoss(dt){
  }
  const d=dist(),dir=flatDir(boss.position,player.position),face=Math.atan2(dir.x,dir.z);
  if(state.bossState==='idle')boss.rotation.y=THREE.MathUtils.lerp(boss.rotation.y,face,dt*5);
+ else if(state.bossState.startsWith('arm_')){
+   const cutoff=BOSS_AIM_CUTOFF[state.bossState]??0;
+   if(state.bossTimer>cutoff){
+     boss.rotation.y=THREE.MathUtils.lerp(boss.rotation.y,face,1-Math.exp(-dt*4.2));
+     const targetRange=BOSS_AIM_RANGE[state.bossState]??3.2;
+     if(d>targetRange+.25)boss.position.addScaledVector(dir,dt*Math.min(1.7,(d-targetRange)*1.25));
+   }
+ }
  if(state.bossState==='idle'){
    state.bossTimer-=dt;
    if(d>4.2)boss.position.addScaledVector(dir,dt*(state.legBroken?1.45:2.05));else if(d<2.8)boss.position.addScaledVector(dir,-dt*.55);
@@ -931,7 +958,7 @@ function updateBoss(dt){
      dorsalArms[0].upperPivot.rotation.z=-1.05+e*2.75;dorsalArms[1].upperPivot.rotation.z=1.05-e*2.75;
      dorsalArms[0].elbow.rotation.z=e*1.0;dorsalArms[1].elbow.rotation.z=-e*1.0;
      trailArms(1.05);
-     if(inBossHitWindow(state.bossTimer,.26,.17))bossArmImpact([0,1],1.18,24,30,false);
+     if(inBossHitWindow(state.bossTimer,.26,.17))bossArmImpact([0,1],1.34,24,30,false);
    }
    if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.72}
  }else if(state.bossState==='arm_double_slam'){
@@ -941,7 +968,7 @@ function updateBoss(dt){
      trailArms(1.2);
      if(inBossHitWindow(state.bossTimer,.26,.16)){
        bossFxOnce('double-slam',()=>{spawnDustBurst(bossGroundPoint(2.0),1.75);state.shake=Math.max(state.shake,.24)});
-       bossArmImpact([0,1],1.28,36,48,false);
+       bossArmImpact([0,1],1.42,36,48,false);
      }
    }
    if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.96}
@@ -953,7 +980,7 @@ function updateBoss(dt){
      dorsalArms[0].elbow.rotation.z=e*.5;
      dorsalArms[1].shoulder.rotation.y=-.2+e*.7;
      spawnArmTrail(dorsalArms[0],1.25);
-     if(inBossHitWindow(state.bossTimer,.27,.17))bossArmImpact(0,1.22,28,36,false);
+     if(inBossHitWindow(state.bossTimer,.27,.17))bossArmImpact(0,1.35,28,36,false);
    }
    if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.78}
  }else if(state.bossState==='arm_uppercut'){
@@ -961,7 +988,7 @@ function updateBoss(dt){
      const p=clamp(1-state.bossTimer/.36,0,1),e=Math.sin(p*Math.PI*.86);
      const a=dorsalArms[1];a.shoulder.rotation.z=-1.55+e*2.7;a.elbow.rotation.z=-1.6+e*2.35;a.wrist.rotation.x=.55-e*.85;
      body.rotation.z=-.24+e*.34;spawnArmTrail(a,1.3);
-     if(inBossHitWindow(state.bossTimer,.2,.12))bossArmImpact(1,1.08,30,42,false);
+     if(inBossHitWindow(state.bossTimer,.2,.12))bossArmImpact(1,1.24,30,42,false);
    }
    if(state.bossTimer<=0){resetDorsalArms(1);body.rotation.z=0;state.bossState='idle';state.bossTimer=.72}
  }else if(state.bossState==='arm_grab'){
@@ -969,7 +996,7 @@ function updateBoss(dt){
      const p=clamp(1-state.bossTimer/.4,0,1),e=Math.sin(p*Math.PI*.82);
      const a=dorsalArms[0];a.shoulder.rotation.x=-.72+e*.92;a.shoulder.rotation.y=-1.48+e*1.5;a.elbow.rotation.z=1.55-e*1.2;a.wrist.rotation.y=-.7+e*.85;
      spawnArmTrail(a,1.15);
-     if(inBossHitWindow(state.bossTimer,.22,.13))bossArmImpact(0,1.12,42,58,true);
+     if(inBossHitWindow(state.bossTimer,.22,.13))bossArmImpact(0,1.28,42,58,true);
    }
    if(state.bossTimer<=0){setDanger(false);resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.0}
  }else if(state.bossState==='arm_barrage'){
@@ -981,7 +1008,7 @@ function updateBoss(dt){
      if(phase!==state.bossPatternStep){state.bossPatternStep=phase;state.bossHit=false;state.bossFxStamp=''}
      if(s>.93){
        bossFxOnce('barrage-'+phase,()=>spawnDustBurst(bossGroundPoint(1.45),.55));
-       bossArmImpact(idx,1.0,14,18,false);
+       bossArmImpact(idx,1.14,14,18,false);
      }
    }
    if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.86}
@@ -992,7 +1019,7 @@ function updateBoss(dt){
      trailArms(1.35);
      if(inBossHitWindow(state.bossTimer,.22,.13)){
        bossFxOnce('guardbreak',()=>{spawnDustBurst(bossGroundPoint(1.7),1.35);state.shake=Math.max(state.shake,.2)});
-       bossArmImpact([0,1],1.22,22,72,false);
+       bossArmImpact([0,1],1.34,22,72,false);
      }
    }
    if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.0}
@@ -1004,7 +1031,7 @@ function updateBoss(dt){
      trailArms(1.2);
      if(inBossHitWindow(state.bossTimer,.23,.14)){
        bossFxOnce('crush',()=>spawnDustBurst(bossGroundPoint(1.25),.9));
-       bossArmImpact([0,1],1.18,46,64,true);
+       bossArmImpact([0,1],1.32,46,64,true);
      }
    }
    if(state.bossTimer<=0){setDanger(false);resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.08}
