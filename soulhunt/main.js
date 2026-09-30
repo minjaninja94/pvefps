@@ -119,11 +119,56 @@ assetLoader.load('./assets/models/kaykit/Knight.glb',gltf=>{
   knightVisual.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
   player.children.filter(o=>o.isMesh).forEach(m=>m.visible=false);
   player.add(knightVisual);
+  setupKnightAnimations(gltf);
 },undefined,err=>console.warn('Local knight asset unavailable; procedural knight remains active.',err));
 
-// Procedural knight drives all combat poses. Keeping these no-op hooks makes the loop robust.
-let playerMixer=null;
-function setPlayerVisualAction(){}
+// KayKit knight animation state machine. Falls back to procedural poses when clips are absent.
+let playerMixer=null,playerActions={},playerActionName='';
+function pickClip(clips,terms){
+ const lower=clips.map(x=>({clip:x,name:(x.name||'').toLowerCase()}));
+ for(const term of terms){
+   const found=lower.find(x=>x.name.includes(term));
+   if(found)return found.clip;
+ }
+ return null;
+}
+function setupKnightAnimations(gltf){
+ if(!gltf.animations?.length)return;
+ playerMixer=new THREE.AnimationMixer(knightVisual);
+ const clips=gltf.animations;
+ const defs={
+   idle:['idle'],
+   walk:['walk'],
+   run:['run'],
+   attack:['melee_attack','attack_slice','attack_chop','attack'],
+   guard:['block','blocking','guard'],
+   roll:['roll','dodge'],
+   hit:['hit','damage'],
+   dead:['death','dead']
+ };
+ for(const [key,terms] of Object.entries(defs)){
+   const clip=pickClip(clips,terms);
+   if(clip){
+     const a=playerMixer.clipAction(clip);
+     if(key==='dead'||key==='hit'||key==='roll'||key==='attack'){a.setLoop(THREE.LoopOnce,1);a.clampWhenFinished=true}
+     playerActions[key]=a;
+   }
+ }
+ console.info('Knight animations:',clips.map(x=>x.name));
+ setPlayerVisualAction('idle',0);
+}
+function setPlayerVisualAction(name,fade=.12){
+ if(!playerMixer)return;
+ if(!playerActions[name])name=playerActions.idle?'idle':Object.keys(playerActions)[0];
+ if(!name||playerActionName===name)return;
+ const prev=playerActions[playerActionName],next=playerActions[name];
+ if(!next)return;
+ next.reset();
+ if(!['dead','hit','roll','attack'].includes(name))next.setLoop(THREE.LoopRepeat,Infinity);
+ next.play();
+ if(prev&&prev!==next)prev.crossFadeTo(next,fade,false);
+ playerActionName=name;
+}
 
 const boss=new THREE.Group();scene.add(boss);
 const shell=mat(0x3f4548,.58,.47),shellDark=mat(0x262b2e,.48,.62),meat=mat(0x452d28,.02,.88),horn=mat(0x807561,.18,.65);
@@ -488,8 +533,14 @@ function applyWeaponAttackPose(w,step,p){
  weaponPivot.scale.setScalar((twoHanded?1.06:1)*(1+(m-1)*.03));
 }
 function updatePlayer(dt){
- if(state.dead){setPlayerVisualAction('dead');return;}
- setPlayerVisualAction(state.attack>0?'attack':'idle');
+ if(state.dead){setPlayerVisualAction('dead');if(playerMixer)playerMixer.update(dt);return;}
+ const axes=getMoveAxes(),moving=axes.x!==0||axes.z!==0,sprinting=input.keys.has('ShiftLeft')||input.keys.has('ShiftRight');
+ let anim='idle';
+ if(state.rolling>0)anim='roll';
+ else if(state.attack>0)anim='attack';
+ else if(input.guard)anim='guard';
+ else if(moving)anim=sprinting?'run':'walk';
+ setPlayerVisualAction(anim);
  state.stamina=Math.min(100,state.stamina+dt*(state.attack||state.rolling?10:29));
  state.posture=Math.max(0,state.posture-dt*(input.guard?5:14));
  state.bossPosture=Math.max(0,state.bossPosture-dt*(state.bossState==='idle'?4.5:1.3));
@@ -570,6 +621,7 @@ function updatePlayer(dt){
      shieldPivot.position.z=THREE.MathUtils.lerp(shieldPivot.position.z,.05,1-Math.exp(-dt*16));
    }
  }
+ if(playerMixer)playerMixer.update(dt);
 }
 
 const camPos=new THREE.Vector3();
