@@ -572,7 +572,7 @@ assetLoader.load('./assets/models/boss/centaur-beast.glb',gltf=>{
  let box=new THREE.Box3().setFromObject(bossLowerVisual,true),size=new THREE.Vector3();box.getSize(size);
  const horizontal=Math.max(size.x,size.z,.001);
  bossLowerVisual.scale.setScalar(4.75/horizontal);
- bossLowerVisual.rotation.y=Math.PI;
+ bossLowerVisual.rotation.y=0;
  bossLowerVisual.updateMatrixWorld(true);
  box=new THREE.Box3().setFromObject(bossLowerVisual,true);
  bossLowerVisual.position.y-=box.min.y;
@@ -994,9 +994,15 @@ function animateGiantessPresence(dt){
  }
 
  if(bossLowerMixer){
-   const desired=state.bossHp<=0?'death':(state.bossStagger>0?'idle_hitreact1':(state.bossState==='idle'&&dist()>4.15?'walk':'idle'));
-   setBossLowerAction(desired);
-   bossLowerMixer.update(dt);
+   if(state.bossHp<=0){
+     setBossLowerAction('idle',.08);
+     bossLowerMixer.timeScale=0;
+   }else{
+     bossLowerMixer.timeScale=1;
+     const desired=state.bossStagger>0?'idle_hitreact1':(state.bossState==='idle'&&dist()>4.15?'walk':'idle');
+     setBossLowerAction(desired);
+     bossLowerMixer.update(dt);
+   }
  }
 }
 function updateSparks(dt){
@@ -1273,7 +1279,14 @@ function updateBoss(dt){
    if(!state.tailBroken)tailPivot.rotation.x=THREE.MathUtils.lerp(tailPivot.rotation.x,0,dt*14);
  }
  if(!['slam','peril','rush','arm_double_slam'].includes(state.bossState))body.position.y=THREE.MathUtils.lerp(body.position.y,BOSS_REST.bodyY,1-Math.exp(-dt*10));
- if(state.bossHp<=0){boss.rotation.z=THREE.MathUtils.lerp(boss.rotation.z,-1.15,dt*2);return}
+ if(state.bossHp<=0){
+   const fall=1-Math.exp(-dt*2.25);
+   boss.rotation.z=THREE.MathUtils.lerp(boss.rotation.z,-1.18,fall);
+   boss.rotation.x=THREE.MathUtils.lerp(boss.rotation.x,.16,fall);
+   boss.position.y=THREE.MathUtils.lerp(boss.position.y,-.34,fall);
+   if(animeHeadPivot)animeHeadPivot.rotation.x=THREE.MathUtils.lerp(animeHeadPivot.rotation.x,.28,fall);
+   return
+ }
  if(state.bossStagger>0){
    setDanger(false);state.bossStagger-=dt;boss.rotation.z=Math.sin(state.time*20)*.045;
    if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.65;boss.rotation.z=0}
