@@ -547,6 +547,7 @@ function setBossMorph(name,value,speed=10,dt=.016){
 
 
 const animeBossBones={},animeBossBoneRest={};
+const bossBustBones={},bossBustRest={};
 const animeBossArmParts={
  leftUpper:null,leftLower:null,leftHand:null,
  rightUpper:null,rightLower:null,rightHand:null
@@ -922,6 +923,16 @@ async function loadAnimeBossUpper(){
      }
      for(const name of ['J_Sec_L_Bust2','J_Sec_R_Bust2']){
        const b=root.getObjectByName(name);if(b)b.scale.multiplyScalar(1.45);
+     }
+     for(const [key,name] of Object.entries({
+       left1:'J_Sec_L_Bust1',right1:'J_Sec_R_Bust1',
+       left2:'J_Sec_L_Bust2',right2:'J_Sec_R_Bust2'
+     })){
+       const b=root.getObjectByName(name);
+       if(b){
+         bossBustBones[key]=b;
+         bossBustRest[key]={position:b.position.clone(),rotation:b.rotation.clone()};
+       }
      }
 
      console.info('Bellamore: full anime centaur upper body loaded');
@@ -1311,12 +1322,12 @@ addEventListener('contextmenu',e=>e.preventDefault());
 
 const ui={hp:document.querySelector('#hp'),stamina:document.querySelector('#stamina'),posture:document.querySelector('#posture'),bossHp:document.querySelector('#bossHp'),bossPosture:document.querySelector('#bossPosture'),msg:document.querySelector('#message'),danger:document.querySelector('#danger'),head:document.querySelector('#headPart'),leg:document.querySelector('#legPart'),spike:document.querySelector('#spikePart'),tail:document.querySelector('#tailPart'),weapon:document.querySelector('#weaponHud'),lockDot:document.querySelector('#lockDot')};
 const potionHud=document.createElement('div');
-potionHud.style.cssText='position:fixed;left:16px;bottom:48px;z-index:30;color:#e8c56a;background:rgba(8,8,8,.72);border:1px solid #8e6d31;padding:7px 12px;font:600 13px sans-serif;letter-spacing:.08em;pointer-events:none';
+potionHud.style.cssText='position:fixed;left:24px;bottom:145px;z-index:30;color:#e8c56a;background:rgba(8,8,8,.72);border:1px solid #8e6d31;padding:7px 12px;font:600 13px sans-serif;letter-spacing:.08em;pointer-events:none';
 document.body.appendChild(potionHud);
 
 const state={
  hp:100,posture:0,stamina:100,staminaMax:100,staminaRegenDelay:0,exhausted:0,potions:3,potionTimer:0,potionHealDone:false,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollElapsed:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
- bossMaxHp:11200,bossHp:11200,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',time:0,shake:0,hitstop:0,
+ bossMaxHp:11200,bossHp:11200,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',bossBustImpulse:0,time:0,shake:0,hitstop:0,
  headHp:100,legHp:150,tailHp:130,tailBroken:false,legBroken:false,headBroken:false,danger:false,reaction:0,reactionZone:'body'
 };
 function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeout(flash.t);flash.t=setTimeout(()=>ui.msg.style.opacity='0',d*1000)}
@@ -1420,6 +1431,56 @@ function updateDustFX(dt){
    if(fx.life<=0){scene.remove(fx.ring,fx.pts);fx.ring.geometry.dispose();fx.ring.material.dispose();fx.pts.geometry.dispose();fx.pts.material.dispose();dustFX.splice(d,1)}
  }
 }
+const bossShockwaves=[];
+function spawnBossShockwave(radius=4.8,dmg=24){
+ const p=boss.position.clone();p.y=.045;
+ const ring=new THREE.Mesh(
+   new THREE.RingGeometry(.62,.84,48),
+   new THREE.MeshBasicMaterial({color:0xd9c8aa,transparent:true,opacity:.72,depthWrite:false,side:THREE.DoubleSide})
+ );
+ ring.rotation.x=-Math.PI/2;ring.position.copy(p);scene.add(ring);
+ bossShockwaves.push({ring,life:.62,max:.62,radius});
+
+ const dx=player.position.x-boss.position.x,dz=player.position.z-boss.position.z;
+ const groundDist=Math.hypot(dx,dz);
+ if(groundDist<=radius){
+   if(state.invuln>0)flash('충격파 회피',.16);
+   else hurtPlayer(dmg,28,false);
+ }
+ spawnDustBurst(p.clone(),1.8);
+ state.shake=Math.max(state.shake,.28);
+ state.bossBustImpulse=Math.max(state.bossBustImpulse,1);
+}
+function updateBossShockwaves(dt){
+ for(let i=bossShockwaves.length-1;i>=0;i--){
+   const s=bossShockwaves[i];s.life-=dt;
+   const p=1-clamp(s.life/s.max,0,1);
+   const scale=.8+p*s.radius*1.6;
+   s.ring.scale.set(scale,scale,scale);
+   s.ring.material.opacity=(1-p)*.72;
+   if(s.life<=0){
+     scene.remove(s.ring);s.ring.geometry.dispose();s.ring.material.dispose();
+     bossShockwaves.splice(i,1);
+   }
+ }
+}
+function applyBossBustBounce(dt){
+ state.bossBustImpulse=Math.max(0,state.bossBustImpulse-dt*2.1);
+ const impulse=state.bossBustImpulse;
+ const wave=Math.sin(state.time*25)*impulse;
+ const settle=Math.sin(state.time*12)*impulse*.38;
+ for(const [key,b] of Object.entries(bossBustBones)){
+   const rest=bossBustRest[key];if(!b||!rest)continue;
+   const side=key.startsWith('left')?-1:1;
+   const layer=key.endsWith('2')?.62:1;
+   const a=(wave+settle)*layer;
+   b.position.x=THREE.MathUtils.lerp(b.position.x,rest.position.x+side*a*.018,1-Math.exp(-dt*18));
+   b.position.y=THREE.MathUtils.lerp(b.position.y,rest.position.y-a*.105,1-Math.exp(-dt*18));
+   b.position.z=THREE.MathUtils.lerp(b.position.z,rest.position.z+a*.14,1-Math.exp(-dt*18));
+   b.rotation.x=THREE.MathUtils.lerp(b.rotation.x,rest.rotation.x-a*.2,1-Math.exp(-dt*18));
+   b.rotation.z=THREE.MathUtils.lerp(b.rotation.z,rest.rotation.z+side*a*.055,1-Math.exp(-dt*18));
+ }
+}
 function bossGroundPoint(offsetZ=1.6){
  const p=new THREE.Vector3(0,0,offsetZ);boss.localToWorld(p);p.y=0;return p;
 }
@@ -1473,6 +1534,12 @@ function animateGiantessPresence(dt){
      torsoX=-.2;headX=.08;
      if(t>.42){lz=-.06;rz=.06;ly=-1.18;ry=1.18;llx=-.28;rlx=-.28}
      else{const s=Math.sin(clamp((.42-t)/.34,0,1)*Math.PI);ly=-1.18+s*1.22;ry=1.18-s*1.22;lz=-.06-s*.72;rz=.06+s*.72;torsoX=-.2+s*.32}
+    }else if(st==='bounce_quake'){
+     const elapsed=3.45-t,cycle=clamp((elapsed-.24)/.9,0,2.999),local=cycle-Math.floor(cycle);
+     const air=Math.sin(local*Math.PI);
+     torsoX=-.08+air*.24;
+     torsoZ=Math.sin(local*Math.PI*2)*.045;
+     headX=-air*.08;
    }
 
    setAnimeBossBone('spine',torsoX*.35,torsoY*.35,torsoZ*.35,9,dt);
@@ -1496,6 +1563,7 @@ function animateGiantessPresence(dt){
      }catch(_){}
    }
    animeBossVRM?.update?.(dt);
+   applyBossBustBounce(dt);
  }
 
  if(bossLowerMixer){
@@ -1662,12 +1730,12 @@ function hitBoss(base,posture=12){
 function chooseBossAttack(){
  if(state.bossHp<=0)return;
  setDanger(false);
- const dorsal=['arm_cross','arm_double_slam','arm_sweep','arm_uppercut','arm_grab','arm_barrage','arm_guardbreak','arm_crush','spike_triple','spike_fan'];
+ const dorsal=['arm_cross','arm_double_slam','arm_sweep','arm_uppercut','arm_grab','arm_barrage','arm_guardbreak','arm_crush','spike_triple','spike_fan','bounce_quake'];
  state.bossState=dorsal[Math.floor(Math.random()*dorsal.length)];
  state.bossTimer={
    arm_cross:1.26,arm_double_slam:1.46,arm_sweep:1.32,arm_uppercut:1.16,
    arm_grab:1.5,arm_barrage:1.92,arm_guardbreak:1.46,arm_crush:1.58,
-   spike_triple:1.36,spike_fan:1.42
+   spike_triple:1.36,spike_fan:1.42,bounce_quake:3.45
  }[state.bossState];
  state.bossHit=false;state.bossPatternStep=0;state.bossFxStamp='';
  if(state.bossState==='arm_grab'||state.bossState==='arm_crush')setDanger(true);
@@ -1832,7 +1900,7 @@ function updateBoss(dt){
  }
  const d=dist(),dir=flatDir(boss.position,player.position),face=Math.atan2(dir.x,dir.z);
  if(state.bossState==='idle'&&state.bossTimer<=.58)boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*5));
- else if(state.bossState==='spike_triple'||state.bossState==='spike_fan'){
+ else if(state.bossState==='spike_triple'||state.bossState==='spike_fan'||state.bossState==='bounce_quake'){
    if(state.bossTimer>.58)boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*5.5));
  }else if(state.bossState.startsWith('arm_')){
    const cutoff=BOSS_AIM_CUTOFF[state.bossState]??0;
@@ -1974,6 +2042,32 @@ function updateBoss(dt){
      }
    }
    if(state.bossTimer<=0){setDanger(false);resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.48}
+ }else if(state.bossState==='bounce_quake'){
+   const total=3.45,elapsed=total-state.bossTimer;
+   if(elapsed<.24){
+     boss.position.y=THREE.MathUtils.lerp(boss.position.y,0,1-Math.exp(-dt*12));
+   }else{
+     const cycle=clamp((elapsed-.24)/.9,0,2.999);
+     const jumpIndex=Math.floor(cycle),local=cycle-jumpIndex;
+     const air=Math.sin(local*Math.PI);
+     boss.position.y=air*1.45;
+
+     // Slight forward drift on each leap; committed landing creates the punishable shockwave.
+     if(local<.58){
+       const leapDir=flatDir(boss.position,player.position);
+       boss.position.addScaledVector(leapDir,dt*(1.25+.25*jumpIndex));
+     }
+     if(local>=.78&&state.bossPatternStep===jumpIndex){
+       spawnBossShockwave(4.6+.35*jumpIndex,22+2*jumpIndex);
+       state.bossPatternStep++;
+     }
+   }
+   if(state.bossTimer<=0){
+     boss.position.y=0;
+     state.bossState='idle';
+     state.bossTimer=1.45;
+     state.bossPatternStep=0;
+   }
  }else if(state.bossState==='spike_triple'){
    // Three discrete shots: readable, rollable, and ideal for punishing a flask at range.
    const shots=[
@@ -2209,6 +2303,6 @@ function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=i
 function loop(){
  let dt=Math.min(clock.getDelta(),.033);state.time+=dt;
  if(state.hitstop>0){state.hitstop-=dt;dt=0}else{updatePlayer(dt);updateBoss(dt)}
-if(playerMixer)playerMixer.update(Math.max(dt,.001));animateVroidPlayer(Math.max(dt,.001));updateArmTrails(Math.max(dt,.001));updateDustFX(Math.max(dt,.001));updateSparks(Math.max(dt,.001));updateBossSpikeProjectiles(Math.max(dt,.001));updateCamera(Math.max(dt,.001));updateUI();renderer.render(scene,camera);requestAnimationFrame(loop);
+if(playerMixer)playerMixer.update(Math.max(dt,.001));animateVroidPlayer(Math.max(dt,.001));updateArmTrails(Math.max(dt,.001));updateDustFX(Math.max(dt,.001));updateSparks(Math.max(dt,.001));updateBossSpikeProjectiles(Math.max(dt,.001));updateBossShockwaves(Math.max(dt,.001));updateCamera(Math.max(dt,.001));updateUI();renderer.render(scene,camera);requestAnimationFrame(loop);
 }
 loop();
