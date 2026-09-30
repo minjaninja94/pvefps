@@ -1,2 +1,75 @@
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#08090b;color:#eee;font-family:system-ui,-apple-system,Segoe UI,sans-serif}#game{display:block;width:100%;height:100%}#hud{position:fixed;inset:0;z-index:2;pointer-events:none;padding:18px;text-shadow:0 2px 4px #000}#brand{font-weight:800;letter-spacing:.08em;margin-bottom:26px}#brand small{font-size:10px;opacity:.48;margin-left:8px}.bar{width:280px;height:14px;background:#241b1b;border:1px solid #6f5f54;margin:8px 0;position:relative}.bar span{position:absolute;top:-18px;font-size:10px;letter-spacing:.12em}.bar i,.bossbar i{display:block;height:100%;width:100%;background:#b84136;transition:width .12s}.bar.stamina i{background:#67a85a}.bar.stamina{background:#172218}.bar.stamina.exhausted i{background:#8a8a76}.bar.posture i,.bossbar.posture i{background:#d7b05a}.bar.posture{background:#252016}.bossbar.posture{height:5px;margin-top:5px}#boss{position:absolute;top:22px;left:50%;transform:translateX(-50%);width:min(560px,70vw);text-align:center}#boss b{font-size:13px;letter-spacing:.18em}.bossbar{height:10px;background:#201b1b;border:1px solid #77685d;margin-top:8px}#parts{font-size:10px;margin-top:8px;opacity:.68;letter-spacing:.04em}#parts em{font-style:normal;color:#d7b05a}#hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:12px;opacity:.75;white-space:nowrap}#message{position:absolute;top:44%;left:50%;transform:translate(-50%,-50%);font-size:36px;font-weight:800;letter-spacing:.08em;opacity:0;transition:opacity .12s}#danger{position:absolute;top:31%;left:50%;transform:translateX(-50%) scale(.7);font:900 72px Georgia,serif;color:#ff3b2f;opacity:0;filter:drop-shadow(0 0 12px #d00);transition:opacity .08s,transform .08s}#danger.on{opacity:1;transform:translateX(-50%) scale(1)}@media(max-width:700px){#hint{font-size:9px;white-space:normal;width:90%;text-align:center}.bar{width:220px}#boss{width:62vw}#danger{font-size:58px}}#weaponHud{position:absolute;left:18px;bottom:54px;padding:8px 11px;border:1px solid #ffffff24;background:#08090bcc;font-size:12px;letter-spacing:.06em;color:#dfd5c5}
-#lockDot{position:absolute;left:50%;top:50%;width:12px;height:12px;border:2px solid #fff;border-radius:50%;transform:translate(-50%,-50%) scale(.82);opacity:0;box-shadow:0 0 7px #000,0 0 10px #fff8;transition:opacity .1s,transform .12s;z-index:5}#lockDot.on{opacity:1;transform:translate(-50%,-50%) scale(1)}#lockDot::after{content:"";position:absolute;left:50%;top:50%;width:3px;height:3px;border-radius:50%;background:#fff;transform:translate(-50%,-50%)}body.pointer-free #game{cursor:none}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#060708;color:#eee;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+#game{display:block;width:100%;height:100%}
+#hud{position:fixed;inset:0;z-index:2;pointer-events:none;padding:20px 24px;text-shadow:0 2px 4px #000}
+
+#brand{font-weight:900;letter-spacing:.16em;margin-bottom:30px;color:#f0e7d6;font-size:16px}
+#brand small{font-size:9px;opacity:.52;margin-left:10px;color:#c9bca7}
+
+/* Dark-Souls-style long, high-contrast player gauges */
+.bar{
+  width:min(560px,34vw);height:18px;margin:10px 0;position:relative;
+  background:linear-gradient(#241b1b,#120d0d);
+  border:1px solid #8a7867;
+  box-shadow:0 0 0 1px #000,inset 0 1px 2px #ffffff18,inset 0 -3px 5px #0008,0 2px 8px #000a
+}
+.bar::after,.bossbar::after{content:"";position:absolute;inset:1px;border-top:1px solid #ffffff1c;pointer-events:none}
+.bar span{position:absolute;top:-18px;font-size:10px;font-weight:800;letter-spacing:.16em;color:#d9ccb9}
+.bar i,.bossbar i{display:block;height:100%;width:100%;transition:width .1s linear;box-shadow:inset 0 0 9px #0005}
+.bar i{background:linear-gradient(90deg,#5b0808 0%,#a91818 55%,#e04435 100%)}
+.bar.stamina{background:linear-gradient(#152017,#0b130c)}
+.bar.stamina i{background:linear-gradient(90deg,#285f20 0%,#59a846 55%,#8bd15f 100%)}
+.bar.stamina.exhausted i{background:#89866e}
+.bar.posture{background:linear-gradient(#282112,#151107);height:15px}
+.bar.posture i{background:linear-gradient(90deg,#7c5716,#cf9e37 58%,#f0c76b)}
+
+#boss{
+  position:absolute;left:50%;bottom:28px;top:auto;transform:translateX(-50%);
+  width:min(1500px,84vw);text-align:left
+}
+#boss b{
+  display:block;font:700 18px/1.2 Georgia,"Times New Roman",serif;
+  letter-spacing:.12em;color:#e6dcc9;margin:0 0 9px 4px;
+  text-shadow:0 2px 5px #000,0 0 10px #000
+}
+.bossbar{
+  position:relative;height:26px;margin-top:0;
+  background:linear-gradient(#211717,#0f0b0b);
+  border:1px solid #8d765e;
+  box-shadow:0 0 0 2px #000,inset 0 2px 5px #000b,0 2px 12px #000d;
+  overflow:hidden
+}
+.bossbar i{background:linear-gradient(90deg,#4a0303 0%,#8f0d0d 48%,#d52a20 100%)}
+.bossbar.posture{height:7px;margin-top:6px;border-color:#625641;background:#17130b}
+.bossbar.posture i{background:linear-gradient(90deg,#795012,#d8a53d,#f2ca6c)}
+#parts{font-size:10px;margin:7px 3px 0;color:#cfc4b2;opacity:.72;letter-spacing:.07em;text-align:center}
+#parts em{font-style:normal;color:#e0b75a}
+
+#hint{
+  position:absolute;bottom:112px;left:50%;transform:translateX(-50%);
+  font-size:11px;opacity:.72;white-space:nowrap;color:#d8d1c7
+}
+#message{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);font-size:40px;font-weight:900;letter-spacing:.08em;opacity:0;transition:opacity .12s}
+#danger{position:absolute;top:31%;left:50%;transform:translateX(-50%) scale(.7);font:900 72px Georgia,serif;color:#ff3b2f;opacity:0;filter:drop-shadow(0 0 12px #d00);transition:opacity .08s,transform .08s}
+#danger.on{opacity:1;transform:translateX(-50%) scale(1)}
+#weaponHud{
+  position:absolute;left:24px;bottom:100px;padding:9px 13px;
+  border:1px solid #8d765e;background:#08090bdc;
+  font-size:12px;letter-spacing:.07em;color:#e2d6c2;box-shadow:0 2px 10px #000a
+}
+
+#lockDot{position:absolute;left:50%;top:50%;width:12px;height:12px;border:2px solid #fff;border-radius:50%;transform:translate(-50%,-50%) scale(.82);opacity:0;box-shadow:0 0 7px #000,0 0 10px #fff8;transition:opacity .1s,transform .12s;z-index:5}
+#lockDot.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#lockDot::after{content:"";position:absolute;left:50%;top:50%;width:3px;height:3px;border-radius:50%;background:#fff;transform:translate(-50%,-50%)}
+body.pointer-free #game{cursor:none}
+
+@media(max-width:900px){
+  #hud{padding:14px}
+  .bar{width:min(72vw,430px)}
+  #boss{width:92vw;bottom:18px}
+  #boss b{font-size:14px}
+  .bossbar{height:21px}
+  #hint{font-size:9px;bottom:96px;white-space:normal;width:88%;text-align:center}
+  #weaponHud{left:14px;bottom:92px}
+  #danger{font-size:58px}
+}
