@@ -606,6 +606,34 @@ function extractArmOnlyPart(bodyNode,side){
  const group=new THREE.Group();group.add(mesh);
  return group;
 }
+function stripSkinnedBoneRegions(root,patterns,threshold=.34){
+ root?.traverse?.(obj=>{
+   if(!obj.isSkinnedMesh||!obj.geometry?.attributes?.skinIndex||!obj.geometry?.attributes?.skinWeight||!obj.skeleton)return;
+   const geo=obj.geometry.clone(),si=geo.attributes.skinIndex,sw=geo.attributes.skinWeight;
+   const banned=new Set();
+   (obj.skeleton.bones||[]).forEach((b,i)=>{
+     const n=(b.name||'').toLowerCase();
+     if(patterns.some(p=>n.includes(p)))banned.add(i);
+   });
+   if(!banned.size)return;
+   const weighted=v=>{
+     let sum=0,sz=Math.min(4,si.itemSize,sw.itemSize);
+     for(let k=0;k<sz;k++){
+       const bi=si.array[v*si.itemSize+k],w=sw.array[v*sw.itemSize+k];
+       if(banned.has(bi))sum+=w;
+     }
+     return sum>=threshold;
+   };
+   const idx=geo.index,out=[],count=idx?idx.count:geo.attributes.position.count;
+   for(let i=0;i<count;i+=3){
+     const a=idx?idx.getX(i):i,b=idx?idx.getX(i+1):i+1,d=idx?idx.getX(i+2):i+2;
+     const bannedVerts=(weighted(a)?1:0)+(weighted(b)?1:0)+(weighted(d)?1:0);
+     if(bannedVerts<2)out.push(a,b,d);
+   }
+   geo.setIndex(out);geo.computeVertexNormals();geo.computeBoundingSphere();
+   obj.geometry=geo;
+ });
+}
 function cloneAnimeArmPart(side){
  const src=animeBossArmParts[side];
  if(!src)return null;
@@ -800,8 +828,11 @@ assetLoader.load('./assets/models/boss/centaur-beast.glb',gltf=>{
  bossLowerVisual.position.y-=box.min.y;
  bossLowerVisual.position.y-=.18;
  bossLowerVisual.position.z=-.82;
- const neck=bossLowerVisual.getObjectByName('Neck1');
- if(neck)neck.scale.setScalar(.001); // removes horse head/neck while preserving torso and legs
+ // Centaur lower body only: remove horse head/neck/ears from the skinned render.
+ stripSkinnedBoneRegions(bossLowerVisual,['head','neck1','neck2','neck3','ear1','ear2','ear3','ear4'],.28);
+ for(const n of ['Head','Neck1','Neck2','Neck3','Ear1.L','Ear2.L','Ear3.L','Ear4.L','Ear1.R','Ear2.R','Ear3.R','Ear4.R']){
+   const bone=bossLowerVisual.getObjectByName(n);if(bone)bone.scale.setScalar(.001);
+ }
  bossLowerVisual.traverse(o=>{
    if(o.isMesh){
      o.castShadow=true;o.receiveShadow=true;
@@ -1102,8 +1133,15 @@ const state={
 };
 function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeout(flash.t);flash.t=setTimeout(()=>ui.msg.style.opacity='0',d*1000)}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
-const PLAYER_ATTACK_MOTION_SCALE=5;
-const BOSS_ATTACK_MOTION_SCALE=5;
+const PLAYER_ATTACK_SCALE={
+ straight:1.18,katana:1.12,spear:1.2,axe:1.34,greatsword:1.48,hammer:1.58
+};
+const BOSS_ATTACK_SCALE={
+ arm_cross:1.45,arm_double_slam:1.68,arm_sweep:1.5,arm_uppercut:1.34,
+ arm_grab:1.72,arm_barrage:1.42,arm_guardbreak:1.66,arm_crush:1.78
+};
+function playerAttackScale(){return PLAYER_ATTACK_SCALE[currentWeapon()?.id]||1.25}
+function bossAttackScale(st){return BOSS_ATTACK_SCALE[st]||1}
 const ROLL_DURATION=.72;
 const ROLL_IFRAMES=.40;
 function lerpAngle(current,target,alpha){
@@ -1541,15 +1579,15 @@ function animateBossTelegraph(dt){
  }
 }
 const BOSS_AIM_CUTOFF={
- arm_cross:.36,arm_double_slam:.38,arm_sweep:.4,arm_uppercut:.31,
- arm_grab:.34,arm_barrage:1.42,arm_guardbreak:.34,arm_crush:.36
+ arm_cross:.72,arm_double_slam:.82,arm_sweep:.78,arm_uppercut:.62,
+ arm_grab:.88,arm_barrage:1.62,arm_guardbreak:.82,arm_crush:.92
 };
 const BOSS_AIM_RANGE={
  arm_cross:4.15,arm_double_slam:3.85,arm_sweep:4.55,arm_uppercut:3.65,
  arm_grab:3.45,arm_barrage:3.85,arm_guardbreak:3.8,arm_crush:3.6
 };
 function updateBoss(dt){
- const bossMotionDt=state.bossState?.startsWith?.('arm_')?dt/BOSS_ATTACK_MOTION_SCALE:dt;
+ const bossMotionDt=state.bossState?.startsWith?.('arm_')?dt/bossAttackScale(state.bossState):dt;
  if(state.bossHp<=0)setBossVisualAction('dead');
  else if(state.bossState==='idle')setBossVisualAction(dist()>4.2?'walk':'idle');
  else if(state.bossStagger>0)setBossVisualAction('idle');
@@ -1592,7 +1630,14 @@ function updateBoss(dt){
  }
  if(state.bossState==='idle'){
    state.bossTimer-=dt;
-   if(d>4.45)boss.position.addScaledVector(dir,dt*(state.legBroken?1.55:2.2));else if(d<2.35)boss.position.addScaledVector(dir,-dt*.28);
+   const recoveryWindow=state.bossTimer>.58;
+   if(!recoveryWindow){
+     if(d>4.45)boss.position.addScaledVector(dir,dt*(state.legBroken?1.55:2.2));
+     else if(d<2.35)boss.position.addScaledVector(dir,-dt*.28);
+   }else{
+     // Vordt/Aldrich-style punish window: boss commits and briefly stays put.
+     boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*1.4));
+   }
    head.rotation.x=Math.sin(state.time*2.2)*.05;tailPivot.rotation.y=Math.sin(state.time*2.8)*.24;resetDorsalArms(Math.min(1,dt*8));dorsalArms[0].shoulder.rotation.z+=Math.sin(state.time*1.8)*.035;dorsalArms[1].shoulder.rotation.z-=Math.sin(state.time*1.8)*.035;
    if(state.bossTimer<=0)chooseBossAttack();return;
  }
@@ -1617,7 +1662,7 @@ function updateBoss(dt){
  }else if(state.bossState==='claw4'){
    const p=1-state.bossTimer/.58;legs[2].rotation.z=-.55+Math.sin(p*Math.PI)*1.3;body.rotation.z=Math.sin(p*Math.PI)*.15;
    if(state.bossTimer<.29)bossImpact(3.9,25,34,false);
-   if(state.bossTimer<=0){legs[0].rotation.z=legs[2].rotation.z=0;body.rotation.z=0;state.bossState='idle';state.bossTimer=.72}
+   if(state.bossTimer<=0){legs[0].rotation.z=legs[2].rotation.z=0;body.rotation.z=0;state.bossState='idle';state.bossTimer=1.1}
  }else if(state.bossState==='bite'){
    const p=1-state.bossTimer/.82;
    head.position.z=BOSS_REST.headZ+Math.sin(p*Math.PI)*.82;jaw.rotation.x=BOSS_REST.jawX+Math.sin(p*Math.PI)*.62;
@@ -1640,7 +1685,7 @@ function updateBoss(dt){
      trailArms(1.05);
      if(inBossHitWindow(state.bossTimer,.26,.17))bossArmImpact([0,1],1.55,24,30,false);
    }
-   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.72}
+   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.1}
  }else if(state.bossState==='arm_double_slam'){
    if(state.bossTimer<=.46){
      const p=clamp(1-state.bossTimer/.46,0,1),e=Math.sin(p*Math.PI*.72);
@@ -1651,7 +1696,7 @@ function updateBoss(dt){
        bossArmImpact([0,1],1.62,36,48,false);
      }
    }
-   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.96}
+   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.35}
  }else if(state.bossState==='arm_sweep'){
    if(state.bossTimer<=.5){
      const p=clamp(1-state.bossTimer/.5,0,1),e=Math.sin(p*Math.PI*.9);
@@ -1662,7 +1707,7 @@ function updateBoss(dt){
      spawnArmTrail(dorsalArms[0],1.25);
      if(inBossHitWindow(state.bossTimer,.27,.17))bossArmImpact(0,1.55,28,36,false);
    }
-   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.78}
+   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.15}
  }else if(state.bossState==='arm_uppercut'){
    if(state.bossTimer<=.36){
      const p=clamp(1-state.bossTimer/.36,0,1),e=Math.sin(p*Math.PI*.86);
@@ -1670,7 +1715,7 @@ function updateBoss(dt){
      body.rotation.z=-.24+e*.34;spawnArmTrail(a,1.3);
      if(inBossHitWindow(state.bossTimer,.2,.12))bossArmImpact(1,1.45,30,42,false);
    }
-   if(state.bossTimer<=0){resetDorsalArms(1);body.rotation.z=0;state.bossState='idle';state.bossTimer=.72}
+   if(state.bossTimer<=0){resetDorsalArms(1);body.rotation.z=0;state.bossState='idle';state.bossTimer=1.1}
  }else if(state.bossState==='arm_grab'){
    if(state.bossTimer<=.4){
      const p=clamp(1-state.bossTimer/.4,0,1),e=Math.sin(p*Math.PI*.82);
@@ -1678,7 +1723,7 @@ function updateBoss(dt){
      spawnArmTrail(a,1.15);
      if(inBossHitWindow(state.bossTimer,.22,.13))bossArmImpact(0,1.48,42,58,true);
    }
-   if(state.bossTimer<=0){setDanger(false);resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.0}
+   if(state.bossTimer<=0){setDanger(false);resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.32}
  }else if(state.bossState==='arm_barrage'){
    if(state.bossTimer<=1.32){
      const active=clamp((1.32-state.bossTimer)/1.06,0,.999),phase=Math.floor(active*6),local=(active*6)-phase,s=Math.sin(local*Math.PI);
@@ -1691,7 +1736,7 @@ function updateBoss(dt){
        bossArmImpact(idx,1.34,14,18,false);
      }
    }
-   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.86}
+   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.22}
  }else if(state.bossState==='arm_guardbreak'){
    if(state.bossTimer<=.38){
      const p=clamp(1-state.bossTimer/.38,0,1),e=Math.sin(p*Math.PI*.72);
@@ -1702,7 +1747,7 @@ function updateBoss(dt){
        bossArmImpact([0,1],1.55,22,72,false);
      }
    }
-   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.0}
+   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.32}
  }else if(state.bossState==='arm_crush'){
    if(state.bossTimer<=.42){
      const p=clamp(1-state.bossTimer/.42,0,1),e=Math.sin(p*Math.PI*.86);
@@ -1714,12 +1759,12 @@ function updateBoss(dt){
        bossArmImpact([0,1],1.52,46,64,true);
      }
    }
-   if(state.bossTimer<=0){setDanger(false);resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.08}
+   if(state.bossTimer<=0){setDanger(false);resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.48}
  }else if(state.bossState==='peril'){
    // red perilous pounce: cannot be guarded/deflected; lateral roll is the intended answer.
    head.rotation.x=-.55;body.rotation.x=.12;
    if(state.bossTimer<.44){bossFxOnce('peril-launch',()=>spawnDustBurst(bossGroundPoint(-.8),.85));boss.position.addScaledVector(dir,dt*10.5);bossImpact(3.25,43,60,true)}
-   if(state.bossTimer<=0){setDanger(false);head.rotation.x=0;body.rotation.x=0;state.bossState='idle';state.bossTimer=1.0}
+   if(state.bossTimer<=0){setDanger(false);head.rotation.x=0;body.rotation.x=0;state.bossState='idle';state.bossTimer=1.32}
  }
 }
 
@@ -1769,7 +1814,7 @@ function updatePlayer(dt){
  if(state.attack>0){
    const w=currentWeapon(),gripDamage=twoHanded?1.16:1,gripPosture=twoHanded?1.2:1;
    const dur=[0,.46,.5,.62][state.attackStep]/w.speed*(twoHanded ? .96 : 1.04),step=state.attackStep;
-   state.attack-=dt/PLAYER_ATTACK_MOTION_SCALE;const p=1-state.attack/dur;
+   state.attack-=dt/playerAttackScale();const p=1-state.attack/dur;
    applyWeaponAttackPose(w,step,p);
    const hitAt=[0,.23,.25,.31][step]/w.speed,range=[0,3.15,3.25,3.45][step]*w.reach,damage=[0,22,25,36][step]*w.damage*gripDamage,post=[0,11,13,20][step]*w.posture*gripPosture;
    if(!state.attackHit&&state.attack<hitAt&&dist()<range){
@@ -1811,7 +1856,7 @@ function updatePlayer(dt){
      move.addScaledVector(forward,z).addScaledVector(strafe,x).normalize();
    }
    const sprint=(input.keys.has('ShiftLeft')||input.keys.has('ShiftRight'))&&state.stamina>0&&state.exhausted<=0;
-   player.position.addScaledVector(move,dt*(sprint?5.2:3.15));
+   player.position.addScaledVector(move,dt*(sprint?6.15:3.8));
  }
  if(player.position.length()>18.8)player.position.setLength(18.8);
 
@@ -1819,23 +1864,23 @@ function updatePlayer(dt){
  if(state.attack<=0&&state.rolling<=0){
    if(state.parryAnim>0){
      const p=state.parryAnim/.28;
-     swordPivot.rotation.x=THREE.MathUtils.lerp(swordPivot.rotation.x,-.55,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*30));
-     swordPivot.rotation.y=THREE.MathUtils.lerp(swordPivot.rotation.y,-1.0+Math.sin((1-p)*Math.PI)*.7,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*30));
-     swordPivot.rotation.z=THREE.MathUtils.lerp(swordPivot.rotation.z,.95,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*30));
-     playerBody.rotation.z=THREE.MathUtils.lerp(playerBody.rotation.z,-.12,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*24));
+     swordPivot.rotation.x=THREE.MathUtils.lerp(swordPivot.rotation.x,-.55,1-Math.exp(-dt*30));
+     swordPivot.rotation.y=THREE.MathUtils.lerp(swordPivot.rotation.y,-1.0+Math.sin((1-p)*Math.PI)*.7,1-Math.exp(-dt*30));
+     swordPivot.rotation.z=THREE.MathUtils.lerp(swordPivot.rotation.z,.95,1-Math.exp(-dt*30));
+     playerBody.rotation.z=THREE.MathUtils.lerp(playerBody.rotation.z,-.12,1-Math.exp(-dt*24));
    }else if(state.guardBlend>.01){
      if(twoHanded){
-       weaponPivot.rotation.x=THREE.MathUtils.lerp(weaponPivot.rotation.x,-.42,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*20));
-       weaponPivot.rotation.y=THREE.MathUtils.lerp(weaponPivot.rotation.y,-.72,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*20));
-       weaponPivot.rotation.z=THREE.MathUtils.lerp(weaponPivot.rotation.z,.78,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*20));
-       shieldPivot.rotation.y=THREE.MathUtils.lerp(shieldPivot.rotation.y,0,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*20));
+       weaponPivot.rotation.x=THREE.MathUtils.lerp(weaponPivot.rotation.x,-.42,1-Math.exp(-dt*20));
+       weaponPivot.rotation.y=THREE.MathUtils.lerp(weaponPivot.rotation.y,-.72,1-Math.exp(-dt*20));
+       weaponPivot.rotation.z=THREE.MathUtils.lerp(weaponPivot.rotation.z,.78,1-Math.exp(-dt*20));
+       shieldPivot.rotation.y=THREE.MathUtils.lerp(shieldPivot.rotation.y,0,1-Math.exp(-dt*20));
      }else{
-       weaponPivot.rotation.x=THREE.MathUtils.lerp(weaponPivot.rotation.x,-.18,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*20));
-       weaponPivot.rotation.y=THREE.MathUtils.lerp(weaponPivot.rotation.y,-.15,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*20));
-       weaponPivot.rotation.z=THREE.MathUtils.lerp(weaponPivot.rotation.z,.22,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*20));
-       shieldPivot.rotation.x=THREE.MathUtils.lerp(shieldPivot.rotation.x,-.08,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*24));
-       shieldPivot.rotation.y=THREE.MathUtils.lerp(shieldPivot.rotation.y,-1.0,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*24));
-       shieldPivot.position.z=THREE.MathUtils.lerp(shieldPivot.position.z,.38,1-Math.exp(-(dt/PLAYER_ATTACK_MOTION_SCALE)*24));
+       weaponPivot.rotation.x=THREE.MathUtils.lerp(weaponPivot.rotation.x,-.18,1-Math.exp(-dt*20));
+       weaponPivot.rotation.y=THREE.MathUtils.lerp(weaponPivot.rotation.y,-.15,1-Math.exp(-dt*20));
+       weaponPivot.rotation.z=THREE.MathUtils.lerp(weaponPivot.rotation.z,.22,1-Math.exp(-dt*20));
+       shieldPivot.rotation.x=THREE.MathUtils.lerp(shieldPivot.rotation.x,-.08,1-Math.exp(-dt*24));
+       shieldPivot.rotation.y=THREE.MathUtils.lerp(shieldPivot.rotation.y,-1.0,1-Math.exp(-dt*24));
+       shieldPivot.position.z=THREE.MathUtils.lerp(shieldPivot.position.z,.38,1-Math.exp(-dt*24));
      }
      playerBody.rotation.x=THREE.MathUtils.lerp(playerBody.rotation.x,-.09*state.guardBlend,1-Math.exp(-dt*18));
      playerBody.rotation.z=THREE.MathUtils.lerp(playerBody.rotation.z,-.06*state.guardBlend,1-Math.exp(-dt*18));
