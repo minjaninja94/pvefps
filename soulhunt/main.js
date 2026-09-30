@@ -39,6 +39,35 @@ part(swordPivot,new THREE.BoxGeometry(.12,.12,1.78),steel,[.18,-.05,-.72],[.18,0
 part(swordPivot,new THREE.BoxGeometry(.55,.08,.12),dark,[.18,-.05,.13],[.18,0,.08]);
 player.position.set(0,0,8);
 
+// CC0 provisional humanoid visual; sword/combat controller remain ours.
+let playerMixer=null,playerActions={},playerActionName='';
+gltfLoader.load('https://gobkit.com/freebies/minion/minion-d01.glb',gltf=>{
+  const visual=gltf.scene;
+  visual.scale.setScalar(1.55);
+  visual.position.set(0,0,0);
+  visual.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+  player.add(visual);
+  playerBody.visible=false;playerHead.visible=false;
+  if(gltf.animations?.length){
+    playerMixer=new THREE.AnimationMixer(visual);
+    const src=gltf.animations[0],fps=24;
+    playerActions.idle=playerMixer.clipAction(THREE.AnimationUtils.subclip(src,'idle',0,30,fps));
+    playerActions.attack=playerMixer.clipAction(THREE.AnimationUtils.subclip(src,'attack',30,60,fps));
+    playerActions.dead=playerMixer.clipAction(THREE.AnimationUtils.subclip(src,'dead',60,90,fps));
+    playerActions.dead.setLoop(THREE.LoopOnce,1);playerActions.dead.clampWhenFinished=true;
+    playerActionName='idle';playerActions.idle.play();
+  }
+},undefined,err=>console.warn('CC0 player model load failed; using procedural fallback.',err));
+
+function setPlayerVisualAction(name){
+ if(!playerMixer||!playerActions[name]||playerActionName===name)return;
+ const prev=playerActions[playerActionName],next=playerActions[name];
+ next.reset().play();
+ if(name!=='dead')next.setLoop(THREE.LoopRepeat,Infinity);
+ if(prev)prev.crossFadeTo(next,.1,false);
+ playerActionName=name;
+}
+
 const boss=new THREE.Group();scene.add(boss);
 const shell=mat(0x3f4548,.58,.47),shellDark=mat(0x262b2e,.48,.62),meat=mat(0x452d28,.02,.88),horn=mat(0x807561,.18,.65);
 const body=part(boss,new THREE.SphereGeometry(1.55,16,10),shell,[0,2.05,0],[0,0,0],[1.4,.75,1.7]);
@@ -302,7 +331,8 @@ function updateBoss(dt){
 }
 
 function updatePlayer(dt){
- if(state.dead)return;
+ if(state.dead){setPlayerVisualAction('dead');return;}
+ setPlayerVisualAction(state.attack>0?'attack':'idle');
  state.stamina=Math.min(100,state.stamina+dt*(state.attack||state.rolling?10:29));
  state.posture=Math.max(0,state.posture-dt*(input.guard?5:14));
  state.bossPosture=Math.max(0,state.bossPosture-dt*(state.bossState==='idle'?4.5:1.3));
@@ -386,6 +416,6 @@ function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=i
 function loop(){
  let dt=Math.min(clock.getDelta(),.033);state.time+=dt;
  if(state.hitstop>0){state.hitstop-=dt;dt=0}else{updatePlayer(dt);updateBoss(dt)}
- if(bossMixer)bossMixer.update(Math.max(dt,.001));updateSparks(Math.max(dt,.001));updateCamera(Math.max(dt,.001));updateUI();renderer.render(scene,camera);requestAnimationFrame(loop);
+ if(bossMixer)bossMixer.update(Math.max(dt,.001));if(playerMixer)playerMixer.update(Math.max(dt,.001));updateSparks(Math.max(dt,.001));updateCamera(Math.max(dt,.001));updateUI();renderer.render(scene,camera);requestAnimationFrame(loop);
 }
 loop();
