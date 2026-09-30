@@ -1,0 +1,64 @@
+name: Vendor Dukhu Soul MPFB boss
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/vendor-dukhu-mpfb.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download CC0 MPFB female avatar
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p soulhunt/assets/models/boss
+          curl -L --fail "https://raw.githubusercontent.com/met4citizen/TalkingHead/main/avatars/mpfb.glb" \
+            -o soulhunt/assets/models/boss/mpfb-female.glb
+
+          cat > soulhunt/assets/models/boss/MPFB_SOURCE.md <<'EOF'
+          # MPFB female boss base
+
+          Source: met4citizen/TalkingHead — avatars/mpfb.glb
+          Upstream description: created with Blender + MPFB (MakeHuman Plugin For Blender)
+          License: CC0 1.0 Universal / public domain
+          Runtime use: visual base for the Dukhu Soul giantess boss; monster lower body and combat arms are project-authored.
+          EOF
+
+      - name: Inspect GLB nodes
+        shell: bash
+        run: |
+          python -m pip install --quiet pygltflib
+          python - <<'PY'
+          import json
+          from pygltflib import GLTF2
+          path='soulhunt/assets/models/boss/mpfb-female.glb'
+          g=GLTF2().load_binary(path)
+          names=[n.name for n in g.nodes if n.name]
+          interesting=[n for n in names if any(k.lower() in n.lower() for k in [
+              'hips','spine','chest','breast','neck','head','shoulder','arm','hand','pony','hair','eye'
+          ])]
+          with open('soulhunt/assets/models/boss/mpfb-nodes.json','w',encoding='utf-8') as f:
+              json.dump({'all_count':len(names),'interesting':interesting},f,ensure_ascii=False,indent=2)
+          print('nodes',len(names))
+          print('\n'.join(interesting[:120]))
+          PY
+
+      - name: Commit model
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add soulhunt/assets/models/boss
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "assets(dukhu-soul): vendor CC0 MPFB female boss base"
+            git push
+          fi
