@@ -187,7 +187,7 @@ function tryRoll(){
  if(state.dead||state.rolling>0||state.attack>0||state.stagger>0||state.stamina<24)return;
  const {x,z}=getMoveAxes();
  const toBoss=flatDir(player.position,boss.position);
- const right=new THREE.Vector3(toBoss.z,0,-toBoss.x);
+ const right=new THREE.Vector3(-toBoss.z,0,toBoss.x);
  state.rollDir.set(0,0,0);
  if(input.lock){
    state.rollDir.addScaledVector(toBoss,z).addScaledVector(right,x);
