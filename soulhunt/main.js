@@ -168,7 +168,7 @@ addEventListener('mousedown',e=>{if(e.button===0)tryAttack();if(e.button===2){in
 addEventListener('mouseup',e=>{if(e.button===2)input.guard=false});
 addEventListener('contextmenu',e=>e.preventDefault());
 
-const ui={hp:document.querySelector('#hp'),posture:document.querySelector('#posture'),bossHp:document.querySelector('#bossHp'),bossPosture:document.querySelector('#bossPosture'),msg:document.querySelector('#message'),danger:document.querySelector('#danger'),head:document.querySelector('#headPart'),leg:document.querySelector('#legPart'),tail:document.querySelector('#tailPart')};
+const ui={hp:document.querySelector('#hp'),posture:document.querySelector('#posture'),bossHp:document.querySelector('#bossHp'),bossPosture:document.querySelector('#bossPosture'),msg:document.querySelector('#message'),danger:document.querySelector('#danger'),head:document.querySelector('#headPart'),leg:document.querySelector('#legPart'),tail:document.querySelector('#tailPart'),weapon:document.querySelector('#weaponHud')};
 const state={
  hp:100,posture:0,stamina:100,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
  bossHp:560,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,time:0,shake:0,hitstop:0,
@@ -378,6 +378,35 @@ function updateBoss(dt){
  }
 }
 
+function applyWeaponAttackPose(w,step,p){
+ const s=Math.sin(clamp(p,0,1)*Math.PI),m=w.motion;
+ if(w.id==='straight'){
+   if(step===1){weaponPivot.rotation.set(-1.05+s*2.2,0,-.34+s*.72);player.rotation.z=-s*.1}
+   if(step===2){weaponPivot.rotation.set(.9-s*2.4,0,.42-s*.86);player.rotation.z=s*.12}
+   if(step===3){weaponPivot.rotation.set(-1.35+s*2.85,s*.25,0);player.rotation.x=-s*.07}
+ }else if(w.id==='greatsword'){
+   if(step===1){weaponPivot.rotation.set(-1.5+s*2.75,-.28+s*.25,-.55+s*.9);playerBody.rotation.z=-s*.18}
+   if(step===2){weaponPivot.rotation.set(1.15-s*2.9,.35-s*.4,.55-s*1.0);playerBody.rotation.z=s*.2}
+   if(step===3){weaponPivot.rotation.set(-1.8+s*3.45,0,s*.22);player.rotation.x=-s*.12}
+ }else if(w.id==='hammer'){
+   weaponPivot.rotation.y=0;
+   if(step===1){weaponPivot.rotation.x=-1.85+s*3.15;weaponPivot.rotation.z=-.22+s*.3;playerBody.rotation.x=-s*.12}
+   if(step===2){weaponPivot.rotation.x=-1.4+s*2.8;weaponPivot.rotation.y=-.5+s*1.0;player.rotation.z=s*.14}
+   if(step===3){weaponPivot.rotation.x=-2.1+s*3.8;playerBody.rotation.x=-s*.18}
+ }else if(w.id==='spear'){
+   const thrust=Math.sin(clamp(p,0,1)*Math.PI);
+   weaponPivot.rotation.set(-.08,-.05,.05);weaponPivot.position.z=-thrust*(step===3?1.05:.72);playerBody.rotation.x=-thrust*.08;
+ }else if(w.id==='katana'){
+   if(step===1){weaponPivot.rotation.set(-.85+s*2.55,-.4+s*.55,-.58+s*.95);player.rotation.z=-s*.09}
+   if(step===2){weaponPivot.rotation.set(.7-s*2.65,.35-s*.65,.55-s*1.1);player.rotation.z=s*.11}
+   if(step===3){weaponPivot.rotation.set(-1.2+s*3.2,-.25+s*.5,0);player.rotation.x=-s*.09}
+ }else{
+   if(step===1){weaponPivot.rotation.set(-1.35+s*2.75,-.15,-.48+s*.82);playerBody.rotation.z=-s*.15}
+   if(step===2){weaponPivot.rotation.set(.95-s*2.55,.3,.5-s*.9);playerBody.rotation.z=s*.16}
+   if(step===3){weaponPivot.rotation.set(-1.65+s*3.25,0,.18*s);player.rotation.x=-s*.1}
+ }
+ weaponPivot.scale.setScalar((twoHanded?1.06:1)*(1+(m-1)*.03));
+}
 function updatePlayer(dt){
  if(state.dead){setPlayerVisualAction('dead');return;}
  setPlayerVisualAction(state.attack>0?'attack':'idle');
@@ -390,9 +419,7 @@ function updatePlayer(dt){
    const w=currentWeapon(),gripDamage=twoHanded?1.16:1,gripPosture=twoHanded?1.2:1;
    const dur=[0,.46,.5,.62][state.attackStep]/w.speed*(twoHanded ? .96 : 1.04),step=state.attackStep;
    state.attack-=dt;const p=1-state.attack/dur;
-   if(step===1){swordPivot.rotation.x=-1.15+Math.sin(p*Math.PI)*2.35;swordPivot.rotation.z=-.35+Math.sin(p*Math.PI)*.72;player.rotation.z=Math.sin(p*Math.PI)*-.11}
-   if(step===2){swordPivot.rotation.x=.95-Math.sin(p*Math.PI)*2.5;swordPivot.rotation.z=.45-Math.sin(p*Math.PI)*.9;player.rotation.z=Math.sin(p*Math.PI)*.13}
-   if(step===3){swordPivot.rotation.x=-1.45+Math.sin(p*Math.PI)*3.0;swordPivot.rotation.y=Math.sin(p*Math.PI)*.35;player.rotation.x=Math.sin(p*Math.PI)*-.08}
+   applyWeaponAttackPose(w,step,p);
    const hitAt=[0,.23,.25,.31][step]/w.speed,range=[0,3.15,3.25,3.45][step]*w.reach,damage=[0,22,25,36][step]*w.damage*gripDamage,post=[0,11,13,20][step]*w.posture*gripPosture;
    if(!state.attackHit&&state.attack<hitAt&&dist()<range){
      state.attackHit=true;
@@ -400,7 +427,7 @@ function updatePlayer(dt){
      hitStop(.018*w.hitstop+(step===3 ? .018 : 0));
    }
    if(state.attack<=0){
-     swordPivot.rotation.set(0,0,0);player.rotation.x=0;player.rotation.z=0;
+     weaponPivot.rotation.set(0,0,0);weaponPivot.position.z=0;player.rotation.x=0;player.rotation.z=0;playerBody.rotation.set(0,0,0);
      if(state.attackQueued&&step<3)startAttack(step+1);else if(!state.attackQueued&&state.comboGrace<=0)state.attackStep=0;
    }
  }
@@ -437,9 +464,19 @@ function updatePlayer(dt){
      swordPivot.rotation.z=THREE.MathUtils.lerp(swordPivot.rotation.z,.95,1-Math.exp(-dt*30));
      playerBody.rotation.z=THREE.MathUtils.lerp(playerBody.rotation.z,-.12,1-Math.exp(-dt*24));
    }else if(state.guardBlend>.01){
-     swordPivot.rotation.x=THREE.MathUtils.lerp(swordPivot.rotation.x,-.35,1-Math.exp(-dt*20));
-     swordPivot.rotation.y=THREE.MathUtils.lerp(swordPivot.rotation.y,-.7,1-Math.exp(-dt*20));
-     swordPivot.rotation.z=THREE.MathUtils.lerp(swordPivot.rotation.z,.72,1-Math.exp(-dt*20));
+     if(twoHanded){
+       weaponPivot.rotation.x=THREE.MathUtils.lerp(weaponPivot.rotation.x,-.42,1-Math.exp(-dt*20));
+       weaponPivot.rotation.y=THREE.MathUtils.lerp(weaponPivot.rotation.y,-.72,1-Math.exp(-dt*20));
+       weaponPivot.rotation.z=THREE.MathUtils.lerp(weaponPivot.rotation.z,.78,1-Math.exp(-dt*20));
+       shieldPivot.rotation.y=THREE.MathUtils.lerp(shieldPivot.rotation.y,0,1-Math.exp(-dt*20));
+     }else{
+       weaponPivot.rotation.x=THREE.MathUtils.lerp(weaponPivot.rotation.x,-.18,1-Math.exp(-dt*20));
+       weaponPivot.rotation.y=THREE.MathUtils.lerp(weaponPivot.rotation.y,-.15,1-Math.exp(-dt*20));
+       weaponPivot.rotation.z=THREE.MathUtils.lerp(weaponPivot.rotation.z,.22,1-Math.exp(-dt*20));
+       shieldPivot.rotation.x=THREE.MathUtils.lerp(shieldPivot.rotation.x,-.08,1-Math.exp(-dt*24));
+       shieldPivot.rotation.y=THREE.MathUtils.lerp(shieldPivot.rotation.y,-1.0,1-Math.exp(-dt*24));
+       shieldPivot.position.z=THREE.MathUtils.lerp(shieldPivot.position.z,.38,1-Math.exp(-dt*24));
+     }
      playerBody.rotation.x=THREE.MathUtils.lerp(playerBody.rotation.x,-.09*state.guardBlend,1-Math.exp(-dt*18));
      playerBody.rotation.z=THREE.MathUtils.lerp(playerBody.rotation.z,-.06*state.guardBlend,1-Math.exp(-dt*18));
    }else{
@@ -448,6 +485,9 @@ function updatePlayer(dt){
      swordPivot.rotation.z=THREE.MathUtils.lerp(swordPivot.rotation.z,0,1-Math.exp(-dt*16));
      playerBody.rotation.x=THREE.MathUtils.lerp(playerBody.rotation.x,0,1-Math.exp(-dt*16));
      playerBody.rotation.z=THREE.MathUtils.lerp(playerBody.rotation.z,0,1-Math.exp(-dt*16));
+     shieldPivot.rotation.x=THREE.MathUtils.lerp(shieldPivot.rotation.x,0,1-Math.exp(-dt*16));
+     shieldPivot.rotation.y=THREE.MathUtils.lerp(shieldPivot.rotation.y,0,1-Math.exp(-dt*16));
+     shieldPivot.position.z=THREE.MathUtils.lerp(shieldPivot.position.z,.05,1-Math.exp(-dt*16));
    }
  }
 }
@@ -463,7 +503,7 @@ function updateCamera(dt){
 function partText(v,broken,label){return broken?label:(v<45?'손상':'정상')}
 function updateUI(){
  ui.hp.style.width=clamp(state.hp,0,100)+'%';ui.posture.style.width=clamp(state.posture,0,100)+'%';ui.bossHp.style.width=(state.bossHp/560*100)+'%';ui.bossPosture.style.width=clamp(state.bossPosture,0,100)+'%';
- ui.head.textContent=partText(state.headHp,state.headBroken,'파괴');ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴');ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단');
+ ui.head.textContent=partText(state.headHp,state.headBroken,'파괴');ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴');ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단');if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
 }
 function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}addEventListener('resize',resize);resize();
 function loop(){
