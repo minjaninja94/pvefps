@@ -321,16 +321,63 @@ function spawnSparks(origin,count=16,power=5.5){
  scene.add(pts);sparks.push({pts,vel,life:.32});
 }
 const armTrails=[];
-function spawnArmTrail(arm){
- const p=new THREE.Vector3();arm.wrist.getWorldPosition(p);
- const mesh=new THREE.Mesh(new THREE.SphereGeometry(.18,8,6),new THREE.MeshBasicMaterial({color:0xff6a44,transparent:true,opacity:.5,depthWrite:false}));
- mesh.position.copy(p);scene.add(mesh);armTrails.push({mesh,life:.16});
+const armTrailLast=new WeakMap();
+function spawnArmTrail(arm,intensity=1){
+ const now=new THREE.Vector3();arm.wrist.getWorldPosition(now);
+ const prev=armTrailLast.get(arm);
+ armTrailLast.set(arm,now.clone());
+ if(!prev||prev.distanceTo(now)<.07)return;
+ const delta=new THREE.Vector3().subVectors(now,prev),len=delta.length(),mid=prev.clone().add(now).multiplyScalar(.5);
+ const geo=new THREE.CylinderGeometry(.075*intensity,.15*intensity,len,7,1,true);
+ const material=new THREE.MeshBasicMaterial({color:0xff7a45,transparent:true,opacity:.42*intensity,depthWrite:false,side:THREE.DoubleSide});
+ const mesh=new THREE.Mesh(geo,material);mesh.position.copy(mid);
+ mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());
+ scene.add(mesh);armTrails.push({mesh,life:.2,max:.2});
 }
 function updateArmTrails(dt){
  for(let i=armTrails.length-1;i>=0;i--){
-   const t=armTrails[i];t.life-=dt;t.mesh.scale.multiplyScalar(1+dt*4);t.mesh.material.opacity=clamp(t.life/.16,0,1)*.45;
+   const t=armTrails[i];t.life-=dt;
+   t.mesh.material.opacity=clamp(t.life/t.max,0,1)*.42;
+   t.mesh.scale.x*=1+dt*1.6;t.mesh.scale.z*=1+dt*1.6;
    if(t.life<=0){scene.remove(t.mesh);t.mesh.geometry.dispose();t.mesh.material.dispose();armTrails.splice(i,1)}
  }
+}
+
+const dustFX=[];
+function spawnDustBurst(origin,scale=1){
+ const ring=new THREE.Mesh(
+   new THREE.RingGeometry(.45*scale,1.0*scale,32),
+   new THREE.MeshBasicMaterial({color:0x8d7864,transparent:true,opacity:.45,depthWrite:false,side:THREE.DoubleSide})
+ );
+ ring.rotation.x=-Math.PI/2;ring.position.copy(origin);ring.position.y=.035;scene.add(ring);
+ const count=14,pos=new Float32Array(count*3),vel=[];
+ for(let i=0;i<count;i++){
+   const a=Math.random()*Math.PI*2,r=.25+Math.random()*.45;
+   pos[i*3]=origin.x+Math.cos(a)*r;pos[i*3+1]=.08+Math.random()*.22;pos[i*3+2]=origin.z+Math.sin(a)*r;
+   vel.push(new THREE.Vector3(Math.cos(a)*(1.2+Math.random()*2.2)*scale,1.2+Math.random()*2.2,Math.sin(a)*(1.2+Math.random()*2.2)*scale));
+ }
+ const geom=new THREE.BufferGeometry();geom.setAttribute('position',new THREE.BufferAttribute(pos,3));
+ const pts=new THREE.Points(geom,new THREE.PointsMaterial({color:0x9e8770,size:.11*scale,transparent:true,opacity:.65,depthWrite:false}));
+ scene.add(pts);dustFX.push({ring,pts,vel,life:.46,max:.46});
+}
+function updateDustFX(dt){
+ for(let d=dustFX.length-1;d>=0;d--){
+   const fx=dustFX[d];fx.life-=dt;const q=clamp(fx.life/fx.max,0,1);
+   fx.ring.scale.multiplyScalar(1+dt*5);fx.ring.material.opacity=q*.42;
+   const arr=fx.pts.geometry.attributes.position.array;
+   for(let i=0;i<fx.vel.length;i++){fx.vel[i].y-=6*dt;arr[i*3]+=fx.vel[i].x*dt;arr[i*3+1]+=fx.vel[i].y*dt;arr[i*3+2]+=fx.vel[i].z*dt}
+   fx.pts.geometry.attributes.position.needsUpdate=true;fx.pts.material.opacity=q*.6;
+   if(fx.life<=0){scene.remove(fx.ring,fx.pts);fx.ring.geometry.dispose();fx.ring.material.dispose();fx.pts.geometry.dispose();fx.pts.material.dispose();dustFX.splice(d,1)}
+ }
+}
+function bossGroundPoint(offsetZ=1.6){
+ const p=new THREE.Vector3(0,0,offsetZ);boss.localToWorld(p);p.y=0;return p;
+}
+function updateBossWarningGlow(){
+ const armAttack=state.bossState.startsWith('arm_');
+ const danger=state.bossState==='arm_grab'||state.bossState==='arm_crush'||state.bossState==='peril';
+ warningFlesh.emissive.setHex(danger?0x8a1108:(armAttack?0x321009:0x000000));
+ warningFlesh.emissiveIntensity=danger?(1.2+.45*Math.sin(state.time*18)):(armAttack?.32:0);
 }
 function updateSparks(dt){
  for(let s=sparks.length-1;s>=0;s--){
@@ -773,6 +820,6 @@ function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=i
 function loop(){
  let dt=Math.min(clock.getDelta(),.033);state.time+=dt;
  if(state.hitstop>0){state.hitstop-=dt;dt=0}else{updatePlayer(dt);updateBoss(dt)}
-if(playerMixer)playerMixer.update(Math.max(dt,.001));updateArmTrails(Math.max(dt,.001));updateSparks(Math.max(dt,.001));updateCamera(Math.max(dt,.001));updateUI();renderer.render(scene,camera);requestAnimationFrame(loop);
+if(playerMixer)playerMixer.update(Math.max(dt,.001));updateArmTrails(Math.max(dt,.001));updateDustFX(Math.max(dt,.001));updateSparks(Math.max(dt,.001));updateCamera(Math.max(dt,.001));updateUI();renderer.render(scene,camera);requestAnimationFrame(loop);
 }
 loop();
