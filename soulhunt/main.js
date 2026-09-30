@@ -70,7 +70,7 @@ addEventListener('contextmenu',e=>e.preventDefault());
 
 const ui={hp:document.querySelector('#hp'),posture:document.querySelector('#posture'),bossHp:document.querySelector('#bossHp'),bossPosture:document.querySelector('#bossPosture'),msg:document.querySelector('#message'),danger:document.querySelector('#danger'),head:document.querySelector('#headPart'),leg:document.querySelector('#legPart'),tail:document.querySelector('#tailPart')};
 const state={
- hp:100,posture:0,stamina:100,attack:0,attackHit:false,rolling:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,stagger:0,dead:false,
+ hp:100,posture:0,stamina:100,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,stagger:0,dead:false,
  bossHp:560,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,time:0,shake:0,hitstop:0,
  headHp:100,legHp:150,tailHp:130,tailBroken:false,legBroken:false,headBroken:false,danger:false
 };
@@ -88,7 +88,20 @@ function tryRoll(){
  if(!state.rollDir.lengthSq())state.rollDir.copy(toBoss).multiplyScalar(-1);state.rollDir.normalize();
  state.stamina-=24;state.rolling=.46;state.invuln=.27;
 }
-function tryAttack(){if(state.dead||state.rolling>0||state.attack>0||state.stagger>0||state.stamina<17)return;state.stamina-=17;state.attack=.5;state.attackHit=false}
+function startAttack(step){
+ const cost=[0,16,18,23][step];
+ if(state.stamina<cost)return false;
+ state.stamina-=cost;state.attackStep=step;state.attack=[0,.46,.5,.62][step];state.attackHit=false;state.attackQueued=false;state.comboGrace=.18;return true;
+}
+function tryAttack(){
+ if(state.dead||state.rolling>0||state.stagger>0)return;
+ if(state.attack>0){
+   if(state.attack<.24)state.attackQueued=true;
+   return;
+ }
+ const next=state.comboGrace>0?Math.min(3,state.attackStep+1):1;
+ startAttack(next);
+}
 function tryDeflect(){if(!state.dead&&state.stagger<=0)state.deflect=.17}
 
 function hurtPlayer(dmg,posture=20,unblockable=false){
@@ -188,11 +201,19 @@ function updatePlayer(dt){
  state.stamina=Math.min(100,state.stamina+dt*(state.attack||state.rolling?10:29));
  state.posture=Math.max(0,state.posture-dt*(input.guard?5:14));
  state.bossPosture=Math.max(0,state.bossPosture-dt*(state.bossState==='idle'?4.5:1.3));
- state.invuln=Math.max(0,state.invuln-dt);state.deflect=Math.max(0,state.deflect-dt);state.stagger=Math.max(0,state.stagger-dt);
+ state.invuln=Math.max(0,state.invuln-dt);state.deflect=Math.max(0,state.deflect-dt);state.stagger=Math.max(0,state.stagger-dt);state.comboGrace=Math.max(0,state.comboGrace-dt);
  if(state.attack>0){
-   state.attack-=dt;const p=1-state.attack/.5;swordPivot.rotation.x=-1.05+Math.sin(p*Math.PI)*2.15;player.rotation.z=Math.sin(p*Math.PI)*-.1;
-   if(!state.attackHit&&state.attack<.25&&dist()<3.15){state.attackHit=true;hitBoss(25,13)}
-   if(state.attack<=0){swordPivot.rotation.x=0;player.rotation.z=0}
+   const dur=[0,.46,.5,.62][state.attackStep],step=state.attackStep;
+   state.attack-=dt;const p=1-state.attack/dur;
+   if(step===1){swordPivot.rotation.x=-1.15+Math.sin(p*Math.PI)*2.35;swordPivot.rotation.z=-.35+Math.sin(p*Math.PI)*.72;player.rotation.z=Math.sin(p*Math.PI)*-.11}
+   if(step===2){swordPivot.rotation.x=.95-Math.sin(p*Math.PI)*2.5;swordPivot.rotation.z=.45-Math.sin(p*Math.PI)*.9;player.rotation.z=Math.sin(p*Math.PI)*.13}
+   if(step===3){swordPivot.rotation.x=-1.45+Math.sin(p*Math.PI)*3.0;swordPivot.rotation.y=Math.sin(p*Math.PI)*.35;player.rotation.x=Math.sin(p*Math.PI)*-.08}
+   const hitAt=[0,.23,.25,.31][step],range=[0,3.15,3.25,3.45][step],damage=[0,22,25,36][step],post=[0,11,13,20][step];
+   if(!state.attackHit&&state.attack<hitAt&&dist()<range){state.attackHit=true;hitBoss(damage,post)}
+   if(state.attack<=0){
+     swordPivot.rotation.set(0,0,0);player.rotation.x=0;player.rotation.z=0;
+     if(state.attackQueued&&step<3)startAttack(step+1);else if(!state.attackQueued&&state.comboGrace<=0)state.attackStep=0;
+   }
  }
  const toBoss=flatDir(player.position,boss.position);
  if(input.lock&&!state.rolling)player.rotation.y=THREE.MathUtils.lerp(player.rotation.y,Math.atan2(toBoss.x,toBoss.z),dt*12);
