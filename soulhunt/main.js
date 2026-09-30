@@ -9,22 +9,25 @@ renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.localClippingEnabled=true;
 
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x08090a);
-scene.fog=new THREE.FogExp2(0x08090a,.03);
+scene.background=new THREE.Color(0x111a28);
+scene.fog=new THREE.FogExp2(0x111a28,.021);
 const camera=new THREE.PerspectiveCamera(58,1,.1,260);
 const clock=new THREE.Clock();
 const assetLoader=new GLTFLoader();
 
-scene.add(new THREE.HemisphereLight(0x75879a,0x1b100d,1.15));
-const moon=new THREE.DirectionalLight(0xd8e2ef,3.6);
+scene.add(new THREE.HemisphereLight(0x8aa8c9,0x121722,1.32));
+const moon=new THREE.DirectionalLight(0xbfd8ff,4.15);
 moon.position.set(-10,14,7); moon.castShadow=true; moon.shadow.mapSize.set(2048,2048); scene.add(moon);
-const fire=new THREE.PointLight(0xff6b3c,18,18,2); fire.position.set(7,3,-6); scene.add(fire);
+const fire=new THREE.PointLight(0xff7048,8,16,2); fire.position.set(7,3,-6); scene.add(fire);
+const bossRim=new THREE.PointLight(0x6fa7ff,20,34,1.55);
+bossRim.position.set(0,8,-9);
+scene.add(bossRim);
 
-const floor=new THREE.Mesh(new THREE.CircleGeometry(25,72),new THREE.MeshStandardMaterial({color:0x171719,roughness:.98,metalness:.05}));
+const floor=new THREE.Mesh(new THREE.CircleGeometry(25,72),new THREE.MeshStandardMaterial({color:0x1a202b,roughness:.98,metalness:.04}));
 floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
 for(let i=0;i<38;i++){
   const a=i/38*Math.PI*2,r=20+Math.random()*4;
-  const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.7+Math.random()*1.7,0),new THREE.MeshStandardMaterial({color:0x202225,roughness:1}));
+  const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.7+Math.random()*1.7,0),new THREE.MeshStandardMaterial({color:0x202a36,roughness:1}));
   rock.position.set(Math.cos(a)*r,.25,Math.sin(a)*r); rock.scale.y=.5+Math.random()*2.3; rock.castShadow=rock.receiveShadow=true; scene.add(rock);
 }
 function mat(color,metal=.15,rough=.72){return new THREE.MeshStandardMaterial({color,metalness:metal,roughness:rough})}
@@ -1949,6 +1952,7 @@ const BOSS_AIM_RANGE={
  arm_grab:3.45,arm_barrage:3.85,arm_guardbreak:3.8,arm_crush:3.6
 };
 function updateBoss(dt){
+ bossRim.position.set(boss.position.x,boss.position.y+8,boss.position.z-9);
  const bossMotionDt=state.bossState?.startsWith?.('arm_')?dt/bossAttackScale(state.bossState):dt;
  if(state.bossHp<=0)setBossVisualAction('dead');
  else if(state.bossState==='idle')setBossVisualAction(dist()>4.2*BOSS_ENGAGE_SCALE?'walk':'idle');
