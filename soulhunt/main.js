@@ -278,6 +278,9 @@ let bossWomanVisual=null;
 const bossWomanBones={};
 const bossWomanRest={};
 const proceduralWoman=[waist,chest,sternum,bustL,bustR,collar,neck,head];
+const proceduralBeast=[body,belly,backShell,waistShell,...legs,tailPivot];
+proceduralWoman.forEach(o=>o.visible=false);
+proceduralBeast.forEach(o=>o.visible=false);
 const womanTorsoClipLow=new THREE.Plane(new THREE.Vector3(0,-1,0),2.58);
 const womanTorsoClipHigh=new THREE.Plane(new THREE.Vector3(0,1,0),-5.45);
 let animeHeadVisual=null,animeHeadPivot=null,animeBossVRM=null,animeHeadReady=false;
@@ -313,52 +316,25 @@ function setBossMorph(name,value,speed=10,dt=.016){
  });
 }
 
-assetLoader.load('./assets/models/boss/mpfb-female.glb',gltf=>{
- bossWomanVisual=gltf.scene;
- bossWomanVisual.name='BellamoreHighDetailBody';
- bossWomanVisual.position.set(0,.06,.5);
- bossWomanVisual.scale.setScalar(3.0);
- bossWomanVisual.traverse(o=>{
-   if(o.isMesh){
-     o.castShadow=true;o.receiveShadow=true;
-     if(Array.isArray(o.material)){
-       o.material=o.material.map(m=>{const n=m.clone();n.clippingPlanes=[womanTorsoClipLow,womanTorsoClipHigh];n.clipShadows=true;return n});
-     }else if(o.material){
-       o.material=o.material.clone();o.material.clippingPlanes=[womanTorsoClipLow,womanTorsoClipHigh];o.material.clipShadows=true;
-     }
-   }
- });
- boss.add(bossWomanVisual);
+// MPFB torso retired: Bellamore now uses a single anime VRM upper body.
 
- for(const name of ['Hips','Spine','Spine1','Spine2','Neck','Head','LeftBreast','RightBreast','PonytailRoot','Ponytail1','Ponytail2','Ponytail3','LeftShoulder','RightShoulder','LeftArm','RightArm','LeftForeArm','RightForeArm','LeftHand','RightHand'])cacheBossWomanBone(name);
 
- // Collapse the avatar's normal arms into the shoulder mass; custom giant arms remain the only readable attack limbs.
- for(const name of ['LeftArm','RightArm']){
-   const b=bossWomanBones[name],base=bossWomanRest[name];
-   if(b&&base)b.scale.set(base.scale.x*.08,base.scale.y*.08,base.scale.z*.08);
- }
+const animeBossBones={},animeBossBoneRest={};
+const animeUpperClip=new THREE.Plane(new THREE.Vector3(0,-1,0),2.38);
+function cacheAnimeBossBone(name,node){
+ if(!node)return;
+ animeBossBones[name]=node;
+ animeBossBoneRest[name]={rotation:node.rotation.clone(),scale:node.scale.clone(),position:node.position.clone()};
+}
+function setAnimeBossBone(name,rx=0,ry=0,rz=0,speed=10,dt=.016){
+ const b=animeBossBones[name],base=animeBossBoneRest[name];
+ if(!b||!base)return;
+ b.rotation.x=THREE.MathUtils.lerp(b.rotation.x,base.rotation.x+rx,1-Math.exp(-dt*speed));
+ b.rotation.y=THREE.MathUtils.lerp(b.rotation.y,base.rotation.y+ry,1-Math.exp(-dt*speed));
+ b.rotation.z=THREE.MathUtils.lerp(b.rotation.z,base.rotation.z+rz,1-Math.exp(-dt*speed));
+}
 
- // Use MPFB only as the voluptuous textured torso. Breast bones are intentionally oversized.
- for(const name of ['LeftBreast','RightBreast']){
-   const b=bossWomanBones[name],base=bossWomanRest[name];
-   if(b&&base){
-     b.scale.set(base.scale.x*3.15,base.scale.y*2.15,base.scale.z*3.65);
-     const side=name==='LeftBreast'?-1:1;
-     b.position.x=base.position.x+side*.042;
-     b.position.y=base.position.y-.01;
-     b.position.z=base.position.z+.085;
-   }
- }
- {
-   const hb=bossWomanBones.Head,hr=bossWomanRest.Head;
-   if(hb&&hr)hb.scale.setScalar(.001);
- }
-
- proceduralWoman.forEach(o=>o.visible=false);
- console.info('Bellamore: high-detail CC0 MPFB body loaded');
-},undefined,err=>console.warn('High-detail boss GLB failed; procedural giantess fallback remains visible.',err));
-
-async function loadAnimeBossHead(){
+async function loadAnimeBossUpper(){
  try{
    const {VRMLoaderPlugin,VRMUtils}=await import('@pixiv/three-vrm');
    const loader=new GLTFLoader();
@@ -368,50 +344,118 @@ async function loadAnimeBossHead(){
      if(vrm)VRMUtils.rotateVRM0(vrm);
      const root=vrm?.scene||gltf.scene;
      const bodyNode=root.getObjectByName('Body');
-     if(bodyNode)bodyNode.visible=false;
-
      const face=root.getObjectByName('Face');
      const hair=root.getObjectByName('Hair001');
-     for(const obj of [face,hair]){
+     for(const obj of [bodyNode,face,hair]){
        if(!obj)continue;
        obj.visible=true;
-       obj.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+       obj.traverse(o=>{
+         if(!o.isMesh)return;
+         o.castShadow=true;o.receiveShadow=true;
+         if(Array.isArray(o.material)){
+           o.material=o.material.map(m=>{const n=m.clone();n.clippingPlanes=[animeUpperClip];n.clipShadows=true;return n});
+         }else if(o.material){
+           o.material=o.material.clone();o.material.clippingPlanes=[animeUpperClip];o.material.clipShadows=true;
+         }
+       });
      }
 
+     // Normalize the full anime body, then anchor the hips at the beast/woman seam.
      root.updateMatrixWorld(true);
-     let box=new THREE.Box3();
-     if(face)box.expandByObject(face,true);
-     if(hair)box.expandByObject(hair,true);
-     if(box.isEmpty())box.setFromObject(root,true);
-     const size=new THREE.Vector3();box.getSize(size);
-     const desiredHeight=2.08;
-     const scale=desiredHeight/Math.max(size.y,.001);
-     root.scale.multiplyScalar(scale);
+     const fullBox=new THREE.Box3().setFromObject(root,true);
+     const fullSize=new THREE.Vector3();fullBox.getSize(fullSize);
+     const fullHeight=5.45;
+     root.scale.multiplyScalar(fullHeight/Math.max(fullSize.y,.001));
      root.updateMatrixWorld(true);
 
-     box=new THREE.Box3();
-     if(face)box.expandByObject(face,true);
-     if(hair)box.expandByObject(hair,true);
-     if(box.isEmpty())box.setFromObject(root,true);
-     const center=new THREE.Vector3();box.getCenter(center);
-     root.position.sub(center);
+     const hips=vrm?.humanoid?.getNormalizedBoneNode?.('hips')||root.getObjectByName('J_Bip_C_Hips');
+     const hipPos=new THREE.Vector3();
+     if(hips){hips.getWorldPosition(hipPos);root.position.sub(hipPos)}
 
      animeHeadPivot=new THREE.Group();
-     animeHeadPivot.position.set(0,5.28,1.08);
+     animeHeadPivot.position.set(0,2.38,.28);
      animeHeadPivot.add(root);
      boss.add(animeHeadPivot);
      animeHeadVisual=root;animeBossVRM=vrm;animeHeadReady=true;
 
-     const hb=bossWomanBones.Head,hr=bossWomanRest.Head;
-     if(hb&&hr)hb.scale.setScalar(.001);
+     const humanoid=vrm?.humanoid;
+     const boneMap={
+       hips:'hips',spine:'spine',chest:'chest',upperChest:'upperChest',neck:'neck',head:'head',
+       leftShoulder:'leftShoulder',rightShoulder:'rightShoulder',
+       leftUpperArm:'leftUpperArm',rightUpperArm:'rightUpperArm',
+       leftLowerArm:'leftLowerArm',rightLowerArm:'rightLowerArm',
+       leftHand:'leftHand',rightHand:'rightHand'
+     };
+     for(const [key,hName] of Object.entries(boneMap)){
+       const node=humanoid?.getNormalizedBoneNode?.(hName);
+       if(node)cacheAnimeBossBone(key,node);
+     }
 
-     console.info('Bellamore: CC0 anime face/hair loaded over MPFB torso');
-   },undefined,err=>console.warn('Anime head failed; MPFB face remains as fallback.',err));
- }catch(err){
-   console.warn('three-vrm unavailable; MPFB face remains as fallback.',err);
- }
+     // Oversize the authored VRoid bust bones instead of overlaying transparent/procedural breasts.
+     for(const [name,side] of [['J_Sec_L_Bust1',-1],['J_Sec_R_Bust1',1]]){
+       const b=root.getObjectByName(name);
+       if(b){
+         b.scale.multiply(new THREE.Vector3(1.65,1.42,1.82));
+         b.position.x+=side*.018;
+         b.position.z+=.032;
+       }
+     }
+     for(const name of ['J_Sec_L_Bust2','J_Sec_R_Bust2']){
+       const b=root.getObjectByName(name);if(b)b.scale.multiplyScalar(1.45);
+     }
+
+     console.info('Bellamore: full anime centaur upper body loaded');
+   },undefined,err=>console.warn('Anime upper body failed to load.',err));
+ }catch(err){console.warn('three-vrm unavailable for boss upper body.',err)}
 }
-loadAnimeBossHead();
+loadAnimeBossUpper();
+
+let bossLowerVisual=null,bossLowerMixer=null,bossLowerActions={},bossLowerAction='';
+function setBossLowerAction(name,fade=.18){
+ if(!bossLowerMixer||!bossLowerActions[name]||bossLowerAction===name)return;
+ const prev=bossLowerActions[bossLowerAction],next=bossLowerActions[name];
+ next.reset().play();
+ if(prev&&prev!==next)prev.crossFadeTo(next,fade,false);
+ bossLowerAction=name;
+}
+assetLoader.load('./assets/models/boss/centaur-beast.glb',gltf=>{
+ bossLowerVisual=gltf.scene;
+ bossLowerVisual.name='BellamoreBeastLowerBody';
+ bossLowerVisual.updateMatrixWorld(true);
+ let box=new THREE.Box3().setFromObject(bossLowerVisual,true),size=new THREE.Vector3();box.getSize(size);
+ const horizontal=Math.max(size.x,size.z,.001);
+ bossLowerVisual.scale.setScalar(5.35/horizontal);
+ bossLowerVisual.rotation.y=Math.PI;
+ bossLowerVisual.updateMatrixWorld(true);
+ box=new THREE.Box3().setFromObject(bossLowerVisual,true);
+ bossLowerVisual.position.y-=box.min.y;
+ bossLowerVisual.position.z=-.5;
+ const neck=bossLowerVisual.getObjectByName('Neck1');
+ if(neck)neck.scale.setScalar(.001); // removes horse head/neck while preserving torso and legs
+ bossLowerVisual.traverse(o=>{
+   if(o.isMesh){
+     o.castShadow=true;o.receiveShadow=true;
+     const mats=Array.isArray(o.material)?o.material:[o.material];
+     for(const m of mats){
+       if(!m||!m.color)continue;
+       m.color.multiplyScalar(.42);
+       m.roughness=Math.max(m.roughness??.7,.64);
+       m.metalness=Math.min(m.metalness??0,.16);
+     }
+   }
+ });
+ boss.add(bossLowerVisual);
+ if(gltf.animations?.length){
+   bossLowerMixer=new THREE.AnimationMixer(bossLowerVisual);
+   for(const clip of gltf.animations){
+     const key=(clip.name||'').toLowerCase();
+     bossLowerActions[key]=bossLowerMixer.clipAction(clip);
+   }
+   setBossLowerAction('idle',0);
+ }
+ console.info('Bellamore: CC0 centaur beast lower body loaded');
+},undefined,err=>console.warn('Centaur beast lower body unavailable.',err));
+
 
 // Her actual gigantic arms. Combat hit ranges stay unchanged; only the visual reach is oversized.
 const dorsalArms=[];
