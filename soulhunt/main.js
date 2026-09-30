@@ -80,6 +80,27 @@ function flatDir(a,b){const d=new THREE.Vector3().subVectors(b,a);d.y=0;return d
 function dist(){return player.position.distanceTo(boss.position)}
 function setDanger(v){state.danger=v;ui.danger.classList.toggle('on',v)}
 function hitStop(sec){state.hitstop=Math.max(state.hitstop,sec)}
+const sparks=[];
+function spawnSparks(origin,count=16,power=5.5){
+ const geom=new THREE.BufferGeometry(),pos=new Float32Array(count*3),vel=[];
+ for(let i=0;i<count;i++){
+   pos[i*3]=origin.x;pos[i*3+1]=origin.y;pos[i*3+2]=origin.z;
+   const v=new THREE.Vector3((Math.random()-.5)*1.5,Math.random()*.9+.25,(Math.random()-.5)*1.5).normalize().multiplyScalar(power*(.55+Math.random()*.75));vel.push(v);
+ }
+ geom.setAttribute('position',new THREE.BufferAttribute(pos,3));
+ const pts=new THREE.Points(geom,new THREE.PointsMaterial({color:0xffc85a,size:.07,transparent:true,opacity:1,depthWrite:false}));
+ scene.add(pts);sparks.push({pts,vel,life:.32});
+}
+function updateSparks(dt){
+ for(let s=sparks.length-1;s>=0;s--){
+   const fx=sparks[s],arr=fx.pts.geometry.attributes.position.array;fx.life-=dt;
+   for(let i=0;i<fx.vel.length;i++){
+     fx.vel[i].y-=11*dt;arr[i*3]+=fx.vel[i].x*dt;arr[i*3+1]+=fx.vel[i].y*dt;arr[i*3+2]+=fx.vel[i].z*dt;
+   }
+   fx.pts.geometry.attributes.position.needsUpdate=true;fx.pts.material.opacity=clamp(fx.life/.32,0,1);
+   if(fx.life<=0){scene.remove(fx.pts);fx.pts.geometry.dispose();fx.pts.material.dispose();sparks.splice(s,1)}
+ }
+}
 function tryRoll(){
  if(state.dead||state.rolling>0||state.attack>0||state.stagger>0||state.stamina<24)return;
  let x=0,z=0;if(input.keys.has('KeyA'))x-=1;if(input.keys.has('KeyD'))x+=1;if(input.keys.has('KeyW'))z-=1;if(input.keys.has('KeyS'))z+=1;
@@ -108,7 +129,7 @@ function hurtPlayer(dmg,posture=20,unblockable=false){
  if(state.invuln>0||state.dead)return;
  if(!unblockable&&input.guard){
    if(state.deflect>0){
-     state.bossPosture+=30;state.posture=Math.max(0,state.posture-15);state.shake=.16;hitStop(.045);flash('튕겨내기',.22);
+     state.bossPosture+=30;state.posture=Math.max(0,state.posture-15);state.shake=.16;hitStop(.055);spawnSparks(player.position.clone().lerp(boss.position,.42).add(new THREE.Vector3(0,1.45,0)),22,7);flash('저스트 튕겨내기',.22);
      if(state.bossPosture>=100){state.bossStagger=2.05;state.bossPosture=48;state.bossState='stagger';flash('자세 붕괴',.52)}
      return;
    }
@@ -249,6 +270,6 @@ function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=i
 function loop(){
  let dt=Math.min(clock.getDelta(),.033);state.time+=dt;
  if(state.hitstop>0){state.hitstop-=dt;dt=0}else{updatePlayer(dt);updateBoss(dt)}
- updateCamera(Math.max(dt,.001));updateUI();renderer.render(scene,camera);requestAnimationFrame(loop);
+ updateSparks(Math.max(dt,.001));updateCamera(Math.max(dt,.001));updateUI();renderer.render(scene,camera);requestAnimationFrame(loop);
 }
 loop();
