@@ -1136,6 +1136,8 @@ function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 const PLAYER_ATTACK_SCALE={
  straight:1.18,katana:1.12,spear:1.2,axe:1.34,greatsword:1.48,hammer:1.58
 };
+// 60fps feel target: quick swings ~80-105f total, heavy slams/grabs ~120-165f,
+// then ~60-90f stationary recovery so the player can reach the flank/back.
 const BOSS_ATTACK_SCALE={
  arm_cross:1.45,arm_double_slam:1.68,arm_sweep:1.5,arm_uppercut:1.34,
  arm_grab:1.72,arm_barrage:1.42,arm_guardbreak:1.66,arm_crush:1.78
@@ -1619,7 +1621,7 @@ function updateBoss(dt){
    return;
  }
  const d=dist(),dir=flatDir(boss.position,player.position),face=Math.atan2(dir.x,dir.z);
- if(state.bossState==='idle')boss.rotation.y=THREE.MathUtils.lerp(boss.rotation.y,face,dt*5);
+ if(state.bossState==='idle'&&state.bossTimer<=.58)boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*5));
  else if(state.bossState.startsWith('arm_')){
    const cutoff=BOSS_AIM_CUTOFF[state.bossState]??0;
    if(state.bossTimer>cutoff){
