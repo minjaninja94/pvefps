@@ -44,9 +44,15 @@ jobs:
           interesting=[n for n in names if any(k.lower() in n.lower() for k in [
               'hips','spine','chest','breast','neck','head','shoulder','arm','hand','pony','hair','eye'
           ])]
+          morphs=[]
+          for mesh in g.meshes or []:
+              extras=getattr(mesh,'extras',None)
+              if isinstance(extras,dict) and extras.get('targetNames'):
+                  morphs.extend(extras['targetNames'])
           with open('soulhunt/assets/models/boss/mpfb-nodes.json','w',encoding='utf-8') as f:
-              json.dump({'all_count':len(names),'interesting':interesting},f,ensure_ascii=False,indent=2)
+              json.dump({'all_count':len(names),'interesting':interesting,'morph_targets':sorted(set(morphs))},f,ensure_ascii=False,indent=2)
           print('nodes',len(names))
+          print('morphs',len(set(morphs)))
           print('\n'.join(interesting[:120]))
           PY
 
