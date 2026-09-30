@@ -522,6 +522,7 @@ async function loadAnimeBossUpper(){
        const node=humanoid?.getNormalizedBoneNode?.(hName);
        if(node)cacheAnimeBossBone(key,node);
      }
+     setTimeout(tryBuildBossMonsterArms,0);
 
      // Centaur construction: keep the entire authored upper body visible, collapse only the human legs.
      for(const name of ['J_Bip_L_UpperLeg','J_Bip_R_UpperLeg']){
@@ -603,9 +604,93 @@ assetLoader.load('./assets/models/boss/centaur-beast.glb',gltf=>{
  console.info('Bellamore: CC0 centaur beast lower body loaded');
 },undefined,err=>console.warn('Centaur beast lower body unavailable.',err));
 
+let monsterSpikeSource=null;
+const bossMonsterArms=[];
+function cloneMonsterSpikeVisual(){
+ if(!monsterSpikeSource)return null;
+ const root=monsterSpikeSource.clone(true);
+ root.traverse(o=>{
+   if(!o.isMesh)return;
+   o.castShadow=true;o.receiveShadow=true;
+   if(o.material){
+     o.material=o.material.clone();
+     if(o.material.color)o.material.color.setHex(0x24222b);
+     o.material.roughness=.72;o.material.metalness=.18;
+   }
+ });
+ return root;
+}
+function orientSegment(group,a,b,thickness=1){
+ const dir=new THREE.Vector3().subVectors(b,a),len=Math.max(.001,dir.length());
+ group.position.copy(a).add(b).multiplyScalar(.5);
+ group.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().normalize());
+ group.scale.set(thickness,len,thickness);
+}
+function tryBuildBossMonsterArms(){
+ if(!monsterSpikeSource||bossMonsterArms.length||!animeBossBones.leftHand||!animeBossBones.rightHand||!dorsalArms?.length)return;
+ for(const side of ['left','right']){
+   const sx=side==='left'?-1:1;
+   const root=new THREE.Group(),boneA=new THREE.Group(),boneB=new THREE.Group(),claw=new THREE.Group();
+   boss.add(root);root.add(boneA,boneB,claw);
+
+   for(let i=0;i<3;i++){
+     const seg=cloneMonsterSpikeVisual();
+     if(seg){
+       seg.position.y=(i-1)*.34;
+       seg.scale.set(.48,.34,.48);
+       seg.rotation.y=i*.85;
+       boneA.add(seg);
+     }
+   }
+   for(let i=0;i<3;i++){
+     const seg=cloneMonsterSpikeVisual();
+     if(seg){
+       seg.position.y=(i-1)*.34;
+       seg.scale.set(.54,.38,.54);
+       seg.rotation.y=-i*.72;
+       boneB.add(seg);
+     }
+   }
+   for(let i=-1;i<=1;i++){
+     const tip=cloneMonsterSpikeVisual();
+     if(tip){
+       tip.position.set(i*.18,.28,0);
+       tip.scale.set(.27,.62,.27);
+       tip.rotation.z=sx*(.22+i*.08);
+       claw.add(tip);
+     }
+   }
+   bossMonsterArms.push({side,sx,root,boneA,boneB,claw,hand:animeBossBones[side+'Hand'],rig:dorsalArms[side==='left'?0:1]});
+ }
+ console.info('Bellamore: external monster arm extension rig built');
+}
+function updateBossMonsterArmVisuals(){
+ if(!bossMonsterArms.length)return;
+ boss.updateMatrixWorld(true);
+ for(const a of bossMonsterArms){
+   const handW=new THREE.Vector3(),wristW=new THREE.Vector3();
+   a.hand.getWorldPosition(handW);a.rig.wrist.getWorldPosition(wristW);
+   const p0=boss.worldToLocal(handW.clone()),p2=boss.worldToLocal(wristW.clone());
+   const p1=p0.clone().lerp(p2,.48);
+   p1.y+=.14;
+   p1.x+=a.sx*.22;
+   p1.z+=.1;
+
+   orientSegment(a.boneA,p0,p1,.82);
+   orientSegment(a.boneB,p1,p2,.94);
+   a.claw.position.copy(p2);
+   const dir=p2.clone().sub(p1).normalize();
+   a.claw.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
+   const active=state?.bossState?.startsWith?.('arm_');
+   const pulse=active?1.08+Math.sin(state.time*18)*.035:1;
+   a.root.scale.setScalar(pulse);
+ }
+}
+
 const bossSpikeTargets=[];
 assetLoader.load('./assets/models/boss/monster-spikes.glb',gltf=>{
  const source=gltf.scene;
+ monsterSpikeSource=source;
  const placements=[
    {p:[0,2.05,-2.05],r:[-.52,0,0],s:[1.15,1.5,1.05]},
    {p:[0,2.18,-1.28],r:[-.46,0,0],s:[1.0,1.3,.95]},
@@ -626,6 +711,7 @@ assetLoader.load('./assets/models/boss/monster-spikes.glb',gltf=>{
    boss.add(root);
    bossSpikeTargets.push({obj:root,hp:i<2?90:65,max:i<2?90:65,broken:false});
  });
+ tryBuildBossMonsterArms();
  console.info('Bellamore: external CC0 spike armor attached');
 },undefined,err=>console.warn('Boss spike asset unavailable.',err));
 
@@ -1174,7 +1260,7 @@ function updateBoss(dt){
  else if(state.bossState==='idle')setBossVisualAction(dist()>4.2?'walk':'idle');
  else if(state.bossStagger>0)setBossVisualAction('idle');
  else setBossVisualAction('attack');
- animateBossTelegraph(dt);updateBossWarningGlow();animateGiantessPresence(dt);
+ animateBossTelegraph(dt);updateBossWarningGlow();animateGiantessPresence(dt);updateBossMonsterArmVisuals();
  if(state.reaction>0){
    state.reaction=Math.max(0,state.reaction-dt);
    const k=Math.sin((state.reaction/.16)*Math.PI);
