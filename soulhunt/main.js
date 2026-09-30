@@ -6,6 +6,7 @@ const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.localClippingEnabled=true;
 
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x08090a);
@@ -244,6 +245,71 @@ const tailB=part(tailPivot,new THREE.CapsuleGeometry(.28,1.65,5,9),shellDark,[0,
 const tailTip=part(tailPivot,new THREE.ConeGeometry(.35,1.42,8),horn,[0,0,-3.5],[Math.PI/2,0,0]);
 
 const BOSS_REST={bodyY:1.48,headY:5.28,headZ:.82,jawX:.08};
+
+let bossWomanVisual=null;
+const bossWomanBones={};
+const bossWomanRest={};
+const proceduralWoman=[waist,chest,sternum,bustL,bustR,collar,neck,head];
+const womanClipPlane=new THREE.Plane(new THREE.Vector3(0,1,0),-2.62);
+
+function cacheBossWomanBone(name){
+ const b=bossWomanVisual?.getObjectByName(name);
+ if(!b)return null;
+ bossWomanBones[name]=b;
+ bossWomanRest[name]={rotation:b.rotation.clone(),scale:b.scale.clone(),position:b.position.clone()};
+ return b;
+}
+function setBoneOffset(name,rx=0,ry=0,rz=0,speed=10,dt=.016){
+ const b=bossWomanBones[name],base=bossWomanRest[name];
+ if(!b||!base)return;
+ b.rotation.x=THREE.MathUtils.lerp(b.rotation.x,base.rotation.x+rx,1-Math.exp(-dt*speed));
+ b.rotation.y=THREE.MathUtils.lerp(b.rotation.y,base.rotation.y+ry,1-Math.exp(-dt*speed));
+ b.rotation.z=THREE.MathUtils.lerp(b.rotation.z,base.rotation.z+rz,1-Math.exp(-dt*speed));
+}
+function setBossMorph(name,value,speed=10,dt=.016){
+ if(!bossWomanVisual)return;
+ bossWomanVisual.traverse(o=>{
+   if(!o.morphTargetDictionary||!o.morphTargetInfluences)return;
+   const idx=o.morphTargetDictionary[name];
+   if(idx===undefined)return;
+   o.morphTargetInfluences[idx]=THREE.MathUtils.lerp(o.morphTargetInfluences[idx]||0,value,1-Math.exp(-dt*speed));
+ });
+}
+
+assetLoader.load('./assets/models/boss/mpfb-female.glb',gltf=>{
+ bossWomanVisual=gltf.scene;
+ bossWomanVisual.name='BellamoreHighDetailBody';
+ bossWomanVisual.position.set(0,.12,.42);
+ bossWomanVisual.scale.setScalar(3.0);
+ bossWomanVisual.traverse(o=>{
+   if(o.isMesh){
+     o.castShadow=true;o.receiveShadow=true;
+     if(Array.isArray(o.material)){
+       o.material=o.material.map(m=>{const n=m.clone();n.clippingPlanes=[womanClipPlane];n.clipShadows=true;return n});
+     }else if(o.material){
+       o.material=o.material.clone();o.material.clippingPlanes=[womanClipPlane];o.material.clipShadows=true;
+     }
+   }
+ });
+ boss.add(bossWomanVisual);
+
+ for(const name of ['Hips','Spine','Spine1','Spine2','Neck','Head','LeftBreast','RightBreast','PonytailRoot','Ponytail1','Ponytail2','Ponytail3','LeftShoulder','RightShoulder','LeftArm','RightArm','LeftForeArm','RightForeArm','LeftHand','RightHand'])cacheBossWomanBone(name);
+
+ // Collapse the avatar's normal arms into the shoulder mass; custom giant arms remain the only readable attack limbs.
+ for(const name of ['LeftArm','RightArm']){
+   const b=bossWomanBones[name],base=bossWomanRest[name];
+   if(b&&base)b.scale.set(base.scale.x*.08,base.scale.y*.08,base.scale.z*.08);
+ }
+
+ // Exaggerate the dedicated MPFB breast bones while preserving the textured/skinned chest.
+ for(const name of ['LeftBreast','RightBreast']){
+   const b=bossWomanBones[name],base=bossWomanRest[name];
+   if(b&&base)b.scale.set(base.scale.x*1.34,base.scale.y*1.22,base.scale.z*1.38);
+ }
+
+ proceduralWoman.forEach(o=>o.visible=false);
+ console.info('Bellamore: high-detail CC0 MPFB body loaded');
+},undefined,err=>console.warn('High-detail boss GLB failed; procedural giantess fallback remains visible.',err));
 
 // Her actual gigantic arms. Combat hit ranges stay unchanged; only the visual reach is oversized.
 const dorsalArms=[];
