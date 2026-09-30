@@ -31,43 +31,74 @@ function part(parent,geo,material,pos,rot=[0,0,0],scale=[1,1,1]){
   const m=new THREE.Mesh(geo,material);m.position.set(...pos);m.rotation.set(...rot);m.scale.set(...scale);m.castShadow=m.receiveShadow=true;parent.add(m);return m;
 }
 
-const steel=mat(0x8e969c,.86,.24),cloth=mat(0x262226,.04,.9),dark=mat(0x34373b,.34,.52);
+const steel=mat(0x9aa2a8,.9,.22),steelDark=mat(0x4b5258,.82,.34),cloth=mat(0x262226,.04,.9),dark=mat(0x34373b,.34,.52),leather=mat(0x4a3428,.05,.82);
 const player=new THREE.Group();scene.add(player);
-const playerBody=part(player,new THREE.CapsuleGeometry(.43,.9,5,8),cloth,[0,1,0]);
-const playerHead=part(player,new THREE.SphereGeometry(.34,12,8),dark,[0,1.92,0]);
-const swordPivot=new THREE.Group();swordPivot.position.set(.42,1.35,0);player.add(swordPivot);
-part(swordPivot,new THREE.BoxGeometry(.12,.12,1.78),steel,[.18,-.05,-.72],[.18,0,.08]);
-part(swordPivot,new THREE.BoxGeometry(.55,.08,.12),dark,[.18,-.05,.13],[.18,0,.08]);
+
+// Stable in-engine knight: no remote player model required.
+const playerBody=part(player,new THREE.CapsuleGeometry(.43,.88,5,8),steelDark,[0,1.05,0]);
+part(player,new THREE.BoxGeometry(.78,.72,.42),steel,[0,1.32,0]);
+const playerHead=part(player,new THREE.SphereGeometry(.34,12,8),steel,[0,1.98,0]);
+part(player,new THREE.BoxGeometry(.48,.13,.38),steelDark,[0,1.98,.23]); // visor
+part(player,new THREE.ConeGeometry(.09,.34,6),steel,[0,2.42,0]);
+for(const sx of [-1,1]){
+ part(player,new THREE.SphereGeometry(.26,10,7),steel,[sx*.55,1.58,0],[0,0,0],[1.25,.7,1]);
+ part(player,new THREE.CapsuleGeometry(.13,.64,4,7),steelDark,[sx*.55,1.06,0],[0,0,sx*.05]);
+ part(player,new THREE.CapsuleGeometry(.16,.78,4,7),steelDark,[sx*.25,.43,0],[0,0,sx*.035]);
+}
+part(player,new THREE.BoxGeometry(.72,.06,.46),leather,[0,.82,0]);
+const cape=part(player,new THREE.PlaneGeometry(.82,1.22),cloth,[0,1.15,-.3],[0,0,0]);cape.material.side=THREE.DoubleSide;
+
+const weaponPivot=new THREE.Group();weaponPivot.position.set(.48,1.38,0);player.add(weaponPivot);
+const shieldPivot=new THREE.Group();shieldPivot.position.set(-.48,1.32,.05);player.add(shieldPivot);
+const shield=part(shieldPivot,new THREE.CylinderGeometry(.48,.48,.11,12),steelDark,[0,0,-.08],[Math.PI/2,0,0],[1,.95,1]);
+part(shieldPivot,new THREE.BoxGeometry(.12,.68,.14),steel,[0,0,.02]);
+const weaponVisual=new THREE.Group();weaponPivot.add(weaponVisual);
+
+const WEAPONS=[
+ {id:'straight',name:'직검',damage:1.00,posture:1.00,speed:1.00,stamina:1.00,reach:1.00,hitstop:1.00,guard:.58,motion:1.00},
+ {id:'greatsword',name:'대검',damage:1.58,posture:1.55,speed:.66,stamina:1.48,reach:1.22,hitstop:1.55,guard:.72,motion:1.35},
+ {id:'hammer',name:'해머',damage:1.38,posture:1.92,speed:.59,stamina:1.58,reach:.93,hitstop:1.82,guard:.76,motion:1.52},
+ {id:'spear',name:'창',damage:.92,posture:.86,speed:1.08,stamina:.92,reach:1.48,hitstop:.82,guard:.48,motion:.82},
+ {id:'katana',name:'태도',damage:1.08,posture:.92,speed:1.18,stamina:.94,reach:1.08,hitstop:.9,guard:.45,motion:.74},
+ {id:'axe',name:'전투도끼',damage:1.28,posture:1.36,speed:.78,stamina:1.27,reach:1.02,hitstop:1.32,guard:.65,motion:1.22}
+];
+let weaponIndex=0,twoHanded=false;
+function currentWeapon(){return WEAPONS[weaponIndex]}
+function clearWeapon(){while(weaponVisual.children.length){const o=weaponVisual.children.pop();o.geometry?.dispose?.();}}
+function addWeaponMesh(geo,material,pos,rot=[0,0,0]){return part(weaponVisual,geo,material,pos,rot)}
+function buildWeapon(){
+ clearWeapon();
+ const w=currentWeapon();
+ if(w.id==='straight'){
+   addWeaponMesh(new THREE.BoxGeometry(.12,.08,1.65),steel,[0,0,-.72]);
+   addWeaponMesh(new THREE.BoxGeometry(.48,.08,.12),steelDark,[0,0,.08]);addWeaponMesh(new THREE.CapsuleGeometry(.055,.34,4,6),leather,[0,0,.34],[Math.PI/2,0,0]);
+ }else if(w.id==='greatsword'){
+   addWeaponMesh(new THREE.BoxGeometry(.24,.10,2.28),steel,[0,0,-1.02]);addWeaponMesh(new THREE.BoxGeometry(.7,.12,.16),steelDark,[0,0,.14]);addWeaponMesh(new THREE.CapsuleGeometry(.075,.55,4,6),leather,[0,0,.52],[Math.PI/2,0,0]);
+ }else if(w.id==='hammer'){
+   addWeaponMesh(new THREE.CylinderGeometry(.075,.075,2.0,8),leather,[0,0,-.45],[Math.PI/2,0,0]);addWeaponMesh(new THREE.BoxGeometry(.92,.58,.5),steelDark,[0,0,-1.42]);
+ }else if(w.id==='spear'){
+   addWeaponMesh(new THREE.CylinderGeometry(.045,.045,2.65,8),leather,[0,0,-.9],[Math.PI/2,0,0]);addWeaponMesh(new THREE.ConeGeometry(.14,.62,6),steel,[0,0,-2.28],[Math.PI/2,0,0]);
+ }else if(w.id==='katana'){
+   addWeaponMesh(new THREE.BoxGeometry(.09,.055,1.82),steel,[.05,0,-.82],[0,.08,0]);addWeaponMesh(new THREE.CylinderGeometry(.18,.18,.05,12),steelDark,[0,0,.08],[Math.PI/2,0,0]);addWeaponMesh(new THREE.CapsuleGeometry(.05,.42,4,6),leather,[0,0,.38],[Math.PI/2,0,0]);
+ }else{
+   addWeaponMesh(new THREE.CylinderGeometry(.07,.07,1.55,8),leather,[0,0,-.45],[Math.PI/2,0,0]);addWeaponMesh(new THREE.BoxGeometry(.72,.46,.18),steel,[.18,0,-1.18],[0,0,.18]);
+ }
+ weaponPivot.scale.setScalar(twoHanded?1.06:1);
+ shield.visible=!twoHanded;
+}
+function setWeapon(i){
+ if(state?.attack>0||state?.rolling>0)return;
+ weaponIndex=(i+WEAPONS.length)%WEAPONS.length;
+ if(['greatsword','hammer'].includes(currentWeapon().id)&&!twoHanded)twoHanded=true;
+ buildWeapon();flash(currentWeapon().name+(twoHanded?' · 양손':' · 방패'),.45);
+}
+function toggleGrip(){if(state?.attack>0||state?.rolling>0)return;twoHanded=!twoHanded;buildWeapon();flash(twoHanded?'양손 잡기 · 무기 가드':'한손 잡기 · 방패 가드',.5)}
+buildWeapon();
 player.position.set(0,0,8);
 
-// CC0 provisional humanoid visual; sword/combat controller remain ours.
-let playerMixer=null,playerActions={},playerActionName='';
-gltfLoader.load('https://gobkit.com/freebies/minion/minion-d01.glb',gltf=>{
-  const visual=gltf.scene;
-  visual.scale.setScalar(1.55);
-  visual.position.set(0,0,0);
-  visual.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
-  player.add(visual);
-  playerBody.visible=false;playerHead.visible=false;
-  if(gltf.animations?.length){
-    playerMixer=new THREE.AnimationMixer(visual);
-    const src=gltf.animations[0],fps=24;
-    playerActions.idle=playerMixer.clipAction(THREE.AnimationUtils.subclip(src,'idle',0,30,fps));
-    playerActions.attack=playerMixer.clipAction(THREE.AnimationUtils.subclip(src,'attack',30,60,fps));
-    playerActions.dead=playerMixer.clipAction(THREE.AnimationUtils.subclip(src,'dead',60,90,fps));
-    playerActions.dead.setLoop(THREE.LoopOnce,1);playerActions.dead.clampWhenFinished=true;
-    playerActionName='idle';playerActions.idle.play();
-  }
-},undefined,err=>console.warn('CC0 player model load failed; using procedural fallback.',err));
-
-function setPlayerVisualAction(name){
- if(!playerMixer||!playerActions[name]||playerActionName===name)return;
- const prev=playerActions[playerActionName],next=playerActions[name];
- next.reset().play();
- if(name!=='dead')next.setLoop(THREE.LoopRepeat,Infinity);
- if(prev)prev.crossFadeTo(next,.1,false);
- playerActionName=name;
-}
+// Procedural knight drives all combat poses. Keeping these no-op hooks makes the loop robust.
+let playerMixer=null;
+function setPlayerVisualAction(){}
 
 const boss=new THREE.Group();scene.add(boss);
 const shell=mat(0x3f4548,.58,.47),shellDark=mat(0x262b2e,.48,.62),meat=mat(0x452d28,.02,.88),horn=mat(0x807561,.18,.65);
