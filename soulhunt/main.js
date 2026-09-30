@@ -164,9 +164,10 @@ function chooseBossAttack(){
  const d=dist(),r=Math.random();
  setDanger(false);
  if(d>7){state.bossState='rush';state.bossTimer=1.05;state.bossHit=false;return}
- if(r<.34){state.bossState='claw1';state.bossTimer=.66;state.bossHit=false}
- else if(r<.58){state.bossState='slam';state.bossTimer=1.05;state.bossHit=false}
- else if(r<.78&&!state.tailBroken){state.bossState='tail';state.bossTimer=.92;state.bossHit=false}
+ if(r<.28){state.bossState='claw1';state.bossTimer=.62;state.bossHit=false}
+ else if(r<.48){state.bossState='bite';state.bossTimer=.82;state.bossHit=false}
+ else if(r<.66){state.bossState='slam';state.bossTimer=1.05;state.bossHit=false}
+ else if(r<.82&&!state.tailBroken){state.bossState='tail';state.bossTimer=.92;state.bossHit=false}
  else{state.bossState='peril';state.bossTimer=1.12;state.bossHit=false;setDanger(true)}
 }
 function bossImpact(range,dmg,posture,unblockable=false){
@@ -194,13 +195,26 @@ function updateBoss(dt){
    if(state.bossTimer<.58)bossImpact(3.25,27,34,false);
    if(state.bossTimer<=0){head.rotation.x=0;state.bossState='idle';state.bossTimer=.55}
  }else if(state.bossState==='claw1'){
-   const p=1-state.bossTimer/.66;legs[0].rotation.x=-Math.sin(p*Math.PI)*1.1;
-   if(state.bossTimer<.31)bossImpact(3.45,18,23,false);
-   if(state.bossTimer<=0){state.bossState='claw2';state.bossTimer=.48;state.bossHit=false}
+   const p=1-state.bossTimer/.62;legs[0].rotation.x=-Math.sin(p*Math.PI)*1.15;
+   if(state.bossTimer<.29)bossImpact(3.45,16,21,false);
+   if(state.bossTimer<=0){state.bossState='claw2';state.bossTimer=.46;state.bossHit=false}
  }else if(state.bossState==='claw2'){
-   const p=1-state.bossTimer/.48;legs[2].rotation.x=-Math.sin(p*Math.PI)*1.2;
-   if(state.bossTimer<.24)bossImpact(3.55,22,29,false);
-   if(state.bossTimer<=0){state.bossState='idle';state.bossTimer=.5}
+   const p=1-state.bossTimer/.46;legs[2].rotation.x=-Math.sin(p*Math.PI)*1.2;
+   if(state.bossTimer<.23)bossImpact(3.55,17,22,false);
+   if(state.bossTimer<=0){state.bossState='claw3';state.bossTimer=.43;state.bossHit=false}
+ }else if(state.bossState==='claw3'){
+   const p=1-state.bossTimer/.43;legs[0].rotation.z=.55-Math.sin(p*Math.PI)*1.15;body.rotation.z=Math.sin(p*Math.PI)*-.12;
+   if(state.bossTimer<.22)bossImpact(3.7,19,24,false);
+   if(state.bossTimer<=0){state.bossState='claw4';state.bossTimer=.58;state.bossHit=false}
+ }else if(state.bossState==='claw4'){
+   const p=1-state.bossTimer/.58;legs[2].rotation.z=-.55+Math.sin(p*Math.PI)*1.3;body.rotation.z=Math.sin(p*Math.PI)*.15;
+   if(state.bossTimer<.29)bossImpact(3.9,25,34,false);
+   if(state.bossTimer<=0){legs[0].rotation.z=legs[2].rotation.z=0;body.rotation.z=0;state.bossState='idle';state.bossTimer=.72}
+ }else if(state.bossState==='bite'){
+   const p=1-state.bossTimer/.82;
+   head.position.z=2.55+Math.sin(p*Math.PI)*.72;jaw.rotation.x=.08+Math.sin(p*Math.PI)*.62;
+   if(state.bossTimer<.34)bossImpact(3.35,28,37,false);
+   if(state.bossTimer<=0){head.position.z=2.55;jaw.rotation.x=.08;state.bossState='idle';state.bossTimer=.62}
  }else if(state.bossState==='slam'){
    const wind=state.bossTimer>.38;body.position.y=THREE.MathUtils.lerp(body.position.y,wind?2.65:1.68,dt*(wind?5:18));
    if(state.bossTimer<.32)bossImpact(4.0,34,43,false);
