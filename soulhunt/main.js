@@ -214,8 +214,7 @@ const nose=part(head,new THREE.ConeGeometry(.055,.2,7),skinShadow,[0,-.02,.7],[M
 const jaw=part(head,new THREE.BoxGeometry(.58,.12,.11),lipMat,[0,-.28,.65],[.08,0,0]);
 
 // Long hair frames the face and keeps the head readable against the giant arms.
-const hairCap=part(head,new THREE.SphereGeometry(.79,16,11),hairMat,[0,.05,-.04],[0,0,0],[1.02,1.08,.82]);
-hairCap.scale.z=.72;
+const hairCap=part(head,new THREE.SphereGeometry(.82,16,11),hairMat,[0,.08,-.38],[0,0,0],[1.04,1.1,.46]);
 for(const sx of [-1,1]){
   part(head,new THREE.CapsuleGeometry(.15,1.55,5,8),hairMat,[sx*.57,-.58,-.02],[0,0,sx*.09],[1,1,1]);
   part(head,new THREE.CapsuleGeometry(.12,1.18,5,8),hairMat,[sx*.36,-.72,-.1],[0,0,sx*.05],[1,1,1]);
@@ -240,52 +239,48 @@ const tailTip=part(tailPivot,new THREE.ConeGeometry(.35,1.42,8),horn,[0,0,-3.5],
 
 const BOSS_REST={bodyY:1.48,headY:5.28,headZ:.82,jawX:.08};
 
-// Extra dorsal arms: deliberately larger than their unchanged combat hit ranges.
+// Her actual gigantic arms. Combat hit ranges stay unchanged; only the visual reach is oversized.
 const dorsalArms=[];
 for(const sx of [-1,1]){
   const shoulder=new THREE.Group();
-  shoulder.position.set(sx*1.72,3.62,-.48);
-  shoulder.rotation.z=-sx*.28;
+  shoulder.position.set(sx*1.25,4.12,.62);
+  shoulder.rotation.z=-sx*.2;
   boss.add(shoulder);
 
-  const shoulderArmor=part(shoulder,new THREE.DodecahedronGeometry(.86,0),carapace,[0,0,0],[0,0,sx*.16],[1.48,1.12,1.32]);
-  part(shoulder,new THREE.ConeGeometry(.28,1.28,8),horn,[sx*.28,.72,-.08],[0,0,sx*.48]);
-  part(shoulder,new THREE.ConeGeometry(.19,1.05,7),horn,[sx*.62,.35,-.42],[Math.PI/2.4,0,sx*.28]);
+  // Human shoulder mass wrapped with monster plating.
+  part(shoulder,new THREE.SphereGeometry(.58,12,9),skin,[0,0,0],[0,0,0],[1.2,.9,1.0]);
+  part(shoulder,new THREE.DodecahedronGeometry(.58,0),carapace,[sx*.22,.12,-.18],[0,0,sx*.15],[1.18,.72,.92]);
+  part(shoulder,new THREE.ConeGeometry(.17,.88,7),horn,[sx*.28,.45,-.2],[0,0,sx*.38]);
 
   const upperPivot=new THREE.Group();
-  upperPivot.position.set(sx*.18,-.04,.08);
-  upperPivot.rotation.z=sx*.18;
+  upperPivot.position.set(sx*.2,-.08,.04);
+  upperPivot.rotation.z=sx*.12;
   shoulder.add(upperPivot);
 
-  // Massive upper arm with a visible flesh gap before the forearm.
-  const upper=part(upperPivot,new THREE.CapsuleGeometry(.43,2.02,7,11),shell,[sx*1.02,-.28,.04],[0,0,sx*1.02],[1.12,1,1.12]);
-  part(upperPivot,new THREE.CapsuleGeometry(.28,.7,5,9),warningFlesh,[sx*1.62,-.6,.05],[0,0,sx*.92],[1.05,1,1.05]);
+  // Very long upper arm: skin first, then a dark organic guard.
+  const upper=part(upperPivot,new THREE.CapsuleGeometry(.36,2.15,7,11),skin,[sx*1.02,-.24,.03],[0,0,sx*1.02],[1.14,1,1.08]);
+  part(upperPivot,new THREE.BoxGeometry(1.18,.34,.5),shellDark,[sx*.92,-.18,-.18],[0,0,sx*.12]);
 
   const elbow=new THREE.Group();
-  elbow.position.set(sx*1.92,-.72,.05);
+  elbow.position.set(sx*1.96,-.7,.04);
   upperPivot.add(elbow);
-  part(elbow,new THREE.DodecahedronGeometry(.48,0),carapace,[0,0,0],[0,0,0],[1.24,.95,1.16]);
-  part(elbow,new THREE.ConeGeometry(.14,.82,7),horn,[0,.38,-.18],[.35,0,sx*.15]);
+  part(elbow,new THREE.SphereGeometry(.34,10,8),skinShadow,[0,0,0]);
+  part(elbow,new THREE.DodecahedronGeometry(.38,0),carapace,[0,.08,-.12],[0,0,0],[1.12,.7,1]);
 
-  const fore=part(elbow,new THREE.CapsuleGeometry(.37,2.0,7,11),warningFlesh,[sx*.96,-.22,.08],[0,0,sx*.96],[1.12,1,1.12]);
-  const foreGuard=part(elbow,new THREE.BoxGeometry(1.35,.5,.72),shellDark,[sx*.82,-.12,.08],[0,0,sx*.12]);
+  const fore=part(elbow,new THREE.CapsuleGeometry(.33,2.08,7,11),skin,[sx*.98,-.18,.06],[0,0,sx*.96],[1.14,1,1.08]);
+  part(elbow,new THREE.BoxGeometry(1.3,.42,.62),warningFlesh,[sx*.9,-.12,-.12],[0,0,sx*.1]);
 
   const wrist=new THREE.Group();
-  wrist.position.set(sx*1.88,-.56,.08);
+  wrist.position.set(sx*1.92,-.54,.06);
   elbow.add(wrist);
 
-  const hand=part(wrist,new THREE.DodecahedronGeometry(.62,0),carapace,[sx*.33,-.08,.12],[0,0,sx*.16],[1.32,.82,1.18]);
-  const palm=part(wrist,new THREE.BoxGeometry(.92,.34,.78),warningFlesh,[sx*.42,-.2,.12],[0,0,sx*.12]);
+  const hand=part(wrist,new THREE.SphereGeometry(.54,12,9),skin,[sx*.34,-.08,.12],[0,0,0],[1.25,.72,1.0]);
+  const palm=part(wrist,new THREE.BoxGeometry(.86,.28,.66),skinShadow,[sx*.42,-.18,.14],[0,0,sx*.1]);
 
-  // Long talons are visual-only: hit ranges remain the existing bossImpact distances.
-  for(let f=-1;f<=1;f++){
-    part(wrist,new THREE.ConeGeometry(.11,.95,7),horn,[sx*.92,-.22,f*.27],[0,0,sx*Math.PI/2]);
-  }
+  // Monster talons sell the hybrid nature, but are visual only.
+  for(let f=-1;f<=1;f++)part(wrist,new THREE.ConeGeometry(.095,.92,7),horn,[sx*.9,-.2,f*.23],[0,0,sx*Math.PI/2]);
 
-  dorsalArms.push({
-    sx,shoulder,upperPivot,elbow,wrist,hand,
-    rest:{shoulderZ:-sx*.28,upperZ:sx*.18}
-  });
+  dorsalArms.push({sx,shoulder,upperPivot,elbow,wrist,hand,rest:{shoulderZ:-sx*.2,upperZ:sx*.12}});
 }
 function resetDorsalArms(dt=1){
  for(const a of dorsalArms){
