@@ -1,5 +1,4 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
-import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 
 const canvas=document.querySelector('#game');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
@@ -12,7 +11,6 @@ scene.background=new THREE.Color(0x08090a);
 scene.fog=new THREE.FogExp2(0x08090a,.03);
 const camera=new THREE.PerspectiveCamera(58,1,.1,140);
 const clock=new THREE.Clock();
-const gltfLoader=new GLTFLoader();
 
 scene.add(new THREE.HemisphereLight(0x75879a,0x1b100d,1.15));
 const moon=new THREE.DirectionalLight(0xd8e2ef,3.6);
@@ -121,37 +119,9 @@ const tailB=part(tailPivot,new THREE.CapsuleGeometry(.24,1.45,5,9),shellDark,[0,
 const tailTip=part(tailPivot,new THREE.ConeGeometry(.32,1.25,8),horn,[0,0,-3],[Math.PI/2,0,0]);
 boss.position.set(0,0,-2);
 
-// CC0 provisional creature visual. Combat logic/hit zones remain our own.
-let bossMixer=null,bossActions={},bossActionName='';
-const primitiveBossMeshes=[body,chest,head,jaw,...legs,tailA,tailB,tailTip];
-gltfLoader.load('https://gobkit.com/freebies/dino/Carnotaurus.glb',gltf=>{
-  const visual=gltf.scene;
-  visual.scale.setScalar(1.95);
-  visual.position.set(0,0,0);
-  visual.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
-  boss.add(visual);
-  primitiveBossMeshes.forEach(m=>m.visible=false);
-  if(gltf.animations?.length){
-    bossMixer=new THREE.AnimationMixer(visual);
-    const src=gltf.animations[0], fps=24;
-    bossActions.idle=bossMixer.clipAction(THREE.AnimationUtils.subclip(src,'idle',0,30,fps));
-    bossActions.attack=bossMixer.clipAction(THREE.AnimationUtils.subclip(src,'attack',30,60,fps));
-    bossActions.dead=bossMixer.clipAction(THREE.AnimationUtils.subclip(src,'dead',60,90,fps));
-    bossActions.walk=bossMixer.clipAction(THREE.AnimationUtils.subclip(src,'walk',90,120,fps));
-    bossActions.dead.setLoop(THREE.LoopOnce,1);bossActions.dead.clampWhenFinished=true;
-    bossActionName='idle';bossActions.idle.play();
-  }
-},undefined,err=>console.warn('CC0 boss model load failed; using procedural fallback.',err));
-
-function setBossVisualAction(name){
- if(!bossMixer||!bossActions[name]||bossActionName===name)return;
- const prev=bossActions[bossActionName],next=bossActions[name];
- next.reset().play();
- if(name!=='dead')next.setLoop(THREE.LoopRepeat,Infinity);
- if(prev)prev.crossFadeTo(next,.12,false);
- bossActionName=name;
-}
-
+// Procedural boss visual is the guaranteed browser-safe fallback.
+let bossMixer=null;
+function setBossVisualAction(){}
 const shadowMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.34,depthWrite:false});
 for(const [obj,r] of [[player,.72],[boss,2.1]]){const s=new THREE.Mesh(new THREE.CircleGeometry(r,32),shadowMat);s.rotation.x=-Math.PI/2;s.position.y=.012;obj.add(s)}
 
@@ -509,6 +479,6 @@ function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=i
 function loop(){
  let dt=Math.min(clock.getDelta(),.033);state.time+=dt;
  if(state.hitstop>0){state.hitstop-=dt;dt=0}else{updatePlayer(dt);updateBoss(dt)}
- if(bossMixer)bossMixer.update(Math.max(dt,.001));if(playerMixer)playerMixer.update(Math.max(dt,.001));updateSparks(Math.max(dt,.001));updateCamera(Math.max(dt,.001));updateUI();renderer.render(scene,camera);requestAnimationFrame(loop);
+updateSparks(Math.max(dt,.001));updateCamera(Math.max(dt,.001));updateUI();renderer.render(scene,camera);requestAnimationFrame(loop);
 }
 loop();
