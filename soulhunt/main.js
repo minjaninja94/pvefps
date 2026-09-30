@@ -1343,16 +1343,16 @@ function animateBossTelegraph(dt){
  }else if(st==='tail'&&t>.47){
    L(body.rotation,'y',-.42,10);L(body.rotation,'z',-.14,10);tailPivot.rotation.y=THREE.MathUtils.lerp(tailPivot.rotation.y,-1.5,1-Math.exp(-dt*13));
  }else if(st==='peril'&&t>.44){
-   body.position.y=THREE.MathUtils.lerp(body.position.y,1.28,1-Math.exp(-bossMotionDt*12));L(body.rotation,'x',-.36,14);L(head.rotation,'x',-.82,14);
+   body.position.y=THREE.MathUtils.lerp(body.position.y,1.28,1-Math.exp(-dt*12));L(body.rotation,'x',-.36,14);L(head.rotation,'x',-.82,14);
  }
 
  // Dorsal-arm attacks: every wind-up has a distinct silhouette.
  else if(st==='arm_cross'&&t>.48){
    // Both hands spread far outside the body, then scissor inward.
-   dorsalArms[0].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[0].shoulder.rotation.y,-.72,1-Math.exp(-bossMotionDt*12));
-   dorsalArms[1].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[1].shoulder.rotation.y,.72,1-Math.exp(-bossMotionDt*12));
-   dorsalArms[0].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[0].upperPivot.rotation.z,-1.05,1-Math.exp(-bossMotionDt*14));
-   dorsalArms[1].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[1].upperPivot.rotation.z,1.05,1-Math.exp(-bossMotionDt*14));
+   dorsalArms[0].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[0].shoulder.rotation.y,-.72,1-Math.exp(-dt*12));
+   dorsalArms[1].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[1].shoulder.rotation.y,.72,1-Math.exp(-dt*12));
+   dorsalArms[0].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[0].upperPivot.rotation.z,-1.05,1-Math.exp(-dt*14));
+   dorsalArms[1].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[1].upperPivot.rotation.z,1.05,1-Math.exp(-dt*14));
    L(body.rotation,'x',-.18,10);L(chest.rotation,'x',-.2,10);L(head.rotation,'x',.1,9);
  }else if(st==='arm_double_slam'&&t>.46){
    // Both arms visibly tower over the shell.
@@ -1367,7 +1367,7 @@ function animateBossTelegraph(dt){
    L(chest.rotation,'z',-.28,11);L(head.rotation,'z',.16,10);
  }else if(st==='arm_uppercut'&&t>.36){
    // Right fist disappears low beside the rib cage before exploding upward.
-   const a=dorsalArms[1];a.shoulder.rotation.z=THREE.MathUtils.lerp(a.shoulder.rotation.z,-1.55,1-Math.exp(-bossMotionDt*14));a.elbow.rotation.z=THREE.MathUtils.lerp(a.elbow.rotation.z,-1.6,1-Math.exp(-bossMotionDt*14));a.wrist.rotation.x=THREE.MathUtils.lerp(a.wrist.rotation.x,.55,1-Math.exp(-bossMotionDt*14));L(body.rotation,'z',-.24,10);L(chest.rotation,'z',-.34,11);L(head.rotation,'z',.2,10);
+   const a=dorsalArms[1];a.shoulder.rotation.z=THREE.MathUtils.lerp(a.shoulder.rotation.z,-1.55,1-Math.exp(-dt*14));a.elbow.rotation.z=THREE.MathUtils.lerp(a.elbow.rotation.z,-1.6,1-Math.exp(-dt*14));a.wrist.rotation.x=THREE.MathUtils.lerp(a.wrist.rotation.x,.55,1-Math.exp(-dt*14));L(body.rotation,'z',-.24,10);L(chest.rotation,'z',-.34,11);L(head.rotation,'z',.2,10);
  }else if(st==='arm_grab'&&t>.4){
    // One giant open hand hangs high and forward; red flesh glows as the tell.
    const a=dorsalArms[0];a.shoulder.rotation.x=THREE.MathUtils.lerp(a.shoulder.rotation.x,-.72,1-Math.exp(-dt*10));a.shoulder.rotation.y=THREE.MathUtils.lerp(a.shoulder.rotation.y,-1.48,1-Math.exp(-dt*10));a.elbow.rotation.z=THREE.MathUtils.lerp(a.elbow.rotation.z,1.55,1-Math.exp(-dt*10));a.wrist.rotation.y=THREE.MathUtils.lerp(a.wrist.rotation.y,-.7,1-Math.exp(-dt*10));L(body.rotation,'y',.22,9);L(chest.rotation,'y',.22,9);L(head.rotation,'y',-.18,9);
@@ -1638,7 +1638,7 @@ function updatePlayer(dt){
    }
  }
  const toBoss=flatDir(player.position,boss.position);
- if(input.lock&&!state.rolling)player.rotation.y=lerpAngle(player.rotation.y,Math.atan2(toBoss.x,toBoss.z),1-Math.exp(-bossMotionDt*12));
+ if(input.lock&&!state.rolling)player.rotation.y=lerpAngle(player.rotation.y,Math.atan2(toBoss.x,toBoss.z),1-Math.exp(-dt*12));
  else if(!input.lock&&!state.rolling)player.rotation.y=lerpAngle(player.rotation.y,input.camYaw,1-Math.exp(-dt*13));
  if(state.rolling>0){
    const total=.5,p=1-state.rolling/total;
