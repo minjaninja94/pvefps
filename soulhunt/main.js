@@ -113,17 +113,44 @@ buildWeapon();
 player.position.set(0,0,8);
 
 let knightVisual=null;
-assetLoader.load('./assets/models/kaykit/Knight.glb',gltf=>{
+assetLoader.load('./assets/models/player/adult-knight-base.glb',gltf=>{
   knightVisual=gltf.scene;
-  knightVisual.scale.setScalar(.92);
+  knightVisual.name='AdultProportionKnightBase';
   knightVisual.rotation.y=Math.PI;
-  knightVisual.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+  knightVisual.updateMatrixWorld(true);
+
+  // Normalize the imported model to an ordinary adult ~1.85m tall.
+  let box=new THREE.Box3().setFromObject(knightVisual,true);
+  const size=new THREE.Vector3();box.getSize(size);
+  const targetHeight=1.85;
+  const scale=targetHeight/Math.max(size.y,.001);
+  knightVisual.scale.setScalar(scale);
+  knightVisual.updateMatrixWorld(true);
+  box=new THREE.Box3().setFromObject(knightVisual,true);
+  knightVisual.position.y-=box.min.y;
+
+  knightVisual.traverse(o=>{
+    if(o.isMesh){
+      o.castShadow=true;o.receiveShadow=true;
+      // Fix Quaternius export's near-black skin artifact without flattening clothes.
+      const mats=Array.isArray(o.material)?o.material:[o.material];
+      for(const m of mats){
+        if(!m||!m.color)continue;
+        const n=(m.name||'').toLowerCase();
+        if(n.includes('skin')&&m.color.r<.08&&m.color.g<.08&&m.color.b<.08)m.color.set(0xb98268);
+        m.metalness=Math.min(m.metalness??0,.25);
+      }
+    }
+  });
+
+  // Hide the squat procedural knight immediately after the adult model is ready.
   player.children.filter(o=>o.isMesh).forEach(m=>m.visible=false);
   player.add(knightVisual);
   setupKnightAnimations(gltf);
-},undefined,err=>console.warn('Local knight asset unavailable; procedural knight remains active.',err));
+  console.info('Adult-proportion CC0 player loaded', {height:targetHeight,clips:gltf.animations.map(a=>a.name)});
+},undefined,err=>console.warn('Adult player asset unavailable; procedural knight remains active.',err));
 
-// KayKit knight animation state machine. Falls back to procedural poses when clips are absent.
+// Adult Quaternius character animation state machine. Falls back to procedural poses when clips are absent.
 let playerMixer=null,playerActions={},playerActionName='';
 function pickClip(clips,terms){
  const lower=clips.map(x=>({clip:x,name:(x.name||'').toLowerCase()}));
@@ -141,11 +168,11 @@ function setupKnightAnimations(gltf){
    idle:['idle'],
    walk:['walk'],
    run:['run'],
-   attack:['melee_attack','attack_slice','attack_chop','attack'],
-   guard:['block','blocking','guard'],
+   attack:['swordslash','punch','melee_attack','attack_slice','attack_chop','attack'],
+   guard:['shoot_onehanded','block','blocking','guard'],
    roll:['roll','dodge'],
-   hit:['hit','damage'],
-   dead:['death','dead']
+   hit:['recievehit','receivehit','hit','damage'],
+   dead:['death','defeat','dead']
  };
  for(const [key,terms] of Object.entries(defs)){
    const clip=pickClip(clips,terms);
