@@ -1,0 +1,75 @@
+name: Vendor Dukhu Soul Anime Head
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/vendor-dukhu-anime-head.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download CC0 anime VRM
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p soulhunt/assets/models/boss
+          curl -L --fail "https://raw.githubusercontent.com/GY19A/jev-stage/main/static/vrm/anime_girl.vrm" \
+            -o soulhunt/assets/models/boss/anime-head.vrm
+
+          cat > soulhunt/assets/models/boss/ANIME_HEAD_SOURCE.md <<'EOF'
+          # Anime head source
+
+          Source: GY19A/jev-stage — static/vrm/anime_girl.vrm
+          Upstream character: おんなのこ１ロング / VRoid-style anime avatar
+          License: CC0 1.0 (as documented by upstream)
+          Runtime use: adult-styled anime head/face/hair only; torso remains the MPFB-based boss body.
+          EOF
+
+      - name: Inspect VRM structure
+        shell: bash
+        run: |
+          python -m pip install --quiet pygltflib
+          python - <<'PY'
+          import json
+          from pygltflib import GLTF2
+          p='soulhunt/assets/models/boss/anime-head.vrm'
+          g=GLTF2().load_binary(p)
+          nodes=[]
+          for i,n in enumerate(g.nodes or []):
+              nodes.append({
+                  'index':i,
+                  'name':n.name,
+                  'mesh':n.mesh,
+                  'skin':n.skin,
+                  'children':n.children or []
+              })
+          meshes=[]
+          for i,m in enumerate(g.meshes or []):
+              meshes.append({'index':i,'name':m.name,'primitives':len(m.primitives or [])})
+          with open('soulhunt/assets/models/boss/anime-head-structure.json','w',encoding='utf-8') as f:
+              json.dump({'nodes':nodes,'meshes':meshes},f,ensure_ascii=False,indent=2)
+          print('nodes',len(nodes),'meshes',len(meshes))
+          for n in nodes:
+              name=(n['name'] or '')
+              if any(k in name.lower() for k in ['head','face','hair','eye','neck','j_bip_c_head','j_bip_c_neck']):
+                  print(n)
+          PY
+
+      - name: Commit anime head
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add soulhunt/assets/models/boss
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "assets(dukhu-soul): vendor CC0 anime head VRM"
+            git push
+          fi
