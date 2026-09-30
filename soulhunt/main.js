@@ -741,6 +741,69 @@ function stripVisibleBossArms(root){
  });
 }
 
+function stripWorldSphereRegions(root,regions){
+ root?.updateMatrixWorld?.(true);
+ const centers=[];
+ for(const cfg of regions){
+   const bone=root.getObjectByName(cfg.name);
+   if(!bone)continue;
+   const p=new THREE.Vector3();bone.getWorldPosition(p);
+   centers.push({p,r:cfg.r});
+ }
+ if(!centers.length)return;
+ root.traverse(obj=>{
+   if(!obj.isSkinnedMesh||!obj.geometry?.attributes?.position)return;
+   obj.updateMatrixWorld(true);
+   const geo=obj.geometry.clone(),pos=geo.attributes.position,oldIndex=geo.index,out=[];
+   const vWorld=new THREE.Vector3();
+   const near=v=>{
+     vWorld.fromBufferAttribute(pos,v).applyMatrix4(obj.matrixWorld);
+     return centers.some(cn=>vWorld.distanceToSquared(cn.p)<=cn.r*cn.r);
+   };
+   const count=oldIndex?oldIndex.count:pos.count;
+   for(let i=0;i<count;i+=3){
+     const a=oldIndex?oldIndex.getX(i):i,b=oldIndex?oldIndex.getX(i+1):i+1,d=oldIndex?oldIndex.getX(i+2):i+2;
+     if(!(near(a)||near(b)||near(d)))out.push(a,b,d);
+   }
+   geo.setIndex(out);geo.computeVertexNormals();geo.computeBoundingSphere();
+   obj.geometry=geo;
+ });
+}
+
+function stripWorldBoneCapsule(root,fromBoneName,toBoneName,extendWorld=2.8,radiusWorld=1.45){
+ root?.updateMatrixWorld?.(true);
+ const fromBone=root.getObjectByName(fromBoneName),toBone=root.getObjectByName(toBoneName);
+ if(!fromBone||!toBone)return;
+ const aWorld=new THREE.Vector3(),headWorld=new THREE.Vector3();
+ fromBone.getWorldPosition(aWorld);toBone.getWorldPosition(headWorld);
+ const dir=headWorld.clone().sub(aWorld);
+ if(dir.lengthSq()<1e-8)return;
+ dir.normalize();
+ const bWorld=headWorld.clone().addScaledVector(dir,extendWorld);
+ const ab=bWorld.clone().sub(aWorld),den=Math.max(1e-8,ab.lengthSq());
+
+ root.traverse(obj=>{
+   if(!obj.isSkinnedMesh||!obj.geometry?.attributes?.position)return;
+   obj.updateMatrixWorld(true);
+   const geo=obj.geometry.clone(),pos=geo.attributes.position,oldIndex=geo.index,out=[];
+   const p=new THREE.Vector3(),ap=new THREE.Vector3(),q=new THREE.Vector3();
+   const inside=v=>{
+     p.fromBufferAttribute(pos,v).applyMatrix4(obj.matrixWorld);
+     ap.copy(p).sub(aWorld);
+     const t=clamp(ap.dot(ab)/den,0,1);
+     q.copy(aWorld).addScaledVector(ab,t);
+     return p.distanceToSquared(q)<=radiusWorld*radiusWorld;
+   };
+   const count=oldIndex?oldIndex.count:pos.count;
+   for(let i=0;i<count;i+=3){
+     const ia=oldIndex?oldIndex.getX(i):i,ib=oldIndex?oldIndex.getX(i+1):i+1,id=oldIndex?oldIndex.getX(i+2):i+2;
+     if(!(inside(ia)||inside(ib)||inside(id)))out.push(ia,ib,id);
+   }
+   geo.setIndex(out);geo.computeVertexNormals();geo.computeBoundingSphere();
+   obj.geometry=geo;
+ });
+}
+
 function stripBoneForwardCapsule(root,fromBoneName,toBoneName,extend=1.2,radius=.7){
  root?.updateMatrixWorld?.(true);
  const fromBone=root.getObjectByName(fromBoneName),toBone=root.getObjectByName(toBoneName);
@@ -971,16 +1034,26 @@ assetLoader.load('./assets/models/boss/centaur-beast.glb',gltf=>{
  bossLowerVisual.position.y-=box.min.y;
  bossLowerVisual.position.y-=.18;
  bossLowerVisual.position.z=-.82;
- // Centaur lower body only: aggressively erase the horse head/neck.
- stripSkinnedBoneRegions(bossLowerVisual,['head','neck1','neck2','neck3','ear1','ear2','ear3','ear4'],.08);
+ // Centaur lower body only: remove the horse head/neck in world space so scale cannot leave a floating muzzle.
+ stripSkinnedBoneRegions(bossLowerVisual,['head','neck1','neck2','neck3','ear1','ear2','ear3','ear4'],.04);
+ stripWorldSphereRegions(bossLowerVisual,[
+   {name:'Head',r:1.85},
+   {name:'Neck3',r:1.45},
+   {name:'Neck2',r:1.22},
+   {name:'Neck1',r:.98},
+   {name:'Ear1.L',r:.72},{name:'Ear1.R',r:.72}
+ ]);
+ // Neck1 -> Head direction continues far beyond the skull, deleting nose/muzzle fragments as well.
+ stripWorldBoneCapsule(bossLowerVisual,'Neck1','Head',3.15,1.52);
+ // Keep the previous local-space trim as a secondary safety pass.
  stripSkinnedSpatialRegions(bossLowerVisual,[
-   {name:'Head',r:1.0},
-   {name:'Neck3',r:.78},
-   {name:'Neck2',r:.68},
-   {name:'Neck1',r:.58},
-   {name:'Ear1.L',r:.42},{name:'Ear1.R',r:.42}
+   {name:'Head',r:1.45},
+   {name:'Neck3',r:1.05},
+   {name:'Neck2',r:.88},
+   {name:'Neck1',r:.7},
+   {name:'Ear1.L',r:.52},{name:'Ear1.R',r:.52}
  ],1.0);
- stripBoneForwardCapsule(bossLowerVisual,'Neck2','Head',1.45,.82);
+ stripBoneForwardCapsule(bossLowerVisual,'Neck1','Head',2.45,1.12);
  for(const n of ['Head','Neck1','Neck2','Neck3','Ear1.L','Ear2.L','Ear3.L','Ear4.L','Ear1.R','Ear2.R','Ear3.R','Ear4.R']){
    const bone=bossLowerVisual.getObjectByName(n);if(bone){bone.visible=false;bone.scale.setScalar(.00001);}
  }
