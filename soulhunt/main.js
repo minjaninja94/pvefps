@@ -72,7 +72,7 @@ const ui={hp:document.querySelector('#hp'),posture:document.querySelector('#post
 const state={
  hp:100,posture:0,stamina:100,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,stagger:0,dead:false,
  bossHp:560,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,time:0,shake:0,hitstop:0,
- headHp:100,legHp:150,tailHp:130,tailBroken:false,legBroken:false,headBroken:false,danger:false
+ headHp:100,legHp:150,tailHp:130,tailBroken:false,legBroken:false,headBroken:false,danger:false,reaction:0,reactionZone:'body'
 };
 function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeout(flash.t);flash.t=setTimeout(()=>ui.msg.style.opacity='0',d*1000)}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
@@ -149,12 +149,12 @@ function hitZone(){
 }
 function hitBoss(base,posture=12){
  if(state.bossHp<=0)return;
- const zone=hitZone();let dmg=base,pd=posture;
+ const zone=hitZone();let dmg=base,pd=posture;state.reaction=.16;state.reactionZone=zone;
  if(zone==='head'){dmg*=1.45;pd*=1.7;state.headHp-=base;if(!state.headBroken&&state.headHp<=0){state.headBroken=true;head.material=meat;flash('머리 갑각 파괴',.6);state.bossPosture+=32}}
  if(zone==='leg'){state.legHp-=base*.8;if(!state.legBroken&&state.legHp<=0){state.legBroken=true;flash('앞발 부위 파괴',.6);state.bossStagger=1.4;state.bossState='stagger'}}
  if(zone==='tail'){dmg*=1.2;state.tailHp-=base;if(!state.tailBroken&&state.tailHp<=0){state.tailBroken=true;tailPivot.visible=false;flash('꼬리 절단',.7);state.bossPosture+=24}}
  if(state.bossStagger>0){dmg*=1.75;pd*=1.8}
- state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture+=pd;state.shake=.13;hitStop(.055);
+ state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture+=pd;state.shake=zone==='head'?.18:.13;hitStop(zone==='head'?.072:.055);spawnSparks(player.position.clone().lerp(boss.position,.62).add(new THREE.Vector3(0,zone==='head'?2.15:1.15,0)),zone==='head'?14:8,zone==='head'?5.5:4.2);
  if(state.bossHp===0){state.bossState='dead';setDanger(false);flash('토벌 완료',1.2)}
  else if(state.bossPosture>=100){state.bossStagger=2.15;state.bossPosture=50;state.bossState='stagger';flash('자세 붕괴',.52)}
 }
@@ -174,6 +174,17 @@ function bossImpact(range,dmg,posture,unblockable=false){
  if(!state.bossHit&&dist()<range){state.bossHit=true;hurtPlayer(dmg,posture,unblockable)}
 }
 function updateBoss(dt){
+ if(state.reaction>0){
+   state.reaction=Math.max(0,state.reaction-dt);
+   const k=Math.sin((state.reaction/.16)*Math.PI);
+   if(state.reactionZone==='head'){head.rotation.z=k*.2;head.position.y=2.15-k*.13}
+   if(state.reactionZone==='leg'){body.rotation.z=k*.08;body.position.y=2.05-k*.09}
+   if(state.reactionZone==='tail'&&!state.tailBroken){tailPivot.rotation.x=k*.24}
+ }else{
+   head.rotation.z=THREE.MathUtils.lerp(head.rotation.z,0,dt*14);head.position.y=THREE.MathUtils.lerp(head.position.y,2.15,dt*14);
+   body.rotation.z=THREE.MathUtils.lerp(body.rotation.z,0,dt*14);body.position.y=THREE.MathUtils.lerp(body.position.y,2.05,dt*14);
+   if(!state.tailBroken)tailPivot.rotation.x=THREE.MathUtils.lerp(tailPivot.rotation.x,0,dt*14);
+ }
  if(state.bossHp<=0){boss.rotation.z=THREE.MathUtils.lerp(boss.rotation.z,-1.15,dt*2);return}
  if(state.bossStagger>0){
    setDanger(false);state.bossStagger-=dt;boss.rotation.z=Math.sin(state.time*20)*.045;
