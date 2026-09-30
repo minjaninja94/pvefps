@@ -171,47 +171,74 @@ function setPlayerVisualAction(name,fade=.12){
 }
 
 const boss=new THREE.Group();scene.add(boss);
-const shell=mat(0x30373a,.68,.38),shellDark=mat(0x171d20,.54,.6),carapace=mat(0x596269,.78,.3),meat=mat(0x552720,.02,.9),horn=mat(0xb2a58d,.12,.6);
+const shell=mat(0x24292d,.7,.34),shellDark=mat(0x111518,.56,.58),carapace=mat(0x555d63,.76,.3),meat=mat(0x4e211d,.02,.9),horn=mat(0xb7aa94,.12,.58);
+const skin=new THREE.MeshStandardMaterial({color:0xd9a99e,roughness:.58,metalness:.01});
+const skinShadow=new THREE.MeshStandardMaterial({color:0xb97e76,roughness:.66,metalness:.01});
+const hairMat=new THREE.MeshStandardMaterial({color:0x17141c,roughness:.72,metalness:.04});
+const eyeMat=new THREE.MeshStandardMaterial({color:0xffd5e6,emissive:0xff2d73,emissiveIntensity:1.35,roughness:.22});
+const lipMat=new THREE.MeshStandardMaterial({color:0x8e3147,roughness:.5});
 const warningFlesh=new THREE.MeshStandardMaterial({color:0x5b231d,roughness:.72,metalness:.02,emissive:0x000000,emissiveIntensity:0});
 
-// Low, long beast core. Each major silhouette layer is intentionally separated.
-const body=part(boss,new THREE.SphereGeometry(1.45,18,12),shellDark,[0,1.72,-.2],[0,0,0],[1.58,.62,2.15]);
-const belly=part(boss,new THREE.SphereGeometry(1.0,14,9),meat,[0,1.28,.05],[0,0,0],[1.25,.48,1.65]);
+// B-form: a colossal adult woman growing from a quadrupedal monster lower body.
+const body=part(boss,new THREE.SphereGeometry(1.55,18,12),shellDark,[0,1.48,-.55],[0,0,0],[1.72,.68,2.25]);
+const belly=part(boss,new THREE.SphereGeometry(1.08,14,9),meat,[0,1.12,.0],[0,0,0],[1.36,.5,1.72]);
 
-// Raised carapace ridge keeps the back readable from the arm silhouette.
-const backShell=new THREE.Group();backShell.position.set(0,2.45,-.55);boss.add(backShell);
-for(const [i,z] of [[0,-.9],[1,-.28],[2,.35],[3,.92]]){
-  const plate=part(backShell,new THREE.DodecahedronGeometry(.72-(i*.055),0),i%2?carapace:shell,[0,.12+i*.08,z],[0,0,0],[1.5,.42,.9]);
-  plate.rotation.x=-.08+i*.035;
+// Monster pelvis and carapace visibly separate the beast half from the woman half.
+const backShell=new THREE.Group();backShell.position.set(0,2.12,-.95);boss.add(backShell);
+for(const [i,z] of [[0,-.82],[1,-.24],[2,.34],[3,.84]]){
+  const plate=part(backShell,new THREE.DodecahedronGeometry(.76-(i*.05),0),i%2?carapace:shell,[0,.12+i*.07,z],[0,0,0],[1.55,.44,.92]);
+  plate.rotation.x=-.09+i*.035;
 }
-for(const x of [-.74,0,.74])part(backShell,new THREE.ConeGeometry(.16,.9,7),horn,[x,.6,-.5],[Math.PI/2.25,0,0]);
+for(const x of [-.78,0,.78])part(backShell,new THREE.ConeGeometry(.17,.95,7),horn,[x,.62,-.42],[Math.PI/2.25,0,0]);
 
-// Chest is narrower and pushed forward, leaving a visible neck gap.
-const chest=part(boss,new THREE.DodecahedronGeometry(1.0,1),carapace,[0,1.92,1.62],[0,0,0],[1.22,.9,.88]);
-const neck=part(boss,new THREE.CapsuleGeometry(.46,.72,5,9),meat,[0,2.12,2.18],[Math.PI/2,0,0],[1.08,1,1.05]);
+// Narrow waist rises clearly above the monster shell.
+const waist=part(boss,new THREE.CapsuleGeometry(.58,.88,6,10),skinShadow,[0,2.72,.38],[0,0,0],[1.15,1,1.0]);
 
-// Head sits clearly in front of the chest instead of intersecting it.
-const head=part(boss,new THREE.DodecahedronGeometry(.78,1),shell,[0,2.32,3.05],[0,0,0],[1.12,.78,1.32]);
-const brow=part(boss,new THREE.BoxGeometry(1.18,.24,.5),carapace,[0,2.62,3.28],[-.08,0,0]);
-part(boss,new THREE.ConeGeometry(.18,1.2,8),horn,[-.58,2.82,3.02],[Math.PI/2.3,0,.28]);
-part(boss,new THREE.ConeGeometry(.18,1.2,8),horn,[.58,2.82,3.02],[Math.PI/2.3,0,-.28]);
-const jaw=part(boss,new THREE.BoxGeometry(1.08,.3,.82),warningFlesh,[0,1.9,3.36],[.08,0,0]);
+// Human torso: broad shoulders, narrow waist, exaggerated chest silhouette.
+const chest=part(boss,new THREE.SphereGeometry(1.12,18,12),skin,[0,3.62,.62],[0,0,0],[1.42,1.08,.82]);
+const sternum=part(boss,new THREE.CapsuleGeometry(.34,.72,5,9),skinShadow,[0,3.48,1.02],[Math.PI/2,0,0],[1.0,1,.72]);
+const bustL=part(boss,new THREE.SphereGeometry(.72,16,11),skin,[ -.62,3.62,1.38],[.08,0,.08],[1.08,.98,.92]);
+const bustR=part(boss,new THREE.SphereGeometry(.72,16,11),skin,[  .62,3.62,1.38],[.08,0,-.08],[1.08,.98,.92]);
 
-// Four legs are wider and separated from the belly; this preserves the original hit logic.
+// A dark organic collar prevents the torso and face from visually merging.
+const collar=part(boss,new THREE.TorusGeometry(.62,.12,7,18,Math.PI*1.45),shell,[0,4.28,.64],[Math.PI/2,0,.78]);
+const neck=part(boss,new THREE.CapsuleGeometry(.3,.62,5,9),skin,[0,4.55,.72],[0,0,0],[1,1,1]);
+
+// Beautiful adult face as a readable focal point.
+const head=part(boss,new THREE.SphereGeometry(.72,20,14),skin,[0,5.28,.82],[0,0,0],[.92,1.18,.78]);
+const faceMask=part(head,new THREE.SphereGeometry(.64,18,12),skin,[0,-.02,.19],[0,0,0],[.88,1.06,.5]);
+const brow=part(head,new THREE.BoxGeometry(.95,.09,.12),skinShadow,[0,.2,.6],[-.08,0,0]);
+const eyeL=part(head,new THREE.SphereGeometry(.065,10,7),eyeMat,[-.22,.12,.64],[0,0,0],[1.25,.62,.5]);
+const eyeR=part(head,new THREE.SphereGeometry(.065,10,7),eyeMat,[ .22,.12,.64],[0,0,0],[1.25,.62,.5]);
+const nose=part(head,new THREE.ConeGeometry(.055,.2,7),skinShadow,[0,-.02,.7],[Math.PI/2,0,0],[.8,1,.8]);
+const jaw=part(head,new THREE.BoxGeometry(.58,.12,.11),lipMat,[0,-.28,.65],[.08,0,0]);
+
+// Long hair frames the face and keeps the head readable against the giant arms.
+const hairCap=part(head,new THREE.SphereGeometry(.79,16,11),hairMat,[0,.05,-.04],[0,0,0],[1.02,1.08,.82]);
+hairCap.scale.z=.72;
+for(const sx of [-1,1]){
+  part(head,new THREE.CapsuleGeometry(.15,1.55,5,8),hairMat,[sx*.57,-.58,-.02],[0,0,sx*.09],[1,1,1]);
+  part(head,new THREE.CapsuleGeometry(.12,1.18,5,8),hairMat,[sx*.36,-.72,-.1],[0,0,sx*.05],[1,1,1]);
+}
+part(head,new THREE.ConeGeometry(.13,.68,7),horn,[-.48,.65,-.18],[.2,0,-.35]);
+part(head,new THREE.ConeGeometry(.13,.68,7),horn,[ .48,.65,-.18],[.2,0,.35]);
+
+// Four monster legs remain the lower-body locomotion and preserve existing combat logic.
 const legs=[];
-for(const sx of [-1,1])for(const z of [1.05,-1.2]){
-  const upper=part(boss,new THREE.CapsuleGeometry(.31,1.08,5,9),shell,[sx*1.5,1.15,z],[0,0,sx*.62],[1.08,1,1.08]);
-  const knee=part(boss,new THREE.SphereGeometry(.28,9,7),carapace,[sx*1.78,.72,z+.08]);
-  const lower=part(boss,new THREE.CapsuleGeometry(.23,.94,5,8),meat,[sx*1.88,.38,z+.18],[0,0,sx*.16]);
-  const claw=part(boss,new THREE.ConeGeometry(.13,.58,7),horn,[sx*2.02,.08,z+.45],[Math.PI/2,0,0]);
+for(const sx of [-1,1])for(const z of [.9,-1.35]){
+  const upper=part(boss,new THREE.CapsuleGeometry(.34,1.18,5,9),shell,[sx*1.62,1.05,z],[0,0,sx*.66],[1.12,1,1.12]);
+  part(boss,new THREE.SphereGeometry(.3,9,7),carapace,[sx*1.92,.62,z+.08]);
+  const lower=part(boss,new THREE.CapsuleGeometry(.24,1.0,5,8),meat,[sx*2.02,.31,z+.2],[0,0,sx*.16]);
+  part(boss,new THREE.ConeGeometry(.14,.62,7),horn,[sx*2.16,.06,z+.5],[Math.PI/2,0,0]);
   legs.push(upper,lower);
 }
 
-const tailPivot=new THREE.Group();tailPivot.position.set(0,1.55,-2.05);boss.add(tailPivot);
-const tailA=part(tailPivot,new THREE.CapsuleGeometry(.4,1.55,5,9),shell,[0,0,-.82],[Math.PI/2,0,0]);
-const tailB=part(tailPivot,new THREE.CapsuleGeometry(.27,1.6,5,9),shellDark,[0,0,-2.15],[Math.PI/2,0,0]);
-const tailTip=part(tailPivot,new THREE.ConeGeometry(.34,1.4,8),horn,[0,0,-3.42],[Math.PI/2,0,0]);
-const BOSS_REST={bodyY:1.72,headY:2.32,headZ:3.05,jawX:.08};
+const tailPivot=new THREE.Group();tailPivot.position.set(0,1.38,-2.18);boss.add(tailPivot);
+const tailA=part(tailPivot,new THREE.CapsuleGeometry(.42,1.58,5,9),shell,[0,0,-.86],[Math.PI/2,0,0]);
+const tailB=part(tailPivot,new THREE.CapsuleGeometry(.28,1.65,5,9),shellDark,[0,0,-2.22],[Math.PI/2,0,0]);
+const tailTip=part(tailPivot,new THREE.ConeGeometry(.35,1.42,8),horn,[0,0,-3.5],[Math.PI/2,0,0]);
+
+const BOSS_REST={bodyY:1.48,headY:5.28,headZ:.82,jawX:.08};
 
 // Extra dorsal arms: deliberately larger than their unchanged combat hit ranges.
 const dorsalArms=[];
