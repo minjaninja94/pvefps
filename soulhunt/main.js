@@ -418,6 +418,29 @@ function updateBossWarningGlow(){
  warningFlesh.emissive.setHex(danger?0x8a1108:(armAttack?0x321009:0x000000));
  warningFlesh.emissiveIntensity=danger?(1.2+.45*Math.sin(state.time*18)):(armAttack?.32:0);
 }
+
+function animateGiantessPresence(dt){
+ const attacking=state.bossState!=='idle'&&state.bossState!=='stagger';
+ const dangerous=state.bossState==='arm_grab'||state.bossState==='arm_crush'||state.bossState==='peril';
+ // Slow breathing and deliberate head movement keep the upper body alive between attacks.
+ if(state.bossState==='idle'){
+   const breathe=Math.sin(state.time*1.55);
+   chest.scale.y=1.08+breathe*.018;
+   chest.rotation.z=Math.sin(state.time*.72)*.018;
+   head.rotation.y=Math.sin(state.time*.55)*.055;
+   head.rotation.x=Math.sin(state.time*.82)*.018;
+   bustL.position.y=3.62+breathe*.025;bustR.position.y=3.62+breathe*.025;
+ }else{
+   chest.scale.y=THREE.MathUtils.lerp(chest.scale.y,1.08,1-Math.exp(-dt*8));
+ }
+ // Danger attacks transform the pretty face into the warning tell.
+ const targetEye=dangerous?3.0:(attacking?1.7:1.25);
+ eyeMat.emissiveIntensity=THREE.MathUtils.lerp(eyeMat.emissiveIntensity,targetEye,1-Math.exp(-dt*10));
+ if(dangerous){
+   jaw.rotation.x=THREE.MathUtils.lerp(jaw.rotation.x,.34,1-Math.exp(-dt*12));
+   head.rotation.z+=Math.sin(state.time*13)*.006;
+ }
+}
 function updateSparks(dt){
  for(let s=sparks.length-1;s>=0;s--){
    const fx=sparks[s],arr=fx.pts.geometry.attributes.position.array;fx.life-=dt;
@@ -569,7 +592,7 @@ function animateBossTelegraph(dt){
    const idx=st==='claw1'||st==='claw3'?0:2,side=idx===0?1:-1;
    if(t>hit){legs[idx].rotation.x=THREE.MathUtils.lerp(legs[idx].rotation.x,-1.55,1-Math.exp(-dt*15));L(body.rotation,'z',side*.18,12);L(head.rotation,'z',side*.12,12)}
  }else if(st==='bite'&&t>.34){
-   head.position.z=THREE.MathUtils.lerp(head.position.z,2.45,1-Math.exp(-dt*13));L(head.rotation,'x',.42,14);jaw.rotation.x=THREE.MathUtils.lerp(jaw.rotation.x,.78,1-Math.exp(-dt*16));
+   head.position.z=THREE.MathUtils.lerp(head.position.z,1.42,1-Math.exp(-dt*13));L(head.rotation,'x',.42,14);jaw.rotation.x=THREE.MathUtils.lerp(jaw.rotation.x,.78,1-Math.exp(-dt*16));
  }else if(st==='slam'&&t>.38){
    body.position.y=THREE.MathUtils.lerp(body.position.y,2.72,1-Math.exp(-dt*9));L(body.rotation,'x',.28,10);L(head.rotation,'x',-.25,10);
  }else if(st==='tail'&&t>.47){
@@ -623,7 +646,7 @@ function updateBoss(dt){
  else if(state.bossState==='idle')setBossVisualAction(dist()>4.2?'walk':'idle');
  else if(state.bossStagger>0)setBossVisualAction('idle');
  else setBossVisualAction('attack');
- animateBossTelegraph(dt);updateBossWarningGlow();
+ animateBossTelegraph(dt);updateBossWarningGlow();animateGiantessPresence(dt);
  if(state.reaction>0){
    state.reaction=Math.max(0,state.reaction-dt);
    const k=Math.sin((state.reaction/.16)*Math.PI);
@@ -908,15 +931,15 @@ function updatePlayer(dt){
 const camPos=new THREE.Vector3();
 function updateCamera(dt){
  const armAttack=state.bossState.startsWith('arm_');
- const target=player.position.clone().add(new THREE.Vector3(0,1.35,0));
+ const target=player.position.clone().add(new THREE.Vector3(0,1.45,0));
  const toBoss=flatDir(player.position,boss.position);
  const back=input.lock?toBoss.clone().multiplyScalar(-1):new THREE.Vector3(0,0,1);
- const distance=armAttack?7.55:6.5,height=armAttack?3.35:3.0;
+ const distance=armAttack?9.15:8.05,height=armAttack?4.35:3.8;
  camPos.copy(target).addScaledVector(back,distance).add(new THREE.Vector3(0,height,0));
- camera.position.lerp(camPos,1-Math.exp(-dt*(armAttack?6.5:8)));
- const bossLookY=armAttack?2.6:1.8;
- const look=input.lock?target.clone().lerp(boss.position.clone().add(new THREE.Vector3(0,bossLookY,0)),armAttack?.46:.38):target;
- const wantedFov=armAttack?63:58;
+ camera.position.lerp(camPos,1-Math.exp(-dt*(armAttack?6.2:7.2)));
+ const bossLookY=armAttack?4.15:3.65;
+ const look=input.lock?target.clone().lerp(boss.position.clone().add(new THREE.Vector3(0,bossLookY,0)),armAttack?.5:.44):target;
+ const wantedFov=armAttack?65:61;
  if(Math.abs(camera.fov-wantedFov)>.02){camera.fov=THREE.MathUtils.lerp(camera.fov,wantedFov,1-Math.exp(-dt*7));camera.updateProjectionMatrix()}
  if(state.shake>0){state.shake=Math.max(0,state.shake-dt);camera.position.x+=(Math.random()-.5)*state.shake;camera.position.y+=(Math.random()-.5)*state.shake}
  camera.lookAt(look);
