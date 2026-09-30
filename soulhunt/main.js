@@ -501,7 +501,11 @@ function chooseBossAttack(){
  }
 }
 function bossImpact(range,dmg,posture,unblockable=false){
- if(!state.bossHit&&dist()<range){state.bossHit=true;hurtPlayer(dmg,posture,unblockable)}
+ if(!state.bossHit&&dist()<range){
+   state.bossHit=true;
+   if(state.invuln>0){state.shake=Math.max(state.shake,.07);flash('회피',.16);return}
+   hurtPlayer(dmg,posture,unblockable);
+ }
 }
 function bossFxOnce(tag,fn){if(state.bossFxStamp===tag)return;state.bossFxStamp=tag;fn()}
 function trailArms(intensity=1){for(const a of dorsalArms)spawnArmTrail(a,intensity)}
@@ -631,7 +635,7 @@ function updateBoss(dt){
    if(state.bossTimer<=0){head.position.z=BOSS_REST.headZ;jaw.rotation.x=BOSS_REST.jawX;state.bossState='idle';state.bossTimer=.62}
  }else if(state.bossState==='slam'){
    const wind=state.bossTimer>.38;body.position.y=THREE.MathUtils.lerp(body.position.y,wind?2.48:1.28,dt*(wind?5:18));
-   if(state.bossTimer<.32)bossImpact(4.0,34,43,false);
+   if(state.bossTimer<.32){bossFxOnce('body-slam',()=>{spawnDustBurst(bossGroundPoint(1.6),1.45);state.shake=Math.max(state.shake,.2)});bossImpact(4.0,34,43,false);}
    if(state.bossTimer<=0){body.position.y=BOSS_REST.bodyY;state.bossState='idle';state.bossTimer=.85}
  }else if(state.bossState==='tail'){
    const p=1-state.bossTimer/.92;tailPivot.rotation.y=-1.1+Math.sin(clamp(p,0,1)*Math.PI)*2.7;
@@ -724,7 +728,7 @@ function updateBoss(dt){
  }else if(state.bossState==='peril'){
    // red perilous pounce: cannot be guarded/deflected; lateral roll is the intended answer.
    head.rotation.x=-.55;body.rotation.x=.12;
-   if(state.bossTimer<.44){boss.position.addScaledVector(dir,dt*10.5);bossImpact(3.25,43,60,true)}
+   if(state.bossTimer<.44){bossFxOnce('peril-launch',()=>spawnDustBurst(bossGroundPoint(-.8),.85));boss.position.addScaledVector(dir,dt*10.5);bossImpact(3.25,43,60,true)}
    if(state.bossTimer<=0){setDanger(false);head.rotation.x=0;body.rotation.x=0;state.bossState='idle';state.bossTimer=1.0}
  }
 }
@@ -851,9 +855,17 @@ function updatePlayer(dt){
 
 const camPos=new THREE.Vector3();
 function updateCamera(dt){
- const target=player.position.clone().add(new THREE.Vector3(0,1.35,0)),toBoss=flatDir(player.position,boss.position),back=input.lock?toBoss.clone().multiplyScalar(-1):new THREE.Vector3(0,0,1);
- camPos.copy(target).addScaledVector(back,6.5).add(new THREE.Vector3(0,3.0,0));camera.position.lerp(camPos,1-Math.exp(-dt*8));
- const look=input.lock?target.clone().lerp(boss.position.clone().add(new THREE.Vector3(0,1.8,0)),.38):target;
+ const armAttack=state.bossState.startsWith('arm_');
+ const target=player.position.clone().add(new THREE.Vector3(0,1.35,0));
+ const toBoss=flatDir(player.position,boss.position);
+ const back=input.lock?toBoss.clone().multiplyScalar(-1):new THREE.Vector3(0,0,1);
+ const distance=armAttack?7.55:6.5,height=armAttack?3.35:3.0;
+ camPos.copy(target).addScaledVector(back,distance).add(new THREE.Vector3(0,height,0));
+ camera.position.lerp(camPos,1-Math.exp(-dt*(armAttack?6.5:8)));
+ const bossLookY=armAttack?2.6:1.8;
+ const look=input.lock?target.clone().lerp(boss.position.clone().add(new THREE.Vector3(0,bossLookY,0)),armAttack?.46:.38):target;
+ const wantedFov=armAttack?63:58;
+ if(Math.abs(camera.fov-wantedFov)>.02){camera.fov=THREE.MathUtils.lerp(camera.fov,wantedFov,1-Math.exp(-dt*7));camera.updateProjectionMatrix()}
  if(state.shake>0){state.shake=Math.max(0,state.shake-dt);camera.position.x+=(Math.random()-.5)*state.shake;camera.position.y+=(Math.random()-.5)*state.shake}
  camera.lookAt(look);
 }
