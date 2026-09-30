@@ -49,8 +49,10 @@ for(const sx of [-1,1]){
 part(player,new THREE.BoxGeometry(.72,.06,.46),leather,[0,.82,0]);
 const cape=part(player,new THREE.PlaneGeometry(.82,1.22),cloth,[0,1.15,-.3],[0,0,0]);cape.material.side=THREE.DoubleSide;
 
-const weaponPivot=new THREE.Group();weaponPivot.position.set(.48,1.38,0);player.add(weaponPivot);
-const shieldPivot=new THREE.Group();shieldPivot.position.set(-.48,1.32,.05);player.add(shieldPivot);
+const weaponHandAnchor=new THREE.Group();player.add(weaponHandAnchor);
+const weaponPivot=new THREE.Group();weaponHandAnchor.add(weaponPivot);
+const shieldHandAnchor=new THREE.Group();player.add(shieldHandAnchor);
+const shieldPivot=new THREE.Group();shieldHandAnchor.add(shieldPivot);
 const shield=part(shieldPivot,new THREE.CylinderGeometry(.48,.48,.11,12),steelDark,[0,0,-.08],[Math.PI/2,0,0],[1,.95,1]);
 part(shieldPivot,new THREE.BoxGeometry(.12,.68,.14),steel,[0,0,.02]);
 const weaponVisual=new THREE.Group();weaponPivot.add(weaponVisual);
@@ -65,7 +67,24 @@ const WEAPONS=[
  {id:'axe',name:'전투도끼',damage:1.28,posture:1.36,speed:.78,stamina:1.27,reach:1.02,hitstop:1.32,guard:.65,motion:1.22,asset:'./assets/models/kaykit/axe_1handed.gltf',assetScale:.76}
 ];
 let weaponIndex=0,twoHanded=false;
+const WEAPON_GRIPS={
+ straight:{pos:[.02,-.015,.015],rot:[-.08,.02,.08],scale:1},
+ greatsword:{pos:[.015,-.02,.02],rot:[-.12,.02,.06],scale:1.02},
+ hammer:{pos:[.015,-.025,.025],rot:[-.16,.03,.04],scale:1.02},
+ spear:{pos:[.015,-.018,.018],rot:[-.04,.03,.05],scale:1},
+ katana:{pos:[.018,-.012,.018],rot:[-.1,.05,.1],scale:1},
+ axe:{pos:[.015,-.02,.02],rot:[-.14,.03,.05],scale:1.01}
+};
 function currentWeapon(){return WEAPONS[weaponIndex]}
+function applyWeaponGrip(){
+ const g=WEAPON_GRIPS[currentWeapon().id]||WEAPON_GRIPS.straight;
+ weaponHandAnchor.position.set(...g.pos);
+ weaponHandAnchor.rotation.set(...g.rot);
+ weaponHandAnchor.scale.setScalar(g.scale||1);
+ weaponPivot.position.set(0,0,0);weaponPivot.rotation.set(0,0,0);
+ shieldHandAnchor.position.set(-.01,-.01,.015);
+ shieldHandAnchor.rotation.set(-.04,0,-.06);
+}
 function clearWeapon(){while(weaponVisual.children.length){const o=weaponVisual.children.pop();o.geometry?.dispose?.();}}
 function addWeaponMesh(geo,material,pos,rot=[0,0,0]){return part(weaponVisual,geo,material,pos,rot)}
 function buildWeapon(){
@@ -85,6 +104,7 @@ function buildWeapon(){
  }else{
    addWeaponMesh(new THREE.CylinderGeometry(.07,.07,1.55,8),leather,[0,0,-.45],[Math.PI/2,0,0]);addWeaponMesh(new THREE.BoxGeometry(.72,.46,.18),steel,[.18,0,-1.18],[0,0,.18]);
  }
+ applyWeaponGrip();
  weaponPivot.scale.setScalar(twoHanded?1.06:1);
  shield.visible=!twoHanded;
  const assetUrl=w.asset;
@@ -159,9 +179,11 @@ player.children.filter(o=>o.isMesh).forEach(m=>m.visible=false);
        if(node)cachePlayerVrmBone(name,node);
      }
 
-     weaponPivot.position.set(.5,1.43,.04);
-     shieldPivot.position.set(-.5,1.4,.08);
-     console.info('Tall CC0 VRoid male player loaded', {height:targetHeight});
+     const rightHand=playerVrmBones.rightHand,leftHand=playerVrmBones.leftHand;
+     if(rightHand)rightHand.add(weaponHandAnchor);
+     if(leftHand)leftHand.add(shieldHandAnchor);
+     applyWeaponGrip();
+     console.info('Tall CC0 VRoid male player loaded', {height:targetHeight,weaponHand:!!rightHand,shieldHand:!!leftHand});
    },undefined,err=>console.warn('Tall VRoid player unavailable.',err));
  }catch(err){console.warn('three-vrm unavailable for player.',err)}
 })();
@@ -184,13 +206,49 @@ function animateVroidPlayer(dt){
  }else if(state.attack>0){
    const w=currentWeapon(),dur=[0,.46,.5,.62][state.attackStep]/w.speed*(twoHanded?.96:1.04);
    const p=clamp(1-state.attack/Math.max(dur,.001),0,1),s=Math.sin(p*Math.PI),step=state.attackStep;
-   spineY=(step===2?-1:1)*s*.28;spineX=-s*.1;
-   rux=-.35+s*1.25;ruz=.45+s*.55;ruy=(step===2?-1:1)*s*.45;rlx=-.75+s*.95;
-   if(twoHanded){lux=rux*.72;luz=-.2-s*.35;luy=ruy*.72;llx=-.65+s*.8}
+   const side=step===2?-1:1;
+   if(w.id==='straight'){
+     spineY=side*s*.24;spineZ=-side*s*.07;spineX=-s*.06;
+     rux=-.34+s*.92;ruy=side*s*.48;ruz=.42+side*s*.52;rlx=-.62+s*.58;
+     if(twoHanded){lux=-.18+s*.58;luy=side*s*.32;luz=-.28-side*s*.24;llx=-.58+s*.42}
+   }else if(w.id==='greatsword'){
+     spineX=.18-s*.42;spineY=side*s*.2;
+     rux=-1.0+s*1.9;ruz=.18+side*s*.6;ruy=side*s*.28;rlx=-1.05+s*.62;
+     lux=-.92+s*1.72;luz=-.18-side*s*.52;luy=side*s*.22;llx=-.98+s*.58;
+   }else if(w.id==='hammer'){
+     spineX=.3-s*.55;spineY=side*s*.12;
+     rux=-1.28+s*2.15;ruz=.28+side*s*.3;rlx=-1.2+s*.5;
+     lux=-1.18+s*1.98;luz=-.3-side*s*.28;llx=-1.12+s*.48;
+   }else if(w.id==='spear'){
+     const thrust=Math.sin(p*Math.PI);
+     spineX=-thrust*.13;spineY=side*.08;
+     rux=-.15+thrust*.38;ruy=-.12;ruz=.12;rlx=-.38+thrust*.25;
+     lux=-.22+thrust*.28;luy=.08;luz=-.18;llx=-.42+thrust*.2;
+   }else if(w.id==='katana'){
+     spineY=side*s*.34;spineZ=-side*s*.1;
+     rux=-.5+s*1.18;ruy=side*s*.7;ruz=.2+side*s*.58;rlx=-.82+s*.72;
+     lux=-.3+s*.55;luy=side*s*.38;luz=-.34-side*s*.22;llx=-.72+s*.5;
+   }else{
+     spineY=side*s*.3;spineX=.08-s*.28;spineZ=-side*s*.08;
+     rux=-.78+s*1.55;ruy=side*s*.52;ruz=.36+side*s*.45;rlx=-.88+s*.62;
+     if(twoHanded){lux=-.68+s*1.32;luy=side*s*.36;luz=-.28-side*s*.34;llx=-.84+s*.54}
+   }
  }else if(input.guard){
-   spineX=-.06;
-   luz=-.35;lux=-.55;luy=-.3;llx=-.8;
-   ruz=.52;rux=-.35;ruy=.22;rlx=-.65;
+   const w=currentWeapon();spineX=-.055;
+   if(!twoHanded){
+     // Shield leads; weapon hand stays ready beside the body.
+     lux=-.62;luy=-.42;luz=-.25;llx=-.92;
+     rux=-.28;ruy=.08;ruz=.54;rlx=-.5;
+   }else if(w.id==='spear'){
+     lux=-.28;luy=.12;luz=-.2;llx=-.35;
+     rux=-.18;ruy=-.12;ruz=.18;rlx=-.36;spineY=.08;
+   }else if(w.id==='greatsword'||w.id==='hammer'){
+     lux=-.72;luy=.18;luz=-.32;llx=-.82;
+     rux=-.78;ruy=-.18;ruz=.32;rlx=-.86;spineX=-.1;
+   }else{
+     lux=-.5;luy=.18;luz=-.32;llx=-.7;
+     rux=-.46;ruy=-.16;ruz=.34;rlx=-.72;
+   }
  }else if(moving){
    const amp=sprint?.62:.42,swing=Math.sin(phase)*amp;
    lulx=swing;rulx=-swing;
@@ -1297,7 +1355,7 @@ function updatePlayer(dt){
      hitStop(.018*w.hitstop+(step===3 ? .018 : 0));
    }
    if(state.attack<=0){
-     weaponPivot.rotation.set(0,0,0);weaponPivot.position.z=0;player.rotation.x=0;player.rotation.z=0;playerBody.rotation.set(0,0,0);
+     weaponPivot.rotation.set(0,0,0);weaponPivot.position.set(0,0,0);applyWeaponGrip();player.rotation.x=0;player.rotation.z=0;playerBody.rotation.set(0,0,0);
      if(state.attackQueued&&step<3)startAttack(step+1);else if(!state.attackQueued&&state.comboGrace<=0)state.attackStep=0;
    }
  }
