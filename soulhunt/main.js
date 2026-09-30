@@ -236,7 +236,7 @@ function startAttack(step){
  const cost=[0,16,18,23][step]*w.stamina*grip;
  if(state.stamina<cost)return false;
  state.stamina-=cost;state.attackStep=step;
- state.attack=[0,.46,.5,.62][step]/w.speed*(twoHanded?.96:1.04);
+ state.attack=[0,.46,.5,.62][step]/w.speed*(twoHanded ? .96 : 1.04);
  state.attackHit=false;state.attackQueued=false;state.comboGrace=.2/w.speed;return true;
 }
 function tryAttack(){
@@ -260,9 +260,9 @@ function hurtPlayer(dmg,posture=20,unblockable=false){
    }
    const w=currentWeapon();
    const shieldGuard=!twoHanded;
-   const absorb=shieldGuard?.82:w.guard;
+   const absorb=shieldGuard ? .82 : w.guard;
    state.hp-=dmg*(1-absorb);
-   state.posture+=posture*(shieldGuard?.72:1.08);
+   state.posture+=posture*(shieldGuard ? .72 : 1.08);
    state.stamina=Math.max(0,state.stamina-(shieldGuard?16:24*w.stamina));
    state.shake=.09;
    flash(shieldGuard?'방패 가드':'무기 가드',.18);
@@ -286,7 +286,7 @@ function hitBoss(base,posture=12){
  if(zone==='leg'){state.legHp-=base*.8;if(!state.legBroken&&state.legHp<=0){state.legBroken=true;flash('앞발 부위 파괴',.6);state.bossStagger=1.4;state.bossState='stagger'}}
  if(zone==='tail'){dmg*=1.2;state.tailHp-=base;if(!state.tailBroken&&state.tailHp<=0){state.tailBroken=true;tailPivot.visible=false;flash('꼬리 절단',.7);state.bossPosture+=24}}
  if(state.bossStagger>0){dmg*=1.75;pd*=1.8}
- state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture+=pd;state.shake=zone==='head'?.18:.13;hitStop(zone==='head'?.072:.055);spawnSparks(player.position.clone().lerp(boss.position,.62).add(new THREE.Vector3(0,zone==='head'?2.15:1.15,0)),zone==='head'?14:8,zone==='head'?5.5:4.2);
+ state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture+=pd;state.shake=zone==='head' ? .18 : .13;hitStop(zone==='head' ? .072 : .055);spawnSparks(player.position.clone().lerp(boss.position,.62).add(new THREE.Vector3(0,zone==='head' ? 2.15 : 1.15,0)),zone==='head' ? 14 : 8,zone==='head' ? 5.5 : 4.2);
  if(state.bossHp===0){state.bossState='dead';setDanger(false);flash('토벌 완료',1.2)}
  else if(state.bossPosture>=100){state.bossStagger=2.15;state.bossPosture=50;state.bossState='stagger';flash('자세 붕괴',.52)}
 }
@@ -388,7 +388,7 @@ function updatePlayer(dt){
  state.guardBlend=THREE.MathUtils.lerp(state.guardBlend,input.guard?1:0,1-Math.exp(-dt*18));
  if(state.attack>0){
    const w=currentWeapon(),gripDamage=twoHanded?1.16:1,gripPosture=twoHanded?1.2:1;
-   const dur=[0,.46,.5,.62][state.attackStep]/w.speed*(twoHanded?.96:1.04),step=state.attackStep;
+   const dur=[0,.46,.5,.62][state.attackStep]/w.speed*(twoHanded ? .96 : 1.04),step=state.attackStep;
    state.attack-=dt;const p=1-state.attack/dur;
    if(step===1){swordPivot.rotation.x=-1.15+Math.sin(p*Math.PI)*2.35;swordPivot.rotation.z=-.35+Math.sin(p*Math.PI)*.72;player.rotation.z=Math.sin(p*Math.PI)*-.11}
    if(step===2){swordPivot.rotation.x=.95-Math.sin(p*Math.PI)*2.5;swordPivot.rotation.z=.45-Math.sin(p*Math.PI)*.9;player.rotation.z=Math.sin(p*Math.PI)*.13}
@@ -397,7 +397,7 @@ function updatePlayer(dt){
    if(!state.attackHit&&state.attack<hitAt&&dist()<range){
      state.attackHit=true;
      hitBoss(damage,post);
-     hitStop(.018*w.hitstop+(step===3?.018:0));
+     hitStop(.018*w.hitstop+(step===3 ? .018 : 0));
    }
    if(state.attack<=0){
      swordPivot.rotation.set(0,0,0);player.rotation.x=0;player.rotation.z=0;
