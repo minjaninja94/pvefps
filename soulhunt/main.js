@@ -250,7 +250,9 @@ let bossWomanVisual=null;
 const bossWomanBones={};
 const bossWomanRest={};
 const proceduralWoman=[waist,chest,sternum,bustL,bustR,collar,neck,head];
-const womanClipPlane=new THREE.Plane(new THREE.Vector3(0,1,0),-2.62);
+const womanTorsoClipLow=new THREE.Plane(new THREE.Vector3(0,-1,0),2.58);
+const womanTorsoClipHigh=new THREE.Plane(new THREE.Vector3(0,1,0),-4.58);
+let animeHeadVisual=null,animeHeadPivot=null,animeBossVRM=null,animeHeadReady=false;
 
 function cacheBossWomanBone(name){
  const b=bossWomanVisual?.getObjectByName(name);
@@ -292,9 +294,9 @@ assetLoader.load('./assets/models/boss/mpfb-female.glb',gltf=>{
    if(o.isMesh){
      o.castShadow=true;o.receiveShadow=true;
      if(Array.isArray(o.material)){
-       o.material=o.material.map(m=>{const n=m.clone();n.clippingPlanes=[womanClipPlane];n.clipShadows=true;return n});
+       o.material=o.material.map(m=>{const n=m.clone();n.clippingPlanes=[womanTorsoClipLow,womanTorsoClipHigh];n.clipShadows=true;return n});
      }else if(o.material){
-       o.material=o.material.clone();o.material.clippingPlanes=[womanClipPlane];o.material.clipShadows=true;
+       o.material=o.material.clone();o.material.clippingPlanes=[womanTorsoClipLow,womanTorsoClipHigh];o.material.clipShadows=true;
      }
    }
  });
@@ -308,15 +310,79 @@ assetLoader.load('./assets/models/boss/mpfb-female.glb',gltf=>{
    if(b&&base)b.scale.set(base.scale.x*.08,base.scale.y*.08,base.scale.z*.08);
  }
 
- // Exaggerate the dedicated MPFB breast bones while preserving the textured/skinned chest.
+ // Use MPFB only as the voluptuous textured torso. Breast bones are intentionally oversized.
  for(const name of ['LeftBreast','RightBreast']){
    const b=bossWomanBones[name],base=bossWomanRest[name];
-   if(b&&base)b.scale.set(base.scale.x*1.34,base.scale.y*1.22,base.scale.z*1.38);
+   if(b&&base){
+     b.scale.set(base.scale.x*2.2,base.scale.y*1.72,base.scale.z*2.48);
+     const side=name==='LeftBreast'?-1:1;
+     b.position.x=base.position.x+side*.028;
+     b.position.z=base.position.z+.035;
+   }
+ }
+ if(animeHeadReady){
+   const hb=bossWomanBones.Head,hr=bossWomanRest.Head;
+   if(hb&&hr)hb.scale.setScalar(.001);
  }
 
  proceduralWoman.forEach(o=>o.visible=false);
  console.info('Bellamore: high-detail CC0 MPFB body loaded');
 },undefined,err=>console.warn('High-detail boss GLB failed; procedural giantess fallback remains visible.',err));
+
+async function loadAnimeBossHead(){
+ try{
+   const {VRMLoaderPlugin,VRMUtils}=await import('@pixiv/three-vrm');
+   const loader=new GLTFLoader();
+   loader.register(parser=>new VRMLoaderPlugin(parser));
+   loader.load('./assets/models/boss/anime-head.vrm',gltf=>{
+     const vrm=gltf.userData?.vrm||null;
+     if(vrm)VRMUtils.rotateVRM0(vrm);
+     const root=vrm?.scene||gltf.scene;
+     const bodyNode=root.getObjectByName('Body');
+     if(bodyNode)bodyNode.visible=false;
+
+     const face=root.getObjectByName('Face');
+     const hair=root.getObjectByName('Hair001');
+     for(const obj of [face,hair]){
+       if(!obj)continue;
+       obj.visible=true;
+       obj.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+     }
+
+     root.updateMatrixWorld(true);
+     let box=new THREE.Box3();
+     if(face)box.expandByObject(face,true);
+     if(hair)box.expandByObject(hair,true);
+     if(box.isEmpty())box.setFromObject(root,true);
+     const size=new THREE.Vector3();box.getSize(size);
+     const desiredHeight=2.08;
+     const scale=desiredHeight/Math.max(size.y,.001);
+     root.scale.multiplyScalar(scale);
+     root.updateMatrixWorld(true);
+
+     box=new THREE.Box3();
+     if(face)box.expandByObject(face,true);
+     if(hair)box.expandByObject(hair,true);
+     if(box.isEmpty())box.setFromObject(root,true);
+     const center=new THREE.Vector3();box.getCenter(center);
+     root.position.sub(center);
+
+     animeHeadPivot=new THREE.Group();
+     animeHeadPivot.position.set(0,5.28,1.08);
+     animeHeadPivot.add(root);
+     boss.add(animeHeadPivot);
+     animeHeadVisual=root;animeBossVRM=vrm;animeHeadReady=true;
+
+     const hb=bossWomanBones.Head,hr=bossWomanRest.Head;
+     if(hb&&hr)hb.scale.setScalar(.001);
+
+     console.info('Bellamore: CC0 anime face/hair loaded over MPFB torso');
+   },undefined,err=>console.warn('Anime head failed; MPFB face remains as fallback.',err));
+ }catch(err){
+   console.warn('three-vrm unavailable; MPFB face remains as fallback.',err);
+ }
+}
+loadAnimeBossHead();
 
 // Her actual gigantic arms. Combat hit ranges stay unchanged; only the visual reach is oversized.
 const dorsalArms=[];
@@ -562,6 +628,27 @@ function animateGiantessPresence(dt){
  setBossMorph('mouthFrownLeft',dangerous?.12:0,10,dt);setBossMorph('mouthFrownRight',dangerous?.12:0,10,dt);
  const blink=(st==='idle'&&Math.sin(state.time*1.85)>0.985)?1:0;
  setBossMorph('eyeBlinkLeft',blink,18,dt);setBossMorph('eyeBlinkRight',blink,18,dt);
+
+ if(animeHeadPivot){
+   let rx=0,ry=0,rz=0;
+   if(st==='idle'){ry=Math.sin(state.time*.55)*.055;rx=Math.sin(state.time*.8)*.018}
+   else if(st==='arm_sweep'){rz=.18;ry=-.08}
+   else if(st==='arm_uppercut'){rz=.2;rx=-.05}
+   else if(st==='arm_grab'){ry=-.2;rx=.06}
+   else if(st==='arm_double_slam'||st==='arm_guardbreak'){rx=-.16}
+   else if(st==='arm_cross'||st==='arm_crush'){rx=.08}
+   animeHeadPivot.rotation.x=THREE.MathUtils.lerp(animeHeadPivot.rotation.x,rx,1-Math.exp(-dt*10));
+   animeHeadPivot.rotation.y=THREE.MathUtils.lerp(animeHeadPivot.rotation.y,ry,1-Math.exp(-dt*10));
+   animeHeadPivot.rotation.z=THREE.MathUtils.lerp(animeHeadPivot.rotation.z,rz,1-Math.exp(-dt*10));
+ }
+ if(animeBossVRM){
+   const em=animeBossVRM.expressionManager;
+   if(em){
+     const idle=st==='idle',danger=dangerous;
+     try{em.setValue('happy',idle?.22:0);em.setValue('surprised',danger?.36:0);em.setValue('angry',danger?.16:0)}catch(_){}
+   }
+   animeBossVRM.update(dt);
+ }
 }
 function updateSparks(dt){
  for(let s=sparks.length-1;s>=0;s--){
