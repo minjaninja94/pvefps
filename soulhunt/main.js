@@ -196,7 +196,7 @@ addEventListener('contextmenu',e=>e.preventDefault());
 const ui={hp:document.querySelector('#hp'),posture:document.querySelector('#posture'),bossHp:document.querySelector('#bossHp'),bossPosture:document.querySelector('#bossPosture'),msg:document.querySelector('#message'),danger:document.querySelector('#danger'),head:document.querySelector('#headPart'),leg:document.querySelector('#legPart'),tail:document.querySelector('#tailPart'),weapon:document.querySelector('#weaponHud')};
 const state={
  hp:100,posture:0,stamina:100,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
- bossHp:560,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,time:0,shake:0,hitstop:0,
+ bossHp:560,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,time:0,shake:0,hitstop:0,
  headHp:100,legHp:150,tailHp:130,tailBroken:false,legBroken:false,headBroken:false,danger:false,reaction:0,reactionZone:'body'
 };
 function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeout(flash.t);flash.t=setTimeout(()=>ui.msg.style.opacity='0',d*1000)}
@@ -321,11 +321,21 @@ function chooseBossAttack(){
  const d=dist(),r=Math.random();
  setDanger(false);
  if(d>7){state.bossState='rush';state.bossTimer=1.05;state.bossHit=false;return}
- if(r<.28){state.bossState='claw1';state.bossTimer=.62;state.bossHit=false}
- else if(r<.48){state.bossState='bite';state.bossTimer=.82;state.bossHit=false}
- else if(r<.66){state.bossState='slam';state.bossTimer=1.05;state.bossHit=false}
- else if(r<.82&&!state.tailBroken){state.bossState='tail';state.bossTimer=.92;state.bossHit=false}
- else{state.bossState='peril';state.bossTimer=1.12;state.bossHit=false;setDanger(true)}
+ if(r<.16){state.bossState='claw1';state.bossTimer=.62;state.bossHit=false}
+ else if(r<.28){state.bossState='bite';state.bossTimer=.82;state.bossHit=false}
+ else if(r<.40){state.bossState='slam';state.bossTimer=1.05;state.bossHit=false}
+ else if(r<.50&&!state.tailBroken){state.bossState='tail';state.bossTimer=.92;state.bossHit=false}
+ else if(r<.58){state.bossState='peril';state.bossTimer=1.12;state.bossHit=false;setDanger(true)}
+ else{
+   const dorsal=['arm_cross','arm_double_slam','arm_sweep','arm_uppercut','arm_grab','arm_barrage','arm_guardbreak','arm_crush'];
+   state.bossState=dorsal[Math.floor(Math.random()*dorsal.length)];
+   state.bossTimer={
+     arm_cross:.92,arm_double_slam:1.08,arm_sweep:.98,arm_uppercut:.82,
+     arm_grab:1.18,arm_barrage:1.42,arm_guardbreak:1.05,arm_crush:1.22
+   }[state.bossState];
+   state.bossHit=false;state.bossPatternStep=0;
+   if(state.bossState==='arm_grab'||state.bossState==='arm_crush')setDanger(true);
+ }
 }
 function bossImpact(range,dmg,posture,unblockable=false){
  if(!state.bossHit&&dist()<range){state.bossHit=true;hurtPlayer(dmg,posture,unblockable)}
@@ -357,7 +367,7 @@ function updateBoss(dt){
  if(state.bossState==='idle'){
    state.bossTimer-=dt;
    if(d>4.2)boss.position.addScaledVector(dir,dt*(state.legBroken?1.45:2.05));else if(d<2.8)boss.position.addScaledVector(dir,-dt*.55);
-   head.rotation.x=Math.sin(state.time*2.2)*.05;tailPivot.rotation.y=Math.sin(state.time*2.8)*.24;
+   head.rotation.x=Math.sin(state.time*2.2)*.05;tailPivot.rotation.y=Math.sin(state.time*2.8)*.24;resetDorsalArms(Math.min(1,dt*8));dorsalArms[0].shoulder.rotation.z+=Math.sin(state.time*1.8)*.035;dorsalArms[1].shoulder.rotation.z-=Math.sin(state.time*1.8)*.035;
    if(state.bossTimer<=0)chooseBossAttack();return;
  }
  state.bossTimer-=dt;
@@ -395,6 +405,51 @@ function updateBoss(dt){
    const p=1-state.bossTimer/.92;tailPivot.rotation.y=-1.1+Math.sin(clamp(p,0,1)*Math.PI)*2.7;
    if(state.bossTimer<.47)bossImpact(4.65,25,31,false);
    if(state.bossTimer<=0){tailPivot.rotation.y=0;state.bossState='idle';state.bossTimer=.62}
+ }else if(state.bossState==='arm_cross'){
+   const p=1-state.bossTimer/.92,s=Math.sin(clamp(p,0,1)*Math.PI);
+   dorsalArms[0].upperPivot.rotation.z=s*1.5;dorsalArms[1].upperPivot.rotation.z=-s*1.5;
+   dorsalArms[0].elbow.rotation.z=s*.8;dorsalArms[1].elbow.rotation.z=-s*.8;
+   if(state.bossTimer<.42)bossImpact(4.1,24,30,false);
+   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.6}
+ }else if(state.bossState==='arm_double_slam'){
+   const p=1-state.bossTimer/1.08;
+   for(const a of dorsalArms){a.shoulder.rotation.x=-Math.sin(clamp(p,0,.55)/.55*Math.PI)*.85;a.upperPivot.rotation.x=-Math.sin(clamp(p,0,1)*Math.PI)*1.2}
+   if(state.bossTimer<.38)bossImpact(4.4,36,48,false);
+   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.85}
+ }else if(state.bossState==='arm_sweep'){
+   const p=1-state.bossTimer/.98,s=Math.sin(clamp(p,0,1)*Math.PI);
+   dorsalArms[0].shoulder.rotation.y=-1.1+s*2.2;dorsalArms[1].shoulder.rotation.y=1.1-s*2.2;
+   dorsalArms[0].upperPivot.rotation.z=.7;dorsalArms[1].upperPivot.rotation.z=-.7;
+   if(state.bossTimer<.5)bossImpact(5.0,28,36,false);
+   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.68}
+ }else if(state.bossState==='arm_uppercut'){
+   const p=1-state.bossTimer/.82,s=Math.sin(clamp(p,0,1)*Math.PI);
+   const a=dorsalArms[1];a.shoulder.rotation.z=-.5+s*1.5;a.elbow.rotation.z=-s*1.15;body.rotation.x=-s*.08;
+   if(state.bossTimer<.32)bossImpact(3.7,30,42,false);
+   if(state.bossTimer<=0){resetDorsalArms(1);body.rotation.x=0;state.bossState='idle';state.bossTimer=.62}
+ }else if(state.bossState==='arm_grab'){
+   const p=1-state.bossTimer/1.18,s=Math.sin(clamp(p,0,1)*Math.PI);
+   const a=dorsalArms[0];a.shoulder.rotation.x=-.45;a.shoulder.rotation.y=-s*.95;a.elbow.rotation.z=s*1.05;
+   if(state.bossTimer<.36)bossImpact(3.25,42,58,true);
+   if(state.bossTimer<=0){setDanger(false);resetDorsalArms(1);state.bossState='idle';state.bossTimer=.95}
+ }else if(state.bossState==='arm_barrage'){
+   const p=1-state.bossTimer/1.42,phase=Math.floor(p*6),s=Math.sin((p*6-phase)*Math.PI);
+   const idx=phase%2;dorsalArms[idx].upperPivot.rotation.z=(idx? -1:1)*s*1.35;dorsalArms[idx].elbow.rotation.z=(idx?-.7:.7)*s;
+   if(phase!==state.bossPatternStep){state.bossPatternStep=phase;state.bossHit=false}
+   if(s>.72)bossImpact(3.8,14,18,false);
+   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.72}
+ }else if(state.bossState==='arm_guardbreak'){
+   const p=1-state.bossTimer/1.05,s=Math.sin(clamp(p,0,1)*Math.PI);
+   dorsalArms[0].upperPivot.rotation.x=-1.1*s;dorsalArms[1].upperPivot.rotation.x=-1.1*s;
+   dorsalArms[0].shoulder.rotation.z=.55*s;dorsalArms[1].shoulder.rotation.z=-.55*s;
+   if(state.bossTimer<.3)bossImpact(4.0,22,72,false);
+   if(state.bossTimer<=0){resetDorsalArms(1);state.bossState='idle';state.bossTimer=.9}
+ }else if(state.bossState==='arm_crush'){
+   const p=1-state.bossTimer/1.22,s=Math.sin(clamp(p,0,1)*Math.PI);
+   dorsalArms[0].shoulder.rotation.y=-.9*s;dorsalArms[1].shoulder.rotation.y=.9*s;
+   dorsalArms[0].elbow.rotation.z=.95*s;dorsalArms[1].elbow.rotation.z=-.95*s;
+   if(state.bossTimer<.4)bossImpact(3.3,46,64,true);
+   if(state.bossTimer<=0){setDanger(false);resetDorsalArms(1);state.bossState='idle';state.bossTimer=1.0}
  }else if(state.bossState==='peril'){
    // red perilous pounce: cannot be guarded/deflected; lateral roll is the intended answer.
    head.rotation.x=-.55;body.rotation.x=.12;
@@ -472,7 +527,7 @@ function updatePlayer(dt){
  if(state.stagger>0||state.attack>.18)return;
  const {x,z}=getMoveAxes();
  if(x||z){
-   const right=new THREE.Vector3(toBoss.z,0,-toBoss.x),move=new THREE.Vector3();
+   const right=new THREE.Vector3(-toBoss.z,0,toBoss.x),move=new THREE.Vector3();
    if(input.lock)move.addScaledVector(toBoss,z).addScaledVector(right,x).normalize();
    else{const basis=getCameraBasis();move.addScaledVector(basis.f,z).addScaledVector(basis.r,x).normalize();}
    const sprint=input.keys.has('ShiftLeft')||input.keys.has('ShiftRight');player.position.addScaledVector(move,dt*(sprint?5.2:3.15));
