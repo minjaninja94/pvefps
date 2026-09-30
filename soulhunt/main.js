@@ -660,6 +660,30 @@ function applyBossArmIK(dt){
  }
 }
 
+
+async function loadFemaleArmDonor(){
+ try{
+   const {VRMLoaderPlugin,VRMUtils}=await import('@pixiv/three-vrm');
+   const loader=new GLTFLoader();loader.register(parser=>new VRMLoaderPlugin(parser));
+   loader.load('./assets/models/boss/female-arm-donor.vrm',gltf=>{
+     const vrm=gltf.userData?.vrm||null;
+     if(vrm)VRMUtils.rotateVRM0(vrm);
+     const root=vrm?.scene||gltf.scene;
+     let bodyNode=root.getObjectByName('Body');
+     if(!bodyNode){
+       root.traverse(o=>{if(!bodyNode&&o.isSkinnedMesh)bodyNode=o});
+     }
+     const left=extractArmOnlyPart(bodyNode,'left'),right=extractArmOnlyPart(bodyNode,'right');
+     if(left&&right){
+       animeBossArmParts.left=left;animeBossArmParts.right=right;
+       tryBuildBossMonsterArms();
+       console.info('Bellamore: dedicated CC0 female arm donor loaded');
+     }else console.warn('Female arm donor loaded but arm extraction failed');
+   },undefined,err=>console.warn('Female arm donor unavailable.',err));
+ }catch(err){console.warn('three-vrm unavailable for arm donor.',err)}
+}
+loadFemaleArmDonor();
+
 async function loadAnimeBossUpper(){
  try{
    const {VRMLoaderPlugin,VRMUtils}=await import('@pixiv/three-vrm');
@@ -719,8 +743,6 @@ async function loadAnimeBossUpper(){
        const node=humanoid?.getNormalizedBoneNode?.(hName);
        if(node)cacheAnimeBossBone(key,node);
      }
-     animeBossArmParts.left=extractArmOnlyPart(bodyNode,'left');
-     animeBossArmParts.right=extractArmOnlyPart(bodyNode,'right');
      setTimeout(tryBuildBossMonsterArms,0);
 
      // Centaur construction: keep the entire authored upper body visible, collapse only the human legs.
