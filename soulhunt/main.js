@@ -266,6 +266,13 @@ function setBoneOffset(name,rx=0,ry=0,rz=0,speed=10,dt=.016){
  b.rotation.y=THREE.MathUtils.lerp(b.rotation.y,base.rotation.y+ry,1-Math.exp(-dt*speed));
  b.rotation.z=THREE.MathUtils.lerp(b.rotation.z,base.rotation.z+rz,1-Math.exp(-dt*speed));
 }
+function setBonePositionOffset(name,x=0,y=0,z=0,speed=10,dt=.016){
+ const b=bossWomanBones[name],base=bossWomanRest[name];
+ if(!b||!base)return;
+ b.position.x=THREE.MathUtils.lerp(b.position.x,base.position.x+x,1-Math.exp(-dt*speed));
+ b.position.y=THREE.MathUtils.lerp(b.position.y,base.position.y+y,1-Math.exp(-dt*speed));
+ b.position.z=THREE.MathUtils.lerp(b.position.z,base.position.z+z,1-Math.exp(-dt*speed));
+}
 function setBossMorph(name,value,speed=10,dt=.016){
  if(!bossWomanVisual)return;
  bossWomanVisual.traverse(o=>{
@@ -492,16 +499,18 @@ function updateBossWarningGlow(){
 }
 
 function animateGiantessPresence(dt){
- const attacking=state.bossState!=='idle'&&state.bossState!=='stagger';
- const dangerous=state.bossState==='arm_grab'||state.bossState==='arm_crush'||state.bossState==='peril';
- // Slow breathing and deliberate head movement keep the upper body alive between attacks.
+ const st=state.bossState;
+ const attacking=st!=='idle'&&st!=='stagger';
+ const dangerous=st==='arm_grab'||st==='arm_crush'||st==='peril';
+
+ // Procedural fallback motion.
  const hairSpeed=attacking?7.5:2.0;
  for(let i=0;i<hairLocks.length;i++){
    const h=hairLocks[i],side=i<2?-1:1;
    h.rotation.z=THREE.MathUtils.lerp(h.rotation.z,side*.06+Math.sin(state.time*hairSpeed+i)*.055,1-Math.exp(-dt*7));
    h.rotation.x=THREE.MathUtils.lerp(h.rotation.x,attacking?.1:0,1-Math.exp(-dt*6));
  }
- if(state.bossState==='idle'){
+ if(st==='idle'){
    const breathe=Math.sin(state.time*1.55);
    chest.scale.y=1.08+breathe*.018;
    chest.rotation.z=Math.sin(state.time*.72)*.018;
@@ -509,16 +518,50 @@ function animateGiantessPresence(dt){
    head.rotation.y=Math.sin(state.time*.55)*.055;
    head.rotation.x=Math.sin(state.time*.82)*.018;
    bustL.position.y=3.62+breathe*.025;bustR.position.y=3.62+breathe*.025;
- }else{
-   chest.scale.y=THREE.MathUtils.lerp(chest.scale.y,1.08,1-Math.exp(-dt*8));
- }
- // Danger attacks transform the pretty face into the warning tell.
+ }else chest.scale.y=THREE.MathUtils.lerp(chest.scale.y,1.08,1-Math.exp(-dt*8));
+
  const targetEye=dangerous?3.0:(attacking?1.7:1.25);
  eyeMat.emissiveIntensity=THREE.MathUtils.lerp(eyeMat.emissiveIntensity,targetEye,1-Math.exp(-dt*10));
- if(dangerous){
-   jaw.rotation.x=THREE.MathUtils.lerp(jaw.rotation.x,.34,1-Math.exp(-dt*12));
-   head.rotation.z+=Math.sin(state.time*13)*.006;
- }
+ if(dangerous){jaw.rotation.x=THREE.MathUtils.lerp(jaw.rotation.x,.34,1-Math.exp(-dt*12));head.rotation.z+=Math.sin(state.time*13)*.006}
+
+ if(!bossWomanVisual)return;
+
+ // High-detail MPFB rig: torso and face clearly telegraph before custom giant-arm hit frames.
+ let spineX=0,spineY=0,spineZ=0,headX=0,headY=0,headZ=0,hipsZ=0;
+ if(st==='idle'){
+   spineX=Math.sin(state.time*1.4)*.012;
+   spineZ=Math.sin(state.time*.7)*.014;
+   headY=Math.sin(state.time*.52)*.045;
+   headX=Math.sin(state.time*.82)*.012;
+ }else if(st==='arm_cross'){spineX=-.16;headX=.09;}
+ else if(st==='arm_double_slam'||st==='arm_guardbreak'){spineX=.3;headX=-.16;}
+ else if(st==='arm_sweep'){spineZ=-.3;hipsZ=.12;headZ=.17;}
+ else if(st==='arm_uppercut'){spineZ=-.34;hipsZ=-.12;headZ=.2;}
+ else if(st==='arm_grab'){spineY=.2;headY=-.2;spineX=-.08;}
+ else if(st==='arm_barrage'){spineX=-.14;spineZ=Math.sin(state.time*16)*.04;}
+ else if(st==='arm_crush'){spineX=-.26;headX=.12;}
+
+ setBoneOffset('Hips',0,0,hipsZ,8,dt);
+ setBoneOffset('Spine1',spineX*.45,spineY*.45,spineZ*.45,9,dt);
+ setBoneOffset('Spine2',spineX,spineY,spineZ,10,dt);
+ setBoneOffset('Neck',headX*.35,headY*.45,headZ*.35,10,dt);
+ setBoneOffset('Head',headX,headY,headZ,11,dt);
+
+ const pony=Math.sin(state.time*(attacking?8:2.1))*(attacking?.1:.03);
+ setBoneOffset('PonytailRoot',-spineX*.15,0,-spineZ*.22+pony*.3,7,dt);
+ setBoneOffset('Ponytail1',-spineX*.3,0,-spineZ*.35+pony,7,dt);
+ setBoneOffset('Ponytail2',-spineX*.4,0,-spineZ*.5+pony*1.25,6,dt);
+ setBoneOffset('Ponytail3',-spineX*.5,0,-spineZ*.65+pony*1.5,5,dt);
+
+ // Facial tells: smiling at rest; eyes widen and mouth opens only before danger attacks.
+ const smile=st==='idle'?.28:.06;
+ setBossMorph('mouthSmileLeft',smile,7,dt);setBossMorph('mouthSmileRight',smile,7,dt);
+ setBossMorph('eyeWideLeft',dangerous?.55:0,12,dt);setBossMorph('eyeWideRight',dangerous?.55:0,12,dt);
+ setBossMorph('browInnerUp',dangerous?.38:0,12,dt);
+ setBossMorph('jawOpen',dangerous?.34:(st==='arm_double_slam'||st==='arm_guardbreak'?.14:0),12,dt);
+ setBossMorph('mouthFrownLeft',dangerous?.12:0,10,dt);setBossMorph('mouthFrownRight',dangerous?.12:0,10,dt);
+ const blink=(st==='idle'&&Math.sin(state.time*1.85)>0.985)?1:0;
+ setBossMorph('eyeBlinkLeft',blink,18,dt);setBossMorph('eyeBlinkRight',blink,18,dt);
 }
 function updateSparks(dt){
  for(let s=sparks.length-1;s>=0;s--){
