@@ -1229,6 +1229,7 @@ function setLockOn(v){
 addEventListener('keydown',e=>{
  input.keys.add(e.code);
  if(e.code==='KeyQ')setLockOn(!input.lock);
+ if(e.code==='KeyR')tryDrinkPotion();
  if(e.code==='Space')tryRoll();
  if(/^Digit[1-6]$/.test(e.code))setWeapon(Number(e.code.slice(5))-1);
  if(e.code==='KeyT')toggleGrip();
@@ -1251,8 +1252,12 @@ addEventListener('mouseup',e=>{if(e.button===2)input.guard=false});
 addEventListener('contextmenu',e=>e.preventDefault());
 
 const ui={hp:document.querySelector('#hp'),stamina:document.querySelector('#stamina'),posture:document.querySelector('#posture'),bossHp:document.querySelector('#bossHp'),bossPosture:document.querySelector('#bossPosture'),msg:document.querySelector('#message'),danger:document.querySelector('#danger'),head:document.querySelector('#headPart'),leg:document.querySelector('#legPart'),spike:document.querySelector('#spikePart'),tail:document.querySelector('#tailPart'),weapon:document.querySelector('#weaponHud'),lockDot:document.querySelector('#lockDot')};
+const potionHud=document.createElement('div');
+potionHud.style.cssText='position:fixed;left:16px;bottom:48px;z-index:30;color:#e8c56a;background:rgba(8,8,8,.72);border:1px solid #8e6d31;padding:7px 12px;font:600 13px sans-serif;letter-spacing:.08em;pointer-events:none';
+document.body.appendChild(potionHud);
+
 const state={
- hp:100,posture:0,stamina:100,staminaMax:100,staminaRegenDelay:0,exhausted:0,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollElapsed:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
+ hp:100,posture:0,stamina:100,staminaMax:100,staminaRegenDelay:0,exhausted:0,potions:3,potionTimer:0,potionHealDone:false,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollElapsed:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
  bossHp:560,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',time:0,shake:0,hitstop:0,
  headHp:100,legHp:150,tailHp:130,tailBroken:false,legBroken:false,headBroken:false,danger:false,reaction:0,reactionZone:'body'
 };
@@ -1475,6 +1480,7 @@ function getCameraBasis(){
  return {f,r};
 }
 function tryRoll(){
+ if(state.potionTimer>0)return;
  if(state.dead||state.rolling>0||state.attack>0||state.stagger>0||state.exhausted>0)return;
  const {x,z}=getMoveAxes();
  const toBoss=flatDir(player.position,boss.position);
@@ -1506,8 +1512,26 @@ function startAttack(step){
  state.attack=[0,.46,.5,.62][step]/w.speed*(twoHanded ? .96 : 1.04);
  state.attackHit=false;state.attackQueued=false;state.comboGrace=.2/w.speed;return true;
 }
+function tryDrinkPotion(){
+ if(state.dead||state.potions<=0||state.potionTimer>0||state.attack>0||state.rolling>0||state.stagger>0)return;
+ if(state.hp>=100){flash('체력이 가득 찼다',.35);return}
+ state.potions--;
+ state.potionTimer=.95;
+ state.potionHealDone=false;
+ state.staminaRegenDelay=Math.max(state.staminaRegenDelay,.9);
+ flash(`에스트 사용 · 남은 수 ${state.potions}`,.55);
+
+ // Healing at range is punishable: Bellamore answers with a quick spike volley.
+ if(state.bossHp>0&&state.bossStagger<=0&&(state.bossState==='idle'||state.bossTimer>.55)){
+   state.bossState='spike_triple';
+   state.bossTimer=1.18;
+   state.bossPatternStep=0;
+   state.bossHit=false;
+   state.bossFxStamp='';
+ }
+}
 function tryAttack(){
- if(state.dead||state.rolling>0||state.stagger>0)return;
+ if(state.dead||state.rolling>0||state.stagger>0||state.potionTimer>0)return;
  if(state.attack>0){
    if(state.attack<.24)state.attackQueued=true;
    return;
@@ -1916,6 +1940,15 @@ function applyWeaponAttackPose(w,step,p){
  weaponPivot.scale.setScalar(twoHanded?1.06:1);
 }
 function updatePlayer(dt){
+ if(state.potionTimer>0){
+   state.potionTimer=Math.max(0,state.potionTimer-dt);
+   if(!state.potionHealDone&&state.potionTimer<=.42){
+     state.potionHealDone=true;
+     state.hp=Math.min(100,state.hp+48);
+     spawnSparks(player.position.clone().add(new THREE.Vector3(0,1.1,0)),10,2.4);
+     flash(`회복 +48 · 포션 ${state.potions}/3`,.45);
+   }
+ }
  if(state.dead){setPlayerVisualAction('dead');if(playerMixer)playerMixer.update(dt);return;}
  const axes=getMoveAxes(),moving=axes.x!==0||axes.z!==0,sprinting=input.keys.has('ShiftLeft')||input.keys.has('ShiftRight');
  let anim='idle';
@@ -1970,7 +2003,7 @@ function updatePlayer(dt){
    }
    return;
  }
- if(state.stagger>0||state.attack>.18)return;
+ if(state.stagger>0||state.attack>.18||state.potionTimer>0)return;
  const {x,z}=getMoveAxes();
  if(x||z){
    const right=new THREE.Vector3(-toBoss.z,0,toBoss.x),move=new THREE.Vector3();
@@ -2084,6 +2117,7 @@ function partText(v,broken,label){return broken?label:(v<45?'손상':'정상')}
 function updateUI(){
  ui.hp.style.width=clamp(state.hp,0,100)+'%';if(ui.stamina){ui.stamina.style.width=(clamp(state.stamina,0,state.staminaMax)/state.staminaMax*100)+'%';ui.stamina.parentElement.classList.toggle('exhausted',state.exhausted>0)}ui.posture.style.width=clamp(state.posture,0,100)+'%';ui.bossHp.style.width=(state.bossHp/560*100)+'%';ui.bossPosture.style.width=clamp(state.bossPosture,0,100)+'%';
  ui.head.textContent=partText(state.headHp,state.headBroken,'파괴');ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴');if(ui.spike){const alive=bossSpikeTargets.filter(s=>!s.broken).length,total=bossSpikeTargets.length;ui.spike.textContent=total?(alive?`${alive}/${total}`:'전부 파괴'):'로딩';}ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단');if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
+ potionHud.textContent=`R · 포션 ${state.potions}/3`;
 }
 function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}addEventListener('resize',resize);resize();
 function loop(){
