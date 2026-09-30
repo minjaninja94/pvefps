@@ -698,35 +698,37 @@ function stripSkinnedSpatialRegions(root,boneNames,radiusScale=1.0){
    obj.geometry=geo;
  });
 }
-function stripVisibleBossArms(bodyNode){
- let src=null;
- if(bodyNode?.isSkinnedMesh)src=bodyNode;
- else bodyNode?.traverse?.(o=>{if(!src&&o.isSkinnedMesh)src=o});
- if(!src||!src.geometry?.attributes?.skinIndex||!src.geometry?.attributes?.skinWeight||!src.skeleton)return;
+function stripVisibleBossArms(root){
+ root?.traverse?.(src=>{
+   if(!src.isSkinnedMesh||!src.geometry?.attributes?.skinIndex||!src.geometry?.attributes?.skinWeight||!src.skeleton)return;
 
- const geo=src.geometry.clone(),si=geo.attributes.skinIndex,sw=geo.attributes.skinWeight;
- const banned=new Set();
- (src.skeleton.bones||[]).forEach((b,i)=>{
-   const n=(b.name||'').toLowerCase();
-   if(n.includes('upperarm')||n.includes('lowerarm')||n.includes('hand')||
-      n.includes('thumb')||n.includes('index')||n.includes('middle')||n.includes('ring')||n.includes('little'))banned.add(i);
- });
- const armWeighted=v=>{
-   let sum=0,sz=Math.min(4,si.itemSize,sw.itemSize);
-   for(let k=0;k<sz;k++){
-     const bi=si.array[v*si.itemSize+k],w=sw.array[v*sw.itemSize+k];
-     if(banned.has(bi))sum+=w;
+   const geo=src.geometry.clone(),si=geo.attributes.skinIndex,sw=geo.attributes.skinWeight;
+   const banned=new Set();
+   (src.skeleton.bones||[]).forEach((b,i)=>{
+     const n=(b.name||'').toLowerCase();
+     if(n.includes('shoulder')||n.includes('upperarm')||n.includes('lowerarm')||n.includes('hand')||
+        n.includes('thumb')||n.includes('index')||n.includes('middle')||n.includes('ring')||n.includes('little'))banned.add(i);
+   });
+   if(!banned.size)return;
+
+   const armWeighted=v=>{
+     let sum=0,sz=Math.min(4,si.itemSize,sw.itemSize);
+     for(let k=0;k<sz;k++){
+       const bi=si.array[v*si.itemSize+k],w=sw.array[v*sw.itemSize+k];
+       if(banned.has(bi))sum+=w;
+     }
+     return sum>.075;
+   };
+
+   const oldIndex=geo.index,out=[],count=oldIndex?oldIndex.count:geo.attributes.position.count;
+   for(let i=0;i<count;i+=3){
+     const a=oldIndex?oldIndex.getX(i):i,b=oldIndex?oldIndex.getX(i+1):i+1,d=oldIndex?oldIndex.getX(i+2):i+2;
+     const hit=(armWeighted(a)?1:0)+(armWeighted(b)?1:0)+(armWeighted(d)?1:0);
+     if(hit<2)out.push(a,b,d);
    }
-   return sum>.16;
- };
- const oldIndex=geo.index,out=[],count=oldIndex?oldIndex.count:geo.attributes.position.count;
- for(let i=0;i<count;i+=3){
-   const a=oldIndex?oldIndex.getX(i):i,b=oldIndex?oldIndex.getX(i+1):i+1,d=oldIndex?oldIndex.getX(i+2):i+2;
-   const hit=(armWeighted(a)?1:0)+(armWeighted(b)?1:0)+(armWeighted(d)?1:0);
-   if(hit<2)out.push(a,b,d);
- }
- geo.setIndex(out);geo.computeVertexNormals();geo.computeBoundingSphere();
- src.geometry=geo;
+   geo.setIndex(out);geo.computeVertexNormals();geo.computeBoundingSphere();
+   src.geometry=geo;
+ });
 }
 
 function stripBoneForwardCapsule(root,fromBoneName,toBoneName,extend=1.2,radius=.7){
@@ -862,7 +864,7 @@ async function loadAnimeBossUpper(){
        });
      }
      // Keep torso/bust/hair/face, but remove the authored arms completely.
-     stripVisibleBossArms(bodyNode);
+     stripVisibleBossArms(root);
 
      // Normalize the full anime body, then anchor the hips at the beast/woman seam.
      root.updateMatrixWorld(true);
@@ -897,9 +899,9 @@ async function loadAnimeBossUpper(){
        const node=humanoid?.getNormalizedBoneNode?.(hName);
        if(node)cacheAnimeBossBone(key,node);
      }
-     for(const armBone of ['leftUpperArm','rightUpperArm']){
+     for(const armBone of ['leftShoulder','rightShoulder','leftUpperArm','rightUpperArm']){
        const b=animeBossBones[armBone];
-       if(b)b.scale.set(.00001,.00001,.00001);
+       if(b){b.visible=false;b.scale.set(.00001,.00001,.00001);}
      }
      setTimeout(tryBuildBossMonsterArms,0);
 
@@ -907,14 +909,6 @@ async function loadAnimeBossUpper(){
      for(const name of ['J_Bip_L_UpperLeg','J_Bip_R_UpperLeg']){
        const b=root.getObjectByName(name);
        if(b)b.scale.set(.001,.001,.001);
-     }
-
-     // Slightly lengthen the actual skinned arms so the visible silhouette matches the wider attack rig.
-     for(const name of ['J_Bip_L_UpperArm','J_Bip_R_UpperArm']){
-       const b=root.getObjectByName(name);if(b)b.scale.multiplyScalar(1.16);
-     }
-     for(const name of ['J_Bip_L_LowerArm','J_Bip_R_LowerArm']){
-       const b=root.getObjectByName(name);if(b)b.scale.multiplyScalar(1.12);
      }
 
      // Oversize the authored VRoid bust bones instead of overlaying transparent/procedural breasts.
