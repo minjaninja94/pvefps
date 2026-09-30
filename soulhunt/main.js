@@ -385,11 +385,71 @@ function chooseBossAttack(){
 function bossImpact(range,dmg,posture,unblockable=false){
  if(!state.bossHit&&dist()<range){state.bossHit=true;hurtPlayer(dmg,posture,unblockable)}
 }
+function animateBossTelegraph(dt){
+ const st=state.bossState,t=state.bossTimer;
+ const lerp=(o,k,v,s=10)=>o[k]=THREE.MathUtils.lerp(o[k],v,1-Math.exp(-dt*s));
+ // relaxed defaults
+ lerp(body.rotation,'x',0,7);lerp(body.rotation,'y',0,7);lerp(body.rotation,'z',0,7);
+ lerp(chest.rotation,'x',0,7);lerp(chest.rotation,'z',0,7);
+ lerp(head.rotation,'x',0,8);lerp(head.rotation,'z',0,8);
+ jaw.rotation.x=THREE.MathUtils.lerp(jaw.rotation.x,.08,1-Math.exp(-dt*9));
+
+ if(st==='rush'){
+   if(t>.58){lerp(body.rotation,'x',-.34,13);lerp(head.rotation,'x',-.72,14);body.position.y=THREE.MathUtils.lerp(body.position.y,1.72,1-Math.exp(-dt*10));}
+ }
+ else if(st==='claw1'||st==='claw2'||st==='claw3'||st==='claw4'){
+   const idx=st==='claw1'||st==='claw3'?0:2,side=idx===0?1:-1;
+   if(t>(st==='claw1'?.29:st==='claw2'?.23:st==='claw3'?.22:.29)){
+     legs[idx].rotation.x=THREE.MathUtils.lerp(legs[idx].rotation.x,-1.55,1-Math.exp(-dt*15));
+     lerp(body.rotation,'z',side*.18,12);lerp(head.rotation,'z',side*.12,12);
+   }
+ }
+ else if(st==='bite'){
+   if(t>.34){head.position.z=THREE.MathUtils.lerp(head.position.z,2.0,1-Math.exp(-dt*13));lerp(head.rotation,'x',.42,14);jaw.rotation.x=THREE.MathUtils.lerp(jaw.rotation.x,.72,1-Math.exp(-dt*16));}
+ }
+ else if(st==='slam'){
+   if(t>.38){body.position.y=THREE.MathUtils.lerp(body.position.y,2.9,1-Math.exp(-dt*9));lerp(body.rotation,'x',.28,10);lerp(head.rotation,'x',-.25,10);}
+ }
+ else if(st==='tail'){
+   if(t>.47){lerp(body.rotation,'y',-.42,10);lerp(body.rotation,'z',-.14,10);tailPivot.rotation.y=THREE.MathUtils.lerp(tailPivot.rotation.y,-1.5,1-Math.exp(-dt*13));}
+ }
+ else if(st==='peril'){
+   if(t>.44){body.position.y=THREE.MathUtils.lerp(body.position.y,1.48,1-Math.exp(-dt*12));lerp(body.rotation,'x',-.36,14);lerp(head.rotation,'x',-.82,14);}
+ }
+ else if(st==='arm_cross'){
+   if(t>.42){dorsalArms[0].shoulder.rotation.z=THREE.MathUtils.lerp(dorsalArms[0].shoulder.rotation.z,-.9,1-Math.exp(-dt*15));dorsalArms[1].shoulder.rotation.z=THREE.MathUtils.lerp(dorsalArms[1].shoulder.rotation.z,.9,1-Math.exp(-dt*15));lerp(body.rotation,'x',-.16,10);}
+ }
+ else if(st==='arm_double_slam'){
+   if(t>.38){for(const a of dorsalArms){a.shoulder.rotation.x=THREE.MathUtils.lerp(a.shoulder.rotation.x,-1.2,1-Math.exp(-dt*12));a.upperPivot.rotation.x=THREE.MathUtils.lerp(a.upperPivot.rotation.x,-1.5,1-Math.exp(-dt*12));}body.position.y=THREE.MathUtils.lerp(body.position.y,2.55,1-Math.exp(-dt*9));}
+ }
+ else if(st==='arm_sweep'){
+   if(t>.5){lerp(body.rotation,'y',-.55,11);dorsalArms[0].shoulder.rotation.y=-1.25;dorsalArms[1].shoulder.rotation.y=-.55;}
+ }
+ else if(st==='arm_uppercut'){
+   if(t>.32){const a=dorsalArms[1];a.shoulder.rotation.z=THREE.MathUtils.lerp(a.shoulder.rotation.z,-1.2,1-Math.exp(-dt*14));a.elbow.rotation.z=THREE.MathUtils.lerp(a.elbow.rotation.z,-1.35,1-Math.exp(-dt*14));lerp(body.rotation,'z',-.2,10);}
+ }
+ else if(st==='arm_grab'){
+   if(t>.36){const a=dorsalArms[0];a.shoulder.rotation.y=THREE.MathUtils.lerp(a.shoulder.rotation.y,-1.35,1-Math.exp(-dt*10));a.elbow.rotation.z=THREE.MathUtils.lerp(a.elbow.rotation.z,1.35,1-Math.exp(-dt*10));lerp(body.rotation,'y',.2,9);}
+ }
+ else if(st==='arm_barrage'){
+   const pulse=Math.sin(state.time*18);
+   dorsalArms[0].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[0].upperPivot.rotation.z,.65+pulse*.25,1-Math.exp(-dt*18));
+   dorsalArms[1].upperPivot.rotation.z=THREE.MathUtils.lerp(dorsalArms[1].upperPivot.rotation.z,-.65-pulse*.25,1-Math.exp(-dt*18));
+   lerp(body.rotation,'x',-.12,12);
+ }
+ else if(st==='arm_guardbreak'){
+   if(t>.3){for(const a of dorsalArms){a.shoulder.rotation.x=THREE.MathUtils.lerp(a.shoulder.rotation.x,-1.45,1-Math.exp(-dt*11));a.elbow.rotation.x=THREE.MathUtils.lerp(a.elbow.rotation.x,-.8,1-Math.exp(-dt*11));}lerp(body.rotation,'x',.22,10);}
+ }
+ else if(st==='arm_crush'){
+   if(t>.4){dorsalArms[0].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[0].shoulder.rotation.y,-1.45,1-Math.exp(-dt*11));dorsalArms[1].shoulder.rotation.y=THREE.MathUtils.lerp(dorsalArms[1].shoulder.rotation.y,1.45,1-Math.exp(-dt*11));lerp(body.rotation,'x',-.2,10);}
+ }
+}
 function updateBoss(dt){
  if(state.bossHp<=0)setBossVisualAction('dead');
  else if(state.bossState==='idle')setBossVisualAction(dist()>4.2?'walk':'idle');
  else if(state.bossStagger>0)setBossVisualAction('idle');
  else setBossVisualAction('attack');
+ animateBossTelegraph(dt);
  if(state.reaction>0){
    state.reaction=Math.max(0,state.reaction-dt);
    const k=Math.sin((state.reaction/.16)*Math.PI);
@@ -401,6 +461,7 @@ function updateBoss(dt){
    body.rotation.z=THREE.MathUtils.lerp(body.rotation.z,0,dt*14);body.position.y=THREE.MathUtils.lerp(body.position.y,2.05,dt*14);
    if(!state.tailBroken)tailPivot.rotation.x=THREE.MathUtils.lerp(tailPivot.rotation.x,0,dt*14);
  }
+ if(!['slam','peril','rush','arm_double_slam'].includes(state.bossState))body.position.y=THREE.MathUtils.lerp(body.position.y,2.05,1-Math.exp(-dt*10));
  if(state.bossHp<=0){boss.rotation.z=THREE.MathUtils.lerp(boss.rotation.z,-1.15,dt*2);return}
  if(state.bossStagger>0){
    setDanger(false);state.bossStagger-=dt;boss.rotation.z=Math.sin(state.time*20)*.045;
