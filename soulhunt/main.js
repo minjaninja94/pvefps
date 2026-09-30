@@ -951,6 +951,12 @@ function pointSegmentDistance(p,a,b){
  const q=a.clone().addScaledVector(ab,t);
  return p.distanceTo(q);
 }
+const BOSS_ACTIVE_VOLUME={
+ arm_cross:{range:4.9,dot:-.05},arm_double_slam:{range:4.55,dot:.05},
+ arm_sweep:{range:5.45,dot:-.72},arm_uppercut:{range:4.05,dot:.18},
+ arm_grab:{range:3.85,dot:.28},arm_barrage:{range:4.25,dot:.05},
+ arm_guardbreak:{range:4.5,dot:.08},arm_crush:{range:4.2,dot:-.08}
+};
 function bossArmImpact(indices,radius,dmg,posture,unblockable=false){
  if(state.bossHit)return;
  const ids=Array.isArray(indices)?indices:[indices];
@@ -961,6 +967,16 @@ function bossArmImpact(indices,radius,dmg,posture,unblockable=false){
    dorsalArms[i].elbow.getWorldPosition(elbow);
    dorsalArms[i].wrist.getWorldPosition(wrist);
    if(pointSegmentDistance(pp,elbow,wrist)<=radius||wrist.distanceTo(pp)<=radius*1.12){touched=true;break}
+ }
+ // Fallback volume exists only during the already-short active frame. It prevents a stationary
+ // player from being mysteriously safe when the visual anime arm and invisible rig diverge slightly.
+ if(!touched){
+   const cfg=BOSS_ACTIVE_VOLUME[state.bossState];
+   if(cfg){
+     const toP=flatDir(boss.position,player.position);
+     const forward=new THREE.Vector3(Math.sin(boss.rotation.y),0,Math.cos(boss.rotation.y));
+     touched=dist()<=cfg.range&&forward.dot(toP)>=cfg.dot;
+   }
  }
  if(!touched)return;
  state.bossHit=true;
@@ -1074,12 +1090,12 @@ function updateBoss(dt){
    if(state.bossTimer>cutoff){
      boss.rotation.y=THREE.MathUtils.lerp(boss.rotation.y,face,1-Math.exp(-dt*4.2));
      const targetRange=BOSS_AIM_RANGE[state.bossState]??3.2;
-     if(d>targetRange+.25)boss.position.addScaledVector(dir,dt*Math.min(1.7,(d-targetRange)*1.25));
+     if(d>targetRange+.18)boss.position.addScaledVector(dir,dt*Math.min(2.35,(d-targetRange)*1.55));
    }
  }
  if(state.bossState==='idle'){
    state.bossTimer-=dt;
-   if(d>4.2)boss.position.addScaledVector(dir,dt*(state.legBroken?1.45:2.05));else if(d<2.8)boss.position.addScaledVector(dir,-dt*.55);
+   if(d>4.45)boss.position.addScaledVector(dir,dt*(state.legBroken?1.55:2.2));else if(d<2.35)boss.position.addScaledVector(dir,-dt*.28);
    head.rotation.x=Math.sin(state.time*2.2)*.05;tailPivot.rotation.y=Math.sin(state.time*2.8)*.24;resetDorsalArms(Math.min(1,dt*8));dorsalArms[0].shoulder.rotation.z+=Math.sin(state.time*1.8)*.035;dorsalArms[1].shoulder.rotation.z-=Math.sin(state.time*1.8)*.035;
    if(state.bossTimer<=0)chooseBossAttack();return;
  }
