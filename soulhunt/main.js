@@ -2142,7 +2142,7 @@ function hitBoss3(base,posture=12){
  }
 }
 function updateBoss3(dt){
- enforceBoss3Visibility();updateBoss3Fx(dt);updateBoss3Weapon();
+ enforceBoss3Visibility();updateBoss3Fx(dt);updateBoss2Fx(dt);updateBoss3Weapon();
  bossRim.position.set(boss.position.x,boss.position.y+3.0,boss.position.z-4.0);
  boss3Halo.rotation.z+=dt*(state.boss3Phase===2?1.8:.72);
  boss3HaloMat.opacity=(state.boss3Phase===2?.2:.1)+Math.sin(state.time*5)*.035;
