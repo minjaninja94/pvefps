@@ -1448,7 +1448,9 @@ boss.add(boss2Root);
 let boss2Visual=null,boss2VRM=null,boss2Ready=false;
 const boss2Bones={},boss2Rest={},boss2BustNodes=[];
 const boss2Projectiles=[],boss2Fx=[];
-const boss2Fired=new Set();
+const boss2Fired=new Set(),boss2MeleeRequests=[];
+const boss2WeaponTrace={valid:false,base:new THREE.Vector3(),tip:new THREE.Vector3()};
+const boss2HandTrace={valid:false,point:new THREE.Vector3()};
 const boss2Aura=new THREE.PointLight(0xff5b35,7.5,12,2);
 boss2Aura.position.set(0,1.65,.25);
 boss2Root.add(boss2Aura);
@@ -1588,7 +1590,7 @@ function setBoss2Style(style,announce=true){
  if(announce)flash(cfg[2],.5);
 }
 function updateBoss2Weapon(){
- if(!boss2Ready||state.bossHp<=0||state.boss2Style==='mage'){
+ if(!boss2Ready||state.bossHp<=0||(state.boss2Style==='mage'&&state.bossState!=='b2_thrust')){
    boss2WeaponRoot.visible=false;return;
  }
  const hand=boss2Bones.rightHand,lower=boss2Bones.rightLowerArm;
@@ -1613,14 +1615,40 @@ function boss2FacingDot(){
  return f.dot(to);
 }
 function boss2Strike(tag,range,dmg,posture,unblockable=false,minDot=-.25){
- boss2Once(tag,()=>{
-   const p=boss.position.clone().lerp(player.position,.48);p.y=.9;
-   spawnSparks(p,9,4.4);state.shake=Math.max(state.shake,.08);
-   if(dist()<=range&&boss2FacingDot()>=minDot){
-     if(state.invuln>0){flash('회피',.16);return}
-     hurtPlayer(dmg,posture,unblockable);
-   }
- });
+ if(!boss2Fired.has(tag))boss2MeleeRequests.push({tag,dmg,posture,unblockable,minDot,kind:'weapon'});
+}
+function boss2GrabStrike(tag,dmg,posture,unblockable=true,minDot=-.1){
+ if(!boss2Fired.has(tag))boss2MeleeRequests.push({tag,dmg,posture,unblockable,minDot,kind:'hand'});
+}
+function resetBoss2PhysicalTrace(){boss2WeaponTrace.valid=false;boss2HandTrace.valid=false}
+function processBoss2PhysicalHits(){
+ const playerCaps=combatHumanoidCapsules(playerVrmBones,player,2.0);
+ let weaponHit=null,handHit=null;
+ if(boss2WeaponRoot.visible){
+  const len=boss2Spear.visible?3.14:1.78;
+  const seg=combatWorldSegment(boss2WeaponRoot,new THREE.Vector3(0,.02,0),new THREE.Vector3(0,len,0));
+  if(boss2WeaponTrace.valid)weaponHit=combatSweptBladeContact(boss2WeaponTrace.base,boss2WeaponTrace.tip,seg.base,seg.tip,playerCaps,boss2Spear.visible?.11:.095);
+  boss2WeaponTrace.base.copy(seg.base);boss2WeaponTrace.tip.copy(seg.tip);boss2WeaponTrace.valid=true;
+ }else boss2WeaponTrace.valid=false;
+ const hand=boss2Bones.rightHand;
+ if(hand){
+  const p=new THREE.Vector3();hand.getWorldPosition(p);
+  if(boss2HandTrace.valid){
+   let bestD=Infinity;
+   for(const c of playerCaps)bestD=Math.min(bestD,combatSegmentSegmentDistance(boss2HandTrace.point,p,c.a,c.b)-c.r);
+   if(bestD<=.2)handHit={point:p.clone(),distance:bestD};
+  }
+  boss2HandTrace.point.copy(p);boss2HandTrace.valid=true;
+ }else boss2HandTrace.valid=false;
+ for(const req of boss2MeleeRequests){
+  const hit=req.kind==='hand'?handHit:weaponHit;
+  if(!hit||boss2Fired.has(req.tag)||boss2FacingDot()<req.minDot)continue;
+  boss2Fired.add(req.tag);state.shake=Math.max(state.shake,.08);spawnSparks(hit.point,9,4.4);
+  if(state.invuln>0){flash('회피',.16);continue}
+  hurtPlayer(req.dmg,req.posture,req.unblockable);
+  break;
+ }
+ boss2MeleeRequests.length=0;
 }
 function spawnBoss2Pulse(pos,radius=1.2,color=0xff6a3c,life=.34){
  const m=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),new THREE.MeshBasicMaterial({color,wireframe:true,transparent:true,opacity:.52,depthWrite:false}));
@@ -1757,7 +1785,7 @@ function chooseBoss2Attack(){
  if(pick==='b2_grab')setDanger(true);
 }
 function finishBoss2Attack(recovery=.72){
- setDanger(false);state.bossState='idle';state.bossTimer=recovery;state.bossFxStamp='';boss2Fired.clear();
+ setDanger(false);state.bossState='idle';state.bossTimer=recovery;state.bossFxStamp='';boss2Fired.clear();boss2MeleeRequests.length=0;resetBoss2PhysicalTrace();
  boss.position.y=0;
 }
 function poseBoss2(dt){
@@ -1819,7 +1847,7 @@ function hitBoss2(base,posture=12,contact=null){
  }
 }
 function updateBoss2(dt){
- enforceBoss2Visibility();updateBoss2Fx(dt);updateBoss2Projectiles(dt);
+ boss2MeleeRequests.length=0;enforceBoss2Visibility();updateBoss2Fx(dt);updateBoss2Projectiles(dt);
  bossRim.position.set(boss.position.x,boss.position.y+3.1,boss.position.z-4.2);
  boss2Halo.rotation.z+=dt*(state.boss2Phase===2?1.4:.55);
  boss2HaloMat.opacity=.16+.08*Math.sin(state.time*(state.boss2Phase===2?8:4));
@@ -1857,24 +1885,24 @@ function updateBoss2(dt){
  }else if(state.bossState==='b2_sword_combo'){
    if(state.bossTimer<1.18&&state.bossTimer>.98)boss.position.addScaledVector(dir,dt*3.8);
    if(state.bossTimer<.82&&state.bossTimer>.62)boss.position.addScaledVector(dir,dt*3.6);
-   if(state.bossTimer<=.96&&state.bossTimer>.62){if(boss2Once('s1-hit',()=>spawnBoss2Slash(1.35,0xff7550)))boss2Strike('s1-dmg',3.25,20,18,false,-.45)}
-   if(state.bossTimer<=.6&&state.bossTimer>.29){if(boss2Once('s2-hit',()=>spawnBoss2Slash(1.5,0xff6948)))boss2Strike('s2-dmg',3.45,23,20,false,-.5)}
-   if(state.bossTimer<=.27){if(boss2Once('s3-hit',()=>{spawnBoss2Slash(1.75,0xff5536);spawnDustBurst(boss.position,.48)}))boss2Strike('s3-dmg',3.7,31,30,false,-.6)}
+   if(state.bossTimer<=.96&&state.bossTimer>.62){boss2Once('s1-vfx',()=>spawnBoss2Slash(1.35,0xff7550));boss2Strike('s1-dmg',3.25,20,18,false,-.45)}
+   if(state.bossTimer<=.6&&state.bossTimer>.29){boss2Once('s2-vfx',()=>spawnBoss2Slash(1.5,0xff6948));boss2Strike('s2-dmg',3.45,23,20,false,-.5)}
+   if(state.bossTimer<=.27&&state.bossTimer>.04){boss2Once('s3-vfx',()=>{spawnBoss2Slash(1.75,0xff5536);spawnDustBurst(boss.position,.48)});boss2Strike('s3-dmg',3.7,31,30,false,-.6)}
    if(state.bossTimer<=0)finishBoss2Attack(.76);
  }else if(state.bossState==='b2_thrust'||state.bossState==='b2_spear_thrust'){
    const spear=state.bossState==='b2_spear_thrust',range=spear?5.1:4.1;
    if(state.bossTimer<.48&&state.bossTimer>.18)boss.position.addScaledVector(dir,dt*(spear?10.5:9.2));
-   if(state.bossTimer<=.33)boss2Strike('thrust',range,spear?30:28,spear?32:29,false,.05);
+   if(state.bossTimer<=.33&&state.bossTimer>.06)boss2Strike('thrust',range,spear?30:28,spear?32:29,false,.05);
    if(state.bossTimer<=0)finishBoss2Attack(.9);
  }else if(state.bossState==='b2_jump_slam'){
    const total=BOSS2_DUR.b2_jump_slam,e=total-state.bossTimer;
    if(e<1.18){const p=clamp(e/1.18,0,1);boss.position.y=Math.sin(p*Math.PI)*2.25;if(p<.7)boss.position.addScaledVector(dir,dt*3.2)}
    else boss.position.y=THREE.MathUtils.lerp(boss.position.y,0,1-Math.exp(-dt*28));
-   if(state.bossTimer<=.38)boss2Once('slam',()=>{spawnDustBurst(boss.position,.9);spawnBossShockwave(3.9,state.boss2Phase===2?31:27);boss2Strike('slam-dmg',3.2,state.boss2Phase===2?35:30,38,false,-1)});
+   if(state.bossTimer<=.38)boss2Once('slam',()=>{spawnDustBurst(boss.position,.9);spawnBossShockwave(3.9,state.boss2Phase===2?31:27)});
    if(state.bossTimer<=0)finishBoss2Attack(1.0);
  }else if(state.bossState==='b2_spear_sweep'){
    if(state.bossTimer<=.78&&state.bossTimer>.44)boss2Once('sweep-vfx',()=>spawnBoss2Slash(2.15,0x6aa9ff));
-   if(state.bossTimer<=.68)boss2Strike('sweep-dmg',4.55,29,31,false,-.75);
+   if(state.bossTimer<=.68&&state.bossTimer>.32)boss2Strike('sweep-dmg',4.55,29,31,false,-.75);
    if(state.bossTimer<=0)finishBoss2Attack(.9);
  }else if(state.bossState==='b2_magic_bolts'){
    if(state.bossTimer<=.9)boss2Once('bolts',()=>spawnBoss2HomingVolley(5));
@@ -1885,10 +1913,10 @@ function updateBoss2(dt){
  }else if(state.bossState==='b2_frenzy'){
    const marks=[1.35,1.05,.76,.48,.2];
    marks.forEach((mark,i)=>{
-     if(state.bossTimer<=mark)boss2Once('fz'+i,()=>{
-       spawnBoss2Slash(1.25+i*.08,0xff386b);
-       if(dist()<3.55&&boss2FacingDot()>-.55){if(state.invuln<=0)hurtPlayer(12+i*2,13+i*2,false);else flash('회피',.12)}
-     });
+     if(state.bossTimer<=mark&&state.bossTimer>mark-.16){
+       boss2Once('fz-vfx'+i,()=>spawnBoss2Slash(1.25+i*.08,0xff386b));
+       boss2Strike('fz-dmg'+i,3.55,12+i*2,13+i*2,false,-.55);
+     }
    });
    if(state.bossTimer>.16&&d>2.6)boss.position.addScaledVector(dir,dt*4.9);
    if(state.bossTimer<=0)finishBoss2Attack(.82);
@@ -1898,17 +1926,16 @@ function updateBoss2(dt){
  }else if(state.bossState==='b2_flame_combo'){
    const marks=[1.48,1.08,.68,.26];
    marks.forEach((mark,i)=>{
-     if(state.bossTimer<=mark)boss2Once('flame'+i,()=>{
-       spawnBoss2Slash(1.4+i*.13,0xff9a48);
-       if(dist()<3.7+i*.1&&boss2FacingDot()>-.55){if(state.invuln<=0)hurtPlayer(18+i*3,18+i*3,false);else flash('회피',.12)}
-       if(i===3)spawnBossShockwave(4.2,29);
-     });
+     if(state.bossTimer<=mark&&state.bossTimer>mark-.19){
+       boss2Once('flame-vfx'+i,()=>{spawnBoss2Slash(1.4+i*.13,0xff9a48);if(i===3)spawnBossShockwave(4.2,29)});
+       boss2Strike('flame-dmg'+i,3.7+i*.1,18+i*3,18+i*3,false,-.55);
+     }
    });
    if(state.bossTimer>.28&&d>2.7)boss.position.addScaledVector(dir,dt*4.2);
    if(state.bossTimer<=0)finishBoss2Attack(1.05);
  }else if(state.bossState==='b2_dash_burst'){
    if(state.bossTimer<.62&&state.bossTimer>.24)boss.position.addScaledVector(dir,dt*11.4);
-   if(state.bossTimer<=.4)boss2Strike('dash-hit',4.0,32,33,false,-.05);
+   if(state.bossTimer<=.4&&state.bossTimer>.1)boss2Strike('dash-hit',4.0,32,33,false,-.05);
    if(state.bossTimer<=.19)boss2Once('dash-burst',()=>{spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,.8,0)),2.45,0xff6a35,.32);if(dist()<2.45&&state.invuln<=0)hurtPlayer(22,24,false)});
    if(state.bossTimer<=0)finishBoss2Attack(.92);
  }else if(state.bossState==='b2_arc'){
@@ -1919,21 +1946,20 @@ function updateBoss2(dt){
    if(state.bossTimer<=0)finishBoss2Attack(1.15);
  }else if(state.bossState==='b2_grab'){
    if(state.bossTimer<.46&&state.bossTimer>.18)boss.position.addScaledVector(dir,dt*7.2);
-   if(state.bossTimer<=.3)boss2Strike('grab',2.8,46,58,true,.12);
+   if(state.bossTimer<=.3&&state.bossTimer>.06)boss2GrabStrike('grab',46,58,true,.12);
    if(state.bossTimer<=0)finishBoss2Attack(1.18);
  }else if(state.bossState==='b2_final'){
    const marks=[2.66,2.14,1.62,1.08,.42];
    marks.forEach((mark,i)=>{
-     if(state.bossTimer<=mark)boss2Once('final'+i,()=>{
-       spawnBoss2Slash(1.55+i*.18,i===4?0xffd36a:0xff5c3d);
-       if(i<4&&dist()<4.0&&boss2FacingDot()>-.65){if(state.invuln<=0)hurtPlayer(17+i*2,18+i*2,false);else flash('회피',.12)}
-       if(i===4){spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1,0)),5.2,0xffd36a,.72);spawnBossShockwave(5.6,38)}
-     });
+     if(state.bossTimer<=mark&&state.bossTimer>mark-.2){
+       boss2Once('final-vfx'+i,()=>{spawnBoss2Slash(1.55+i*.18,i===4?0xffd36a:0xff5c3d);if(i===4){spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1,0)),5.2,0xffd36a,.72);spawnBossShockwave(5.6,38)}});
+       if(i<4)boss2Strike('final-dmg'+i,4.0,17+i*2,18+i*2,false,-.65);
+     }
    });
    if(state.bossTimer>1.0&&d>3.0)boss.position.addScaledVector(dir,dt*4.8);
    if(state.bossTimer<=0)finishBoss2Attack(1.65);
  }
- poseBoss2(dt);updateBoss2Weapon();
+ poseBoss2(dt);updateBoss2Weapon();processBoss2PhysicalHits();
 }
 
 /* -------------------------------------------------------------------------- */
