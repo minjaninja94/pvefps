@@ -244,6 +244,23 @@ function samplePlayerHandPath(id,step,p){
   THREE.MathUtils.lerp(a[3],b[3],t)
  );
 }
+const PLAYER_READY_HANDS={
+ straight:[.2,-.7,.1],
+ greatsword:[.42,-.18,-.12],
+ hammer:[.34,-.3,-.08],
+ spear:[.2,-.34,.5],
+ katana:[-.18,-.58,.04],
+ axe:[.36,-.26,-.08]
+};
+function playerReadyHand(id,reach,moving,phase,sprint){
+ const a=PLAYER_READY_HANDS[id]||PLAYER_READY_HANDS.straight;
+ const v=new THREE.Vector3(a[0]*reach,a[1]*reach,a[2]*reach);
+ if(moving){
+  const bob=Math.sin(phase)*(sprint?.09:.055)*reach;
+  v.y+=Math.abs(bob)*.18;v.z+=bob*(id==='spear'?.22:.12);
+ }
+ return v;
+}
 function applyPlayerArmIK(dt,phase,moving,sprint){
  if(!playerVrmBones.leftUpperArm||!playerVrmBones.rightUpperArm)return;
  player.updateMatrixWorld(true);playerVrmRoot?.updateMatrixWorld(true);
@@ -252,10 +269,14 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
    const sx=side==='left'?-1:1,upper=playerVrmBones[side+'UpperArm'];
    const shoulder=new THREE.Vector3();upper.getWorldPosition(shoulder);
    const reach=getArmReach(playerVrmBones,side);
-   let delta=new THREE.Vector3(sx*reach*.13,-reach*.84,.04);
-   if(moving&&!attack&&!input.guard&&state.rolling<=0){
-     const swing=Math.sin(phase)*(sprint?.18:.12)*reach*(side==='left'?1:-1);
-     delta.z+=swing;delta.y+=Math.abs(swing)*.05;
+   let delta;
+   if(side==='right'&&!attack&&!input.guard&&state.rolling<=0){
+     delta=playerReadyHand(w.id,reach,moving,phase,sprint);
+   }else if(side==='left'&&!attack&&!input.guard&&state.rolling<=0&&!twoHanded){
+     delta=new THREE.Vector3(-reach*.16,-reach*.4,reach*.34);
+     if(moving)delta.z+=Math.sin(phase)*(sprint?.08:.05)*reach;
+   }else{
+     delta=new THREE.Vector3(sx*reach*.13,-reach*.84,.04);
    }
    if(input.guard&&!attack&&state.rolling<=0){
      delta.set(sx*reach*.12,-reach*.28,reach*.42);
@@ -411,7 +432,7 @@ function animateVroidPlayer(dt){
      rux=-.46;ruy=-.16;ruz=.34;rlx=-.72;
    }
  }else if(moving){
-   const amp=sprint?.62:.42,swing=Math.sin(phase)*amp;
+   const w=currentWeapon(),amp=sprint?.62:.42,swing=Math.sin(phase)*amp;
    lulx=swing;rulx=-swing;
    lllx=Math.max(0,-Math.sin(phase))*(sprint?.78:.5);
    rllx=Math.max(0,Math.sin(phase))*(sprint?.78:.5);
@@ -420,6 +441,10 @@ function animateVroidPlayer(dt){
    lux=-swing*.52;rux=swing*.52;
    luz=-1.62;ruz=1.62;llx=.42;rlx=.42;
    hipsY=Math.sin(phase*2)*.025;spineZ=-Math.sin(phase)*.025;
+   if(w.id==='greatsword'||w.id==='hammer'){spineX=-.08;hipsX=.045;lllx+=.08;rllx+=.08}
+   else if(w.id==='spear'){spineX=-.035;spineY=.045}
+   else if(w.id==='katana'){spineX=-.055;hipsX=.035;spineZ*=1.25}
+   else if(w.id==='axe'){spineX=-.045;spineY=.035}
  }else{
    const breathe=Math.sin(state.time*1.6);
    spineX=breathe*.012;spineY=Math.sin(state.time*.45)*.01;
@@ -2544,7 +2569,7 @@ const BOSS_ATTACK_SCALE={
 };
 function bossAttackScale(st){return BOSS_ATTACK_SCALE[st]||1}
 const ROLL_DURATION=.72;
-const ROLL_IFRAMES=.40;
+const ROLL_IFRAME_START=.08,ROLL_IFRAME_END=.62;
 function lerpAngle(current,target,alpha){
  const delta=Math.atan2(Math.sin(target-current),Math.cos(target-current));
  return current+delta*alpha;
@@ -2890,7 +2915,7 @@ function tryRoll(){
  }
  state.rollDir.normalize();
  if(!spendStamina(24,.72))return;
- state.rolling=ROLL_DURATION;state.rollElapsed=0;state.invuln=ROLL_IFRAMES;
+ state.rolling=ROLL_DURATION;state.rollElapsed=0;state.invuln=0;
  spawnDustBurst(player.position.clone(),.38);
  player.rotation.y=Math.atan2(state.rollDir.x,state.rollDir.z);
 }
@@ -3574,6 +3599,7 @@ function updatePlayer(dt){
    state.rollElapsed=Math.min(ROLL_DURATION,state.rollElapsed+dt);
    const p=clamp(state.rollElapsed/ROLL_DURATION,0,1);
    state.rolling=Math.max(0,ROLL_DURATION-state.rollElapsed);
+   state.invuln=(p>=ROLL_IFRAME_START&&p<=ROLL_IFRAME_END)?Math.max(state.invuln,.055):0;
    const speed=8.0-3.25*motionSmooth(.48,1,p);
    player.position.addScaledVector(state.rollDir,dt*speed);
    player.rotation.x=0;
