@@ -1428,7 +1428,7 @@ boss2Root.visible=BOSS_VARIANT===2;
 boss.add(boss2Root);
 
 let boss2Visual=null,boss2VRM=null,boss2Ready=false;
-const boss2Bones={},boss2Rest={};
+const boss2Bones={},boss2Rest={},boss2BustNodes=[];
 const boss2Projectiles=[],boss2Fx=[];
 const boss2Fired=new Set();
 const boss2Aura=new THREE.PointLight(0xff5b35,7.5,12,2);
@@ -1519,6 +1519,7 @@ async function loadBoss2Avatar(){
      if(vrm)VRMUtils.rotateVRM0(vrm);
      const root=vrm?.scene||gltf.scene;
      root.traverse(o=>{
+       if(/bust|breast/i.test(o.name||''))boss2BustNodes.push(o);
        if(o.isMesh){
          o.castShadow=true;o.receiveShadow=true;
          if(Array.isArray(o.material))o.material=o.material.map(m=>m.clone());
@@ -1534,6 +1535,8 @@ async function loadBoss2Avatar(){
      root.position.z=.08;
      boss2Root.add(root);
      boss2Visual=root;boss2VRM=vrm;boss2Ready=true;boss2Fallback.visible=false;
+     // Mature heroine silhouette: subtle upper-body emphasis without breaking the source rig.
+     for(const n of boss2BustNodes){n.scale.x*=1.10;n.scale.y*=1.04;n.scale.z*=1.12;}
      const h=vrm?.humanoid;
      for(const n of ['hips','spine','chest','upperChest','neck','head','leftShoulder','rightShoulder','leftUpperArm','rightUpperArm','leftLowerArm','rightLowerArm','leftHand','rightHand','leftUpperLeg','rightUpperLeg','leftLowerLeg','rightLowerLeg','leftFoot','rightFoot']){
        const node=h?.getNormalizedBoneNode?.(n);
@@ -1747,7 +1750,14 @@ function poseBoss2(dt){
  setBoss2Bone('spine',-.025+pulse*.012,0,0,6,dt);
  setBoss2Bone('head',.015,-pulse*.012,0,6,dt);
  if(st==='idle'){
-   setBoss2Bone('rightUpperArm',-.3,0,-.18,8,dt);setBoss2Bone('leftUpperArm',-.08,0,.18,8,dt);
+   const charm=Math.sin(state.time*1.65),phase=state.boss2Phase===2?1.35:1;
+   setBoss2Bone('hips',0,.03*charm,.075*charm*phase,7,dt);
+   setBoss2Bone('spine',-.045,.018*charm,-.05*charm*phase,7,dt);
+   setBoss2Bone('chest',-.065,-.012*charm,-.025*charm*phase,7,dt);
+   setBoss2Bone('upperChest',-.035,0,-.018*charm*phase,7,dt);
+   setBoss2Bone('head',.025,-.018*charm,-.025*charm,7,dt);
+   setBoss2Bone('leftUpperLeg',0,0,.055,7,dt);setBoss2Bone('rightUpperLeg',0,0,-.035,7,dt);
+   setBoss2Bone('rightUpperArm',-.34,.03,-.22,8,dt);setBoss2Bone('leftUpperArm',-.12,-.02,.22,8,dt);
  }else if(st==='b2_sword_combo'||st==='b2_flame_combo'||st==='b2_frenzy'){
    const swing=Math.sin((BOSS2_DUR[st]-t)*Math.PI*4.2);
    setBoss2Bone('rightShoulder',0,.18*swing,-.15,15,dt);
