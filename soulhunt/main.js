@@ -5,6 +5,9 @@ const BOSS_QUERY=Number(new URLSearchParams(location.search).get('boss'));
 const BOSS_VARIANT=[1,2,3].includes(BOSS_QUERY)?BOSS_QUERY:1;
 const BOSS2_NAME='잔불의 왕녀 · 아르세리아';
 const BOSS3_NAME='붉은 백합의 검희 · 세리아';
+const VRM_SAMPLE_REV='e16eb187100149a315ad92c3c9968f1d5baa6c7d';
+const BOSS2_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VRM_SAMPLE_REV}/vroid/beta/Victoria_Rubin.vrm`;
+const BOSS3_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VRM_SAMPLE_REV}/vroid/beta/Vita.vrm`;
 
 const canvas=document.querySelector('#game');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
@@ -1515,8 +1518,8 @@ async function loadBoss2Avatar(){
  if(BOSS_VARIANT!==2)return;
  try{
    const {VRMLoaderPlugin,VRMUtils}=await import('@pixiv/three-vrm');
-   const loader=new GLTFLoader();loader.register(parser=>new VRMLoaderPlugin(parser));
-   loader.load('./assets/models/boss/anime-head.vrm',gltf=>{
+   const loader=new GLTFLoader();loader.setCrossOrigin('anonymous');loader.register(parser=>new VRMLoaderPlugin(parser));
+   loader.load(BOSS2_MODEL_URL,gltf=>{
      const vrm=gltf.userData?.vrm||null;
      if(vrm)VRMUtils.rotateVRM0(vrm);
      const root=vrm?.scene||gltf.scene;
@@ -1545,7 +1548,7 @@ async function loadBoss2Avatar(){
        if(node)cacheBoss2Bone(n,node);
      }
      flash('잔불의 왕녀 · 아르세리아',.9);
-   },undefined,err=>console.warn('Arcelia VRM unavailable.',err));
+   },undefined,err=>console.warn('Arcelia / Victoria Rubin VRM unavailable.',err));
  }catch(err){console.warn('three-vrm unavailable for Arcelia.',err)}
 }
 
@@ -2006,8 +2009,8 @@ async function loadBoss3Avatar(){
  if(BOSS_VARIANT!==3)return;
  try{
   const {VRMLoaderPlugin,VRMUtils}=await import('@pixiv/three-vrm');
-  const loader=new GLTFLoader();loader.register(parser=>new VRMLoaderPlugin(parser));
-  loader.load('./assets/models/boss/anime-head.vrm',gltf=>{
+  const loader=new GLTFLoader();loader.setCrossOrigin('anonymous');loader.register(parser=>new VRMLoaderPlugin(parser));
+  loader.load(BOSS3_MODEL_URL,gltf=>{
    const vrm=gltf.userData?.vrm||null;if(vrm)VRMUtils.rotateVRM0(vrm);
    const root=vrm?.scene||gltf.scene;
    root.traverse(o=>{
@@ -2035,7 +2038,7 @@ async function loadBoss3Avatar(){
    if(boss3Bones.leftUpperLeg)boss3Bones.leftUpperLeg.scale.x*=1.04;
    if(boss3Bones.rightUpperLeg)boss3Bones.rightUpperLeg.scale.x*=1.04;
    flash(BOSS3_NAME,.9);
-  },undefined,err=>console.warn('Seria VRM unavailable.',err));
+  },undefined,err=>console.warn('Seria / Vita VRM unavailable.',err));
  }catch(err){console.warn('three-vrm unavailable for Seria.',err)}
 }
 function enforceBoss3Visibility(){
