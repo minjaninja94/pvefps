@@ -1645,8 +1645,8 @@ function applyBoss2PrimaryArmIK(dt){
  solveArmCCD(boss2Bones,'right',target,elbowHint,1-Math.exp(-dt*42));
 }
 function applyBoss2WeaponGripIK(dt){
- if(!boss2Ready||!boss2WeaponRoot.visible)return;
- const twoHand=state.boss2Style==='spear'||state.boss2Style==='awakened'||state.boss2Style==='frenzy'||['b2_flame_combo','b2_final','b2_spear_sweep','b2_spear_thrust'].includes(state.bossState);
+ if(!boss2Ready)return;
+ const twoHand=boss2WeaponRoot.visible&&(state.boss2Style==='spear'||state.boss2Style==='awakened'||state.boss2Style==='frenzy'||['b2_flame_combo','b2_final','b2_spear_sweep','b2_spear_thrust'].includes(state.bossState));
  if(!boss2Bones.leftUpperArm||!boss2Bones.leftHand)return;
  const shoulder=new THREE.Vector3();boss2Bones.leftUpperArm.getWorldPosition(shoulder);
  const reach=getArmReach(boss2Bones,'left');
