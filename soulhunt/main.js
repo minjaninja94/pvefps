@@ -195,6 +195,55 @@ function getArmReach(bones,side){
 function playerLocalVector(v){
  const q=new THREE.Quaternion();player.getWorldQuaternion(q);return v.clone().applyQuaternion(q);
 }
+const PLAYER_HAND_PATHS={
+ straight:[
+  null,
+  [[0,.18,-.52,.22],[.27,.66,-.18,.02],[.6,-.58,-.3,.88],[1,.14,-.5,.28]],
+  [[0,.12,-.5,.24],[.25,-.58,-.22,.06],[.61,.64,-.3,.9],[1,.14,-.5,.3]],
+  [[0,.16,-.5,.22],[.36,.06,.2,.02],[.7,.02,-.7,1.0],[1,.15,-.5,.3]]
+ ],
+ greatsword:[
+  null,
+  [[0,.18,-.5,.16],[.38,.74,.12,-.08],[.72,-.62,-.4,.98],[1,.08,-.56,.3]],
+  [[0,.1,-.54,.22],[.38,-.72,-.04,.0],[.72,.7,-.42,.96],[1,.08,-.56,.3]],
+  [[0,.14,-.54,.2],[.43,.04,.38,-.08],[.77,.03,-.8,1.02],[1,.08,-.58,.28]]
+ ],
+ hammer:[
+  null,
+  [[0,.16,-.52,.18],[.42,.62,.22,-.12],[.74,-.48,-.5,.86],[1,.06,-.6,.25]],
+  [[0,.08,-.56,.2],[.42,-.62,.12,-.1],[.75,.5,-.52,.86],[1,.06,-.6,.24]],
+  [[0,.1,-.58,.18],[.49,.02,.48,-.12],[.8,.0,-.88,.82],[1,.06,-.62,.22]]
+ ],
+ spear:[
+  null,
+  [[0,.1,-.46,.16],[.31,.24,-.38,-.34],[.64,.02,-.38,1.2],[1,.1,-.48,.22]],
+  [[0,.08,-.46,.18],[.3,-.2,-.4,-.28],[.63,-.06,-.37,1.14],[1,.1,-.48,.22]],
+  [[0,.08,-.5,.15],[.38,.1,-.34,-.46],[.72,.0,-.5,1.4],[1,.08,-.5,.2]]
+ ],
+ katana:[
+  null,
+  [[0,-.18,-.64,.05],[.22,-.48,-.56,-.04],[.51,.58,-.14,.94],[1,.05,-.54,.24]],
+  [[0,.08,-.56,.2],[.22,.5,-.18,.06],[.52,-.58,-.2,.94],[1,.04,-.54,.24]],
+  [[0,-.08,-.58,.16],[.3,.36,.12,-.06],[.66,-.4,-.58,1.04],[1,.05,-.54,.24]]
+ ],
+ axe:[
+  null,
+  [[0,.16,-.52,.18],[.34,.62,.06,-.04],[.68,-.46,-.56,.88],[1,.08,-.56,.26]],
+  [[0,.08,-.54,.2],[.34,-.58,-.08,.02],[.69,.58,-.48,.88],[1,.08,-.56,.26]],
+  [[0,.12,-.56,.18],[.4,.12,.34,-.08],[.75,-.22,-.76,.94],[1,.08,-.58,.24]]
+ ]
+};
+function samplePlayerHandPath(id,step,p){
+ const frames=PLAYER_HAND_PATHS[id]?.[step]||PLAYER_HAND_PATHS.straight[Math.max(1,Math.min(3,step))];
+ let a=frames[0],b=frames[frames.length-1];
+ for(let i=0;i<frames.length-1;i++){if(p>=frames[i][0]&&p<=frames[i+1][0]){a=frames[i];b=frames[i+1];break}}
+ const t=motionSmooth(a[0],b[0],p);
+ return new THREE.Vector3(
+  THREE.MathUtils.lerp(a[1],b[1],t),
+  THREE.MathUtils.lerp(a[2],b[2],t),
+  THREE.MathUtils.lerp(a[3],b[3],t)
+ );
+}
 function applyPlayerArmIK(dt,phase,moving,sprint){
  if(!playerVrmBones.leftUpperArm||!playerVrmBones.rightUpperArm)return;
  player.updateMatrixWorld(true);playerVrmRoot?.updateMatrixWorld(true);
@@ -216,18 +265,15 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
      delta.set(sx*reach*.16,-reach*.18,reach*.28);
    }
    if(attack){
-     const dur=[0,.46,.5,.62][step]/w.speed*(twoHanded?.96:1.04);
-     const p=clamp(1-state.attack/Math.max(dur,.001),0,1),s=Math.sin(p*Math.PI),comboSide=step===2?-1:1;
-     if(w.id==='spear'){
-       delta.set(sx*reach*.08,-reach*.34,reach*(.28+.56*s));
-     }else if(w.id==='greatsword'||w.id==='hammer'){
-       delta.set((side==='right'?-comboSide*.28:-comboSide*.12)*reach*sx,-reach*(.2-.22*s),reach*(.24+.42*s));
+     const p=playerAttackProgress();
+     if(side==='right'){
+       const path=samplePlayerHandPath(w.id,step,p);
+       delta.set(path.x*reach,path.y*reach,path.z*reach);
+     }else if(twoHanded){
+       delta.set(-.12*reach,-.34*reach,.3*reach);
      }else{
-       const cross=(side==='right'?-comboSide*.48:-comboSide*.18)*s;
-       delta.set((sx*.08+cross)*reach,-reach*(.4-.22*s),reach*(.2+.48*s));
-     }
-     if(twoHanded&&side==='left'){
-       delta.x-=.08*reach;delta.y+=.04*reach;delta.z-=.04*reach;
+       // Shield arm stays compact and protects the torso while the weapon hand attacks.
+       delta.set(-.16*reach,-.28*reach,.48*reach);
      }
    }
    const handTarget=shoulder.clone().add(playerLocalVector(delta));
@@ -320,34 +366,33 @@ function animateVroidPlayer(dt){
    lllx=1.46*tuck-.62*land;rllx=1.46*tuck+.72*land;
    lfx=-.28*tuck+.18*land;rfx=-.28*tuck-.24*land;
  }else if(state.attack>0){
-   const w=currentWeapon(),dur=[0,.46,.5,.62][state.attackStep]/w.speed*(twoHanded?.96:1.04);
-   const p=clamp(1-state.attack/Math.max(dur,.001),0,1),s=Math.sin(p*Math.PI),step=state.attackStep;
-   const side=step===2?-1:1;
+   const w=currentWeapon(),p=playerAttackProgress(),step=state.attackStep,profile=playerAttackProfile(w.id,step);
+   const side=step===2?-1:1,arc=Math.sin(p*Math.PI),impact=Math.sin(clamp((p-profile.active[0])/(profile.active[1]-profile.active[0]),0,1)*Math.PI);
+   // Arms are resolved by hand-target IK below. These values drive hips, torso, stance and planted feet.
+   luz=-.35;ruz=.35;llx=-.45;rlx=-.45;
    if(w.id==='straight'){
-     spineY=side*s*.24;spineZ=-side*s*.07;spineX=-s*.06;
-     rux=-.34+s*.92;ruy=side*s*.48;ruz=.42+side*s*.52;rlx=-.62+s*.58;
-     if(twoHanded){lux=-.18+s*.58;luy=side*s*.32;luz=-.28-side*s*.24;llx=-.58+s*.42}
+     spineY=side*(-.24+motionSmooth(.18,.58,p)*.62)*(1-motionSmooth(.72,1,p));
+     spineZ=-side*.08*arc;spineX=-.08*impact;hipsY=spineY*.45;
+     lulx=side*.18*arc;rulx=-side*.12*arc;lllx=.18*arc;rllx=.12*arc;
    }else if(w.id==='greatsword'){
-     spineX=.18-s*.42;spineY=side*s*.2;
-     rux=-1.0+s*1.9;ruz=.18+side*s*.6;ruy=side*s*.28;rlx=-1.05+s*.62;
-     lux=-.92+s*1.72;luz=-.18-side*s*.52;luy=side*s*.22;llx=-.98+s*.58;
+     spineX=.16*motionSmooth(0,.36,p)-.46*impact;spineY=side*.34*arc;hipsY=spineY*.62;
+     lulx=.24*arc;rulx=-.2*arc;lllx=.42*arc;rllx=.36*arc;hipsX=.08*arc;
    }else if(w.id==='hammer'){
-     spineX=.3-s*.55;spineY=side*s*.12;
-     rux=-1.28+s*2.15;ruz=.28+side*s*.3;rlx=-1.2+s*.5;
-     lux=-1.18+s*1.98;luz=-.3-side*s*.28;llx=-1.12+s*.48;
+     const squat=Math.sin(clamp(p/.82,0,1)*Math.PI);
+     spineX=.28*motionSmooth(0,.42,p)-.64*impact;spineY=side*.16*arc;hipsX=.18*squat;
+     lulx=.34*squat;rulx=-.26*squat;lllx=.58*squat;rllx=.52*squat;
    }else if(w.id==='spear'){
-     const thrust=Math.sin(p*Math.PI);
-     spineX=-thrust*.13;spineY=side*.08;
-     rux=-.15+thrust*.38;ruy=-.12;ruz=.12;rlx=-.38+thrust*.25;
-     lux=-.22+thrust*.28;luy=.08;luz=-.18;llx=-.42+thrust*.2;
+     const lunge=motionSmooth(profile.active[0]-.08,profile.active[1],p)*(1-motionSmooth(.78,1,p));
+     spineX=-.18*lunge;spineY=side*.08*arc;hipsX=-.04*lunge;
+     lulx=-.34*lunge;rulx=.28*lunge;lllx=.2*lunge;rllx=.48*lunge;
    }else if(w.id==='katana'){
-     spineY=side*s*.34;spineZ=-side*s*.1;
-     rux=-.5+s*1.18;ruy=side*s*.7;ruz=.2+side*s*.58;rlx=-.82+s*.72;
-     lux=-.3+s*.55;luy=side*s*.38;luz=-.34-side*s*.22;llx=-.72+s*.5;
-   }else{
-     spineY=side*s*.3;spineX=.08-s*.28;spineZ=-side*s*.08;
-     rux=-.78+s*1.55;ruy=side*s*.52;ruz=.36+side*s*.45;rlx=-.88+s*.62;
-     if(twoHanded){lux=-.68+s*1.32;luy=side*s*.36;luz=-.28-side*s*.34;llx=-.84+s*.54}
+     const low=Math.sin(clamp(p/.74,0,1)*Math.PI);
+     spineY=side*(-.34+motionSmooth(.12,.52,p)*.86)*(1-motionSmooth(.7,1,p));
+     spineZ=-side*.13*impact;spineX=-.13*low;hipsY=spineY*.68;hipsX=.08*low;
+     lulx=.3*low;rulx=-.2*low;lllx=.46*low;rllx=.38*low;
+   }else if(w.id==='axe'){
+     spineY=side*.42*arc;spineZ=-side*.11*impact;spineX=.1*motionSmooth(0,.35,p)-.38*impact;hipsY=spineY*.55;
+     lulx=.22*arc;rulx=-.16*arc;lllx=.32*arc;rllx=.28*arc;
    }
  }else if(input.guard){
    const w=currentWeapon();spineX=-.055;
@@ -3465,24 +3510,15 @@ function updateBoss(dt){
 }
 
 function applyWeaponAttackPose(w,step,p){
- const t=clamp(p,0,1),s=Math.sin(t*Math.PI),side=step===2?-1:1;
- weaponPivot.position.set(0,0,0);
-
- // The hands/arms now create the attack arc. Weapon-local motion is intentionally small
- // so the weapon stays seated in the palm instead of spinning independently around it.
- if(w.id==='straight'){
-   weaponPivot.rotation.set(-.08+s*.12,side*s*.035,-side*s*.12);
- }else if(w.id==='greatsword'){
-   weaponPivot.rotation.set(-.16+s*.18,side*s*.055,-side*s*.1);
- }else if(w.id==='hammer'){
-   weaponPivot.rotation.set(-.22+s*.16,side*s*.04,-side*s*.07);
- }else if(w.id==='spear'){
-   weaponPivot.rotation.set(-.03,0,side*s*.025);
- }else if(w.id==='katana'){
-   weaponPivot.rotation.set(-.12+s*.1,side*s*.05,-side*s*.15);
- }else{
-   weaponPivot.rotation.set(-.16+s*.12,side*s*.045,-side*s*.11);
- }
+ const t=clamp(p,0,1),s=Math.sin(t*Math.PI),impact=Math.sin(clamp((t-playerAttackProfile(w.id,step).active[0])/(playerAttackProfile(w.id,step).active[1]-playerAttackProfile(w.id,step).active[0]),0,1)*Math.PI);
+ const side=step===2?-1:1;weaponPivot.position.set(0,0,0);
+ // Small wrist/edge-alignment offsets. The arm IK supplies the main path, so the weapon never disconnects from the palm.
+ if(w.id==='straight')weaponPivot.rotation.set(-.08+.1*s,side*.08*impact,-side*.16*impact);
+ else if(w.id==='greatsword')weaponPivot.rotation.set(-.18+.14*s,side*.05*impact,-side*.1*impact);
+ else if(w.id==='hammer')weaponPivot.rotation.set(-.24+.08*s,side*.025*impact,-side*.045*impact);
+ else if(w.id==='spear')weaponPivot.rotation.set(-.025,side*.015*impact,side*.018*impact);
+ else if(w.id==='katana')weaponPivot.rotation.set(-.14+.08*s,side*.11*impact,-side*.22*impact);
+ else weaponPivot.rotation.set(-.17+.1*s,side*.06*impact,-side*.13*impact);
  weaponPivot.scale.setScalar(twoHanded?1.06:1);
 }
 function updatePlayer(dt){
