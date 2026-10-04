@@ -67,6 +67,22 @@
     });
   })();
   </script>
+  <script>
+  (() => {
+    const showBootError = (message) => {
+      let box = document.querySelector('#bootError');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'bootError';
+        box.style.cssText = 'position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:999;max-width:90vw;padding:10px 14px;background:#310909ee;border:1px solid #b95b4b;color:#ffe1d9;font:12px/1.45 monospace;white-space:pre-wrap';
+        document.body.appendChild(box);
+      }
+      box.textContent = '덕후 소울 로딩 오류: ' + message;
+    };
+    window.addEventListener('error', e => showBootError(e.message || '알 수 없는 오류'));
+    window.addEventListener('unhandledrejection', e => showBootError(e.reason?.message || String(e.reason || 'Promise 오류')));
+  })();
+  </script>
   <script type="module" src="./main.js"></script>
 </body>
 </html>
