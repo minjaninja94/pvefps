@@ -1791,14 +1791,14 @@ function poseBoss2(dt){
    setBoss2Bone('spine',-.18,.55*swing,-.16*swing,18,dt);
  }
 }
-function hitBoss2(base,posture=12){
+function hitBoss2(base,posture=12,contact=null){
  if(state.bossHp<=0)return;
  let dmg=base,pd=posture;
  if(state.bossStagger>0){dmg*=1.65;pd*=1.65}
  state.bossHp=Math.max(0,state.bossHp-dmg);
  state.bossPosture=Math.min(140,state.bossPosture+pd);
  state.shake=.13;hitStop(.055);
- spawnSparks(player.position.clone().lerp(boss.position,.58).add(new THREE.Vector3(0,1.1,0)),9,4.6);
+ spawnSparks(contact||player.position.clone().lerp(boss.position,.58).add(new THREE.Vector3(0,1.1,0)),9,4.6);
  if(state.bossHp<=0){
    state.bossState='dead';state.potionPunishQueued=false;setDanger(false);flash('잔불이 꺼졌다 · 토벌 완료',1.25);
  }else if(state.bossPosture>=100){
@@ -2159,12 +2159,12 @@ function poseBoss3(dt){
  }
  if(phase===2)setBoss3Bone('upperChest',-.055,0,0,7,dt);
 }
-function hitBoss3(base,posture=12){
+function hitBoss3(base,posture=12,contact=null){
  if(state.bossHp<=0)return;
  let dmg=base,pd=posture;
  if(state.bossStagger>0){dmg*=1.6;pd*=1.7}
  state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture=Math.min(140,state.bossPosture+pd);
- state.shake=.13;hitStop(.052);spawnSparks(player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)),9,4.8);
+ state.shake=.13;hitStop(.052);spawnSparks(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)),9,4.8);
  if(state.bossHp<=0){
   state.bossState='dead';state.potionPunishQueued=false;setDanger(false);flash('붉은 백합이 스러졌다 · 토벌 완료',1.25);
  }else if(state.bossPosture>=108){
@@ -2299,6 +2299,73 @@ function lerpAngle(current,target,alpha){
 }
 function flatDir(a,b){const d=new THREE.Vector3().subVectors(b,a);d.y=0;return d.lengthSq()?d.normalize():d.set(0,0,-1)}
 function dist(){return player.position.distanceTo(boss.position)}
+function combatSegmentSegmentDistance(p1,q1,p2,q2){
+ const d1=q1.clone().sub(p1),d2=q2.clone().sub(p2),r=p1.clone().sub(p2);
+ const a=d1.dot(d1),e=d2.dot(d2),f=d2.dot(r),EPS=1e-7;let s=0,t=0;
+ if(a<=EPS&&e<=EPS)return p1.distanceTo(p2);
+ if(a<=EPS){t=clamp(f/e,0,1)}
+ else{const c=d1.dot(r);if(e<=EPS)s=clamp(-c/a,0,1);else{const b=d1.dot(d2),den=a*e-b*b;s=Math.abs(den)>EPS?clamp((b*f-c*e)/den,0,1):0;t=(b*s+f)/e;if(t<0){t=0;s=clamp(-c/a,0,1)}else if(t>1){t=1;s=clamp((b-c)/a,0,1)}}}
+ return p1.clone().addScaledVector(d1,s).distanceTo(p2.clone().addScaledVector(d2,t));
+}
+function combatBonePoint(bones,name){const b=bones?.[name];if(!b)return null;const p=new THREE.Vector3();b.getWorldPosition(p);return p}
+function combatHumanoidCapsules(bones,root,fallbackHeight=2){
+ root?.updateMatrixWorld?.(true);
+ const hips=combatBonePoint(bones,'hips'),chest=combatBonePoint(bones,'chest')||combatBonePoint(bones,'upperChest'),head=combatBonePoint(bones,'head'),out=[];
+ const add=(a,b,r,part)=>{if(a&&b)out.push({a,b,r,part})};
+ if(hips&&chest&&head){
+  add(hips,chest,.28,'torso');add(chest,head,.23,'upper');
+  for(const side of ['left','right']){
+   const ua=combatBonePoint(bones,side+'UpperArm'),la=combatBonePoint(bones,side+'LowerArm'),hand=combatBonePoint(bones,side+'Hand');
+   const ul=combatBonePoint(bones,side+'UpperLeg'),ll=combatBonePoint(bones,side+'LowerLeg'),foot=combatBonePoint(bones,side+'Foot');
+   add(ua,la,.115,'arm');add(la,hand,.105,'arm');add(ul,ll,.16,'leg');add(ll,foot,.135,'leg');
+  }
+ }else{const p=new THREE.Vector3();root?.getWorldPosition?.(p);add(p.clone().add(new THREE.Vector3(0,.28,0)),p.clone().add(new THREE.Vector3(0,fallbackHeight*.88,0)),.34,'torso')}
+ return out;
+}
+function combatSweptBladeContact(prevBase,prevTip,base,tip,capsules,bladeRadius=.09){
+ const prevMid=prevBase.clone().lerp(prevTip,.5),mid=base.clone().lerp(tip,.5);let best=null,bestD=Infinity;
+ for(const c of capsules){
+  const d=Math.min(
+   combatSegmentSegmentDistance(prevBase,prevTip,c.a,c.b),combatSegmentSegmentDistance(base,tip,c.a,c.b),
+   combatSegmentSegmentDistance(prevTip,tip,c.a,c.b),combatSegmentSegmentDistance(prevBase,base,c.a,c.b),
+   combatSegmentSegmentDistance(prevMid,mid,c.a,c.b)
+  );
+  if(d<=c.r+bladeRadius&&d<bestD){bestD=d;best={point:mid.clone(),part:c.part,distance:d}}
+ }
+ return best;
+}
+function combatWorldSegment(root,baseLocal,tipLocal){root.updateWorldMatrix?.(true,true);return{base:root.localToWorld(baseLocal.clone()),tip:root.localToWorld(tipLocal.clone())}}
+const playerWeaponTrace={valid:false,base:new THREE.Vector3(),tip:new THREE.Vector3(),step:0};
+function resetPlayerWeaponTrace(){playerWeaponTrace.valid=false;playerWeaponTrace.step=state.attackStep}
+function playerWeaponLocalSegment(){
+ const id=currentWeapon().id,tipZ={straight:-1.58,greatsword:-2.22,hammer:-1.62,spear:-2.62,katana:-1.82,axe:-1.4}[id]??-1.55;
+ const baseZ={straight:.12,greatsword:.2,hammer:.2,spear:.28,katana:.14,axe:.18}[id]??.12;
+ return{base:new THREE.Vector3(0,0,baseZ),tip:new THREE.Vector3(0,0,tipZ),radius:id==='hammer'?.19:id==='greatsword'?.13:.09};
+}
+function playerAttackWindow(step,w){
+ if(w.id==='spear')return step===3?[.32,.78]:[.34,.72];
+ if(w.id==='greatsword'||w.id==='hammer')return step===3?[.4,.82]:[.42,.76];
+ return step===3?[.3,.78]:[.3,.7];
+}
+function updatePlayerMeleeCollision(){
+ const spec=playerWeaponLocalSegment(),seg=combatWorldSegment(weaponPivot,spec.base,spec.tip);
+ if(!playerWeaponTrace.valid||playerWeaponTrace.step!==state.attackStep){playerWeaponTrace.base.copy(seg.base);playerWeaponTrace.tip.copy(seg.tip);playerWeaponTrace.valid=true;playerWeaponTrace.step=state.attackStep;return}
+ if(state.attack>0&&!state.attackHit){
+  const w=currentWeapon(),dur=[0,.46,.5,.62][state.attackStep]/w.speed*(twoHanded?.96:1.04),p=clamp(1-state.attack/Math.max(dur,.001),0,1),win=playerAttackWindow(state.attackStep,w);
+  if(p>=win[0]&&p<=win[1]){
+   let caps;
+   if(BOSS_VARIANT===2)caps=combatHumanoidCapsules(boss2Bones,boss2Root,2.1);
+   else if(BOSS_VARIANT===3)caps=combatHumanoidCapsules(boss3Bones,boss3Root,2.05);
+   else{const bp=boss.position.clone();caps=[{a:bp.clone().add(new THREE.Vector3(0,.4,0)),b:bp.clone().add(new THREE.Vector3(0,5.6*BOSS_GIANT_SCALE,0)),r:1.15*BOSS_GIANT_SCALE,part:'body'}]}
+   const hit=combatSweptBladeContact(playerWeaponTrace.base,playerWeaponTrace.tip,seg.base,seg.tip,caps,spec.radius);
+   if(hit){
+    const gripDamage=twoHanded?1.16:1,gripPosture=twoHanded?1.2:1,step=state.attackStep;
+    state.attackHit=true;hitBoss([0,22,25,36][step]*w.damage*gripDamage,[0,11,13,20][step]*w.posture*gripPosture,hit.point);hitStop(.018*w.hitstop+(step===3?.018:0));
+   }
+  }
+ }
+ playerWeaponTrace.base.copy(seg.base);playerWeaponTrace.tip.copy(seg.tip);
+}
 function setDanger(v){state.danger=v;ui.danger.classList.toggle('on',v)}
 function hitStop(sec){state.hitstop=Math.max(state.hitstop,sec)}
 function spendStamina(amount,delay=.55){
@@ -2585,6 +2652,7 @@ function startAttack(step){
  if(!spendStamina(cost,.62))return false;
  state.attackStep=step;
  state.attack=[0,.46,.5,.62][step]/w.speed*(twoHanded ? .96 : 1.04);
+ resetPlayerWeaponTrace();
  state.attackHit=false;state.attackQueued=false;state.comboGrace=.2/w.speed;return true;
 }
 function tryDrinkPotion(){
@@ -2658,9 +2726,9 @@ function hitZone(){
  if(dot<-.42&&!state.tailBroken)return 'tail';
  return 'leg';
 }
-function hitBoss(base,posture=12){
- if(BOSS_VARIANT===2){hitBoss2(base,posture);return}
- if(BOSS_VARIANT===3){hitBoss3(base,posture);return}
+function hitBoss(base,posture=12,contact=null){
+ if(BOSS_VARIANT===2){hitBoss2(base,posture,contact);return}
+ if(BOSS_VARIANT===3){hitBoss3(base,posture,contact);return}
  if(state.bossHp<=0)return;
  let spikeTarget=null,spikeDist=Infinity;
  const playerHitPoint=player.position.clone().add(new THREE.Vector3(0,1.15,0));
@@ -2681,7 +2749,7 @@ function hitBoss(base,posture=12){
  if(zone==='leg'){state.legHp-=base*.8;if(!state.legBroken&&state.legHp<=0){state.legBroken=true;flash('앞발 부위 파괴',.6);state.bossStagger=1.4;state.bossState='stagger'}}
  if(zone==='tail'){dmg*=1.2;state.tailHp-=base;if(!state.tailBroken&&state.tailHp<=0){state.tailBroken=true;tailPivot.visible=false;flash('꼬리 절단',.7);state.bossPosture+=24}}
  if(state.bossStagger>0){dmg*=1.75;pd*=1.8}
- state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture+=pd;state.shake=zone==='head'||zone==='spike' ? .18 : .13;hitStop(zone==='head'||zone==='spike' ? .072 : .055);spawnSparks(player.position.clone().lerp(boss.position,.62).add(new THREE.Vector3(0,zone==='head' ? 2.15 : 1.15,0)),zone==='head' ? 14 : 8,zone==='head' ? 5.5 : 4.2);
+ state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture+=pd;state.shake=zone==='head'||zone==='spike' ? .18 : .13;hitStop(zone==='head'||zone==='spike' ? .072 : .055);spawnSparks(contact||player.position.clone().lerp(boss.position,.62).add(new THREE.Vector3(0,zone==='head' ? 2.15 : 1.15,0)),zone==='head' ? 14 : 8,zone==='head' ? 5.5 : 4.2);
  if(state.bossHp===0){state.bossState='dead';state.potionPunishQueued=false;setDanger(false);flash('토벌 완료',1.2)}
  else if(state.bossPosture>=100){state.bossStagger=2.15;state.bossPosture=50;state.bossState='stagger';flash('자세 붕괴',.52)}
 }
@@ -3250,12 +3318,7 @@ function updatePlayer(dt){
    const dur=[0,.46,.5,.62][state.attackStep]/w.speed*(twoHanded ? .96 : 1.04),step=state.attackStep;
    state.attack-=dt/playerAttackScale();const p=1-state.attack/dur;
    applyWeaponAttackPose(w,step,p);
-   const hitAt=[0,.23,.25,.31][step]/w.speed,range=[0,3.15,3.25,3.45][step]*w.reach,damage=[0,22,25,36][step]*w.damage*gripDamage,post=[0,11,13,20][step]*w.posture*gripPosture;
-   if(!state.attackHit&&state.attack<hitAt&&dist()<range*(BOSS_GIANT_SCALE*.82)){
-     state.attackHit=true;
-     hitBoss(damage,post);
-     hitStop(.018*w.hitstop+(step===3 ? .018 : 0));
-   }
+   // Physical damage is resolved after the animated weapon transform updates.
    if(state.attack<=0){
      weaponPivot.rotation.set(0,0,0);weaponPivot.position.set(0,0,0);applyWeaponGrip();player.rotation.x=0;player.rotation.z=0;playerBody.rotation.set(0,0,0);
      if(state.attackQueued&&step<3)startAttack(step+1);else if(!state.attackQueued&&state.comboGrace<=0)state.attackStep=0;
@@ -3420,7 +3483,7 @@ function loop(){
  }
  try{
    if(playerMixer)playerMixer.update(Math.max(dt,.001));
-   animateVroidPlayer(Math.max(dt,.001));updateArmTrails(Math.max(dt,.001));updateDustFX(Math.max(dt,.001));updateSparks(Math.max(dt,.001));
+   animateVroidPlayer(Math.max(dt,.001));updatePlayerMeleeCollision();updateArmTrails(Math.max(dt,.001));updateDustFX(Math.max(dt,.001));updateSparks(Math.max(dt,.001));
    updateBossSpikeProjectiles(Math.max(dt,.001));updateBossShockwaves(Math.max(dt,.001));
  }catch(err){reportSoulhuntRuntimeError(err)}
  try{updateCamera(Math.max(dt,.001));updateUI()}catch(err){reportSoulhuntRuntimeError(err)}
