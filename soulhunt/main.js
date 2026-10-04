@@ -1700,7 +1700,7 @@ function processBoss2PhysicalHits(){
  }else boss2HandTrace.valid=false;
  for(const req of boss2MeleeRequests){
   const hit=req.kind==='hand'?handHit:weaponHit;
-  if(!hit||boss2Fired.has(req.tag)||boss2FacingDot()<req.minDot)continue;
+  if(!hit||boss2Fired.has(req.tag))continue;
   boss2Fired.add(req.tag);state.shake=Math.max(state.shake,.08);spawnSparks(hit.point,9,4.4);
   if(state.invuln>0){flash('회피',.16);continue}
   hurtPlayer(req.dmg,req.posture,req.unblockable);
@@ -2225,11 +2225,11 @@ function processBoss3PhysicalHits(){
  const seg=combatWorldSegment(boss3WeaponRoot,new THREE.Vector3(0,.02,0),new THREE.Vector3(0,1.78,0));
  const caps=combatHumanoidCapsules(playerVrmBones,player,2.0);
  let hit=null;
- if(boss3WeaponTrace.valid)hit=combatSweptBladeContact(boss3WeaponTrace.base,boss3WeaponTrace.tip,seg.base,seg.tip,caps,.09);
+ if(boss3WeaponTrace.valid)hit=combatSweptBladeContact(boss3WeaponTrace.base,boss3WeaponTrace.tip,seg.base,seg.tip,caps,.145);
  boss3WeaponTrace.base.copy(seg.base);boss3WeaponTrace.tip.copy(seg.tip);boss3WeaponTrace.valid=true;
  if(hit){
   for(const req of boss3MeleeRequests){
-   if(boss3Fired.has(req.tag)||boss3FacingDot()<req.minDot)continue;
+   if(boss3Fired.has(req.tag))continue;
    boss3Fired.add(req.tag);state.shake=Math.max(state.shake,.08);spawnSparks(hit.point,10,4.8);
    if(state.invuln>0){flash('회피',.12);break}
    hurtPlayer(req.dmg,req.posture,req.unblockable);
@@ -2478,11 +2478,11 @@ function combatHumanoidCapsules(bones,root,fallbackHeight=2){
  const hips=combatBonePoint(bones,'hips'),chest=combatBonePoint(bones,'chest')||combatBonePoint(bones,'upperChest'),head=combatBonePoint(bones,'head'),out=[];
  const add=(a,b,r,part)=>{if(a&&b)out.push({a,b,r,part})};
  if(hips&&chest&&head){
-  add(hips,chest,.28,'torso');add(chest,head,.23,'upper');
+  add(hips,chest,.32,'torso');add(chest,head,.27,'upper');
   for(const side of ['left','right']){
    const ua=combatBonePoint(bones,side+'UpperArm'),la=combatBonePoint(bones,side+'LowerArm'),hand=combatBonePoint(bones,side+'Hand');
    const ul=combatBonePoint(bones,side+'UpperLeg'),ll=combatBonePoint(bones,side+'LowerLeg'),foot=combatBonePoint(bones,side+'Foot');
-   add(ua,la,.115,'arm');add(la,hand,.105,'arm');add(ul,ll,.16,'leg');add(ll,foot,.135,'leg');
+   add(ua,la,.13,'arm');add(la,hand,.12,'arm');add(ul,ll,.175,'leg');add(ll,foot,.15,'leg');
   }
  }else{const p=new THREE.Vector3();root?.getWorldPosition?.(p);add(p.clone().add(new THREE.Vector3(0,.28,0)),p.clone().add(new THREE.Vector3(0,fallbackHeight*.88,0)),.34,'torso')}
  return out;
