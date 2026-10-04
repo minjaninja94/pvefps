@@ -1533,7 +1533,7 @@ boss2Root.visible=BOSS_VARIANT===2;
 boss.add(boss2Root);
 
 let boss2Visual=null,boss2VRM=null,boss2Ready=false;
-const boss2Bones={},boss2Rest={},boss2BustNodes=[];
+const boss2Bones={},boss2Rest={},boss2RenderBones={},boss2BustNodes=[];
 const boss2Projectiles=[],boss2Fx=[];
 const boss2Fired=new Set(),boss2MeleeRequests=[];
 const boss2WeaponTrace={valid:false,base:new THREE.Vector3(),tip:new THREE.Vector3()};
@@ -1656,8 +1656,11 @@ async function loadBoss2Avatar(){
      for(const n of ['hips','spine','chest','upperChest','neck','head','leftShoulder','rightShoulder','leftUpperArm','rightUpperArm','leftLowerArm','rightLowerArm','leftHand','rightHand','leftUpperLeg','rightUpperLeg','leftLowerLeg','rightLowerLeg','leftFoot','rightFoot']){
        const node=h?.getNormalizedBoneNode?.(n);
        if(node)cacheBoss2Bone(n,node);
+       const raw=h?.getRawBoneNode?.(n);
+       boss2RenderBones[n]=raw||node||null;
      }
      poseBoss2(.12);syncBoss2Rig(0);
+     console.info('Arcelia VRM rig', {normalizedArms:!!boss2Bones.rightUpperArm,rawArms:!!boss2RenderBones.rightUpperArm,rawHand:!!boss2RenderBones.rightHand});
      flash('잔불의 왕녀 · 아르세리아',.9);
    },undefined,err=>console.warn('Arcelia / Victoria Rubin VRM unavailable.',err));
  }catch(err){console.warn('three-vrm unavailable for Arcelia.',err)}
@@ -1689,7 +1692,7 @@ function updateBoss2Weapon(){
  if(!boss2Ready||state.bossHp<=0||(state.boss2Style==='mage'&&state.bossState!=='b2_thrust')){
    boss2WeaponRoot.visible=false;return;
  }
- const hand=boss2Bones.rightHand,lower=boss2Bones.rightLowerArm;
+ const hand=boss2RenderBones.rightHand||boss2Bones.rightHand,lower=boss2RenderBones.rightLowerArm||boss2Bones.rightLowerArm;
  if(!hand||!lower){boss2WeaponRoot.visible=false;return}
  const hp=new THREE.Vector3(),lp=new THREE.Vector3();
  hand.getWorldPosition(hp);lower.getWorldPosition(lp);
@@ -2128,7 +2131,7 @@ boss3Root.visible=BOSS_VARIANT===3;
 boss.add(boss3Root);
 
 let boss3Visual=null,boss3VRM=null,boss3Ready=false,boss3VisualBaseY=0;
-const boss3Bones={},boss3Rest={},boss3Fired=new Set(),boss3Fx=[],boss3BustNodes=[],boss3MeleeRequests=[];
+const boss3Bones={},boss3Rest={},boss3RenderBones={},boss3Fired=new Set(),boss3Fx=[],boss3BustNodes=[],boss3MeleeRequests=[];
 const boss3WeaponTrace={valid:false,base:new THREE.Vector3(),tip:new THREE.Vector3()};
 const boss3Aura=new THREE.PointLight(0xd9344f,8.5,13,2);
 boss3Aura.position.set(0,1.45,.18);boss3Root.add(boss3Aura);
@@ -2231,6 +2234,7 @@ async function loadBoss3Avatar(){
    const h=vrm?.humanoid;
    for(const n of ['hips','spine','chest','upperChest','neck','head','leftShoulder','rightShoulder','leftUpperArm','rightUpperArm','leftLowerArm','rightLowerArm','leftHand','rightHand','leftUpperLeg','rightUpperLeg','leftLowerLeg','rightLowerLeg','leftFoot','rightFoot']){
     const node=h?.getNormalizedBoneNode?.(n);if(node)cacheBoss3Bone(n,node);
+    const raw=h?.getRawBoneNode?.(n);boss3RenderBones[n]=raw||node||null;
    }
    for(const n of boss3BustNodes){n.scale.x*=1.18;n.scale.y*=1.08;n.scale.z*=1.22}
    if(boss3Bones.spine){boss3Bones.spine.scale.x*=.91;boss3Bones.spine.scale.z*=.90}
@@ -2240,6 +2244,7 @@ async function loadBoss3Avatar(){
    if(boss3Bones.leftUpperLeg)boss3Bones.leftUpperLeg.scale.x*=1.04;
    if(boss3Bones.rightUpperLeg)boss3Bones.rightUpperLeg.scale.x*=1.04;
    poseBoss3(.12);syncBoss3Rig(0);
+   console.info('Seria VRM rig', {normalizedArms:!!boss3Bones.rightUpperArm,rawArms:!!boss3RenderBones.rightUpperArm,rawHand:!!boss3RenderBones.rightHand});
    flash(BOSS3_NAME,.9);
   },undefined,err=>console.warn('Seria / Vita VRM unavailable.',err));
  }catch(err){console.warn('three-vrm unavailable for Seria.',err)}
@@ -2251,7 +2256,7 @@ function enforceBoss3Visibility(){
 }
 function updateBoss3Weapon(){
  if(!boss3Ready||state.bossHp<=0){boss3WeaponRoot.visible=false;return}
- const hand=boss3Bones.rightHand,lower=boss3Bones.rightLowerArm;
+ const hand=boss3RenderBones.rightHand||boss3Bones.rightHand,lower=boss3RenderBones.rightLowerArm||boss3Bones.rightLowerArm;
  if(!hand||!lower){boss3WeaponRoot.visible=false;return}
  const hp=new THREE.Vector3(),lp=new THREE.Vector3();hand.getWorldPosition(hp);lower.getWorldPosition(lp);
  const dir=hp.clone().sub(lp);if(dir.lengthSq()<1e-6)dir.set(0,-1,0);dir.normalize();
@@ -2639,8 +2644,8 @@ function updatePlayerMeleeCollision(){
   const w=currentWeapon(),p=playerAttackProgress(),win=playerAttackWindow(state.attackStep,w);
   if(p>=win[0]&&p<=win[1]){
    let caps;
-   if(BOSS_VARIANT===2)caps=combatHumanoidCapsules(boss2Bones,boss2Root,2.1);
-   else if(BOSS_VARIANT===3)caps=combatHumanoidCapsules(boss3Bones,boss3Root,2.05);
+   if(BOSS_VARIANT===2)caps=combatHumanoidCapsules(Object.keys(boss2RenderBones).length?boss2RenderBones:boss2Bones,boss2Root,2.1);
+   else if(BOSS_VARIANT===3)caps=combatHumanoidCapsules(Object.keys(boss3RenderBones).length?boss3RenderBones:boss3Bones,boss3Root,2.05);
    else{const bp=boss.position.clone();caps=[{a:bp.clone().add(new THREE.Vector3(0,.4,0)),b:bp.clone().add(new THREE.Vector3(0,5.6*BOSS_GIANT_SCALE,0)),r:1.15*BOSS_GIANT_SCALE,part:'body'}]}
    const hit=combatSweptBladeContact(playerWeaponTrace.base,playerWeaponTrace.tip,seg.base,seg.tip,caps,spec.radius);
    if(hit){
