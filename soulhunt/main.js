@@ -1490,12 +1490,14 @@ boss2Sword.add(new THREE.Mesh(new THREE.BoxGeometry(.1,1.7,.055),boss2SwordMat))
 boss2Sword.children[0].position.y=.88;
 const boss2Guard=new THREE.Mesh(new THREE.BoxGeometry(.5,.055,.11),boss2SwordMat);
 boss2Guard.position.y=.06;boss2Sword.add(boss2Guard);
+const boss2SwordGrip=new THREE.Mesh(new THREE.CylinderGeometry(.045,.052,.42,8),new THREE.MeshStandardMaterial({color:0x251712,roughness:.72}));
+boss2SwordGrip.position.y=-.18;boss2Sword.add(boss2SwordGrip);
 boss2WeaponRoot.add(boss2Sword);
 const boss2Spear=new THREE.Group();
-const boss2Shaft=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,2.8,8),new THREE.MeshStandardMaterial({color:0x392719,roughness:.78}));
+const boss2Shaft=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,3.25,8),new THREE.MeshStandardMaterial({color:0x392719,roughness:.78}));
 boss2Shaft.position.y=1.38;boss2Spear.add(boss2Shaft);
 const boss2Tip=new THREE.Mesh(new THREE.ConeGeometry(.11,.52,7),boss2SpearMat);
-boss2Tip.position.y=3.02;boss2Spear.add(boss2Tip);
+boss2Tip.position.y=3.18;boss2Spear.add(boss2Tip);
 boss2WeaponRoot.add(boss2Spear);
 
 state.boss2Phase=1;
@@ -1503,6 +1505,7 @@ state.boss2Style='sword';
 state.boss2AttackCount=0;
 state.boss2FinalUsed=false;
 state.boss2DeadPose=0;
+state.boss2HitReact=0;
 
 if(BOSS_VARIANT===2){
   scene.background.set(0x17131a);
@@ -1614,7 +1617,7 @@ function applyBoss2WeaponGripIK(dt){
  const twoHand=state.boss2Style==='spear'||state.boss2Style==='awakened'||state.boss2Style==='frenzy'||['b2_flame_combo','b2_final','b2_spear_sweep','b2_spear_thrust'].includes(state.bossState);
  if(!twoHand||!boss2Bones.leftUpperArm||!boss2Bones.leftHand)return;
  boss2WeaponRoot.updateWorldMatrix(true,true);
- const gripY=boss2Spear.visible?-.42:-.2;
+ const gripY=boss2Spear.visible?-.14:-.18;
  const target=boss2WeaponRoot.localToWorld(new THREE.Vector3(0,gripY,0));
  const shoulder=new THREE.Vector3();boss2Bones.leftUpperArm.getWorldPosition(shoulder);
  const reach=getArmReach(boss2Bones,'left');
@@ -1809,9 +1812,9 @@ function poseBoss2(dt){
  if(!boss2Ready)return;
  resetBoss2Pose(dt);
  const st=state.bossState,t=state.bossTimer;
- const pulse=Math.sin(state.time*3.2);
- setBoss2Bone('spine',-.025+pulse*.012,0,0,6,dt);
- setBoss2Bone('head',.015,-pulse*.012,0,6,dt);
+ const pulse=Math.sin(state.time*3.2),hitReact=state.boss2HitReact>0?Math.sin((state.boss2HitReact/.14)*Math.PI):0;
+ setBoss2Bone('spine',-.025+pulse*.012-hitReact*.12,0,hitReact*.08,10,dt);
+ setBoss2Bone('head',.015-hitReact*.06,-pulse*.012,-hitReact*.06,10,dt);
  if(st==='idle'){
    const charm=Math.sin(state.time*1.65),phase=state.boss2Phase===2?1.35:1;
    setBoss2Bone('hips',0,.03*charm,.075*charm*phase,7,dt);
@@ -1863,7 +1866,7 @@ function hitBoss2(base,posture=12,contact=null){
  if(state.bossStagger>0){dmg*=1.65;pd*=1.65}
  state.bossHp=Math.max(0,state.bossHp-dmg);
  state.bossPosture=Math.min(140,state.bossPosture+pd);
- state.shake=.13;hitStop(.055);
+ state.shake=.13;state.boss2HitReact=.14;hitStop(.055);
  spawnSparks(contact||player.position.clone().lerp(boss.position,.58).add(new THREE.Vector3(0,1.1,0)),9,4.6);
  if(state.bossHp<=0){
    state.bossState='dead';state.potionPunishQueued=false;setDanger(false);flash('잔불이 꺼졌다 · 토벌 완료',1.25);
@@ -1877,6 +1880,7 @@ function updateBoss2(dt){
  boss2Halo.rotation.z+=dt*(state.boss2Phase===2?1.4:.55);
  boss2HaloMat.opacity=.16+.08*Math.sin(state.time*(state.boss2Phase===2?8:4));
  boss2Aura.intensity=(state.boss2Phase===2?11.5:7.2)+Math.sin(state.time*7)*.8;
+ state.boss2HitReact=Math.max(0,state.boss2HitReact-dt);
  if(state.bossHp<=0){
    state.boss2DeadPose=Math.min(1,state.boss2DeadPose+dt*.55);
    if(boss2Visual){boss2Visual.rotation.z=THREE.MathUtils.lerp(boss2Visual.rotation.z,-1.35,state.boss2DeadPose*.045);boss2Visual.position.y=THREE.MathUtils.lerp(boss2Visual.position.y,.1,state.boss2DeadPose*.03)}
@@ -2040,6 +2044,7 @@ state.boss3Phase=1;
 state.boss3Last='';
 state.boss3DeadPose=0;
 state.boss3HealPulse=0;
+state.boss3HitReact=0;
 
 if(BOSS_VARIANT===3){
  scene.background.set(0x160f17);scene.fog.color.set(0x160f17);
@@ -2215,10 +2220,10 @@ function poseBoss3(dt){
  if(!boss3Ready)return;
  resetBoss3Pose(dt);
  const st=state.bossState,t=state.bossTimer,phase=state.boss3Phase;
- const breath=Math.sin(state.time*2.3);
+ const breath=Math.sin(state.time*2.3),hitReact=state.boss3HitReact>0?Math.sin((state.boss3HitReact/.14)*Math.PI):0;
  setBoss3Bone('hips',0,.025*breath,.035*breath,7,dt);
- setBoss3Bone('spine',-.035,0,-.025*breath,7,dt);
- setBoss3Bone('head',.015,-.018*breath,0,7,dt);
+ setBoss3Bone('spine',-.035-hitReact*.13,0,-.025*breath+hitReact*.09,11,dt);
+ setBoss3Bone('head',.015-hitReact*.055,-.018*breath,-hitReact*.07,11,dt);
  if(st==='idle'){
   const sway=Math.sin(state.time*1.6),phaseAmp=phase===2?1.3:1;
   setBoss3Bone('hips',0,.04*sway,.09*sway*phaseAmp,8,dt);
@@ -2262,7 +2267,7 @@ function hitBoss3(base,posture=12,contact=null){
  let dmg=base,pd=posture;
  if(state.bossStagger>0){dmg*=1.6;pd*=1.7}
  state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture=Math.min(140,state.bossPosture+pd);
- state.shake=.13;hitStop(.052);spawnSparks(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)),9,4.8);
+ state.shake=.13;state.boss3HitReact=.14;hitStop(.052);spawnSparks(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)),9,4.8);
  if(state.bossHp<=0){
   state.bossState='dead';state.potionPunishQueued=false;setDanger(false);flash('붉은 백합이 스러졌다 · 토벌 완료',1.25);
  }else if(state.bossPosture>=108){
@@ -2274,7 +2279,7 @@ function updateBoss3(dt){
  bossRim.position.set(boss.position.x,boss.position.y+3.0,boss.position.z-4.0);
  boss3Halo.rotation.z+=dt*(state.boss3Phase===2?1.8:.72);
  boss3HaloMat.opacity=(state.boss3Phase===2?.22:.1)+Math.sin(state.time*5)*.035;
- state.boss3HealPulse=Math.max(0,state.boss3HealPulse-dt);
+ state.boss3HealPulse=Math.max(0,state.boss3HealPulse-dt);state.boss3HitReact=Math.max(0,state.boss3HitReact-dt);
  boss3Aura.intensity=(state.boss3Phase===2?13.5:7.4)+(state.boss3HealPulse>0?5:0)+Math.sin(state.time*6)*.55;
  if(boss3Visual){
   const targetY=boss3VisualBaseY+(state.boss3Phase===2?.018*Math.sin(state.time*4.2):0);
