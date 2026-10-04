@@ -1929,7 +1929,7 @@ boss3Root.name='SeriaRoot';
 boss3Root.visible=BOSS_VARIANT===3;
 boss.add(boss3Root);
 
-let boss3Visual=null,boss3VRM=null,boss3Ready=false;
+let boss3Visual=null,boss3VRM=null,boss3Ready=false,boss3VisualBaseY=0;
 const boss3Bones={},boss3Rest={},boss3Fired=new Set(),boss3Fx=[],boss3BustNodes=[];
 const boss3Aura=new THREE.PointLight(0xd9344f,8.5,13,2);
 boss3Aura.position.set(0,1.45,.18);boss3Root.add(boss3Aura);
@@ -2021,7 +2021,7 @@ async function loadBoss3Avatar(){
    root.updateMatrixWorld(true);
    let box=new THREE.Box3().setFromObject(root,true),size=new THREE.Vector3();box.getSize(size);
    root.scale.multiplyScalar(3.05/Math.max(size.y,.001));root.updateMatrixWorld(true);
-   box=new THREE.Box3().setFromObject(root,true);root.position.y-=box.min.y;root.position.z=.06;
+   box=new THREE.Box3().setFromObject(root,true);root.position.y-=box.min.y;root.position.z=.06;boss3VisualBaseY=root.position.y;
    boss3Root.add(root);boss3Visual=root;boss3VRM=vrm;boss3Ready=true;boss3Fallback.visible=false;
    const h=vrm?.humanoid;
    for(const n of ['hips','spine','chest','upperChest','neck','head','leftShoulder','rightShoulder','leftUpperArm','rightUpperArm','leftLowerArm','rightLowerArm','leftHand','rightHand','leftUpperLeg','rightUpperLeg','leftLowerLeg','rightLowerLeg','leftFoot','rightFoot']){
@@ -2125,14 +2125,23 @@ function poseBoss3(dt){
  setBoss3Bone('spine',-.035,0,-.025*breath,7,dt);
  setBoss3Bone('head',.015,-.018*breath,0,7,dt);
  if(st==='idle'){
-  setBoss3Bone('rightUpperArm',-.48,.05,-.28,10,dt);setBoss3Bone('rightLowerArm',-.5,0,-.15,10,dt);
-  setBoss3Bone('leftUpperArm',-.08,-.04,.22,8,dt);setBoss3Bone('leftUpperLeg',0,0,.045,7,dt);
+  const sway=Math.sin(state.time*1.6),phaseAmp=phase===2?1.3:1;
+  setBoss3Bone('hips',0,.04*sway,.09*sway*phaseAmp,8,dt);
+  setBoss3Bone('spine',-.05,.02*sway,-.05*sway*phaseAmp,8,dt);
+  setBoss3Bone('chest',-.07,-.01*sway,-.03*sway*phaseAmp,8,dt);
+  setBoss3Bone('upperChest',-.03,0,-.02*sway*phaseAmp,8,dt);
+  setBoss3Bone('head',.03,-.02*sway,-.03*sway,8,dt);
+  setBoss3Bone('rightUpperArm',-.52,.08,-.32,10,dt);setBoss3Bone('rightLowerArm',-.58,0,-.18,10,dt);
+  setBoss3Bone('leftUpperArm',-.10,-.05,.24,8,dt);
+  setBoss3Bone('leftUpperLeg',0,0,.07,8,dt);setBoss3Bone('rightUpperLeg',0,0,-.04,8,dt);
  }else if(['b3_triple','b3_cross','b3_wing_combo','b3_dance','b3_dance2','b3_echoes'].includes(st)){
   const freq=(st==='b3_dance'||st==='b3_dance2')?8.7:5.1;
   const swing=Math.sin((BOSS3_DUR[st]-t)*Math.PI*freq);
   setBoss3Bone('rightShoulder',0,.15*swing,-.12,18,dt);
   setBoss3Bone('rightUpperArm',-.95,.14,.95*swing,22,dt);setBoss3Bone('rightLowerArm',-.48,0,-.48*swing,22,dt);
-  setBoss3Bone('spine',-.16,.34*swing,-.18*swing,18,dt);
+  setBoss3Bone('spine',-.18,.42*swing,-.24*swing,18,dt);
+  setBoss3Bone('chest',-.06,.18*swing,-.10*swing,18,dt);
+  setBoss3Bone('head',.02,-.08*swing,.04*swing,14,dt);
   setBoss3Bone('leftUpperArm',-.28,-.12,-.32*swing,15,dt);
  }else if(st==='b3_lunge'||st==='b3_rising'){
   setBoss3Bone('rightUpperArm',-1.38,.05,-.12,20,dt);setBoss3Bone('rightLowerArm',-.12,0,0,20,dt);
@@ -2163,9 +2172,13 @@ function updateBoss3(dt){
  enforceBoss3Visibility();updateBoss3Fx(dt);updateBoss2Fx(dt);updateBoss3Weapon();
  bossRim.position.set(boss.position.x,boss.position.y+3.0,boss.position.z-4.0);
  boss3Halo.rotation.z+=dt*(state.boss3Phase===2?1.8:.72);
- boss3HaloMat.opacity=(state.boss3Phase===2?.2:.1)+Math.sin(state.time*5)*.035;
+ boss3HaloMat.opacity=(state.boss3Phase===2?.22:.1)+Math.sin(state.time*5)*.035;
  state.boss3HealPulse=Math.max(0,state.boss3HealPulse-dt);
- boss3Aura.intensity=(state.boss3Phase===2?11.2:7.4)+(state.boss3HealPulse>0?5:0)+Math.sin(state.time*6)*.55;
+ boss3Aura.intensity=(state.boss3Phase===2?13.5:7.4)+(state.boss3HealPulse>0?5:0)+Math.sin(state.time*6)*.55;
+ if(boss3Visual){
+  const targetY=boss3VisualBaseY+(state.boss3Phase===2?.018*Math.sin(state.time*4.2):0);
+  boss3Visual.position.y=THREE.MathUtils.lerp(boss3Visual.position.y,targetY,1-Math.exp(-dt*10));
+ }
  if(state.bossHp<=0){
   state.boss3DeadPose=Math.min(1,state.boss3DeadPose+dt*.6);
   if(boss3Visual){boss3Visual.rotation.z=THREE.MathUtils.lerp(boss3Visual.rotation.z,-1.35,state.boss3DeadPose*.05);boss3Visual.position.y=THREE.MathUtils.lerp(boss3Visual.position.y,.08,state.boss3DeadPose*.035)}
@@ -2174,7 +2187,10 @@ function updateBoss3(dt){
  if(state.boss3Phase===1&&state.bossHp<=state.bossMaxHp*.5){
   state.boss3Phase=2;state.bossState='b3_phase';state.bossTimer=BOSS3_DUR.b3_phase;boss3Fired.clear();
   state.bossHp=Math.max(state.bossHp,state.bossMaxHp*.62);
-  setDanger(false);spawnBoss3Petals(34,5.2);flash('혈화 개화 · 두 번째 검무',1.0);
+  boss3Aura.color.setHex(0xff4b73);boss3Aura.intensity=13.5;
+  boss3HaloMat.color.setHex(0xff6d96);boss3HaloMat.opacity=.22;
+  boss3BladeMat.emissive.setHex(0xb51e49);boss3BladeMat.emissiveIntensity=.75;
+  setDanger(false);spawnBoss3Petals(48,6.2);flash('혈화 개화 · 두 번째 검무',1.0);
  }
  if(state.bossStagger>0){
   state.bossStagger=Math.max(0,state.bossStagger-dt);boss.position.y=THREE.MathUtils.lerp(boss.position.y,0,1-Math.exp(-dt*13));
