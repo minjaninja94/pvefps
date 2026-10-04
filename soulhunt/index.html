@@ -11,7 +11,7 @@
     <div class="boss-select-panel">
       <div class="boss-select-kicker">DUKHOO SOUL · BOSS TRIAL</div>
       <h1>도전할 보스를 선택</h1>
-      <p>보스 1은 기존 거녀 전투, 보스 2는 무기 형상과 전투 스타일을 전환하는 미소녀 검사형 보스입니다.</p>
+      <p>보스 1은 거녀 전투, 보스 2는 다중 무기 검사, 보스 3은 초고속 검무와 회복 압박을 쓰는 검희형 보스입니다.</p>
       <div class="boss-select-grid">
         <button class="boss-card" data-boss="1">
           <span class="boss-no">BOSS 01</span>
@@ -19,9 +19,14 @@
           <small>초대형 팔 · 쓸기 · 찍기 · 가시 · 충격파</small>
         </button>
         <button class="boss-card boss-card-new" data-boss="2">
-          <span class="boss-no">BOSS 02 · NEW</span>
+          <span class="boss-no">BOSS 02</span>
           <strong>잔불의 왕녀 · 아르세리아</strong>
           <small>검 / 창 / 술법 / 광전 폼 · 2페이즈 잿불 각성</small>
+        </button>
+        <button class="boss-card boss-card-new" data-boss="3">
+          <span class="boss-no">BOSS 03 · NEW</span>
+          <strong>붉은 백합의 검희 · 세리아</strong>
+          <small>회복 검격 · 연속 검무 · 공중 급습 · 2페이즈 혈화 개화</small>
         </button>
       </div>
     </div>
@@ -52,7 +57,7 @@
   (() => {
     const selected = new URLSearchParams(location.search).get('boss');
     const select = document.querySelector('#bossSelect');
-    if (selected === '1' || selected === '2') select.hidden = true;
+    if (selected === '1' || selected === '2' || selected === '3') select.hidden = true;
     document.querySelectorAll('[data-boss]').forEach(btn => {
       btn.addEventListener('click', () => {
         const url = new URL(location.href);
