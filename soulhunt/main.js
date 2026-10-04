@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+const BOSS_VARIANT=new URLSearchParams(location.search).get('boss')==='2'?2:1;
+const BOSS2_NAME='잔불의 왕녀 · 아르세리아';
+
 const canvas=document.querySelector('#game');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));
@@ -428,8 +431,8 @@ function setPlayerVisualAction(name,fade=.12){
  playerActionName=name;
 }
 
-const BOSS_GIANT_SCALE=2.0;
-const BOSS_ENGAGE_SCALE=1.55;
+const BOSS_GIANT_SCALE=BOSS_VARIANT===2?1.0:2.0;
+const BOSS_ENGAGE_SCALE=BOSS_VARIANT===2?1.0:1.55;
 const BOSS_ARM_RADIUS_SCALE=1.28;
 const BOSS_SHOCKWAVE_SCALE=1.4;
 const boss=new THREE.Group();
@@ -1402,16 +1405,489 @@ addEventListener('mousedown',e=>{
 addEventListener('mouseup',e=>{if(e.button===2)input.guard=false});
 addEventListener('contextmenu',e=>e.preventDefault());
 
-const ui={hp:document.querySelector('#hp'),stamina:document.querySelector('#stamina'),posture:document.querySelector('#posture'),bossHp:document.querySelector('#bossHp'),bossPosture:document.querySelector('#bossPosture'),msg:document.querySelector('#message'),danger:document.querySelector('#danger'),head:document.querySelector('#headPart'),leg:document.querySelector('#legPart'),spike:document.querySelector('#spikePart'),tail:document.querySelector('#tailPart'),weapon:document.querySelector('#weaponHud'),lockDot:document.querySelector('#lockDot')};
+const ui={hp:document.querySelector('#hp'),stamina:document.querySelector('#stamina'),posture:document.querySelector('#posture'),bossHp:document.querySelector('#bossHp'),bossPosture:document.querySelector('#bossPosture'),msg:document.querySelector('#message'),danger:document.querySelector('#danger'),head:document.querySelector('#headPart'),leg:document.querySelector('#legPart'),spike:document.querySelector('#spikePart'),tail:document.querySelector('#tailPart'),weapon:document.querySelector('#weaponHud'),lockDot:document.querySelector('#lockDot'),bossName:document.querySelector('#bossName'),parts:document.querySelector('#parts')};
 const potionHud=document.createElement('div');
 potionHud.style.cssText='position:fixed;left:24px;bottom:145px;z-index:30;color:#e8c56a;background:rgba(8,8,8,.72);border:1px solid #8e6d31;padding:7px 12px;font:600 13px sans-serif;letter-spacing:.08em;pointer-events:none';
 document.body.appendChild(potionHud);
 
 const state={
  hp:100,posture:0,stamina:100,staminaMax:100,staminaRegenDelay:0,exhausted:0,potions:3,potionTimer:0,potionHealDone:false,attack:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollElapsed:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
- bossMaxHp:11200,bossHp:11200,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',bossBustImpulse:0,bossAttackTarget:new THREE.Vector3(),bossAttackTargetLocked:false,potionPunishQueued:false,potionPunishKind:'spike_triple',time:0,shake:0,hitstop:0,
+ bossMaxHp:BOSS_VARIANT===2?9000:11200,bossHp:BOSS_VARIANT===2?9000:11200,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',bossBustImpulse:0,bossAttackTarget:new THREE.Vector3(),bossAttackTargetLocked:false,potionPunishQueued:false,potionPunishKind:'spike_triple',time:0,shake:0,hitstop:0,
  headHp:100,legHp:150,tailHp:130,tailBroken:false,legBroken:false,headBroken:false,danger:false,reaction:0,reactionZone:'body'
 };
+
+/* -------------------------------------------------------------------------- */
+/* Boss 02: Ember Princess Arcelia                                            */
+/* Full-body anime VRM + independent multi-form / phase-2 combat state machine */
+/* -------------------------------------------------------------------------- */
+const boss2Root=new THREE.Group();
+boss2Root.name='ArceliaRoot';
+boss2Root.visible=BOSS_VARIANT===2;
+boss.add(boss2Root);
+
+let boss2Visual=null,boss2VRM=null,boss2Ready=false;
+const boss2Bones={},boss2Rest={};
+const boss2Projectiles=[],boss2Fx=[];
+const boss2Aura=new THREE.PointLight(0xff5b35,7.5,12,2);
+boss2Aura.position.set(0,1.65,.25);
+boss2Root.add(boss2Aura);
+const boss2HaloMat=new THREE.MeshBasicMaterial({color:0xff7148,transparent:true,opacity:.22,depthWrite:false});
+const boss2Halo=new THREE.Mesh(new THREE.TorusGeometry(1.05,.025,7,40),boss2HaloMat);
+boss2Halo.rotation.x=Math.PI/2;boss2Halo.position.y=.03;boss2Root.add(boss2Halo);
+
+const boss2WeaponRoot=new THREE.Group();
+boss2WeaponRoot.visible=false;
+scene.add(boss2WeaponRoot);
+const boss2SwordMat=new THREE.MeshStandardMaterial({color:0xe9e3da,metalness:.9,roughness:.18,emissive:0x7d2518,emissiveIntensity:.55});
+const boss2SpearMat=new THREE.MeshStandardMaterial({color:0xe3dfd5,metalness:.86,roughness:.22,emissive:0x214f7d,emissiveIntensity:.42});
+const boss2Sword=new THREE.Group();
+boss2Sword.add(new THREE.Mesh(new THREE.BoxGeometry(.1,1.7,.055),boss2SwordMat));
+boss2Sword.children[0].position.y=.88;
+const boss2Guard=new THREE.Mesh(new THREE.BoxGeometry(.5,.055,.11),boss2SwordMat);
+boss2Guard.position.y=.06;boss2Sword.add(boss2Guard);
+boss2WeaponRoot.add(boss2Sword);
+const boss2Spear=new THREE.Group();
+const boss2Shaft=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,2.8,8),new THREE.MeshStandardMaterial({color:0x392719,roughness:.78}));
+boss2Shaft.position.y=1.38;boss2Spear.add(boss2Shaft);
+const boss2Tip=new THREE.Mesh(new THREE.ConeGeometry(.11,.52,7),boss2SpearMat);
+boss2Tip.position.y=3.02;boss2Spear.add(boss2Tip);
+boss2WeaponRoot.add(boss2Spear);
+
+state.boss2Phase=1;
+state.boss2Style='sword';
+state.boss2AttackCount=0;
+state.boss2FinalUsed=false;
+state.boss2DeadPose=0;
+
+if(BOSS_VARIANT===2){
+  scene.background.set(0x17131a);
+  scene.fog.color.set(0x17131a);
+  fire.color.set(0xff5d3c);fire.intensity=10;
+  moon.color.set(0xcac3ff);moon.intensity=3.3;
+  if(ui.bossName)ui.bossName.textContent=BOSS2_NAME;
+}
+
+function cacheBoss2Bone(name,node){
+ if(!node)return;
+ boss2Bones[name]=node;
+ boss2Rest[name]={rotation:node.rotation.clone(),position:node.position.clone(),scale:node.scale.clone()};
+}
+function setBoss2Bone(name,rx=0,ry=0,rz=0,speed=12,dt=.016){
+ const b=boss2Bones[name],r=boss2Rest[name];if(!b||!r)return;
+ const a=1-Math.exp(-dt*speed);
+ b.rotation.x=THREE.MathUtils.lerp(b.rotation.x,r.rotation.x+rx,a);
+ b.rotation.y=THREE.MathUtils.lerp(b.rotation.y,r.rotation.y+ry,a);
+ b.rotation.z=THREE.MathUtils.lerp(b.rotation.z,r.rotation.z+rz,a);
+}
+function resetBoss2Pose(dt){
+ for(const [name,b] of Object.entries(boss2Bones)){
+   const r=boss2Rest[name];if(!r)continue;
+   const a=1-Math.exp(-dt*11);
+   b.rotation.x=THREE.MathUtils.lerp(b.rotation.x,r.rotation.x,a);
+   b.rotation.y=THREE.MathUtils.lerp(b.rotation.y,r.rotation.y,a);
+   b.rotation.z=THREE.MathUtils.lerp(b.rotation.z,r.rotation.z,a);
+ }
+}
+async function loadBoss2Avatar(){
+ if(BOSS_VARIANT!==2)return;
+ try{
+   const {VRMLoaderPlugin,VRMUtils}=await import('@pixiv/three-vrm');
+   const loader=new GLTFLoader();loader.register(parser=>new VRMLoaderPlugin(parser));
+   loader.load('./assets/models/boss/anime-head.vrm',gltf=>{
+     const vrm=gltf.userData?.vrm||null;
+     if(vrm)VRMUtils.rotateVRM0(vrm);
+     const root=vrm?.scene||gltf.scene;
+     root.traverse(o=>{
+       if(o.isMesh){
+         o.castShadow=true;o.receiveShadow=true;
+         if(Array.isArray(o.material))o.material=o.material.map(m=>m.clone());
+         else if(o.material)o.material=o.material.clone();
+       }
+     });
+     root.updateMatrixWorld(true);
+     let box=new THREE.Box3().setFromObject(root,true),size=new THREE.Vector3();box.getSize(size);
+     root.scale.multiplyScalar(3.15/Math.max(size.y,.001));
+     root.updateMatrixWorld(true);
+     box=new THREE.Box3().setFromObject(root,true);
+     root.position.y-=box.min.y;
+     root.position.z=.08;
+     boss2Root.add(root);
+     boss2Visual=root;boss2VRM=vrm;boss2Ready=true;
+     const h=vrm?.humanoid;
+     for(const n of ['hips','spine','chest','upperChest','neck','head','leftShoulder','rightShoulder','leftUpperArm','rightUpperArm','leftLowerArm','rightLowerArm','leftHand','rightHand','leftUpperLeg','rightUpperLeg','leftLowerLeg','rightLowerLeg','leftFoot','rightFoot']){
+       const node=h?.getNormalizedBoneNode?.(n);
+       if(node)cacheBoss2Bone(n,node);
+     }
+     flash('잔불의 왕녀 · 아르세리아',.9);
+   },undefined,err=>console.warn('Arcelia VRM unavailable.',err));
+ }catch(err){console.warn('three-vrm unavailable for Arcelia.',err)}
+}
+loadBoss2Avatar();
+
+function enforceBoss2Visibility(){
+ if(BOSS_VARIANT!==2)return;
+ for(const child of boss.children)child.visible=(child===boss2Root);
+ boss2Root.visible=true;
+}
+function setBoss2Style(style,announce=true){
+ if(state.boss2Style===style&&!announce)return;
+ state.boss2Style=style;
+ const cfg={
+  sword:[0xff643e,8.5,'검의 형상'],
+  spear:[0x66a8ff,7.3,'창의 형상'],
+  mage:[0xb48cff,8.0,'술법의 형상'],
+  frenzy:[0xff3469,10.0,'광전의 형상'],
+  awakened:[0xffb04b,12.5,'잿불 각성']
+ }[style]||[0xff643e,8,'검의 형상'];
+ boss2Aura.color.setHex(cfg[0]);boss2Aura.intensity=cfg[1];
+ boss2HaloMat.color.setHex(cfg[0]);
+ boss2SwordMat.emissive.setHex(cfg[0]);
+ boss2SpearMat.emissive.setHex(cfg[0]);
+ if(announce)flash(cfg[2],.5);
+}
+function updateBoss2Weapon(){
+ if(!boss2Ready||state.bossHp<=0||state.boss2Style==='mage'){
+   boss2WeaponRoot.visible=false;return;
+ }
+ const hand=boss2Bones.rightHand,lower=boss2Bones.rightLowerArm;
+ if(!hand||!lower){boss2WeaponRoot.visible=false;return}
+ const hp=new THREE.Vector3(),lp=new THREE.Vector3();
+ hand.getWorldPosition(hp);lower.getWorldPosition(lp);
+ const dir=hp.clone().sub(lp);
+ if(dir.lengthSq()<1e-6)dir.set(0,-1,0);dir.normalize();
+ boss2WeaponRoot.visible=true;
+ boss2WeaponRoot.position.copy(hp).addScaledVector(dir,.06);
+ boss2WeaponRoot.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
+ boss2Sword.visible=state.boss2Style!=='spear';
+ boss2Spear.visible=state.boss2Style==='spear';
+}
+function boss2Once(tag,fn){
+ if(state.bossFxStamp===tag)return false;
+ state.bossFxStamp=tag;fn?.();return true;
+}
+function boss2FacingDot(){
+ const to=flatDir(boss.position,player.position);
+ const f=new THREE.Vector3(Math.sin(boss.rotation.y),0,Math.cos(boss.rotation.y));
+ return f.dot(to);
+}
+function boss2Strike(tag,range,dmg,posture,unblockable=false,minDot=-.25){
+ boss2Once(tag,()=>{
+   const p=boss.position.clone().lerp(player.position,.48);p.y=.9;
+   spawnSparks(p,9,4.4);state.shake=Math.max(state.shake,.08);
+   if(dist()<=range&&boss2FacingDot()>=minDot){
+     if(state.invuln>0){flash('회피',.16);return}
+     hurtPlayer(dmg,posture,unblockable);
+   }
+ });
+}
+function spawnBoss2Pulse(pos,radius=1.2,color=0xff6a3c,life=.34){
+ const m=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),new THREE.MeshBasicMaterial({color,wireframe:true,transparent:true,opacity:.52,depthWrite:false}));
+ m.position.copy(pos);m.scale.setScalar(.12);scene.add(m);
+ boss2Fx.push({obj:m,life,max:life,radius});
+}
+function spawnBoss2Slash(radius=1.5,color=0xff6c42){
+ const m=new THREE.Mesh(new THREE.TorusGeometry(radius,.045,6,34,Math.PI*1.28),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.72,depthWrite:false}));
+ m.position.copy(boss.position).add(new THREE.Vector3(0,1.35,0));
+ m.rotation.set(Math.PI/2,boss.rotation.y-.64,0);
+ scene.add(m);boss2Fx.push({obj:m,life:.22,max:.22,radius:1});
+}
+function updateBoss2Fx(dt){
+ for(let i=boss2Fx.length-1;i>=0;i--){
+   const f=boss2Fx[i];f.life-=dt;
+   const p=1-clamp(f.life/f.max,0,1);
+   if(f.radius!==1)f.obj.scale.setScalar(.12+p*f.radius);
+   if(f.obj.material)f.obj.material.opacity=Math.max(0,(1-p)*.62);
+   if(f.life<=0){scene.remove(f.obj);f.obj.geometry?.dispose?.();f.obj.material?.dispose?.();boss2Fx.splice(i,1)}
+ }
+}
+function makeBoss2Orb(color=0xa86cff,r=.16){
+ const mat=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:2.4,roughness:.2});
+ const m=new THREE.Mesh(new THREE.SphereGeometry(r,10,8),mat);m.castShadow=true;scene.add(m);return m;
+}
+function spawnBoss2HomingVolley(count=4){
+ for(let i=0;i<count;i++){
+   const a=(i-(count-1)/2)*.34;
+   const p=boss.position.clone().add(new THREE.Vector3(Math.sin(a)*1.1,1.55+i*.09,Math.cos(a)*.45));
+   const m=makeBoss2Orb(0xb174ff,.18);m.position.copy(p);
+   const d=flatDir(p,player.position).applyAxisAngle(new THREE.Vector3(0,1,0),a*.35);
+   boss2Projectiles.push({obj:m,vel:d.multiplyScalar(5.5),life:4.4,dmg:18,kind:'homing',turn:2.0});
+ }
+}
+function spawnBoss2Arc(){
+ const f=new THREE.Vector3(Math.sin(boss.rotation.y),0,Math.cos(boss.rotation.y));
+ const m=new THREE.Mesh(new THREE.TorusGeometry(.72,.085,6,26,Math.PI*1.18),new THREE.MeshStandardMaterial({color:0xff9b50,emissive:0xff4c22,emissiveIntensity:2.4,transparent:true,opacity:.88,side:THREE.DoubleSide}));
+ m.position.copy(boss.position).add(new THREE.Vector3(0,1.05,0)).addScaledVector(f,1.0);
+ m.rotation.set(Math.PI/2,boss.rotation.y-.58,0);scene.add(m);
+ boss2Projectiles.push({obj:m,vel:f.multiplyScalar(10.5),life:2.3,dmg:27,kind:'arc',radius:1.05});
+}
+function spawnBoss2Skyfall(){
+ const center=player.position.clone();
+ const offsets=[[0,0],[1.8,.5],[-1.5,1.0],[.8,-1.8],[-1.7,-1.25]];
+ offsets.forEach((o,i)=>{
+   const target=center.clone().add(new THREE.Vector3(o[0],0,o[1]));
+   const m=makeBoss2Orb(0xff8a42,.22);m.position.copy(target).add(new THREE.Vector3(0,7.5+i*.45,0));
+   boss2Projectiles.push({obj:m,vel:new THREE.Vector3(0,-8.5-i*.35,0),life:2.0,dmg:23,kind:'fall',target,radius:1.25});
+ });
+}
+function pointSegmentDistance(p,a,b){
+ const ab=b.clone().sub(a),den=Math.max(1e-6,ab.lengthSq());
+ const t=clamp(p.clone().sub(a).dot(ab)/den,0,1);
+ return p.distanceTo(a.clone().addScaledVector(ab,t));
+}
+function spawnBoss2Beam(){
+ const start=boss.position.clone().add(new THREE.Vector3(0,1.55,0));
+ const target=player.position.clone().add(new THREE.Vector3(0,1.0,0));
+ const dir=target.clone().sub(start).normalize(),len=18,end=start.clone().addScaledVector(dir,len);
+ const m=new THREE.Mesh(new THREE.CylinderGeometry(.12,.2,len,10,1,true),new THREE.MeshBasicMaterial({color:0xc68cff,transparent:true,opacity:.8,depthWrite:false}));
+ m.position.copy(start).add(end).multiplyScalar(.5);
+ m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);scene.add(m);
+ boss2Fx.push({obj:m,life:.24,max:.24,radius:1});
+ if(pointSegmentDistance(player.position.clone().add(new THREE.Vector3(0,1,0)),start,end)<.82){
+   if(state.invuln>0)flash('회피',.16);else hurtPlayer(31,34,false);
+ }
+}
+function updateBoss2Projectiles(dt){
+ const playerPoint=player.position.clone().add(new THREE.Vector3(0,1.0,0));
+ for(let i=boss2Projectiles.length-1;i>=0;i--){
+   const p=boss2Projectiles[i];p.life-=dt;
+   if(p.kind==='homing'){
+     const desired=playerPoint.clone().sub(p.obj.position).normalize().multiplyScalar(p.vel.length());
+     p.vel.lerp(desired,1-Math.exp(-dt*p.turn));
+   }
+   p.obj.position.addScaledVector(p.vel,dt);
+   p.obj.rotation.x+=dt*5;p.obj.rotation.y+=dt*7;
+   let hit=false;
+   if(p.kind==='fall'&&p.obj.position.y<=.22){
+     spawnBoss2Pulse(p.target,p.radius,0xff6b35,.28);spawnDustBurst(p.target,.5);
+     if(player.position.distanceTo(p.target)<p.radius){
+       if(state.invuln>0)flash('회피',.14);else hurtPlayer(p.dmg,24,false);
+     }
+     hit=true;
+   }else if(p.kind!=='fall'&&p.obj.position.distanceTo(playerPoint)<(p.radius||.55)){
+     if(state.invuln>0)flash('회피',.14);else hurtPlayer(p.dmg,22,false);
+     hit=true;
+   }
+   if(hit||p.life<=0||p.obj.position.length()>48){
+     scene.remove(p.obj);p.obj.geometry?.dispose?.();p.obj.material?.dispose?.();boss2Projectiles.splice(i,1);
+   }
+ }
+}
+const BOSS2_DUR={
+ b2_sword_combo:1.55,b2_thrust:1.28,b2_jump_slam:1.72,
+ b2_spear_sweep:1.62,b2_spear_thrust:1.34,
+ b2_magic_bolts:1.55,b2_beam:1.62,b2_frenzy:1.82,
+ b2_awaken:2.35,b2_flame_combo:2.05,b2_dash_burst:1.48,
+ b2_arc:1.34,b2_skyfall:2.15,b2_grab:1.55,b2_final:3.65
+};
+function chooseBoss2Attack(){
+ if(state.bossHp<=0)return;
+ state.bossFxStamp='';state.bossHit=false;setDanger(false);
+ state.boss2AttackCount++;
+ if(state.boss2Phase===1&&state.boss2AttackCount%3===1&&state.boss2AttackCount>1){
+   const order=['sword','spear','mage','frenzy'];
+   let idx=(order.indexOf(state.boss2Style)+1)%order.length;
+   if(dist()>7.2&&idx===0)idx=1;
+   if(dist()<3.0&&idx===2)idx=3;
+   setBoss2Style(order[idx]);
+ }
+ let pick;
+ if(state.boss2Phase===2){
+   if(state.bossHp/state.bossMaxHp<.2&&!state.boss2FinalUsed){
+     pick='b2_final';state.boss2FinalUsed=true;
+   }else if(state.potionPunishQueued){
+     pick='b2_dash_burst';state.potionPunishQueued=false;
+   }else{
+     const pool=['b2_flame_combo','b2_dash_burst','b2_arc','b2_skyfall','b2_grab'];
+     pick=pool[Math.floor(Math.random()*pool.length)];
+   }
+ }else{
+   const pools={
+    sword:['b2_sword_combo','b2_thrust','b2_jump_slam'],
+    spear:['b2_spear_sweep','b2_spear_thrust','b2_jump_slam'],
+    mage:['b2_magic_bolts','b2_beam','b2_thrust'],
+    frenzy:['b2_frenzy','b2_thrust','b2_sword_combo']
+   };
+   const pool=pools[state.boss2Style]||pools.sword;
+   pick=pool[Math.floor(Math.random()*pool.length)];
+ }
+ state.bossState=pick;state.bossTimer=BOSS2_DUR[pick]||1.4;
+ state.bossAttackTarget.copy(player.position);state.bossAttackTarget.y=0;
+ if(pick==='b2_grab')setDanger(true);
+}
+function finishBoss2Attack(recovery=.72){
+ setDanger(false);state.bossState='idle';state.bossTimer=recovery;state.bossFxStamp='';
+ boss.position.y=0;
+}
+function poseBoss2(dt){
+ if(!boss2Ready)return;
+ resetBoss2Pose(dt);
+ const st=state.bossState,t=state.bossTimer;
+ const pulse=Math.sin(state.time*3.2);
+ setBoss2Bone('spine',-.025+pulse*.012,0,0,6,dt);
+ setBoss2Bone('head',.015,-pulse*.012,0,6,dt);
+ if(st==='idle'){
+   setBoss2Bone('rightUpperArm',-.3,0,-.18,8,dt);setBoss2Bone('leftUpperArm',-.08,0,.18,8,dt);
+ }else if(st==='b2_sword_combo'||st==='b2_flame_combo'||st==='b2_frenzy'){
+   const swing=Math.sin((BOSS2_DUR[st]-t)*Math.PI*4.2);
+   setBoss2Bone('rightShoulder',0,.18*swing,-.15,15,dt);
+   setBoss2Bone('rightUpperArm',-1.0,.15,.9*swing,18,dt);
+   setBoss2Bone('rightLowerArm',-.55,0,-.42*swing,18,dt);
+   setBoss2Bone('spine',-.14,.28*swing,-.18*swing,15,dt);
+ }else if(st==='b2_thrust'||st==='b2_spear_thrust'||st==='b2_dash_burst'){
+   setBoss2Bone('rightUpperArm',-1.38,.08,-.12,18,dt);
+   setBoss2Bone('rightLowerArm',-.12,0,0,18,dt);
+   setBoss2Bone('spine',-.22,0,0,15,dt);
+ }else if(st==='b2_spear_sweep'||st==='b2_arc'){
+   const swing=Math.sin((BOSS2_DUR[st]-t)*Math.PI*1.8);
+   setBoss2Bone('rightUpperArm',-.65,.2,1.1*swing,16,dt);
+   setBoss2Bone('leftUpperArm',-.35,-.15,-.55*swing,14,dt);
+   setBoss2Bone('spine',-.08,.5*swing,0,15,dt);
+ }else if(st==='b2_magic_bolts'||st==='b2_beam'||st==='b2_skyfall'||st==='b2_awaken'){
+   setBoss2Bone('leftUpperArm',-.55,-.45,.86,12,dt);setBoss2Bone('rightUpperArm',-.55,.45,-.86,12,dt);
+   setBoss2Bone('leftLowerArm',-.45,0,.3,12,dt);setBoss2Bone('rightLowerArm',-.45,0,-.3,12,dt);
+   setBoss2Bone('upperChest',-.12,0,0,10,dt);
+ }else if(st==='b2_grab'){
+   setBoss2Bone('rightUpperArm',-1.3,.18,-.3,16,dt);setBoss2Bone('rightLowerArm',-.18,0,0,16,dt);
+   setBoss2Bone('leftUpperArm',-.35,-.2,.45,12,dt);
+ }else if(st==='b2_final'){
+   const swing=Math.sin((BOSS2_DUR.b2_final-t)*Math.PI*5.1);
+   setBoss2Bone('rightUpperArm',-1.05,.2,.95*swing,20,dt);setBoss2Bone('leftUpperArm',-.72,-.18,-.72*swing,18,dt);
+   setBoss2Bone('spine',-.18,.55*swing,-.16*swing,18,dt);
+ }
+}
+function hitBoss2(base,posture=12){
+ if(state.bossHp<=0)return;
+ let dmg=base,pd=posture;
+ if(state.bossStagger>0){dmg*=1.65;pd*=1.65}
+ state.bossHp=Math.max(0,state.bossHp-dmg);
+ state.bossPosture=Math.min(140,state.bossPosture+pd);
+ state.shake=.13;hitStop(.055);
+ spawnSparks(player.position.clone().lerp(boss.position,.58).add(new THREE.Vector3(0,1.1,0)),9,4.6);
+ if(state.bossHp<=0){
+   state.bossState='dead';state.potionPunishQueued=false;setDanger(false);flash('잔불이 꺼졌다 · 토벌 완료',1.25);
+ }else if(state.bossPosture>=100){
+   state.bossPosture=42;state.bossStagger=1.65;state.bossState='stagger';state.bossTimer=1.65;flash('자세 붕괴',.5);
+ }
+}
+function updateBoss2(dt){
+ enforceBoss2Visibility();updateBoss2Fx(dt);updateBoss2Projectiles(dt);
+ bossRim.position.set(boss.position.x,boss.position.y+3.1,boss.position.z-4.2);
+ boss2Halo.rotation.z+=dt*(state.boss2Phase===2?1.4:.55);
+ boss2HaloMat.opacity=.16+.08*Math.sin(state.time*(state.boss2Phase===2?8:4));
+ boss2Aura.intensity=(state.boss2Phase===2?11.5:7.2)+Math.sin(state.time*7)*.8;
+ if(state.bossHp<=0){
+   state.boss2DeadPose=Math.min(1,state.boss2DeadPose+dt*.55);
+   if(boss2Visual){boss2Visual.rotation.z=THREE.MathUtils.lerp(boss2Visual.rotation.z,-1.35,state.boss2DeadPose*.045);boss2Visual.position.y=THREE.MathUtils.lerp(boss2Visual.position.y,.1,state.boss2DeadPose*.03)}
+   boss2WeaponRoot.visible=false;poseBoss2(dt);return;
+ }
+ if(state.boss2Phase===1&&state.bossHp<=state.bossMaxHp*.5){
+   state.boss2Phase=2;setBoss2Style('awakened',false);
+   state.bossState='b2_awaken';state.bossTimer=BOSS2_DUR.b2_awaken;state.bossFxStamp='';
+   setDanger(false);flash('왕혼 해방 · 잿불 각성',1.0);
+   spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1.1,0)),3.8,0xffa045,.7);
+ }
+ if(state.bossStagger>0){
+   state.bossStagger=Math.max(0,state.bossStagger-dt);
+   boss.position.y=THREE.MathUtils.lerp(boss.position.y,0,1-Math.exp(-dt*12));
+   poseBoss2(dt);updateBoss2Weapon();
+   if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.85}
+   return;
+ }
+ state.bossTimer-=dt;
+ const face=Math.atan2(player.position.x-boss.position.x,player.position.z-boss.position.z);
+ if(!['b2_thrust','b2_spear_thrust','b2_dash_burst'].includes(state.bossState)||state.bossTimer>.46){
+   boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*7.5));
+ }
+ const d=dist(),dir=flatDir(boss.position,player.position);
+ if(state.bossState==='idle'){
+   boss.position.y=THREE.MathUtils.lerp(boss.position.y,0,1-Math.exp(-dt*14));
+   const ideal=state.boss2Style==='mage'?6.8:state.boss2Style==='spear'?4.7:3.2;
+   if(d>ideal+.45)boss.position.addScaledVector(dir,dt*(state.boss2Style==='frenzy'?4.3:3.25));
+   else if(d<ideal-.8&&state.boss2Style==='mage')boss.position.addScaledVector(dir,-dt*2.2);
+   if(state.bossTimer<=0)chooseBoss2Attack();
+ }else if(state.bossState==='b2_sword_combo'){
+   if(state.bossTimer<1.18&&state.bossTimer>.98)boss.position.addScaledVector(dir,dt*3.8);
+   if(state.bossTimer<.82&&state.bossTimer>.62)boss.position.addScaledVector(dir,dt*3.6);
+   boss2Strike('s1',3.25,20,18,false,-.35); if(state.bossTimer>.98)state.bossFxStamp='';
+   if(state.bossTimer<=.96&&state.bossTimer>.62){if(boss2Once('s1-hit',()=>spawnBoss2Slash(1.35,0xff7550)))boss2Strike('s1-dmg',3.25,20,18,false,-.45)}
+   if(state.bossTimer<=.6&&state.bossTimer>.29){if(boss2Once('s2-hit',()=>spawnBoss2Slash(1.5,0xff6948)))boss2Strike('s2-dmg',3.45,23,20,false,-.5)}
+   if(state.bossTimer<=.27){if(boss2Once('s3-hit',()=>{spawnBoss2Slash(1.75,0xff5536);spawnDustBurst(boss.position,.48)}))boss2Strike('s3-dmg',3.7,31,30,false,-.6)}
+   if(state.bossTimer<=0)finishBoss2Attack(.76);
+ }else if(state.bossState==='b2_thrust'||state.bossState==='b2_spear_thrust'){
+   const spear=state.bossState==='b2_spear_thrust',range=spear?5.1:4.1;
+   if(state.bossTimer<.48&&state.bossTimer>.18)boss.position.addScaledVector(dir,dt*(spear?10.5:9.2));
+   if(state.bossTimer<=.33)boss2Strike('thrust',range,spear?30:28,spear?32:29,false,.05);
+   if(state.bossTimer<=0)finishBoss2Attack(.9);
+ }else if(state.bossState==='b2_jump_slam'){
+   const total=BOSS2_DUR.b2_jump_slam,e=total-state.bossTimer;
+   if(e<1.18){const p=clamp(e/1.18,0,1);boss.position.y=Math.sin(p*Math.PI)*2.25;if(p<.7)boss.position.addScaledVector(dir,dt*3.2)}
+   else boss.position.y=THREE.MathUtils.lerp(boss.position.y,0,1-Math.exp(-dt*28));
+   if(state.bossTimer<=.38)boss2Once('slam',()=>{spawnDustBurst(boss.position,.9);spawnBossShockwave(3.9,state.boss2Phase===2?31:27);boss2Strike('slam-dmg',3.2,state.boss2Phase===2?35:30,38,false,-1)});
+   if(state.bossTimer<=0)finishBoss2Attack(1.0);
+ }else if(state.bossState==='b2_spear_sweep'){
+   if(state.bossTimer<=.78&&state.bossTimer>.44)boss2Once('sweep-vfx',()=>spawnBoss2Slash(2.15,0x6aa9ff));
+   if(state.bossTimer<=.68)boss2Strike('sweep-dmg',4.55,29,31,false,-.75);
+   if(state.bossTimer<=0)finishBoss2Attack(.9);
+ }else if(state.bossState==='b2_magic_bolts'){
+   if(state.bossTimer<=.9)boss2Once('bolts',()=>spawnBoss2HomingVolley(5));
+   if(state.bossTimer<=0)finishBoss2Attack(.72);
+ }else if(state.bossState==='b2_beam'){
+   if(state.bossTimer<=.42)boss2Once('beam',()=>spawnBoss2Beam());
+   if(state.bossTimer<=0)finishBoss2Attack(1.0);
+ }else if(state.bossState==='b2_frenzy'){
+   const marks=[1.35,1.05,.76,.48,.2];
+   marks.forEach((mark,i)=>{
+     if(state.bossTimer<=mark)boss2Once('fz'+i,()=>{
+       spawnBoss2Slash(1.25+i*.08,0xff386b);
+       if(dist()<3.55&&boss2FacingDot()>-.55){if(state.invuln<=0)hurtPlayer(12+i*2,13+i*2,false);else flash('회피',.12)}
+     });
+   });
+   if(state.bossTimer>.16&&d>2.6)boss.position.addScaledVector(dir,dt*4.9);
+   if(state.bossTimer<=0)finishBoss2Attack(.82);
+ }else if(state.bossState==='b2_awaken'){
+   if(state.bossTimer<=.48)boss2Once('awaken-wave',()=>{spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1,0)),4.6,0xffa13d,.55);spawnDustBurst(boss.position,.8)});
+   if(state.bossTimer<=0)finishBoss2Attack(1.05);
+ }else if(state.bossState==='b2_flame_combo'){
+   const marks=[1.48,1.08,.68,.26];
+   marks.forEach((mark,i)=>{
+     if(state.bossTimer<=mark)boss2Once('flame'+i,()=>{
+       spawnBoss2Slash(1.4+i*.13,0xff9a48);
+       if(dist()<3.7+i*.1&&boss2FacingDot()>-.55){if(state.invuln<=0)hurtPlayer(18+i*3,18+i*3,false);else flash('회피',.12)}
+       if(i===3)spawnBossShockwave(4.2,29);
+     });
+   });
+   if(state.bossTimer>.28&&d>2.7)boss.position.addScaledVector(dir,dt*4.2);
+   if(state.bossTimer<=0)finishBoss2Attack(1.05);
+ }else if(state.bossState==='b2_dash_burst'){
+   if(state.bossTimer<.62&&state.bossTimer>.24)boss.position.addScaledVector(dir,dt*11.4);
+   if(state.bossTimer<=.4)boss2Strike('dash-hit',4.0,32,33,false,-.05);
+   if(state.bossTimer<=.19)boss2Once('dash-burst',()=>{spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,.8,0)),2.45,0xff6a35,.32);if(dist()<2.45&&state.invuln<=0)hurtPlayer(22,24,false)});
+   if(state.bossTimer<=0)finishBoss2Attack(.92);
+ }else if(state.bossState==='b2_arc'){
+   if(state.bossTimer<=.48)boss2Once('arc',()=>spawnBoss2Arc());
+   if(state.bossTimer<=0)finishBoss2Attack(.82);
+ }else if(state.bossState==='b2_skyfall'){
+   if(state.bossTimer<=1.18)boss2Once('sky',()=>spawnBoss2Skyfall());
+   if(state.bossTimer<=0)finishBoss2Attack(1.15);
+ }else if(state.bossState==='b2_grab'){
+   if(state.bossTimer<.46&&state.bossTimer>.18)boss.position.addScaledVector(dir,dt*7.2);
+   if(state.bossTimer<=.3)boss2Strike('grab',2.8,46,58,true,.12);
+   if(state.bossTimer<=0)finishBoss2Attack(1.18);
+ }else if(state.bossState==='b2_final'){
+   const marks=[2.66,2.14,1.62,1.08,.42];
+   marks.forEach((mark,i)=>{
+     if(state.bossTimer<=mark)boss2Once('final'+i,()=>{
+       spawnBoss2Slash(1.55+i*.18,i===4?0xffd36a:0xff5c3d);
+       if(i<4&&dist()<4.0&&boss2FacingDot()>-.65){if(state.invuln<=0)hurtPlayer(17+i*2,18+i*2,false);else flash('회피',.12)}
+       if(i===4){spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1,0)),5.2,0xffd36a,.72);spawnBossShockwave(5.6,38)}
+     });
+   });
+   if(state.bossTimer>1.0&&d>3.0)boss.position.addScaledVector(dir,dt*4.8);
+   if(state.bossTimer<=0)finishBoss2Attack(1.65);
+ }
+ poseBoss2(dt);updateBoss2Weapon();
+}
+
 function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeout(flash.t);flash.t=setTimeout(()=>ui.msg.style.opacity='0',d*1000)}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 const PLAYER_ATTACK_SCALE={
@@ -1793,6 +2269,7 @@ function hitZone(){
  return 'leg';
 }
 function hitBoss(base,posture=12){
+ if(BOSS_VARIANT===2){hitBoss2(base,posture);return}
  if(state.bossHp<=0)return;
  let spikeTarget=null,spikeDist=Infinity;
  const playerHitPoint=player.position.clone().add(new THREE.Vector3(0,1.15,0));
@@ -2060,6 +2537,7 @@ const BOSS_AIM_RANGE={
  arm_grab:3.45,arm_barrage:3.85,arm_guardbreak:3.8,arm_crush:3.6
 };
 function updateBoss(dt){
+ if(BOSS_VARIANT===2){updateBoss2(dt);return}
  bossRim.position.set(boss.position.x,boss.position.y+8,boss.position.z-9);
  const bossMotionDt=state.bossState?.startsWith?.('arm_')?dt/bossAttackScale(state.bossState):dt;
  if(state.bossHp<=0)setBossVisualAction('dead');
@@ -2466,7 +2944,8 @@ function updateLockMarker(){
  if(!ui.lockDot)return;
  const show=input.lock&&state.bossHp>0;
  if(!show){ui.lockDot.classList.remove('on');return}
- const p=boss.position.clone().add(new THREE.Vector3(0,4.35*BOSS_GIANT_SCALE,.15)).project(camera);
+ const lockY=BOSS_VARIANT===2?1.85:4.35*BOSS_GIANT_SCALE;
+ const p=boss.position.clone().add(new THREE.Vector3(0,lockY,.15)).project(camera);
  const visible=p.z>-1&&p.z<1&&Math.abs(p.x)<1.15&&Math.abs(p.y)<1.15;
  if(!visible){ui.lockDot.classList.remove('on');return}
  ui.lockDot.style.left=((p.x*.5+.5)*innerWidth)+'px';
@@ -2479,13 +2958,13 @@ function updateCamera(dt){
  let wantedFov=60;
 
  if(input.lock){
-   const d=dist(),armAttack=state.bossState.startsWith('arm_');
+   const d=dist(),armAttack=BOSS_VARIANT===1&&state.bossState.startsWith('arm_');
    const toBoss=flatDir(player.position,boss.position);
    const right=new THREE.Vector3(toBoss.z,0,-toBoss.x);
    const backDist=clamp(7.8+d*.28,8.8,14.5)+(armAttack?.75:0);
    const height=2.9+clamp(d*.1,.25,2.0)+(armAttack?.32:0);
    desiredPos.copy(target).addScaledVector(toBoss,-backDist).addScaledVector(right,.42).add(new THREE.Vector3(0,height,0));
-   const bossFocus=boss.position.clone().add(new THREE.Vector3(0,4.0*BOSS_GIANT_SCALE,0));
+   const bossFocus=boss.position.clone().add(new THREE.Vector3(0,BOSS_VARIANT===2?1.75:4.0*BOSS_GIANT_SCALE,0));
    const focusWeight=clamp(.5+d*.01,.5,.64);
    desiredLook.copy(target).lerp(bossFocus,focusWeight);
    wantedFov=armAttack?65:61;
@@ -2521,7 +3000,7 @@ function updateCamera(dt){
 function partText(v,broken,label){return broken?label:(v<45?'손상':'정상')}
 function updateUI(){
  ui.hp.style.width=clamp(state.hp,0,100)+'%';if(ui.stamina){ui.stamina.style.width=(clamp(state.stamina,0,state.staminaMax)/state.staminaMax*100)+'%';ui.stamina.parentElement.classList.toggle('exhausted',state.exhausted>0)}ui.posture.style.width=clamp(state.posture,0,100)+'%';ui.bossHp.style.width=(clamp(state.bossHp,0,state.bossMaxHp)/state.bossMaxHp*100)+'%';ui.bossPosture.style.width=clamp(state.bossPosture,0,100)+'%';
- ui.head.textContent=partText(state.headHp,state.headBroken,'파괴');ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴');if(ui.spike){const alive=bossSpikeTargets.filter(s=>!s.broken).length,total=bossSpikeTargets.length;ui.spike.textContent=total?(alive?`${alive}/${total}`:'전부 파괴'):'로딩';}ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단');if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
+ if(BOSS_VARIANT===2){if(ui.parts)ui.parts.textContent=state.boss2Phase===2?'2페이즈 · 잿불 각성 · 완성형 전투':'1페이즈 · '+({sword:'검',spear:'창',mage:'술법',frenzy:'광전'}[state.boss2Style]||'검')+' 형상';}else{ui.head.textContent=partText(state.headHp,state.headBroken,'파괴');ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴');if(ui.spike){const alive=bossSpikeTargets.filter(s=>!s.broken).length,total=bossSpikeTargets.length;ui.spike.textContent=total?(alive?`${alive}/${total}`:'전부 파괴'):'로딩';}ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단');}if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
  potionHud.textContent=`R · 포션 ${state.potions}/3`;
 }
 function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}addEventListener('resize',resize);resize();
