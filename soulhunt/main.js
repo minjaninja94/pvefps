@@ -1612,18 +1612,56 @@ function updateBoss2Weapon(){
  boss2Sword.visible=state.boss2Style!=='spear';
  boss2Spear.visible=state.boss2Style==='spear';
 }
+function bossCombatOffset(x,y,z){
+ const q=new THREE.Quaternion();boss.getWorldQuaternion(q);
+ return new THREE.Vector3(x,y,z).applyQuaternion(q);
+}
+function applyBoss2PrimaryArmIK(dt){
+ if(!boss2Ready||!boss2Bones.rightUpperArm||!boss2Bones.rightHand)return;
+ const shoulder=new THREE.Vector3();boss2Bones.rightUpperArm.getWorldPosition(shoulder);
+ const reach=getArmReach(boss2Bones,'right'),st=state.bossState,t=state.bossTimer;
+ let local=new THREE.Vector3(.34,-.48,.22);
+ if(st==='b2_sword_combo'||st==='b2_flame_combo'||st==='b2_frenzy'){
+   const dur=BOSS2_DUR[st]||1.5,swing=Math.sin((dur-t)*Math.PI*4.2);
+   local.set(.62*swing,-.24+.08*Math.abs(swing),.72+.12*Math.abs(swing));
+ }else if(st==='b2_thrust'||st==='b2_spear_thrust'||st==='b2_dash_burst'){
+   local.set(.08,-.28,1.12);
+ }else if(st==='b2_spear_sweep'||st==='b2_arc'){
+   const swing=Math.sin(((BOSS2_DUR[st]||1.4)-t)*Math.PI*1.8);
+   local.set(.82*swing,-.25,.64);
+ }else if(st==='b2_jump_slam'){
+   const p=clamp(1-t/BOSS2_DUR.b2_jump_slam,0,1);
+   local.set(.18,-.08-.62*p,.56+.26*p);
+ }else if(st==='b2_grab'){
+   local.set(.12,-.18,1.02);
+ }else if(st==='b2_final'){
+   const swing=Math.sin((BOSS2_DUR.b2_final-t)*Math.PI*5.1);
+   local.set(.72*swing,-.22,.78);
+ }else if(st==='b2_magic_bolts'||st==='b2_beam'||st==='b2_skyfall'||st==='b2_awaken'){
+   local.set(.45,.04,.48);
+ }
+ const target=shoulder.clone().add(bossCombatOffset(local.x*reach,local.y*reach,local.z*reach));
+ const elbowHint=shoulder.clone().add(bossCombatOffset(.28*reach,-.34*reach,.22*reach));
+ solveArmCCD(boss2Bones,'right',target,elbowHint,1-Math.exp(-dt*42));
+}
 function applyBoss2WeaponGripIK(dt){
  if(!boss2Ready||!boss2WeaponRoot.visible)return;
  const twoHand=state.boss2Style==='spear'||state.boss2Style==='awakened'||state.boss2Style==='frenzy'||['b2_flame_combo','b2_final','b2_spear_sweep','b2_spear_thrust'].includes(state.bossState);
- if(!twoHand||!boss2Bones.leftUpperArm||!boss2Bones.leftHand)return;
- boss2WeaponRoot.updateWorldMatrix(true,true);
- const gripY=boss2Spear.visible?-.14:-.18;
- const target=boss2WeaponRoot.localToWorld(new THREE.Vector3(0,gripY,0));
+ if(!boss2Bones.leftUpperArm||!boss2Bones.leftHand)return;
  const shoulder=new THREE.Vector3();boss2Bones.leftUpperArm.getWorldPosition(shoulder);
  const reach=getArmReach(boss2Bones,'left');
- const sideDir=new THREE.Vector3(Math.cos(boss.rotation.y),0,-Math.sin(boss.rotation.y));
- const elbowHint=shoulder.clone().addScaledVector(sideDir,-reach*.28).add(new THREE.Vector3(0,-reach*.3,0));
- solveArmCCD(boss2Bones,'left',target,elbowHint,1-Math.exp(-dt*34));
+ let target,elbowHint;
+ if(twoHand){
+   boss2WeaponRoot.updateWorldMatrix(true,true);
+   const gripY=boss2Spear.visible?-.14:-.18;
+   target=boss2WeaponRoot.localToWorld(new THREE.Vector3(0,gripY,0));
+   elbowHint=shoulder.clone().add(bossCombatOffset(-.3*reach,-.31*reach,.16*reach));
+ }else{
+   const casting=['b2_magic_bolts','b2_beam','b2_skyfall','b2_awaken'].includes(state.bossState);
+   target=shoulder.clone().add(bossCombatOffset(casting?-.34*reach:-.18*reach,casting?.02*reach:-.62*reach,casting?.56*reach:.18*reach));
+   elbowHint=shoulder.clone().add(bossCombatOffset(-.34*reach,-.34*reach,.12*reach));
+ }
+ solveArmCCD(boss2Bones,'left',target,elbowHint,1-Math.exp(-dt*38));
 }
 function boss2Once(tag,fn){
  if(boss2Fired.has(tag))return false;
@@ -1800,7 +1838,7 @@ function chooseBoss2Attack(){
    const pool=pools[state.boss2Style]||pools.sword;
    pick=pool[Math.floor(Math.random()*pool.length)];
  }
- state.bossState=pick;state.bossTimer=BOSS2_DUR[pick]||1.4;
+ state.bossState=pick;state.bossTimer=BOSS2_DUR[pick]||1.4;resetBoss2PhysicalTrace();
  state.bossAttackTarget.copy(player.position);state.bossAttackTarget.y=0;
  if(pick==='b2_grab')setDanger(true);
 }
@@ -1988,7 +2026,7 @@ function updateBoss2(dt){
    if(state.bossTimer>1.0&&d>3.0)boss.position.addScaledVector(dir,dt*4.8);
    if(state.bossTimer<=0)finishBoss2Attack(1.65);
  }
- poseBoss2(dt);updateBoss2Weapon();applyBoss2WeaponGripIK(dt);updateBoss2Weapon();processBoss2PhysicalHits();
+ poseBoss2(dt);applyBoss2PrimaryArmIK(dt);updateBoss2Weapon();applyBoss2WeaponGripIK(dt);updateBoss2Weapon();processBoss2PhysicalHits();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2126,17 +2164,41 @@ function updateBoss3Weapon(){
  boss3WeaponRoot.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
  if(boss3Katana.parent!==boss3WeaponRoot)boss3WeaponRoot.add(boss3Katana);
 }
+function applyBoss3PrimaryArmIK(dt){
+ if(!boss3Ready||!boss3Bones.rightUpperArm||!boss3Bones.rightHand)return;
+ const shoulder=new THREE.Vector3();boss3Bones.rightUpperArm.getWorldPosition(shoulder);
+ const reach=getArmReach(boss3Bones,'right'),st=state.bossState,t=state.bossTimer;
+ let local=new THREE.Vector3(.36,-.5,.2);
+ if(['b3_triple','b3_cross','b3_wing_combo','b3_dance','b3_dance2','b3_echoes'].includes(st)){
+   const freq=(st==='b3_dance'||st==='b3_dance2')?8.7:5.1;
+   const swing=Math.sin(((BOSS3_DUR[st]||1.5)-t)*Math.PI*freq);
+   local.set(.76*swing,-.22+.06*Math.abs(swing),.72+.12*Math.abs(swing));
+ }else if(st==='b3_lunge'||st==='b3_rising'){
+   local.set(.04,-.26,1.18);
+ }else if(st==='b3_dive_bloom'){
+   local.set(.08,-.2,1.05);
+ }else if(st==='b3_phase'||st==='b3_flower'){
+   local.set(.42,.03,.48);
+ }
+ const target=shoulder.clone().add(bossCombatOffset(local.x*reach,local.y*reach,local.z*reach));
+ const elbowHint=shoulder.clone().add(bossCombatOffset(.3*reach,-.32*reach,.2*reach));
+ solveArmCCD(boss3Bones,'right',target,elbowHint,1-Math.exp(-dt*46));
+}
 function applyBoss3WeaponGripIK(dt){
  if(!boss3Ready||!boss3WeaponRoot.visible||!boss3Bones.leftUpperArm||!boss3Bones.leftHand)return;
  const twoHand=state.boss3Phase===2||['b3_dance','b3_dance2','b3_wing_combo','b3_lunge','b3_rising','b3_echoes'].includes(state.bossState);
- if(!twoHand)return;
- boss3WeaponRoot.updateWorldMatrix(true,true);
- const target=boss3WeaponRoot.localToWorld(new THREE.Vector3(0,-.19,0));
  const shoulder=new THREE.Vector3();boss3Bones.leftUpperArm.getWorldPosition(shoulder);
  const reach=getArmReach(boss3Bones,'left');
- const sideDir=new THREE.Vector3(Math.cos(boss.rotation.y),0,-Math.sin(boss.rotation.y));
- const elbowHint=shoulder.clone().addScaledVector(sideDir,-reach*.3).add(new THREE.Vector3(0,-reach*.3,0));
- solveArmCCD(boss3Bones,'left',target,elbowHint,1-Math.exp(-dt*38));
+ let target,elbowHint;
+ if(twoHand){
+   boss3WeaponRoot.updateWorldMatrix(true,true);
+   target=boss3WeaponRoot.localToWorld(new THREE.Vector3(0,-.19,0));
+   elbowHint=shoulder.clone().add(bossCombatOffset(-.3*reach,-.3*reach,.15*reach));
+ }else{
+   target=shoulder.clone().add(bossCombatOffset(-.18*reach,-.62*reach,.16*reach));
+   elbowHint=shoulder.clone().add(bossCombatOffset(-.34*reach,-.34*reach,.1*reach));
+ }
+ solveArmCCD(boss3Bones,'left',target,elbowHint,1-Math.exp(-dt*42));
 }
 function boss3Once(tag,fn){if(boss3Fired.has(tag))return false;boss3Fired.add(tag);fn?.();return true}
 function boss3FacingDot(){
@@ -2210,7 +2272,7 @@ function chooseBoss3Attack(){
   const choices=pool.filter(x=>x!==state.boss3Last);
   pick=choices[Math.floor(Math.random()*choices.length)];
  }
- state.boss3Last=pick;state.bossState=pick;state.bossTimer=BOSS3_DUR[pick]||1.4;
+ state.boss3Last=pick;state.bossState=pick;state.bossTimer=BOSS3_DUR[pick]||1.4;resetBoss3PhysicalTrace();
  state.bossAttackTarget.copy(player.position);state.bossAttackTarget.y=0;
 }
 function finishBoss3Attack(recovery=.66){
@@ -2378,7 +2440,7 @@ function updateBoss3(dt){
   });
   if(state.bossTimer<=0)finishBoss3Attack(1.3);
  }
- poseBoss3(dt);updateBoss3Weapon();applyBoss3WeaponGripIK(dt);updateBoss3Weapon();processBoss3PhysicalHits();
+ poseBoss3(dt);applyBoss3PrimaryArmIK(dt);updateBoss3Weapon();applyBoss3WeaponGripIK(dt);updateBoss3Weapon();processBoss3PhysicalHits();
 }
 
 function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeout(flash.t);flash.t=setTimeout(()=>ui.msg.style.opacity='0',d*1000)}
