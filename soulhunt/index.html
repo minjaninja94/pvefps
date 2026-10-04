@@ -7,13 +7,33 @@
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
+  <div id="bossSelect" aria-label="보스 선택">
+    <div class="boss-select-panel">
+      <div class="boss-select-kicker">DUKHOO SOUL · BOSS TRIAL</div>
+      <h1>도전할 보스를 선택</h1>
+      <p>보스 1은 기존 거녀 전투, 보스 2는 무기 형상과 전투 스타일을 전환하는 미소녀 검사형 보스입니다.</p>
+      <div class="boss-select-grid">
+        <button class="boss-card" data-boss="1">
+          <span class="boss-no">BOSS 01</span>
+          <strong>심연거녀 벨라모르</strong>
+          <small>초대형 팔 · 쓸기 · 찍기 · 가시 · 충격파</small>
+        </button>
+        <button class="boss-card boss-card-new" data-boss="2">
+          <span class="boss-no">BOSS 02 · NEW</span>
+          <strong>잔불의 왕녀 · 아르세리아</strong>
+          <small>검 / 창 / 술법 / 광전 폼 · 2페이즈 잿불 각성</small>
+        </button>
+      </div>
+    </div>
+  </div>
+  <button id="bossSwitch" type="button">보스 선택</button>
   <div id="hud">
     <div id="brand">덕후 소울 <small>COMBAT PROTOTYPE</small></div>
     <div class="bar"><span>HP</span><i id="hp"></i></div>
     <div class="bar stamina"><span>STAMINA</span><i id="stamina"></i></div>
     <div class="bar posture"><span>POSTURE</span><i id="posture"></i></div>
     <div id="boss">
-      <b>심연거녀 벨라모르 · 시련 개체</b>
+      <b id="bossName">심연거녀 벨라모르 · 시련 개체</b>
       <div class="bossbar"><i id="bossHp"></i></div>
       <div class="bossbar posture"><i id="bossPosture"></i></div>
       <div id="parts">얼굴 <em id="headPart">정상</em> · 괴수하체 <em id="legPart">정상</em> · 가시갑각 <em id="spikePart">정상</em> · 꼬리 <em id="tailPart">정상</em></div>
@@ -28,6 +48,25 @@
   <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/","@pixiv/three-vrm":"https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.5.5/lib/three-vrm.module.min.js"}}
 </script>
+  <script>
+  (() => {
+    const selected = new URLSearchParams(location.search).get('boss');
+    const select = document.querySelector('#bossSelect');
+    if (selected === '1' || selected === '2') select.hidden = true;
+    document.querySelectorAll('[data-boss]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const url = new URL(location.href);
+        url.searchParams.set('boss', btn.dataset.boss);
+        location.href = url.toString();
+      });
+    });
+    document.querySelector('#bossSwitch').addEventListener('click', () => {
+      const url = new URL(location.href);
+      url.searchParams.delete('boss');
+      location.href = url.toString();
+    });
+  })();
+  </script>
   <script type="module" src="./main.js"></script>
 </body>
 </html>
