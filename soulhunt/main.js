@@ -884,6 +884,7 @@ function applyBossArmIK(dt){
 
 
 async function loadFemaleArmDonor(){
+ if(BOSS_VARIANT!==1)return;
  try{
    const {VRMLoaderPlugin,VRMUtils}=await import('@pixiv/three-vrm');
    const loader=new GLTFLoader();loader.register(parser=>new VRMLoaderPlugin(parser));
@@ -915,6 +916,7 @@ async function loadFemaleArmDonor(){
 loadFemaleArmDonor();
 
 async function loadAnimeBossUpper(){
+ if(BOSS_VARIANT!==1)return;
  try{
    const {VRMLoaderPlugin,VRMUtils}=await import('@pixiv/three-vrm');
    const loader=new GLTFLoader();
@@ -1024,7 +1026,7 @@ function setBossLowerAction(name,fade=.18){
  if(prev&&prev!==next)prev.crossFadeTo(next,fade,false);
  bossLowerAction=name;
 }
-assetLoader.load('./assets/models/boss/centaur-beast.glb',gltf=>{
+if(BOSS_VARIANT===1)assetLoader.load('./assets/models/boss/centaur-beast.glb',gltf=>{
  bossLowerVisual=gltf.scene;
  bossLowerVisual.name='BellamoreBeastLowerBody';
  bossLowerVisual.updateMatrixWorld(true);
@@ -1267,7 +1269,7 @@ function updateBossMonsterArmVisuals(){
 }
 
 const bossSpikeTargets=[];
-assetLoader.load('./assets/models/boss/monster-spikes.glb',gltf=>{
+if(BOSS_VARIANT===1)assetLoader.load('./assets/models/boss/monster-spikes.glb',gltf=>{
  const source=gltf.scene;
  monsterSpikeSource=source;
  const placements=[
