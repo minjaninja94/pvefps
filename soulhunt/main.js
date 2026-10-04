@@ -1438,6 +1438,24 @@ const boss2HaloMat=new THREE.MeshBasicMaterial({color:0xff7148,transparent:true,
 const boss2Halo=new THREE.Mesh(new THREE.TorusGeometry(1.05,.025,7,40),boss2HaloMat);
 boss2Halo.rotation.x=Math.PI/2;boss2Halo.position.y=.03;boss2Root.add(boss2Halo);
 
+// Browser-safe fallback silhouette: always visible until the VRM is fully ready.
+const boss2Fallback=new THREE.Group();
+boss2Fallback.name='ArceliaFallback';
+boss2Root.add(boss2Fallback);
+const b2FallbackSkin=new THREE.MeshStandardMaterial({color:0xd9b0a5,roughness:.55,metalness:.02});
+const b2FallbackCloth=new THREE.MeshStandardMaterial({color:0x251823,roughness:.72,metalness:.08,emissive:0x35151c,emissiveIntensity:.35});
+const b2FallbackHair=new THREE.MeshStandardMaterial({color:0x17121d,roughness:.8,metalness:.02});
+part(boss2Fallback,new THREE.CapsuleGeometry(.36,.82,5,8),b2FallbackCloth,[0,1.15,0]);
+part(boss2Fallback,new THREE.SphereGeometry(.31,14,10),b2FallbackSkin,[0,1.97,.02]);
+part(boss2Fallback,new THREE.SphereGeometry(.335,14,10),b2FallbackHair,[0,2.06,-.06],[0,0,0],[1.02,.82,1.04]);
+part(boss2Fallback,new THREE.BoxGeometry(.7,.62,.34),b2FallbackCloth,[0,1.43,0]);
+for(const sx of [-1,1]){
+  part(boss2Fallback,new THREE.CapsuleGeometry(.095,.58,4,7),b2FallbackSkin,[sx*.48,1.32,0],[0,0,sx*.06]);
+  part(boss2Fallback,new THREE.CapsuleGeometry(.11,.72,4,7),b2FallbackCloth,[sx*.19,.56,0],[0,0,sx*.025]);
+}
+const b2FallbackCape=part(boss2Fallback,new THREE.PlaneGeometry(.86,1.2),b2FallbackCloth,[0,1.22,-.25],[0,0,0]);
+b2FallbackCape.material.side=THREE.DoubleSide;
+
 const boss2WeaponRoot=new THREE.Group();
 boss2WeaponRoot.visible=false;
 scene.add(boss2WeaponRoot);
@@ -1515,7 +1533,7 @@ async function loadBoss2Avatar(){
      root.position.y-=box.min.y;
      root.position.z=.08;
      boss2Root.add(root);
-     boss2Visual=root;boss2VRM=vrm;boss2Ready=true;
+     boss2Visual=root;boss2VRM=vrm;boss2Ready=true;boss2Fallback.visible=false;
      const h=vrm?.humanoid;
      for(const n of ['hips','spine','chest','upperChest','neck','head','leftShoulder','rightShoulder','leftUpperArm','rightUpperArm','leftLowerArm','rightLowerArm','leftHand','rightHand','leftUpperLeg','rightUpperLeg','leftLowerLeg','rightLowerLeg','leftFoot','rightFoot']){
        const node=h?.getNormalizedBoneNode?.(n);
@@ -1525,12 +1543,12 @@ async function loadBoss2Avatar(){
    },undefined,err=>console.warn('Arcelia VRM unavailable.',err));
  }catch(err){console.warn('three-vrm unavailable for Arcelia.',err)}
 }
-loadBoss2Avatar();
 
 function enforceBoss2Visibility(){
  if(BOSS_VARIANT!==2)return;
  for(const child of boss.children)child.visible=(child===boss2Root);
  boss2Root.visible=true;
+ if(!boss2Ready)boss2Fallback.visible=true;
 }
 function setBoss2Style(style,announce=true){
  if(state.boss2Style===style&&!announce)return;
@@ -3006,9 +3024,35 @@ function updateUI(){
  potionHud.textContent=`R · 포션 ${state.potions}/3`;
 }
 function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}addEventListener('resize',resize);resize();
+let soulhuntRuntimeErrorShown=false;
+function reportSoulhuntRuntimeError(err){
+ console.error('Soulhunt runtime error:',err);
+ if(soulhuntRuntimeErrorShown)return;
+ soulhuntRuntimeErrorShown=true;
+ const box=document.createElement('div');
+ box.id='runtimeError';
+ box.style.cssText='position:fixed;right:14px;bottom:14px;z-index:99;max-width:520px;padding:10px 12px;background:#2a0808e8;border:1px solid #b95b4b;color:#ffd9d1;font:12px/1.45 monospace;pointer-events:none';
+ box.textContent='전투 로직 오류를 복구했습니다: '+(err?.message||String(err));
+ document.body.appendChild(box);
+ setTimeout(()=>box.remove(),6000);
+}
 function loop(){
  let dt=Math.min(clock.getDelta(),.033);state.time+=dt;
- if(state.hitstop>0){state.hitstop-=dt;dt=0}else{updatePlayer(dt);updateBoss(dt)}
-if(playerMixer)playerMixer.update(Math.max(dt,.001));animateVroidPlayer(Math.max(dt,.001));updateArmTrails(Math.max(dt,.001));updateDustFX(Math.max(dt,.001));updateSparks(Math.max(dt,.001));updateBossSpikeProjectiles(Math.max(dt,.001));updateBossShockwaves(Math.max(dt,.001));updateCamera(Math.max(dt,.001));updateUI();renderer.render(scene,camera);requestAnimationFrame(loop);
+ try{
+   if(state.hitstop>0){state.hitstop-=dt;dt=0}else{updatePlayer(dt);updateBoss(dt)}
+ }catch(err){
+   reportSoulhuntRuntimeError(err);
+   state.hitstop=0;
+   if(BOSS_VARIANT===2){state.bossState='idle';state.bossTimer=.8;boss.position.y=0;enforceBoss2Visibility()}
+ }
+ try{
+   if(playerMixer)playerMixer.update(Math.max(dt,.001));
+   animateVroidPlayer(Math.max(dt,.001));updateArmTrails(Math.max(dt,.001));updateDustFX(Math.max(dt,.001));updateSparks(Math.max(dt,.001));
+   updateBossSpikeProjectiles(Math.max(dt,.001));updateBossShockwaves(Math.max(dt,.001));
+ }catch(err){reportSoulhuntRuntimeError(err)}
+ try{updateCamera(Math.max(dt,.001));updateUI()}catch(err){reportSoulhuntRuntimeError(err)}
+ renderer.render(scene,camera);
+ requestAnimationFrame(loop);
 }
+if(BOSS_VARIANT===2)loadBoss2Avatar();
 loop();
