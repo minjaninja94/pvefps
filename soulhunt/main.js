@@ -1650,7 +1650,7 @@ function spawnBoss2Skyfall(){
    boss2Projectiles.push({obj:m,vel:new THREE.Vector3(0,-8.5-i*.35,0),life:2.0,dmg:23,kind:'fall',target,radius:1.25});
  });
 }
-function pointSegmentDistance(p,a,b){
+function pointSegmentDistanceBoss2(p,a,b){
  const ab=b.clone().sub(a),den=Math.max(1e-6,ab.lengthSq());
  const t=clamp(p.clone().sub(a).dot(ab)/den,0,1);
  return p.distanceTo(a.clone().addScaledVector(ab,t));
@@ -1663,7 +1663,7 @@ function spawnBoss2Beam(){
  m.position.copy(start).add(end).multiplyScalar(.5);
  m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);scene.add(m);
  boss2Fx.push({obj:m,life:.24,max:.24,radius:1});
- if(pointSegmentDistance(player.position.clone().add(new THREE.Vector3(0,1,0)),start,end)<.82){
+ if(pointSegmentDistanceBoss2(player.position.clone().add(new THREE.Vector3(0,1,0)),start,end)<.82){
    if(state.invuln>0)flash('회피',.16);else hurtPlayer(31,34,false);
  }
 }
