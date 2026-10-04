@@ -1610,6 +1610,11 @@ function setBoss2Bone(name,rx=0,ry=0,rz=0,speed=12,dt=.016){
  b.rotation.y=THREE.MathUtils.lerp(b.rotation.y,r.rotation.y+ry,a);
  b.rotation.z=THREE.MathUtils.lerp(b.rotation.z,r.rotation.z+rz,a);
 }
+function syncBoss2Rig(dt=0){
+ if(!boss2VRM)return;
+ boss2VRM.update?.(Math.max(0,dt));
+ boss2Visual?.updateMatrixWorld?.(true);
+}
 function resetBoss2Pose(dt){
  for(const [name,b] of Object.entries(boss2Bones)){
    const r=boss2Rest[name];if(!r)continue;
@@ -1652,6 +1657,7 @@ async function loadBoss2Avatar(){
        const node=h?.getNormalizedBoneNode?.(n);
        if(node)cacheBoss2Bone(n,node);
      }
+     poseBoss2(.12);syncBoss2Rig(0);
      flash('잔불의 왕녀 · 아르세리아',.9);
    },undefined,err=>console.warn('Arcelia / Victoria Rubin VRM unavailable.',err));
  }catch(err){console.warn('three-vrm unavailable for Arcelia.',err)}
@@ -2005,7 +2011,7 @@ function updateBoss2(dt){
  if(state.bossHp<=0){
    state.boss2DeadPose=Math.min(1,state.boss2DeadPose+dt*.55);
    if(boss2Visual){boss2Visual.rotation.z=THREE.MathUtils.lerp(boss2Visual.rotation.z,-1.35,state.boss2DeadPose*.045);boss2Visual.position.y=THREE.MathUtils.lerp(boss2Visual.position.y,.1,state.boss2DeadPose*.03)}
-   boss2WeaponRoot.visible=false;poseBoss2(dt);return;
+   boss2WeaponRoot.visible=false;poseBoss2(dt);syncBoss2Rig(dt);return;
  }
  if(state.boss2Phase===1&&state.bossHp<=state.bossMaxHp*.5){
    state.boss2Phase=2;setBoss2Style('awakened',false);
@@ -2016,7 +2022,7 @@ function updateBoss2(dt){
  if(state.bossStagger>0){
    state.bossStagger=Math.max(0,state.bossStagger-dt);
    boss.position.y=THREE.MathUtils.lerp(boss.position.y,0,1-Math.exp(-dt*12));
-   poseBoss2(dt);updateBoss2Weapon();
+   poseBoss2(dt);applyBoss2PrimaryArmIK(dt);applyBoss2WeaponGripIK(dt);syncBoss2Rig(dt);updateBoss2Weapon();
    if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.85}
    return;
  }
@@ -2109,7 +2115,7 @@ function updateBoss2(dt){
    if(state.bossTimer>1.0&&d>3.0)boss.position.addScaledVector(dir,dt*4.8);
    if(state.bossTimer<=0)finishBoss2Attack(1.65);
  }
- poseBoss2(dt);applyBoss2PrimaryArmIK(dt);updateBoss2Weapon();applyBoss2WeaponGripIK(dt);updateBoss2Weapon();processBoss2PhysicalHits();
+ poseBoss2(dt);applyBoss2PrimaryArmIK(dt);updateBoss2Weapon();applyBoss2WeaponGripIK(dt);syncBoss2Rig(dt);updateBoss2Weapon();processBoss2PhysicalHits();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2187,6 +2193,11 @@ function setBoss3Bone(name,rx=0,ry=0,rz=0,speed=12,dt=.016){
  b.rotation.y=THREE.MathUtils.lerp(b.rotation.y,r.rotation.y+ry,a);
  b.rotation.z=THREE.MathUtils.lerp(b.rotation.z,r.rotation.z+rz,a);
 }
+function syncBoss3Rig(dt=0){
+ if(!boss3VRM)return;
+ boss3VRM.update?.(Math.max(0,dt));
+ boss3Visual?.updateMatrixWorld?.(true);
+}
 function resetBoss3Pose(dt){
  for(const [name,b] of Object.entries(boss3Bones)){
   const r=boss3Rest[name];if(!r)continue;
@@ -2228,6 +2239,7 @@ async function loadBoss3Avatar(){
    if(boss3Bones.hips){boss3Bones.hips.scale.x*=1.06;boss3Bones.hips.scale.z*=1.10}
    if(boss3Bones.leftUpperLeg)boss3Bones.leftUpperLeg.scale.x*=1.04;
    if(boss3Bones.rightUpperLeg)boss3Bones.rightUpperLeg.scale.x*=1.04;
+   poseBoss3(.12);syncBoss3Rig(0);
    flash(BOSS3_NAME,.9);
   },undefined,err=>console.warn('Seria / Vita VRM unavailable.',err));
  }catch(err){console.warn('three-vrm unavailable for Seria.',err)}
@@ -2433,7 +2445,7 @@ function updateBoss3(dt){
  if(state.bossHp<=0){
   state.boss3DeadPose=Math.min(1,state.boss3DeadPose+dt*.6);
   if(boss3Visual){boss3Visual.rotation.z=THREE.MathUtils.lerp(boss3Visual.rotation.z,-1.35,state.boss3DeadPose*.05);boss3Visual.position.y=THREE.MathUtils.lerp(boss3Visual.position.y,.08,state.boss3DeadPose*.035)}
-  boss3WeaponRoot.visible=false;poseBoss3(dt);return;
+  boss3WeaponRoot.visible=false;poseBoss3(dt);syncBoss3Rig(dt);return;
  }
  if(state.boss3Phase===1&&state.bossHp<=state.bossMaxHp*.5){
   state.boss3Phase=2;state.bossState='b3_phase';state.bossTimer=BOSS3_DUR.b3_phase;boss3Fired.clear();
@@ -2445,7 +2457,7 @@ function updateBoss3(dt){
  }
  if(state.bossStagger>0){
   state.bossStagger=Math.max(0,state.bossStagger-dt);boss.position.y=THREE.MathUtils.lerp(boss.position.y,0,1-Math.exp(-dt*13));
-  poseBoss3(dt);if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.72}return;
+  poseBoss3(dt);applyBoss3PrimaryArmIK(dt);applyBoss3WeaponGripIK(dt);syncBoss3Rig(dt);if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.72}return;
  }
  state.bossTimer-=dt;
  const d=dist(),dir=flatDir(boss.position,player.position);
@@ -2523,7 +2535,7 @@ function updateBoss3(dt){
   });
   if(state.bossTimer<=0)finishBoss3Attack(1.3);
  }
- poseBoss3(dt);applyBoss3PrimaryArmIK(dt);updateBoss3Weapon();applyBoss3WeaponGripIK(dt);updateBoss3Weapon();processBoss3PhysicalHits();
+ poseBoss3(dt);applyBoss3PrimaryArmIK(dt);updateBoss3Weapon();applyBoss3WeaponGripIK(dt);syncBoss3Rig(dt);updateBoss3Weapon();processBoss3PhysicalHits();
 }
 
 function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeout(flash.t);flash.t=setTimeout(()=>ui.msg.style.opacity='0',d*1000)}
