@@ -144,7 +144,10 @@ buildWeapon();
 player.position.set(0,0,8);
 
 let knightVisual=null,playerVrm=null,playerVrmRoot=null;
+const playerVrmMotion=new THREE.Group();playerVrmMotion.position.y=.98;player.add(playerVrmMotion);
+const playerVrmMotionRest={y:.98};
 const playerVrmRootRest={y:0,rotation:new THREE.Euler()};
+function motionSmooth(a,b,x){const t=clamp((x-a)/Math.max(.0001,b-a),0,1);return t*t*(3-2*t)}
 const playerVrmBones={},playerVrmRest={};
 function cachePlayerVrmBone(name,node){
  if(!node)return;
@@ -267,12 +270,13 @@ player.children.filter(o=>o.isMesh).forEach(m=>m.visible=false);
      root.updateMatrixWorld(true);
      box=new THREE.Box3().setFromObject(root,true);
      root.position.y-=box.min.y;
+     root.position.y-=playerVrmMotionRest.y;
      root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
 
      knightVisual=root;playerVrmRoot=root;playerVrm=vrm;
      playerVrmRootRest.y=root.position.y;
      playerVrmRootRest.rotation.copy(root.rotation);
-     player.add(root);
+     playerVrmMotion.add(root);
 
      const humanoid=vrm?.humanoid;
      for(const name of ['hips','spine','chest','upperChest','neck','head',
@@ -305,10 +309,16 @@ function animateVroidPlayer(dt){
  }else if(state.stagger>0){
    spineX=-.18;spineZ=Math.sin(state.time*24)*.08;hipsX=.08;
  }else if(state.rolling>0){
-   const rp=clamp(state.rollElapsed/ROLL_DURATION,0,1),tuck=Math.sin(rp*Math.PI);
-   spineX=-.72-tuck*.28;hipsX=.22;
-   luz=-.58;ruz=.58;llx=-1.05;rlx=-1.05;
-   lulx=-1.05*tuck;rulx=-1.05*tuck;lllx=1.42*tuck;rllx=1.42*tuck;
+   const rp=clamp(state.rollElapsed/ROLL_DURATION,0,1);
+   const prep=motionSmooth(0,.16,rp),spinP=motionSmooth(.12,.78,rp),land=motionSmooth(.72,1,rp);
+   const tuck=Math.sin(clamp((rp-.06)/.82,0,1)*Math.PI);
+   spineX=-.26*prep-.72*tuck+.18*land;hipsX=.34*tuck-.12*land;
+   spineZ=Math.sin(spinP*Math.PI)*.055;
+   headX=.38*tuck-.12*land;
+   luz=-.48-.18*tuck;ruz=.48+.18*tuck;lux=-.86*tuck;rux=-.86*tuck;llx=-1.18*tuck;rlx=-1.18*tuck;
+   lulx=-1.08*tuck+.24*land;rulx=-1.08*tuck-.18*land;
+   lllx=1.46*tuck-.62*land;rllx=1.46*tuck+.72*land;
+   lfx=-.28*tuck+.18*land;rfx=-.28*tuck-.24*land;
  }else if(state.attack>0){
    const w=currentWeapon(),dur=[0,.46,.5,.62][state.attackStep]/w.speed*(twoHanded?.96:1.04);
    const p=clamp(1-state.attack/Math.max(dur,.001),0,1),s=Math.sin(p*Math.PI),step=state.attackStep;
@@ -390,17 +400,20 @@ function animateVroidPlayer(dt){
  applyPlayerArmIK(dt,phase,moving,sprint);
 
  if(playerVrmRoot){
-   if(state.rolling>0){
-     const rp=clamp(state.rollElapsed/ROLL_DURATION,0,1);
-     playerVrmRoot.rotation.x=playerVrmRootRest.rotation.x-rp*Math.PI*2;
-     playerVrmRoot.rotation.y=playerVrmRootRest.rotation.y;
-     playerVrmRoot.rotation.z=playerVrmRootRest.rotation.z;
-     playerVrmRoot.position.y=playerVrmRootRest.y+Math.sin(rp*Math.PI)*.34;
-   }else{
-     playerVrmRoot.rotation.x=lerpAngle(playerVrmRoot.rotation.x,playerVrmRootRest.rotation.x,1-Math.exp(-dt*16));
-     playerVrmRoot.rotation.z=lerpAngle(playerVrmRoot.rotation.z,playerVrmRootRest.rotation.z,1-Math.exp(-dt*16));
-     playerVrmRoot.position.y=THREE.MathUtils.lerp(playerVrmRoot.position.y,playerVrmRootRest.y,1-Math.exp(-dt*18));
-   }
+   playerVrmRoot.rotation.x=lerpAngle(playerVrmRoot.rotation.x,playerVrmRootRest.rotation.x,1-Math.exp(-dt*18));
+   playerVrmRoot.rotation.z=lerpAngle(playerVrmRoot.rotation.z,playerVrmRootRest.rotation.z,1-Math.exp(-dt*18));
+   playerVrmRoot.position.y=THREE.MathUtils.lerp(playerVrmRoot.position.y,playerVrmRootRest.y,1-Math.exp(-dt*20));
+ }
+ if(state.rolling>0){
+   const rp=clamp(state.rollElapsed/ROLL_DURATION,0,1),spinP=motionSmooth(.12,.78,rp);
+   const tuck=Math.sin(clamp((rp-.06)/.82,0,1)*Math.PI);
+   playerVrmMotion.rotation.x=-spinP*Math.PI*2;
+   playerVrmMotion.rotation.z=Math.sin(spinP*Math.PI)*.035;
+   playerVrmMotion.position.y=playerVrmMotionRest.y+Math.sin(spinP*Math.PI)*.19-.08*tuck;
+ }else{
+   playerVrmMotion.rotation.x=lerpAngle(playerVrmMotion.rotation.x,0,1-Math.exp(-dt*24));
+   playerVrmMotion.rotation.z=lerpAngle(playerVrmMotion.rotation.z,0,1-Math.exp(-dt*24));
+   playerVrmMotion.position.y=THREE.MathUtils.lerp(playerVrmMotion.position.y,playerVrmMotionRest.y,1-Math.exp(-dt*22));
  }
  playerVrm?.update?.(dt);
 }
@@ -3496,12 +3509,12 @@ function updatePlayer(dt){
    state.rollElapsed=Math.min(ROLL_DURATION,state.rollElapsed+dt);
    const p=clamp(state.rollElapsed/ROLL_DURATION,0,1);
    state.rolling=Math.max(0,ROLL_DURATION-state.rollElapsed);
-   const speed=7.25-p*2.35;
+   const speed=8.0-3.25*motionSmooth(.48,1,p);
    player.position.addScaledVector(state.rollDir,dt*speed);
    player.rotation.x=0;
    player.rotation.z=Math.sin(p*Math.PI*2)*.035;
    if(state.rolling<=0){
-     player.rotation.x=0;player.rotation.z=0;
+     player.rotation.x=0;player.rotation.z=0;playerVrmMotion.rotation.set(0,0,0);playerVrmMotion.position.y=playerVrmMotionRest.y;
      spawnDustBurst(player.position.clone(),.26);
    }
    return;
