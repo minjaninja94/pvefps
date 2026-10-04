@@ -232,6 +232,19 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
    const elbowTarget=shoulder.clone().add(playerLocalVector(elbowDelta));
    solveArmCCD(playerVrmBones,side,handTarget,elbowTarget,1-Math.exp(-dt*32));
  }
+ // Two-handed weapons use the actual weapon handle as the left-hand IK target.
+ // This keeps both palms on the same weapon and lets the elbow fold naturally instead of posing independently.
+ if(twoHanded&&playerVrmBones.leftUpperArm&&playerVrmBones.leftHand&&playerVrmBones.rightHand){
+   player.updateMatrixWorld(true);weaponPivot.updateWorldMatrix(true,true);
+   const w=currentWeapon();
+   const gripZ={straight:.22,katana:.27,greatsword:.34,hammer:.4,spear:.58,axe:.3}[w.id]??.28;
+   const gripTarget=weaponPivot.localToWorld(new THREE.Vector3(0,0,gripZ));
+   const shoulder=new THREE.Vector3();playerVrmBones.leftUpperArm.getWorldPosition(shoulder);
+   const reach=getArmReach(playerVrmBones,'left');
+   const elbowHint=shoulder.clone().add(playerLocalVector(new THREE.Vector3(-reach*.3,-reach*.34,reach*.16)));
+   solveArmCCD(playerVrmBones,'left',gripTarget,elbowHint,1-Math.exp(-dt*38));
+   playerVrmBones.leftHand.updateWorldMatrix?.(false,true);
+ }
 }
 
 
