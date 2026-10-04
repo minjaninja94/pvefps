@@ -1428,6 +1428,7 @@ boss.add(boss2Root);
 let boss2Visual=null,boss2VRM=null,boss2Ready=false;
 const boss2Bones={},boss2Rest={};
 const boss2Projectiles=[],boss2Fx=[];
+const boss2Fired=new Set();
 const boss2Aura=new THREE.PointLight(0xff5b35,7.5,12,2);
 boss2Aura.position.set(0,1.65,.25);
 boss2Root.add(boss2Aura);
@@ -1562,8 +1563,8 @@ function updateBoss2Weapon(){
  boss2Spear.visible=state.boss2Style==='spear';
 }
 function boss2Once(tag,fn){
- if(state.bossFxStamp===tag)return false;
- state.bossFxStamp=tag;fn?.();return true;
+ if(boss2Fired.has(tag))return false;
+ boss2Fired.add(tag);fn?.();return true;
 }
 function boss2FacingDot(){
  const to=flatDir(boss.position,player.position);
@@ -1681,7 +1682,7 @@ const BOSS2_DUR={
 };
 function chooseBoss2Attack(){
  if(state.bossHp<=0)return;
- state.bossFxStamp='';state.bossHit=false;setDanger(false);
+ state.bossFxStamp='';boss2Fired.clear();state.bossHit=false;setDanger(false);
  state.boss2AttackCount++;
  if(state.boss2Phase===1&&state.boss2AttackCount%3===1&&state.boss2AttackCount>1){
    const order=['sword','spear','mage','frenzy'];
@@ -1715,7 +1716,7 @@ function chooseBoss2Attack(){
  if(pick==='b2_grab')setDanger(true);
 }
 function finishBoss2Attack(recovery=.72){
- setDanger(false);state.bossState='idle';state.bossTimer=recovery;state.bossFxStamp='';
+ setDanger(false);state.bossState='idle';state.bossTimer=recovery;state.bossFxStamp='';boss2Fired.clear();
  boss.position.y=0;
 }
 function poseBoss2(dt){
@@ -1782,7 +1783,7 @@ function updateBoss2(dt){
  }
  if(state.boss2Phase===1&&state.bossHp<=state.bossMaxHp*.5){
    state.boss2Phase=2;setBoss2Style('awakened',false);
-   state.bossState='b2_awaken';state.bossTimer=BOSS2_DUR.b2_awaken;state.bossFxStamp='';
+   state.bossState='b2_awaken';state.bossTimer=BOSS2_DUR.b2_awaken;state.bossFxStamp='';boss2Fired.clear();
    setDanger(false);flash('왕혼 해방 · 잿불 각성',1.0);
    spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1.1,0)),3.8,0xffa045,.7);
  }
@@ -1808,7 +1809,6 @@ function updateBoss2(dt){
  }else if(state.bossState==='b2_sword_combo'){
    if(state.bossTimer<1.18&&state.bossTimer>.98)boss.position.addScaledVector(dir,dt*3.8);
    if(state.bossTimer<.82&&state.bossTimer>.62)boss.position.addScaledVector(dir,dt*3.6);
-   boss2Strike('s1',3.25,20,18,false,-.35); if(state.bossTimer>.98)state.bossFxStamp='';
    if(state.bossTimer<=.96&&state.bossTimer>.62){if(boss2Once('s1-hit',()=>spawnBoss2Slash(1.35,0xff7550)))boss2Strike('s1-dmg',3.25,20,18,false,-.45)}
    if(state.bossTimer<=.6&&state.bossTimer>.29){if(boss2Once('s2-hit',()=>spawnBoss2Slash(1.5,0xff6948)))boss2Strike('s2-dmg',3.45,23,20,false,-.5)}
    if(state.bossTimer<=.27){if(boss2Once('s3-hit',()=>{spawnBoss2Slash(1.75,0xff5536);spawnDustBurst(boss.position,.48)}))boss2Strike('s3-dmg',3.7,31,30,false,-.6)}
