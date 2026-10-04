@@ -1930,7 +1930,7 @@ boss3Root.visible=BOSS_VARIANT===3;
 boss.add(boss3Root);
 
 let boss3Visual=null,boss3VRM=null,boss3Ready=false;
-const boss3Bones={},boss3Rest={},boss3Fired=new Set(),boss3Fx=[];
+const boss3Bones={},boss3Rest={},boss3Fired=new Set(),boss3Fx=[],boss3BustNodes=[];
 const boss3Aura=new THREE.PointLight(0xd9344f,8.5,13,2);
 boss3Aura.position.set(0,1.45,.18);boss3Root.add(boss3Aura);
 const boss3HaloMat=new THREE.MeshBasicMaterial({color:0x8f1735,transparent:true,opacity:.12,depthWrite:false});
@@ -1938,17 +1938,27 @@ const boss3Halo=new THREE.Mesh(new THREE.TorusGeometry(.92,.018,6,36),boss3HaloM
 boss3Halo.rotation.x=Math.PI/2;boss3Halo.position.y=.025;boss3Root.add(boss3Halo);
 
 const boss3Fallback=new THREE.Group();boss3Fallback.name='SeriaFallback';boss3Root.add(boss3Fallback);
-const b3Skin=new THREE.MeshStandardMaterial({color:0xd8b2a7,roughness:.55});
-const b3Dress=new THREE.MeshStandardMaterial({color:0x3b0d1d,roughness:.7,metalness:.1,emissive:0x310913,emissiveIntensity:.28});
-const b3Hair=new THREE.MeshStandardMaterial({color:0xb96a4c,roughness:.72});
-part(boss3Fallback,new THREE.CapsuleGeometry(.31,.84,5,8),b3Dress,[0,1.12,0]);
-part(boss3Fallback,new THREE.BoxGeometry(.64,.56,.31),b3Dress,[0,1.42,0]);
-part(boss3Fallback,new THREE.SphereGeometry(.29,14,10),b3Skin,[0,1.94,.02]);
-part(boss3Fallback,new THREE.SphereGeometry(.32,14,10),b3Hair,[0,2.03,-.055],[0,0,0],[1.0,.88,1.04]);
+const b3Skin=new THREE.MeshStandardMaterial({color:0xe1b2a8,roughness:.5});
+const b3Corset=new THREE.MeshStandardMaterial({color:0x4a1021,roughness:.58,metalness:.08,emissive:0x2d0812,emissiveIntensity:.28});
+const b3Accent=new THREE.MeshStandardMaterial({color:0x111015,roughness:.72,metalness:.12});
+const b3Hair=new THREE.MeshStandardMaterial({color:0xb36a50,roughness:.7});
+const b3Silk=new THREE.MeshStandardMaterial({color:0x5b1830,roughness:.75,metalness:.04,transparent:true,opacity:.72,side:THREE.DoubleSide});
+part(boss3Fallback,new THREE.CapsuleGeometry(.3,.72,5,8),b3Skin,[0,1.18,0]);
+part(boss3Fallback,new THREE.BoxGeometry(.58,.42,.28),b3Corset,[0,1.36,.02]);
+part(boss3Fallback,new THREE.BoxGeometry(.46,.18,.22),b3Corset,[0,1.63,.05]);
+part(boss3Fallback,new THREE.SphereGeometry(.29,14,10),b3Skin,[0,1.95,.02]);
+part(boss3Fallback,new THREE.SphereGeometry(.325,14,10),b3Hair,[0,2.04,-.06],[0,0,0],[1,.9,1.04]);
+part(boss3Fallback,new THREE.SphereGeometry(.16,12,10),b3Skin,[-.13,1.5,.13],[0,0,0],[1.05,.95,1.18]);
+part(boss3Fallback,new THREE.SphereGeometry(.16,12,10),b3Skin,[.13,1.5,.13],[0,0,0],[1.05,.95,1.18]);
 for(const sx of [-1,1]){
- part(boss3Fallback,new THREE.CapsuleGeometry(.082,.58,4,7),b3Skin,[sx*.43,1.3,0],[0,0,sx*.05]);
- part(boss3Fallback,new THREE.CapsuleGeometry(.095,.78,4,7),b3Dress,[sx*.17,.5,0],[0,0,sx*.025]);
+ part(boss3Fallback,new THREE.CapsuleGeometry(.082,.56,4,7),b3Skin,[sx*.42,1.3,0],[0,0,sx*.05]);
+ part(boss3Fallback,new THREE.CapsuleGeometry(.05,.42,4,7),b3Accent,[sx*.53,1.02,0],[0,0,sx*.03]);
+ part(boss3Fallback,new THREE.CapsuleGeometry(.095,.82,4,7),b3Skin,[sx*.17,.5,0],[0,0,sx*.02]);
+ part(boss3Fallback,new THREE.CylinderGeometry(.1,.09,.45,10),b3Accent,[sx*.17,.72,0]);
 }
+part(boss3Fallback,new THREE.PlaneGeometry(.42,1.0),b3Silk,[-.18,1.02,.1],[.18,.24,.08]);
+part(boss3Fallback,new THREE.PlaneGeometry(.42,1.0),b3Silk,[.18,1.02,.1],[.18,-.24,-.08]);
+part(boss3Fallback,new THREE.PlaneGeometry(.72,1.15),b3Silk,[0,1.0,-.18]);
 
 const boss3WeaponRoot=new THREE.Group();boss3WeaponRoot.visible=false;scene.add(boss3WeaponRoot);
 const boss3BladeMat=new THREE.MeshStandardMaterial({color:0xe7e3db,metalness:.92,roughness:.16,emissive:0x5f0e22,emissiveIntensity:.42});
@@ -2001,6 +2011,7 @@ async function loadBoss3Avatar(){
    const vrm=gltf.userData?.vrm||null;if(vrm)VRMUtils.rotateVRM0(vrm);
    const root=vrm?.scene||gltf.scene;
    root.traverse(o=>{
+    if(/bust|breast/i.test(o.name||''))boss3BustNodes.push(o);
     if(o.isMesh){
      o.castShadow=true;o.receiveShadow=true;
      if(Array.isArray(o.material))o.material=o.material.map(m=>m.clone());
@@ -2016,6 +2027,13 @@ async function loadBoss3Avatar(){
    for(const n of ['hips','spine','chest','upperChest','neck','head','leftShoulder','rightShoulder','leftUpperArm','rightUpperArm','leftLowerArm','rightLowerArm','leftHand','rightHand','leftUpperLeg','rightUpperLeg','leftLowerLeg','rightLowerLeg','leftFoot','rightFoot']){
     const node=h?.getNormalizedBoneNode?.(n);if(node)cacheBoss3Bone(n,node);
    }
+   for(const n of boss3BustNodes){n.scale.x*=1.18;n.scale.y*=1.08;n.scale.z*=1.22}
+   if(boss3Bones.spine){boss3Bones.spine.scale.x*=.91;boss3Bones.spine.scale.z*=.90}
+   if(boss3Bones.chest){boss3Bones.chest.scale.x*=1.05;boss3Bones.chest.scale.z*=1.10}
+   if(boss3Bones.upperChest){boss3Bones.upperChest.scale.x*=1.06;boss3Bones.upperChest.scale.z*=1.12}
+   if(boss3Bones.hips){boss3Bones.hips.scale.x*=1.06;boss3Bones.hips.scale.z*=1.10}
+   if(boss3Bones.leftUpperLeg)boss3Bones.leftUpperLeg.scale.x*=1.04;
+   if(boss3Bones.rightUpperLeg)boss3Bones.rightUpperLeg.scale.x*=1.04;
    flash(BOSS3_NAME,.9);
   },undefined,err=>console.warn('Seria VRM unavailable.',err));
  }catch(err){console.warn('three-vrm unavailable for Seria.',err)}
