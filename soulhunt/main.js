@@ -2,19 +2,21 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const BOSS_QUERY=Number(new URLSearchParams(location.search).get('boss'));
-const BOSS_VARIANT=[1,2,3].includes(BOSS_QUERY)?BOSS_QUERY:1;
+const BOSS_VARIANT=[1,2,3,4].includes(BOSS_QUERY)?BOSS_QUERY:1;
 const BOSS2_NAME='잔불의 왕녀 · 아르세리아';
 const BOSS3_NAME='붉은 백합의 검희 · 세리아';
+const BOSS4_NAME='백야의 검성 · 비비';
 const VRM_SAMPLE_REV='e16eb187100149a315ad92c3c9968f1d5baa6c7d';
 const BOSS2_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VRM_SAMPLE_REV}/vroid/beta/Victoria_Rubin.vrm`;
 const BOSS3_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VRM_SAMPLE_REV}/vroid/beta/Vita.vrm`;
+const BOSS4_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VRM_SAMPLE_REV}/vroid/beta/Vivi.vrm`;
 
 const PLAYER_MAX_HP=1600;
 const PLAYER_MAX_STAMINA=120;
 const PLAYER_DAMAGE_SCALE=10;
 const BOSS_DAMAGE_SCALE=16;
 const POTION_HEAL=780;
-const BOSS_MAX_HP={1:18000,2:22000,3:26000};
+const BOSS_MAX_HP={1:18000,2:22000,3:26000,4:24500};
 const BOSS1_PART_HP={head:1000,leg:1500,tail:1300,spikeHeavy:900,spikeLight:650};
 const BOSS3_HEAL_SCALE=BOSS_MAX_HP[3]/11800;
 
@@ -2774,6 +2776,205 @@ function updateBoss3(dt){
  poseBoss3(dt);applyBoss3PrimaryArmIK(dt);updateBoss3Weapon();applyBoss3WeaponGripIK(dt);syncBoss3Rig(dt);updateBoss3Weapon();processBoss3PhysicalHits();
 }
 
+
+/* -------------------------------------------------------------------------- */
+/* Boss 04: White-Night Sword Saint Vivi                                      */
+/* CC0 VRoid boss with draw slash / illusion dance / dragon dash patterns     */
+/* -------------------------------------------------------------------------- */
+const boss4Root=new THREE.Group();boss4Root.name='ViviSwordSaintRoot';boss4Root.visible=BOSS_VARIANT===4;boss.add(boss4Root);
+let boss4Visual=null,boss4VRM=null,boss4Ready=false,boss4VisualBaseY=0;
+const boss4Bones={},boss4Rest={},boss4RenderBones={},boss4Fired=new Set(),boss4MeleeRequests=[];
+const boss4WeaponTrace={valid:false,base:new THREE.Vector3(),tip:new THREE.Vector3()};
+const boss4Aura=new THREE.PointLight(0x73b9ff,8.5,13,2);boss4Aura.position.set(0,1.35,.12);boss4Root.add(boss4Aura);
+const boss4HaloMat=new THREE.MeshBasicMaterial({color:0x88bfff,transparent:true,opacity:.11,depthWrite:false});
+const boss4Halo=new THREE.Mesh(new THREE.TorusGeometry(.9,.018,6,36),boss4HaloMat);boss4Halo.rotation.x=Math.PI/2;boss4Halo.position.y=.03;boss4Root.add(boss4Halo);
+const boss4Fallback=new THREE.Group();boss4Root.add(boss4Fallback);
+const b4Skin=new THREE.MeshStandardMaterial({color:0xe3b7aa,roughness:.5});
+const b4Cloth=new THREE.MeshStandardMaterial({color:0x182b47,roughness:.58,metalness:.12,emissive:0x071524,emissiveIntensity:.22});
+part(boss4Fallback,new THREE.CapsuleGeometry(.29,.8,5,8),b4Skin,[0,1.18,0]);
+part(boss4Fallback,new THREE.BoxGeometry(.58,.66,.3),b4Cloth,[0,1.38,0]);
+part(boss4Fallback,new THREE.SphereGeometry(.29,14,10),b4Skin,[0,2.02,.02]);
+
+const boss4WeaponRoot=new THREE.Group();boss4WeaponRoot.visible=false;scene.add(boss4WeaponRoot);
+const boss4BladeMat=new THREE.MeshStandardMaterial({color:0xeaf4ff,metalness:.94,roughness:.14,emissive:0x225d8f,emissiveIntensity:.46});
+const boss4GripMat=new THREE.MeshStandardMaterial({color:0x131820,metalness:.28,roughness:.65});
+const boss4Sword=new THREE.Group();
+part(boss4Sword,new THREE.BoxGeometry(.105,2.3,.045),boss4BladeMat,[0,1.22,0]);
+part(boss4Sword,new THREE.BoxGeometry(.52,.055,.12),boss4GripMat,[0,.08,0]);
+part(boss4Sword,new THREE.CylinderGeometry(.047,.054,.52,8),boss4GripMat,[0,-.2,0]);
+boss4WeaponRoot.add(boss4Sword);
+const boss4Sheath=new THREE.Group();boss4Sheath.visible=BOSS_VARIANT===4;boss4Root.add(boss4Sheath);
+part(boss4Sheath,new THREE.BoxGeometry(.12,2.12,.09),boss4GripMat,[-.45,1.02,.05],[0,0,.28]);
+
+state.boss4AttackCount=0;state.boss4DashStep=-1;state.boss4DashDir=new THREE.Vector3();state.boss4HitReact=0;
+
+function cacheBoss4Bone(name,node){if(!node)return;boss4Bones[name]=node;boss4Rest[name]={rotation:node.rotation.clone(),position:node.position.clone(),scale:node.scale.clone()}}
+function setBoss4Bone(name,rx=0,ry=0,rz=0,speed=12,dt=.016){
+ const b=boss4Bones[name],r=boss4Rest[name];if(!b||!r)return;
+ const a=1-Math.exp(-dt*speed);
+ b.rotation.x=THREE.MathUtils.lerp(b.rotation.x,r.rotation.x+rx,a);
+ b.rotation.y=THREE.MathUtils.lerp(b.rotation.y,r.rotation.y+ry,a);
+ b.rotation.z=THREE.MathUtils.lerp(b.rotation.z,r.rotation.z+rz,a);
+}
+function resetBoss4Pose(dt){
+ for(const [name,b] of Object.entries(boss4Bones)){
+  const r=boss4Rest[name];if(!r)continue;const a=1-Math.exp(-dt*12);
+  b.rotation.x=THREE.MathUtils.lerp(b.rotation.x,r.rotation.x,a);b.rotation.y=THREE.MathUtils.lerp(b.rotation.y,r.rotation.y,a);b.rotation.z=THREE.MathUtils.lerp(b.rotation.z,r.rotation.z,a);
+ }
+}
+function syncBoss4Rig(dt=0){if(!boss4VRM)return;boss4VRM.update?.(Math.max(0,dt));boss4Visual?.updateMatrixWorld?.(true)}
+async function loadBoss4Avatar(){
+ if(BOSS_VARIANT!==4)return;
+ try{
+  const {VRMLoaderPlugin,VRMUtils}=await import('@pixiv/three-vrm');
+  const loader=new GLTFLoader();loader.setCrossOrigin('anonymous');loader.register(parser=>new VRMLoaderPlugin(parser));
+  loader.load(BOSS4_MODEL_URL,gltf=>{
+   const vrm=gltf.userData?.vrm||null;if(vrm)VRMUtils.rotateVRM0(vrm);
+   const root=vrm?.scene||gltf.scene;
+   root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(Array.isArray(o.material))o.material=o.material.map(m=>m.clone());else if(o.material)o.material=o.material.clone()}});
+   root.updateMatrixWorld(true);let box=new THREE.Box3().setFromObject(root,true),size=new THREE.Vector3();box.getSize(size);
+   root.scale.multiplyScalar(3.0/Math.max(size.y,.001));root.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(root,true);
+   root.position.y-=box.min.y;root.position.z=.05;boss4VisualBaseY=root.position.y;
+   boss4Root.add(root);boss4Visual=root;boss4VRM=vrm;boss4Ready=true;boss4Fallback.visible=false;
+   const h=vrm?.humanoid;
+   for(const n of ['hips','spine','chest','upperChest','neck','head','leftShoulder','rightShoulder','leftUpperArm','rightUpperArm','leftLowerArm','rightLowerArm','leftHand','rightHand','leftUpperLeg','rightUpperLeg','leftLowerLeg','rightLowerLeg','leftFoot','rightFoot']){
+    const node=h?.getNormalizedBoneNode?.(n);if(node)cacheBoss4Bone(n,node);
+    const raw=h?.getRawBoneNode?.(n);boss4RenderBones[n]=raw||node||null;
+   }
+   poseBoss4(.12);syncBoss4Rig(0);flash(BOSS4_NAME,.9);
+   console.info('Vivi Sword Saint VRM rig',{rawHand:!!boss4RenderBones.rightHand,arm:!!boss4Bones.rightUpperArm});
+  },undefined,err=>console.warn('Vivi VRM unavailable.',err));
+ }catch(err){console.warn('three-vrm unavailable for Vivi.',err)}
+}
+function enforceBoss4Visibility(){
+ if(BOSS_VARIANT!==4)return;
+ for(const child of boss.children)child.visible=(child===boss4Root);
+ boss4Root.visible=true;if(!boss4Ready)boss4Fallback.visible=true;
+}
+function updateBoss4Weapon(){
+ if(!boss4Ready||state.bossHp<=0){boss4WeaponRoot.visible=false;return}
+ const hand=boss4RenderBones.rightHand||boss4Bones.rightHand,lower=boss4RenderBones.rightLowerArm||boss4Bones.rightLowerArm;
+ if(!hand||!lower){boss4WeaponRoot.visible=false;return}
+ const hp=new THREE.Vector3(),lp=new THREE.Vector3();hand.getWorldPosition(hp);lower.getWorldPosition(lp);
+ const dir=hp.clone().sub(lp);if(dir.lengthSq()<1e-6)dir.set(0,-1,0);dir.normalize();
+ boss4WeaponRoot.visible=true;boss4WeaponRoot.position.copy(hp).addScaledVector(dir,.045);
+ boss4WeaponRoot.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
+}
+const BOSS4_DUR={b4_combo:2.05,b4_batto:1.92,b4_illusion:3.82,b4_dragon:3.36};
+const BOSS4_COMBO_MARKS=[1.48,.82,.22];
+const BOSS4_ILLUSION_MARKS=[3.18,2.78,2.38,1.98,1.58,1.18,.78,.34];
+const BOSS4_DRAGON_MARKS=[2.72,1.9,1.08,.3];
+function boss4BeatTarget(t,marks,reach,forward=.82){
+ const beat=soulsSwordBeat(t,marks,.25,.2);
+ if(!beat)return new THREE.Vector3(.28,-.5,.24);
+ return soulsSwordHandTarget(beat,reach,forward).multiplyScalar(1/reach);
+}
+function applyBoss4PrimaryArmIK(dt){
+ if(!boss4Ready||!boss4Bones.rightUpperArm||!boss4Bones.rightHand)return;
+ const shoulder=new THREE.Vector3();boss4Bones.rightUpperArm.getWorldPosition(shoulder);
+ const reach=getArmReach(boss4Bones,'right'),st=state.bossState,t=state.bossTimer;
+ let local=new THREE.Vector3(.3,-.52,.24);
+ if(st==='b4_combo')local=boss4BeatTarget(t,BOSS4_COMBO_MARKS,reach,.78);
+ else if(st==='b4_illusion')local=boss4BeatTarget(t,BOSS4_ILLUSION_MARKS,reach,.88);
+ else if(st==='b4_batto'){
+  const p=clamp(1-t/BOSS4_DUR.b4_batto,0,1),cut=motionSmooth(.48,.66,p),recover=motionSmooth(.72,1,p);
+  local.set(THREE.MathUtils.lerp(.42,-.72,cut)*(1-recover)+.16*recover,-.58+.28*cut,.02+1.02*cut-.5*recover);
+ }else if(st==='b4_dragon')local.set(.02,-.25,1.18);
+ const target=shoulder.clone().add(bossCombatOffset(local.x*reach,local.y*reach,local.z*reach));
+ const elbowHint=shoulder.clone().add(bossCombatOffset(.3*reach,-.34*reach,.16*reach));
+ solveArmCCD(boss4Bones,'right',target,elbowHint,1-Math.exp(-dt*46));
+}
+function poseBoss4(dt){
+ if(!boss4Ready)return;resetBoss4Pose(dt);
+ const st=state.bossState,t=state.bossTimer,hit=state.boss4HitReact>0?Math.sin((state.boss4HitReact/.14)*Math.PI):0;
+ setBoss4Bone('spine',-.035-hit*.12,0,hit*.08,12,dt);setBoss4Bone('head',.02-hit*.05,0,-hit*.05,11,dt);
+ if(st==='idle'){
+  const sway=Math.sin(state.time*1.7);setBoss4Bone('hips',0,.03*sway,.05*sway,8,dt);setBoss4Bone('spine',-.04,.02*sway,-.035*sway,8,dt);
+  setBoss4Bone('rightUpperArm',-.46,.06,-.3,10,dt);setBoss4Bone('rightLowerArm',-.62,0,-.14,10,dt);setBoss4Bone('leftUpperArm',-.12,-.03,.2,8,dt);
+  if(dist()>3.5){const stride=Math.sin(state.time*7.6)*.4;setBoss4Bone('leftUpperLeg',stride,0,.04,13,dt);setBoss4Bone('rightUpperLeg',-stride,0,-.04,13,dt)}
+ }else if(st==='b4_batto'){
+  const p=clamp(1-t/BOSS4_DUR.b4_batto,0,1),cut=Math.sin(clamp((p-.45)/.34,0,1)*Math.PI);
+  setBoss4Bone('hips',.08,-.34+.62*cut,0,18,dt);setBoss4Bone('spine',-.16,-.42+.82*cut,-.08*cut,20,dt);
+  setBoss4Bone('leftUpperLeg',-.28,0,.08,18,dt);setBoss4Bone('rightUpperLeg',.18,0,-.06,18,dt);setBoss4Bone('rightLowerArm',-.78+.4*cut,0,-.12*cut,22,dt);
+ }else if(st==='b4_combo'||st==='b4_illusion'){
+  const marks=st==='b4_combo'?BOSS4_COMBO_MARKS:BOSS4_ILLUSION_MARKS,beat=soulsSwordBeat(t,marks,.24,.2);
+  const cut=beat?Math.sin(clamp((beat.p-.3)/.52,0,1)*Math.PI):0,side=beat&&beat.index%2===0?1:-1;
+  setBoss4Bone('hips',0,side*.14*cut,0,18,dt);setBoss4Bone('spine',-.08,side*.34*cut,-side*.1*cut,21,dt);
+  setBoss4Bone('chest',-.04,side*.16*cut,-side*.05*cut,20,dt);setBoss4Bone('rightLowerArm',-.7+.32*cut,0,-side*.2*cut,22,dt);
+ }else if(st==='b4_dragon'){
+  setBoss4Bone('hips',-.08,0,0,22,dt);setBoss4Bone('spine',-.32,0,0,24,dt);
+  setBoss4Bone('rightUpperArm',-.78,.02,-.08,25,dt);setBoss4Bone('rightLowerArm',-.24,0,0,25,dt);
+  setBoss4Bone('leftUpperArm',-.45,-.08,.25,20,dt);setBoss4Bone('leftUpperLeg',-.42,0,.04,22,dt);setBoss4Bone('rightUpperLeg',.48,0,-.04,22,dt);
+ }
+ setBoss4Bone('rightHand',-.06,-.04,-.1,22,dt);
+}
+function boss4Strike(tag,dmg,posture,ttl=.26){
+ if(boss4Fired.has(tag)||boss4MeleeRequests.some(r=>r.tag===tag))return;
+ boss4MeleeRequests.push({tag,dmg,posture,ttl});
+}
+function resetBoss4PhysicalTrace(){boss4WeaponTrace.valid=false}
+function processBoss4PhysicalHits(){
+ if(!boss4WeaponRoot.visible){boss4WeaponTrace.valid=false;boss4MeleeRequests.length=0;return}
+ const seg=combatWorldSegment(boss4WeaponRoot,new THREE.Vector3(0,.02,0),new THREE.Vector3(0,2.38,0));
+ const caps=combatHumanoidCapsules(playerVrmBones,player,2.0);let hit=null;
+ if(boss4WeaponTrace.valid)hit=combatSweptBladeContact(boss4WeaponTrace.base,boss4WeaponTrace.tip,seg.base,seg.tip,caps,.19);
+ boss4WeaponTrace.base.copy(seg.base);boss4WeaponTrace.tip.copy(seg.tip);boss4WeaponTrace.valid=true;
+ if(hit){
+  for(const req of boss4MeleeRequests){
+   if(boss4Fired.has(req.tag))continue;boss4Fired.add(req.tag);spawnSparks(hit.point,11,5);state.shake=Math.max(state.shake,.09);
+   if(state.invuln>0){flash('회피',.12);break}
+   hurtPlayer(req.dmg,req.posture,false);break;
+  }
+ }
+ for(let i=boss4MeleeRequests.length-1;i>=0;i--)if(boss4Fired.has(boss4MeleeRequests[i].tag)||boss4MeleeRequests[i].ttl<=0)boss4MeleeRequests.splice(i,1);
+}
+function chooseBoss4Attack(){
+ if(state.bossHp<=0)return;boss4Fired.clear();boss4MeleeRequests.length=0;state.boss4AttackCount++;
+ let pool=state.bossHp<state.bossMaxHp*.5?['b4_batto','b4_illusion','b4_dragon','b4_combo']:['b4_batto','b4_combo','b4_dragon','b4_illusion'];
+ if(state.potionPunishQueued){state.potionPunishQueued=false;state.bossState='b4_dragon'}else state.bossState=pool[Math.floor(Math.random()*pool.length)];
+ state.bossTimer=BOSS4_DUR[state.bossState];state.boss4DashStep=-1;resetBoss4PhysicalTrace();
+}
+function finishBoss4Attack(recovery=.78){state.bossState='idle';state.bossTimer=recovery;boss4Fired.clear();boss4MeleeRequests.length=0;state.boss4DashStep=-1;resetBoss4PhysicalTrace()}
+function hitBoss4(base,posture=12,contact=null){
+ if(state.bossHp<=0)return;let dmg=base,pd=posture;if(state.bossStagger>0){dmg*=1.62;pd*=1.7}
+ state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture=Math.min(140,state.bossPosture+pd);state.boss4HitReact=.14;state.shake=.13;hitStop(.052);
+ spawnSparks(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)),10,4.8);
+ if(state.bossHp<=0){state.bossState='dead';setDanger(false);flash('백야의 검성이 쓰러졌다 · 토벌 완료',1.2)}
+ else if(state.bossPosture>=108){state.bossPosture=44;state.bossStagger=1.35;state.bossState='stagger';state.bossTimer=1.35;flash('자세 붕괴',.45)}
+}
+function updateBoss4(dt){
+ for(let i=boss4MeleeRequests.length-1;i>=0;i--){boss4MeleeRequests[i].ttl-=dt;if(boss4MeleeRequests[i].ttl<=0)boss4MeleeRequests.splice(i,1)}
+ enforceBoss4Visibility();state.boss4HitReact=Math.max(0,state.boss4HitReact-dt);boss4Halo.rotation.z+=dt*.8;boss4Aura.intensity=8.5+Math.sin(state.time*5.5)*.7;
+ if(boss4Visual)boss4Visual.position.y=THREE.MathUtils.lerp(boss4Visual.position.y,boss4VisualBaseY,1-Math.exp(-dt*10));
+ if(state.bossHp<=0){boss4WeaponRoot.visible=false;poseBoss4(dt);syncBoss4Rig(dt);return}
+ if(state.bossStagger>0){state.bossStagger=Math.max(0,state.bossStagger-dt);poseBoss4(dt);applyBoss4PrimaryArmIK(dt);syncBoss4Rig(dt);updateBoss4Weapon();if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.8}return}
+ state.bossTimer-=dt;const d=dist(),dir=flatDir(boss.position,player.position),face=Math.atan2(player.position.x-boss.position.x,player.position.z-boss.position.z);
+ boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*(state.bossState==='b4_dragon'?12:8.5)));
+ if(state.bossState==='idle'){
+  if(d>3.5)boss.position.addScaledVector(dir,dt*3.25);else if(d<2.15)boss.position.addScaledVector(dir,-dt*.85);
+  if(state.bossTimer<=0)chooseBoss4Attack();
+ }else if(state.bossState==='b4_combo'){
+  const dmgs=[18,22,30];BOSS4_COMBO_MARKS.forEach((m,i)=>{if(state.bossTimer<=m+.1&&state.bossTimer>m-.1)boss4Strike('c'+i,dmgs[i],17+i*4);if(state.bossTimer<=m+.22&&state.bossTimer>m+.05&&d>2.4)boss.position.addScaledVector(dir,dt*3.2)});
+  if(state.bossTimer<=0)finishBoss4Attack(.76);
+ }else if(state.bossState==='b4_batto'){
+  const p=clamp(1-state.bossTimer/BOSS4_DUR.b4_batto,0,1);
+  if(p>.42&&p<.58&&d>2.2)boss.position.addScaledVector(dir,dt*4.8);
+  if(p>=.52&&p<=.7){boss4Once('batto-vfx',()=>spawnBoss2Slash(2.35,0x9dd8ff));boss4Strike('batto-hit',34,34,.3)}
+  if(state.bossTimer<=0)finishBoss4Attack(1.0);
+ }else if(state.bossState==='b4_illusion'){
+  BOSS4_ILLUSION_MARKS.forEach((m,i)=>{if(state.bossTimer<=m+.085&&state.bossTimer>m-.085){boss4Once('iv'+i,()=>spawnBoss2Slash(1.7+(i%3)*.1,0xa5d8ff));boss4Strike('ih'+i,14+(i%3)*2,12+(i%4)*2,.22)}if(state.bossTimer<=m+.18&&state.bossTimer>m+.03&&d>2.2)boss.position.addScaledVector(dir,dt*3.4)});
+  if(state.bossTimer<=0)finishBoss4Attack(1.05);
+ }else if(state.bossState==='b4_dragon'){
+  BOSS4_DRAGON_MARKS.forEach((m,i)=>{
+   if(state.boss4DashStep<i&&state.bossTimer<=m+.25){state.boss4DashStep=i;state.boss4DashDir.copy(flatDir(boss.position,player.position));boss4Once('dragon-flash'+i,()=>spawnBoss3Petals(5,2.1))}
+   if(state.boss4DashStep===i&&state.bossTimer<=m+.16&&state.bossTimer>m-.1){boss.position.addScaledVector(state.boss4DashDir,dt*13.5);boss4Strike('dragon-hit'+i,i===3?32:19,18+i*4,.28)}
+  });
+  if(state.bossTimer<=0)finishBoss4Attack(1.02);
+ }
+ poseBoss4(dt);applyBoss4PrimaryArmIK(dt);syncBoss4Rig(dt);updateBoss4Weapon();processBoss4PhysicalHits();
+}
+function boss4Once(tag,fn){if(boss4Fired.has(tag))return false;boss4Fired.add(tag);fn?.();return true}
+
 function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeout(flash.t);flash.t=setTimeout(()=>ui.msg.style.opacity='0',d*1000)}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 const PLAYER_ATTACK_PROFILES={
@@ -2888,6 +3089,7 @@ function updatePlayerMeleeCollision(){
    let caps;
    if(BOSS_VARIANT===2)caps=combatHumanoidCapsules(Object.keys(boss2RenderBones).length?boss2RenderBones:boss2Bones,boss2Root,2.1);
    else if(BOSS_VARIANT===3)caps=combatHumanoidCapsules(Object.keys(boss3RenderBones).length?boss3RenderBones:boss3Bones,boss3Root,2.05);
+   else if(BOSS_VARIANT===4)caps=combatHumanoidCapsules(Object.keys(boss4RenderBones).length?boss4RenderBones:boss4Bones,boss4Root,2.05);
    else{const bp=boss.position.clone();caps=[{a:bp.clone().add(new THREE.Vector3(0,.4,0)),b:bp.clone().add(new THREE.Vector3(0,5.6*BOSS_GIANT_SCALE,0)),r:1.15*BOSS_GIANT_SCALE,part:'body'}]}
    const hit=combatSweptBladeContact(playerWeaponTrace.base,playerWeaponTrace.tip,seg.base,seg.tip,caps,spec.radius);
    if(hit){
@@ -3264,6 +3466,7 @@ function hitBoss(base,posture=12,contact=null){
  base*=PLAYER_DAMAGE_SCALE;
  if(BOSS_VARIANT===2){hitBoss2(base,posture,contact);return}
  if(BOSS_VARIANT===3){hitBoss3(base,posture,contact);return}
+ if(BOSS_VARIANT===4){hitBoss4(base,posture,contact);return}
  if(state.bossHp<=0)return;
  let spikeTarget=null,spikeDist=Infinity;
  const playerHitPoint=player.position.clone().add(new THREE.Vector3(0,1.15,0));
@@ -3533,6 +3736,7 @@ const BOSS_AIM_RANGE={
 function updateBoss(dt){
  if(BOSS_VARIANT===2){updateBoss2(dt);return}
  if(BOSS_VARIANT===3){updateBoss3(dt);return}
+ if(BOSS_VARIANT===4){updateBoss4(dt);return}
  bossRim.position.set(boss.position.x,boss.position.y+8,boss.position.z-9);
  const bossMotionDt=state.bossState?.startsWith?.('arm_')?dt/bossAttackScale(state.bossState):dt;
  if(state.bossHp<=0)setBossVisualAction('dead');
@@ -3991,7 +4195,7 @@ function updateCamera(dt){
 function partText(v,broken,label,max=100){return broken?label:(v<max*.45?'손상':'정상')}
 function updateUI(){
  ui.hp.style.width=(clamp(state.hp,0,state.hpMax)/state.hpMax*100)+'%';if(hpLabel)hpLabel.textContent=`HP ${Math.ceil(state.hp)} / ${state.hpMax}`;if(ui.stamina){ui.stamina.style.width=(clamp(state.stamina,0,state.staminaMax)/state.staminaMax*100)+'%';ui.stamina.parentElement.classList.toggle('exhausted',state.exhausted>0)}if(staminaLabel)staminaLabel.textContent=`STAMINA ${Math.ceil(state.stamina)} / ${state.staminaMax}`;ui.posture.style.width=clamp(state.posture,0,100)+'%';ui.bossHp.style.width=(clamp(state.bossHp,0,state.bossMaxHp)/state.bossMaxHp*100)+'%';ui.bossPosture.style.width=clamp(state.bossPosture,0,100)+'%';
- if(BOSS_VARIANT===2){if(ui.parts)ui.parts.textContent=state.boss2Phase===2?'2페이즈 · 잿불 각성 · 완성형 전투':'1페이즈 · '+({sword:'검',spear:'창',mage:'술법',frenzy:'광전'}[state.boss2Style]||'검')+' 형상';}else if(BOSS_VARIANT===3){if(ui.parts)ui.parts.textContent=state.boss3Phase===2?'2페이즈 · 혈화 개화 · 회복 검무':'1페이즈 · 검격 적중 시 체력 회복';}else{ui.head.textContent=partText(state.headHp,state.headBroken,'파괴',BOSS1_PART_HP.head);ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴',BOSS1_PART_HP.leg);if(ui.spike){const alive=bossSpikeTargets.filter(s=>!s.broken).length,total=bossSpikeTargets.length;ui.spike.textContent=total?(alive?`${alive}/${total}`:'전부 파괴'):'로딩';}ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단',BOSS1_PART_HP.tail);}if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
+ if(BOSS_VARIANT===2){if(ui.parts)ui.parts.textContent=state.boss2Phase===2?'2페이즈 · 잿불 각성 · 완성형 전투':'1페이즈 · '+({sword:'검',spear:'창',mage:'술법',frenzy:'광전'}[state.boss2Style]||'검')+' 형상';}else if(BOSS_VARIANT===3){if(ui.parts)ui.parts.textContent=state.boss3Phase===2?'2페이즈 · 혈화 개화 · 회복 검무':'1페이즈 · 검격 적중 시 체력 회복';}else if(BOSS_VARIANT===4){if(ui.parts)ui.parts.textContent='검성 패턴 · 발도 / 환영검무 / 맹룡단공참';}else{ui.head.textContent=partText(state.headHp,state.headBroken,'파괴',BOSS1_PART_HP.head);ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴',BOSS1_PART_HP.leg);if(ui.spike){const alive=bossSpikeTargets.filter(s=>!s.broken).length,total=bossSpikeTargets.length;ui.spike.textContent=total?(alive?`${alive}/${total}`:'전부 파괴'):'로딩';}ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단',BOSS1_PART_HP.tail);}if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
  potionHud.textContent=`R · 포션 ${state.potions}/3`;
 }
 function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}addEventListener('resize',resize);resize();
@@ -4016,6 +4220,7 @@ function loop(){
    state.hitstop=0;
    if(BOSS_VARIANT===2){state.bossState='idle';state.bossTimer=.8;boss.position.y=0;enforceBoss2Visibility()}
    else if(BOSS_VARIANT===3){state.bossState='idle';state.bossTimer=.8;boss.position.y=0;enforceBoss3Visibility()}
+   else if(BOSS_VARIANT===4){state.bossState='idle';state.bossTimer=.8;boss.position.y=0;enforceBoss4Visibility()}
  }
  try{
    if(playerMixer)playerMixer.update(Math.max(dt,.001));
@@ -4028,4 +4233,5 @@ function loop(){
 }
 if(BOSS_VARIANT===2)loadBoss2Avatar();
 if(BOSS_VARIANT===3)loadBoss3Avatar();
+if(BOSS_VARIANT===4)loadBoss4Avatar();
 loop();
