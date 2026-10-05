@@ -216,9 +216,9 @@ const PLAYER_HAND_PATHS={
  ],
  spear:[
   null,
-  [[0,.1,-.46,.16],[.31,.24,-.38,-.34],[.64,.02,-.38,1.2],[1,.1,-.48,.22]],
-  [[0,.08,-.46,.18],[.3,-.2,-.4,-.28],[.63,-.06,-.37,1.14],[1,.1,-.48,.22]],
-  [[0,.08,-.5,.15],[.38,.1,-.34,-.46],[.72,.0,-.5,1.4],[1,.08,-.5,.2]]
+  [[0,.12,-.42,.18],[.22,.16,-.34,-.42],[.48,.08,-.36,.18],[.64,.02,-.4,1.42],[.78,.02,-.42,1.36],[1,.1,-.46,.3]],
+  [[0,.08,-.44,.2],[.22,-.14,-.35,-.36],[.47,-.04,-.38,.2],[.63,-.02,-.4,1.34],[.78,.0,-.42,1.3],[1,.1,-.46,.3]],
+  [[0,.08,-.46,.18],[.28,.1,-.3,-.5],[.53,.04,-.38,.28],[.7,.0,-.48,1.62],[.82,.0,-.48,1.5],[1,.08,-.48,.28]]
  ],
  katana:[
   null,
@@ -260,6 +260,35 @@ function playerReadyHand(id,reach,moving,phase,sprint){
   v.y+=Math.abs(bob)*.18;v.z+=bob*(id==='spear'?.22:.12);
  }
  return v;
+}
+const PLAYER_SECONDARY_GRIP_Z={straight:.3,greatsword:.5,hammer:.58,spear:.78,katana:.4,axe:.44};
+const PLAYER_WRIST_GRIP={
+ straight:{r:[-.05,-.08,-.16],l:[-.04,.04,.1]},
+ greatsword:{r:[-.12,-.04,-.12],l:[-.1,.04,.1]},
+ hammer:{r:[-.16,-.02,-.08],l:[-.14,.03,.08]},
+ spear:{r:[-.02,0,-.02],l:[-.03,0,.02]},
+ katana:{r:[-.08,-.1,-.2],l:[-.08,.06,.12]},
+ axe:{r:[-.12,-.04,-.12],l:[-.1,.04,.08]}
+};
+function alignPlayerSpearToForward(dt){
+ if(currentWeapon().id!=='spear'||!weaponPivot.parent)return;
+ weaponPivot.parent.updateWorldMatrix(true,false);
+ const forward=new THREE.Vector3(Math.sin(player.rotation.y),0,Math.cos(player.rotation.y)).normalize();
+ const p=state.attack>0?playerAttackProgress():0;
+ const dip=state.attack>0?THREE.MathUtils.lerp(.04,-.08,Math.sin(clamp(p,0,1)*Math.PI)):0;
+ const bladeDir=forward.clone().add(new THREE.Vector3(0,dip,0)).normalize();
+ const z=bladeDir.clone().multiplyScalar(-1);
+ let y=new THREE.Vector3(0,1,0);if(Math.abs(y.dot(z))>.96)y.set(1,0,0);
+ const x=y.clone().cross(z).normalize();y=z.clone().cross(x).normalize();
+ const worldQ=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,y,z));
+ const parentQ=new THREE.Quaternion();weaponPivot.parent.getWorldQuaternion(parentQ);
+ const localQ=parentQ.invert().multiply(worldQ);
+ weaponPivot.quaternion.slerp(localQ,1-Math.exp(-dt*36));
+}
+function applyPlayerWristGrip(dt){
+ const w=currentWeapon(),g=PLAYER_WRIST_GRIP[w.id]||PLAYER_WRIST_GRIP.straight;
+ setPlayerVrmBone('rightHand',g.r[0],g.r[1],g.r[2],22,dt);
+ if(twoHanded)setPlayerVrmBone('leftHand',g.l[0],g.l[1],g.l[2],22,dt);
 }
 function applyPlayerArmIK(dt,phase,moving,sprint){
  if(!playerVrmBones.leftUpperArm||!playerVrmBones.rightUpperArm)return;
@@ -307,7 +336,8 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
  if(twoHanded&&playerVrmBones.leftUpperArm&&playerVrmBones.leftHand&&playerVrmBones.rightHand){
    player.updateMatrixWorld(true);weaponPivot.updateWorldMatrix(true,true);
    const w=currentWeapon();
-   const gripZ={straight:.22,katana:.27,greatsword:.34,hammer:.4,spear:.58,axe:.3}[w.id]??.28;
+   if(w.id==='spear')alignPlayerSpearToForward(dt);
+   const gripZ=PLAYER_SECONDARY_GRIP_Z[w.id]??.32;
    const gripTarget=weaponPivot.localToWorld(new THREE.Vector3(0,0,gripZ));
    const shoulder=new THREE.Vector3();playerVrmBones.leftUpperArm.getWorldPosition(shoulder);
    const reach=getArmReach(playerVrmBones,'left');
@@ -315,6 +345,8 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
    solveArmCCD(playerVrmBones,'left',gripTarget,elbowHint,1-Math.exp(-dt*38));
    playerVrmBones.leftHand.updateWorldMatrix?.(false,true);
  }
+ if(currentWeapon().id==='spear')alignPlayerSpearToForward(dt);
+ applyPlayerWristGrip(dt);
 }
 
 
