@@ -236,9 +236,9 @@ const PLAYER_HAND_PATHS={
  ],
  spear:[
   null,
-  [[0,.12,-.42,.18],[.22,.16,-.34,-.42],[.48,.08,-.36,.18],[.64,.02,-.4,1.42],[.78,.02,-.42,1.36],[1,.1,-.46,.3]],
-  [[0,.08,-.44,.2],[.22,-.14,-.35,-.36],[.47,-.04,-.38,.2],[.63,-.02,-.4,1.34],[.78,.0,-.42,1.3],[1,.1,-.46,.3]],
-  [[0,.08,-.46,.18],[.28,.1,-.3,-.5],[.53,.04,-.38,.28],[.7,.0,-.48,1.62],[.82,.0,-.48,1.5],[1,.08,-.48,.28]]
+  [[0,.18,-.3,.0],[.3,.2,-.28,-.34],[.48,.16,-.3,.08],[.66,.08,-.34,1.28],[.8,.08,-.34,1.22],[1,.16,-.34,.18]],
+  [[0,.12,-.32,.04],[.3,.04,-.3,-.3],[.48,.08,-.32,.1],[.66,.02,-.34,1.24],[.8,.04,-.34,1.18],[1,.14,-.34,.2]],
+  [[0,.16,-.3,.0],[.34,.14,-.26,-.42],[.52,.1,-.3,.12],[.72,.02,-.35,1.48],[.84,.04,-.35,1.4],[1,.14,-.34,.18]]
  ],
  katana:[
   null,
@@ -294,9 +294,7 @@ function alignPlayerSpearToForward(dt){
  if(currentWeapon().id!=='spear'||!weaponPivot.parent)return;
  weaponPivot.parent.updateWorldMatrix(true,false);
  const forward=new THREE.Vector3(Math.sin(player.rotation.y),0,Math.cos(player.rotation.y)).normalize();
- const p=state.attack>0?playerAttackProgress():0;
- const dip=state.attack>0?THREE.MathUtils.lerp(.04,-.08,Math.sin(clamp(p,0,1)*Math.PI)):0;
- const bladeDir=forward.clone().add(new THREE.Vector3(0,dip,0)).normalize();
+ const bladeDir=forward.clone();
  const z=bladeDir.clone().multiplyScalar(-1);
  let y=new THREE.Vector3(0,1,0);if(Math.abs(y.dot(z))>.96)y.set(1,0,0);
  const x=y.clone().cross(z).normalize();y=z.clone().cross(x).normalize();
@@ -1846,7 +1844,12 @@ function applyBoss2PrimaryArmIK(dt){
    const marks=st==='b2_sword_combo'?BOSS2_SWORD_MARKS:st==='b2_flame_combo'?BOSS2_FLAME_MARKS:st==='b2_frenzy'?BOSS2_FRENZY_MARKS:BOSS2_FINAL_MARKS;
    const beat=soulsSwordBeat(t,marks,st==='b2_final'?.3:.25,st==='b2_final'?.24:.22);
    local.copy(soulsSwordHandTarget(beat,reach,st==='b2_final'?.88:.76).multiplyScalar(1/reach));
- }else if(st==='b2_thrust'||st==='b2_spear_thrust'||st==='b2_dash_burst'){
+ }else if(st==='b2_spear_thrust'){
+   const e=BOSS2_DUR.b2_spear_thrust-t;
+   const p=clamp(e/BOSS2_DUR.b2_spear_thrust,0,1);
+   const thrust=motionSmooth(.42,.66,p),recover=motionSmooth(.72,1,p);
+   local.set(.28*(1-thrust)-.06*recover,-.38+.05*thrust,-.18+1.28*thrust-.68*recover);
+ }else if(st==='b2_thrust'||st==='b2_dash_burst'){
    local.set(.08,-.28,1.12);
  }else if(st==='b2_spear_sweep'||st==='b2_arc'){
    const swing=Math.sin(((BOSS2_DUR[st]||1.4)-t)*Math.PI*1.8);
@@ -1875,7 +1878,7 @@ function applyBoss2WeaponGripIK(dt){
  let target,elbowHint;
  if(twoHand){
    boss2WeaponRoot.updateWorldMatrix(true,true);
-   const gripY=boss2Spear.visible?.58:-.26;
+   const gripY=boss2Spear.visible?.92:-.26;
    target=boss2WeaponRoot.localToWorld(new THREE.Vector3(0,gripY,0));
    elbowHint=shoulder.clone().add(bossCombatOffset(-.3*reach,-.31*reach,.16*reach));
  }else{
@@ -2109,7 +2112,19 @@ function poseBoss2(dt){
    setBoss2Bone('rightLowerArm',-.72+.28*cut,0,-side*.16*cut,18,dt);
    setBoss2Bone('spine',-.08,side*.24*cut,-side*.08*cut,15,dt);
    setBoss2Bone('hips',0,side*.1*cut,0,13,dt);
- }else if(st==='b2_thrust'||st==='b2_spear_thrust'||st==='b2_dash_burst'){
+ }else if(st==='b2_spear_thrust'){
+   const e=BOSS2_DUR.b2_spear_thrust-t,p=clamp(e/BOSS2_DUR.b2_spear_thrust,0,1);
+   const thrust=motionSmooth(.42,.66,p),recover=motionSmooth(.72,1,p),drive=thrust*(1-recover);
+   setBoss2Bone('spine',-.12-.16*drive,.05*drive,0,18,dt);
+   setBoss2Bone('hips',-.04*drive,.08*drive,0,17,dt);
+   setBoss2Bone('rightUpperArm',-.72+.14*drive,.04,-.16,20,dt);
+   setBoss2Bone('rightLowerArm',-.78+.5*drive,0,0,22,dt);
+   setBoss2Bone('leftUpperArm',-.48+.1*drive,-.04,.16,20,dt);
+   setBoss2Bone('leftLowerArm',-.62+.34*drive,0,0,22,dt);
+   setBoss2Bone('leftUpperLeg',-.28*drive,0,.03,18,dt);
+   setBoss2Bone('rightUpperLeg',.38*drive,0,-.03,18,dt);
+   setBoss2Bone('rightLowerLeg',.46*drive,0,0,18,dt);
+ }else if(st==='b2_thrust'||st==='b2_dash_burst'){
    setBoss2Bone('rightUpperArm',-1.38,.08,-.12,18,dt);
    setBoss2Bone('rightLowerArm',-.12,0,0,18,dt);
    setBoss2Bone('spine',-.22,0,0,15,dt);
@@ -2200,9 +2215,15 @@ function updateBoss2(dt){
    });
    if(state.bossTimer<=0)finishBoss2Attack(.88);
  }else if(state.bossState==='b2_thrust'||state.bossState==='b2_spear_thrust'){
-   const spear=state.bossState==='b2_spear_thrust',range=spear?5.1:4.1;
-   if(state.bossTimer<.48&&state.bossTimer>.18)boss.position.addScaledVector(dir,dt*(spear?10.5:9.2));
-   if(state.bossTimer<=.44&&state.bossTimer>.05)boss2Strike('thrust',range,spear?30:28,spear?32:29,false,.05);
+   const spear=state.bossState==='b2_spear_thrust',range=spear?5.35:4.1;
+   if(spear){
+     const e=BOSS2_DUR.b2_spear_thrust-state.bossTimer,p=clamp(e/BOSS2_DUR.b2_spear_thrust,0,1);
+     if(p>=.42&&p<=.7)boss.position.addScaledVector(dir,dt*7.2);
+     if(p>=.48&&p<=.76)boss2Strike('thrust',range,30,32,false,.05);
+   }else{
+     if(state.bossTimer<.48&&state.bossTimer>.18)boss.position.addScaledVector(dir,dt*9.2);
+     if(state.bossTimer<=.44&&state.bossTimer>.05)boss2Strike('thrust',range,28,29,false,.05);
+   }
    if(state.bossTimer<=0)finishBoss2Attack(.9);
  }else if(state.bossState==='b2_jump_slam'){
    const total=BOSS2_DUR.b2_jump_slam,e=total-state.bossTimer;
