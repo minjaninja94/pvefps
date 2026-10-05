@@ -2033,9 +2033,10 @@ function processBoss2PhysicalHits(){
  const playerCaps=combatHumanoidCapsules(playerVrmBones,player,2.0);
  let weaponHit=null,handHit=null;
  if(boss2WeaponRoot.visible){
-  const len=boss2Spear.visible?3.32:2.28;
-  const seg=combatWorldSegment(boss2WeaponRoot,new THREE.Vector3(0,.02,0),new THREE.Vector3(0,len,0));
-  if(boss2WeaponTrace.valid)weaponHit=combatSweptBladeContact(boss2WeaponTrace.base,boss2WeaponTrace.tip,seg.base,seg.tip,playerCaps,boss2Spear.visible?.18:.18);
+  const base=boss2Spear.visible?new THREE.Vector3(0,2.72,0):new THREE.Vector3(0,.18,0);
+  const tip=boss2Spear.visible?new THREE.Vector3(0,3.32,0):new THREE.Vector3(0,2.26,0);
+  const seg=combatWorldSegment(boss2WeaponRoot,base,tip);
+  if(boss2WeaponTrace.valid)weaponHit=combatSweptBladeContact(boss2WeaponTrace.base,boss2WeaponTrace.tip,seg.base,seg.tip,playerCaps,boss2Spear.visible?.12:.13);
   boss2WeaponTrace.base.copy(seg.base);boss2WeaponTrace.tip.copy(seg.tip);boss2WeaponTrace.valid=true;
  }else boss2WeaponTrace.valid=false;
  const hand=boss2Bones.rightHand;
@@ -2652,10 +2653,10 @@ function boss3Strike(tag,range,dmg,posture,unblockable=false,minDot=-.35,healMul
 function resetBoss3PhysicalTrace(){boss3WeaponTrace.valid=false}
 function processBoss3PhysicalHits(){
  if(!boss3WeaponRoot.visible){boss3WeaponTrace.valid=false;boss3MeleeRequests.length=0;return}
- const seg=combatWorldSegment(boss3WeaponRoot,new THREE.Vector3(0,.02,0),new THREE.Vector3(0,2.26,0));
+ const seg=combatWorldSegment(boss3WeaponRoot,new THREE.Vector3(0,.16,0),new THREE.Vector3(0,2.26,0));
  const caps=combatHumanoidCapsules(playerVrmBones,player,2.0);
  let hit=null;
- if(boss3WeaponTrace.valid)hit=combatSweptBladeContact(boss3WeaponTrace.base,boss3WeaponTrace.tip,seg.base,seg.tip,caps,.19);
+ if(boss3WeaponTrace.valid)hit=combatSweptBladeContact(boss3WeaponTrace.base,boss3WeaponTrace.tip,seg.base,seg.tip,caps,.115);
  boss3WeaponTrace.base.copy(seg.base);boss3WeaponTrace.tip.copy(seg.tip);boss3WeaponTrace.valid=true;
  if(hit){
   for(const req of boss3MeleeRequests){
@@ -3095,9 +3096,9 @@ function boss4Strike(tag,dmg,posture,ttl=.26,unblockable=false){
 function resetBoss4PhysicalTrace(){boss4WeaponTrace.valid=false}
 function processBoss4PhysicalHits(){
  if(!boss4WeaponRoot.visible){boss4WeaponTrace.valid=false;boss4MeleeRequests.length=0;return}
- const seg=combatWorldSegment(boss4WeaponRoot,new THREE.Vector3(0,.02,0),new THREE.Vector3(0,2.38,0));
+ const seg=combatWorldSegment(boss4WeaponRoot,new THREE.Vector3(0,.16,0),new THREE.Vector3(0,2.38,0));
  const caps=combatHumanoidCapsules(playerVrmBones,player,2.0);let hit=null;
- if(boss4WeaponTrace.valid)hit=combatSweptBladeContact(boss4WeaponTrace.base,boss4WeaponTrace.tip,seg.base,seg.tip,caps,.19);
+ if(boss4WeaponTrace.valid)hit=combatSweptBladeContact(boss4WeaponTrace.base,boss4WeaponTrace.tip,seg.base,seg.tip,caps,.12);
  boss4WeaponTrace.base.copy(seg.base);boss4WeaponTrace.tip.copy(seg.tip);boss4WeaponTrace.valid=true;
  if(hit){
   for(const req of boss4MeleeRequests){
@@ -3354,8 +3355,8 @@ function resetBoss5PhysicalTrace(){
 function processBoss5PhysicalHits(){
  const caps=combatHumanoidCapsules(playerVrmBones,player,2.0);
  if(boss5WeaponRoot.visible){
-  const seg=combatWorldSegment(boss5WeaponRoot,new THREE.Vector3(0,.08,0),new THREE.Vector3(0,3.25,0));let hit=null;
-  if(boss5WeaponTrace.valid)hit=combatSweptBladeContact(boss5WeaponTrace.base,boss5WeaponTrace.tip,seg.base,seg.tip,caps,.22);
+  const seg=combatWorldSegment(boss5WeaponRoot,new THREE.Vector3(-.1,2.72,0),new THREE.Vector3(.66,3.02,0));let hit=null;
+  if(boss5WeaponTrace.valid)hit=combatSweptBladeContact(boss5WeaponTrace.base,boss5WeaponTrace.tip,seg.base,seg.tip,caps,.24);
   boss5WeaponTrace.base.copy(seg.base);boss5WeaponTrace.tip.copy(seg.tip);boss5WeaponTrace.valid=true;
   if(hit)for(const req of boss5MeleeRequests){if(boss5Fired.has(req.tag))continue;boss5Fired.add(req.tag);spawnSparks(hit.point,13,5.4);if(state.invuln>0){flash('회피',.12);break}hurtPlayer(req.dmg,req.posture,!!req.unblockable);break}
  }
@@ -3569,15 +3570,23 @@ function combatSweptBladeContact(prevBase,prevTip,base,tip,capsules,bladeRadius=
 function combatWorldSegment(root,baseLocal,tipLocal){root.updateWorldMatrix?.(true,true);return{base:root.localToWorld(baseLocal.clone()),tip:root.localToWorld(tipLocal.clone())}}
 const playerWeaponTrace={valid:false,base:new THREE.Vector3(),tip:new THREE.Vector3(),step:0};
 function resetPlayerWeaponTrace(){playerWeaponTrace.valid=false;playerWeaponTrace.step=state.attackStep}
-function playerWeaponLocalSegment(){
- const id=currentWeapon().id,tipZ={straight:-1.62,greatsword:-2.26,hammer:-1.68,spear:-2.82,katana:-1.88,axe:-1.46}[id]??-1.58;
- const baseZ={straight:.14,greatsword:.22,hammer:.22,spear:.34,katana:.16,axe:.2}[id]??.14;
- const radius={straight:.12,greatsword:.15,hammer:.22,spear:.16,katana:.115,axe:.16}[id]??.12;
- return{base:new THREE.Vector3(0,0,baseZ),tip:new THREE.Vector3(0,0,tipZ),radius};
+function playerWeaponDamageZone(){
+ const id=currentWeapon().id;
+ const zones={
+  // Only the sharpened / striking portion deals damage. Handles and guards are excluded.
+  straight:{base:[0,0,-.08],tip:[0,0,-1.58],radius:.09},
+  greatsword:{base:[0,0,-.12],tip:[0,0,-2.2],radius:.12},
+  hammer:{base:[-.38,0,-1.42],tip:[.38,0,-1.42],radius:.3},
+  spear:{base:[0,0,-2.02],tip:[0,0,-2.78],radius:.105},
+  katana:{base:[.04,0,-.08],tip:[.05,0,-1.84],radius:.075},
+  axe:{base:[-.16,0,-1.18],tip:[.5,0,-1.18],radius:.22}
+ };
+ const z=zones[id]||zones.straight;
+ return{base:new THREE.Vector3(...z.base),tip:new THREE.Vector3(...z.tip),radius:z.radius};
 }
 function playerAttackWindow(step,w){return playerAttackProfile(w.id,step).active}
 function updatePlayerMeleeCollision(){
- const spec=playerWeaponLocalSegment(),seg=combatWorldSegment(weaponPivot,spec.base,spec.tip);
+ const spec=playerWeaponDamageZone(),seg=combatWorldSegment(weaponPivot,spec.base,spec.tip);
  if(!playerWeaponTrace.valid||playerWeaponTrace.step!==state.attackStep){playerWeaponTrace.base.copy(seg.base);playerWeaponTrace.tip.copy(seg.tip);playerWeaponTrace.valid=true;playerWeaponTrace.step=state.attackStep;return}
  if(state.attack>0&&!state.attackHit){
   const w=currentWeapon(),p=playerAttackProgress(),win=playerAttackWindow(state.attackStep,w);
