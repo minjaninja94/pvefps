@@ -1602,6 +1602,7 @@ addEventListener('keydown',e=>{
  input.keys.add(e.code);
  if(e.code==='KeyQ')setLockOn(!input.lock);
  if(e.code==='KeyR')tryDrinkPotion();
+ if(e.code==='KeyE'&&!e.repeat){e.preventDefault();tryStrongAttack()}
  if(e.code==='Space')tryRoll();
  if(/^Digit[1-6]$/.test(e.code))setWeapon(Number(e.code.slice(5))-1);
  if(e.code==='KeyT')toggleGrip();
@@ -1617,7 +1618,7 @@ document.addEventListener('pointerlockchange',()=>{
 });
 canvas.addEventListener('click',()=>{if(!input.lock)requestFreeLook()});
 addEventListener('mousedown',e=>{
- if(e.button===0){if(!input.lock)requestFreeLook();if(e.ctrlKey||input.keys.has('ControlLeft')||input.keys.has('ControlRight'))tryStrongAttack();else tryAttack()}
+ if(e.button===0){if(!input.lock)requestFreeLook();tryAttack()}
  if(e.button===2){input.guard=true;tryDeflect()}
 });
 addEventListener('mouseup',e=>{if(e.button===2)input.guard=false});
