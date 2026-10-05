@@ -1632,7 +1632,7 @@ document.body.appendChild(potionHud);
 
 const state={
  hp:PLAYER_MAX_HP,hpMax:PLAYER_MAX_HP,posture:0,stamina:PLAYER_MAX_STAMINA,staminaMax:PLAYER_MAX_STAMINA,staminaRegenDelay:0,exhausted:0,damageGrace:0,potions:3,potionTimer:0,potionHealDone:false,attack:0,attackDuration:0,attackHit:false,attackStep:0,attackQueued:false,attackStrong:false,comboGrace:0,rolling:0,rollElapsed:0,rollLean:1,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
- bossMaxHp:BOSS_MAX_HP[BOSS_VARIANT],bossHp:BOSS_MAX_HP[BOSS_VARIANT],bossPosture:0,bossPostureGrace:0,bossState:'idle',bossTimer:1.0,bossPunish:0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',bossBustImpulse:0,bossAttackTarget:new THREE.Vector3(),bossAttackTargetLocked:false,potionPunishQueued:false,potionPunishKind:'spike_triple',time:0,shake:0,hitstop:0,
+ bossMaxHp:BOSS_MAX_HP[BOSS_VARIANT],bossHp:BOSS_MAX_HP[BOSS_VARIANT],bossPosture:0,bossPostureGrace:0,bossState:'idle',bossTimer:1.0,bossPunish:0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',bossBustImpulse:0,bossAttackTarget:new THREE.Vector3(),bossAttackTargetLocked:false,potionPunishQueued:false,potionPunishKind:'spike_triple',time:0,shake:0,impactFov:0,impactRoll:0,impactFlash:0,hitstop:0,
  headHp:BOSS1_PART_HP.head,legHp:BOSS1_PART_HP.leg,tailHp:BOSS1_PART_HP.tail,tailBroken:false,legBroken:false,headBroken:false,danger:false,reaction:0,reactionZone:'body'
 };
 
@@ -2291,8 +2291,7 @@ function hitBoss2(base,posture=12,contact=null){
  if(state.bossStagger>0){dmg*=1.6;pd*=.22}
  state.bossHp=Math.max(0,state.bossHp-dmg);
  addBossPosture(pd);
- state.shake=.13;state.boss2HitReact=.14;hitStop(.055);
- spawnSparks(contact||player.position.clone().lerp(boss.position,.58).add(new THREE.Vector3(0,1.1,0)),9,4.6);
+ state.boss2HitReact=.14;triggerPlayerHitImpact(contact||player.position.clone().lerp(boss.position,.58).add(new THREE.Vector3(0,1.1,0)));
  if(state.bossHp<=0){
    state.bossState='dead';state.potionPunishQueued=false;setDanger(false);flash('잔불이 꺼졌다 · 토벌 완료',1.25);
  }else if(state.bossPosture>=BOSS_POSTURE_MAX[2]){
@@ -2825,7 +2824,7 @@ function hitBoss3(base,posture=12,contact=null){
  let dmg=base,pd=posture;[dmg,pd]=bossPunishDamage(dmg,pd);
  if(state.bossStagger>0){dmg*=1.58;pd*=.22}
  state.bossHp=Math.max(0,state.bossHp-dmg);addBossPosture(pd);
- state.shake=.13;state.boss3HitReact=.14;hitStop(.052);spawnSparks(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)),9,4.8);
+ state.boss3HitReact=.14;triggerPlayerHitImpact(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)));
  if(state.bossHp<=0){
   state.bossState='dead';state.potionPunishQueued=false;setDanger(false);flash('붉은 백합이 스러졌다 · 토벌 완료',1.25);
  }else if(state.bossPosture>=BOSS_POSTURE_MAX[3]){
@@ -3156,8 +3155,7 @@ function chooseBoss4Attack(){
 function finishBoss4Attack(recovery=.78){setDanger(false);state.bossState='idle';beginBossPunish(recovery);boss4Fired.clear();boss4MeleeRequests.length=0;state.boss4DashStep=-1;resetBoss4PhysicalTrace()}
 function hitBoss4(base,posture=12,contact=null){
  if(state.bossHp<=0)return;let dmg=base,pd=posture;[dmg,pd]=bossPunishDamage(dmg,pd);if(state.bossStagger>0){dmg*=1.6;pd*=.22}
- state.bossHp=Math.max(0,state.bossHp-dmg);addBossPosture(pd);state.boss4HitReact=.14;state.shake=.13;hitStop(.052);
- spawnSparks(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)),10,4.8);
+ state.bossHp=Math.max(0,state.bossHp-dmg);addBossPosture(pd);state.boss4HitReact=.14;triggerPlayerHitImpact(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)));
  if(state.bossHp<=0){state.bossState='dead';setDanger(false);flash('백야의 검성이 쓰러졌다 · 토벌 완료',1.2)}
  else if(state.bossPosture>=BOSS_POSTURE_MAX[4]){resetBossPostureAfterBreak(.32);state.bossStagger=1.22;state.bossState='stagger';state.bossTimer=1.22;flash('자세 붕괴',.45)}
 }
@@ -3422,8 +3420,7 @@ function chooseBoss5Attack(){
 function finishBoss5Attack(recovery=.76){setDanger(false);state.bossState='idle';beginBossPunish(recovery);boss5Fired.clear();boss5MeleeRequests.length=0;boss5BodyRequests.length=0;state.boss5RushStep=-1;resetBoss5PhysicalTrace();boss.position.y=0}
 function hitBoss5(base,posture=12,contact=null){
  if(state.bossHp<=0)return;let dmg=base,pd=posture;[dmg,pd]=bossPunishDamage(dmg,pd);if(state.bossStagger>0){dmg*=1.58;pd*=.2}
- state.bossHp=Math.max(0,state.bossHp-dmg);addBossPosture(pd);state.boss5HitReact=.14;state.shake=.14;hitStop(.055);
- spawnSparks(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)),11,5);
+ state.bossHp=Math.max(0,state.bossHp-dmg);addBossPosture(pd);state.boss5HitReact=.14;triggerPlayerHitImpact(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)));
  if(state.bossHp<=0){state.bossState='dead';setDanger(false);flash('흑철의 투희가 무너졌다 · 토벌 완료',1.25)}
  else if(state.bossPosture>=BOSS_POSTURE_MAX[5]){resetBossPostureAfterBreak(.32);state.bossStagger=1.18;state.bossState='stagger';state.bossTimer=1.18;flash('자세 붕괴',.45)}
 }
@@ -3644,7 +3641,7 @@ function updatePlayerMeleeCollision(){
     }else{
       damage=[0,22,25,36][step]*w.damage*gripDamage;posture=[0,11,13,20][step]*w.posture*gripPosture;
     }
-    state.attackHit=true;hitBoss(damage,posture,hit.point);hitStop((state.attackStrong?.05:.018)*w.hitstop+(!state.attackStrong&&step===3?.018:0));
+    state.attackHit=true;hitBoss(damage,posture,hit.point);if(!state.attackStrong)hitStop(.012*w.hitstop);
    }
   }
  }
@@ -3652,6 +3649,66 @@ function updatePlayerMeleeCollision(){
 }
 function setDanger(v){state.danger=v;ui.danger.classList.toggle('on',v)}
 function hitStop(sec){state.hitstop=Math.max(state.hitstop,sec)}
+let impactAudioCtx=null,impactNoiseBuffer=null,impactOverlay=null;
+const impactBursts=[];
+function ensureImpactOverlay(){
+ if(impactOverlay)return impactOverlay;
+ impactOverlay=document.createElement('div');
+ Object.assign(impactOverlay.style,{position:'fixed',inset:'0',pointerEvents:'none',zIndex:'35',opacity:'0',mixBlendMode:'screen',background:'radial-gradient(circle at 50% 50%, rgba(255,255,255,.34) 0%, rgba(255,210,160,.14) 18%, rgba(255,90,50,.05) 42%, transparent 70%)',transition:'opacity 45ms linear'});
+ document.body.appendChild(impactOverlay);return impactOverlay;
+}
+function ensureImpactAudio(){
+ try{
+  if(!impactAudioCtx){
+   const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;
+   impactAudioCtx=new AC();
+   const len=Math.floor(impactAudioCtx.sampleRate*.16),buf=impactAudioCtx.createBuffer(1,len,impactAudioCtx.sampleRate),data=buf.getChannelData(0);
+   for(let i=0;i<len;i++)data[i]=(Math.random()*2-1)*(1-i/len);
+   impactNoiseBuffer=buf;
+  }
+  if(impactAudioCtx.state==='suspended')impactAudioCtx.resume?.().catch(()=>{});
+  return impactAudioCtx;
+ }catch{return null}
+}
+function playImpactSound(kind='blade',power=1){
+ const ctx=ensureImpactAudio();if(!ctx)return;
+ const now=ctx.currentTime,master=ctx.createGain();master.gain.setValueAtTime(.0001,now);master.gain.exponentialRampToValueAtTime(Math.min(.42,.12*power),now+.005);master.gain.exponentialRampToValueAtTime(.0001,now+.15+.05*power);master.connect(ctx.destination);
+ const osc=ctx.createOscillator(),og=ctx.createGain(),base=kind==='hammer'?68:kind==='heavy'?82:kind==='spear'?120:kind==='katana'?168:145;
+ osc.type=kind==='hammer'?'sine':'triangle';osc.frequency.setValueAtTime(base*(1+.06*Math.random()),now);osc.frequency.exponentialRampToValueAtTime(Math.max(42,base*.48),now+.12);
+ og.gain.setValueAtTime(.55,now);og.gain.exponentialRampToValueAtTime(.0001,now+.16);osc.connect(og).connect(master);osc.start(now);osc.stop(now+.18);
+ if(impactNoiseBuffer){
+  const src=ctx.createBufferSource(),ng=ctx.createGain(),filter=ctx.createBiquadFilter();src.buffer=impactNoiseBuffer;filter.type='bandpass';filter.frequency.value=kind==='hammer'?420:kind==='heavy'?680:kind==='katana'?1900:1250;filter.Q.value=.7;
+  ng.gain.setValueAtTime(kind==='hammer'?.7:.45,now);ng.gain.exponentialRampToValueAtTime(.0001,now+.11+.03*power);src.connect(filter).connect(ng).connect(master);src.start(now);src.stop(now+.16);
+ }
+}
+function spawnImpactBurst(origin,intensity=1,heavy=false){
+ const color=heavy?0xffb05a:0xffe0a4;
+ const ring=new THREE.Mesh(new THREE.RingGeometry(.08,.14,24),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.9,depthWrite:false,side:THREE.DoubleSide}));
+ ring.position.copy(origin);ring.quaternion.copy(camera.quaternion);scene.add(ring);
+ impactBursts.push({obj:ring,life:.16,max:.16,grow:heavy?7.5:5.4});
+ spawnSparks(origin,Math.round((heavy?24:14)*intensity),heavy?7.8:5.8);
+}
+function updateImpactBursts(dt){
+ for(let i=impactBursts.length-1;i>=0;i--){const b=impactBursts[i];b.life-=dt;const p=1-clamp(b.life/b.max,0,1);b.obj.scale.setScalar(1+p*b.grow);b.obj.material.opacity=(1-p)*.9;if(b.life<=0){scene.remove(b.obj);b.obj.geometry.dispose();b.obj.material.dispose();impactBursts.splice(i,1)}}
+ const o=impactOverlay;if(o){o.style.opacity=String(clamp(state.impactFlash,0,.78));state.impactFlash=Math.max(0,state.impactFlash-dt*5.5)}
+ state.impactFov=THREE.MathUtils.lerp(state.impactFov,0,1-Math.exp(-dt*16));state.impactRoll=THREE.MathUtils.lerp(state.impactRoll,0,1-Math.exp(-dt*18));
+}
+function weaponImpactProfile(){
+ const id=currentWeapon()?.id||'straight';
+ const map={straight:{kind:'blade',stop:.045,shake:.12,fov:-.9,flash:.2,power:1},greatsword:{kind:'heavy',stop:.078,shake:.2,fov:-1.7,flash:.34,power:1.55},hammer:{kind:'hammer',stop:.095,shake:.25,fov:-2.15,flash:.42,power:1.8},spear:{kind:'spear',stop:.05,shake:.13,fov:-1,flash:.2,power:1.05},katana:{kind:'katana',stop:.04,shake:.11,fov:-.8,flash:.18,power:.95},axe:{kind:'heavy',stop:.072,shake:.19,fov:-1.55,flash:.31,power:1.45}};
+ const p={...(map[id]||map.straight)};if(state.attackStrong){p.stop*=1.45;p.shake*=1.35;p.fov*=1.3;p.flash*=1.35;p.power*=1.35}return p;
+}
+function triggerPlayerHitImpact(contact,zone='body'){
+ if(!contact)return;
+ const p=weaponImpactProfile(),critical=zone==='head'||zone==='spike'||state.bossPosture>=((BOSS_POSTURE_MAX[BOSS_VARIANT]||220)*.9),mul=critical?1.25:1;
+ hitStop(p.stop*mul);state.shake=Math.max(state.shake,p.shake*mul);state.impactFov=Math.min(state.impactFov,p.fov*mul);state.impactRoll=(Math.random()<.5?-1:1)*.008*p.power*mul;state.impactFlash=Math.max(state.impactFlash,p.flash*mul);
+ ensureImpactOverlay();spawnImpactBurst(contact,p.power*mul,['heavy','hammer'].includes(p.kind));playImpactSound(p.kind,p.power*mul);
+}
+function triggerPlayerHurtImpact(dmg,unblockable=false){
+ const power=clamp(dmg/(PLAYER_MAX_HP*.32),.75,1.8)*(unblockable?1.18:1);
+ state.shake=Math.max(state.shake,.16*power);state.impactFov=Math.min(state.impactFov,-1.1*power);state.impactRoll=(Math.random()<.5?-1:1)*.012*power;state.impactFlash=Math.max(state.impactFlash,.18*power);ensureImpactOverlay();playImpactSound(unblockable?'heavy':'hammer',.85*power);
+}
+
 function spendStamina(amount,delay=.55){
  if(state.stamina<amount||state.exhausted>0)return false;
  state.stamina=Math.max(0,state.stamina-amount);
@@ -3990,7 +4047,7 @@ function hurtPlayer(dmg,posture=20,unblockable=false){
  dmg*=BOSS_DAMAGE_SCALE;
  if(!unblockable&&input.guard){
    if(state.deflect>0){
-     addBossPosture(32,3.4);state.posture=Math.max(0,state.posture-15);state.stamina=Math.min(state.staminaMax,state.stamina+9);state.shake=.16;state.parryAnim=.28;hitStop(.055);spawnSparks(player.position.clone().lerp(boss.position,.42).add(new THREE.Vector3(0,1.45,0)),22,7);flash('저스트 튕겨내기',.22);
+     addBossPosture(32,3.4);state.posture=Math.max(0,state.posture-15);state.stamina=Math.min(state.staminaMax,state.stamina+9);state.parryAnim=.28;hitStop(.085);const parryPoint=player.position.clone().lerp(boss.position,.42).add(new THREE.Vector3(0,1.45,0));state.shake=Math.max(state.shake,.24);state.impactFlash=Math.max(state.impactFlash,.46);state.impactFov=Math.min(state.impactFov,-2.1);ensureImpactOverlay();spawnImpactBurst(parryPoint,1.8,true);playImpactSound('heavy',1.7);flash('저스트 튕겨내기',.22);
      if(state.bossPosture>=BOSS_POSTURE_MAX[BOSS_VARIANT]){state.bossStagger=1.42;resetBossPostureAfterBreak(.32);state.bossState='stagger';flash('자세 붕괴',.52)}
      return;
    }
@@ -4007,7 +4064,7 @@ function hurtPlayer(dmg,posture=20,unblockable=false){
      state.exhausted=.9;state.stagger=.78;state.posture=Math.min(100,state.posture+24);
      flash('가드 붕괴',.38);
    }else flash(shieldGuard?'방패 가드':'무기 가드',.18);
- }else{state.hp-=dmg;state.posture+=posture;state.stagger=.3;state.damageGrace=.28;state.shake=.23;hitStop(.035)}
+ }else{state.hp-=dmg;state.posture+=posture;state.stagger=.3;state.damageGrace=.28;hitStop(.038);triggerPlayerHurtImpact(dmg,unblockable)}
  if(state.posture>=100){state.posture=32;state.stagger=.85;flash('자세 무너짐',.4)}
  if(state.hp<=0){state.hp=0;state.dead=true;flash('사망',1.2)}
 }
@@ -4046,7 +4103,7 @@ function hitBoss(base,posture=12,contact=null){
  if(zone==='leg'){state.legHp-=base*.8;if(!state.legBroken&&state.legHp<=0){state.legBroken=true;flash('앞발 부위 파괴',.6);state.bossStagger=1.4;state.bossState='stagger'}}
  if(zone==='tail'){dmg*=1.2;state.tailHp-=base;if(!state.tailBroken&&state.tailHp<=0){state.tailBroken=true;tailPivot.visible=false;flash('꼬리 절단',.7);addBossPosture(24)}}
  if(state.bossStagger>0){dmg*=1.65;pd*=.22}
- state.bossHp=Math.max(0,state.bossHp-dmg);addBossPosture(pd);state.shake=zone==='head'||zone==='spike' ? .18 : .13;hitStop(zone==='head'||zone==='spike' ? .072 : .055);spawnSparks(contact||player.position.clone().lerp(boss.position,.62).add(new THREE.Vector3(0,zone==='head' ? 2.15 : 1.15,0)),zone==='head' ? 14 : 8,zone==='head' ? 5.5 : 4.2);
+ state.bossHp=Math.max(0,state.bossHp-dmg);addBossPosture(pd);triggerPlayerHitImpact(contact||player.position.clone().lerp(boss.position,.62).add(new THREE.Vector3(0,zone==='head' ? 2.15 : 1.15,0)),zone);
  if(state.bossHp===0){state.bossState='dead';state.potionPunishQueued=false;setDanger(false);flash('토벌 완료',1.2)}
  else if(state.bossPosture>=BOSS_POSTURE_MAX[1]){state.bossStagger=1.5;resetBossPostureAfterBreak(.32);state.bossState='stagger';flash('자세 붕괴',.52)}
 }
@@ -4743,6 +4800,7 @@ function updateCamera(dt){
    desiredLook.y+=input.camPitch*3.7+.12;
    wantedFov=input.keys.has('ShiftLeft')||input.keys.has('ShiftRight')?55:52;
  }
+ wantedFov+=state.impactFov;
 
  const posEase=1-Math.exp(-dt*(input.lock?7.6:10.8));
  const lookEase=1-Math.exp(-dt*(input.lock?9.0:13.5));
@@ -4759,7 +4817,7 @@ function updateCamera(dt){
    camera.position.x+=(Math.random()-.5)*state.shake;
    camera.position.y+=(Math.random()-.5)*state.shake;
  }
- camera.lookAt(camLook);
+ camera.lookAt(camLook);if(Math.abs(state.impactRoll)>.0001)camera.rotateZ(state.impactRoll);
  updateLockMarker();
 }
 function partText(v,broken,label,max=100){return broken?label:(v<max*.45?'손상':'정상')}
@@ -4795,7 +4853,7 @@ function loop(){
  }
  try{
    if(playerMixer)playerMixer.update(Math.max(dt,.001));
-   animateVroidPlayer(Math.max(dt,.001));updatePlayerMeleeCollision();updateArmTrails(Math.max(dt,.001));updateDustFX(Math.max(dt,.001));updateSparks(Math.max(dt,.001));
+   animateVroidPlayer(Math.max(dt,.001));updatePlayerMeleeCollision();updateArmTrails(Math.max(dt,.001));updateDustFX(Math.max(dt,.001));updateSparks(Math.max(dt,.001));updateImpactBursts(Math.max(dt,.001));
    updateBossSpikeProjectiles(Math.max(dt,.001));updateBossShockwaves(Math.max(dt,.001));
  }catch(err){reportSoulhuntRuntimeError(err)}
  try{updateCamera(Math.max(dt,.001));updateUI()}catch(err){reportSoulhuntRuntimeError(err)}
