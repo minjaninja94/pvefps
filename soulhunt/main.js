@@ -3035,10 +3035,13 @@ async function loadBoss5Avatar(){
    boss5Root.add(root);boss5Visual=root;boss5VRM=vrm;boss5Ready=true;boss5Fallback.visible=false;
    const h=vrm?.humanoid;
    for(const n of ['hips','spine','chest','upperChest','neck','head','leftShoulder','rightShoulder','leftUpperArm','rightUpperArm','leftLowerArm','rightLowerArm','leftHand','rightHand','leftUpperLeg','rightUpperLeg','leftLowerLeg','rightLowerLeg','leftFoot','rightFoot']){
-    const node=h?.getNormalizedBoneNode?.(n);if(node)cacheBoss5Bone(n,node);
-    const raw=h?.getRawBoneNode?.(n);boss5RenderBones[n]=raw||node||null;
+    const normalized=h?.getNormalizedBoneNode?.(n)||null;
+    const raw=h?.getRawBoneNode?.(n)||null;
+    const control=normalized||raw;
+    if(control)cacheBoss5Bone(n,control);
+    boss5RenderBones[n]=raw||normalized||null;
    }
-   poseBoss5(.12);syncBoss5Rig(0);flash(BOSS5_NAME,.9);
+   poseBoss5(.12);applyBoss5PrimaryArmIK(.12);syncBoss5Rig(0);updateBoss5Weapon();flash(BOSS5_NAME,.9);
    console.info('Shino champion VRM rig',{hand:!!boss5RenderBones.rightHand,foot:!!boss5RenderBones.rightFoot});
   },undefined,err=>console.warn('Shino VRM unavailable.',err));
  }catch(err){console.warn('three-vrm unavailable for Shino.',err)}
@@ -3048,7 +3051,8 @@ function enforceBoss5Visibility(){
 }
 function updateBoss5Weapon(){
  if(!boss5Ready||state.bossHp<=0){boss5WeaponRoot.visible=false;return}
- const hand=boss5RenderBones.rightHand||boss5Bones.rightHand,lower=boss5RenderBones.rightLowerArm||boss5Bones.rightLowerArm;
+ const hand=boss5RenderBones.rightHand||boss5Bones.rightHand;
+ const lower=boss5RenderBones.rightLowerArm||boss5Bones.rightLowerArm||boss5RenderBones.rightUpperArm||boss5Bones.rightUpperArm;
  if(!hand||!lower){boss5WeaponRoot.visible=false;return}
  const hp=new THREE.Vector3(),lp=new THREE.Vector3();hand.getWorldPosition(hp);lower.getWorldPosition(lp);
  const dir=hp.clone().sub(lp);if(dir.lengthSq()<1e-6)dir.set(0,-1,0);dir.normalize();
