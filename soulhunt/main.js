@@ -1796,6 +1796,47 @@ function soulsSwordHandTarget(beat,reach,forward=.78){
  const z=(.3+forward*.72*cut-.42*recover)*reach;
  return new THREE.Vector3(x*reach,y,z);
 }
+function boss3Dance2Flight(timer){
+ const total=BOSS3_DUR.b3_dance2,e=total-timer;
+ let y=0,orbit=0,forward=0,turn=0,air=0;
+ if(e<.55){
+  const p=motionSmooth(0,.55,e);y=THREE.MathUtils.lerp(0,1.85,p)+Math.sin(p*Math.PI)*.35;forward=.35*p;turn=-.12*p;air=p;
+ }else if(e<1.48){
+  const p=motionSmooth(.55,1.48,e);y=1.85+.2*Math.sin(p*Math.PI);orbit=Math.sin(p*Math.PI)*.95;forward=1.0*p;turn=-.4+.8*p;air=1;
+ }else if(e<1.8){
+  const p=motionSmooth(1.48,1.8,e);y=1.95-.1*p;orbit=.22*(1-p);forward=.18*p;turn=.18*(1-p);air=1;
+ }else if(e<2.7){
+  const p=motionSmooth(1.8,2.7,e);y=1.86+.16*Math.sin(p*Math.PI);orbit=-Math.sin(p*Math.PI)*1.05;forward=1.15*p;turn=.42-.84*p;air=1;
+ }else if(e<3.0){
+  const p=motionSmooth(2.7,3.0,e);y=1.84-.12*p;orbit=-.18*(1-p);forward=.12*p;turn=-.18*(1-p);air=1;
+ }else if(e<3.9){
+  const p=motionSmooth(3.0,3.9,e);y=1.72+.12*Math.sin(p*Math.PI);orbit=Math.sin(p*Math.PI)*.82;forward=.92*p;turn=-.35+.7*p;air=1;
+ }else{
+  const p=motionSmooth(3.9,total,e);y=THREE.MathUtils.lerp(1.68,0,p);orbit=.12*(1-p);forward=.08*(1-p);turn=.1*(1-p);air=1-p;
+ }
+ return{e,y,orbit,forward,turn,air};
+}
+function poseBoss3AerialDance(dt,t){
+ const flight=boss3Dance2Flight(t),beat=soulsSwordBeat(t,BOSS3_DANCE2_MARKS,.24,.2);
+ const slash=beat?Math.sin(clamp((beat.p-.28)/.5,0,1)*Math.PI):0;
+ const side=beat&&beat.index%2===0?1:-1;
+ setBoss3Bone('hips',-.3*flight.air,side*.18*slash,side*.2*slash,24,dt);
+ setBoss3Bone('spine',-.42*flight.air,side*.42*slash,-side*.16*slash,26,dt);
+ setBoss3Bone('chest',-.12,side*.2*slash,-side*.08*slash,24,dt);
+ setBoss3Bone('upperChest',-.08,side*.12*slash,0,22,dt);
+ setBoss3Bone('head',.16*flight.air,-side*.12*slash,side*.06*slash,20,dt);
+ setBoss3Bone('leftUpperLeg',-1.0*flight.air+.18*slash,0,.18,24,dt);
+ setBoss3Bone('rightUpperLeg',-.82*flight.air-.14*slash,0,-.18,24,dt);
+ setBoss3Bone('leftLowerLeg',1.25*flight.air,0,0,26,dt);
+ setBoss3Bone('rightLowerLeg',1.05*flight.air,0,0,26,dt);
+ setBoss3Bone('leftFoot',-.18*flight.air,0,.08,22,dt);
+ setBoss3Bone('rightFoot',-.12*flight.air,0,-.08,22,dt);
+ setBoss3Bone('rightShoulder',0,side*.12*slash,-.16,26,dt);
+ setBoss3Bone('rightUpperArm',-.42-.32*flight.air,.12,side*.62*slash,28,dt);
+ setBoss3Bone('rightLowerArm',-.82+.42*slash,0,-side*.28*slash,28,dt);
+ setBoss3Bone('leftUpperArm',-.48*flight.air,-.14,-side*.28*slash,24,dt);
+ setBoss3Bone('leftLowerArm',-.58+.18*slash,0,side*.12*slash,24,dt);
+}
 function applyBoss2PrimaryArmIK(dt){
  if(!boss2Ready||!boss2Bones.rightUpperArm||!boss2Bones.rightHand)return;
  const shoulder=new THREE.Vector3();boss2Bones.rightUpperArm.getWorldPosition(shoulder);
@@ -2376,10 +2417,21 @@ function applyBoss3PrimaryArmIK(dt){
  const shoulder=new THREE.Vector3();boss3Bones.rightUpperArm.getWorldPosition(shoulder);
  const reach=getArmReach(boss3Bones,'right'),st=state.bossState,t=state.bossTimer;
  let local=new THREE.Vector3(.36,-.5,.2);
- if(['b3_triple','b3_wing_combo','b3_dance','b3_dance2'].includes(st)){
-   const marks=st==='b3_triple'?BOSS3_TRIPLE_MARKS:st==='b3_wing_combo'?BOSS3_WING_MARKS:st==='b3_dance'?BOSS3_DANCE_MARKS:BOSS3_DANCE2_MARKS;
-   const beat=soulsSwordBeat(t,marks,st==='b3_dance2'?.25:.23,.21);
-   local.copy(soulsSwordHandTarget(beat,reach,st==='b3_dance2'?.86:.78).multiplyScalar(1/reach));
+ if(['b3_triple','b3_wing_combo','b3_dance'].includes(st)){
+   const marks=st==='b3_triple'?BOSS3_TRIPLE_MARKS:st==='b3_wing_combo'?BOSS3_WING_MARKS:BOSS3_DANCE_MARKS;
+   const beat=soulsSwordBeat(t,marks,.23,.21);
+   local.copy(soulsSwordHandTarget(beat,reach,.78).multiplyScalar(1/reach));
+ }else if(st==='b3_dance2'){
+   const beat=soulsSwordBeat(t,BOSS3_DANCE2_MARKS,.24,.2);
+   if(beat){
+    const side=beat.index%2===0?1:-1,p=beat.p;
+    const cut=motionSmooth(.36,.68,p),recover=motionSmooth(.7,1,p);
+    local.set(
+      THREE.MathUtils.lerp(side*.62,-side*.72,cut)*(1-recover)+side*.14*recover,
+      -.1-.2*Math.sin(p*Math.PI),
+      .38+1.02*cut-.52*recover
+    );
+   }else local.set(.22,-.18,.48);
  }else if(st==='b3_cross'||st==='b3_echoes'){
    const marks=st==='b3_cross'?BOSS3_CROSS_MARKS:BOSS3_ECHO_MARKS;
    const beat=soulsSwordBeat(t,marks,.26,.22);
@@ -2472,13 +2524,13 @@ function updateBoss3Fx(dt){
 }
 const BOSS3_DUR={
  b3_triple:2.04,b3_lunge:1.22,b3_cross:1.52,b3_dance:2.72,b3_rising:1.52,
- b3_phase:2.42,b3_wing_combo:2.72,b3_dive_bloom:2.46,b3_echoes:2.62,b3_flower:2.62,b3_dance2:3.36
+ b3_phase:2.42,b3_wing_combo:2.72,b3_dive_bloom:2.46,b3_echoes:2.62,b3_flower:2.62,b3_dance2:4.4
 };
 const BOSS3_TRIPLE_MARKS=[1.52,.88,.26];
 const BOSS3_CROSS_MARKS=[1.05,.38];
 const BOSS3_DANCE_MARKS=[2.12,1.48,.84,.22];
 const BOSS3_WING_MARKS=[2.16,1.53,.9,.27];
-const BOSS3_DANCE2_MARKS=[2.76,2.13,1.50,.87,.24];
+const BOSS3_DANCE2_MARKS=[3.58,3.13,2.45,1.98,1.26,.72];
 const BOSS3_ECHO_MARKS=[2.06,1.45,.84,.23];
 function chooseBoss3Attack(){
  if(state.bossHp<=0)return;
@@ -2522,8 +2574,10 @@ function poseBoss3(dt){
   }else{
     setBoss3Bone('leftUpperLeg',0,0,.07,8,dt);setBoss3Bone('rightUpperLeg',0,0,-.04,8,dt);
   }
- }else if(['b3_triple','b3_cross','b3_wing_combo','b3_dance','b3_dance2','b3_echoes'].includes(st)){
-  const marks=st==='b3_triple'?BOSS3_TRIPLE_MARKS:st==='b3_cross'?BOSS3_CROSS_MARKS:st==='b3_wing_combo'?BOSS3_WING_MARKS:st==='b3_dance'?BOSS3_DANCE_MARKS:st==='b3_dance2'?BOSS3_DANCE2_MARKS:BOSS3_ECHO_MARKS;
+ }else if(st==='b3_dance2'){
+  poseBoss3AerialDance(dt,t);
+ }else if(['b3_triple','b3_cross','b3_wing_combo','b3_dance','b3_echoes'].includes(st)){
+  const marks=st==='b3_triple'?BOSS3_TRIPLE_MARKS:st==='b3_cross'?BOSS3_CROSS_MARKS:st==='b3_wing_combo'?BOSS3_WING_MARKS:st==='b3_dance'?BOSS3_DANCE_MARKS:BOSS3_ECHO_MARKS;
   const beat=soulsSwordBeat(t,marks,.24,.22),cut=beat?Math.sin(clamp((beat.p-.34)/.48,0,1)*Math.PI):0,side=beat&&beat.index%2===0?1:-1;
   setBoss3Bone('rightShoulder',0,side*.08*cut,-.1,18,dt);
   setBoss3Bone('rightUpperArm',-.6,.08,side*.38*cut,20,dt);setBoss3Bone('rightLowerArm',-.68+.3*cut,0,-side*.18*cut,20,dt);
@@ -2616,13 +2670,27 @@ function updateBoss3(dt){
    if(state.bossTimer<=m+.11&&state.bossTimer>m-.11)boss3Strike('cross'+i,3.8,dmgs[i],20+i*7,false,-.68,2.5);
   });
   if(state.bossTimer<=0)finishBoss3Attack(.8);
- }else if(state.bossState==='b3_dance'||state.bossState==='b3_dance2'){
-  const phase2=state.bossState==='b3_dance2',marks=phase2?BOSS3_DANCE2_MARKS:BOSS3_DANCE_MARKS;
-  marks.forEach((m,i)=>{
-   if(state.bossTimer<=m+.1&&state.bossTimer>m-.1)boss3Strike('dance'+i,phase2?4.05:3.8,phase2?17+(i%3)*2:16+(i%3)*2,14+(i%3)*2,false,-.74,2.2);
-   if(state.bossTimer<=m+.2&&state.bossTimer>m+.04&&d>2.45)boss.position.addScaledVector(dir,dt*(phase2?4.2:3.7));
+ }else if(state.bossState==='b3_dance'){
+  BOSS3_DANCE_MARKS.forEach((m,i)=>{
+   if(state.bossTimer<=m+.1&&state.bossTimer>m-.1)boss3Strike('dance'+i,3.8,16+(i%3)*2,14+(i%3)*2,false,-.74,2.2);
+   if(state.bossTimer<=m+.2&&state.bossTimer>m+.04&&d>2.45)boss.position.addScaledVector(dir,dt*3.7);
   });
-  if(state.bossTimer<=0)finishBoss3Attack(phase2?1.08:.92);
+  if(state.bossTimer<=0)finishBoss3Attack(.92);
+ }else if(state.bossState==='b3_dance2'){
+  const flight=boss3Dance2Flight(state.bossTimer);
+  boss.position.y=flight.y;
+  const side=new THREE.Vector3(dir.z,0,-dir.x);
+  boss.position.addScaledVector(side,flight.orbit*dt*2.4);
+  if(flight.forward>0&&d>1.65)boss.position.addScaledVector(dir,dt*(2.6+flight.forward*2.8));
+  boss.rotation.y=lerpAngle(boss.rotation.y,face+flight.turn,1-Math.exp(-dt*10.5));
+  BOSS3_DANCE2_MARKS.forEach((m,i)=>{
+   if(state.bossTimer<=m+.1&&state.bossTimer>m-.1){
+    boss3Once('water-vfx'+i,()=>{spawnBoss2Slash(1.8+i*.06,i<4?0xff6f8b:0xff9bb0);spawnBoss3Petals(7,2.8)});
+    boss3Strike('water-hit'+i,4.15,16+(i%3)*2,14+(i%3)*2,false,-.85,2.15);
+   }
+  });
+  if(state.bossTimer<=0){boss.position.y=0;spawnDustBurst(boss.position,.42);finishBoss3Attack(1.12)}
+
  }else if(state.bossState==='b3_rising'){
   if(state.bossTimer<.72&&state.bossTimer>.32)boss.position.addScaledVector(dir,dt*6.4);
   if(state.bossTimer<=.52&&state.bossTimer>.22)boss3Strike('rise',3.45,31,36,false,-.25,2.6);
