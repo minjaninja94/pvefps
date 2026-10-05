@@ -323,7 +323,9 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
      if(side==='right')delta.z=reach*.26;
    }
    if(state.rolling>0){
-     delta.set(sx*reach*.16,-reach*.18,reach*.28);
+     const lean=state.rollLean||1;
+     if(side==='right')delta.set(-lean*reach*.12,-reach*.12,reach*.22);
+     else delta.set(lean*reach*.08,-reach*.08,reach*.3);
    }
    if(attack){
      const p=playerAttackProgress();
@@ -420,15 +422,18 @@ function animateVroidPlayer(dt){
    spineX=-.18;spineZ=Math.sin(state.time*24)*.08;hipsX=.08;
  }else if(state.rolling>0){
    const rp=clamp(state.rollElapsed/ROLL_DURATION,0,1);
-   const prep=motionSmooth(0,.16,rp),spinP=motionSmooth(.12,.78,rp),land=motionSmooth(.72,1,rp);
-   const tuck=Math.sin(clamp((rp-.06)/.82,0,1)*Math.PI);
-   spineX=-.26*prep-.72*tuck+.18*land;hipsX=.34*tuck-.12*land;
-   spineZ=Math.sin(spinP*Math.PI)*.055;
-   headX=.38*tuck-.12*land;
-   luz=-.48-.18*tuck;ruz=.48+.18*tuck;lux=-.86*tuck;rux=-.86*tuck;llx=-1.18*tuck;rlx=-1.18*tuck;
-   lulx=-1.08*tuck+.24*land;rulx=-1.08*tuck-.18*land;
-   lllx=1.46*tuck-.62*land;rllx=1.46*tuck+.72*land;
-   lfx=-.28*tuck+.18*land;rfx=-.28*tuck-.24*land;
+   const prep=motionSmooth(0,.14,rp),spinP=motionSmooth(.13,.79,rp),land=motionSmooth(.76,1,rp);
+   const tuck=Math.sin(clamp((rp-.05)/.86,0,1)*Math.PI),lean=state.rollLean||1;
+   // Ground roll: chin tucked, one shoulder leads, knees stay close to the torso.
+   spineX=-.34*prep-.9*tuck+.2*land;hipsX=.5*tuck-.14*land;
+   spineZ=lean*(.14*prep-.18*tuck+.08*land);
+   headX=.56*tuck-.16*land;headZ=-lean*.11*tuck;
+   luz=-.52-.25*tuck;ruz=.52+.25*tuck;
+   lux=-.98*tuck+lean*.08;rux=-.92*tuck-lean*.08;
+   llx=-1.28*tuck;rlx=-1.22*tuck;
+   lulx=-1.22*tuck+.3*land;rulx=-1.08*tuck-.2*land;
+   lllx=1.58*tuck-.68*land;rllx=1.46*tuck+.74*land;
+   lfx=-.34*tuck+.2*land;rfx=-.3*tuck-.24*land;
  }else if(state.attack>0){
    const w=currentWeapon(),p=playerAttackProgress(),step=state.attackStep,profile=playerAttackProfile(w.id,step);
    const side=step===2?-1:1,arc=Math.sin(p*Math.PI),impact=Math.sin(clamp((p-profile.active[0])/(profile.active[1]-profile.active[0]),0,1)*Math.PI);
@@ -518,15 +523,20 @@ function animateVroidPlayer(dt){
    playerVrmRoot.position.y=THREE.MathUtils.lerp(playerVrmRoot.position.y,playerVrmRootRest.y,1-Math.exp(-dt*20));
  }
  if(state.rolling>0){
-   const rp=clamp(state.rollElapsed/ROLL_DURATION,0,1),spinP=motionSmooth(.12,.78,rp);
-   const tuck=Math.sin(clamp((rp-.06)/.82,0,1)*Math.PI);
+   const rp=clamp(state.rollElapsed/ROLL_DURATION,0,1),spinP=motionSmooth(.13,.79,rp),lean=state.rollLean||1;
+   const tuck=Math.sin(clamp((rp-.05)/.86,0,1)*Math.PI);
+   // Rotate around a low body-center and bias toward one shoulder instead of doing an airborne somersault.
    playerVrmMotion.rotation.x=-spinP*Math.PI*2;
-   playerVrmMotion.rotation.z=Math.sin(spinP*Math.PI)*.035;
-   playerVrmMotion.position.y=playerVrmMotionRest.y+Math.sin(spinP*Math.PI)*.19-.08*tuck;
+   playerVrmMotion.rotation.y=lean*Math.sin(spinP*Math.PI)*.08;
+   playerVrmMotion.rotation.z=lean*Math.sin(spinP*Math.PI)*.16;
+   playerVrmMotion.position.y=playerVrmMotionRest.y-.34*tuck+.025*Math.sin(spinP*Math.PI*2);
+   playerVrmMotion.position.z=-.08*Math.sin(spinP*Math.PI*2);
  }else{
    playerVrmMotion.rotation.x=lerpAngle(playerVrmMotion.rotation.x,0,1-Math.exp(-dt*24));
+   playerVrmMotion.rotation.y=lerpAngle(playerVrmMotion.rotation.y,0,1-Math.exp(-dt*24));
    playerVrmMotion.rotation.z=lerpAngle(playerVrmMotion.rotation.z,0,1-Math.exp(-dt*24));
    playerVrmMotion.position.y=THREE.MathUtils.lerp(playerVrmMotion.position.y,playerVrmMotionRest.y,1-Math.exp(-dt*22));
+   playerVrmMotion.position.z=THREE.MathUtils.lerp(playerVrmMotion.position.z,0,1-Math.exp(-dt*22));
  }
  playerVrm?.update?.(dt);
 }
@@ -1561,7 +1571,7 @@ potionHud.style.cssText='position:fixed;left:24px;bottom:145px;z-index:30;color:
 document.body.appendChild(potionHud);
 
 const state={
- hp:100,posture:0,stamina:100,staminaMax:100,staminaRegenDelay:0,exhausted:0,potions:3,potionTimer:0,potionHealDone:false,attack:0,attackDuration:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollElapsed:0,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
+ hp:100,posture:0,stamina:100,staminaMax:100,staminaRegenDelay:0,exhausted:0,potions:3,potionTimer:0,potionHealDone:false,attack:0,attackDuration:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollElapsed:0,rollLean:1,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
  bossMaxHp:BOSS_VARIANT===3?11800:BOSS_VARIANT===2?9000:11200,bossHp:BOSS_VARIANT===3?11800:BOSS_VARIANT===2?9000:11200,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',bossBustImpulse:0,bossAttackTarget:new THREE.Vector3(),bossAttackTargetLocked:false,potionPunishQueued:false,potionPunishKind:'spike_triple',time:0,shake:0,hitstop:0,
  headHp:100,legHp:150,tailHp:130,tailBroken:false,legBroken:false,headBroken:false,danger:false,reaction:0,reactionZone:'body'
 };
@@ -2647,8 +2657,8 @@ const BOSS_ATTACK_SCALE={
  arm_grab:1.72,arm_barrage:1.42,arm_guardbreak:1.66,arm_crush:1.78
 };
 function bossAttackScale(st){return BOSS_ATTACK_SCALE[st]||1}
-const ROLL_DURATION=.72;
-const ROLL_IFRAME_START=.08,ROLL_IFRAME_END=.62;
+const ROLL_DURATION=.76;
+const ROLL_IFRAME_START=.10,ROLL_IFRAME_END=.60;
 function lerpAngle(current,target,alpha){
  const delta=Math.atan2(Math.sin(target-current),Math.cos(target-current));
  return current+delta*alpha;
@@ -3004,6 +3014,7 @@ function tryRoll(){
    else state.rollDir.set(-Math.sin(player.rotation.y),0,-Math.cos(player.rotation.y));
  }
  state.rollDir.normalize();
+ state.rollLean=x<0?-1:x>0?1:(state.rollLean>0?-1:1);
  if(!spendStamina(24,.72))return;
  state.rolling=ROLL_DURATION;state.rollElapsed=0;state.invuln=0;
  spawnDustBurst(player.position.clone(),.38);
@@ -3690,12 +3701,12 @@ function updatePlayer(dt){
    const p=clamp(state.rollElapsed/ROLL_DURATION,0,1);
    state.rolling=Math.max(0,ROLL_DURATION-state.rollElapsed);
    state.invuln=(p>=ROLL_IFRAME_START&&p<=ROLL_IFRAME_END)?Math.max(state.invuln,.055):0;
-   const speed=8.0-3.25*motionSmooth(.48,1,p);
+   const speed=6.9-2.2*motionSmooth(.55,1,p);
    player.position.addScaledVector(state.rollDir,dt*speed);
    player.rotation.x=0;
    player.rotation.z=Math.sin(p*Math.PI*2)*.035;
    if(state.rolling<=0){
-     player.rotation.x=0;player.rotation.z=0;playerVrmMotion.rotation.set(0,0,0);playerVrmMotion.position.y=playerVrmMotionRest.y;
+     player.rotation.x=0;player.rotation.z=0;playerVrmMotion.rotation.set(0,0,0);playerVrmMotion.position.set(0,playerVrmMotionRest.y,0);
      spawnDustBurst(player.position.clone(),.26);
    }
    return;
