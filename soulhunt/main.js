@@ -3057,7 +3057,7 @@ function updateBoss5Weapon(){
 }
 function applyBoss5GripIK(dt){
  if(!boss5Ready||!boss5WeaponRoot.visible||!boss5Bones.leftUpperArm||!boss5Bones.leftHand)return;
- const shoulder=new THREE.Vector3();boss5Bones.leftUpperArm.getWorldPosition(shoulder),reach=getArmReach(boss5Bones,'left');
+ const shoulder=new THREE.Vector3();boss5Bones.leftUpperArm.getWorldPosition(shoulder);const reach=getArmReach(boss5Bones,'left');
  boss5WeaponRoot.updateWorldMatrix(true,true);
  const target=boss5WeaponRoot.localToWorld(new THREE.Vector3(0,.72,0));
  const elbow=shoulder.clone().add(bossCombatOffset(-.35*reach,-.26*reach,.12*reach));
@@ -3068,7 +3068,7 @@ const BOSS5_CHAIN_MARKS=[2.02,1.34,.62];
 const BOSS5_RUSH_MARKS=[2.72,2.05,1.36,.64];
 function applyBoss5PrimaryArmIK(dt){
  if(!boss5Ready||!boss5Bones.rightUpperArm||!boss5Bones.rightHand)return;
- const shoulder=new THREE.Vector3();boss5Bones.rightUpperArm.getWorldPosition(shoulder),reach=getArmReach(boss5Bones,'right'),st=state.bossState,t=state.bossTimer;
+ const shoulder=new THREE.Vector3();boss5Bones.rightUpperArm.getWorldPosition(shoulder);const reach=getArmReach(boss5Bones,'right'),st=state.bossState,t=state.bossTimer;
  let local=new THREE.Vector3(.34,-.42,.22);
  if(st==='b5_chain'){const beat=soulsSwordBeat(t,BOSS5_CHAIN_MARKS,.34,.28);local=beat?soulsSwordHandTarget(beat,reach,.92).multiplyScalar(1/reach):local}
  else if(st==='b5_upper'){const p=clamp(1-t/BOSS5_DUR.b5_upper,0,1),cut=motionSmooth(.36,.68,p);local.set(.2,-.5+.5*cut,.12+1.0*cut)}
