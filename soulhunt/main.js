@@ -2,21 +2,23 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const BOSS_QUERY=Number(new URLSearchParams(location.search).get('boss'));
-const BOSS_VARIANT=[1,2,3,4].includes(BOSS_QUERY)?BOSS_QUERY:1;
+const BOSS_VARIANT=[1,2,3,4,5].includes(BOSS_QUERY)?BOSS_QUERY:1;
 const BOSS2_NAME='잔불의 왕녀 · 아르세리아';
 const BOSS3_NAME='붉은 백합의 검희 · 세리아';
 const BOSS4_NAME='백야의 검성 · 비비';
+const BOSS5_NAME='흑철의 투희 · 시노';
 const VRM_SAMPLE_REV='e16eb187100149a315ad92c3c9968f1d5baa6c7d';
 const BOSS2_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VRM_SAMPLE_REV}/vroid/beta/Victoria_Rubin.vrm`;
 const BOSS3_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VRM_SAMPLE_REV}/vroid/beta/Vita.vrm`;
 const BOSS4_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VRM_SAMPLE_REV}/vroid/beta/Vivi.vrm`;
+const BOSS5_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VRM_SAMPLE_REV}/vroid/beta/Sendagaya_Shino.vrm`;
 
 const PLAYER_MAX_HP=1600;
 const PLAYER_MAX_STAMINA=120;
 const PLAYER_DAMAGE_SCALE=10;
 const BOSS_DAMAGE_SCALE=16;
 const POTION_HEAL=780;
-const BOSS_MAX_HP={1:18000,2:22000,3:26000,4:24500};
+const BOSS_MAX_HP={1:18000,2:22000,3:26000,4:24500,5:30000};
 const BOSS1_PART_HP={head:1000,leg:1500,tail:1300,spikeHeavy:900,spikeLight:650};
 const BOSS3_HEAL_SCALE=BOSS_MAX_HP[3]/11800;
 
@@ -2975,6 +2977,252 @@ function updateBoss4(dt){
 }
 function boss4Once(tag,fn){if(boss4Fired.has(tag))return false;boss4Fired.add(tag);fn?.();return true}
 
+
+/* -------------------------------------------------------------------------- */
+/* Boss 05: Black-Iron Champion Shino                                         */
+/* Original champion-style axe fighter: poleaxe pressure + physical brawling  */
+/* -------------------------------------------------------------------------- */
+const boss5Root=new THREE.Group();boss5Root.name='ShinoChampionRoot';boss5Root.visible=BOSS_VARIANT===5;boss.add(boss5Root);
+let boss5Visual=null,boss5VRM=null,boss5Ready=false,boss5VisualBaseY=0;
+const boss5Bones={},boss5Rest={},boss5RenderBones={},boss5Fired=new Set(),boss5MeleeRequests=[],boss5BodyRequests=[];
+const boss5WeaponTrace={valid:false,base:new THREE.Vector3(),tip:new THREE.Vector3()};
+const boss5BodyTrace={kick:new THREE.Vector3(),shoulder:new THREE.Vector3(),elbow:new THREE.Vector3(),validKick:false,validShoulder:false,validElbow:false};
+const boss5Aura=new THREE.PointLight(0xe4703b,7.8,12.5,2);boss5Aura.position.set(0,1.25,.1);boss5Root.add(boss5Aura);
+const boss5HaloMat=new THREE.MeshBasicMaterial({color:0x9e3f24,transparent:true,opacity:.08,depthWrite:false});
+const boss5Halo=new THREE.Mesh(new THREE.TorusGeometry(.95,.022,6,40),boss5HaloMat);boss5Halo.rotation.x=Math.PI/2;boss5Halo.position.y=.03;boss5Root.add(boss5Halo);
+
+const boss5Fallback=new THREE.Group();boss5Root.add(boss5Fallback);
+const b5Skin=new THREE.MeshStandardMaterial({color:0xe0b09e,roughness:.5});
+const b5Armor=new THREE.MeshStandardMaterial({color:0x262a30,metalness:.55,roughness:.48,emissive:0x120906,emissiveIntensity:.18});
+part(boss5Fallback,new THREE.CapsuleGeometry(.31,.82,5,8),b5Skin,[0,1.18,0]);
+part(boss5Fallback,new THREE.BoxGeometry(.68,.72,.34),b5Armor,[0,1.4,0]);
+part(boss5Fallback,new THREE.SphereGeometry(.29,14,10),b5Skin,[0,2.04,.02]);
+
+const boss5WeaponRoot=new THREE.Group();boss5WeaponRoot.visible=false;scene.add(boss5WeaponRoot);
+const boss5Steel=new THREE.MeshStandardMaterial({color:0xb9bec4,metalness:.93,roughness:.24,emissive:0x2a170f,emissiveIntensity:.22});
+const boss5ShaftMat=new THREE.MeshStandardMaterial({color:0x32251d,roughness:.72,metalness:.08});
+const boss5Axe=new THREE.Group();
+const boss5Shaft=new THREE.Mesh(new THREE.CylinderGeometry(.052,.058,3.35,9),boss5ShaftMat);boss5Shaft.position.y=1.3;boss5Axe.add(boss5Shaft);
+part(boss5Axe,new THREE.BoxGeometry(.78,.72,.09),boss5Steel,[.28,2.88,0],[0,0,-.22]);
+part(boss5Axe,new THREE.ConeGeometry(.16,.6,7),boss5Steel,[-.08,3.0,0],[0,0,Math.PI]);
+part(boss5Axe,new THREE.BoxGeometry(.36,.16,.1),boss5Steel,[-.24,2.76,0],[0,0,.22]);
+boss5WeaponRoot.add(boss5Axe);
+
+state.boss5Phase=1;state.boss5AttackCount=0;state.boss5HitReact=0;state.boss5ChargeDir=new THREE.Vector3();state.boss5RushStep=-1;
+
+function cacheBoss5Bone(name,node){if(!node)return;boss5Bones[name]=node;boss5Rest[name]={rotation:node.rotation.clone(),position:node.position.clone(),scale:node.scale.clone()}}
+function setBoss5Bone(name,rx=0,ry=0,rz=0,speed=12,dt=.016){
+ const b=boss5Bones[name],r=boss5Rest[name];if(!b||!r)return;const a=1-Math.exp(-dt*speed);
+ b.rotation.x=THREE.MathUtils.lerp(b.rotation.x,r.rotation.x+rx,a);b.rotation.y=THREE.MathUtils.lerp(b.rotation.y,r.rotation.y+ry,a);b.rotation.z=THREE.MathUtils.lerp(b.rotation.z,r.rotation.z+rz,a);
+}
+function resetBoss5Pose(dt){
+ for(const [name,b] of Object.entries(boss5Bones)){const r=boss5Rest[name];if(!r)continue;const a=1-Math.exp(-dt*13);
+  b.rotation.x=THREE.MathUtils.lerp(b.rotation.x,r.rotation.x,a);b.rotation.y=THREE.MathUtils.lerp(b.rotation.y,r.rotation.y,a);b.rotation.z=THREE.MathUtils.lerp(b.rotation.z,r.rotation.z,a)}
+}
+function syncBoss5Rig(dt=0){if(!boss5VRM)return;boss5VRM.update?.(Math.max(0,dt));boss5Visual?.updateMatrixWorld?.(true)}
+async function loadBoss5Avatar(){
+ if(BOSS_VARIANT!==5)return;
+ try{
+  const {VRMLoaderPlugin,VRMUtils}=await import('@pixiv/three-vrm');
+  const loader=new GLTFLoader();loader.setCrossOrigin('anonymous');loader.register(parser=>new VRMLoaderPlugin(parser));
+  loader.load(BOSS5_MODEL_URL,gltf=>{
+   const vrm=gltf.userData?.vrm||null;if(vrm)VRMUtils.rotateVRM0(vrm);
+   const root=vrm?.scene||gltf.scene;
+   root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(Array.isArray(o.material))o.material=o.material.map(m=>m.clone());else if(o.material)o.material=o.material.clone()}});
+   root.updateMatrixWorld(true);let box=new THREE.Box3().setFromObject(root,true),size=new THREE.Vector3();box.getSize(size);
+   root.scale.multiplyScalar(3.12/Math.max(size.y,.001));root.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(root,true);
+   root.position.y-=box.min.y;root.position.z=.04;boss5VisualBaseY=root.position.y;
+   boss5Root.add(root);boss5Visual=root;boss5VRM=vrm;boss5Ready=true;boss5Fallback.visible=false;
+   const h=vrm?.humanoid;
+   for(const n of ['hips','spine','chest','upperChest','neck','head','leftShoulder','rightShoulder','leftUpperArm','rightUpperArm','leftLowerArm','rightLowerArm','leftHand','rightHand','leftUpperLeg','rightUpperLeg','leftLowerLeg','rightLowerLeg','leftFoot','rightFoot']){
+    const node=h?.getNormalizedBoneNode?.(n);if(node)cacheBoss5Bone(n,node);
+    const raw=h?.getRawBoneNode?.(n);boss5RenderBones[n]=raw||node||null;
+   }
+   poseBoss5(.12);syncBoss5Rig(0);flash(BOSS5_NAME,.9);
+   console.info('Shino champion VRM rig',{hand:!!boss5RenderBones.rightHand,foot:!!boss5RenderBones.rightFoot});
+  },undefined,err=>console.warn('Shino VRM unavailable.',err));
+ }catch(err){console.warn('three-vrm unavailable for Shino.',err)}
+}
+function enforceBoss5Visibility(){
+ if(BOSS_VARIANT!==5)return;for(const child of boss.children)child.visible=(child===boss5Root);boss5Root.visible=true;if(!boss5Ready)boss5Fallback.visible=true;
+}
+function updateBoss5Weapon(){
+ if(!boss5Ready||state.bossHp<=0){boss5WeaponRoot.visible=false;return}
+ const hand=boss5RenderBones.rightHand||boss5Bones.rightHand,lower=boss5RenderBones.rightLowerArm||boss5Bones.rightLowerArm;
+ if(!hand||!lower){boss5WeaponRoot.visible=false;return}
+ const hp=new THREE.Vector3(),lp=new THREE.Vector3();hand.getWorldPosition(hp);lower.getWorldPosition(lp);
+ const dir=hp.clone().sub(lp);if(dir.lengthSq()<1e-6)dir.set(0,-1,0);dir.normalize();
+ boss5WeaponRoot.visible=true;boss5WeaponRoot.position.copy(hp).addScaledVector(dir,.05);
+ boss5WeaponRoot.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
+}
+function applyBoss5GripIK(dt){
+ if(!boss5Ready||!boss5WeaponRoot.visible||!boss5Bones.leftUpperArm||!boss5Bones.leftHand)return;
+ const shoulder=new THREE.Vector3();boss5Bones.leftUpperArm.getWorldPosition(shoulder),reach=getArmReach(boss5Bones,'left');
+ boss5WeaponRoot.updateWorldMatrix(true,true);
+ const target=boss5WeaponRoot.localToWorld(new THREE.Vector3(0,.72,0));
+ const elbow=shoulder.clone().add(bossCombatOffset(-.35*reach,-.26*reach,.12*reach));
+ solveArmCCD(boss5Bones,'left',target,elbow,1-Math.exp(-dt*44));
+}
+const BOSS5_DUR={b5_chain:2.68,b5_charge:1.75,b5_kick:1.42,b5_upper:1.78,b5_leap:2.12,b5_rush:3.3,b5_roar:2.0};
+const BOSS5_CHAIN_MARKS=[2.02,1.34,.62];
+const BOSS5_RUSH_MARKS=[2.72,2.05,1.36,.64];
+function applyBoss5PrimaryArmIK(dt){
+ if(!boss5Ready||!boss5Bones.rightUpperArm||!boss5Bones.rightHand)return;
+ const shoulder=new THREE.Vector3();boss5Bones.rightUpperArm.getWorldPosition(shoulder),reach=getArmReach(boss5Bones,'right'),st=state.bossState,t=state.bossTimer;
+ let local=new THREE.Vector3(.34,-.42,.22);
+ if(st==='b5_chain'){const beat=soulsSwordBeat(t,BOSS5_CHAIN_MARKS,.34,.28);local=beat?soulsSwordHandTarget(beat,reach,.92).multiplyScalar(1/reach):local}
+ else if(st==='b5_upper'){const p=clamp(1-t/BOSS5_DUR.b5_upper,0,1),cut=motionSmooth(.36,.68,p);local.set(.2,-.5+.5*cut,.12+1.0*cut)}
+ else if(st==='b5_leap')local.set(.16,.1,.72);
+ else if(st==='b5_rush')local.set(.02,-.16,1.06);
+ else if(st==='b5_charge'||st==='b5_kick')local.set(.28,-.46,.22);
+ const target=shoulder.clone().add(bossCombatOffset(local.x*reach,local.y*reach,local.z*reach));
+ const elbow=shoulder.clone().add(bossCombatOffset(.3*reach,-.32*reach,.18*reach));
+ solveArmCCD(boss5Bones,'right',target,elbow,1-Math.exp(-dt*45));
+}
+function poseBoss5(dt){
+ if(!boss5Ready)return;resetBoss5Pose(dt);
+ const st=state.bossState,t=state.bossTimer,phase=state.boss5Phase,hit=state.boss5HitReact>0?Math.sin((state.boss5HitReact/.14)*Math.PI):0;
+ setBoss5Bone('spine',-.04-hit*.12,0,hit*.08,12,dt);setBoss5Bone('head',.02-hit*.05,0,-hit*.05,11,dt);
+ if(st==='idle'){
+  const sway=Math.sin(state.time*1.5);setBoss5Bone('hips',0,.025*sway,.045*sway,8,dt);setBoss5Bone('spine',-.055,.015*sway,-.03*sway,8,dt);
+  setBoss5Bone('rightUpperArm',-.58,.06,-.3,10,dt);setBoss5Bone('rightLowerArm',-.56,0,-.16,10,dt);setBoss5Bone('leftUpperArm',-.44,-.04,.28,10,dt);
+  if(dist()>3.7){const stride=Math.sin(state.time*(phase===2?9.2:7.4))*(phase===2?.52:.42);setBoss5Bone('leftUpperLeg',stride,0,.04,14,dt);setBoss5Bone('rightUpperLeg',-stride,0,-.04,14,dt)}
+ }else if(st==='b5_chain'){
+  const beat=soulsSwordBeat(t,BOSS5_CHAIN_MARKS,.34,.28),cut=beat?Math.sin(clamp((beat.p-.28)/.5,0,1)*Math.PI):0,side=beat&&beat.index%2===0?1:-1;
+  setBoss5Bone('hips',0,side*.16*cut,0,20,dt);setBoss5Bone('spine',-.12,side*.36*cut,-side*.12*cut,22,dt);setBoss5Bone('rightLowerArm',-.66+.28*cut,0,-side*.2*cut,22,dt);
+ }else if(st==='b5_charge'){
+  const p=clamp(1-t/BOSS5_DUR.b5_charge,0,1),drive=motionSmooth(.28,.72,p)*(1-motionSmooth(.78,1,p));
+  setBoss5Bone('spine',-.48*drive,0,0,24,dt);setBoss5Bone('hips',-.12*drive,0,0,22,dt);setBoss5Bone('head',.16*drive,0,0,20,dt);
+  setBoss5Bone('leftUpperArm',-.78*drive,-.12,.22,22,dt);setBoss5Bone('rightUpperArm',-.72*drive,.08,-.2,22,dt);
+  setBoss5Bone('leftUpperLeg',-.5*drive,0,.03,22,dt);setBoss5Bone('rightUpperLeg',.52*drive,0,-.03,22,dt);
+ }else if(st==='b5_kick'){
+  const p=clamp(1-t/BOSS5_DUR.b5_kick,0,1),kick=Math.sin(clamp((p-.28)/.5,0,1)*Math.PI);
+  setBoss5Bone('spine',-.12,-.18*kick,.1*kick,22,dt);setBoss5Bone('hips',.08,-.2*kick,0,22,dt);
+  setBoss5Bone('rightUpperLeg',-1.15*kick,0,-.12,28,dt);setBoss5Bone('rightLowerLeg',.32+.52*(1-kick),0,0,28,dt);setBoss5Bone('rightFoot',-.28*kick,0,0,26,dt);
+ }else if(st==='b5_upper'){
+  const p=clamp(1-t/BOSS5_DUR.b5_upper,0,1),cut=Math.sin(clamp((p-.3)/.48,0,1)*Math.PI);
+  setBoss5Bone('hips',.12,-.2*cut,0,22,dt);setBoss5Bone('spine',.12-.5*cut,-.24*cut,0,24,dt);setBoss5Bone('rightUpperArm',-.86+.46*cut,.04,-.42*cut,24,dt);
+ }else if(st==='b5_leap'){
+  const p=clamp(1-t/BOSS5_DUR.b5_leap,0,1),air=Math.sin(clamp(p/.82,0,1)*Math.PI);
+  setBoss5Bone('hips',-.22*air,0,0,22,dt);setBoss5Bone('spine',-.3*air,0,0,22,dt);setBoss5Bone('leftUpperLeg',-.82*air,0,.12,24,dt);setBoss5Bone('rightUpperLeg',-.68*air,0,-.12,24,dt);
+  setBoss5Bone('leftLowerLeg',1.08*air,0,0,24,dt);setBoss5Bone('rightLowerLeg',.96*air,0,0,24,dt);
+ }else if(st==='b5_rush'){
+  setBoss5Bone('spine',-.36,0,0,25,dt);setBoss5Bone('hips',-.1,0,0,22,dt);setBoss5Bone('rightUpperArm',-.86,.02,-.08,25,dt);setBoss5Bone('rightLowerArm',-.22,0,0,25,dt);
+ }else if(st==='b5_roar'){
+  setBoss5Bone('spine',.16,0,0,16,dt);setBoss5Bone('chest',.22,0,0,16,dt);setBoss5Bone('leftUpperArm',-.34,-.52,.88,16,dt);setBoss5Bone('rightUpperArm',-.34,.52,-.88,16,dt);
+ }
+ setBoss5Bone('rightHand',-.05,-.03,-.08,22,dt);setBoss5Bone('leftHand',-.04,.03,.06,22,dt);
+}
+function boss5Strike(tag,dmg,posture,ttl=.3){
+ if(boss5Fired.has(tag)||boss5MeleeRequests.some(r=>r.tag===tag))return;boss5MeleeRequests.push({tag,dmg,posture,ttl});
+}
+function boss5BodyStrike(tag,kind,dmg,posture,ttl=.28){
+ if(boss5Fired.has(tag)||boss5BodyRequests.some(r=>r.tag===tag))return;boss5BodyRequests.push({tag,kind,dmg,posture,ttl});
+}
+function boss5BodyPoint(kind){
+ const map=kind==='kick'?['rightFoot','rightLowerLeg']:kind==='elbow'?['rightLowerArm','rightUpperArm']:['chest','hips'];
+ const a=boss5RenderBones[map[0]]||boss5Bones[map[0]],b=boss5RenderBones[map[1]]||boss5Bones[map[1]];
+ const p=new THREE.Vector3();
+ if(a)a.getWorldPosition(p);else p.copy(boss.position).add(new THREE.Vector3(0,kind==='shoulder'?1.35:.8,0));
+ if(b){const q=new THREE.Vector3();b.getWorldPosition(q);p.lerp(q,kind==='shoulder'?.35:.15)}
+ return p;
+}
+function resetBoss5PhysicalTrace(){
+ boss5WeaponTrace.valid=false;boss5BodyTrace.validKick=boss5BodyTrace.validShoulder=boss5BodyTrace.validElbow=false;
+}
+function processBoss5PhysicalHits(){
+ const caps=combatHumanoidCapsules(playerVrmBones,player,2.0);
+ if(boss5WeaponRoot.visible){
+  const seg=combatWorldSegment(boss5WeaponRoot,new THREE.Vector3(0,.08,0),new THREE.Vector3(0,3.25,0));let hit=null;
+  if(boss5WeaponTrace.valid)hit=combatSweptBladeContact(boss5WeaponTrace.base,boss5WeaponTrace.tip,seg.base,seg.tip,caps,.22);
+  boss5WeaponTrace.base.copy(seg.base);boss5WeaponTrace.tip.copy(seg.tip);boss5WeaponTrace.valid=true;
+  if(hit)for(const req of boss5MeleeRequests){if(boss5Fired.has(req.tag))continue;boss5Fired.add(req.tag);spawnSparks(hit.point,13,5.4);if(state.invuln>0){flash('회피',.12);break}hurtPlayer(req.dmg,req.posture,false);break}
+ }
+ for(const kind of ['kick','shoulder','elbow']){
+  const cur=boss5BodyPoint(kind),key='valid'+kind[0].toUpperCase()+kind.slice(1),prev=boss5BodyTrace[kind];let bodyHit=null;
+  if(boss5BodyTrace[key]){
+   for(const c of caps){const d=combatSegmentSegmentDistance(prev,cur,c.a,c.b);if(d<=c.r+(kind==='shoulder'?.42:.25)){bodyHit={point:cur.clone(),distance:d};break}}
+  }
+  prev.copy(cur);boss5BodyTrace[key]=true;
+  if(bodyHit)for(const req of boss5BodyRequests){if(req.kind!==kind||boss5Fired.has(req.tag))continue;boss5Fired.add(req.tag);spawnDustBurst(bodyHit.point,.18);if(state.invuln>0){flash('회피',.12);break}hurtPlayer(req.dmg,req.posture,false);break}
+ }
+ for(let i=boss5MeleeRequests.length-1;i>=0;i--)if(boss5Fired.has(boss5MeleeRequests[i].tag)||boss5MeleeRequests[i].ttl<=0)boss5MeleeRequests.splice(i,1);
+ for(let i=boss5BodyRequests.length-1;i>=0;i--)if(boss5Fired.has(boss5BodyRequests[i].tag)||boss5BodyRequests[i].ttl<=0)boss5BodyRequests.splice(i,1);
+}
+function chooseBoss5Attack(){
+ if(state.bossHp<=0)return;boss5Fired.clear();boss5MeleeRequests.length=0;boss5BodyRequests.length=0;state.boss5AttackCount++;
+ const phase2=state.boss5Phase===2;
+ const pool=phase2?['b5_chain','b5_charge','b5_kick','b5_upper','b5_leap','b5_rush']:['b5_chain','b5_charge','b5_kick','b5_upper','b5_leap'];
+ if(state.potionPunishQueued){state.potionPunishQueued=false;state.bossState=phase2?'b5_rush':'b5_charge'}else state.bossState=pool[Math.floor(Math.random()*pool.length)];
+ state.bossTimer=BOSS5_DUR[state.bossState];state.boss5RushStep=-1;resetBoss5PhysicalTrace();
+}
+function finishBoss5Attack(recovery=.76){state.bossState='idle';state.bossTimer=recovery;boss5Fired.clear();boss5MeleeRequests.length=0;boss5BodyRequests.length=0;state.boss5RushStep=-1;resetBoss5PhysicalTrace();boss.position.y=0}
+function hitBoss5(base,posture=12,contact=null){
+ if(state.bossHp<=0)return;let dmg=base,pd=posture;if(state.bossStagger>0){dmg*=1.55;pd*=1.65}
+ state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture=Math.min(145,state.bossPosture+pd);state.boss5HitReact=.14;state.shake=.14;hitStop(.055);
+ spawnSparks(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)),11,5);
+ if(state.bossHp<=0){state.bossState='dead';setDanger(false);flash('흑철의 투희가 무너졌다 · 토벌 완료',1.25)}
+ else if(state.bossPosture>=112){state.bossPosture=48;state.bossStagger=1.28;state.bossState='stagger';state.bossTimer=1.28;flash('자세 붕괴',.45)}
+}
+function updateBoss5(dt){
+ for(const r of boss5MeleeRequests)r.ttl-=dt;for(const r of boss5BodyRequests)r.ttl-=dt;
+ enforceBoss5Visibility();state.boss5HitReact=Math.max(0,state.boss5HitReact-dt);boss5Halo.rotation.z+=dt*(state.boss5Phase===2?1.6:.72);boss5Aura.intensity=(state.boss5Phase===2?12:7.8)+Math.sin(state.time*6)*.6;
+ if(boss5Visual)boss5Visual.position.y=THREE.MathUtils.lerp(boss5Visual.position.y,boss5VisualBaseY,1-Math.exp(-dt*11));
+ if(state.bossHp<=0){boss5WeaponRoot.visible=false;poseBoss5(dt);syncBoss5Rig(dt);return}
+ if(state.boss5Phase===1&&state.bossHp<=state.bossMaxHp*.5){
+  state.boss5Phase=2;state.bossState='b5_roar';state.bossTimer=BOSS5_DUR.b5_roar;boss5Fired.clear();boss5Aura.color.setHex(0xff6b35);boss5HaloMat.opacity=.16;
+  spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1,0)),4.2,0xff6832,.55);flash('투신 각성 · 흑철의 폭주',.9);
+ }
+ if(state.bossStagger>0){state.bossStagger=Math.max(0,state.bossStagger-dt);poseBoss5(dt);applyBoss5PrimaryArmIK(dt);applyBoss5GripIK(dt);syncBoss5Rig(dt);updateBoss5Weapon();if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.72}return}
+ state.bossTimer-=dt;const d=dist(),dir=flatDir(boss.position,player.position),face=Math.atan2(player.position.x-boss.position.x,player.position.z-boss.position.z),p2=state.boss5Phase===2;
+ if(!['b5_charge','b5_rush','b5_leap'].includes(state.bossState)||state.bossTimer>.55)boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*(p2?11:8.5)));
+ if(state.bossState==='idle'){
+  if(d>3.8)boss.position.addScaledVector(dir,dt*(p2?4.25:3.45));else if(d<2.0)boss.position.addScaledVector(dir,-dt*.72);
+  if(state.bossTimer<=0)chooseBoss5Attack();
+ }else if(state.bossState==='b5_chain'){
+  const dmgs=p2?[20,24,34]:[18,22,30];
+  BOSS5_CHAIN_MARKS.forEach((m,i)=>{if(state.bossTimer<=m+.12&&state.bossTimer>m-.12)boss5Strike('chain'+i,dmgs[i],18+i*4,.32);if(state.bossTimer<=m+.28&&state.bossTimer>m+.06&&d>2.55)boss.position.addScaledVector(dir,dt*(p2?4.0:3.3))});
+  if(state.bossTimer<=0)finishBoss5Attack(p2?.62:.8);
+ }else if(state.bossState==='b5_charge'){
+  const p=clamp(1-state.bossTimer/BOSS5_DUR.b5_charge,0,1);
+  if(p<.18)state.boss5ChargeDir.copy(dir);
+  if(p>.3&&p<.76)boss.position.addScaledVector(state.boss5ChargeDir,dt*(p2?12.5:10.7));
+  if(p>.38&&p<.72)boss5BodyStrike('shoulder','shoulder',p2?31:27,34,.34);
+  if(p>.68&&p<.9)boss5Strike('charge-axe',p2?33:29,31,.34);
+  if(state.bossTimer<=0)finishBoss5Attack(.78);
+ }else if(state.bossState==='b5_kick'){
+  const p=clamp(1-state.bossTimer/BOSS5_DUR.b5_kick,0,1);
+  if(p>.38&&p<.7){boss.position.addScaledVector(dir,dt*2.8);boss5BodyStrike('kick','kick',p2?28:24,38,.32)}
+  if(p>.66&&p<.92)boss5Strike('kick-follow',p2?29:25,25,.3);
+  if(state.bossTimer<=0)finishBoss5Attack(p2?.5:.72);
+ }else if(state.bossState==='b5_upper'){
+  const p=clamp(1-state.bossTimer/BOSS5_DUR.b5_upper,0,1);
+  if(p>.4&&p<.75){boss.position.addScaledVector(dir,dt*4.3);boss5Strike('upper',p2?36:32,39,.36)}
+  if(state.bossTimer<=0)finishBoss5Attack(.86);
+ }else if(state.bossState==='b5_leap'){
+  const p=clamp(1-state.bossTimer/BOSS5_DUR.b5_leap,0,1);
+  if(p<.62){boss.position.y=Math.sin(clamp(p/.62,0,1)*Math.PI)*2.15;if(p<.45)boss.position.addScaledVector(dir,dt*3.2)}
+  else boss.position.y=THREE.MathUtils.lerp(boss.position.y,0,1-Math.exp(-dt*24));
+  if(p>.58&&p<.82)boss5Strike('leap-axe',p2?40:35,44,.38);
+  if(p>.7)boss5Once('leap-dust',()=>spawnDustBurst(boss.position,.7));
+  if(state.bossTimer<=0)finishBoss5Attack(.96);
+ }else if(state.bossState==='b5_rush'){
+  BOSS5_RUSH_MARKS.forEach((m,i)=>{
+   if(state.boss5RushStep<i&&state.bossTimer<=m+.22){state.boss5RushStep=i;state.boss5ChargeDir.copy(flatDir(boss.position,player.position))}
+   if(state.boss5RushStep===i&&state.bossTimer<=m+.16&&state.bossTimer>m-.12){
+    boss.position.addScaledVector(state.boss5ChargeDir,dt*14.2);
+    if(i%2===0)boss5Strike('rush-axe'+i,i===3?38:22,22+i*3,.3);else boss5BodyStrike('rush-elbow'+i,'elbow',23+i*2,28+i*3,.3);
+   }
+  });
+  if(state.bossTimer<=0)finishBoss5Attack(.72);
+ }else if(state.bossState==='b5_roar'){
+  if(state.bossTimer<=.72)boss5Once('roar-wave',()=>{spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1.0,0)),4.4,0xff6b35,.62);spawnDustBurst(boss.position,.85)});
+  if(state.bossTimer<=0)finishBoss5Attack(.58);
+ }
+ poseBoss5(dt);applyBoss5PrimaryArmIK(dt);updateBoss5Weapon();applyBoss5GripIK(dt);syncBoss5Rig(dt);updateBoss5Weapon();processBoss5PhysicalHits();
+}
+function boss5Once(tag,fn){if(boss5Fired.has(tag))return false;boss5Fired.add(tag);fn?.();return true}
+
 function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeout(flash.t);flash.t=setTimeout(()=>ui.msg.style.opacity='0',d*1000)}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 const PLAYER_ATTACK_PROFILES={
@@ -3090,6 +3338,7 @@ function updatePlayerMeleeCollision(){
    if(BOSS_VARIANT===2)caps=combatHumanoidCapsules(Object.keys(boss2RenderBones).length?boss2RenderBones:boss2Bones,boss2Root,2.1);
    else if(BOSS_VARIANT===3)caps=combatHumanoidCapsules(Object.keys(boss3RenderBones).length?boss3RenderBones:boss3Bones,boss3Root,2.05);
    else if(BOSS_VARIANT===4)caps=combatHumanoidCapsules(Object.keys(boss4RenderBones).length?boss4RenderBones:boss4Bones,boss4Root,2.05);
+   else if(BOSS_VARIANT===5)caps=combatHumanoidCapsules(Object.keys(boss5RenderBones).length?boss5RenderBones:boss5Bones,boss5Root,2.1);
    else{const bp=boss.position.clone();caps=[{a:bp.clone().add(new THREE.Vector3(0,.4,0)),b:bp.clone().add(new THREE.Vector3(0,5.6*BOSS_GIANT_SCALE,0)),r:1.15*BOSS_GIANT_SCALE,part:'body'}]}
    const hit=combatSweptBladeContact(playerWeaponTrace.base,playerWeaponTrace.tip,seg.base,seg.tip,caps,spec.radius);
    if(hit){
@@ -3467,6 +3716,7 @@ function hitBoss(base,posture=12,contact=null){
  if(BOSS_VARIANT===2){hitBoss2(base,posture,contact);return}
  if(BOSS_VARIANT===3){hitBoss3(base,posture,contact);return}
  if(BOSS_VARIANT===4){hitBoss4(base,posture,contact);return}
+ if(BOSS_VARIANT===5){hitBoss5(base,posture,contact);return}
  if(state.bossHp<=0)return;
  let spikeTarget=null,spikeDist=Infinity;
  const playerHitPoint=player.position.clone().add(new THREE.Vector3(0,1.15,0));
@@ -3737,6 +3987,7 @@ function updateBoss(dt){
  if(BOSS_VARIANT===2){updateBoss2(dt);return}
  if(BOSS_VARIANT===3){updateBoss3(dt);return}
  if(BOSS_VARIANT===4){updateBoss4(dt);return}
+ if(BOSS_VARIANT===5){updateBoss5(dt);return}
  bossRim.position.set(boss.position.x,boss.position.y+8,boss.position.z-9);
  const bossMotionDt=state.bossState?.startsWith?.('arm_')?dt/bossAttackScale(state.bossState):dt;
  if(state.bossHp<=0)setBossVisualAction('dead');
@@ -4195,7 +4446,7 @@ function updateCamera(dt){
 function partText(v,broken,label,max=100){return broken?label:(v<max*.45?'손상':'정상')}
 function updateUI(){
  ui.hp.style.width=(clamp(state.hp,0,state.hpMax)/state.hpMax*100)+'%';if(hpLabel)hpLabel.textContent=`HP ${Math.ceil(state.hp)} / ${state.hpMax}`;if(ui.stamina){ui.stamina.style.width=(clamp(state.stamina,0,state.staminaMax)/state.staminaMax*100)+'%';ui.stamina.parentElement.classList.toggle('exhausted',state.exhausted>0)}if(staminaLabel)staminaLabel.textContent=`STAMINA ${Math.ceil(state.stamina)} / ${state.staminaMax}`;ui.posture.style.width=clamp(state.posture,0,100)+'%';ui.bossHp.style.width=(clamp(state.bossHp,0,state.bossMaxHp)/state.bossMaxHp*100)+'%';ui.bossPosture.style.width=clamp(state.bossPosture,0,100)+'%';
- if(BOSS_VARIANT===2){if(ui.parts)ui.parts.textContent=state.boss2Phase===2?'2페이즈 · 잿불 각성 · 완성형 전투':'1페이즈 · '+({sword:'검',spear:'창',mage:'술법',frenzy:'광전'}[state.boss2Style]||'검')+' 형상';}else if(BOSS_VARIANT===3){if(ui.parts)ui.parts.textContent=state.boss3Phase===2?'2페이즈 · 혈화 개화 · 회복 검무':'1페이즈 · 검격 적중 시 체력 회복';}else if(BOSS_VARIANT===4){if(ui.parts)ui.parts.textContent='검성 패턴 · 발도 / 환영검무 / 맹룡단공참';}else{ui.head.textContent=partText(state.headHp,state.headBroken,'파괴',BOSS1_PART_HP.head);ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴',BOSS1_PART_HP.leg);if(ui.spike){const alive=bossSpikeTargets.filter(s=>!s.broken).length,total=bossSpikeTargets.length;ui.spike.textContent=total?(alive?`${alive}/${total}`:'전부 파괴'):'로딩';}ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단',BOSS1_PART_HP.tail);}if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
+ if(BOSS_VARIANT===2){if(ui.parts)ui.parts.textContent=state.boss2Phase===2?'2페이즈 · 잿불 각성 · 완성형 전투':'1페이즈 · '+({sword:'검',spear:'창',mage:'술법',frenzy:'광전'}[state.boss2Style]||'검')+' 형상';}else if(BOSS_VARIANT===3){if(ui.parts)ui.parts.textContent=state.boss3Phase===2?'2페이즈 · 혈화 개화 · 회복 검무':'1페이즈 · 검격 적중 시 체력 회복';}else if(BOSS_VARIANT===4){if(ui.parts)ui.parts.textContent='검성 패턴 · 발도 / 환영검무 / 맹룡단공참';}else if(BOSS_VARIANT===5){if(ui.parts)ui.parts.textContent=state.boss5Phase===2?'2페이즈 · 투신 각성 · 도끼+체술 연계':'1페이즈 · 대형 도끼 / 숄더 / 킥 / 도약';}else{ui.head.textContent=partText(state.headHp,state.headBroken,'파괴',BOSS1_PART_HP.head);ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴',BOSS1_PART_HP.leg);if(ui.spike){const alive=bossSpikeTargets.filter(s=>!s.broken).length,total=bossSpikeTargets.length;ui.spike.textContent=total?(alive?`${alive}/${total}`:'전부 파괴'):'로딩';}ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단',BOSS1_PART_HP.tail);}if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
  potionHud.textContent=`R · 포션 ${state.potions}/3`;
 }
 function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}addEventListener('resize',resize);resize();
@@ -4221,6 +4472,7 @@ function loop(){
    if(BOSS_VARIANT===2){state.bossState='idle';state.bossTimer=.8;boss.position.y=0;enforceBoss2Visibility()}
    else if(BOSS_VARIANT===3){state.bossState='idle';state.bossTimer=.8;boss.position.y=0;enforceBoss3Visibility()}
    else if(BOSS_VARIANT===4){state.bossState='idle';state.bossTimer=.8;boss.position.y=0;enforceBoss4Visibility()}
+   else if(BOSS_VARIANT===5){state.bossState='idle';state.bossTimer=.8;boss.position.y=0;enforceBoss5Visibility()}
  }
  try{
    if(playerMixer)playerMixer.update(Math.max(dt,.001));
@@ -4234,4 +4486,5 @@ function loop(){
 if(BOSS_VARIANT===2)loadBoss2Avatar();
 if(BOSS_VARIANT===3)loadBoss3Avatar();
 if(BOSS_VARIANT===4)loadBoss4Avatar();
+if(BOSS_VARIANT===5)loadBoss5Avatar();
 loop();
