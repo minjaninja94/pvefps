@@ -195,6 +195,17 @@ function getArmReach(bones,side){
 function playerLocalVector(v){
  const q=new THREE.Quaternion();player.getWorldQuaternion(q);return v.clone().applyQuaternion(q);
 }
+function alignObjectLocalYToWorld(obj,worldDir,alpha=1){
+ if(!obj?.parent||!worldDir?.lengthSq?.())return;
+ obj.parent.updateWorldMatrix(true,false);
+ const y=worldDir.clone().normalize();
+ let z=new THREE.Vector3(0,1,0);if(Math.abs(z.dot(y))>.96)z.set(0,0,1);
+ const x=y.clone().cross(z).normalize();z=x.clone().cross(y).normalize();
+ const worldQ=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,y,z));
+ const parentQ=new THREE.Quaternion();obj.parent.getWorldQuaternion(parentQ);
+ const localQ=parentQ.invert().multiply(worldQ);
+ obj.quaternion.slerp(localQ,clamp(alpha,0,1));
+}
 const PLAYER_HAND_PATHS={
  straight:[
   null,
@@ -261,7 +272,7 @@ function playerReadyHand(id,reach,moving,phase,sprint){
  }
  return v;
 }
-const PLAYER_SECONDARY_GRIP_Z={straight:.3,greatsword:.5,hammer:.58,spear:.78,katana:.4,axe:.44};
+const PLAYER_SECONDARY_GRIP_Z={straight:.3,greatsword:.5,hammer:.58,spear:-.55,katana:.4,axe:.44};
 const PLAYER_WRIST_GRIP={
  straight:{r:[-.05,-.08,-.16],l:[-.04,.04,.1]},
  greatsword:{r:[-.12,-.04,-.12],l:[-.1,.04,.1]},
@@ -1609,8 +1620,8 @@ const boss2SwordGrip=new THREE.Mesh(new THREE.CylinderGeometry(.045,.052,.42,8),
 boss2SwordGrip.position.y=-.18;boss2Sword.add(boss2SwordGrip);
 boss2WeaponRoot.add(boss2Sword);
 const boss2Spear=new THREE.Group();
-const boss2Shaft=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,3.25,8),new THREE.MeshStandardMaterial({color:0x392719,roughness:.78}));
-boss2Shaft.position.y=1.38;boss2Spear.add(boss2Shaft);
+const boss2Shaft=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,3.75,8),new THREE.MeshStandardMaterial({color:0x392719,roughness:.78}));
+boss2Shaft.position.y=1.32;boss2Spear.add(boss2Shaft);
 const boss2Tip=new THREE.Mesh(new THREE.ConeGeometry(.11,.52,7),boss2SpearMat);
 boss2Tip.position.y=3.18;boss2Spear.add(boss2Tip);
 boss2WeaponRoot.add(boss2Spear);
@@ -1735,6 +1746,10 @@ function updateBoss2Weapon(){
  boss2WeaponRoot.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
  boss2Sword.visible=state.boss2Style!=='spear';
  boss2Spear.visible=state.boss2Style==='spear';
+ if(boss2Spear.visible&&['idle','b2_spear_thrust','b2_thrust','b2_dash_burst'].includes(state.bossState)){
+   const aim=player.position.clone().add(new THREE.Vector3(0,1.12,0)).sub(boss2WeaponRoot.position);
+   alignObjectLocalYToWorld(boss2WeaponRoot,aim,1);
+ }
 }
 function bossCombatOffset(x,y,z){
  const q=new THREE.Quaternion();boss.getWorldQuaternion(q);
@@ -1777,7 +1792,7 @@ function applyBoss2WeaponGripIK(dt){
  let target,elbowHint;
  if(twoHand){
    boss2WeaponRoot.updateWorldMatrix(true,true);
-   const gripY=boss2Spear.visible?-.14:-.18;
+   const gripY=boss2Spear.visible?.58:-.26;
    target=boss2WeaponRoot.localToWorld(new THREE.Vector3(0,gripY,0));
    elbowHint=shoulder.clone().add(bossCombatOffset(-.3*reach,-.31*reach,.16*reach));
  }else{
@@ -1809,7 +1824,7 @@ function processBoss2PhysicalHits(){
  if(boss2WeaponRoot.visible){
   const len=boss2Spear.visible?3.14:1.78;
   const seg=combatWorldSegment(boss2WeaponRoot,new THREE.Vector3(0,.02,0),new THREE.Vector3(0,len,0));
-  if(boss2WeaponTrace.valid)weaponHit=combatSweptBladeContact(boss2WeaponTrace.base,boss2WeaponTrace.tip,seg.base,seg.tip,playerCaps,boss2Spear.visible?.11:.095);
+  if(boss2WeaponTrace.valid)weaponHit=combatSweptBladeContact(boss2WeaponTrace.base,boss2WeaponTrace.tip,seg.base,seg.tip,playerCaps,boss2Spear.visible?.17:.13);
   boss2WeaponTrace.base.copy(seg.base);boss2WeaponTrace.tip.copy(seg.tip);boss2WeaponTrace.valid=true;
  }else boss2WeaponTrace.valid=false;
  const hand=boss2Bones.rightHand;
@@ -2021,6 +2036,11 @@ function poseBoss2(dt){
    setBoss2Bone('rightUpperArm',-1.05,.2,.95*swing,20,dt);setBoss2Bone('leftUpperArm',-.72,-.18,-.72*swing,18,dt);
    setBoss2Bone('spine',-.18,.55*swing,-.16*swing,18,dt);
  }
+ if(state.boss2Style==='spear'){
+   setBoss2Bone('rightHand',-.03,0,-.04,20,dt);setBoss2Bone('leftHand',-.04,0,.03,20,dt);
+ }else{
+   setBoss2Bone('rightHand',-.07,-.03,-.1,18,dt);setBoss2Bone('leftHand',-.05,.03,.08,18,dt);
+ }
 }
 function hitBoss2(base,posture=12,contact=null){
  if(state.bossHp<=0)return;
@@ -2083,7 +2103,7 @@ function updateBoss2(dt){
  }else if(state.bossState==='b2_thrust'||state.bossState==='b2_spear_thrust'){
    const spear=state.bossState==='b2_spear_thrust',range=spear?5.1:4.1;
    if(state.bossTimer<.48&&state.bossTimer>.18)boss.position.addScaledVector(dir,dt*(spear?10.5:9.2));
-   if(state.bossTimer<=.33&&state.bossTimer>.06)boss2Strike('thrust',range,spear?30:28,spear?32:29,false,.05);
+   if(state.bossTimer<=.44&&state.bossTimer>.05)boss2Strike('thrust',range,spear?30:28,spear?32:29,false,.05);
    if(state.bossTimer<=0)finishBoss2Attack(.9);
  }else if(state.bossState==='b2_jump_slam'){
    const total=BOSS2_DUR.b2_jump_slam,e=total-state.bossTimer;
@@ -2455,6 +2475,8 @@ function poseBoss3(dt){
   setBoss3Bone('spine',-.3,.05,0,18,dt);
  }
  if(phase===2)setBoss3Bone('upperChest',-.055,0,0,7,dt);
+ setBoss3Bone('rightHand',-.07,-.05,-.12,20,dt);
+ setBoss3Bone('leftHand',-.06,.04,.1,20,dt);
 }
 function hitBoss3(base,posture=12,contact=null){
  if(state.bossHp<=0)return;
