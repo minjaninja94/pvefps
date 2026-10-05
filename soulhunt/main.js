@@ -1570,7 +1570,7 @@ document.addEventListener('pointerlockchange',()=>{
 });
 canvas.addEventListener('click',()=>{if(!input.lock)requestFreeLook()});
 addEventListener('mousedown',e=>{
- if(e.button===0){if(!input.lock)requestFreeLook();tryAttack()}
+ if(e.button===0){if(!input.lock)requestFreeLook();if(e.ctrlKey||input.keys.has('ControlLeft')||input.keys.has('ControlRight'))tryStrongAttack();else tryAttack()}
  if(e.button===2){input.guard=true;tryDeflect()}
 });
 addEventListener('mouseup',e=>{if(e.button===2)input.guard=false});
@@ -1583,7 +1583,7 @@ potionHud.style.cssText='position:fixed;left:24px;bottom:145px;z-index:30;color:
 document.body.appendChild(potionHud);
 
 const state={
- hp:PLAYER_MAX_HP,hpMax:PLAYER_MAX_HP,posture:0,stamina:PLAYER_MAX_STAMINA,staminaMax:PLAYER_MAX_STAMINA,staminaRegenDelay:0,exhausted:0,potions:3,potionTimer:0,potionHealDone:false,attack:0,attackDuration:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollElapsed:0,rollLean:1,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
+ hp:PLAYER_MAX_HP,hpMax:PLAYER_MAX_HP,posture:0,stamina:PLAYER_MAX_STAMINA,staminaMax:PLAYER_MAX_STAMINA,staminaRegenDelay:0,exhausted:0,potions:3,potionTimer:0,potionHealDone:false,attack:0,attackDuration:0,attackHit:false,attackStep:0,attackQueued:false,attackStrong:false,comboGrace:0,rolling:0,rollElapsed:0,rollLean:1,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
  bossMaxHp:BOSS_MAX_HP[BOSS_VARIANT],bossHp:BOSS_MAX_HP[BOSS_VARIANT],bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',bossBustImpulse:0,bossAttackTarget:new THREE.Vector3(),bossAttackTargetLocked:false,potionPunishQueued:false,potionPunishKind:'spike_triple',time:0,shake:0,hitstop:0,
  headHp:BOSS1_PART_HP.head,legHp:BOSS1_PART_HP.leg,tailHp:BOSS1_PART_HP.tail,tailBroken:false,legBroken:false,headBroken:false,danger:false,reaction:0,reactionZone:'body'
 };
@@ -3255,7 +3255,16 @@ const PLAYER_ATTACK_PROFILES={
   {duration:.84,active:[.37,.68],queue:.72,drive:1.05},
   {duration:1.00,active:[.45,.74],queue:.78,drive:1.25}]
 };
-function playerAttackProfile(id=currentWeapon()?.id,step=state.attackStep){
+const PLAYER_STRONG_PROFILES={
+ straight:{duration:.92,active:[.46,.67],drive:2.25,cost:28,damage:2.15,posture:1.75},
+ greatsword:{duration:1.78,active:[.61,.79],drive:1.15,cost:42,damage:3.05,posture:2.65},
+ hammer:{duration:1.52,active:[.55,.76],drive:.92,cost:40,damage:2.8,posture:3.0},
+ spear:{duration:1.08,active:[.43,.69],drive:3.85,cost:30,damage:2.05,posture:1.8},
+ katana:{duration:.96,active:[.39,.58],drive:2.8,cost:29,damage:2.35,posture:1.65},
+ axe:{duration:1.34,active:[.52,.75],drive:1.42,cost:36,damage:2.65,posture:2.35}
+};
+function playerAttackProfile(id=currentWeapon()?.id,step=state.attackStep,strong=state.attackStrong){
+ if(strong)return PLAYER_STRONG_PROFILES[id]||PLAYER_STRONG_PROFILES.straight;
  return PLAYER_ATTACK_PROFILES[id]?.[step]||PLAYER_ATTACK_PROFILES.straight[Math.max(1,Math.min(3,step||1))];
 }
 function playerAttackProgress(){
@@ -3347,7 +3356,14 @@ function updatePlayerMeleeCollision(){
    const hit=combatSweptBladeContact(playerWeaponTrace.base,playerWeaponTrace.tip,seg.base,seg.tip,caps,spec.radius);
    if(hit){
     const gripDamage=twoHanded?1.16:1,gripPosture=twoHanded?1.2:1,step=state.attackStep;
-    state.attackHit=true;hitBoss([0,22,25,36][step]*w.damage*gripDamage,[0,11,13,20][step]*w.posture*gripPosture,hit.point);hitStop(.018*w.hitstop+(step===3?.018:0));
+    let damage,posture;
+    if(state.attackStrong){
+      const sp=PLAYER_STRONG_PROFILES[w.id]||PLAYER_STRONG_PROFILES.straight;
+      damage=22*w.damage*sp.damage*gripDamage;posture=15*w.posture*sp.posture*gripPosture;
+    }else{
+      damage=[0,22,25,36][step]*w.damage*gripDamage;posture=[0,11,13,20][step]*w.posture*gripPosture;
+    }
+    state.attackHit=true;hitBoss(damage,posture,hit.point);hitStop((state.attackStrong?.05:.018)*w.hitstop+(!state.attackStrong&&step===3?.018:0));
    }
   }
  }
@@ -3634,13 +3650,16 @@ function tryRoll(){
  spawnDustBurst(player.position.clone(),.38);
  player.rotation.y=Math.atan2(state.rollDir.x,state.rollDir.z);
 }
-function startAttack(step){
- const w=currentWeapon(),grip=twoHanded?1.08:1,profile=playerAttackProfile(w.id,step);
- const cost=[0,16,18,23][step]*w.stamina*grip;
- if(!spendStamina(cost,.62))return false;
- state.attackStep=step;state.attackDuration=profile.duration*(twoHanded?.98:1);
+function startAttack(step,strong=false){
+ const w=currentWeapon(),grip=twoHanded?1.08:1;
+ state.attackStrong=!!strong;
+ const profile=playerAttackProfile(w.id,step,strong);
+ const cost=(strong?profile.cost:[0,16,18,23][step]*w.stamina)*grip;
+ if(!spendStamina(cost,strong?.82:.62)){state.attackStrong=false;return false}
+ state.attackStep=strong?1:step;state.attackDuration=profile.duration*(twoHanded?.98:1);
  state.attack=state.attackDuration;resetPlayerWeaponTrace();
- state.attackHit=false;state.attackQueued=false;state.comboGrace=Math.max(.12,profile.duration*(1-profile.queue)+.05);return true;
+ state.attackHit=false;state.attackQueued=false;
+ state.comboGrace=strong?0:Math.max(.12,profile.duration*(1-profile.queue)+.05);return true;
 }
 function tryDrinkPotion(){
  if(state.dead||state.potions<=0||state.potionTimer>0||state.attack>0||state.rolling>0||state.stagger>0)return;
@@ -3671,12 +3690,17 @@ function tryDrinkPotion(){
 function tryAttack(){
  if(state.dead||state.rolling>0||state.stagger>0||state.potionTimer>0)return;
  if(state.attack>0){
+   if(state.attackStrong)return;
    const profile=playerAttackProfile(),p=playerAttackProgress();
    if(p>=profile.queue)state.attackQueued=true;
    return;
  }
  const next=state.comboGrace>0?Math.min(3,state.attackStep+1):1;
- startAttack(next);
+ startAttack(next,false);
+}
+function tryStrongAttack(){
+ if(state.dead||state.rolling>0||state.stagger>0||state.potionTimer>0||state.attack>0)return;
+ startAttack(1,true);
 }
 function tryDeflect(){if(!state.dead&&state.stagger<=0&&state.exhausted<=0&&spendStamina(5,.32)){state.deflect=.17;state.parryAnim=.22}}
 
@@ -4310,7 +4334,8 @@ function updatePlayer(dt){
    // Physical damage is resolved after the animated weapon transform updates.
    if(state.attack<=0){
      weaponPivot.rotation.set(0,0,0);weaponPivot.position.set(0,0,0);applyWeaponGrip();player.rotation.x=0;player.rotation.z=0;playerBody.rotation.set(0,0,0);
-     if(state.attackQueued&&step<3)startAttack(step+1);else if(!state.attackQueued&&state.comboGrace<=0)state.attackStep=0;
+     if(state.attackStrong){state.attackStrong=false;state.attackStep=0;state.attackQueued=false;state.comboGrace=0}
+     else if(state.attackQueued&&step<3)startAttack(step+1,false);else if(!state.attackQueued&&state.comboGrace<=0)state.attackStep=0;
    }
  }
  const toBoss=flatDir(player.position,boss.position);
