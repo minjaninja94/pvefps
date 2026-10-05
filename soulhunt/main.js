@@ -1630,7 +1630,7 @@ document.body.appendChild(potionHud);
 
 const state={
  hp:PLAYER_MAX_HP,hpMax:PLAYER_MAX_HP,posture:0,stamina:PLAYER_MAX_STAMINA,staminaMax:PLAYER_MAX_STAMINA,staminaRegenDelay:0,exhausted:0,potions:3,potionTimer:0,potionHealDone:false,attack:0,attackDuration:0,attackHit:false,attackStep:0,attackQueued:false,attackStrong:false,comboGrace:0,rolling:0,rollElapsed:0,rollLean:1,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
- bossMaxHp:BOSS_MAX_HP[BOSS_VARIANT],bossHp:BOSS_MAX_HP[BOSS_VARIANT],bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',bossBustImpulse:0,bossAttackTarget:new THREE.Vector3(),bossAttackTargetLocked:false,potionPunishQueued:false,potionPunishKind:'spike_triple',time:0,shake:0,hitstop:0,
+ bossMaxHp:BOSS_MAX_HP[BOSS_VARIANT],bossHp:BOSS_MAX_HP[BOSS_VARIANT],bossPosture:0,bossState:'idle',bossTimer:1.0,bossPunish:0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',bossBustImpulse:0,bossAttackTarget:new THREE.Vector3(),bossAttackTargetLocked:false,potionPunishQueued:false,potionPunishKind:'spike_triple',time:0,shake:0,hitstop:0,
  headHp:BOSS1_PART_HP.head,legHp:BOSS1_PART_HP.leg,tailHp:BOSS1_PART_HP.tail,tailBroken:false,legBroken:false,headBroken:false,danger:false,reaction:0,reactionZone:'body'
 };
 
@@ -1828,6 +1828,25 @@ function updateBoss2Weapon(){
 function bossCombatOffset(x,y,z){
  const q=new THREE.Quaternion();boss.getWorldQuaternion(q);
  return new THREE.Vector3(x,y,z).applyQuaternion(q);
+}
+function beginBossPunish(base){
+ const r=Math.max(.82,base*1.32);
+ state.bossPunish=r;state.bossTimer=r;
+ return r;
+}
+function updateBossPunish(dt){state.bossPunish=Math.max(0,state.bossPunish-dt)}
+function bossCommittedDir(duration,timer,lockFraction=.56){
+ const live=flatDir(boss.position,player.position);
+ if(timer>Math.max(.12,duration*lockFraction)){
+  state.bossAttackTarget.copy(player.position);state.bossAttackTarget.y=0;
+  return live;
+ }
+ const locked=flatDir(boss.position,state.bossAttackTarget);
+ return locked.lengthSq()?locked:live;
+}
+function bossPunishDamage(base,posture){
+ if(state.bossPunish<=0)return [base,posture];
+ return [base*1.18,posture*1.35];
 }
 function soulsSwordBeat(timer,marks,wind=.24,follow=.22){
  let best=null;
@@ -2132,7 +2151,7 @@ const BOSS2_FRENZY_MARKS=[2.48,1.92,1.36,.8,.26];
 const BOSS2_FLAME_MARKS=[2.08,1.47,.86,.28];
 const BOSS2_FINAL_MARKS=[3.48,2.72,1.96,1.20,.38];
 function chooseBoss2Attack(){
- if(state.bossHp<=0)return;
+ if(state.bossHp<=0)return;state.bossPunish=0;
  state.bossFxStamp='';boss2Fired.clear();state.bossHit=false;setDanger(false);
  state.boss2AttackCount++;
  if(state.boss2Phase===1&&state.boss2AttackCount%3===1&&state.boss2AttackCount>1){
@@ -2167,7 +2186,7 @@ function chooseBoss2Attack(){
  if(pick==='b2_grab')setDanger(true);
 }
 function finishBoss2Attack(recovery=.72){
- setDanger(false);state.bossState='idle';state.bossTimer=recovery;state.bossFxStamp='';boss2Fired.clear();boss2MeleeRequests.length=0;resetBoss2PhysicalTrace();
+ setDanger(false);state.bossState='idle';beginBossPunish(recovery);state.bossFxStamp='';boss2Fired.clear();boss2MeleeRequests.length=0;resetBoss2PhysicalTrace();
  boss.position.y=0;
 }
 function poseBoss2(dt){
@@ -2249,7 +2268,7 @@ function poseBoss2(dt){
 }
 function hitBoss2(base,posture=12,contact=null){
  if(state.bossHp<=0)return;
- let dmg=base,pd=posture;
+ let dmg=base,pd=posture;[dmg,pd]=bossPunishDamage(dmg,pd);
  if(state.bossStagger>0){dmg*=1.65;pd*=1.65}
  state.bossHp=Math.max(0,state.bossHp-dmg);
  state.bossPosture=Math.min(140,state.bossPosture+pd);
@@ -2287,18 +2306,23 @@ function updateBoss2(dt){
    if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.85}
    return;
  }
- state.bossTimer-=dt;
- const face=Math.atan2(player.position.x-boss.position.x,player.position.z-boss.position.z);
- if(!['b2_thrust','b2_spear_thrust','b2_dash_burst'].includes(state.bossState)||state.bossTimer>.46){
+ state.bossTimer-=dt;updateBossPunish(dt);
+ const liveDir=flatDir(boss.position,player.position),dur=BOSS2_DUR[state.bossState]||1;
+ const dir=state.bossState==='idle'?liveDir:bossCommittedDir(dur,state.bossTimer,.56);
+ const face=Math.atan2(dir.x,dir.z);
+ if(state.bossState!=='idle'&&(!['b2_thrust','b2_spear_thrust','b2_dash_burst'].includes(state.bossState)||state.bossTimer>.46)){
    boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*7.5));
  }
- const d=dist(),dir=flatDir(boss.position,player.position);
+ const d=dist();
  if(state.bossState==='idle'){
    boss.position.y=THREE.MathUtils.lerp(boss.position.y,0,1-Math.exp(-dt*14));
    const ideal=state.boss2Style==='mage'?6.8:state.boss2Style==='spear'?4.7:3.2;
-   if(d>ideal+.45)boss.position.addScaledVector(dir,dt*(state.boss2Style==='frenzy'?4.3:3.25));
-   else if(d<ideal-.8&&state.boss2Style==='mage')boss.position.addScaledVector(dir,-dt*2.2);
-   if(state.bossTimer<=0)chooseBoss2Attack();
+   if(state.bossPunish<=0){
+    boss.rotation.y=lerpAngle(boss.rotation.y,Math.atan2(liveDir.x,liveDir.z),1-Math.exp(-dt*5));
+    if(d>ideal+.45)boss.position.addScaledVector(liveDir,dt*(state.boss2Style==='frenzy'?4.3:3.25));
+    else if(d<ideal-.8&&state.boss2Style==='mage')boss.position.addScaledVector(liveDir,-dt*2.2);
+   }
+   if(state.bossTimer<=0&&state.bossPunish<=0)chooseBoss2Attack();
  }else if(state.bossState==='b2_sword_combo'){
    const dmgs=[20,23,31],posts=[18,20,30];
    BOSS2_SWORD_MARKS.forEach((mark,i)=>{
@@ -2663,7 +2687,7 @@ const BOSS3_WATER_BURSTS=[
 const BOSS3_DANCE2_MARKS=BOSS3_WATER_BURSTS.flat();
 const BOSS3_ECHO_MARKS=[2.06,1.45,.84,.23];
 function chooseBoss3Attack(){
- if(state.bossHp<=0)return;
+ if(state.bossHp<=0)return;state.bossPunish=0;
  setDanger(false);boss3Fired.clear();
  let pool;
  if(state.boss3Phase===2)pool=['b3_wing_combo','b3_dive_bloom','b3_echoes','b3_flower','b3_dance2','b3_lunge'];
@@ -2679,7 +2703,7 @@ function chooseBoss3Attack(){
  state.bossAttackTarget.copy(player.position);state.bossAttackTarget.y=0;
 }
 function finishBoss3Attack(recovery=.66){
- setDanger(false);state.bossState='idle';state.bossTimer=recovery;boss3Fired.clear();boss3MeleeRequests.length=0;resetBoss3PhysicalTrace();boss.position.y=0;
+ setDanger(false);state.bossState='idle';beginBossPunish(recovery);boss3Fired.clear();boss3MeleeRequests.length=0;resetBoss3PhysicalTrace();boss.position.y=0;
 }
 function poseBoss3(dt){
  if(!boss3Ready)return;
@@ -2736,7 +2760,7 @@ function poseBoss3(dt){
 }
 function hitBoss3(base,posture=12,contact=null){
  if(state.bossHp<=0)return;
- let dmg=base,pd=posture;
+ let dmg=base,pd=posture;[dmg,pd]=bossPunishDamage(dmg,pd);
  if(state.bossStagger>0){dmg*=1.6;pd*=1.7}
  state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture=Math.min(140,state.bossPosture+pd);
  state.shake=.13;state.boss3HitReact=.14;hitStop(.052);spawnSparks(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)),9,4.8);
@@ -2775,17 +2799,21 @@ function updateBoss3(dt){
   state.bossStagger=Math.max(0,state.bossStagger-dt);boss.position.y=THREE.MathUtils.lerp(boss.position.y,0,1-Math.exp(-dt*13));
   poseBoss3(dt);applyBoss3PrimaryArmIK(dt);applyBoss3WeaponGripIK(dt);syncBoss3Rig(dt);if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.72}return;
  }
- state.bossTimer-=dt;
- const d=dist(),dir=flatDir(boss.position,player.position);
- const face=Math.atan2(player.position.x-boss.position.x,player.position.z-boss.position.z);
- if(!['b3_lunge','b3_dive_bloom'].includes(state.bossState)||state.bossTimer>.48)boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*9.5));
+ state.bossTimer-=dt;updateBossPunish(dt);
+ const d=dist(),liveDir=flatDir(boss.position,player.position),dur=BOSS3_DUR[state.bossState]||1;
+ const dir=state.bossState==='idle'?liveDir:bossCommittedDir(dur,state.bossTimer,state.bossState==='b3_dance2'?.72:.56);
+ const face=Math.atan2(dir.x,dir.z);
+ if(state.bossState!=='idle'&&(!['b3_lunge','b3_dive_bloom'].includes(state.bossState)||state.bossTimer>.48))boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*9.5));
  if(state.bossState==='idle'){
   boss.position.y=THREE.MathUtils.lerp(boss.position.y,0,1-Math.exp(-dt*16));
-  if(d>3.6)boss.position.addScaledVector(dir,dt*(state.boss3Phase===2?4.0:3.3));
-  else if(d<2.1)boss.position.addScaledVector(dir,-dt*.9);
-  const side=new THREE.Vector3(dir.z,0,-dir.x).multiplyScalar(Math.sin(state.time*1.7)*(state.boss3Phase===2?.72:.48)*dt);
-  boss.position.add(side);
-  if(state.bossTimer<=0)chooseBoss3Attack();
+  if(state.bossPunish<=0){
+   boss.rotation.y=lerpAngle(boss.rotation.y,Math.atan2(liveDir.x,liveDir.z),1-Math.exp(-dt*5.5));
+   if(d>3.6)boss.position.addScaledVector(liveDir,dt*(state.boss3Phase===2?4.0:3.3));
+   else if(d<2.1)boss.position.addScaledVector(liveDir,-dt*.9);
+   const side=new THREE.Vector3(liveDir.z,0,-liveDir.x).multiplyScalar(Math.sin(state.time*1.7)*(state.boss3Phase===2?.72:.48)*dt);
+   boss.position.add(side);
+  }
+  if(state.bossTimer<=0&&state.bossPunish<=0)chooseBoss3Attack();
  }else if(state.bossState==='b3_triple'){
   const dmgs=[18,22,30];
   BOSS3_TRIPLE_MARKS.forEach((m,i)=>{
@@ -3053,14 +3081,14 @@ function processBoss4PhysicalHits(){
  for(let i=boss4MeleeRequests.length-1;i>=0;i--)if(boss4Fired.has(boss4MeleeRequests[i].tag)||boss4MeleeRequests[i].ttl<=0)boss4MeleeRequests.splice(i,1);
 }
 function chooseBoss4Attack(){
- if(state.bossHp<=0)return;boss4Fired.clear();boss4MeleeRequests.length=0;state.boss4AttackCount++;
+ if(state.bossHp<=0)return;state.bossPunish=0;boss4Fired.clear();boss4MeleeRequests.length=0;state.boss4AttackCount++;
  let pool=state.bossHp<state.bossMaxHp*.5?['b4_batto','b4_illusion','b4_dragon','b4_combo']:['b4_batto','b4_combo','b4_dragon','b4_illusion'];
  if(state.potionPunishQueued){state.potionPunishQueued=false;state.bossState='b4_dragon'}else state.bossState=pool[Math.floor(Math.random()*pool.length)];
  state.bossTimer=BOSS4_DUR[state.bossState];state.boss4DashStep=-1;resetBoss4PhysicalTrace();
 }
-function finishBoss4Attack(recovery=.78){state.bossState='idle';state.bossTimer=recovery;boss4Fired.clear();boss4MeleeRequests.length=0;state.boss4DashStep=-1;resetBoss4PhysicalTrace()}
+function finishBoss4Attack(recovery=.78){state.bossState='idle';beginBossPunish(recovery);boss4Fired.clear();boss4MeleeRequests.length=0;state.boss4DashStep=-1;resetBoss4PhysicalTrace()}
 function hitBoss4(base,posture=12,contact=null){
- if(state.bossHp<=0)return;let dmg=base,pd=posture;if(state.bossStagger>0){dmg*=1.62;pd*=1.7}
+ if(state.bossHp<=0)return;let dmg=base,pd=posture;[dmg,pd]=bossPunishDamage(dmg,pd);if(state.bossStagger>0){dmg*=1.62;pd*=1.7}
  state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture=Math.min(140,state.bossPosture+pd);state.boss4HitReact=.14;state.shake=.13;hitStop(.052);
  spawnSparks(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)),10,4.8);
  if(state.bossHp<=0){state.bossState='dead';setDanger(false);flash('백야의 검성이 쓰러졌다 · 토벌 완료',1.2)}
@@ -3072,11 +3100,11 @@ function updateBoss4(dt){
  if(boss4Visual)boss4Visual.position.y=THREE.MathUtils.lerp(boss4Visual.position.y,boss4VisualBaseY,1-Math.exp(-dt*10));
  if(state.bossHp<=0){boss4WeaponRoot.visible=false;poseBoss4(dt);syncBoss4Rig(dt);return}
  if(state.bossStagger>0){state.bossStagger=Math.max(0,state.bossStagger-dt);poseBoss4(dt);applyBoss4PrimaryArmIK(dt);syncBoss4Rig(dt);updateBoss4Weapon();if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.8}return}
- state.bossTimer-=dt;const d=dist(),dir=flatDir(boss.position,player.position),face=Math.atan2(player.position.x-boss.position.x,player.position.z-boss.position.z);
- boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*(state.bossState==='b4_dragon'?12:8.5)));
+ state.bossTimer-=dt;updateBossPunish(dt);const d=dist(),liveDir=flatDir(boss.position,player.position),dur=BOSS4_DUR[state.bossState]||1,dir=state.bossState==='idle'?liveDir:bossCommittedDir(dur,state.bossTimer,.54),face=Math.atan2(dir.x,dir.z);
+ if(state.bossState!=='idle')boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*(state.bossState==='b4_dragon'?12:8.5)));
  if(state.bossState==='idle'){
-  if(d>3.5)boss.position.addScaledVector(dir,dt*3.25);else if(d<2.15)boss.position.addScaledVector(dir,-dt*.85);
-  if(state.bossTimer<=0)chooseBoss4Attack();
+  if(state.bossPunish<=0){boss.rotation.y=lerpAngle(boss.rotation.y,Math.atan2(liveDir.x,liveDir.z),1-Math.exp(-dt*5.5));if(d>3.5)boss.position.addScaledVector(liveDir,dt*3.25);else if(d<2.15)boss.position.addScaledVector(liveDir,-dt*.85)}
+  if(state.bossTimer<=0&&state.bossPunish<=0)chooseBoss4Attack();
  }else if(state.bossState==='b4_combo'){
   const dmgs=[18,22,30];BOSS4_COMBO_MARKS.forEach((m,i)=>{if(state.bossTimer<=m+.1&&state.bossTimer>m-.1)boss4Strike('c'+i,dmgs[i],17+i*4);if(state.bossTimer<=m+.22&&state.bossTimer>m+.05&&d>2.4)boss.position.addScaledVector(dir,dt*3.2)});
   if(state.bossTimer<=0)finishBoss4Attack(.76);
@@ -3309,7 +3337,7 @@ function processBoss5PhysicalHits(){
  for(let i=boss5BodyRequests.length-1;i>=0;i--)if(boss5Fired.has(boss5BodyRequests[i].tag)||boss5BodyRequests[i].ttl<=0)boss5BodyRequests.splice(i,1);
 }
 function chooseBoss5Attack(){
- if(state.bossHp<=0)return;boss5Fired.clear();boss5MeleeRequests.length=0;boss5BodyRequests.length=0;state.boss5AttackCount++;
+ if(state.bossHp<=0)return;state.bossPunish=0;boss5Fired.clear();boss5MeleeRequests.length=0;boss5BodyRequests.length=0;state.boss5AttackCount++;
  const phase2=state.boss5Phase===2,d=dist();
  let pool;
  if(d<2.25)pool=phase2?['b5_kick','b5_charge','b5_chain','b5_upper','b5_rush']:['b5_kick','b5_charge','b5_chain','b5_upper'];
@@ -3318,9 +3346,9 @@ function chooseBoss5Attack(){
  if(state.potionPunishQueued){state.potionPunishQueued=false;state.bossState=phase2?'b5_rush':'b5_charge'}else state.bossState=pool[Math.floor(Math.random()*pool.length)];
  state.bossTimer=BOSS5_DUR[state.bossState];state.boss5RushStep=-1;resetBoss5PhysicalTrace();
 }
-function finishBoss5Attack(recovery=.76){state.bossState='idle';state.bossTimer=recovery;boss5Fired.clear();boss5MeleeRequests.length=0;boss5BodyRequests.length=0;state.boss5RushStep=-1;resetBoss5PhysicalTrace();boss.position.y=0}
+function finishBoss5Attack(recovery=.76){state.bossState='idle';beginBossPunish(recovery);boss5Fired.clear();boss5MeleeRequests.length=0;boss5BodyRequests.length=0;state.boss5RushStep=-1;resetBoss5PhysicalTrace();boss.position.y=0}
 function hitBoss5(base,posture=12,contact=null){
- if(state.bossHp<=0)return;let dmg=base,pd=posture;if(state.bossStagger>0){dmg*=1.55;pd*=1.65}
+ if(state.bossHp<=0)return;let dmg=base,pd=posture;[dmg,pd]=bossPunishDamage(dmg,pd);if(state.bossStagger>0){dmg*=1.55;pd*=1.65}
  state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture=Math.min(145,state.bossPosture+pd);state.boss5HitReact=.14;state.shake=.14;hitStop(.055);
  spawnSparks(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)),11,5);
  if(state.bossHp<=0){state.bossState='dead';setDanger(false);flash('흑철의 투희가 무너졌다 · 토벌 완료',1.25)}
@@ -3336,11 +3364,11 @@ function updateBoss5(dt){
   spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1,0)),4.2,0xff6832,.55);flash('투신 각성 · 흑철의 폭주',.9);
  }
  if(state.bossStagger>0){state.bossStagger=Math.max(0,state.bossStagger-dt);poseBoss5(dt);applyBoss5PrimaryArmIK(dt);applyBoss5GripIK(dt);syncBoss5Rig(dt);updateBoss5Weapon();if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.72}return}
- state.bossTimer-=dt;const d=dist(),dir=flatDir(boss.position,player.position),face=Math.atan2(player.position.x-boss.position.x,player.position.z-boss.position.z),p2=state.boss5Phase===2;
- if(!['b5_charge','b5_rush','b5_leap'].includes(state.bossState)||state.bossTimer>.55)boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*(p2?11:8.5)));
+ state.bossTimer-=dt;updateBossPunish(dt);const d=dist(),liveDir=flatDir(boss.position,player.position),dur=BOSS5_DUR[state.bossState]||1,dir=state.bossState==='idle'?liveDir:bossCommittedDir(dur,state.bossTimer,.55),face=Math.atan2(dir.x,dir.z),p2=state.boss5Phase===2;
+ if(state.bossState!=='idle'&&(!['b5_charge','b5_rush','b5_leap'].includes(state.bossState)||state.bossTimer>.55))boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*(p2?11:8.5)));
  if(state.bossState==='idle'){
-  if(d>3.8)boss.position.addScaledVector(dir,dt*(p2?4.25:3.45));else if(d<2.0)boss.position.addScaledVector(dir,-dt*.72);
-  if(state.bossTimer<=0)chooseBoss5Attack();
+  if(state.bossPunish<=0){boss.rotation.y=lerpAngle(boss.rotation.y,Math.atan2(liveDir.x,liveDir.z),1-Math.exp(-dt*5));if(d>3.8)boss.position.addScaledVector(liveDir,dt*(p2?4.25:3.45));else if(d<2.0)boss.position.addScaledVector(liveDir,-dt*.72)}
+  if(state.bossTimer<=0&&state.bossPunish<=0)chooseBoss5Attack();
  }else if(state.bossState==='b5_chain'){
   const dmgs=p2?[21,25,36]:[18,23,32];
   BOSS5_CHAIN_MARKS.forEach((m,i)=>{
