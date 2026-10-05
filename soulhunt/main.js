@@ -9,6 +9,15 @@ const VRM_SAMPLE_REV='e16eb187100149a315ad92c3c9968f1d5baa6c7d';
 const BOSS2_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VRM_SAMPLE_REV}/vroid/beta/Victoria_Rubin.vrm`;
 const BOSS3_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VRM_SAMPLE_REV}/vroid/beta/Vita.vrm`;
 
+const PLAYER_MAX_HP=1600;
+const PLAYER_MAX_STAMINA=120;
+const PLAYER_DAMAGE_SCALE=10;
+const BOSS_DAMAGE_SCALE=16;
+const POTION_HEAL=780;
+const BOSS_MAX_HP={1:18000,2:22000,3:26000};
+const BOSS1_PART_HP={head:1000,leg:1500,tail:1300,spikeHeavy:900,spikeLight:650};
+const BOSS3_HEAL_SCALE=BOSS_MAX_HP[3]/11800;
+
 const canvas=document.querySelector('#game');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));
@@ -1448,7 +1457,7 @@ if(BOSS_VARIANT===1)assetLoader.load('./assets/models/boss/monster-spikes.glb',g
      }
    });
    boss.add(root);
-   bossSpikeTargets.push({obj:root,hp:i<2?90:65,max:i<2?90:65,broken:false});
+   bossSpikeTargets.push({obj:root,hp:i<2?BOSS1_PART_HP.spikeHeavy:BOSS1_PART_HP.spikeLight,max:i<2?BOSS1_PART_HP.spikeHeavy:BOSS1_PART_HP.spikeLight,broken:false});
  });
  tryBuildBossMonsterArms();
  console.info('Bellamore: external CC0 spike armor attached');
@@ -1566,14 +1575,15 @@ addEventListener('mouseup',e=>{if(e.button===2)input.guard=false});
 addEventListener('contextmenu',e=>e.preventDefault());
 
 const ui={hp:document.querySelector('#hp'),stamina:document.querySelector('#stamina'),posture:document.querySelector('#posture'),bossHp:document.querySelector('#bossHp'),bossPosture:document.querySelector('#bossPosture'),msg:document.querySelector('#message'),danger:document.querySelector('#danger'),head:document.querySelector('#headPart'),leg:document.querySelector('#legPart'),spike:document.querySelector('#spikePart'),tail:document.querySelector('#tailPart'),weapon:document.querySelector('#weaponHud'),lockDot:document.querySelector('#lockDot'),bossName:document.querySelector('#bossName'),parts:document.querySelector('#parts')};
+const hpLabel=ui.hp?.parentElement?.querySelector('span'),staminaLabel=ui.stamina?.parentElement?.querySelector('span');
 const potionHud=document.createElement('div');
 potionHud.style.cssText='position:fixed;left:24px;bottom:145px;z-index:30;color:#e8c56a;background:rgba(8,8,8,.72);border:1px solid #8e6d31;padding:7px 12px;font:600 13px sans-serif;letter-spacing:.08em;pointer-events:none';
 document.body.appendChild(potionHud);
 
 const state={
- hp:100,posture:0,stamina:100,staminaMax:100,staminaRegenDelay:0,exhausted:0,potions:3,potionTimer:0,potionHealDone:false,attack:0,attackDuration:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollElapsed:0,rollLean:1,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
- bossMaxHp:BOSS_VARIANT===3?11800:BOSS_VARIANT===2?9000:11200,bossHp:BOSS_VARIANT===3?11800:BOSS_VARIANT===2?9000:11200,bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',bossBustImpulse:0,bossAttackTarget:new THREE.Vector3(),bossAttackTargetLocked:false,potionPunishQueued:false,potionPunishKind:'spike_triple',time:0,shake:0,hitstop:0,
- headHp:100,legHp:150,tailHp:130,tailBroken:false,legBroken:false,headBroken:false,danger:false,reaction:0,reactionZone:'body'
+ hp:PLAYER_MAX_HP,hpMax:PLAYER_MAX_HP,posture:0,stamina:PLAYER_MAX_STAMINA,staminaMax:PLAYER_MAX_STAMINA,staminaRegenDelay:0,exhausted:0,potions:3,potionTimer:0,potionHealDone:false,attack:0,attackDuration:0,attackHit:false,attackStep:0,attackQueued:false,comboGrace:0,rolling:0,rollElapsed:0,rollLean:1,rollDir:new THREE.Vector3(),invuln:0,deflect:0,parryAnim:0,guardBlend:0,stagger:0,dead:false,
+ bossMaxHp:BOSS_MAX_HP[BOSS_VARIANT],bossHp:BOSS_MAX_HP[BOSS_VARIANT],bossPosture:0,bossState:'idle',bossTimer:1.0,bossHit:false,bossStagger:0,bossPatternStep:0,bossFxStamp:'',bossBustImpulse:0,bossAttackTarget:new THREE.Vector3(),bossAttackTargetLocked:false,potionPunishQueued:false,potionPunishKind:'spike_triple',time:0,shake:0,hitstop:0,
+ headHp:BOSS1_PART_HP.head,legHp:BOSS1_PART_HP.leg,tailHp:BOSS1_PART_HP.tail,tailBroken:false,legBroken:false,headBroken:false,danger:false,reaction:0,reactionZone:'body'
 };
 
 /* -------------------------------------------------------------------------- */
@@ -2375,6 +2385,7 @@ function boss3FacingDot(){
 }
 function boss3Heal(amount){
  if(state.bossHp<=0)return;
+ amount*=BOSS3_HEAL_SCALE;
  const old=state.bossHp;state.bossHp=Math.min(state.bossMaxHp,state.bossHp+amount);
  if(state.bossHp>old){
   state.boss3HealPulse=.18;
@@ -3030,7 +3041,7 @@ function startAttack(step){
 }
 function tryDrinkPotion(){
  if(state.dead||state.potions<=0||state.potionTimer>0||state.attack>0||state.rolling>0||state.stagger>0)return;
- if(state.hp>=100){flash('체력이 가득 찼다',.35);return}
+ if(state.hp>=state.hpMax){flash('체력이 가득 찼다',.35);return}
  state.potions--;
  state.potionTimer=.95;
  state.potionHealDone=false;
@@ -3068,6 +3079,7 @@ function tryDeflect(){if(!state.dead&&state.stagger<=0&&state.exhausted<=0&&spen
 
 function hurtPlayer(dmg,posture=20,unblockable=false){
  if(state.invuln>0||state.dead)return;
+ dmg*=BOSS_DAMAGE_SCALE;
  if(!unblockable&&input.guard){
    if(state.deflect>0){
      state.bossPosture+=30;state.posture=Math.max(0,state.posture-15);state.stamina=Math.min(state.staminaMax,state.stamina+9);state.shake=.16;state.parryAnim=.28;hitStop(.055);spawnSparks(player.position.clone().lerp(boss.position,.42).add(new THREE.Vector3(0,1.45,0)),22,7);flash('저스트 튕겨내기',.22);
@@ -3101,6 +3113,7 @@ function hitZone(){
  return 'leg';
 }
 function hitBoss(base,posture=12,contact=null){
+ base*=PLAYER_DAMAGE_SCALE;
  if(BOSS_VARIANT===2){hitBoss2(base,posture,contact);return}
  if(BOSS_VARIANT===3){hitBoss3(base,posture,contact);return}
  if(state.bossHp<=0)return;
@@ -3652,9 +3665,9 @@ function updatePlayer(dt){
    state.potionTimer=Math.max(0,state.potionTimer-dt);
    if(!state.potionHealDone&&state.potionTimer<=.42){
      state.potionHealDone=true;
-     state.hp=Math.min(100,state.hp+48);
+     state.hp=Math.min(state.hpMax,state.hp+POTION_HEAL);
      spawnSparks(player.position.clone().add(new THREE.Vector3(0,1.1,0)),10,2.4);
-     flash(`회복 +48 · 포션 ${state.potions}/3`,.45);
+     flash(`회복 +${POTION_HEAL} · 포션 ${state.potions}/3`,.45);
    }
  }
  if(state.dead){setPlayerVisualAction('dead');if(playerMixer)playerMixer.update(dt);return;}
@@ -3822,10 +3835,10 @@ function updateCamera(dt){
  camera.lookAt(camLook);
  updateLockMarker();
 }
-function partText(v,broken,label){return broken?label:(v<45?'손상':'정상')}
+function partText(v,broken,label,max=100){return broken?label:(v<max*.45?'손상':'정상')}
 function updateUI(){
- ui.hp.style.width=clamp(state.hp,0,100)+'%';if(ui.stamina){ui.stamina.style.width=(clamp(state.stamina,0,state.staminaMax)/state.staminaMax*100)+'%';ui.stamina.parentElement.classList.toggle('exhausted',state.exhausted>0)}ui.posture.style.width=clamp(state.posture,0,100)+'%';ui.bossHp.style.width=(clamp(state.bossHp,0,state.bossMaxHp)/state.bossMaxHp*100)+'%';ui.bossPosture.style.width=clamp(state.bossPosture,0,100)+'%';
- if(BOSS_VARIANT===2){if(ui.parts)ui.parts.textContent=state.boss2Phase===2?'2페이즈 · 잿불 각성 · 완성형 전투':'1페이즈 · '+({sword:'검',spear:'창',mage:'술법',frenzy:'광전'}[state.boss2Style]||'검')+' 형상';}else if(BOSS_VARIANT===3){if(ui.parts)ui.parts.textContent=state.boss3Phase===2?'2페이즈 · 혈화 개화 · 회복 검무':'1페이즈 · 검격 적중 시 체력 회복';}else{ui.head.textContent=partText(state.headHp,state.headBroken,'파괴');ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴');if(ui.spike){const alive=bossSpikeTargets.filter(s=>!s.broken).length,total=bossSpikeTargets.length;ui.spike.textContent=total?(alive?`${alive}/${total}`:'전부 파괴'):'로딩';}ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단');}if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
+ ui.hp.style.width=(clamp(state.hp,0,state.hpMax)/state.hpMax*100)+'%';if(hpLabel)hpLabel.textContent=`HP ${Math.ceil(state.hp)} / ${state.hpMax}`;if(ui.stamina){ui.stamina.style.width=(clamp(state.stamina,0,state.staminaMax)/state.staminaMax*100)+'%';ui.stamina.parentElement.classList.toggle('exhausted',state.exhausted>0)}if(staminaLabel)staminaLabel.textContent=`STAMINA ${Math.ceil(state.stamina)} / ${state.staminaMax}`;ui.posture.style.width=clamp(state.posture,0,100)+'%';ui.bossHp.style.width=(clamp(state.bossHp,0,state.bossMaxHp)/state.bossMaxHp*100)+'%';ui.bossPosture.style.width=clamp(state.bossPosture,0,100)+'%';
+ if(BOSS_VARIANT===2){if(ui.parts)ui.parts.textContent=state.boss2Phase===2?'2페이즈 · 잿불 각성 · 완성형 전투':'1페이즈 · '+({sword:'검',spear:'창',mage:'술법',frenzy:'광전'}[state.boss2Style]||'검')+' 형상';}else if(BOSS_VARIANT===3){if(ui.parts)ui.parts.textContent=state.boss3Phase===2?'2페이즈 · 혈화 개화 · 회복 검무':'1페이즈 · 검격 적중 시 체력 회복';}else{ui.head.textContent=partText(state.headHp,state.headBroken,'파괴',BOSS1_PART_HP.head);ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴',BOSS1_PART_HP.leg);if(ui.spike){const alive=bossSpikeTargets.filter(s=>!s.broken).length,total=bossSpikeTargets.length;ui.spike.textContent=total?(alive?`${alive}/${total}`:'전부 파괴'):'로딩';}ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단',BOSS1_PART_HP.tail);}if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
  potionHud.textContent=`R · 포션 ${state.potions}/3`;
 }
 function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}addEventListener('resize',resize);resize();
