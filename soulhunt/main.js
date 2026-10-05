@@ -2682,6 +2682,43 @@ function spawnBoss3Petals(count=18,power=3.2){
   scene.add(m);boss3Fx.push({m,life:.55+Math.random()*.5,vel:new THREE.Vector3(Math.cos(a)*s,.6+Math.random()*2.4,Math.sin(a)*s),spin:(Math.random()-.5)*8});
  }
 }
+const boss3SlashWaves=[];
+function spawnBoss3DownSlashWave(index=0){
+ const phase2=state.boss3Phase===2;
+ const start=boss.position.clone().add(new THREE.Vector3(0,2.15,0));
+ if(boss3WeaponRoot.visible){
+  const blade=combatWorldSegment(boss3WeaponRoot,new THREE.Vector3(0,1.72,0),new THREE.Vector3(0,2.24,0));
+  start.copy(blade.tip);
+ }
+ const target=player.position.clone().add(new THREE.Vector3(0,.92,0));
+ const dir=target.clone().sub(start).normalize(),width=phase2?1.68:1.46;
+ const m=new THREE.Mesh(new THREE.BoxGeometry(width,.085,.055),new THREE.MeshBasicMaterial({color:phase2?0xff5c7b:0xe7d7de,transparent:true,opacity:.82,depthWrite:false,side:THREE.DoubleSide}));
+ m.position.copy(start);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),dir);scene.add(m);
+ const axis=new THREE.Vector3(1,0,0).applyQuaternion(m.quaternion).normalize(),half=width*.5;
+ const base=m.position.clone().addScaledVector(axis,-half),tip=m.position.clone().addScaledVector(axis,half);
+ boss3SlashWaves.push({obj:m,vel:dir.multiplyScalar(phase2?14.8:13.2),life:1.2,dmg:phase2?11:9,posture:phase2?13:10,radius:.115,half,prevBase:base,prevTip:tip,index});
+}
+function updateBoss3SlashWaves(dt){
+ if(!boss3SlashWaves.length)return;
+ const caps=combatHumanoidCapsules(playerVrmBones,player,2.0);
+ for(let i=boss3SlashWaves.length-1;i>=0;i--){
+  const w=boss3SlashWaves[i];w.life-=dt;w.obj.position.addScaledVector(w.vel,dt);
+  const axis=new THREE.Vector3(1,0,0).applyQuaternion(w.obj.quaternion).normalize();
+  const base=w.obj.position.clone().addScaledVector(axis,-w.half),tip=w.obj.position.clone().addScaledVector(axis,w.half);
+  const hit=combatSweptBladeContact(w.prevBase,w.prevTip,base,tip,caps,w.radius);
+  if(hit){
+   spawnSparks(hit.point,8,3.8);
+   if(state.invuln>0)flash('회피',.12);else hurtPlayer(w.dmg,w.posture,false);
+   scene.remove(w.obj);w.obj.geometry?.dispose?.();w.obj.material?.dispose?.();boss3SlashWaves.splice(i,1);continue;
+  }
+  w.prevBase.copy(base);w.prevTip.copy(tip);w.obj.material.opacity=Math.min(.82,Math.max(0,w.life*1.7));
+  if(w.life<=0||w.obj.position.y<-.5||w.obj.position.length()>52){scene.remove(w.obj);w.obj.geometry?.dispose?.();w.obj.material?.dispose?.();boss3SlashWaves.splice(i,1)}
+ }
+}
+function clearBoss3SlashWaves(){
+ for(const w of boss3SlashWaves){scene.remove(w.obj);w.obj.geometry?.dispose?.();w.obj.material?.dispose?.()}
+ boss3SlashWaves.length=0;
+}
 function updateBoss3Fx(dt){
  for(let i=boss3Fx.length-1;i>=0;i--){
   const f=boss3Fx[i];f.life-=dt;f.vel.y-=dt*3.4;f.m.position.addScaledVector(f.vel,dt);
@@ -2710,7 +2747,7 @@ function chooseBoss3Attack(){
  setDanger(false);boss3Fired.clear();
  let pool;
  if(state.boss3Phase===2)pool=['b3_wing_combo','b3_dive_bloom','b3_echoes','b3_flower','b3_dance2','b3_lunge'];
- else pool=['b3_triple','b3_lunge','b3_cross','b3_dance','b3_rising'];
+ else pool=['b3_triple','b3_lunge','b3_cross','b3_dance','b3_rising','b3_dance2'];
  let pick;
  if(state.potionPunishQueued){pick=state.boss3Phase===2?'b3_dive_bloom':'b3_lunge';state.potionPunishQueued=false}
  else{
@@ -2718,7 +2755,7 @@ function chooseBoss3Attack(){
   pick=choices[Math.floor(Math.random()*choices.length)];
  }
  state.boss3Last=pick;state.bossState=pick;state.bossTimer=BOSS3_DUR[pick]||1.4;resetBoss3PhysicalTrace();
- if(pick==='b3_dance2'){state.boss3WaterBurst=0;state.boss3WaterDir.copy(flatDir(boss.position,player.position));state.boss3WaterSide*=-1}
+ if(pick==='b3_dance2'){clearBoss3SlashWaves();state.boss3WaterBurst=0;state.boss3WaterDir.copy(flatDir(boss.position,player.position));state.boss3WaterSide*=-1}
  if(pick==='b3_dive_bloom')setDanger(true);
  state.bossAttackTarget.copy(player.position);state.bossAttackTarget.y=0;
 }
@@ -2797,7 +2834,7 @@ function hitBoss3(base,posture=12,contact=null){
 }
 function updateBoss3(dt){
  for(let i=boss3MeleeRequests.length-1;i>=0;i--){boss3MeleeRequests[i].ttl-=dt;if(boss3MeleeRequests[i].ttl<=0)boss3MeleeRequests.splice(i,1)}
- enforceBoss3Visibility();updateBoss3Fx(dt);updateBoss2Fx(dt);updateBoss3Weapon();
+ enforceBoss3Visibility();updateBoss3Fx(dt);updateBoss2Fx(dt);updateBoss3SlashWaves(dt);updateBoss3Weapon();
  bossRim.position.set(boss.position.x,boss.position.y+3.0,boss.position.z-4.0);
  boss3Halo.rotation.z+=dt*(state.boss3Phase===2?1.8:.72);
  boss3HaloMat.opacity=(state.boss3Phase===2?.22:.1)+Math.sin(state.time*5)*.035;
@@ -2808,7 +2845,7 @@ function updateBoss3(dt){
   boss3Visual.position.y=THREE.MathUtils.lerp(boss3Visual.position.y,targetY,1-Math.exp(-dt*10));
  }
  if(state.bossHp<=0){
-  state.boss3DeadPose=Math.min(1,state.boss3DeadPose+dt*.6);
+  clearBoss3SlashWaves();state.boss3DeadPose=Math.min(1,state.boss3DeadPose+dt*.6);
   if(boss3Visual){boss3Visual.rotation.z=THREE.MathUtils.lerp(boss3Visual.rotation.z,-1.35,state.boss3DeadPose*.05);boss3Visual.position.y=THREE.MathUtils.lerp(boss3Visual.position.y,.08,state.boss3DeadPose*.035)}
   boss3WeaponRoot.visible=false;poseBoss3(dt);syncBoss3Rig(dt);return;
  }
@@ -2887,11 +2924,11 @@ function updateBoss3(dt){
   BOSS3_DANCE2_MARKS.forEach((m,i)=>{
    if(state.bossTimer<=m+.055&&state.bossTimer>m-.055){
     const final=i===BOSS3_DANCE2_MARKS.length-1;
-    boss3Once('water-vfx'+i,()=>{spawnBoss2Slash(final?2.55:2.05+(i%4)*.07,final?0xffd5df:0xff718f);spawnBoss3Petals(final?16:5,final?4.2:2.4)});
+    boss3Once('water-vfx'+i,()=>{spawnBoss2Slash(final?2.55:2.05+(i%4)*.07,final?0xffd5df:state.boss3Phase===2?0xff718f:0xe7d7de);spawnBoss3Petals(final?16:state.boss3Phase===2?5:2,final?4.2:2.4);spawnBoss3DownSlashWave(i)});
     boss3Strike('water-hit'+i,final?4.8:4.25,final?24:9+(i%4),final?30:10+(i%3)*2,false,-.92,final?2.4:1.7);
    }
   });
-  if(state.bossTimer<=0){state.boss3WaterBurst=0;boss.position.y=0;spawnDustBurst(boss.position,.7);finishBoss3Attack(1.48)}
+  if(state.bossTimer<=0){state.boss3WaterBurst=0;boss.position.y=0;spawnDustBurst(boss.position,.7);if(state.boss3Phase===2)spawnBossShockwave(3.2,14);finishBoss3Attack(1.48)}
 
  }else if(state.bossState==='b3_rising'){
   if(state.bossTimer<.72&&state.bossTimer>.32)boss.position.addScaledVector(dir,dt*6.4);
