@@ -1830,6 +1830,37 @@ function soulsSwordHandTarget(beat,reach,forward=.78){
  const z=(.3+forward*.72*cut-.42*recover)*reach;
  return new THREE.Vector3(x*reach,y,z);
 }
+function bossKeyedSlash(timer,marks,opts={}){
+ const wind=opts.wind??.32,cutTime=opts.cut??.16,recover=opts.recover??.26;
+ let best=null;
+ for(let i=0;i<marks.length;i++){
+  const impact=marks[i],start=impact+wind,end=impact-recover;
+  if(timer<=start&&timer>=end){
+   const elapsed=start-timer,total=wind+recover,p=clamp(elapsed/Math.max(.001,total),0,1);
+   const windP=motionSmooth(0,wind/total,p),cutP=motionSmooth(wind/total,(wind+cutTime)/total,p),recoverP=motionSmooth((wind+cutTime)/total,1,p);
+   const candidate={index:i,side:i%2===0?1:-1,p,wind:windP,cut:cutP,recover:recoverP,impact:Math.sin(clamp((p-wind/total)/(Math.max(.08,cutTime/total)),0,1)*Math.PI)};
+   if(!best||Math.abs(timer-impact)<Math.abs(timer-marks[best.index]))best=candidate;
+  }
+ }
+ return best;
+}
+function bossSwordHandArc(beat,reach,cfg={}){
+ if(!beat)return new THREE.Vector3((cfg.readyX??.25)*reach,(cfg.readyY??-.5)*reach,(cfg.readyZ??.24)*reach);
+ const side=beat.side,wind=beat.wind,cut=beat.cut,recover=beat.recover;
+ const startX=side*(cfg.windX??.72),endX=-side*(cfg.cutX??.72);
+ const x=(THREE.MathUtils.lerp(startX,endX,cut)*(1-recover)+side*(cfg.recoverX??.16)*recover)*reach;
+ const y=((cfg.baseY??-.32)+(cfg.liftY??.22)*wind-(cfg.dropY??.18)*cut+(cfg.recoverY??.08)*recover)*reach;
+ const z=((cfg.baseZ??.18)+(cfg.windBack??-.28)*wind+(cfg.forward??1.02)*cut-(cfg.pullback??.46)*recover)*reach;
+ return new THREE.Vector3(x,y,z);
+}
+function bossPolearmHandArc(timer,duration,reach,reverse=false){
+ const p=clamp(1-timer/Math.max(.001,duration),0,1),wind=motionSmooth(0,.34,p),cut=motionSmooth(.36,.62,p),recover=motionSmooth(.68,1,p);
+ const side=reverse?-1:1;
+ const x=THREE.MathUtils.lerp(-side*.72,side*.82,cut)*(1-recover)+side*.18*recover;
+ const y=-.38+.18*wind-.12*cut+.08*recover;
+ const z=.08-.32*wind+1.04*cut-.48*recover;
+ return new THREE.Vector3(x*reach,y*reach,z*reach);
+}
 function boss3Dance2Flight(timer){
  const total=BOSS3_DUR.b3_dance2,e=total-timer;
  let y=0,orbit=0,forward=0,turn=0,air=0,burst=0;
@@ -1890,8 +1921,8 @@ function applyBoss2PrimaryArmIK(dt){
  let local=new THREE.Vector3(.34,-.48,.22);
  if(st==='b2_sword_combo'||st==='b2_flame_combo'||st==='b2_frenzy'||st==='b2_final'){
    const marks=st==='b2_sword_combo'?BOSS2_SWORD_MARKS:st==='b2_flame_combo'?BOSS2_FLAME_MARKS:st==='b2_frenzy'?BOSS2_FRENZY_MARKS:BOSS2_FINAL_MARKS;
-   const beat=soulsSwordBeat(t,marks,st==='b2_final'?.3:.25,st==='b2_final'?.24:.22);
-   local.copy(soulsSwordHandTarget(beat,reach,st==='b2_final'?.88:.76).multiplyScalar(1/reach));
+   const beat=bossKeyedSlash(t,marks,{wind:st==='b2_final'?.36:.3,cut:.16,recover:.28});
+   local.copy(bossSwordHandArc(beat,reach,{windX:.78,cutX:.84,baseY:-.28,liftY:.28,dropY:.2,baseZ:.12,windBack:-.34,forward:st==='b2_final'?1.18:1.02,pullback:.5}).multiplyScalar(1/reach));
  }else if(st==='b2_spear_thrust'){
    const e=BOSS2_DUR.b2_spear_thrust-t;
    const p=clamp(e/BOSS2_DUR.b2_spear_thrust,0,1);
@@ -1900,8 +1931,7 @@ function applyBoss2PrimaryArmIK(dt){
  }else if(st==='b2_thrust'||st==='b2_dash_burst'){
    local.set(.08,-.28,1.12);
  }else if(st==='b2_spear_sweep'||st==='b2_arc'){
-   const swing=Math.sin(((BOSS2_DUR[st]||1.4)-t)*Math.PI*1.8);
-   local.set(.82*swing,-.25,.64);
+   local.copy(bossPolearmHandArc(t,BOSS2_DUR[st]||1.4,reach,st==='b2_arc').multiplyScalar(1/reach));
  }else if(st==='b2_jump_slam'){
    const p=clamp(1-t/BOSS2_DUR.b2_jump_slam,0,1);
    local.set(.18,-.08-.62*p,.56+.26*p);
@@ -2177,10 +2207,11 @@ function poseBoss2(dt){
    setBoss2Bone('rightLowerArm',-.12,0,0,18,dt);
    setBoss2Bone('spine',-.22,0,0,15,dt);
  }else if(st==='b2_spear_sweep'||st==='b2_arc'){
-   const swing=Math.sin((BOSS2_DUR[st]-t)*Math.PI*1.8);
-   setBoss2Bone('rightUpperArm',-.65,.2,1.1*swing,16,dt);
-   setBoss2Bone('leftUpperArm',-.35,-.15,-.55*swing,14,dt);
-   setBoss2Bone('spine',-.08,.5*swing,0,15,dt);
+   const p=clamp(1-t/BOSS2_DUR[st],0,1),wind=motionSmooth(0,.34,p),cut=motionSmooth(.36,.62,p),recover=motionSmooth(.68,1,p),side=st==='b2_arc'?-1:1;
+   const twist=THREE.MathUtils.lerp(-side*.52,side*.64,cut)*(1-recover)+side*.08*recover;
+   setBoss2Bone('hips',0,twist*.56,0,19,dt);setBoss2Bone('spine',-.12,twist,-side*.08*cut,22,dt);setBoss2Bone('chest',-.04,twist*.48,0,20,dt);
+   setBoss2Bone('rightUpperArm',-.62+.16*wind,.08,side*.34*cut,22,dt);setBoss2Bone('rightLowerArm',-.7+.3*cut,0,-side*.16*cut,22,dt);
+   setBoss2Bone('leftUpperArm',-.52,-.04,-side*.2*cut,20,dt);setBoss2Bone('leftUpperLeg',-.22*wind,0,.04,18,dt);setBoss2Bone('rightUpperLeg',.24*cut,0,-.04,18,dt);
  }else if(st==='b2_magic_bolts'||st==='b2_beam'||st==='b2_skyfall'||st==='b2_awaken'){
    setBoss2Bone('leftUpperArm',-.55,-.45,.86,12,dt);setBoss2Bone('rightUpperArm',-.55,.45,-.86,12,dt);
    setBoss2Bone('leftLowerArm',-.45,0,.3,12,dt);setBoss2Bone('rightLowerArm',-.45,0,-.3,12,dt);
@@ -2488,8 +2519,8 @@ function applyBoss3PrimaryArmIK(dt){
  let local=new THREE.Vector3(.36,-.5,.2);
  if(['b3_triple','b3_wing_combo','b3_dance'].includes(st)){
    const marks=st==='b3_triple'?BOSS3_TRIPLE_MARKS:st==='b3_wing_combo'?BOSS3_WING_MARKS:BOSS3_DANCE_MARKS;
-   const beat=soulsSwordBeat(t,marks,.23,.21);
-   local.copy(soulsSwordHandTarget(beat,reach,.78).multiplyScalar(1/reach));
+   const beat=bossKeyedSlash(t,marks,{wind:.22,cut:.12,recover:.2});
+   local.copy(bossSwordHandArc(beat,reach,{windX:.56,cutX:.66,baseY:-.38,liftY:.14,dropY:.1,baseZ:.22,windBack:-.18,forward:.94,pullback:.38,recoverX:.1}).multiplyScalar(1/reach));
  }else if(st==='b3_dance2'){
    const beat=soulsSwordBeat(t,BOSS3_DANCE2_MARKS,.18,.14);
    if(beat){
@@ -2503,8 +2534,8 @@ function applyBoss3PrimaryArmIK(dt){
    }else local.set(.16,-.42,.34);
  }else if(st==='b3_cross'||st==='b3_echoes'){
    const marks=st==='b3_cross'?BOSS3_CROSS_MARKS:BOSS3_ECHO_MARKS;
-   const beat=soulsSwordBeat(t,marks,.26,.22);
-   local.copy(soulsSwordHandTarget(beat,reach,.82).multiplyScalar(1/reach));
+   const beat=bossKeyedSlash(t,marks,{wind:.26,cut:.12,recover:.22});
+   local.copy(bossSwordHandArc(beat,reach,{windX:.64,cutX:.72,baseY:-.34,liftY:.18,dropY:.12,baseZ:.18,windBack:-.24,forward:1.02,pullback:.42}).multiplyScalar(1/reach));
  }else if(st==='b3_lunge'||st==='b3_rising'){
    local.set(.04,-.26,1.18);
  }else if(st==='b3_dive_bloom'){
@@ -2648,13 +2679,12 @@ function poseBoss3(dt){
   poseBoss3AerialDance(dt,t);
  }else if(['b3_triple','b3_cross','b3_wing_combo','b3_dance','b3_echoes'].includes(st)){
   const marks=st==='b3_triple'?BOSS3_TRIPLE_MARKS:st==='b3_cross'?BOSS3_CROSS_MARKS:st==='b3_wing_combo'?BOSS3_WING_MARKS:st==='b3_dance'?BOSS3_DANCE_MARKS:BOSS3_ECHO_MARKS;
-  const beat=soulsSwordBeat(t,marks,.24,.22),cut=beat?Math.sin(clamp((beat.p-.34)/.48,0,1)*Math.PI):0,side=beat&&beat.index%2===0?1:-1;
-  setBoss3Bone('rightShoulder',0,side*.08*cut,-.1,18,dt);
-  setBoss3Bone('rightUpperArm',-.6,.08,side*.38*cut,20,dt);setBoss3Bone('rightLowerArm',-.68+.3*cut,0,-side*.18*cut,20,dt);
-  setBoss3Bone('spine',-.08,side*.28*cut,-side*.09*cut,18,dt);
-  setBoss3Bone('chest',-.04,side*.14*cut,-side*.05*cut,18,dt);
-  setBoss3Bone('hips',0,side*.12*cut,0,15,dt);
-  setBoss3Bone('leftUpperArm',-.3,-.08,-side*.12*cut,15,dt);
+  const beat=bossKeyedSlash(t,marks,{wind:.24,cut:.12,recover:.22}),cut=beat?.impact||0,side=beat?.side||1,wind=beat?.wind||0;
+  setBoss3Bone('hips',-.03*wind,side*.18*cut,0,22,dt);setBoss3Bone('spine',-.1,side*.34*cut,-side*.1*cut,24,dt);
+  setBoss3Bone('chest',-.04,side*.18*cut,-side*.05*cut,23,dt);setBoss3Bone('head',.02,-side*.08*cut,side*.03*cut,18,dt);
+  setBoss3Bone('rightShoulder',0,side*.08*cut,-.1,22,dt);setBoss3Bone('rightUpperArm',-.58+.08*wind,.08,side*.34*cut,24,dt);setBoss3Bone('rightLowerArm',-.72+.36*cut,0,-side*.16*cut,24,dt);
+  setBoss3Bone('leftUpperArm',-.26,-.08,-side*.16*cut,20,dt);
+  setBoss3Bone('leftUpperLeg',-.18*wind,0,.06,18,dt);setBoss3Bone('rightUpperLeg',.16*cut,0,-.04,18,dt);
  }else if(st==='b3_lunge'||st==='b3_rising'){
   setBoss3Bone('rightUpperArm',-1.38,.05,-.12,20,dt);setBoss3Bone('rightLowerArm',-.12,0,0,20,dt);
   setBoss3Bone('spine',-.27,.04,0,18,dt);setBoss3Bone('leftUpperArm',-.45,-.2,.42,16,dt);
@@ -2899,9 +2929,9 @@ const BOSS4_COMBO_MARKS=[1.48,.82,.22];
 const BOSS4_ILLUSION_MARKS=[3.18,2.78,2.38,1.98,1.58,1.18,.78,.34];
 const BOSS4_DRAGON_MARKS=[2.72,1.9,1.08,.3];
 function boss4BeatTarget(t,marks,reach,forward=.82){
- const beat=soulsSwordBeat(t,marks,.25,.2);
- if(!beat)return new THREE.Vector3(.28,-.5,.24);
- return soulsSwordHandTarget(beat,reach,forward).multiplyScalar(1/reach);
+ const beat=bossKeyedSlash(t,marks,{wind:.2,cut:.1,recover:.18});
+ if(!beat)return new THREE.Vector3(.24,-.54,.18);
+ return bossSwordHandArc(beat,reach,{windX:.46,cutX:.58,baseY:-.46,liftY:.1,dropY:.08,baseZ:.14,windBack:-.2,forward,pullback:.34,recoverX:.08}).multiplyScalar(1/reach);
 }
 function applyBoss4PrimaryArmIK(dt){
  if(!boss4Ready||!boss4Bones.rightUpperArm||!boss4Bones.rightHand)return;
