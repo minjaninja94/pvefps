@@ -219,6 +219,20 @@ function alignObjectLocalYToWorld(obj,worldDir,alpha=1){
  const localQ=parentQ.invert().multiply(worldQ);
  obj.quaternion.slerp(localQ,clamp(alpha,0,1));
 }
+function alignWeaponFromHands(root,rightHand,leftHand,leftIsForward=false,alpha=1){
+ if(!root||!rightHand||!leftHand)return false;
+ const r=new THREE.Vector3(),l=new THREE.Vector3();rightHand.getWorldPosition(r);leftHand.getWorldPosition(l);
+ const axis=(leftIsForward?l.clone().sub(r):r.clone().sub(l));
+ if(axis.lengthSq()<1e-6)return false;
+ root.position.copy(r);
+ alignObjectLocalYToWorld(root,axis,alpha);
+ return true;
+}
+function applyWeaponEdgeRoll(root,roll){
+ if(!root||!roll)return;
+ const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),roll);
+ root.quaternion.multiply(q);
+}
 const PLAYER_HAND_PATHS={
  straight:[
   null,
@@ -1800,10 +1814,16 @@ function updateBoss2Weapon(){
  boss2WeaponRoot.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
  boss2Sword.visible=state.boss2Style!=='spear';
  boss2Spear.visible=state.boss2Style==='spear';
- if(boss2Spear.visible&&['idle','b2_spear_thrust','b2_thrust','b2_dash_burst'].includes(state.bossState)){
+ const left=boss2RenderBones.leftHand||boss2Bones.leftHand;
+ const twoHand=!!left&&(boss2Spear.visible||state.boss2Style==='awakened'||state.boss2Style==='frenzy'||['b2_flame_combo','b2_final'].includes(state.bossState));
+ if(twoHand)alignWeaponFromHands(boss2WeaponRoot,hand,left,boss2Spear.visible,1);
+ else if(boss2Spear.visible&&['idle','b2_spear_thrust','b2_thrust','b2_dash_burst'].includes(state.bossState)){
    const aim=player.position.clone().add(new THREE.Vector3(0,1.12,0)).sub(boss2WeaponRoot.position);
    alignObjectLocalYToWorld(boss2WeaponRoot,aim,1);
  }
+ const marks=state.bossState==='b2_sword_combo'?BOSS2_SWORD_MARKS:state.bossState==='b2_flame_combo'?BOSS2_FLAME_MARKS:state.bossState==='b2_frenzy'?BOSS2_FRENZY_MARKS:state.bossState==='b2_final'?BOSS2_FINAL_MARKS:null;
+ const edge=marks?bossKeyedSlash(state.bossTimer,marks,{wind:.3,cut:.16,recover:.28}):null;
+ if(edge&&!boss2Spear.visible)applyWeaponEdgeRoll(boss2WeaponRoot,edge.side*edge.impact*.28);
 }
 function bossCombatOffset(x,y,z){
  const q=new THREE.Quaternion();boss.getWorldQuaternion(q);
@@ -2509,6 +2529,12 @@ function updateBoss3Weapon(){
  const dir=hp.clone().sub(lp);if(dir.lengthSq()<1e-6)dir.set(0,-1,0);dir.normalize();
  boss3WeaponRoot.visible=true;boss3WeaponRoot.position.copy(hp).addScaledVector(dir,.04);
  boss3WeaponRoot.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
+ const left=boss3RenderBones.leftHand||boss3Bones.leftHand;
+ const twoHand=!!left&&(state.boss3Phase===2||['b3_dance','b3_dance2','b3_wing_combo','b3_lunge','b3_rising','b3_echoes'].includes(state.bossState));
+ if(twoHand)alignWeaponFromHands(boss3WeaponRoot,hand,left,false,1);
+ const marks=state.bossState==='b3_triple'?BOSS3_TRIPLE_MARKS:state.bossState==='b3_cross'?BOSS3_CROSS_MARKS:state.bossState==='b3_wing_combo'?BOSS3_WING_MARKS:state.bossState==='b3_dance'?BOSS3_DANCE_MARKS:state.bossState==='b3_echoes'?BOSS3_ECHO_MARKS:state.bossState==='b3_dance2'?BOSS3_DANCE2_MARKS:null;
+ const edge=marks?bossKeyedSlash(state.bossTimer,marks,state.bossState==='b3_dance2'?{wind:.105,cut:.065,recover:.105}:{wind:.24,cut:.12,recover:.22}):null;
+ if(edge)applyWeaponEdgeRoll(boss3WeaponRoot,edge.side*edge.impact*(state.bossState==='b3_dance2'?.42:.3));
  if(boss3Katana.parent!==boss3WeaponRoot)boss3WeaponRoot.add(boss3Katana);
 }
 function applyBoss3PrimaryArmIK(dt){
@@ -2946,6 +2972,13 @@ function updateBoss4Weapon(){
  const dir=hp.clone().sub(lp);if(dir.lengthSq()<1e-6)dir.set(0,-1,0);dir.normalize();
  boss4WeaponRoot.visible=true;boss4WeaponRoot.position.copy(hp).addScaledVector(dir,.045);
  boss4WeaponRoot.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
+ const marks=state.bossState==='b4_combo'?BOSS4_COMBO_MARKS:state.bossState==='b4_illusion'?BOSS4_ILLUSION_MARKS:null;
+ const edge=marks?bossKeyedSlash(state.bossTimer,marks,{wind:.2,cut:.1,recover:.18}):null;
+ if(edge)applyWeaponEdgeRoll(boss4WeaponRoot,edge.side*edge.impact*.38);
+ else if(state.bossState==='b4_batto'){
+  const p=clamp(1-state.bossTimer/BOSS4_DUR.b4_batto,0,1),cut=motionSmooth(.48,.66,p);
+  applyWeaponEdgeRoll(boss4WeaponRoot,-.42*cut);
+ }
 }
 const BOSS4_DUR={b4_combo:2.05,b4_batto:1.92,b4_illusion:3.82,b4_dragon:3.36};
 const BOSS4_COMBO_MARKS=[1.48,.82,.22];
@@ -3147,6 +3180,11 @@ function updateBoss5Weapon(){
  const dir=hp.clone().sub(lp);if(dir.lengthSq()<1e-6)dir.set(0,-1,0);dir.normalize();
  boss5WeaponRoot.visible=true;boss5WeaponRoot.position.copy(hp).addScaledVector(dir,.05);
  boss5WeaponRoot.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
+ const left=boss5RenderBones.leftHand||boss5Bones.leftHand;
+ if(left)alignWeaponFromHands(boss5WeaponRoot,hand,left,true,1);
+ const marks=state.bossState==='b5_chain'?BOSS5_CHAIN_MARKS:state.bossState==='b5_rush'?BOSS5_RUSH_AXE_MARKS:null;
+ const edge=marks?bossKeyedSlash(state.bossTimer,marks,{wind:state.bossState==='b5_chain'?.38:.24,cut:state.bossState==='b5_chain'?.18:.13,recover:state.bossState==='b5_chain'?.3:.22}):null;
+ if(edge)applyWeaponEdgeRoll(boss5WeaponRoot,edge.side*edge.impact*.34);
 }
 function applyBoss5GripIK(dt){
  if(!boss5Ready||!boss5WeaponRoot.visible||!boss5Bones.leftUpperArm||!boss5Bones.leftHand)return;
