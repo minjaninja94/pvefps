@@ -2196,7 +2196,12 @@ function poseBoss2(dt){
  const pulse=Math.sin(state.time*3.2),hitReact=state.boss2HitReact>0?Math.sin((state.boss2HitReact/.14)*Math.PI):0;
  setBoss2Bone('spine',-.025+pulse*.012-hitReact*.12,0,hitReact*.08,10,dt);
  setBoss2Bone('head',.015-hitReact*.06,-pulse*.012,-hitReact*.06,10,dt);
- if(st==='idle'){
+ if(st==='idle'&&state.bossPunish>0){
+   const r=clamp(state.bossPunish/1.8,0,1);
+   setBoss2Bone('hips',.08*r,-.08*r,0,16,dt);setBoss2Bone('spine',-.28*r,.12*r,.04*r,18,dt);setBoss2Bone('chest',-.12*r,.06*r,0,16,dt);
+   setBoss2Bone('rightUpperArm',-.38,-.05,-.26,16,dt);setBoss2Bone('rightLowerArm',-.78,0,-.1,18,dt);
+   setBoss2Bone('leftUpperArm',-.28,.02,.2,15,dt);setBoss2Bone('head',.08*r,-.04*r,0,14,dt);
+ }else if(st==='idle'){
    const charm=Math.sin(state.time*1.65),phase=state.boss2Phase===2?1.35:1;
    setBoss2Bone('hips',0,.03*charm,.075*charm*phase,7,dt);
    setBoss2Bone('spine',-.045,.018*charm,-.05*charm*phase,7,dt);
@@ -2404,7 +2409,7 @@ function updateBoss2(dt){
      }
      if(i<4&&state.bossTimer<=mark+.24&&state.bossTimer>mark+.05&&d>2.8)boss.position.addScaledVector(dir,dt*3.4);
    });
-   if(state.bossTimer<=0)finishBoss2Attack(1.7);
+   if(state.bossTimer<=0)finishBoss2Attack(1.45);
  }
  poseBoss2(dt);applyBoss2PrimaryArmIK(dt);updateBoss2Weapon();applyBoss2WeaponGripIK(dt);syncBoss2Rig(dt);updateBoss2Weapon();processBoss2PhysicalHits();
 }
@@ -2713,7 +2718,12 @@ function poseBoss3(dt){
  setBoss3Bone('hips',0,.025*breath,.035*breath,7,dt);
  setBoss3Bone('spine',-.035-hitReact*.13,0,-.025*breath+hitReact*.09,11,dt);
  setBoss3Bone('head',.015-hitReact*.055,-.018*breath,-hitReact*.07,11,dt);
- if(st==='idle'){
+ if(st==='idle'&&state.bossPunish>0){
+  const r=clamp(state.bossPunish/1.9,0,1);
+  setBoss3Bone('hips',.06*r,-.1*r,0,18,dt);setBoss3Bone('spine',-.3*r,.1*r,.04*r,20,dt);setBoss3Bone('chest',-.12*r,.05*r,0,18,dt);
+  setBoss3Bone('rightUpperArm',-.42,-.05,-.3,18,dt);setBoss3Bone('rightLowerArm',-.82,0,-.14,20,dt);
+  setBoss3Bone('leftUpperArm',-.2,.02,.18,16,dt);setBoss3Bone('head',.1*r,-.04*r,0,16,dt);
+ }else if(st==='idle'){
   const sway=Math.sin(state.time*1.6),phaseAmp=phase===2?1.3:1;
   setBoss3Bone('hips',0,.04*sway,.09*sway*phaseAmp,8,dt);
   setBoss3Bone('spine',-.05,.02*sway,-.05*sway*phaseAmp,8,dt);
@@ -2866,7 +2876,7 @@ function updateBoss3(dt){
     boss3Strike('water-hit'+i,final?4.8:4.25,final?24:9+(i%4),final?30:10+(i%3)*2,false,-.92,final?2.4:1.7);
    }
   });
-  if(state.bossTimer<=0){state.boss3WaterBurst=0;boss.position.y=0;spawnDustBurst(boss.position,.7);finishBoss3Attack(1.22)}
+  if(state.bossTimer<=0){state.boss3WaterBurst=0;boss.position.y=0;spawnDustBurst(boss.position,.7);finishBoss3Attack(1.48)}
 
  }else if(state.bossState==='b3_rising'){
   if(state.bossTimer<.72&&state.bossTimer>.32)boss.position.addScaledVector(dir,dt*6.4);
@@ -3036,7 +3046,11 @@ function poseBoss4(dt){
  if(!boss4Ready)return;resetBoss4Pose(dt);
  const st=state.bossState,t=state.bossTimer,hit=state.boss4HitReact>0?Math.sin((state.boss4HitReact/.14)*Math.PI):0;
  setBoss4Bone('spine',-.035-hit*.12,0,hit*.08,12,dt);setBoss4Bone('head',.02-hit*.05,0,-hit*.05,11,dt);
- if(st==='idle'){
+ if(st==='idle'&&state.bossPunish>0){
+  const r=clamp(state.bossPunish/1.8,0,1);
+  setBoss4Bone('hips',.05*r,-.08*r,0,18,dt);setBoss4Bone('spine',-.24*r,.08*r,.03*r,20,dt);setBoss4Bone('chest',-.1*r,.04*r,0,18,dt);
+  setBoss4Bone('rightUpperArm',-.38,-.04,-.26,18,dt);setBoss4Bone('rightLowerArm',-.8,0,-.1,20,dt);setBoss4Bone('head',.08*r,-.03*r,0,16,dt);
+ }else if(st==='idle'){
   const sway=Math.sin(state.time*1.7);setBoss4Bone('hips',0,.03*sway,.05*sway,8,dt);setBoss4Bone('spine',-.04,.02*sway,-.035*sway,8,dt);
   setBoss4Bone('rightUpperArm',-.46,.06,-.3,10,dt);setBoss4Bone('rightLowerArm',-.62,0,-.14,10,dt);setBoss4Bone('leftUpperArm',-.12,-.03,.2,8,dt);
   if(dist()>3.5){const stride=Math.sin(state.time*7.6)*.4;setBoss4Bone('leftUpperLeg',stride,0,.04,13,dt);setBoss4Bone('rightUpperLeg',-stride,0,-.04,13,dt)}
@@ -3115,7 +3129,7 @@ function updateBoss4(dt){
   if(state.bossTimer<=0)finishBoss4Attack(1.0);
  }else if(state.bossState==='b4_illusion'){
   BOSS4_ILLUSION_MARKS.forEach((m,i)=>{if(state.bossTimer<=m+.085&&state.bossTimer>m-.085){boss4Once('iv'+i,()=>spawnBoss2Slash(1.7+(i%3)*.1,0xa5d8ff));boss4Strike('ih'+i,14+(i%3)*2,12+(i%4)*2,.22)}if(state.bossTimer<=m+.18&&state.bossTimer>m+.03&&d>2.2)boss.position.addScaledVector(dir,dt*3.4)});
-  if(state.bossTimer<=0)finishBoss4Attack(1.05);
+  if(state.bossTimer<=0)finishBoss4Attack(1.18);
  }else if(state.bossState==='b4_dragon'){
   BOSS4_DRAGON_MARKS.forEach((m,i)=>{
    if(state.boss4DashStep<i&&state.bossTimer<=m+.25){state.boss4DashStep=i;state.boss4DashDir.copy(flatDir(boss.position,player.position));boss4Once('dragon-flash'+i,()=>spawnBoss3Petals(5,2.1))}
@@ -3257,7 +3271,12 @@ function poseBoss5(dt){
  if(!boss5Ready)return;resetBoss5Pose(dt);
  const st=state.bossState,t=state.bossTimer,phase=state.boss5Phase,hit=state.boss5HitReact>0?Math.sin((state.boss5HitReact/.14)*Math.PI):0;
  setBoss5Bone('spine',-.04-hit*.12,0,hit*.08,12,dt);setBoss5Bone('head',.02-hit*.05,0,-hit*.05,11,dt);
- if(st==='idle'){
+ if(st==='idle'&&state.bossPunish>0){
+  const r=clamp(state.bossPunish/1.9,0,1);
+  setBoss5Bone('hips',.12*r,-.06*r,0,18,dt);setBoss5Bone('spine',-.34*r,.08*r,.02*r,21,dt);setBoss5Bone('chest',-.14*r,.04*r,0,19,dt);
+  setBoss5Bone('rightUpperArm',-.44,-.04,-.28,18,dt);setBoss5Bone('rightLowerArm',-.84,0,-.12,20,dt);
+  setBoss5Bone('leftUpperArm',-.36,.02,.22,18,dt);setBoss5Bone('leftLowerArm',-.7,0,.08,18,dt);setBoss5Bone('head',.1*r,-.03*r,0,16,dt);
+ }else if(st==='idle'){
   const sway=Math.sin(state.time*1.5);setBoss5Bone('hips',0,.025*sway,.045*sway,8,dt);setBoss5Bone('spine',-.055,.015*sway,-.03*sway,8,dt);
   setBoss5Bone('rightUpperArm',-.58,.06,-.3,10,dt);setBoss5Bone('rightLowerArm',-.56,0,-.16,10,dt);setBoss5Bone('leftUpperArm',-.44,-.04,.28,10,dt);
   if(dist()>3.7){const stride=Math.sin(state.time*(phase===2?9.2:7.4))*(phase===2?.52:.42);setBoss5Bone('leftUpperLeg',stride,0,.04,14,dt);setBoss5Bone('rightUpperLeg',-stride,0,-.04,14,dt)}
@@ -3418,7 +3437,7 @@ function updateBoss5(dt){
   if(t<=.68&&t>.3){
    boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*22));boss.position.addScaledVector(dir,dt*5.0);boss5Strike('rush-finisher',39,44,.38);
   }
-  if(state.bossTimer<=0)finishBoss5Attack(.68);
+  if(state.bossTimer<=0)finishBoss5Attack(1.02);
  }else if(state.bossState==='b5_roar'){
   if(state.bossTimer<=.72)boss5Once('roar-wave',()=>{spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1.0,0)),4.4,0xff6b35,.62);spawnDustBurst(boss.position,.85)});
   if(state.bossTimer<=0)finishBoss5Attack(.58);
