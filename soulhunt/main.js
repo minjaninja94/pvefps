@@ -28,7 +28,7 @@ renderer.localClippingEnabled=true;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x111a28);
 scene.fog=new THREE.FogExp2(0x111a28,.021);
-const camera=new THREE.PerspectiveCamera(58,1,.1,260);
+const camera=new THREE.PerspectiveCamera(52,1,.1,260);
 const clock=new THREE.Clock();
 const assetLoader=new GLTFLoader();
 
@@ -3791,34 +3791,39 @@ function updateLockMarker(){
  ui.lockDot.classList.add('on');
 }
 function updateCamera(dt){
- const target=player.position.clone().add(new THREE.Vector3(0,1.52,0));
+ const target=player.position.clone().add(new THREE.Vector3(0,1.38,0));
  let desiredPos=new THREE.Vector3(),desiredLook=new THREE.Vector3();
- let wantedFov=60;
+ let wantedFov=52;
 
  if(input.lock){
-   const d=dist(),armAttack=BOSS_VARIANT===1&&state.bossState.startsWith('arm_');
+   const d=dist(),armAttack=BOSS_VARIANT===1&&state.bossState.startsWith('arm_'),giant=BOSS_VARIANT===1;
    const toBoss=flatDir(player.position,boss.position);
    const right=new THREE.Vector3(toBoss.z,0,-toBoss.x);
-   const backDist=clamp(7.8+d*.28,8.8,14.5)+(armAttack?.75:0);
-   const height=2.9+clamp(d*.1,.25,2.0)+(armAttack?.32:0);
-   desiredPos.copy(target).addScaledVector(toBoss,-backDist).addScaledVector(right,.42).add(new THREE.Vector3(0,height,0));
-   const bossFocus=boss.position.clone().add(new THREE.Vector3(0,BOSS_VARIANT===1?4.0*BOSS_GIANT_SCALE:1.75,0));
-   const focusWeight=clamp(.5+d*.01,.5,.64);
+   const backDist=giant
+     ? clamp(7.35+d*.22,8.1,12.5)+(armAttack?.62:0)
+     : clamp(5.55+d*.16,6.35,9.6);
+   const height=giant
+     ? 2.55+clamp(d*.075,.22,1.55)+(armAttack?.28:0)
+     : 1.88+clamp(d*.055,.14,.82);
+   const sideOffset=giant?.4:.58;
+   desiredPos.copy(target).addScaledVector(toBoss,-backDist).addScaledVector(right,sideOffset).add(new THREE.Vector3(0,height,0));
+   const bossFocus=boss.position.clone().add(new THREE.Vector3(0,giant?3.85*BOSS_GIANT_SCALE:1.62,0));
+   const focusWeight=giant?clamp(.48+d*.009,.48,.61):clamp(.52+d*.008,.52,.62);
    desiredLook.copy(target).lerp(bossFocus,focusWeight);
-   wantedFov=armAttack?65:61;
+   wantedFov=giant?(armAttack?60:56):53;
  }else{
    const f=new THREE.Vector3(Math.sin(input.camYaw),0,Math.cos(input.camYaw)).normalize();
    const right=new THREE.Vector3(f.z,0,-f.x);
-   const backDist=6.45;
-   const height=2.05+input.camPitch*1.25;
-   desiredPos.copy(target).addScaledVector(f,-backDist).addScaledVector(right,.5).add(new THREE.Vector3(0,height,0));
-   desiredLook.copy(target).addScaledVector(f,5.4);
-   desiredLook.y+=input.camPitch*4.4+.18;
-   wantedFov=input.keys.has('ShiftLeft')||input.keys.has('ShiftRight')?63:60;
+   const backDist=5.15;
+   const height=1.58+input.camPitch*1.08;
+   desiredPos.copy(target).addScaledVector(f,-backDist).addScaledVector(right,.58).add(new THREE.Vector3(0,height,0));
+   desiredLook.copy(target).addScaledVector(f,4.65);
+   desiredLook.y+=input.camPitch*3.7+.12;
+   wantedFov=input.keys.has('ShiftLeft')||input.keys.has('ShiftRight')?55:52;
  }
 
- const posEase=1-Math.exp(-dt*(input.lock?7.2:10.5));
- const lookEase=1-Math.exp(-dt*(input.lock?8.5:13));
+ const posEase=1-Math.exp(-dt*(input.lock?7.6:10.8));
+ const lookEase=1-Math.exp(-dt*(input.lock?9.0:13.5));
  if(!camLook.lengthSq())camLook.copy(desiredLook);
  camera.position.lerp(desiredPos,posEase);
  camLook.lerp(desiredLook,lookEase);
