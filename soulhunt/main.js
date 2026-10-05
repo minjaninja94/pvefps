@@ -2591,9 +2591,9 @@ const PLAYER_ATTACK_PROFILES={
   {duration:1.18,active:[.46,.73],queue:.77,drive:.7},
   {duration:1.36,active:[.54,.81],queue:.82,drive:.78}],
  spear:[null,
-  {duration:.54,active:[.40,.66],queue:.70,drive:2.4},
-  {duration:.59,active:[.39,.65],queue:.70,drive:2.1},
-  {duration:.72,active:[.44,.72],queue:.76,drive:2.8}],
+  {duration:.58,active:[.34,.76],queue:.72,drive:2.65},
+  {duration:.62,active:[.34,.75],queue:.72,drive:2.4},
+  {duration:.76,active:[.38,.80],queue:.78,drive:3.05}],
  katana:[null,
   {duration:.44,active:[.23,.51],queue:.59,drive:1.9},
   {duration:.48,active:[.22,.52],queue:.60,drive:1.75},
@@ -2651,12 +2651,22 @@ function combatHumanoidCapsules(bones,root,fallbackHeight=2){
 function combatSweptBladeContact(prevBase,prevTip,base,tip,capsules,bladeRadius=.09){
  const prevMid=prevBase.clone().lerp(prevTip,.5),mid=base.clone().lerp(tip,.5);let best=null,bestD=Infinity;
  for(const c of capsules){
-  const d=Math.min(
+  let d=Math.min(
    combatSegmentSegmentDistance(prevBase,prevTip,c.a,c.b),combatSegmentSegmentDistance(base,tip,c.a,c.b),
    combatSegmentSegmentDistance(prevTip,tip,c.a,c.b),combatSegmentSegmentDistance(prevBase,base,c.a,c.b),
    combatSegmentSegmentDistance(prevMid,mid,c.a,c.b)
   );
-  if(d<=c.r+bladeRadius&&d<bestD){bestD=d;best={point:mid.clone(),part:c.part,distance:d}}
+  // Fast weapons can move completely across a thin body part between rendered frames.
+  // Sample the full blade at four intermediate transforms so a stationary target cannot be skipped.
+  for(let i=1;i<=4;i++){
+   const t=i/5,ib=prevBase.clone().lerp(base,t),it=prevTip.clone().lerp(tip,t);
+   d=Math.min(d,combatSegmentSegmentDistance(ib,it,c.a,c.b));
+  }
+  if(d<=c.r+bladeRadius&&d<bestD){
+   bestD=d;
+   const contactT=.5;
+   best={point:base.clone().lerp(tip,contactT),part:c.part,distance:d};
+  }
  }
  return best;
 }
@@ -2664,9 +2674,10 @@ function combatWorldSegment(root,baseLocal,tipLocal){root.updateWorldMatrix?.(tr
 const playerWeaponTrace={valid:false,base:new THREE.Vector3(),tip:new THREE.Vector3(),step:0};
 function resetPlayerWeaponTrace(){playerWeaponTrace.valid=false;playerWeaponTrace.step=state.attackStep}
 function playerWeaponLocalSegment(){
- const id=currentWeapon().id,tipZ={straight:-1.58,greatsword:-2.22,hammer:-1.62,spear:-2.62,katana:-1.82,axe:-1.4}[id]??-1.55;
- const baseZ={straight:.12,greatsword:.2,hammer:.2,spear:.28,katana:.14,axe:.18}[id]??.12;
- return{base:new THREE.Vector3(0,0,baseZ),tip:new THREE.Vector3(0,0,tipZ),radius:id==='hammer'?.19:id==='greatsword'?.13:.09};
+ const id=currentWeapon().id,tipZ={straight:-1.62,greatsword:-2.26,hammer:-1.68,spear:-2.82,katana:-1.88,axe:-1.46}[id]??-1.58;
+ const baseZ={straight:.14,greatsword:.22,hammer:.22,spear:.34,katana:.16,axe:.2}[id]??.14;
+ const radius={straight:.12,greatsword:.15,hammer:.22,spear:.16,katana:.115,axe:.16}[id]??.12;
+ return{base:new THREE.Vector3(0,0,baseZ),tip:new THREE.Vector3(0,0,tipZ),radius};
 }
 function playerAttackWindow(step,w){return playerAttackProfile(w.id,step).active}
 function updatePlayerMeleeCollision(){
