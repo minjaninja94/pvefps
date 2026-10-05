@@ -1812,10 +1812,12 @@ function boss2FacingDot(){
  return f.dot(to);
 }
 function boss2Strike(tag,range,dmg,posture,unblockable=false,minDot=-.25){
- if(!boss2Fired.has(tag))boss2MeleeRequests.push({tag,dmg,posture,unblockable,minDot,kind:'weapon'});
+ if(boss2Fired.has(tag)||boss2MeleeRequests.some(r=>r.tag===tag))return;
+ boss2MeleeRequests.push({tag,dmg,posture,unblockable,minDot,kind:'weapon',ttl:.28});
 }
 function boss2GrabStrike(tag,dmg,posture,unblockable=true,minDot=-.1){
- if(!boss2Fired.has(tag))boss2MeleeRequests.push({tag,dmg,posture,unblockable,minDot,kind:'hand'});
+ if(boss2Fired.has(tag)||boss2MeleeRequests.some(r=>r.tag===tag))return;
+ boss2MeleeRequests.push({tag,dmg,posture,unblockable,minDot,kind:'hand',ttl:.32});
 }
 function resetBoss2PhysicalTrace(){boss2WeaponTrace.valid=false;boss2HandTrace.valid=false}
 function processBoss2PhysicalHits(){
@@ -1824,7 +1826,7 @@ function processBoss2PhysicalHits(){
  if(boss2WeaponRoot.visible){
   const len=boss2Spear.visible?3.14:1.78;
   const seg=combatWorldSegment(boss2WeaponRoot,new THREE.Vector3(0,.02,0),new THREE.Vector3(0,len,0));
-  if(boss2WeaponTrace.valid)weaponHit=combatSweptBladeContact(boss2WeaponTrace.base,boss2WeaponTrace.tip,seg.base,seg.tip,playerCaps,boss2Spear.visible?.17:.13);
+  if(boss2WeaponTrace.valid)weaponHit=combatSweptBladeContact(boss2WeaponTrace.base,boss2WeaponTrace.tip,seg.base,seg.tip,playerCaps,boss2Spear.visible?.18:.18);
   boss2WeaponTrace.base.copy(seg.base);boss2WeaponTrace.tip.copy(seg.tip);boss2WeaponTrace.valid=true;
  }else boss2WeaponTrace.valid=false;
  const hand=boss2Bones.rightHand;
@@ -1845,7 +1847,9 @@ function processBoss2PhysicalHits(){
   hurtPlayer(req.dmg,req.posture,req.unblockable);
   break;
  }
- boss2MeleeRequests.length=0;
+ for(let i=boss2MeleeRequests.length-1;i>=0;i--){
+  if(boss2Fired.has(boss2MeleeRequests[i].tag)||boss2MeleeRequests[i].ttl<=0)boss2MeleeRequests.splice(i,1);
+ }
 }
 function spawnBoss2Pulse(pos,radius=1.2,color=0xff6a3c,life=.34){
  const m=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),new THREE.MeshBasicMaterial({color,wireframe:true,transparent:true,opacity:.52,depthWrite:false}));
@@ -2057,7 +2061,8 @@ function hitBoss2(base,posture=12,contact=null){
  }
 }
 function updateBoss2(dt){
- boss2MeleeRequests.length=0;enforceBoss2Visibility();updateBoss2Fx(dt);updateBoss2Projectiles(dt);
+ for(let i=boss2MeleeRequests.length-1;i>=0;i--){boss2MeleeRequests[i].ttl-=dt;if(boss2MeleeRequests[i].ttl<=0)boss2MeleeRequests.splice(i,1)}
+ enforceBoss2Visibility();updateBoss2Fx(dt);updateBoss2Projectiles(dt);
  bossRim.position.set(boss.position.x,boss.position.y+3.1,boss.position.z-4.2);
  boss2Halo.rotation.z+=dt*(state.boss2Phase===2?1.4:.55);
  boss2HaloMat.opacity=.16+.08*Math.sin(state.time*(state.boss2Phase===2?8:4));
@@ -2369,7 +2374,7 @@ function boss3Heal(amount){
 function boss3Strike(tag,range,dmg,posture,unblockable=false,minDot=-.35,healMul=2.5){
  if(boss3Fired.has(tag))return;
  boss3Once(tag+'-vfx',()=>spawnBoss2Slash(1.12+Math.min(.7,range*.08),state.boss3Phase===2?0xff4968:0xc9b8b8));
- boss3MeleeRequests.push({tag,dmg,posture,unblockable,minDot,healMul});
+ if(!boss3MeleeRequests.some(r=>r.tag===tag))boss3MeleeRequests.push({tag,dmg,posture,unblockable,minDot,healMul,ttl:.26});
 }
 function resetBoss3PhysicalTrace(){boss3WeaponTrace.valid=false}
 function processBoss3PhysicalHits(){
@@ -2377,7 +2382,7 @@ function processBoss3PhysicalHits(){
  const seg=combatWorldSegment(boss3WeaponRoot,new THREE.Vector3(0,.02,0),new THREE.Vector3(0,1.78,0));
  const caps=combatHumanoidCapsules(playerVrmBones,player,2.0);
  let hit=null;
- if(boss3WeaponTrace.valid)hit=combatSweptBladeContact(boss3WeaponTrace.base,boss3WeaponTrace.tip,seg.base,seg.tip,caps,.145);
+ if(boss3WeaponTrace.valid)hit=combatSweptBladeContact(boss3WeaponTrace.base,boss3WeaponTrace.tip,seg.base,seg.tip,caps,.19);
  boss3WeaponTrace.base.copy(seg.base);boss3WeaponTrace.tip.copy(seg.tip);boss3WeaponTrace.valid=true;
  if(hit){
   for(const req of boss3MeleeRequests){
@@ -2389,7 +2394,9 @@ function processBoss3PhysicalHits(){
    break;
   }
  }
- boss3MeleeRequests.length=0;
+ for(let i=boss3MeleeRequests.length-1;i>=0;i--){
+  if(boss3Fired.has(boss3MeleeRequests[i].tag)||boss3MeleeRequests[i].ttl<=0)boss3MeleeRequests.splice(i,1);
+ }
 }
 function spawnBoss3Petals(count=18,power=3.2){
  const geo=new THREE.PlaneGeometry(.09,.18);
@@ -2491,7 +2498,8 @@ function hitBoss3(base,posture=12,contact=null){
  }
 }
 function updateBoss3(dt){
- boss3MeleeRequests.length=0;enforceBoss3Visibility();updateBoss3Fx(dt);updateBoss2Fx(dt);updateBoss3Weapon();
+ for(let i=boss3MeleeRequests.length-1;i>=0;i--){boss3MeleeRequests[i].ttl-=dt;if(boss3MeleeRequests[i].ttl<=0)boss3MeleeRequests.splice(i,1)}
+ enforceBoss3Visibility();updateBoss3Fx(dt);updateBoss2Fx(dt);updateBoss3Weapon();
  bossRim.position.set(boss.position.x,boss.position.y+3.0,boss.position.z-4.0);
  boss3Halo.rotation.z+=dt*(state.boss3Phase===2?1.8:.72);
  boss3HaloMat.opacity=(state.boss3Phase===2?.22:.1)+Math.sin(state.time*5)*.035;
@@ -2658,10 +2666,10 @@ function combatSegmentSegmentDistance(p1,q1,p2,q2){
 function combatBonePoint(bones,name){const b=bones?.[name];if(!b)return null;const p=new THREE.Vector3();b.getWorldPosition(p);return p}
 function combatHumanoidCapsules(bones,root,fallbackHeight=2){
  root?.updateMatrixWorld?.(true);
- const hips=combatBonePoint(bones,'hips'),chest=combatBonePoint(bones,'chest')||combatBonePoint(bones,'upperChest'),head=combatBonePoint(bones,'head'),out=[];
+ const hips=combatBonePoint(bones,'hips'),chest=combatBonePoint(bones,'chest')||combatBonePoint(bones,'upperChest'),head=combatBonePoint(bones,'head'),leftShoulder=combatBonePoint(bones,'leftShoulder'),rightShoulder=combatBonePoint(bones,'rightShoulder'),out=[];
  const add=(a,b,r,part)=>{if(a&&b)out.push({a,b,r,part})};
  if(hips&&chest&&head){
-  add(hips,chest,.32,'torso');add(chest,head,.27,'upper');
+  add(hips,chest,.36,'torso');add(chest,head,.3,'upper');add(leftShoulder,rightShoulder,.19,'shoulders');
   for(const side of ['left','right']){
    const ua=combatBonePoint(bones,side+'UpperArm'),la=combatBonePoint(bones,side+'LowerArm'),hand=combatBonePoint(bones,side+'Hand');
    const ul=combatBonePoint(bones,side+'UpperLeg'),ll=combatBonePoint(bones,side+'LowerLeg'),foot=combatBonePoint(bones,side+'Foot');
