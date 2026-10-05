@@ -157,6 +157,9 @@ function toggleGrip(){if(state?.attack>0||state?.rolling>0)return;twoHanded=!two
 buildWeapon();
 player.position.set(0,0,8);
 
+const PLAYER_MODEL_REV='e16eb187100149a315ad92c3c9968f1d5baa6c7d';
+const PLAYER_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${PLAYER_MODEL_REV}/vroid/beta/Sakurada_Fumiriya.vrm`;
+const PLAYER_VISUAL_HEIGHT=2.65;
 let knightVisual=null,playerVrm=null,playerVrmRoot=null;
 const playerVrmMotion=new THREE.Group();playerVrmMotion.position.y=.98;player.add(playerVrmMotion);
 const playerVrmMotionRest={y:.98};
@@ -380,7 +383,7 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
  }
  // Two-handed weapons use the actual weapon handle as the left-hand IK target.
  // This keeps both palms on the same weapon and lets the elbow fold naturally instead of posing independently.
- if(twoHanded&&playerVrmBones.leftUpperArm&&playerVrmBones.leftHand&&playerVrmBones.rightHand){
+ if(twoHanded&&state.rolling<=0&&playerVrmBones.leftUpperArm&&playerVrmBones.leftHand&&playerVrmBones.rightHand){
    player.updateMatrixWorld(true);weaponPivot.updateWorldMatrix(true,true);
    const w=currentWeapon();
    if(w.id==='spear')alignPlayerSpearToForward(dt);
@@ -392,8 +395,8 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
    solveArmCCD(playerVrmBones,'left',gripTarget,elbowHint,1-Math.exp(-dt*38));
    playerVrmBones.leftHand.updateWorldMatrix?.(false,true);
  }
- applyPlayerWristGrip(dt);
- if(currentWeapon().id==='spear')alignPlayerSpearToForward(dt);
+ if(state.rolling<=0){applyPlayerWristGrip(dt);if(currentWeapon().id==='spear')alignPlayerSpearToForward(dt)}
+ else{setPlayerVrmBone('rightHand',-.22,-.08,-.2,28,dt);setPlayerVrmBone('leftHand',-.18,.08,.18,28,dt)}
 }
 
 
@@ -403,16 +406,16 @@ player.children.filter(o=>o.isMesh).forEach(m=>m.visible=false);
 (async()=>{
  try{
    const {VRMLoaderPlugin,VRMUtils}=await import('@pixiv/three-vrm');
-   const loader=new GLTFLoader();loader.register(parser=>new VRMLoaderPlugin(parser));
-   loader.load('./assets/models/player/vroid-male.vrm',gltf=>{
+   const loader=new GLTFLoader();loader.setCrossOrigin('anonymous');loader.register(parser=>new VRMLoaderPlugin(parser));
+   loader.load(PLAYER_MODEL_URL,gltf=>{
      const vrm=gltf.userData?.vrm||null;
      if(vrm)VRMUtils.rotateVRM0(vrm);
      const root=vrm?.scene||gltf.scene;
      root.updateMatrixWorld(true);
      let box=new THREE.Box3().setFromObject(root,true),size=new THREE.Vector3();box.getSize(size);
-     const targetHeight=1.98;
+     const targetHeight=PLAYER_VISUAL_HEIGHT;
      const uniform=targetHeight/Math.max(size.y,.001);
-     root.scale.set(uniform*.94,uniform*1.035,uniform*.94); // tall/slender ~8-head game silhouette
+     root.scale.set(uniform*.98,uniform*1.015,uniform*.98); // near-boss human scale; preserve natural limb proportions
      root.updateMatrixWorld(true);
      box=new THREE.Box3().setFromObject(root,true);
      root.position.y-=box.min.y;
@@ -436,7 +439,7 @@ player.children.filter(o=>o.isMesh).forEach(m=>m.visible=false);
      if(rightHand)rightHand.add(weaponHandAnchor);
      if(leftHand)leftHand.add(shieldHandAnchor);
      applyWeaponGrip();
-     console.info('Tall CC0 VRoid male player loaded', {height:targetHeight,weaponHand:!!rightHand,shieldHand:!!leftHand});
+     console.info('Sakurada Fumiriya player loaded', {height:targetHeight,weaponHand:!!rightHand,shieldHand:!!leftHand,bones:Object.keys(playerVrmBones).length});
    },undefined,err=>console.warn('Tall VRoid player unavailable.',err));
  }catch(err){console.warn('three-vrm unavailable for player.',err)}
 })();
@@ -448,26 +451,31 @@ function animateVroidPlayer(dt){
  const speed=sprint?10.5:6.8,phase=state.time*speed;
  let hipsX=0,hipsY=0,hipsZ=0,spineX=0,spineY=0,spineZ=0;
  let lsz=-.18,rsz=.18,luz=-1.62,ruz=1.62,lux=.12,rux=.12,luy=.04,ruy=-.04,llx=.42,rlx=.42;
- let lulx=0,rulx=0,lllx=0,rllx=0,lfx=0,rfx=0,headX=0,headY=0,headZ=0;
+ let lulx=0,rulx=0,lllx=0,rllx=0,lfx=0,rfx=0,headX=0,headY=0,headZ=0,neckX=0,neckY=0,neckZ=0;
 
  if(state.dead){
    spineZ=.8;hipsZ=.35;luz=-.55;ruz=.55;
  }else if(state.stagger>0){
    spineX=-.18;spineZ=Math.sin(state.time*24)*.08;hipsX=.08;
  }else if(state.rolling>0){
-   const rp=clamp(state.rollElapsed/ROLL_DURATION,0,1);
-   const prep=motionSmooth(0,.14,rp),spinP=motionSmooth(.13,.79,rp),land=motionSmooth(.76,1,rp);
-   const tuck=Math.sin(clamp((rp-.05)/.86,0,1)*Math.PI),lean=state.rollLean||1;
-   // Ground roll: chin tucked, one shoulder leads, knees stay close to the torso.
-   spineX=-.34*prep-.9*tuck+.2*land;hipsX=.5*tuck-.14*land;
-   spineZ=lean*(.14*prep-.18*tuck+.08*land);
-   headX=.56*tuck-.16*land;headZ=-lean*.11*tuck;
-   luz=-.52-.25*tuck;ruz=.52+.25*tuck;
-   lux=-.98*tuck+lean*.08;rux=-.92*tuck-lean*.08;
-   llx=-1.28*tuck;rlx=-1.22*tuck;
-   lulx=-1.22*tuck+.3*land;rulx=-1.08*tuck-.2*land;
-   lllx=1.58*tuck-.68*land;rllx=1.46*tuck+.74*land;
-   lfx=-.34*tuck+.2*land;rfx=-.3*tuck-.24*land;
+   const rp=clamp(state.rollElapsed/ROLL_DURATION,0,1),lean=state.rollLean||1;
+   const prep=motionSmooth(0,.13,rp),shoulder=motionSmooth(.09,.32,rp),invert=motionSmooth(.28,.58,rp),exit=motionSmooth(.55,.8,rp),land=motionSmooth(.78,1,rp);
+   const tuck=Math.sin(clamp((rp-.035)/.9,0,1)*Math.PI),leadL=lean<0?1:0,leadR=lean>0?1:0;
+   // Shoulder-led dodge roll: crouch -> shoulder contact -> rounded back/hips -> feet recover.
+   hipsX=.6*tuck-.2*land;hipsY=lean*(.1*shoulder-.12*exit);hipsZ=-lean*.18*shoulder+lean*.12*exit;
+   spineX=-.42*prep-1.02*tuck+.3*land;spineY=-lean*.08*shoulder+lean*.06*exit;spineZ=lean*(.28*shoulder-.2*exit);
+   headX=.72*tuck-.22*land;headY=-lean*.06*shoulder;headZ=-lean*.2*shoulder+lean*.1*exit;
+   neckX=.38*tuck-.12*land;neckY=-lean*.05*shoulder;neckZ=-lean*.13*shoulder+lean*.06*exit;
+   lsz=-.18-lean*.22*shoulder;rsz=.18-lean*.22*shoulder;
+   // Arms cross the chest asymmetrically so the leading shoulder, not the face, takes the roll.
+   lux=-1.12*tuck+(leadL?.18:-.08)*shoulder;rux=-1.06*tuck+(leadR?.18:-.08)*shoulder;
+   luy=lean*.24*shoulder;ruy=lean*.18*shoulder;
+   luz=-.7-.34*tuck-lean*.16*shoulder;ruz=.7+.34*tuck-lean*.16*shoulder;
+   llx=-1.36*tuck+.18*exit;rlx=-1.3*tuck+.16*exit;
+   // One knee folds first, the other follows, then both extend into the landing.
+   lulx=-1.3*tuck+(leadL?.22:-.05)*shoulder+.36*land;rulx=-1.18*tuck+(leadR?.22:-.05)*shoulder+.3*land;
+   lllx=1.62*tuck-(leadL?.18:0)*invert-.72*land;rllx=1.52*tuck-(leadR?.18:0)*invert-.66*land;
+   lfx=-.4*tuck+.26*land;rfx=-.36*tuck+.24*land;
  }else if(state.attack>0){
    const w=currentWeapon(),p=playerAttackProgress(),step=state.attackStep,profile=playerAttackProfile(w.id,step),strong=state.attackStrong;
    const side=step===2?-1:1,arc=Math.sin(p*Math.PI),impact=Math.sin(clamp((p-profile.active[0])/(profile.active[1]-profile.active[0]),0,1)*Math.PI);
@@ -572,6 +580,7 @@ function animateVroidPlayer(dt){
  setPlayerVrmBone('leftLowerLeg',lllx,0,0,14,dt);
  setPlayerVrmBone('rightLowerLeg',rllx,0,0,14,dt);
  setPlayerVrmBone('leftFoot',lfx,0,0,13,dt);setPlayerVrmBone('rightFoot',rfx,0,0,13,dt);
+ setPlayerVrmBone('neck',neckX,neckY,neckZ,12,dt);
  setPlayerVrmBone('head',headX,headY,headZ,11,dt);
  applyPlayerArmIK(dt,phase,moving,sprint);
 
@@ -581,14 +590,14 @@ function animateVroidPlayer(dt){
    playerVrmRoot.position.y=THREE.MathUtils.lerp(playerVrmRoot.position.y,playerVrmRootRest.y,1-Math.exp(-dt*20));
  }
  if(state.rolling>0){
-   const rp=clamp(state.rollElapsed/ROLL_DURATION,0,1),spinP=motionSmooth(.13,.79,rp),lean=state.rollLean||1;
-   const tuck=Math.sin(clamp((rp-.05)/.86,0,1)*Math.PI);
-   // Rotate around a low body-center and bias toward one shoulder instead of doing an airborne somersault.
+   const rp=clamp(state.rollElapsed/ROLL_DURATION,0,1),spinP=motionSmooth(.11,.82,rp),lean=state.rollLean||1;
+   const tuck=Math.sin(clamp((rp-.035)/.9,0,1)*Math.PI),shoulder=Math.sin(clamp((rp-.06)/.72,0,1)*Math.PI);
+   // Full ground rotation is carried on an oblique shoulder axis; the skeleton curl does most of the visible work.
    playerVrmMotion.rotation.x=-spinP*Math.PI*2;
-   playerVrmMotion.rotation.y=lean*Math.sin(spinP*Math.PI)*.08;
-   playerVrmMotion.rotation.z=lean*Math.sin(spinP*Math.PI)*.16;
-   playerVrmMotion.position.y=playerVrmMotionRest.y-.34*tuck+.025*Math.sin(spinP*Math.PI*2);
-   playerVrmMotion.position.z=-.08*Math.sin(spinP*Math.PI*2);
+   playerVrmMotion.rotation.y=lean*Math.sin(spinP*Math.PI)*.12;
+   playerVrmMotion.rotation.z=lean*.34*shoulder;
+   playerVrmMotion.position.y=playerVrmMotionRest.y-.46*tuck+.018*Math.sin(spinP*Math.PI*2);
+   playerVrmMotion.position.z=-.12*Math.sin(spinP*Math.PI*2);
  }else{
    playerVrmMotion.rotation.x=lerpAngle(playerVrmMotion.rotation.x,0,1-Math.exp(-dt*24));
    playerVrmMotion.rotation.y=lerpAngle(playerVrmMotion.rotation.y,0,1-Math.exp(-dt*24));
@@ -3568,13 +3577,16 @@ function combatBonePoint(bones,name){const b=bones?.[name];if(!b)return null;con
 function combatHumanoidCapsules(bones,root,fallbackHeight=2){
  root?.updateMatrixWorld?.(true);
  const hips=combatBonePoint(bones,'hips'),chest=combatBonePoint(bones,'chest')||combatBonePoint(bones,'upperChest'),head=combatBonePoint(bones,'head'),leftShoulder=combatBonePoint(bones,'leftShoulder'),rightShoulder=combatBonePoint(bones,'rightShoulder'),out=[];
- const add=(a,b,r,part)=>{if(a&&b)out.push({a,b,r,part})};
+ const lf=combatBonePoint(bones,'leftFoot'),rf=combatBonePoint(bones,'rightFoot');
+ let scale=1;
+ if(head&&(lf||rf)){const foot=lf&&rf?lf.clone().add(rf).multiplyScalar(.5):(lf||rf);scale=clamp(Math.abs(head.y-foot.y)/1.72,.88,1.58)}
+ const add=(a,b,r,part)=>{if(a&&b)out.push({a,b,r:r*scale,part})};
  if(hips&&chest&&head){
-  add(hips,chest,.36,'torso');add(chest,head,.3,'upper');add(leftShoulder,rightShoulder,.19,'shoulders');
+  add(hips,chest,.34,'torso');add(chest,head,.285,'upper');add(leftShoulder,rightShoulder,.18,'shoulders');
   for(const side of ['left','right']){
    const ua=combatBonePoint(bones,side+'UpperArm'),la=combatBonePoint(bones,side+'LowerArm'),hand=combatBonePoint(bones,side+'Hand');
    const ul=combatBonePoint(bones,side+'UpperLeg'),ll=combatBonePoint(bones,side+'LowerLeg'),foot=combatBonePoint(bones,side+'Foot');
-   add(ua,la,.13,'arm');add(la,hand,.12,'arm');add(ul,ll,.175,'leg');add(ll,foot,.15,'leg');
+   add(ua,la,.122,'arm');add(la,hand,.11,'arm');add(ul,ll,.165,'leg');add(ll,foot,.14,'leg');
   }
  }else{const p=new THREE.Vector3();root?.getWorldPosition?.(p);add(p.clone().add(new THREE.Vector3(0,.28,0)),p.clone().add(new THREE.Vector3(0,fallbackHeight*.88,0)),.34,'torso')}
  return out;
@@ -4770,7 +4782,7 @@ function updateLockMarker(){
  ui.lockDot.classList.add('on');
 }
 function updateCamera(dt){
- const target=player.position.clone().add(new THREE.Vector3(0,1.38,0));
+ const target=player.position.clone().add(new THREE.Vector3(0,PLAYER_VISUAL_HEIGHT*.53,0));
  let desiredPos=new THREE.Vector3(),desiredLook=new THREE.Vector3();
  let wantedFov=52;
 
