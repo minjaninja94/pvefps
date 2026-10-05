@@ -356,8 +356,8 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
    solveArmCCD(playerVrmBones,'left',gripTarget,elbowHint,1-Math.exp(-dt*38));
    playerVrmBones.leftHand.updateWorldMatrix?.(false,true);
  }
- if(currentWeapon().id==='spear')alignPlayerSpearToForward(dt);
  applyPlayerWristGrip(dt);
+ if(currentWeapon().id==='spear')alignPlayerSpearToForward(dt);
 }
 
 
