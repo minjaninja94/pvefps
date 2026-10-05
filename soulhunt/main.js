@@ -222,43 +222,51 @@ function alignObjectLocalYToWorld(obj,worldDir,alpha=1){
 const PLAYER_HAND_PATHS={
  straight:[
   null,
-  [[0,.18,-.52,.22],[.27,.66,-.18,.02],[.6,-.58,-.3,.88],[1,.14,-.5,.28]],
-  [[0,.12,-.5,.24],[.25,-.58,-.22,.06],[.61,.64,-.3,.9],[1,.14,-.5,.3]],
-  [[0,.16,-.5,.22],[.36,.06,.2,.02],[.7,.02,-.7,1.0],[1,.15,-.5,.3]]
+  [[0,.2,-.5,.16],[.18,.42,-.48,-.12],[.4,.62,-.24,.18],[.6,-.54,-.34,.92],[.78,-.4,-.42,.72],[1,.16,-.5,.24]],
+  [[0,.12,-.5,.22],[.18,-.48,-.44,-.06],[.4,-.62,-.24,.22],[.6,.58,-.32,.92],[.78,.42,-.42,.7],[1,.14,-.5,.26]],
+  [[0,.14,-.52,.2],[.26,.08,-.02,-.14],[.48,.18,.28,.04],[.68,-.08,-.78,.96],[.84,.02,-.62,.66],[1,.14,-.52,.24]]
  ],
  greatsword:[
   null,
-  [[0,.18,-.5,.16],[.38,.74,.12,-.08],[.72,-.62,-.4,.98],[1,.08,-.56,.3]],
-  [[0,.1,-.54,.22],[.38,-.72,-.04,.0],[.72,.7,-.42,.96],[1,.08,-.56,.3]],
-  [[0,.14,-.54,.2],[.43,.04,.38,-.08],[.77,.03,-.8,1.02],[1,.08,-.58,.28]]
+  [[0,.2,-.5,.12],[.2,.55,-.08,-.18],[.44,.72,.22,-.08],[.68,-.62,-.38,1.04],[.84,-.34,-.54,.7],[1,.08,-.56,.28]],
+  [[0,.1,-.54,.2],[.2,-.55,-.08,-.14],[.44,-.72,.18,-.06],[.69,.66,-.4,1.02],[.84,.34,-.54,.72],[1,.08,-.56,.28]],
+  [[0,.12,-.56,.18],[.22,.02,.08,-.22],[.5,.02,.48,-.12],[.72,.02,-.9,1.08],[.86,.02,-.68,.72],[1,.08,-.58,.26]]
  ],
  hammer:[
   null,
-  [[0,.16,-.52,.18],[.42,.62,.22,-.12],[.74,-.48,-.5,.86],[1,.06,-.6,.25]],
-  [[0,.08,-.56,.2],[.42,-.62,.12,-.1],[.75,.5,-.52,.86],[1,.06,-.6,.24]],
-  [[0,.1,-.58,.18],[.49,.02,.48,-.12],[.8,.0,-.88,.82],[1,.06,-.62,.22]]
+  [[0,.18,-.5,.14],[.22,.58,-.02,-.12],[.48,.72,.22,.06],[.7,-.56,-.48,.9],[.86,-.34,-.58,.62],[1,.06,-.6,.22]],
+  [[0,.08,-.56,.18],[.22,-.58,-.02,-.12],[.48,-.72,.2,.06],[.7,.58,-.5,.92],[.86,.34,-.58,.62],[1,.06,-.6,.22]],
+  [[0,.1,-.58,.16],[.28,.0,.1,-.18],[.52,.0,.56,-.08],[.76,.0,-.96,.88],[.88,.0,-.72,.56],[1,.06,-.62,.2]]
  ],
  spear:[
   null,
-  [[0,.18,-.3,.0],[.3,.2,-.28,-.34],[.48,.16,-.3,.08],[.66,.08,-.34,1.28],[.8,.08,-.34,1.22],[1,.16,-.34,.18]],
-  [[0,.12,-.32,.04],[.3,.04,-.3,-.3],[.48,.08,-.32,.1],[.66,.02,-.34,1.24],[.8,.04,-.34,1.18],[1,.14,-.34,.2]],
-  [[0,.16,-.3,.0],[.34,.14,-.26,-.42],[.52,.1,-.3,.12],[.72,.02,-.35,1.48],[.84,.04,-.35,1.4],[1,.14,-.34,.18]]
+  [[0,.18,-.3,.0],[.26,.22,-.28,-.48],[.5,.12,-.31,.08],[.66,.05,-.34,1.34],[.8,.06,-.34,1.18],[1,.16,-.34,.14]],
+  [[0,.12,-.32,.02],[.26,-.08,-.29,-.42],[.5,.02,-.31,.12],[.66,-.02,-.34,1.3],[.8,.02,-.34,1.14],[1,.14,-.34,.16]],
+  [[0,.16,-.3,0],[.28,.12,-.26,-.56],[.52,.04,-.31,.1],[.72,.02,-.35,1.54],[.84,.04,-.35,1.34],[1,.14,-.34,.14]]
  ],
  katana:[
   null,
-  [[0,-.18,-.64,.05],[.22,-.48,-.56,-.04],[.51,.58,-.14,.94],[1,.05,-.54,.24]],
-  [[0,.08,-.56,.2],[.22,.5,-.18,.06],[.52,-.58,-.2,.94],[1,.04,-.54,.24]],
-  [[0,-.08,-.58,.16],[.3,.36,.12,-.06],[.66,-.4,-.58,1.04],[1,.05,-.54,.24]]
+  [[0,-.18,-.62,.02],[.18,-.44,-.58,-.18],[.36,-.56,-.48,.0],[.54,.62,-.2,1.0],[.72,.44,-.42,.78],[1,.04,-.54,.22]],
+  [[0,.08,-.56,.18],[.18,.44,-.52,-.16],[.36,.56,-.42,.02],[.54,-.62,-.2,1.02],[.72,-.44,-.4,.78],[1,.04,-.54,.22]],
+  [[0,-.08,-.58,.14],[.22,.28,-.06,-.18],[.46,.42,.22,.02],[.66,-.42,-.62,1.06],[.82,-.26,-.52,.76],[1,.05,-.54,.22]]
  ],
  axe:[
   null,
-  [[0,.16,-.52,.18],[.34,.62,.06,-.04],[.68,-.46,-.56,.88],[1,.08,-.56,.26]],
-  [[0,.08,-.54,.2],[.34,-.58,-.08,.02],[.69,.58,-.48,.88],[1,.08,-.56,.26]],
-  [[0,.12,-.56,.18],[.4,.12,.34,-.08],[.75,-.22,-.76,.94],[1,.08,-.58,.24]]
+  [[0,.16,-.52,.16],[.22,.54,.02,-.12],[.44,.68,.22,-.02],[.68,-.5,-.58,.94],[.84,-.3,-.56,.66],[1,.08,-.56,.24]],
+  [[0,.08,-.54,.18],[.22,-.54,-.02,-.1],[.44,-.68,.2,.0],[.68,.56,-.54,.94],[.84,.3,-.56,.66],[1,.08,-.56,.24]],
+  [[0,.12,-.56,.16],[.26,.08,.2,-.18],[.5,.16,.52,-.08],[.74,-.18,-.86,.96],[.86,-.1,-.68,.62],[1,.08,-.58,.22]]
  ]
 };
+const PLAYER_STRONG_HAND_PATHS={
+ straight:[[0,.18,-.54,.1],[.18,.5,-.28,-.18],[.4,.7,-.12,.0],[.58,-.62,-.34,1.18],[.74,-.42,-.46,.92],[1,.14,-.52,.22]],
+ greatsword:[[0,.12,-.58,.1],[.18,.0,-.08,-.3],[.46,.0,.62,-.18],[.62,.0,.7,-.08],[.76,.0,-1.02,1.14],[.9,.0,-.74,.72],[1,.08,-.58,.22]],
+ hammer:[[0,.12,-.58,.12],[.18,.58,.12,-.2],[.42,.74,.4,-.08],[.6,-.74,-.18,.38],[.74,-.42,-.72,.92],[.9,-.18,-.64,.58],[1,.06,-.6,.2]],
+ spear:[[0,.2,-.3,-.08],[.28,.22,-.28,-.72],[.46,.12,-.31,-.36],[.62,.02,-.34,1.62],[.78,.02,-.34,1.46],[1,.14,-.34,.12]],
+ katana:[[0,-.32,-.66,-.1],[.28,-.56,-.62,-.26],[.44,-.64,-.54,-.12],[.56,.7,-.18,1.16],[.7,.5,-.36,.94],[1,.04,-.54,.2]],
+ axe:[[0,.14,-.58,.12],[.2,.12,.02,-.24],[.48,.18,.58,-.14],[.66,-.08,-.92,1.02],[.82,-.04,-.72,.7],[1,.08,-.58,.2]]
+};
 function samplePlayerHandPath(id,step,p){
- const frames=PLAYER_HAND_PATHS[id]?.[step]||PLAYER_HAND_PATHS.straight[Math.max(1,Math.min(3,step))];
+ const frames=state.attackStrong?(PLAYER_STRONG_HAND_PATHS[id]||PLAYER_STRONG_HAND_PATHS.straight):(PLAYER_HAND_PATHS[id]?.[step]||PLAYER_HAND_PATHS.straight[Math.max(1,Math.min(3,step))]);
  let a=frames[0],b=frames[frames.length-1];
  for(let i=0;i<frames.length-1;i++){if(p>=frames[i][0]&&p<=frames[i+1][0]){a=frames[i];b=frames[i+1];break}}
  const t=motionSmooth(a[0],b[0],p);
@@ -446,11 +454,35 @@ function animateVroidPlayer(dt){
    lllx=1.58*tuck-.68*land;rllx=1.46*tuck+.74*land;
    lfx=-.34*tuck+.2*land;rfx=-.3*tuck-.24*land;
  }else if(state.attack>0){
-   const w=currentWeapon(),p=playerAttackProgress(),step=state.attackStep,profile=playerAttackProfile(w.id,step);
+   const w=currentWeapon(),p=playerAttackProgress(),step=state.attackStep,profile=playerAttackProfile(w.id,step),strong=state.attackStrong;
    const side=step===2?-1:1,arc=Math.sin(p*Math.PI),impact=Math.sin(clamp((p-profile.active[0])/(profile.active[1]-profile.active[0]),0,1)*Math.PI);
    // Arms are resolved by hand-target IK below. These values drive hips, torso, stance and planted feet.
    luz=-.35;ruz=.35;llx=-.45;rlx=-.45;
-   if(w.id==='straight'){
+   if(strong&&w.id==='straight'){
+     const load=motionSmooth(0,.38,p)*(1-motionSmooth(.64,1,p)),cut=Math.sin(clamp((p-.38)/.42,0,1)*Math.PI);
+     spineX=-.18*load-.24*cut;spineY=.48*load-.56*cut;hipsY=spineY*.7;hipsX=.1*load;
+     lulx=-.32*load+.16*cut;rulx=.34*load-.12*cut;lllx=.54*load;rllx=.34*load;
+   }else if(strong&&w.id==='greatsword'){
+     const charge=motionSmooth(0,.52,p)*(1-motionSmooth(.7,1,p)),slam=impact;
+     spineX=.34*charge-.72*slam;hipsX=.22*charge-.08*slam;spineY=.08*charge;hipsY=.05*charge;
+     lulx=.48*charge-.2*slam;rulx=.42*charge-.18*slam;lllx=.82*charge;rllx=.78*charge;headX=-.12*charge+.12*slam;
+   }else if(strong&&w.id==='hammer'){
+     const coil=motionSmooth(0,.5,p)*(1-motionSmooth(.68,1,p)),smash=impact;
+     spineY=-.72*coil+.86*smash;hipsY=spineY*.78;spineX=.22*coil-.5*smash;hipsX=.16*coil;
+     lulx=.42*coil-.16*smash;rulx=-.36*coil+.14*smash;lllx=.62*coil;rllx=.58*coil;
+   }else if(strong&&w.id==='spear'){
+     const brace=motionSmooth(0,.4,p)*(1-motionSmooth(.68,1,p)),thrust=impact;
+     spineX=-.28*brace-.24*thrust;hipsX=-.08*brace;spineY=.06;hipsY=.04;
+     lulx=-.48*brace;rulx=.48*brace;lllx=.28*brace;rllx=.72*brace;
+   }else if(strong&&w.id==='katana'){
+     const draw=motionSmooth(0,.42,p)*(1-motionSmooth(.62,1,p)),cut=impact;
+     spineX=-.18*draw-.12*cut;spineY=-.58*draw+.82*cut;hipsY=spineY*.82;hipsX=.1*draw;
+     lulx=.42*draw-.18*cut;rulx=-.3*draw+.16*cut;lllx=.58*draw;rllx=.46*draw;headY=-.12*draw+.16*cut;
+   }else if(strong&&w.id==='axe'){
+     const load=motionSmooth(0,.5,p)*(1-motionSmooth(.7,1,p)),chop=impact;
+     spineX=.3*load-.68*chop;spineY=.26*load-.34*chop;hipsY=spineY*.7;hipsX=.18*load;
+     lulx=.44*load-.18*chop;rulx=.38*load-.16*chop;lllx=.7*load;rllx=.66*load;
+   }else if(w.id==='straight'){
      spineY=side*(-.24+motionSmooth(.18,.58,p)*.62)*(1-motionSmooth(.72,1,p));
      spineZ=-side*.08*arc;spineX=-.08*impact;hipsY=spineY*.45;
      lulx=side*.18*arc;rulx=-side*.12*arc;lllx=.18*arc;rllx=.12*arc;
@@ -4280,15 +4312,24 @@ function updateBoss(dt){
 }
 
 function applyWeaponAttackPose(w,step,p){
- const t=clamp(p,0,1),s=Math.sin(t*Math.PI),impact=Math.sin(clamp((t-playerAttackProfile(w.id,step).active[0])/(playerAttackProfile(w.id,step).active[1]-playerAttackProfile(w.id,step).active[0]),0,1)*Math.PI);
+ const t=clamp(p,0,1),s=Math.sin(t*Math.PI),profile=playerAttackProfile(w.id,step),impact=Math.sin(clamp((t-profile.active[0])/(profile.active[1]-profile.active[0]),0,1)*Math.PI);
  const side=step===2?-1:1;weaponPivot.position.set(0,0,0);
- // Small wrist/edge-alignment offsets. The arm IK supplies the main path, so the weapon never disconnects from the palm.
- if(w.id==='straight')weaponPivot.rotation.set(-.08+.1*s,side*.08*impact,-side*.16*impact);
- else if(w.id==='greatsword')weaponPivot.rotation.set(-.18+.14*s,side*.05*impact,-side*.1*impact);
- else if(w.id==='hammer')weaponPivot.rotation.set(-.24+.08*s,side*.025*impact,-side*.045*impact);
- else if(w.id==='spear')weaponPivot.rotation.set(-.025,side*.015*impact,side*.018*impact);
- else if(w.id==='katana')weaponPivot.rotation.set(-.14+.08*s,side*.11*impact,-side*.22*impact);
- else weaponPivot.rotation.set(-.17+.1*s,side*.06*impact,-side*.13*impact);
+ if(state.attackStrong){
+   if(w.id==='straight')weaponPivot.rotation.set(-.1+.12*s,.14*impact,-.22*impact);
+   else if(w.id==='greatsword')weaponPivot.rotation.set(-.26+.18*s,.02*impact,-.06*impact);
+   else if(w.id==='hammer')weaponPivot.rotation.set(-.3+.12*s,-.08*impact,.08*impact);
+   else if(w.id==='spear')weaponPivot.rotation.set(-.015,0,0);
+   else if(w.id==='katana')weaponPivot.rotation.set(-.16+.06*s,.16*impact,-.28*impact);
+   else weaponPivot.rotation.set(-.22+.12*s,.05*impact,-.16*impact);
+ }else{
+   // Small wrist/edge-alignment offsets. The arm IK supplies the main path, so the weapon never disconnects from the palm.
+   if(w.id==='straight')weaponPivot.rotation.set(-.08+.1*s,side*.08*impact,-side*.16*impact);
+   else if(w.id==='greatsword')weaponPivot.rotation.set(-.18+.14*s,side*.05*impact,-side*.1*impact);
+   else if(w.id==='hammer')weaponPivot.rotation.set(-.24+.08*s,side*.025*impact,-side*.045*impact);
+   else if(w.id==='spear')weaponPivot.rotation.set(-.025,side*.015*impact,side*.018*impact);
+   else if(w.id==='katana')weaponPivot.rotation.set(-.14+.08*s,side*.11*impact,-side*.22*impact);
+   else weaponPivot.rotation.set(-.17+.1*s,side*.06*impact,-side*.13*impact);
+ }
  weaponPivot.scale.setScalar(twoHanded?1.06:1);
 }
 function updatePlayer(dt){
