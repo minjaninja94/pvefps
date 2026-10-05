@@ -18,7 +18,7 @@ const PLAYER_MAX_STAMINA=130;
 const PLAYER_DAMAGE_SCALE=10;
 const BOSS_DAMAGE_SCALE=13.5;
 const POTION_HEAL=780;
-const BOSS_MAX_HP={1:14000,2:14500,3:16000,4:15000,5:17500};
+const BOSS_MAX_HP={1:12000,2:12500,3:14000,4:13000,5:15000};
 const BOSS_POSTURE_MAX={1:240,2:280,3:300,4:290,5:330};
 const BOSS1_PART_HP={head:1000,leg:1500,tail:1300,spikeHeavy:900,spikeLight:650};
 const BOSS3_HEAL_SCALE=BOSS_MAX_HP[3]/11800;
@@ -87,7 +87,7 @@ const WEAPONS=[
  {id:'straight',name:'직검',damage:1.00,posture:1.00,speed:1.00,stamina:1.00,reach:1.00,hitstop:1.00,guard:.58,motion:1.00,asset:'./assets/models/kaykit/sword_1handed.gltf',assetScale:.72},
  {id:'greatsword',name:'대검',damage:1.58,posture:1.55,speed:.66,stamina:1.48,reach:1.22,hitstop:1.55,guard:.72,motion:1.35,asset:'./assets/models/kaykit/sword_2handed.gltf',assetScale:.78},
  {id:'hammer',name:'해머',damage:1.38,posture:1.92,speed:.59,stamina:1.58,reach:.93,hitstop:1.82,guard:.76,motion:1.52},
- {id:'spear',name:'창',damage:.92,posture:.86,speed:1.08,stamina:.92,reach:1.48,hitstop:.82,guard:.48,motion:.82,asset:'./assets/models/kenney/weapon-spear.glb',assetScale:.9},
+ {id:'spear',name:'창',damage:.98,posture:.86,speed:1.08,stamina:.92,reach:1.48,hitstop:.82,guard:.48,motion:.82,asset:'./assets/models/kenney/weapon-spear.glb',assetScale:.9},
  {id:'katana',name:'태도',damage:1.08,posture:.92,speed:1.18,stamina:.94,reach:1.08,hitstop:.9,guard:.45,motion:.74,asset:'./assets/models/kaykit/sword_1handed.gltf',assetScale:.8,assetThin:true},
  {id:'axe',name:'전투도끼',damage:1.28,posture:1.36,speed:.78,stamina:1.27,reach:1.02,hitstop:1.32,guard:.65,motion:1.22,asset:'./assets/models/kaykit/axe_1handed.gltf',assetScale:.76}
 ];
@@ -3482,7 +3482,7 @@ const PLAYER_STRONG_PROFILES={
  straight:{duration:.92,active:[.46,.67],drive:2.25,cost:26,damage:2.15,posture:1.45},
  greatsword:{duration:1.78,active:[.61,.79],drive:1.15,cost:38,damage:3.05,posture:1.9},
  hammer:{duration:1.52,active:[.55,.76],drive:.92,cost:36,damage:2.8,posture:2.05},
- spear:{duration:1.08,active:[.43,.69],drive:3.85,cost:27,damage:2.05,posture:1.45},
+ spear:{duration:1.08,active:[.43,.69],drive:3.85,cost:27,damage:2.35,posture:1.45},
  katana:{duration:.96,active:[.39,.58],drive:2.8,cost:26,damage:2.35,posture:1.4},
  axe:{duration:1.34,active:[.52,.75],drive:1.42,cost:33,damage:2.65,posture:1.8}
 };
