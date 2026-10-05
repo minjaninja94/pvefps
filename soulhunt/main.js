@@ -1863,56 +1863,49 @@ function bossPolearmHandArc(timer,duration,reach,reverse=false){
 }
 function boss3Dance2Flight(timer){
  const total=BOSS3_DUR.b3_dance2,e=total-timer;
- let y=0,orbit=0,forward=0,turn=0,air=0,burst=0;
- if(e<.68){
-  const p=motionSmooth(0,.68,e);
-  y=THREE.MathUtils.lerp(0,3.15,p)+Math.sin(p*Math.PI)*.42;
-  forward=.15*p;turn=-.08*p;air=p;
- }else if(e<1.62){
-  const p=motionSmooth(.68,1.62,e);
-  y=3.12+.12*Math.sin(p*Math.PI);
-  orbit=Math.sin(p*Math.PI)*.46;forward=.8*p;turn=-.18+.36*p;air=1;burst=1;
- }else if(e<2.38){
-  const p=motionSmooth(1.62,2.38,e);
-  y=3.18+.05*Math.sin(p*Math.PI*2);orbit=.1*Math.sin(p*Math.PI*2);forward=.05;turn=.06*(1-p);air=1;
- }else if(e<3.36){
-  const p=motionSmooth(2.38,3.36,e);
-  y=3.08+.13*Math.sin(p*Math.PI);
-  orbit=-Math.sin(p*Math.PI)*.52;forward=.88*p;turn=.2-.4*p;air=1;burst=2;
- }else if(e<4.14){
-  const p=motionSmooth(3.36,4.14,e);
-  y=3.16+.05*Math.sin(p*Math.PI*2);orbit=-.08*Math.sin(p*Math.PI*2);forward=.04;turn=-.05*(1-p);air=1;
- }else if(e<5.42){
-  const p=motionSmooth(4.14,5.42,e);
-  y=3.0+.16*Math.sin(p*Math.PI);
-  orbit=Math.sin(p*Math.PI)*.42;forward=1.0*p;turn=-.2+.4*p;air=1;burst=3;
+ let y=0,air=0,burst=0,dash=0,orbit=0,turn=0;
+ if(e<.72){
+  const p=motionSmooth(0,.72,e);y=THREE.MathUtils.lerp(0,3.55,p)+Math.sin(p*Math.PI)*.34;air=p;turn=-.08*p;
+ }else if(e<1.18){
+  const p=motionSmooth(.72,1.18,e);y=3.52+.06*Math.sin(p*Math.PI);air=1;
+ }else if(e<2.28){
+  const p=motionSmooth(1.18,2.28,e);y=3.46+.1*Math.sin(p*Math.PI);air=1;burst=1;dash=.72+.28*Math.sin(p*Math.PI);orbit=.2*Math.sin(p*Math.PI*2);turn=-.16+.32*p;
+ }else if(e<2.9){
+  const p=motionSmooth(2.28,2.9,e);y=3.5+.035*Math.sin(p*Math.PI*2);air=1;orbit=.08*Math.sin(p*Math.PI*2);
+ }else if(e<4.0){
+  const p=motionSmooth(2.9,4.0,e);y=3.42+.12*Math.sin(p*Math.PI);air=1;burst=2;dash=.8+.25*Math.sin(p*Math.PI);orbit=-.22*Math.sin(p*Math.PI*2);turn=.18-.36*p;
+ }else if(e<4.65){
+  const p=motionSmooth(4.0,4.65,e);y=3.48+.04*Math.sin(p*Math.PI*2);air=1;orbit=-.07*Math.sin(p*Math.PI*2);
+ }else if(e<5.92){
+  const p=motionSmooth(4.65,5.92,e);y=3.36+.14*Math.sin(p*Math.PI);air=1;burst=3;dash=.92+.3*Math.sin(p*Math.PI);orbit=.24*Math.sin(p*Math.PI*2);turn=-.2+.4*p;
+ }else if(e<6.28){
+  const p=motionSmooth(5.92,6.28,e);y=THREE.MathUtils.lerp(3.35,2.75,p);air=1;burst=4;dash=.65;turn=.1*(1-p);
  }else{
-  const p=motionSmooth(5.42,total,e);
-  y=THREE.MathUtils.lerp(3.0,0,p);orbit=.08*(1-p);forward=.08*(1-p);turn=.08*(1-p);air=1-p;
+  const p=motionSmooth(6.28,total,e);y=THREE.MathUtils.lerp(2.75,0,p);air=1-p;orbit=.05*(1-p);
  }
- return{e,y,orbit,forward,turn,air,burst};
+ return{e,y,air,burst,dash,orbit,turn};
 }
 function poseBoss3AerialDance(dt,t){
- const flight=boss3Dance2Flight(t),beat=soulsSwordBeat(t,BOSS3_DANCE2_MARKS,.18,.14);
- const slash=beat?Math.sin(clamp((beat.p-.18)/.64,0,1)*Math.PI):0;
- const side=beat&&beat.index%2===0?1:-1;
- const curl=flight.air*(.82+.08*Math.sin(flight.e*3.2));
- setBoss3Bone('hips',-.12*flight.air,side*.14*slash,side*.1*slash,26,dt);
- setBoss3Bone('spine',-.16*flight.air,side*.34*slash,-side*.12*slash,28,dt);
- setBoss3Bone('chest',-.08,side*.22*slash,-side*.07*slash,26,dt);
- setBoss3Bone('upperChest',-.04,side*.14*slash,0,24,dt);
- setBoss3Bone('head',.08*flight.air,-side*.1*slash,side*.04*slash,22,dt);
- setBoss3Bone('leftUpperLeg',-.72*curl+.12*slash,0,.14,26,dt);
- setBoss3Bone('rightUpperLeg',-.58*curl-.1*slash,0,-.14,26,dt);
- setBoss3Bone('leftLowerLeg',1.18*curl,0,0,28,dt);
- setBoss3Bone('rightLowerLeg',1.02*curl,0,0,28,dt);
- setBoss3Bone('leftFoot',-.12*flight.air,0,.06,24,dt);
- setBoss3Bone('rightFoot',-.1*flight.air,0,-.06,24,dt);
- setBoss3Bone('rightShoulder',0,side*.1*slash,-.14,28,dt);
- setBoss3Bone('rightUpperArm',-.76-.18*flight.air,.12,side*.48*slash,30,dt);
- setBoss3Bone('rightLowerArm',-.62+.34*slash,0,-side*.22*slash,30,dt);
- setBoss3Bone('leftUpperArm',-.44*flight.air,-.12,-side*.22*slash,26,dt);
- setBoss3Bone('leftLowerArm',-.54+.14*slash,0,side*.1*slash,26,dt);
+ const flight=boss3Dance2Flight(t),beat=bossKeyedSlash(t,BOSS3_DANCE2_MARKS,{wind:.105,cut:.065,recover:.105});
+ const slash=beat?.impact||0,side=beat?.side||state.boss3WaterSide||1;
+ const tuck=flight.air*(.78+.06*Math.sin(flight.e*3.6));
+ const dive=flight.burst===4?.7:0;
+ setBoss3Bone('hips',-.12*tuck-.12*dive,side*.18*slash,side*.12*slash,30,dt);
+ setBoss3Bone('spine',-.18*tuck-.18*dive,side*.46*slash,-side*.16*slash,32,dt);
+ setBoss3Bone('chest',-.08,side*.26*slash,-side*.08*slash,30,dt);
+ setBoss3Bone('upperChest',-.04,side*.16*slash,0,28,dt);
+ setBoss3Bone('head',.08*tuck,-side*.12*slash,side*.05*slash,24,dt);
+ setBoss3Bone('leftUpperLeg',-.7*tuck+.12*slash,0,.16,28,dt);
+ setBoss3Bone('rightUpperLeg',-.58*tuck-.1*slash,0,-.16,28,dt);
+ setBoss3Bone('leftLowerLeg',1.16*tuck,0,0,30,dt);setBoss3Bone('rightLowerLeg',1.0*tuck,0,0,30,dt);
+ setBoss3Bone('leftFoot',-.12*tuck,0,.05,26,dt);setBoss3Bone('rightFoot',-.1*tuck,0,-.05,26,dt);
+ setBoss3Bone('rightShoulder',0,side*.14*slash,-.16,32,dt);
+ setBoss3Bone('rightUpperArm',-.74-.18*tuck,.1,side*.68*slash,34,dt);
+ setBoss3Bone('rightLowerArm',-.66+.44*slash,0,-side*.3*slash,34,dt);
+ setBoss3Bone('leftUpperArm',-.46*tuck,-.12,-side*.32*slash,28,dt);
+ setBoss3Bone('leftLowerArm',-.56+.2*slash,0,side*.14*slash,28,dt);
+ setBoss3Bone('rightHand',-.08,-side*.12*slash,-side*.2*slash,34,dt);
+ setBoss3Bone('leftHand',-.05,side*.06*slash,side*.08*slash,28,dt);
 }
 function applyBoss2PrimaryArmIK(dt){
  if(!boss2Ready||!boss2Bones.rightUpperArm||!boss2Bones.rightHand)return;
@@ -2423,6 +2416,9 @@ state.boss3Last='';
 state.boss3DeadPose=0;
 state.boss3HealPulse=0;
 state.boss3HitReact=0;
+state.boss3WaterBurst=0;
+state.boss3WaterDir=new THREE.Vector3();
+state.boss3WaterSide=1;
 
 if(BOSS_VARIANT===3){
  scene.background.set(0x160f17);scene.fog.color.set(0x160f17);
@@ -2522,16 +2518,15 @@ function applyBoss3PrimaryArmIK(dt){
    const beat=bossKeyedSlash(t,marks,{wind:.22,cut:.12,recover:.2});
    local.copy(bossSwordHandArc(beat,reach,{windX:.56,cutX:.66,baseY:-.38,liftY:.14,dropY:.1,baseZ:.22,windBack:-.18,forward:.94,pullback:.38,recoverX:.1}).multiplyScalar(1/reach));
  }else if(st==='b3_dance2'){
-   const beat=soulsSwordBeat(t,BOSS3_DANCE2_MARKS,.18,.14);
+   const beat=bossKeyedSlash(t,BOSS3_DANCE2_MARKS,{wind:.105,cut:.065,recover:.105});
    if(beat){
-    const side=beat.index%2===0?1:-1,p=beat.p;
-    const cut=motionSmooth(.24,.68,p),recover=motionSmooth(.72,1,p);
+    const side=beat.side,cut=beat.cut,recover=beat.recover;
     local.set(
-      THREE.MathUtils.lerp(side*.58,-side*.66,cut)*(1-recover)+side*.12*recover,
-      -.42-.34*cut+.18*recover,
-      .28+.92*cut-.42*recover
+      (THREE.MathUtils.lerp(side*.7,-side*.76,cut)*(1-recover)+side*.1*recover),
+      -.48-.36*cut+.18*recover,
+      .18+1.18*cut-.48*recover
     );
-   }else local.set(.16,-.42,.34);
+   }else local.set(.12,-.5,.28);
  }else if(st==='b3_cross'||st==='b3_echoes'){
    const marks=st==='b3_cross'?BOSS3_CROSS_MARKS:BOSS3_ECHO_MARKS;
    const beat=bossKeyedSlash(t,marks,{wind:.26,cut:.12,recover:.22});
@@ -2624,14 +2619,19 @@ function updateBoss3Fx(dt){
 }
 const BOSS3_DUR={
  b3_triple:2.04,b3_lunge:1.22,b3_cross:1.52,b3_dance:2.72,b3_rising:1.52,
- b3_phase:2.42,b3_wing_combo:2.72,b3_dive_bloom:2.46,b3_echoes:2.62,b3_flower:2.62,b3_dance2:6.4
+ b3_phase:2.42,b3_wing_combo:2.72,b3_dive_bloom:2.46,b3_echoes:2.62,b3_flower:2.62,b3_dance2:7.0
 };
 const BOSS3_TRIPLE_MARKS=[1.52,.88,.26];
 const BOSS3_CROSS_MARKS=[1.05,.38];
 const BOSS3_DANCE_MARKS=[2.12,1.48,.84,.22];
 const BOSS3_WING_MARKS=[2.16,1.53,.9,.27];
-// Three aerial flurries. One well-timed roll can pass each burst instead of every micro slash.
-const BOSS3_DANCE2_MARKS=[5.34,5.08,4.82,3.58,3.31,3.04,1.78,1.5,1.22,.94];
+const BOSS3_WATER_BURSTS=[
+ [5.45,5.26,5.07,4.88],
+ [3.80,3.60,3.40,3.20],
+ [2.05,1.85,1.65,1.45,1.25],
+ [.92]
+];
+const BOSS3_DANCE2_MARKS=BOSS3_WATER_BURSTS.flat();
 const BOSS3_ECHO_MARKS=[2.06,1.45,.84,.23];
 function chooseBoss3Attack(){
  if(state.bossHp<=0)return;
@@ -2646,6 +2646,7 @@ function chooseBoss3Attack(){
   pick=choices[Math.floor(Math.random()*choices.length)];
  }
  state.boss3Last=pick;state.bossState=pick;state.bossTimer=BOSS3_DUR[pick]||1.4;resetBoss3PhysicalTrace();
+ if(pick==='b3_dance2'){state.boss3WaterBurst=0;state.boss3WaterDir.copy(flatDir(boss.position,player.position));state.boss3WaterSide*=-1}
  state.bossAttackTarget.copy(player.position);state.bossAttackTarget.y=0;
 }
 function finishBoss3Attack(recovery=.66){
@@ -2779,17 +2780,32 @@ function updateBoss3(dt){
  }else if(state.bossState==='b3_dance2'){
   const flight=boss3Dance2Flight(state.bossTimer);
   boss.position.y=flight.y;
-  const side=new THREE.Vector3(dir.z,0,-dir.x);
-  boss.position.addScaledVector(side,flight.orbit*dt*1.45);
-  if(flight.burst&&flight.forward>0&&d>1.3)boss.position.addScaledVector(dir,dt*(2.2+flight.forward*2.35));
-  boss.rotation.y=lerpAngle(boss.rotation.y,face+flight.turn,1-Math.exp(-dt*12));
+  if(flight.burst&&state.boss3WaterBurst!==flight.burst){
+   state.boss3WaterBurst=flight.burst;
+   state.boss3WaterDir.copy(flatDir(boss.position,player.position));
+   state.boss3WaterSide*=-1;
+   boss3Once('water-burst-petal'+flight.burst,()=>spawnBoss3Petals(flight.burst===4?14:9,3.2));
+  }
+  const waterDir=state.boss3WaterDir.lengthSq()?state.boss3WaterDir:dir;
+  const waterSide=new THREE.Vector3(waterDir.z,0,-waterDir.x);
+  if(flight.burst){
+   const speed=flight.burst===1?8.2:flight.burst===2?8.8:flight.burst===3?9.5:6.4;
+   if(d>1.0)boss.position.addScaledVector(waterDir,dt*speed*flight.dash);
+   boss.position.addScaledVector(waterSide,dt*flight.orbit*state.boss3WaterSide*2.1);
+   const aim=Math.atan2(waterDir.x,waterDir.z);
+   boss.rotation.y=lerpAngle(boss.rotation.y,aim+flight.turn,1-Math.exp(-dt*18));
+  }else{
+   boss.position.addScaledVector(waterSide,dt*flight.orbit*.6);
+   boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*7));
+  }
   BOSS3_DANCE2_MARKS.forEach((m,i)=>{
-   if(state.bossTimer<=m+.075&&state.bossTimer>m-.075){
-    boss3Once('water-vfx'+i,()=>{spawnBoss2Slash(1.95+(i%3)*.08,i<6?0xff6f8b:0xffa4b5);spawnBoss3Petals(6,2.5)});
-    boss3Strike('water-hit'+i,4.25,13+(i%3)*2,12+(i%3)*2,false,-.9,2.0);
+   if(state.bossTimer<=m+.055&&state.bossTimer>m-.055){
+    const final=i===BOSS3_DANCE2_MARKS.length-1;
+    boss3Once('water-vfx'+i,()=>{spawnBoss2Slash(final?2.55:2.05+(i%4)*.07,final?0xffd5df:0xff718f);spawnBoss3Petals(final?16:5,final?4.2:2.4)});
+    boss3Strike('water-hit'+i,final?4.8:4.25,final?24:9+(i%4),final?30:10+(i%3)*2,false,-.92,final?2.4:1.7);
    }
   });
-  if(state.bossTimer<=0){boss.position.y=0;spawnDustBurst(boss.position,.55);finishBoss3Attack(1.18)}
+  if(state.bossTimer<=0){state.boss3WaterBurst=0;boss.position.y=0;spawnDustBurst(boss.position,.7);finishBoss3Attack(1.22)}
 
  }else if(state.bossState==='b3_rising'){
   if(state.bossTimer<.72&&state.bossTimer>.32)boss.position.addScaledVector(dir,dt*6.4);
