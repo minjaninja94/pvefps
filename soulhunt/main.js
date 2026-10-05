@@ -2305,7 +2305,7 @@ function updateBoss2(dt){
    spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1.1,0)),3.8,0xffa045,.7);
  }
  if(state.bossStagger>0){
-   state.bossStagger=Math.max(0,state.bossStagger-dt);
+   setDanger(false);state.bossStagger=Math.max(0,state.bossStagger-dt);
    boss.position.y=THREE.MathUtils.lerp(boss.position.y,0,1-Math.exp(-dt*12));
    poseBoss2(dt);applyBoss2PrimaryArmIK(dt);applyBoss2WeaponGripIK(dt);syncBoss2Rig(dt);updateBoss2Weapon();
    if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.85}
@@ -2705,6 +2705,7 @@ function chooseBoss3Attack(){
  }
  state.boss3Last=pick;state.bossState=pick;state.bossTimer=BOSS3_DUR[pick]||1.4;resetBoss3PhysicalTrace();
  if(pick==='b3_dance2'){state.boss3WaterBurst=0;state.boss3WaterDir.copy(flatDir(boss.position,player.position));state.boss3WaterSide*=-1}
+ if(pick==='b3_dive_bloom')setDanger(true);
  state.bossAttackTarget.copy(player.position);state.bossAttackTarget.y=0;
 }
 function finishBoss3Attack(recovery=.66){
@@ -2806,7 +2807,7 @@ function updateBoss3(dt){
   setDanger(false);spawnBoss3Petals(48,6.2);flash('혈화 개화 · 두 번째 검무',1.0);
  }
  if(state.bossStagger>0){
-  state.bossStagger=Math.max(0,state.bossStagger-dt);boss.position.y=THREE.MathUtils.lerp(boss.position.y,0,1-Math.exp(-dt*13));
+  setDanger(false);state.bossStagger=Math.max(0,state.bossStagger-dt);boss.position.y=THREE.MathUtils.lerp(boss.position.y,0,1-Math.exp(-dt*13));
   poseBoss3(dt);applyBoss3PrimaryArmIK(dt);applyBoss3WeaponGripIK(dt);syncBoss3Rig(dt);if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.72}return;
  }
  state.bossTimer-=dt;updateBossPunish(dt);
@@ -2903,7 +2904,7 @@ function updateBoss3(dt){
   else if(state.bossTimer>.46){boss.position.addScaledVector(dir,dt*10.8);boss.position.y=THREE.MathUtils.lerp(boss.position.y,.12,1-Math.exp(-dt*12))}
   if(state.bossTimer<=.54)boss3Once('dive-land',()=>{
    spawnBoss3Petals(30,5.4);spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,.55,0)),4.0,0xe23b61,.58);
-   if(dist()<4.0&&state.invuln<=0){hurtPlayer(38,42,false);boss3Heal(110)}
+   if(dist()<4.0&&state.invuln<=0){hurtPlayer(38,42,true);boss3Heal(110)}
   });
   if(state.bossTimer<=.18)boss3Once('dive-after',()=>{spawnBossShockwave(4.8,28);if(dist()<4.8&&state.invuln<=0){hurtPlayer(20,24,false);boss3Heal(55)}});
   if(state.bossTimer<=0)finishBoss3Attack(1.08);
@@ -3074,9 +3075,9 @@ function poseBoss4(dt){
   setBoss4Bone('rightHand',-.06,-.04-side*.16*edge,-.1-side*.26*edge,30,dt);
  }
 }
-function boss4Strike(tag,dmg,posture,ttl=.26){
+function boss4Strike(tag,dmg,posture,ttl=.26,unblockable=false){
  if(boss4Fired.has(tag)||boss4MeleeRequests.some(r=>r.tag===tag))return;
- boss4MeleeRequests.push({tag,dmg,posture,ttl});
+ boss4MeleeRequests.push({tag,dmg,posture,ttl,unblockable});
 }
 function resetBoss4PhysicalTrace(){boss4WeaponTrace.valid=false}
 function processBoss4PhysicalHits(){
@@ -3089,7 +3090,7 @@ function processBoss4PhysicalHits(){
   for(const req of boss4MeleeRequests){
    if(boss4Fired.has(req.tag))continue;boss4Fired.add(req.tag);spawnSparks(hit.point,11,5);state.shake=Math.max(state.shake,.09);
    if(state.invuln>0){flash('회피',.12);break}
-   hurtPlayer(req.dmg,req.posture,false);break;
+   hurtPlayer(req.dmg,req.posture,!!req.unblockable);break;
   }
  }
  for(let i=boss4MeleeRequests.length-1;i>=0;i--)if(boss4Fired.has(boss4MeleeRequests[i].tag)||boss4MeleeRequests[i].ttl<=0)boss4MeleeRequests.splice(i,1);
@@ -3099,8 +3100,9 @@ function chooseBoss4Attack(){
  let pool=state.bossHp<state.bossMaxHp*.5?['b4_batto','b4_illusion','b4_dragon','b4_combo']:['b4_batto','b4_combo','b4_dragon','b4_illusion'];
  if(state.potionPunishQueued){state.potionPunishQueued=false;state.bossState='b4_dragon'}else state.bossState=pool[Math.floor(Math.random()*pool.length)];
  state.bossTimer=BOSS4_DUR[state.bossState];state.boss4DashStep=-1;resetBoss4PhysicalTrace();
+ if(state.bossState==='b4_batto')setDanger(true);
 }
-function finishBoss4Attack(recovery=.78){state.bossState='idle';beginBossPunish(recovery);boss4Fired.clear();boss4MeleeRequests.length=0;state.boss4DashStep=-1;resetBoss4PhysicalTrace()}
+function finishBoss4Attack(recovery=.78){setDanger(false);state.bossState='idle';beginBossPunish(recovery);boss4Fired.clear();boss4MeleeRequests.length=0;state.boss4DashStep=-1;resetBoss4PhysicalTrace()}
 function hitBoss4(base,posture=12,contact=null){
  if(state.bossHp<=0)return;let dmg=base,pd=posture;[dmg,pd]=bossPunishDamage(dmg,pd);if(state.bossStagger>0){dmg*=1.62;pd*=1.7}
  state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture=Math.min(140,state.bossPosture+pd);state.boss4HitReact=.14;state.shake=.13;hitStop(.052);
@@ -3113,7 +3115,7 @@ function updateBoss4(dt){
  enforceBoss4Visibility();state.boss4HitReact=Math.max(0,state.boss4HitReact-dt);boss4Halo.rotation.z+=dt*.8;boss4Aura.intensity=8.5+Math.sin(state.time*5.5)*.7;
  if(boss4Visual)boss4Visual.position.y=THREE.MathUtils.lerp(boss4Visual.position.y,boss4VisualBaseY,1-Math.exp(-dt*10));
  if(state.bossHp<=0){boss4WeaponRoot.visible=false;poseBoss4(dt);syncBoss4Rig(dt);return}
- if(state.bossStagger>0){state.bossStagger=Math.max(0,state.bossStagger-dt);poseBoss4(dt);applyBoss4PrimaryArmIK(dt);syncBoss4Rig(dt);updateBoss4Weapon();if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.8}return}
+ if(state.bossStagger>0){setDanger(false);state.bossStagger=Math.max(0,state.bossStagger-dt);poseBoss4(dt);applyBoss4PrimaryArmIK(dt);syncBoss4Rig(dt);updateBoss4Weapon();if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.8}return}
  state.bossTimer-=dt;updateBossPunish(dt);const d=dist(),liveDir=flatDir(boss.position,player.position),dur=BOSS4_DUR[state.bossState]||1,dir=state.bossState==='idle'?liveDir:bossCommittedDir(dur,state.bossTimer,.54),face=Math.atan2(dir.x,dir.z);
  if(state.bossState!=='idle')boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*(state.bossState==='b4_dragon'?12:8.5)));
  if(state.bossState==='idle'){
@@ -3125,7 +3127,7 @@ function updateBoss4(dt){
  }else if(state.bossState==='b4_batto'){
   const p=clamp(1-state.bossTimer/BOSS4_DUR.b4_batto,0,1);
   if(p>.42&&p<.58&&d>2.2)boss.position.addScaledVector(dir,dt*4.8);
-  if(p>=.52&&p<=.7){boss4Once('batto-vfx',()=>spawnBoss2Slash(2.35,0x9dd8ff));boss4Strike('batto-hit',34,34,.3)}
+  if(p>=.52&&p<=.7){boss4Once('batto-vfx',()=>spawnBoss2Slash(2.35,0x9dd8ff));boss4Strike('batto-hit',34,34,.3,true)}
   if(state.bossTimer<=0)finishBoss4Attack(1.0);
  }else if(state.bossState==='b4_illusion'){
   BOSS4_ILLUSION_MARKS.forEach((m,i)=>{if(state.bossTimer<=m+.085&&state.bossTimer>m-.085){boss4Once('iv'+i,()=>spawnBoss2Slash(1.7+(i%3)*.1,0xa5d8ff));boss4Strike('ih'+i,14+(i%3)*2,12+(i%4)*2,.22)}if(state.bossTimer<=m+.18&&state.bossTimer>m+.03&&d>2.2)boss.position.addScaledVector(dir,dt*3.4)});
@@ -3319,11 +3321,11 @@ function poseBoss5(dt){
   setBoss5Bone('rightHand',-.05,-.03-side*.08*edge,-.08-side*.14*edge,28,dt);setBoss5Bone('leftHand',-.04,.03+side*.03*edge,.06,24,dt);
  }
 }
-function boss5Strike(tag,dmg,posture,ttl=.3){
- if(boss5Fired.has(tag)||boss5MeleeRequests.some(r=>r.tag===tag))return;boss5MeleeRequests.push({tag,dmg,posture,ttl});
+function boss5Strike(tag,dmg,posture,ttl=.3,unblockable=false){
+ if(boss5Fired.has(tag)||boss5MeleeRequests.some(r=>r.tag===tag))return;boss5MeleeRequests.push({tag,dmg,posture,ttl,unblockable});
 }
-function boss5BodyStrike(tag,kind,dmg,posture,ttl=.28){
- if(boss5Fired.has(tag)||boss5BodyRequests.some(r=>r.tag===tag))return;boss5BodyRequests.push({tag,kind,dmg,posture,ttl});
+function boss5BodyStrike(tag,kind,dmg,posture,ttl=.28,unblockable=false){
+ if(boss5Fired.has(tag)||boss5BodyRequests.some(r=>r.tag===tag))return;boss5BodyRequests.push({tag,kind,dmg,posture,ttl,unblockable});
 }
 function boss5BodyPoint(kind){
  const map=kind==='kick'?['rightFoot','rightLowerLeg']:kind==='elbow'?['rightLowerArm','rightUpperArm']:['chest','hips'];
@@ -3342,7 +3344,7 @@ function processBoss5PhysicalHits(){
   const seg=combatWorldSegment(boss5WeaponRoot,new THREE.Vector3(0,.08,0),new THREE.Vector3(0,3.25,0));let hit=null;
   if(boss5WeaponTrace.valid)hit=combatSweptBladeContact(boss5WeaponTrace.base,boss5WeaponTrace.tip,seg.base,seg.tip,caps,.22);
   boss5WeaponTrace.base.copy(seg.base);boss5WeaponTrace.tip.copy(seg.tip);boss5WeaponTrace.valid=true;
-  if(hit)for(const req of boss5MeleeRequests){if(boss5Fired.has(req.tag))continue;boss5Fired.add(req.tag);spawnSparks(hit.point,13,5.4);if(state.invuln>0){flash('회피',.12);break}hurtPlayer(req.dmg,req.posture,false);break}
+  if(hit)for(const req of boss5MeleeRequests){if(boss5Fired.has(req.tag))continue;boss5Fired.add(req.tag);spawnSparks(hit.point,13,5.4);if(state.invuln>0){flash('회피',.12);break}hurtPlayer(req.dmg,req.posture,!!req.unblockable);break}
  }
  for(const kind of ['kick','shoulder','elbow']){
   const cur=boss5BodyPoint(kind),key='valid'+kind[0].toUpperCase()+kind.slice(1),prev=boss5BodyTrace[kind];let bodyHit=null;
@@ -3350,7 +3352,7 @@ function processBoss5PhysicalHits(){
    for(const c of caps){const d=combatSegmentSegmentDistance(prev,cur,c.a,c.b);if(d<=c.r+(kind==='shoulder'?.42:.25)){bodyHit={point:cur.clone(),distance:d};break}}
   }
   prev.copy(cur);boss5BodyTrace[key]=true;
-  if(bodyHit)for(const req of boss5BodyRequests){if(req.kind!==kind||boss5Fired.has(req.tag))continue;boss5Fired.add(req.tag);spawnDustBurst(bodyHit.point,.18);if(state.invuln>0){flash('회피',.12);break}hurtPlayer(req.dmg,req.posture,false);break}
+  if(bodyHit)for(const req of boss5BodyRequests){if(req.kind!==kind||boss5Fired.has(req.tag))continue;boss5Fired.add(req.tag);spawnDustBurst(bodyHit.point,.18);if(state.invuln>0){flash('회피',.12);break}hurtPlayer(req.dmg,req.posture,!!req.unblockable);break}
  }
  for(let i=boss5MeleeRequests.length-1;i>=0;i--)if(boss5Fired.has(boss5MeleeRequests[i].tag)||boss5MeleeRequests[i].ttl<=0)boss5MeleeRequests.splice(i,1);
  for(let i=boss5BodyRequests.length-1;i>=0;i--)if(boss5Fired.has(boss5BodyRequests[i].tag)||boss5BodyRequests[i].ttl<=0)boss5BodyRequests.splice(i,1);
@@ -3364,8 +3366,9 @@ function chooseBoss5Attack(){
  else pool=phase2?['b5_chain','b5_charge','b5_kick','b5_upper','b5_leap','b5_rush']:['b5_chain','b5_charge','b5_kick','b5_upper','b5_leap'];
  if(state.potionPunishQueued){state.potionPunishQueued=false;state.bossState=phase2?'b5_rush':'b5_charge'}else state.bossState=pool[Math.floor(Math.random()*pool.length)];
  state.bossTimer=BOSS5_DUR[state.bossState];state.boss5RushStep=-1;resetBoss5PhysicalTrace();
+ if(state.bossState==='b5_charge')setDanger(true);
 }
-function finishBoss5Attack(recovery=.76){state.bossState='idle';beginBossPunish(recovery);boss5Fired.clear();boss5MeleeRequests.length=0;boss5BodyRequests.length=0;state.boss5RushStep=-1;resetBoss5PhysicalTrace();boss.position.y=0}
+function finishBoss5Attack(recovery=.76){setDanger(false);state.bossState='idle';beginBossPunish(recovery);boss5Fired.clear();boss5MeleeRequests.length=0;boss5BodyRequests.length=0;state.boss5RushStep=-1;resetBoss5PhysicalTrace();boss.position.y=0}
 function hitBoss5(base,posture=12,contact=null){
  if(state.bossHp<=0)return;let dmg=base,pd=posture;[dmg,pd]=bossPunishDamage(dmg,pd);if(state.bossStagger>0){dmg*=1.55;pd*=1.65}
  state.bossHp=Math.max(0,state.bossHp-dmg);state.bossPosture=Math.min(145,state.bossPosture+pd);state.boss5HitReact=.14;state.shake=.14;hitStop(.055);
@@ -3382,7 +3385,7 @@ function updateBoss5(dt){
   state.boss5Phase=2;state.bossState='b5_roar';state.bossTimer=BOSS5_DUR.b5_roar;boss5Fired.clear();boss5Aura.color.setHex(0xff6b35);boss5HaloMat.opacity=.16;
   spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1,0)),4.2,0xff6832,.55);flash('투신 각성 · 흑철의 폭주',.9);
  }
- if(state.bossStagger>0){state.bossStagger=Math.max(0,state.bossStagger-dt);poseBoss5(dt);applyBoss5PrimaryArmIK(dt);applyBoss5GripIK(dt);syncBoss5Rig(dt);updateBoss5Weapon();if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.72}return}
+ if(state.bossStagger>0){setDanger(false);state.bossStagger=Math.max(0,state.bossStagger-dt);poseBoss5(dt);applyBoss5PrimaryArmIK(dt);applyBoss5GripIK(dt);syncBoss5Rig(dt);updateBoss5Weapon();if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.72}return}
  state.bossTimer-=dt;updateBossPunish(dt);const d=dist(),liveDir=flatDir(boss.position,player.position),dur=BOSS5_DUR[state.bossState]||1,dir=state.bossState==='idle'?liveDir:bossCommittedDir(dur,state.bossTimer,.55),face=Math.atan2(dir.x,dir.z),p2=state.boss5Phase===2;
  if(state.bossState!=='idle'&&(!['b5_charge','b5_rush','b5_leap'].includes(state.bossState)||state.bossTimer>.55))boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*(p2?11:8.5)));
  if(state.bossState==='idle'){
@@ -3399,7 +3402,7 @@ function updateBoss5(dt){
   const p=clamp(1-state.bossTimer/BOSS5_DUR.b5_charge,0,1);
   if(p<.16)state.boss5ChargeDir.copy(dir);
   if(p>.28&&p<.67)boss.position.addScaledVector(state.boss5ChargeDir,dt*(p2?13.4:11.4));
-  if(p>.34&&p<.67)boss5BodyStrike('shoulder','shoulder',p2?32:28,36,.34);
+  if(p>.34&&p<.67)boss5BodyStrike('shoulder','shoulder',p2?32:28,36,.34,true);
   if(p>.68&&p<.86){boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*18));boss5Strike('charge-axe',p2?35:31,34,.34)}
   if(state.bossTimer<=0)finishBoss5Attack(p2?.55:.72);
  }else if(state.bossState==='b5_kick'){
