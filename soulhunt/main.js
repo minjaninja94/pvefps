@@ -77,7 +77,7 @@ const cape=part(player,new THREE.PlaneGeometry(.82,1.22),cloth,[0,1.15,-.3],[0,0
 
 const weaponHandAnchor=new THREE.Group();player.add(weaponHandAnchor);
 const weaponPivot=new THREE.Group();weaponHandAnchor.add(weaponPivot);
-const shieldHandAnchor=new THREE.Group();player.add(shieldHandAnchor);
+const shieldHandAnchor=new THREE.Group();shieldHandAnchor.name='PlayerForearmShieldRig';shieldHandAnchor.visible=false;scene.add(shieldHandAnchor);
 const shieldPivot=new THREE.Group();shieldHandAnchor.add(shieldPivot);
 const shield=part(shieldPivot,new THREE.CylinderGeometry(.36,.36,.085,12),steelDark,[0,0,-.045],[Math.PI/2,0,0],[1,.9,1]);
 part(shieldPivot,new THREE.BoxGeometry(.09,.5,.11),steel,[0,0,.025]);
@@ -94,12 +94,14 @@ const WEAPONS=[
 ];
 let weaponIndex=0,twoHanded=false;
 const WEAPON_GRIPS={
- straight:{pos:[.02,-.015,.015],rot:[-.08,.02,.08],scale:1},
- greatsword:{pos:[.015,-.02,.02],rot:[-.12,.02,.06],scale:1.02},
- hammer:{pos:[.015,-.025,.025],rot:[-.16,.03,.04],scale:1.02},
- spear:{pos:[.015,-.018,.018],rot:[-.04,.03,.05],scale:1},
- katana:{pos:[.018,-.012,.018],rot:[-.1,.05,.1],scale:1},
- axe:{pos:[.015,-.02,.02],rot:[-.14,.03,.05],scale:1.01}
+ // Local offsets are measured from the VRM right palm.  Each weapon has a different
+ // handle thickness / wrist angle so the hand sits on the actual grip, not the guard.
+ straight:{pos:[.012,-.026,.018],rot:[-.16,.015,.055],scale:1},
+ greatsword:{pos:[.008,-.038,.02],rot:[-.205,.012,.028],scale:1.02},
+ hammer:{pos:[.01,-.043,.024],rot:[-.245,.01,.018],scale:1.02},
+ spear:{pos:[.008,-.026,.018],rot:[-.075,.0,.018],scale:1},
+ katana:{pos:[.012,-.024,.018],rot:[-.185,.055,.085],scale:1},
+ axe:{pos:[.01,-.036,.022],rot:[-.22,.012,.025],scale:1.01}
 };
 function currentWeapon(){return WEAPONS[weaponIndex]}
 function applyWeaponGrip(){
@@ -108,11 +110,10 @@ function applyWeaponGrip(){
  weaponHandAnchor.rotation.set(...g.rot);
  weaponHandAnchor.scale.setScalar(g.scale||1);
  weaponPivot.position.set(0,0,0);weaponPivot.rotation.set(0,0,0);
- shieldHandAnchor.position.set(-.035,.012,.045);
- shieldHandAnchor.rotation.set(-.12,.045,-.16);
- shieldPivot.position.set(-.12,-.015,.105);
- shieldPivot.rotation.set(-.18,.06,-.16);
- shieldPivot.scale.setScalar(.94);
+ // Shield transform is solved in world space from elbow + wrist every frame.
+ shieldPivot.position.set(0,0,0);
+ shieldPivot.rotation.set(0,0,0);
+ shieldPivot.scale.setScalar(1);
 }
 function clearWeapon(){while(weaponVisual.children.length){const o=weaponVisual.children.pop();o.geometry?.dispose?.();}}
 function addWeaponMesh(geo,material,pos,rot=[0,0,0]){return part(weaponVisual,geo,material,pos,rot)}
@@ -299,12 +300,12 @@ function samplePlayerHandPath(id,step,p){
  );
 }
 const PLAYER_READY_HANDS={
- straight:[.2,-.7,.1],
- greatsword:[.42,-.18,-.12],
- hammer:[.34,-.3,-.08],
- spear:[.2,-.34,.5],
- katana:[-.18,-.58,.04],
- axe:[.36,-.26,-.08]
+ straight:[.24,-.56,.22],
+ greatsword:[.3,-.38,.06],
+ hammer:[.3,-.42,.03],
+ spear:[.22,-.32,.54],
+ katana:[.1,-.5,.22],
+ axe:[.3,-.4,.08]
 };
 function playerReadyHand(id,reach,moving,phase,sprint){
  const a=PLAYER_READY_HANDS[id]||PLAYER_READY_HANDS.straight;
@@ -321,12 +322,12 @@ function playerReadyHand(id,reach,moving,phase,sprint){
 }
 const PLAYER_SECONDARY_GRIP_Z={straight:.3,greatsword:.5,hammer:.58,spear:-.55,katana:.4,axe:.44};
 const PLAYER_WRIST_GRIP={
- straight:{r:[-.05,-.08,-.16],l:[-.04,.04,.1]},
- greatsword:{r:[-.12,-.04,-.12],l:[-.1,.04,.1]},
- hammer:{r:[-.16,-.02,-.08],l:[-.14,.03,.08]},
- spear:{r:[-.02,0,-.02],l:[-.03,0,.02]},
- katana:{r:[-.08,-.1,-.2],l:[-.08,.06,.12]},
- axe:{r:[-.12,-.04,-.12],l:[-.1,.04,.08]}
+ straight:{r:[-.11,-.035,-.11],l:[-.04,.04,.08]},
+ greatsword:{r:[-.16,-.02,-.075],l:[-.12,.035,.075]},
+ hammer:{r:[-.19,-.01,-.055],l:[-.15,.025,.06]},
+ spear:{r:[-.045,0,-.015],l:[-.035,0,.015]},
+ katana:{r:[-.13,-.055,-.13],l:[-.1,.045,.09]},
+ axe:{r:[-.17,-.02,-.07],l:[-.12,.03,.065]}
 };
 function alignPlayerSpearToForward(dt){
  if(currentWeapon().id!=='spear'||!weaponPivot.parent)return;
@@ -358,13 +359,13 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
    if(side==='right'&&!attack&&!input.guard&&state.rolling<=0){
      delta=playerReadyHand(w.id,reach,moving,phase,sprint);
    }else if(side==='left'&&!attack&&!input.guard&&state.rolling<=0&&!twoHanded){
-     delta=new THREE.Vector3(-reach*.29,-reach*.38,reach*.3);
-     if(moving){delta.z-=Math.sin(phase)*(sprint?.055:.035)*reach;delta.x-=Math.abs(Math.sin(phase))*.018*reach;}
+     delta=new THREE.Vector3(-reach*.34,-reach*.43,reach*.22);
+     if(moving){delta.z-=Math.sin(phase)*(sprint?.038:.024)*reach;delta.x-=Math.abs(Math.sin(phase))*.012*reach;}
    }else{
      delta=new THREE.Vector3(sx*reach*.13,-reach*.84,.04);
    }
    if(input.guard&&!attack&&state.rolling<=0){
-     delta.set(side==='left'?-reach*.25:reach*.13,-reach*.28,side==='left'?reach*.36:reach*.27);
+     delta.set(side==='left'?-reach*.34:reach*.14,-reach*.27,side==='left'?reach*.4:reach*.29);
    }
    if(state.rolling>0){
      const lean=state.rollLean||1;
@@ -380,7 +381,7 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
        delta.set(-.12*reach,-.34*reach,.3*reach);
      }else{
        // Shield arm stays compact and protects the torso while the weapon hand attacks.
-       delta.set(-.29*reach,-.32*reach,.36*reach);
+       delta.set(-.36*reach,-.34*reach,.32*reach);
      }
    }
    const handTarget=shoulder.clone().add(playerLocalVector(delta));
@@ -404,6 +405,36 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
  }
  if(state.rolling<=0){applyPlayerWristGrip(dt);if(currentWeapon().id==='spear')alignPlayerSpearToForward(dt)}
  else{setPlayerVrmBone('rightHand',-.22,-.08,-.2,28,dt);setPlayerVrmBone('leftHand',-.18,.08,.18,28,dt)}
+}
+
+function updatePlayerShieldRig(dt){
+ const elbow=playerVrmBones.leftLowerArm,hand=playerVrmBones.leftHand;
+ const visible=!twoHanded&&!!elbow&&!!hand&&!state.dead;
+ shieldPivot.visible=visible;shieldHandAnchor.visible=visible;
+ if(!visible)return;
+
+ player.updateMatrixWorld(true);elbow.updateWorldMatrix(true,false);hand.updateWorldMatrix(true,false);
+ const e=new THREE.Vector3(),h=new THREE.Vector3();elbow.getWorldPosition(e);hand.getWorldPosition(h);
+ const forward=new THREE.Vector3(Math.sin(player.rotation.y),0,Math.cos(player.rotation.y)).normalize();
+ const right=new THREE.Vector3(forward.z,0,-forward.x),left=right.clone().multiplyScalar(-1);
+ const guarding=input.guard&&state.attack<=0&&state.rolling<=0;
+ const attacking=state.attack>0;
+ const center=e.clone().lerp(h,.58)
+   .addScaledVector(left,guarding?.17:.145)
+   .addScaledVector(forward,guarding?.17:attacking?.045:.015);
+ center.y+=guarding?.035:.01;
+
+ const normal=forward.clone().multiplyScalar(guarding?1:.5).addScaledVector(left,guarding?.16:.72).normalize();
+ let up=new THREE.Vector3(0,1,0);
+ let x=up.clone().cross(normal).normalize();
+ if(x.lengthSq()<1e-6)x.copy(right);
+ up=normal.clone().cross(x).normalize();
+ const q=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,up,normal));
+ const ease=1-Math.exp(-dt*(guarding?28:18));
+ shieldHandAnchor.position.lerp(center,ease);
+ shieldHandAnchor.quaternion.slerp(q,ease);
+ const scale=guarding?.93:.86;
+ shieldHandAnchor.scale.setScalar(THREE.MathUtils.lerp(shieldHandAnchor.scale.x||1,scale,ease));
 }
 
 
@@ -444,8 +475,8 @@ player.children.filter(o=>o.isMesh).forEach(m=>m.visible=false);
 
      const rightHand=playerVrmBones.rightHand,leftHand=playerVrmBones.leftHand;
      if(rightHand)rightHand.add(weaponHandAnchor);
-     if(leftHand)leftHand.add(shieldHandAnchor);
      applyWeaponGrip();
+     shieldHandAnchor.visible=!!leftHand&&!twoHanded;
      console.info('Sakurada Fumiriya player loaded', {height:targetHeight,weaponHand:!!rightHand,shieldHand:!!leftHand,bones:Object.keys(playerVrmBones).length});
    },undefined,err=>console.warn('Tall VRoid player unavailable.',err));
  }catch(err){console.warn('three-vrm unavailable for player.',err)}
@@ -614,6 +645,8 @@ function animateVroidPlayer(dt){
    playerVrmMotion.position.z=THREE.MathUtils.lerp(playerVrmMotion.position.z,0,1-Math.exp(-dt*22));
  }
  playerVrm?.update?.(dt);
+ player.updateMatrixWorld(true);playerVrmRoot?.updateMatrixWorld(true);
+ updatePlayerShieldRig(dt);
 }
 
 // Legacy clip helper kept for fallback assets; the VRoid player is bone-animated procedurally.
