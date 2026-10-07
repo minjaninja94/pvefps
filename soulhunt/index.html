@@ -11,7 +11,7 @@
     <div class="boss-select-panel">
       <div class="boss-select-kicker">DUKHOO SOUL · BOSS TRIAL</div>
       <h1>도전할 보스를 선택</h1>
-      <p>거녀·다중무기·공중검무·검성에 이어, 보스 5는 대형 도끼와 체술 압박을 섞는 투희형 보스입니다.</p>
+      <p>보스 1~5를 넘어 최종 보스 황근출이 추가되었습니다. 해병문학 밈을 투사체·돌진·가드불가 패턴으로 재구성한 패러디 보스입니다.</p>
       <div class="boss-select-grid">
         <button class="boss-card" data-boss="1">
           <span class="boss-no">BOSS 01</span>
@@ -34,9 +34,14 @@
           <small>Vivi 기반 검성 · 발도 · 환영검무 · 맹룡단공참 · 고속 3연검</small>
         </button>
         <button class="boss-card boss-card-new" data-boss="5">
-          <span class="boss-no">BOSS 05 · NEW</span>
+          <span class="boss-no">BOSS 05</span>
           <strong>흑철의 투희 · 시노</strong>
           <small>Sendagaya Shino 기반 도끼녀 · 대형 도끼 · 숄더 · 킥 · 엘보 · 투신 각성</small>
+        </button>
+        <button class="boss-card boss-card-new" data-boss="6">
+          <span class="boss-no">FINAL BOSS · NEW</span>
+          <strong>황근출</strong>
+          <small>기합포 · 해병수류탄 · 해병짜장 · 오도봉고 · 역돌격 · 지원사격 · 악으로 깡으로</small>
         </button>
       </div>
     </div>
@@ -67,7 +72,7 @@
   (() => {
     const selected = new URLSearchParams(location.search).get('boss');
     const select = document.querySelector('#bossSelect');
-    if (selected === '1' || selected === '2' || selected === '3' || selected === '4' || selected === '5') select.hidden = true;
+    if (selected === '1' || selected === '2' || selected === '3' || selected === '4' || selected === '5' || selected === '6') select.hidden = true;
     document.querySelectorAll('[data-boss]').forEach(btn => {
       btn.addEventListener('click', () => {
         const url = new URL(location.href);
