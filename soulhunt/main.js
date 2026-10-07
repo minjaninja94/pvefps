@@ -3538,6 +3538,7 @@ const b6EyeAura=new THREE.MeshBasicMaterial({color:0xff0500,transparent:true,opa
 const b6EyeFlareMat=new THREE.MeshBasicMaterial({color:0xff1a08,transparent:true,opacity:.86,depthTest:false,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,toneMapped:false});
 const b6EyeBeamMat=new THREE.MeshBasicMaterial({color:0xff0800,transparent:true,opacity:.34,depthTest:false,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false});
 const boss6EyeFx=[];
+let boss6TankMuzzle=null,boss6TankMuzzleFlash=null,boss6TankRecoil=0;
 const b6Black=new THREE.MeshBasicMaterial({color:0x080808});
 
 function boss6Mesh(parent,geometry,material,pos=[0,0,0],scale=[1,1,1],rot=[0,0,0]){
@@ -3579,6 +3580,9 @@ function buildBoss6ProceduralModel(){
  boss6Mesh(boss6GroinCannon,new THREE.CylinderGeometry(.12,.15,1.8,12),b6TankGreen,[0,-.01,-.98],[1,1,1],[Math.PI/2,0,0]);
  boss6Mesh(boss6GroinCannon,new THREE.CylinderGeometry(.16,.16,.22,12),b6TankGreenDark,[0,-.01,-1.9],[1,1,1],[Math.PI/2,0,0]);
  boss6Mesh(boss6GroinCannon,new THREE.CylinderGeometry(.14,.14,.13,12),b6Black,[0,-.01,-2.05],[1,1,1],[Math.PI/2,0,0]);
+ boss6TankMuzzle=new THREE.Group();boss6TankMuzzle.name='HwangTankMuzzle';boss6TankMuzzle.position.set(0,-.01,-2.14);boss6GroinCannon.add(boss6TankMuzzle);
+ boss6TankMuzzleFlash=boss6Mesh(boss6TankMuzzle,new THREE.SphereGeometry(.15,9,7),new THREE.MeshBasicMaterial({color:0xffb52e,transparent:true,opacity:.95,depthWrite:false,blending:THREE.AdditiveBlending}),[0,0,-.04],[1.25,.8,1.25]);
+ boss6TankMuzzleFlash.visible=false;
  boss6GroinCannon.rotation.x=-.045;
 
  const spine=boss6Joint(hips,'spine',[0,.22,0]);
@@ -3694,6 +3698,9 @@ function buildBoss6SupportMarine(name,role,side){
  boss6Mesh(groinCannon,new THREE.CylinderGeometry(isTonton?.095:.075,isTonton?.12:.095,isTonton?1.5:1.28,12),tankGreen,[0,-.015,-.82],[1,1,1],[Math.PI/2,0,0]);
  boss6Mesh(groinCannon,new THREE.CylinderGeometry(isTonton?.13:.105,isTonton?.13:.105,.18,12),tankGreenDark,[0,-.015,-1.58],[1,1,1],[Math.PI/2,0,0]);
  boss6Mesh(groinCannon,new THREE.CylinderGeometry(isTonton?.115:.09,isTonton?.115:.09,.12,12),b6Black,[0,-.015,-1.68],[1,1,1],[Math.PI/2,0,0]);
+ const groinMuzzle=new THREE.Group();groinMuzzle.name=(isTonton?'Tontonjeong':'Mumochil')+'TankMuzzle';groinMuzzle.position.set(0,-.015,-1.76);groinCannon.add(groinMuzzle);
+ const groinMuzzleFlash=boss6Mesh(groinMuzzle,new THREE.SphereGeometry(isTonton?.12:.09,8,6),new THREE.MeshBasicMaterial({color:0xffb52e,transparent:true,opacity:.95,depthWrite:false,blending:THREE.AdditiveBlending}),[0,0,-.035],[1.25,.8,1.25]);
+ groinMuzzleFlash.visible=false;
  groinCannon.rotation.x=isTonton?-.04:-.025;
 
  if(isTonton){
@@ -3756,7 +3763,7 @@ function buildBoss6SupportMarine(name,role,side){
   root.scale.setScalar(scale);
   root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
   root.visible=false;boss6Root.add(root);
-  return {name,role,side,root,pelvis,torso,head,lArm,rArm,lFore,rFore,lLeg,rLeg,lShin,rShin,weapon,muzzle,muzzleFlash,recoil:0,weaponBaseZ:-.48,seed:1.3};
+  return {name,role,side,root,pelvis,torso,head,lArm,rArm,lFore,rFore,lLeg,rLeg,lShin,rShin,weapon,muzzle,muzzleFlash,groinCannon,groinMuzzle,groinMuzzleFlash,recoil:0,weaponBaseZ:-.48,seed:1.3};
  }
 
  // Canonical Mumochil silhouette: tan male, narrow squinting eyes and a tall black mohawk.
@@ -3816,7 +3823,7 @@ function buildBoss6SupportMarine(name,role,side){
  root.scale.setScalar(scale);
  root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
  root.visible=false;boss6Root.add(root);
- return {name,role,side,root,pelvis,torso,head,lArm,rArm,lFore,rFore,lLeg,rLeg,lShin,rShin,weapon,muzzle,muzzleFlash,recoil:0,weaponBaseZ:-.43,seed:3.7};
+ return {name,role,side,root,pelvis,torso,head,lArm,rArm,lFore,rFore,lLeg,rLeg,lShin,rShin,weapon,muzzle,muzzleFlash,groinCannon,groinMuzzle,groinMuzzleFlash,recoil:0,weaponBaseZ:-.43,seed:3.7};
 }
 function buildBoss6SupportSquad(){
  if(boss6SupportBuilt)return;
@@ -3835,6 +3842,7 @@ function updateBoss6SupportSquad(dt){
   if(!attack){
    m.recoil=0;
    m.muzzleFlash.visible=false;
+   if(m.groinMuzzleFlash)m.groinMuzzleFlash.visible=false;
    m.root.position.set(m.side*(m.role==='tonton'?4.5:4.9),0,2.4);
    continue;
   }
@@ -3864,18 +3872,20 @@ function updateBoss6SupportSquad(dt){
   m.recoil=Math.max(0,m.recoil-dt);
   const recoil=m.recoil>0?Math.sin((m.recoil/.13)*Math.PI)*(m.role==='tonton'?.16:.1):0;
   m.weapon.position.z=(m.weaponBaseZ??-.43)+recoil;
-  m.muzzleFlash.visible=m.recoil>.075;
+  m.muzzleFlash.visible=false;
+  if(m.groinMuzzleFlash)m.groinMuzzleFlash.visible=m.recoil>.075;
  }
 }
 function fireBoss6SupportMarine(m,index=0){
  if(!m)return false;
- const start=new THREE.Vector3();m.muzzle.getWorldPosition(start);
+ const muzzle=m.groinMuzzle||m.muzzle;
+ const start=new THREE.Vector3();muzzle.getWorldPosition(start);
  const target=player.position.clone().add(new THREE.Vector3((index%3-1)*.18,1.0,0));
  const dir=target.sub(start).normalize();
  const heavy=m.role==='tonton';
  spawnBoss6Shot('support',start,dir,{speed:heavy?16.2:20.5,dmg:heavy?15:12,posture:heavy?15:10,radius:heavy?.18:.11,life:1.65});
  m.recoil=.13;
- spawnSparks(start,heavy?8:5,heavy?3.4:2.5);
+ spawnSparks(start,heavy?12:8,heavy?4.4:3.2);
  return true;
 }
 
@@ -3983,17 +3993,30 @@ function updateBoss6Projectiles(dt){
   if(p.life<=0||p.obj.position.y<-1||p.obj.position.length()>65)removeBoss6Projectile(i);
  }
 }
-function boss6Origin(y=1.75){return boss.position.clone().add(new THREE.Vector3(0,y,0))}
+function boss6Origin(y=1.75){
+ if(boss6TankMuzzle){
+  boss6Root.updateMatrixWorld(true);
+  const p=new THREE.Vector3();boss6TankMuzzle.getWorldPosition(p);return p;
+ }
+ return boss.position.clone().add(new THREE.Vector3(0,y,0));
+}
 function boss6Aim(y=.95){return player.position.clone().add(new THREE.Vector3(0,y,0)).sub(boss6Origin()).normalize()}
+function pulseBoss6TankMuzzle(){
+ boss6TankRecoil=.14;
+ if(boss6TankMuzzleFlash)boss6TankMuzzleFlash.visible=true;
+}
 function boss6FireKihap(index=0){
+ pulseBoss6TankMuzzle();
  const spread=(index-2)*.045,dir=boss6Aim().applyAxisAngle(new THREE.Vector3(0,1,0),spread);
  spawnBoss6Shot('kihap',boss6Origin(1.85),dir,{speed:15.5,dmg:14,posture:13,radius:.18,life:1.7});
 }
 function boss6FireGrenade(index=0){
+ pulseBoss6TankMuzzle();
  const start=boss6Origin(2.0),target=player.position.clone().add(new THREE.Vector3((index-1)*.7,.15,0)),dir=target.sub(start).normalize();
  spawnBoss6Shot('grenade',start,dir,{speed:9.0,up:5.0,gravity:9.8,dmg:15,posture:16,radius:.2,life:2.5});
 }
 function boss6FireJjajang(index=0){
+ pulseBoss6TankMuzzle();
  const start=boss6Origin(2.05),target=player.position.clone().add(new THREE.Vector3((index%2?1:-1)*.55,.1,(index-1.5)*.35)),dir=target.sub(start).normalize();
  spawnBoss6Shot('jjajang',start,dir,{speed:8.0,up:4.2,gravity:8.4,dmg:12,posture:11,radius:.28,life:2.6});
 }
@@ -4009,6 +4032,7 @@ function boss6FireSupport(index=0){
  spawnBoss6Shot('support',start,dir,{speed:16.5,dmg:13,posture:12,radius:.15,life:1.5});
 }
 function boss6FireEnlist(unblockable=true){
+ pulseBoss6TankMuzzle();
  const dir=boss6Aim(1.05);spawnBoss6Shot('enlist',boss6Origin(1.65),dir,{speed:11.5,dmg:18,posture:30,radius:.36,unblockable,pull:true,life:2.0});
 }
 function boss6Once(tag,fn){if(boss6Fired.has(tag))return false;boss6Fired.add(tag);fn?.();return true}
@@ -4058,7 +4082,7 @@ function hitBoss6(base,posture=12,contact=null){
  else if(state.bossPosture>=BOSS_POSTURE_MAX[6]){resetBossPostureAfterBreak(.32);state.bossStagger=1.15;state.bossState='stagger';state.bossTimer=1.15;flash('황근출 자세 붕괴',.48)}
 }
 function updateBoss6(dt){
- enforceBoss6Visibility();updateBoss6Projectiles(dt);updateBoss6SupportSquad(dt);state.boss6HitReact=Math.max(0,state.boss6HitReact-dt);boss6Halo.rotation.z+=dt*(state.boss6Phase===2?2.0:.9);boss6Aura.intensity=(state.boss6Phase===2?15:11)+Math.sin(state.time*7)*1.0;
+ enforceBoss6Visibility();updateBoss6Projectiles(dt);updateBoss6SupportSquad(dt);boss6TankRecoil=Math.max(0,boss6TankRecoil-dt);if(boss6TankMuzzleFlash)boss6TankMuzzleFlash.visible=boss6TankRecoil>.055;state.boss6HitReact=Math.max(0,state.boss6HitReact-dt);boss6Halo.rotation.z+=dt*(state.boss6Phase===2?2.0:.9);boss6Aura.intensity=(state.boss6Phase===2?15:11)+Math.sin(state.time*7)*1.0;
  const eyePulse=1+Math.sin(state.time*10.5)*.14+(state.boss6Phase===2?.12:0);
  b6EyeFlareMat.opacity=.82+Math.sin(state.time*12)*.12;
  b6EyeBeamMat.opacity=(state.boss6Phase===2?.5:.34)+Math.sin(state.time*9)*.06;
