@@ -419,7 +419,8 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
      const p=playerAttackProgress();
      if(side==='right'){
        const path=samplePlayerHandPath(w.id,step,p);
-       delta.set(path.x*reach,path.y*reach,path.z*reach);
+       const weaponReach=1+(w.reach-1)*.28;
+       delta.set(path.x*reach,path.y*reach,path.z*reach*weaponReach);
      }else if(twoHanded){
        delta.set(-.12*reach,-.34*reach,.3*reach);
      }else{
@@ -2183,10 +2184,10 @@ function processBoss2PhysicalHits(){
  const playerCaps=combatHumanoidCapsules(playerVrmBones,player,2.0);
  let weaponHit=null,handHit=null;
  if(boss2WeaponRoot.visible){
-  const base=boss2Spear.visible?new THREE.Vector3(0,2.72,0):new THREE.Vector3(0,.18,0);
-  const tip=boss2Spear.visible?new THREE.Vector3(0,3.32,0):new THREE.Vector3(0,2.26,0);
+  const base=boss2Spear.visible?new THREE.Vector3(0,2.62,0):new THREE.Vector3(0,.08,0);
+  const tip=boss2Spear.visible?new THREE.Vector3(0,3.46,0):new THREE.Vector3(0,2.24,0);
   const seg=combatWorldSegment(boss2WeaponRoot,base,tip);
-  if(boss2WeaponTrace.valid)weaponHit=combatSweptBladeContact(boss2WeaponTrace.base,boss2WeaponTrace.tip,seg.base,seg.tip,playerCaps,boss2Spear.visible?.12:.13);
+  if(boss2WeaponTrace.valid)weaponHit=combatSweptBladeContact(boss2WeaponTrace.base,boss2WeaponTrace.tip,seg.base,seg.tip,playerCaps,boss2Spear.visible?.15:.145);
   boss2WeaponTrace.base.copy(seg.base);boss2WeaponTrace.tip.copy(seg.tip);boss2WeaponTrace.valid=true;
  }else boss2WeaponTrace.valid=false;
  const hand=boss2Bones.rightHand;
@@ -2789,10 +2790,10 @@ function boss3Strike(tag,range,dmg,posture,unblockable=false,minDot=-.35,healMul
 function resetBoss3PhysicalTrace(){boss3WeaponTrace.valid=false}
 function processBoss3PhysicalHits(){
  if(!boss3WeaponRoot.visible){boss3WeaponTrace.valid=false;boss3MeleeRequests.length=0;return}
- const seg=combatWorldSegment(boss3WeaponRoot,new THREE.Vector3(0,.16,0),new THREE.Vector3(0,2.26,0));
+ const seg=combatWorldSegment(boss3WeaponRoot,new THREE.Vector3(0,.08,0),new THREE.Vector3(0,2.22,0));
  const caps=combatHumanoidCapsules(playerVrmBones,player,2.0);
  let hit=null;
- if(boss3WeaponTrace.valid)hit=combatSweptBladeContact(boss3WeaponTrace.base,boss3WeaponTrace.tip,seg.base,seg.tip,caps,.115);
+ if(boss3WeaponTrace.valid)hit=combatSweptBladeContact(boss3WeaponTrace.base,boss3WeaponTrace.tip,seg.base,seg.tip,caps,.13);
  boss3WeaponTrace.base.copy(seg.base);boss3WeaponTrace.tip.copy(seg.tip);boss3WeaponTrace.valid=true;
  if(hit){
   for(const req of boss3MeleeRequests){
@@ -3260,9 +3261,9 @@ function boss4Strike(tag,dmg,posture,ttl=.26,unblockable=false){
 function resetBoss4PhysicalTrace(){boss4WeaponTrace.valid=false}
 function processBoss4PhysicalHits(){
  if(!boss4WeaponRoot.visible){boss4WeaponTrace.valid=false;boss4MeleeRequests.length=0;return}
- const seg=combatWorldSegment(boss4WeaponRoot,new THREE.Vector3(0,.16,0),new THREE.Vector3(0,2.38,0));
+ const seg=combatWorldSegment(boss4WeaponRoot,new THREE.Vector3(0,.07,0),new THREE.Vector3(0,2.39,0));
  const caps=combatHumanoidCapsules(playerVrmBones,player,2.0);let hit=null;
- if(boss4WeaponTrace.valid)hit=combatSweptBladeContact(boss4WeaponTrace.base,boss4WeaponTrace.tip,seg.base,seg.tip,caps,.12);
+ if(boss4WeaponTrace.valid)hit=combatSweptBladeContact(boss4WeaponTrace.base,boss4WeaponTrace.tip,seg.base,seg.tip,caps,.14);
  boss4WeaponTrace.base.copy(seg.base);boss4WeaponTrace.tip.copy(seg.tip);boss4WeaponTrace.valid=true;
  if(hit){
   for(const req of boss4MeleeRequests){
@@ -4300,37 +4301,37 @@ function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeo
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 const PLAYER_ATTACK_PROFILES={
  straight:[null,
-  {duration:.56,active:[.31,.62],queue:.67,drive:1.35},
-  {duration:.59,active:[.30,.64],queue:.68,drive:1.15},
-  {duration:.74,active:[.38,.72],queue:.74,drive:1.55}],
+  {duration:.56,active:[.27,.68],queue:.67,drive:1.35},
+  {duration:.59,active:[.26,.69],queue:.68,drive:1.15},
+  {duration:.74,active:[.34,.77],queue:.74,drive:1.55}],
  greatsword:[null,
-  {duration:.96,active:[.42,.70],queue:.73,drive:.95},
-  {duration:1.02,active:[.41,.71],queue:.74,drive:.9},
-  {duration:1.20,active:[.49,.78],queue:.79,drive:1.05}],
+  {duration:.96,active:[.37,.76],queue:.73,drive:.95},
+  {duration:1.02,active:[.37,.77],queue:.74,drive:.9},
+  {duration:1.20,active:[.44,.83],queue:.79,drive:1.05}],
  hammer:[null,
-  {duration:1.10,active:[.48,.72],queue:.76,drive:.72},
-  {duration:1.18,active:[.46,.73],queue:.77,drive:.7},
-  {duration:1.36,active:[.54,.81],queue:.82,drive:.78}],
+  {duration:1.10,active:[.43,.79],queue:.76,drive:.72},
+  {duration:1.18,active:[.42,.80],queue:.77,drive:.7},
+  {duration:1.36,active:[.49,.86],queue:.82,drive:.78}],
  spear:[null,
-  {duration:.58,active:[.34,.76],queue:.72,drive:2.65},
-  {duration:.62,active:[.34,.75],queue:.72,drive:2.4},
-  {duration:.76,active:[.38,.80],queue:.78,drive:3.05}],
+  {duration:.58,active:[.28,.82],queue:.72,drive:2.65},
+  {duration:.62,active:[.28,.81],queue:.72,drive:2.4},
+  {duration:.76,active:[.32,.85],queue:.78,drive:3.05}],
  katana:[null,
-  {duration:.44,active:[.23,.51],queue:.59,drive:1.9},
-  {duration:.48,active:[.22,.52],queue:.60,drive:1.75},
-  {duration:.64,active:[.30,.65],queue:.69,drive:2.05}],
+  {duration:.44,active:[.18,.58],queue:.59,drive:1.9},
+  {duration:.48,active:[.17,.59],queue:.60,drive:1.75},
+  {duration:.64,active:[.25,.71],queue:.69,drive:2.05}],
  axe:[null,
-  {duration:.78,active:[.38,.67],queue:.71,drive:1.15},
-  {duration:.84,active:[.37,.68],queue:.72,drive:1.05},
-  {duration:1.00,active:[.45,.74],queue:.78,drive:1.25}]
+  {duration:.78,active:[.33,.73],queue:.71,drive:1.15},
+  {duration:.84,active:[.32,.74],queue:.72,drive:1.05},
+  {duration:1.00,active:[.40,.80],queue:.78,drive:1.25}]
 };
 const PLAYER_STRONG_PROFILES={
- straight:{duration:.92,active:[.46,.67],drive:2.25,cost:26,damage:2.15,posture:1.45},
- greatsword:{duration:1.78,active:[.61,.79],drive:1.15,cost:38,damage:3.05,posture:1.9},
- hammer:{duration:1.52,active:[.55,.76],drive:.92,cost:36,damage:2.8,posture:2.05},
- spear:{duration:1.08,active:[.43,.69],drive:3.85,cost:27,damage:2.35,posture:1.45},
- katana:{duration:.96,active:[.39,.58],drive:2.8,cost:26,damage:2.35,posture:1.4},
- axe:{duration:1.34,active:[.52,.75],drive:1.42,cost:33,damage:2.65,posture:1.8}
+ straight:{duration:.92,active:[.41,.72],drive:2.25,cost:26,damage:2.15,posture:1.45},
+ greatsword:{duration:1.78,active:[.56,.84],drive:1.15,cost:38,damage:3.05,posture:1.9},
+ hammer:{duration:1.52,active:[.50,.82],drive:.92,cost:36,damage:2.8,posture:2.05},
+ spear:{duration:1.08,active:[.37,.76],drive:3.85,cost:27,damage:2.35,posture:1.45},
+ katana:{duration:.96,active:[.34,.64],drive:2.8,cost:26,damage:2.35,posture:1.4},
+ axe:{duration:1.34,active:[.47,.81],drive:1.42,cost:33,damage:2.65,posture:1.8}
 };
 function playerAttackProfile(id=currentWeapon()?.id,step=state.attackStep,strong=state.attackStrong){
  if(strong)return PLAYER_STRONG_PROFILES[id]||PLAYER_STRONG_PROFILES.straight;
@@ -4409,13 +4410,14 @@ function resetPlayerWeaponTrace(){playerWeaponTrace.valid=false;playerWeaponTrac
 function playerWeaponDamageZone(){
  const id=currentWeapon().id;
  const zones={
-  // Only the sharpened / striking portion deals damage. Handles and guards are excluded.
-  straight:{base:[0,0,-.08],tip:[0,0,-1.58],radius:.09},
-  greatsword:{base:[0,0,-.12],tip:[0,0,-2.2],radius:.12},
-  hammer:{base:[-.38,0,-1.42],tip:[.38,0,-1.42],radius:.3},
-  spear:{base:[0,0,-2.02],tip:[0,0,-2.78],radius:.105},
-  katana:{base:[.04,0,-.08],tip:[.05,0,-1.84],radius:.075},
-  axe:{base:[-.7,0,-1.18],tip:[.15,0,-1.18],radius:.22}
+  // Bounds are derived from the visible meshes; radii only add enough tolerance for rasterized edges.
+  straight:{base:[0,0,-.04],tip:[0,0,-1.60],radius:.115},
+  greatsword:{base:[0,0,-.06],tip:[0,0,-2.22],radius:.155},
+  hammer:{base:[-.46,0,-1.42],tip:[.46,0,-1.42],radius:.31},
+  // Distal shaft + spearhead count as contact so a visibly intersecting long spear cannot ghost through.
+  spear:{base:[0,0,-1.68],tip:[0,0,-2.82],radius:.125},
+  katana:{base:[.04,0,-.03],tip:[.05,0,-1.86],radius:.095},
+  axe:{base:[-.72,0,-1.20],tip:[.16,0,-1.20],radius:.235}
  };
  const z=zones[id]||zones.straight;
  return{base:new THREE.Vector3(...z.base),tip:new THREE.Vector3(...z.tip),radius:z.radius};
