@@ -3669,8 +3669,19 @@ function buildBoss6SupportMarine(name,role,side){
  const metal=new THREE.MeshStandardMaterial({color:isTonton?0x444945:0x555b53,roughness:.4,metalness:.64});
  const gunDark=new THREE.MeshStandardMaterial({color:0x151817,roughness:.55,metalness:.42});
  const accent=new THREE.MeshStandardMaterial({color:0xa31711,roughness:.52,metalness:.12,emissive:0x250201,emissiveIntensity:.2});
+ const tankGreen=new THREE.MeshStandardMaterial({color:isTonton?0x486b2d:0x5b7a35,roughness:.62,metalness:.34});
+ const tankGreenDark=new THREE.MeshStandardMaterial({color:0x263b1c,roughness:.68,metalness:.4});
 
  const pelvis=new THREE.Group();pelvis.position.y=isTonton?1.23:1.17;root.add(pelvis);
+
+ // Slapstick marine prop: a long green tank-cannon barrel mounted dead-center between the legs.
+ const groinCannon=new THREE.Group();groinCannon.name=isTonton?'TontonjeongTankBarrel':'MumochilTankBarrel';
+ groinCannon.position.set(0,isTonton?-.11:-.1,-.22);pelvis.add(groinCannon);
+ boss6Mesh(groinCannon,new THREE.BoxGeometry(isTonton?.34:.29,isTonton?.26:.22,.34),tankGreenDark,[0,.02,-.03]);
+ boss6Mesh(groinCannon,new THREE.CylinderGeometry(isTonton?.095:.075,isTonton?.12:.095,isTonton?1.5:1.28,12),tankGreen,[0,-.015,-.82],[1,1,1],[Math.PI/2,0,0]);
+ boss6Mesh(groinCannon,new THREE.CylinderGeometry(isTonton?.13:.105,isTonton?.13:.105,.18,12),tankGreenDark,[0,-.015,-1.58],[1,1,1],[Math.PI/2,0,0]);
+ boss6Mesh(groinCannon,new THREE.CylinderGeometry(isTonton?.115:.09,isTonton?.115:.09,.12,12),b6Black,[0,-.015,-1.68],[1,1,1],[Math.PI/2,0,0]);
+ groinCannon.rotation.x=isTonton?-.04:-.025;
 
  if(isTonton){
   // Canonical Tontonjeong silhouette: huge coal-black body + bright red field briefs.
