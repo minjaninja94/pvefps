@@ -3522,13 +3522,17 @@ const boss6Fallback=new THREE.Group();boss6Root.add(boss6Fallback);
 
 const b6Skin=new THREE.MeshStandardMaterial({color:0x9b6a50,roughness:.78,metalness:.02});
 const b6SkinDark=new THREE.MeshStandardMaterial({color:0x744936,roughness:.82});
+const b6Face=new THREE.MeshStandardMaterial({color:0x070606,roughness:.94,metalness:.01});
+const b6FaceDark=new THREE.MeshStandardMaterial({color:0x010101,roughness:.98,metalness:0});
+const b6EyeSocket=new THREE.MeshStandardMaterial({color:0x210303,roughness:.74,emissive:0x230000,emissiveIntensity:.42});
 const b6Uniform=new THREE.MeshStandardMaterial({color:0x171c16,roughness:.7,metalness:.08,emissive:0x100301,emissiveIntensity:.16});
 const b6UniformTrim=new THREE.MeshStandardMaterial({color:0x30382b,roughness:.66,metalness:.12});
 const b6Boot=new THREE.MeshStandardMaterial({color:0x111310,roughness:.78,metalness:.18});
 const b6Metal=new THREE.MeshStandardMaterial({color:0x726c5d,roughness:.45,metalness:.5});
 const b6Red=new THREE.MeshStandardMaterial({color:0x8d130d,roughness:.5,metalness:.12,emissive:0x4a0503,emissiveIntensity:.35});
 const b6EyeWhite=new THREE.MeshStandardMaterial({color:0xc8bbaa,roughness:.8});
-const b6EyeGlow=new THREE.MeshBasicMaterial({color:0xff1a08});
+const b6EyeGlow=new THREE.MeshBasicMaterial({color:0xff1600});
+const b6EyeAura=new THREE.MeshBasicMaterial({color:0xff0800,transparent:true,opacity:.26,depthWrite:false,blending:THREE.AdditiveBlending});
 const b6Black=new THREE.MeshBasicMaterial({color:0x080808});
 
 function boss6Mesh(parent,geometry,material,pos=[0,0,0],scale=[1,1,1],rot=[0,0,0]){
@@ -3559,15 +3563,19 @@ function buildBoss6ProceduralModel(){
  boss6Mesh(neck,new THREE.CylinderGeometry(.16,.2,.25,8),b6Skin,[0,.1,0]);
 
  const head=boss6Joint(neck,'head',[0,.22,-.005]);
- boss6Mesh(head,new THREE.BoxGeometry(.52,.53,.47),b6Skin,[0,.1,0],[1.03,1,1]);
- boss6Mesh(head,new THREE.BoxGeometry(.58,.2,.5),b6SkinDark,[0,-.145,-.005],[1,1,1]);
- boss6Mesh(head,new THREE.BoxGeometry(.14,.19,.16),b6SkinDark,[0,.08,-.29]);
- boss6Mesh(head,new THREE.BoxGeometry(.15,.09,.06),b6SkinDark,[-.31,.08,0]);
- boss6Mesh(head,new THREE.BoxGeometry(.15,.09,.06),b6SkinDark,[.31,.08,0]);
- boss6Mesh(head,new THREE.BoxGeometry(.16,.08,.025),b6EyeWhite,[-.13,.15,-.247]);
- boss6Mesh(head,new THREE.BoxGeometry(.16,.08,.025),b6EyeWhite,[.13,.15,-.247]);
- boss6Mesh(head,new THREE.SphereGeometry(.031,8,6),b6EyeGlow,[-.13,.15,-.276]);
- boss6Mesh(head,new THREE.SphereGeometry(.031,8,6),b6EyeGlow,[.13,.15,-.276]);
+ boss6Mesh(head,new THREE.BoxGeometry(.52,.53,.47),b6Face,[0,.1,0],[1.03,1,1]);
+ boss6Mesh(head,new THREE.BoxGeometry(.58,.2,.5),b6FaceDark,[0,-.145,-.005],[1,1,1]);
+ boss6Mesh(head,new THREE.BoxGeometry(.14,.19,.16),b6FaceDark,[0,.08,-.29]);
+ boss6Mesh(head,new THREE.BoxGeometry(.15,.09,.06),b6FaceDark,[-.31,.08,0]);
+ boss6Mesh(head,new THREE.BoxGeometry(.15,.09,.06),b6FaceDark,[.31,.08,0]);
+ boss6Mesh(head,new THREE.BoxGeometry(.17,.075,.027),b6EyeSocket,[-.13,.15,-.249]);
+ boss6Mesh(head,new THREE.BoxGeometry(.17,.075,.027),b6EyeSocket,[.13,.15,-.249]);
+ boss6Mesh(head,new THREE.SphereGeometry(.047,10,8),b6EyeGlow,[-.13,.15,-.282]);
+ boss6Mesh(head,new THREE.SphereGeometry(.047,10,8),b6EyeGlow,[.13,.15,-.282]);
+ boss6Mesh(head,new THREE.SphereGeometry(.095,10,8),b6EyeAura,[-.13,.15,-.294],[1.6,.72,.38]);
+ boss6Mesh(head,new THREE.SphereGeometry(.095,10,8),b6EyeAura,[.13,.15,-.294],[1.6,.72,.38]);
+ const leftEyeLight=new THREE.PointLight(0xff1200,3.4,2.5,2.0);leftEyeLight.position.set(-.13,.15,-.31);head.add(leftEyeLight);
+ const rightEyeLight=new THREE.PointLight(0xff1200,3.4,2.5,2.0);rightEyeLight.position.set(.13,.15,-.31);head.add(rightEyeLight);
  boss6Mesh(head,new THREE.BoxGeometry(.22,.045,.025),b6Black,[-.12,.245,-.272],[1,1,1],[0,0,.13]);
  boss6Mesh(head,new THREE.BoxGeometry(.22,.045,.025),b6Black,[.12,.245,-.272],[1,1,1],[0,0,-.13]);
  boss6Mesh(head,new THREE.BoxGeometry(.31,.045,.025),b6Black,[0,-.075,-.275]);
@@ -3704,7 +3712,7 @@ function buildBoss6SupportMarine(name,role,side){
 
   root.scale.setScalar(scale);
   root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
-  boss6Root.add(root);
+  root.visible=false;boss6Root.add(root);
   return {name,role,side,root,pelvis,torso,head,lArm,rArm,lFore,rFore,lLeg,rLeg,lShin,rShin,weapon,muzzle,muzzleFlash,recoil:0,weaponBaseZ:-.48,seed:1.3};
  }
 
@@ -3778,13 +3786,19 @@ function buildBoss6SupportSquad(){
 function updateBoss6SupportSquad(dt){
  if(!boss6SupportBuilt)return;
  const alive=state.bossHp>0&&BOSS_VARIANT===6;
- const attack=state.bossState==='b6_support'||state.bossState==='b6_allfire';
+ const attack=alive&&(state.bossState==='b6_support'||state.bossState==='b6_allfire');
  for(const m of boss6SupportMarines){
-  m.root.visible=alive;if(!alive)continue;
-  const idleX=m.side*(m.role==='tonton'?2.35:2.6),attackX=m.side*(m.role==='tonton'?3.0:3.25);
-  const idleZ=1.35,attackZ=-.25;
-  const tx=attack?attackX:idleX,tz=attack?attackZ:idleZ;
-  const a=1-Math.exp(-dt*(attack?7.5:4.5));
+  m.root.visible=attack;
+  if(!attack){
+   m.recoil=0;
+   m.muzzleFlash.visible=false;
+   m.root.position.set(m.side*(m.role==='tonton'?4.5:4.9),0,2.4);
+   continue;
+  }
+  const attackX=m.side*(m.role==='tonton'?3.0:3.25);
+  const attackZ=-.25;
+  const tx=attackX,tz=attackZ;
+  const a=1-Math.exp(-dt*7.5);
   m.root.position.x=THREE.MathUtils.lerp(m.root.position.x,tx,a);
   m.root.position.z=THREE.MathUtils.lerp(m.root.position.z,tz,a);
   const moving=Math.abs(m.root.position.x-tx)+Math.abs(m.root.position.z-tz)>.08;
@@ -3795,15 +3809,15 @@ function updateBoss6SupportSquad(dt){
   m.rLeg.rotation.x=THREE.MathUtils.lerp(m.rLeg.rotation.x,moving?-gait*.42:0,1-Math.exp(-dt*12));
   m.lShin.rotation.x=THREE.MathUtils.lerp(m.lShin.rotation.x,moving?Math.max(0,-gait)*.5:0,1-Math.exp(-dt*12));
   m.rShin.rotation.x=THREE.MathUtils.lerp(m.rShin.rotation.x,moving?Math.max(0,gait)*.5:0,1-Math.exp(-dt*12));
-  const aim=attack?1:.55;
+  const aim=1;
   m.lArm.rotation.x=THREE.MathUtils.lerp(m.lArm.rotation.x,-.86*aim,1-Math.exp(-dt*14));
   m.rArm.rotation.x=THREE.MathUtils.lerp(m.rArm.rotation.x,-.86*aim,1-Math.exp(-dt*14));
   m.lArm.rotation.z=THREE.MathUtils.lerp(m.lArm.rotation.z,m.role==='tonton'?.32:.24,1-Math.exp(-dt*14));
   m.rArm.rotation.z=THREE.MathUtils.lerp(m.rArm.rotation.z,m.role==='tonton'?-.32:-.24,1-Math.exp(-dt*14));
   m.lFore.rotation.x=THREE.MathUtils.lerp(m.lFore.rotation.x,-.45*aim,1-Math.exp(-dt*14));
   m.rFore.rotation.x=THREE.MathUtils.lerp(m.rFore.rotation.x,-.45*aim,1-Math.exp(-dt*14));
-  m.torso.rotation.x=THREE.MathUtils.lerp(m.torso.rotation.x,attack?-.12:.01*breath,1-Math.exp(-dt*10));
-  m.head.rotation.y=THREE.MathUtils.lerp(m.head.rotation.y,attack?m.side*.08:Math.sin(state.time*.7+m.seed)*.07,1-Math.exp(-dt*8));
+  m.torso.rotation.x=THREE.MathUtils.lerp(m.torso.rotation.x,-.12,1-Math.exp(-dt*10));
+  m.head.rotation.y=THREE.MathUtils.lerp(m.head.rotation.y,m.side*.08,1-Math.exp(-dt*8));
   m.recoil=Math.max(0,m.recoil-dt);
   const recoil=m.recoil>0?Math.sin((m.recoil/.13)*Math.PI)*(m.role==='tonton'?.16:.1):0;
   m.weapon.position.z=(m.weaponBaseZ??-.43)+recoil;
