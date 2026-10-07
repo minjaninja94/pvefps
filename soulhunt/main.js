@@ -3,11 +3,11 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const BOSS_QUERY=Number(new URLSearchParams(location.search).get('boss'));
 const BOSS_VARIANT=[1,2,3,4,5,6].includes(BOSS_QUERY)?BOSS_QUERY:1;
-const BOSS2_NAME='잔불의 왕녀 · 아르세리아';
-const BOSS3_NAME='붉은 백합의 검희 · 세리아';
-const BOSS4_NAME='백야의 검성 · 비비';
-const BOSS5_NAME='흑철의 투희 · 시노';
-const BOSS6_NAME='라스트보스 · 황근출';
+const BOSS2_NAME='불질하는 미친련 · 박복자';
+const BOSS3_NAME='피 빠는 칼잡이 · 김말자';
+const BOSS4_NAME='칼에 미친련 · 이순자';
+const BOSS5_NAME='도끼 든 미친련 · 최춘자';
+const BOSS6_NAME='황근출';
 const VRM_SAMPLE_REV='e16eb187100149a315ad92c3c9968f1d5baa6c7d';
 const BOSS2_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VRM_SAMPLE_REV}/vroid/beta/Victoria_Rubin.vrm`;
 const BOSS3_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VRM_SAMPLE_REV}/vroid/beta/Vita.vrm`;
@@ -1871,7 +1871,7 @@ async function loadBoss2Avatar(){
      }
      poseBoss2(.12);syncBoss2Rig(0);
      console.info('Arcelia VRM rig', {normalizedArms:!!boss2Bones.rightUpperArm,rawArms:!!boss2RenderBones.rightUpperArm,rawHand:!!boss2RenderBones.rightHand});
-     flash('잔불의 왕녀 · 아르세리아',.9);
+     flash(BOSS2_NAME,.9);
    },undefined,err=>console.warn('Arcelia / Victoria Rubin VRM unavailable.',err));
  }catch(err){console.warn('three-vrm unavailable for Arcelia.',err)}
 }
@@ -2956,7 +2956,7 @@ function hitBoss3(base,posture=12,contact=null){
  state.bossHp=Math.max(0,state.bossHp-dmg);addBossPosture(pd);
  state.boss3HitReact=.14;triggerPlayerHitImpact(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)));
  if(state.bossHp<=0){
-  state.bossState='dead';state.potionPunishQueued=false;setDanger(false);flash('붉은 백합이 스러졌다 · 토벌 완료',1.25);
+  state.bossState='dead';state.potionPunishQueued=false;setDanger(false);flash('김말자 쓰러짐 · 피 그만 빨기',1.25);
  }else if(state.bossPosture>=BOSS_POSTURE_MAX[3]){
   resetBossPostureAfterBreak(.32);state.bossStagger=1.18;state.bossState='stagger';state.bossTimer=1.18;flash('자세 붕괴',.45);
  }
@@ -3284,7 +3284,7 @@ function finishBoss4Attack(recovery=.78){setDanger(false);state.bossState='idle'
 function hitBoss4(base,posture=12,contact=null){
  if(state.bossHp<=0)return;let dmg=base,pd=posture;[dmg,pd]=bossPunishDamage(dmg,pd);if(state.bossStagger>0){dmg*=1.6;pd*=.22}
  state.bossHp=Math.max(0,state.bossHp-dmg);addBossPosture(pd);state.boss4HitReact=.14;triggerPlayerHitImpact(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)));
- if(state.bossHp<=0){state.bossState='dead';setDanger(false);flash('백야의 검성이 쓰러졌다 · 토벌 완료',1.2)}
+ if(state.bossHp<=0){state.bossState='dead';setDanger(false);flash('이순자 쓰러짐 · 칼 내려놓음',1.2)}
  else if(state.bossPosture>=BOSS_POSTURE_MAX[4]){resetBossPostureAfterBreak(.32);state.bossStagger=1.22;state.bossState='stagger';state.bossTimer=1.22;flash('자세 붕괴',.45)}
 }
 function updateBoss4(dt){
@@ -3549,7 +3549,7 @@ function finishBoss5Attack(recovery=.76){setDanger(false);state.bossState='idle'
 function hitBoss5(base,posture=12,contact=null){
  if(state.bossHp<=0)return;let dmg=base,pd=posture;[dmg,pd]=bossPunishDamage(dmg,pd);if(state.bossStagger>0){dmg*=1.58;pd*=.2}
  state.bossHp=Math.max(0,state.bossHp-dmg);addBossPosture(pd);state.boss5HitReact=.14;triggerPlayerHitImpact(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)));
- if(state.bossHp<=0){state.bossState='dead';setDanger(false);flash('흑철의 투희가 무너졌다 · 토벌 완료',1.25)}
+ if(state.bossHp<=0){state.bossState='dead';setDanger(false);flash('최춘자 쓰러짐 · 도끼 압수',1.25)}
  else if(state.bossPosture>=BOSS_POSTURE_MAX[5]){resetBossPostureAfterBreak(.32);state.bossStagger=1.18;state.bossState='stagger';state.bossTimer=1.18;flash('자세 붕괴',.45)}
 }
 function updateBoss5(dt){
@@ -5607,7 +5607,7 @@ function updateCamera(dt){
 function partText(v,broken,label,max=100){return broken?label:(v<max*.45?'손상':'정상')}
 function updateUI(){
  ui.hp.style.width=(clamp(state.hp,0,state.hpMax)/state.hpMax*100)+'%';if(hpLabel)hpLabel.textContent=`HP ${Math.ceil(state.hp)} / ${state.hpMax}`;if(ui.stamina){ui.stamina.style.width=(clamp(state.stamina,0,state.staminaMax)/state.staminaMax*100)+'%';ui.stamina.parentElement.classList.toggle('exhausted',state.exhausted>0)}if(staminaLabel)staminaLabel.textContent=`STAMINA ${Math.ceil(state.stamina)} / ${state.staminaMax}`;ui.posture.style.width=clamp(state.posture,0,100)+'%';ui.bossHp.style.width=(clamp(state.bossHp,0,state.bossMaxHp)/state.bossMaxHp*100)+'%';ui.bossPosture.style.width=(clamp(state.bossPosture,0,BOSS_POSTURE_MAX[BOSS_VARIANT])/BOSS_POSTURE_MAX[BOSS_VARIANT]*100)+'%';
- if(BOSS_VARIANT===2){if(ui.parts)ui.parts.textContent=state.boss2Phase===2?'2페이즈 · 잿불 각성 · 완성형 전투':'1페이즈 · '+({sword:'검',spear:'창',mage:'술법',frenzy:'광전'}[state.boss2Style]||'검')+' 형상';}else if(BOSS_VARIANT===3){if(ui.parts)ui.parts.textContent=state.boss3Phase===2?'2페이즈 · 혈화 개화 · 회복 검무':'1페이즈 · 검격 적중 시 체력 회복';}else if(BOSS_VARIANT===4){if(ui.parts)ui.parts.textContent='검성 패턴 · 발도 / 환영검무 / 맹룡단공참';}else if(BOSS_VARIANT===5){if(ui.parts)ui.parts.textContent=state.boss5Phase===2?'2페이즈 · 투신 각성 · 도끼+체술 연계':'1페이즈 · 대형 도끼 / 숄더 / 킥 / 도약';}else if(BOSS_VARIANT===6){if(ui.parts)ui.parts.textContent=state.boss6Phase===2?'2페이즈 · 악으로 깡으로 · 전탄발사':'1페이즈 · 기합포 / 수류탄 / 해병짜장 / 오도봉고 / 지원사격';}else{ui.head.textContent=partText(state.headHp,state.headBroken,'파괴',BOSS1_PART_HP.head);ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴',BOSS1_PART_HP.leg);if(ui.spike){const alive=bossSpikeTargets.filter(s=>!s.broken).length,total=bossSpikeTargets.length;ui.spike.textContent=total?(alive?`${alive}/${total}`:'전부 파괴'):'로딩';}ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단',BOSS1_PART_HP.tail);}if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
+ if(BOSS_VARIANT===2){if(ui.parts)ui.parts.textContent=state.boss2Phase===2?'2페이즈 · 복자 빡침 · 불장난 강화':'1페이즈 · '+({sword:'칼',spear:'창',mage:'마법질',frenzy:'난동'}[state.boss2Style]||'칼')+' 모드';}else if(BOSS_VARIANT===3){if(ui.parts)ui.parts.textContent=state.boss3Phase===2?'2페이즈 · 말자 피맛 봄 · 회복 칼질':'1페이즈 · 칼 맞히면 지 혼자 회복';}else if(BOSS_VARIANT===4){if(ui.parts)ui.parts.textContent='순자 칼질 · 발도 / 환영검무 / 맹룡단공참';}else if(BOSS_VARIANT===5){if(ui.parts)ui.parts.textContent=state.boss5Phase===2?'2페이즈 · 춘자 빡침 · 도끼+주먹질':'1페이즈 · 큰 도끼 / 어깨빵 / 발차기 / 점프';}else if(BOSS_VARIANT===6){if(ui.parts)ui.parts.textContent=state.boss6Phase===2?'2페이즈 · 악으로 깡으로 · 전탄발사':'1페이즈 · 기합포 / 수류탄 / 해병짜장 / 오도봉고 / 지원사격';}else{ui.head.textContent=partText(state.headHp,state.headBroken,'파괴',BOSS1_PART_HP.head);ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴',BOSS1_PART_HP.leg);if(ui.spike){const alive=bossSpikeTargets.filter(s=>!s.broken).length,total=bossSpikeTargets.length;ui.spike.textContent=total?(alive?`${alive}/${total}`:'전부 파괴'):'로딩';}ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단',BOSS1_PART_HP.tail);}if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
  potionHud.textContent=`R · 포션 ${state.potions}/3`;
 }
 function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}addEventListener('resize',resize);resize();
