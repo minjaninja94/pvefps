@@ -1,6 +1,6 @@
 # Third-party boss avatar models
 
-The Soulhunt prototype uses four distinct VRoid beta sample avatars for Boss 02 through Boss 05.
+The Soulhunt prototype uses VRoid beta sample avatars for Boss 02 through Boss 06.
 
 ## Boss 02 — Victoria Rubin
 - Runtime role: 잔불의 왕녀 · 아르세리아
@@ -37,5 +37,13 @@ The Soulhunt prototype uses four distinct VRoid beta sample avatars for Boss 02 
 - Original VRoid beta sample model by pixiv Inc.
 - License: CC0 / copyright waiver for the beta sample model.
 - License reference: see the `madjin/vrm-samples` repository README and VRoid sample-model license information.
+
+## Boss 06 — Sendagaya Shibu (runtime Hwang Geunchul parody)
+- Runtime role: 라스트보스 · 황근출
+- Source model: `vroid/beta/Sendagaya_Shibu.vrm`
+- Source repository: `madjin/vrm-samples`
+- Pinned revision: `e16eb187100149a315ad92c3c9968f1d5baa6c7d`
+- The base model is used only as a reusable humanoid body. The marine cap, dark vest, red eye and boss presentation are added procedurally at runtime.
+- The source repository documents its VRoid beta sample set and associated CC0 licensing information.
 
 The VRM files are loaded from an immutable, commit-pinned GitHub raw URL at runtime rather than duplicated in this repository. If local vendoring is added later, preserve this notice.
