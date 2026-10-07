@@ -364,8 +364,23 @@ function alignPlayerSpearToForward(dt){
 }
 function applyPlayerWristGrip(dt){
  const w=currentWeapon(),g=PLAYER_WRIST_GRIP[w.id]||PLAYER_WRIST_GRIP.straight;
- setPlayerVrmBone('rightHand',g.r[0],g.r[1],g.r[2],22,dt);
- if(twoHanded)setPlayerVrmBone('leftHand',g.l[0],g.l[1],g.l[2],22,dt);
+ let rr=[...g.r],ll=[...g.l];
+ if(state.attack>0){
+  const p=playerAttackProgress(),side=state.attackStep===2?-1:1;
+  const profile=playerAttackProfile(w.id,state.attackStep);
+  const active=motionSmooth(profile.active[0]-.08,profile.active[1],p)*(1-motionSmooth(profile.active[1],.94,p));
+  const wind=motionSmooth(.06,Math.max(.16,profile.active[0]-.06),p)*(1-motionSmooth(profile.active[0],profile.active[1],p));
+  const edge=w.id==='spear'?.08:w.id==='greatsword'||w.id==='hammer'?.18:w.id==='axe'?.24:w.id==='katana'?.38:.3;
+  rr[1]+=side*(wind*.12-active*edge);
+  rr[2]+=side*(wind*.08-active*edge*.7);
+  rr[0]-=active*(w.id==='hammer'?.08:w.id==='greatsword'?.06:.035);
+  if(twoHanded){
+   ll[1]-=side*(wind*.05-active*edge*.32);
+   ll[2]-=side*(wind*.04-active*edge*.22);
+  }
+ }
+ setPlayerVrmBone('rightHand',rr[0],rr[1],rr[2],28,dt);
+ if(twoHanded)setPlayerVrmBone('leftHand',ll[0],ll[1],ll[2],28,dt);
 }
 function applyPlayerArmIK(dt,phase,moving,sprint){
  if(!playerVrmBones.leftUpperArm||!playerVrmBones.rightUpperArm)return;
@@ -604,19 +619,22 @@ function animateVroidPlayer(dt){
      rux=-.46;ruy=-.16;ruz=.34;rlx=-.72;
    }
  }else if(moving){
-   const w=currentWeapon(),amp=sprint?.62:.42,swing=Math.sin(phase)*amp;
+   const w=currentWeapon(),amp=sprint?.56:.38,stride=Math.sin(phase),swing=stride*amp;
+   const leftSwing=Math.max(0,Math.cos(phase)),rightSwing=Math.max(0,-Math.cos(phase));
    lulx=swing;rulx=-swing;
-   lllx=Math.max(0,-Math.sin(phase))*(sprint?.78:.5);
-   rllx=Math.max(0,Math.sin(phase))*(sprint?.78:.5);
-   lfx=-Math.sin(phase)*(sprint?.22:.16);rfx=Math.sin(phase)*(sprint?.22:.16);
-   headZ=Math.sin(phase)*.012;headX=-Math.sin(phase*2)*.008;
-   lux=-swing*.52;rux=swing*.52;
+   lllx=leftSwing*(sprint?.68:.43);
+   rllx=rightSwing*(sprint?.68:.43);
+   lfx=-stride*(sprint?.16:.11)-leftSwing*(sprint?.11:.075);
+   rfx=stride*(sprint?.16:.11)-rightSwing*(sprint?.11:.075);
+   headZ=stride*.009;headX=-Math.sin(phase*2)*.006;
+   // Base arm swing is subtle; hand IK below keeps the actual weapon grip stable.
+   lux=-swing*.34;rux=swing*.28;
    luz=-1.62;ruz=1.62;llx=.42;rlx=.42;
-   hipsY=Math.sin(phase*2)*.025;spineZ=-Math.sin(phase)*.025;
-   if(w.id==='greatsword'||w.id==='hammer'){spineX=-.08;hipsX=.045;lllx+=.08;rllx+=.08}
-   else if(w.id==='spear'){spineX=-.035;spineY=.045}
-   else if(w.id==='katana'){spineX=-.055;hipsX=.035;spineZ*=1.25}
-   else if(w.id==='axe'){spineX=-.045;spineY=.035}
+   hipsY=Math.sin(phase*2)*.018;hipsZ=stride*.014;spineY=-stride*(sprint?.045:.03);spineZ=-stride*.018;
+   if(w.id==='greatsword'||w.id==='hammer'){spineX=-.075;hipsX=.04;lllx+=.055;rllx+=.055}
+   else if(w.id==='spear'){spineX=-.03;spineY+=.03}
+   else if(w.id==='katana'){spineX=-.05;hipsX=.03;spineZ*=1.18}
+   else if(w.id==='axe'){spineX=-.045;spineY+=.025}
  }else{
    const breathe=Math.sin(state.time*1.6);
    spineX=breathe*.012;spineY=Math.sin(state.time*.45)*.01;
