@@ -3898,6 +3898,7 @@ function updatePlayerMeleeCollision(){
    else if(BOSS_VARIANT===3)caps=combatHumanoidCapsules(Object.keys(boss3RenderBones).length?boss3RenderBones:boss3Bones,boss3Root,2.05);
    else if(BOSS_VARIANT===4)caps=combatHumanoidCapsules(Object.keys(boss4RenderBones).length?boss4RenderBones:boss4Bones,boss4Root,2.05);
    else if(BOSS_VARIANT===5)caps=combatHumanoidCapsules(Object.keys(boss5RenderBones).length?boss5RenderBones:boss5Bones,boss5Root,2.1);
+   else if(BOSS_VARIANT===6)caps=combatHumanoidCapsules(Object.keys(boss6RenderBones).length?boss6RenderBones:boss6Bones,boss6Root,3.28);
    else{const bp=boss.position.clone();caps=[{a:bp.clone().add(new THREE.Vector3(0,.4,0)),b:bp.clone().add(new THREE.Vector3(0,5.6*BOSS_GIANT_SCALE,0)),r:1.15*BOSS_GIANT_SCALE,part:'body'}]}
    const hit=combatSweptBladeContact(playerWeaponTrace.base,playerWeaponTrace.tip,seg.base,seg.tip,caps,spec.radius);
    if(hit){
