@@ -255,9 +255,14 @@ function weaponArmAxis(lower,hand,fallback=null){
 function placeWeaponAtPrimaryGrip(root,hand,localGripY,axisWorld,roll=0){
  if(!root||!hand||!axisWorld?.lengthSq?.())return false;
  const hp=new THREE.Vector3();hand.getWorldPosition(hp);
- const axis=axisWorld.clone().normalize();
- root.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),axis);
- root.position.copy(hp).addScaledVector(axis,-localGripY);
+ const desiredAxis=axisWorld.clone().normalize();
+ const desiredQ=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),desiredAxis);
+ if(!root.userData.gripReady||root.quaternion.angleTo(desiredQ)>.92){
+  root.quaternion.copy(desiredQ);root.userData.gripReady=true;
+ }else root.quaternion.slerp(desiredQ,.72);
+ // Position is solved after orientation so the authored grip point stays exactly inside the palm.
+ const actualAxis=new THREE.Vector3(0,1,0).applyQuaternion(root.quaternion).normalize();
+ root.position.copy(hp).addScaledVector(actualAxis,-localGripY);
  if(roll)applyWeaponEdgeRoll(root,roll);
  root.updateMatrixWorld(true);
  return true;
