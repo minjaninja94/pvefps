@@ -5522,7 +5522,9 @@ function updatePlayer(dt){
    const profile=playerAttackProfile(w.id,state.attackStep),step=state.attackStep;
    state.attack-=dt;const p=playerAttackProgress();
    applyWeaponAttackPose(w,step,p);
-   if(p>=profile.active[0]&&p<=profile.active[1]){
+   const driveStart=Math.min(profile.active[1],profile.active[0]+.065);
+   const driveEnd=Math.max(driveStart,profile.active[1]-.065);
+   if(p>=driveStart&&p<=driveEnd){
      const forward=new THREE.Vector3(Math.sin(player.rotation.y),0,Math.cos(player.rotation.y));
      player.position.addScaledVector(forward,dt*profile.drive);
    }
