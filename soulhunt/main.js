@@ -5046,6 +5046,28 @@ const BOSS_AIM_RANGE={
  arm_cross:4.15,arm_double_slam:3.85,arm_sweep:4.55,arm_uppercut:3.65,
  arm_grab:3.45,arm_barrage:3.85,arm_guardbreak:3.8,arm_crush:3.6
 };
+function animateBoss1QuadrupedWalk(dt,moving){
+ const phase=state.time*(state.legBroken?2.7:3.8);
+ const g=Math.sin(phase),lift=Math.abs(Math.cos(phase));
+ const upperIdx=[0,2,4,6],lowerIdx=[1,3,5,7];
+ // Diagonal pairs move together: LF+RR / RF+LR.
+ const signs=[1,-1,-1,1];
+ for(let j=0;j<4;j++){
+  const upper=legs[upperIdx[j]],lower=legs[lowerIdx[j]];
+  if(!upper||!lower)continue;
+  const step=moving?g*signs[j]*(state.legBroken?.18:.3):0;
+  const knee=moving?Math.max(0,-g*signs[j])*(state.legBroken?.16:.28):0;
+  upper.rotation.x=THREE.MathUtils.lerp(upper.rotation.x,step,1-Math.exp(-dt*10));
+  lower.rotation.x=THREE.MathUtils.lerp(lower.rotation.x,knee,1-Math.exp(-dt*11));
+ }
+ const sway=moving?g*.025:0,bob=moving?lift*.025:0;
+ body.rotation.y=THREE.MathUtils.lerp(body.rotation.y,sway,1-Math.exp(-dt*8));
+ body.position.y=THREE.MathUtils.lerp(body.position.y,BOSS_REST.bodyY+bob,1-Math.exp(-dt*10));
+ backShell.rotation.z=THREE.MathUtils.lerp(backShell.rotation.z,-sway*.8,1-Math.exp(-dt*8));
+ if(animeHeadPivot){
+  animeHeadPivot.rotation.z=THREE.MathUtils.lerp(animeHeadPivot.rotation.z,-sway*.42,1-Math.exp(-dt*7));
+ }
+}
 function updateBoss(dt){
  if(BOSS_VARIANT===2){updateBoss2(dt);return}
  if(BOSS_VARIANT===3){updateBoss3(dt);return}
@@ -5116,6 +5138,7 @@ function updateBoss(dt){
  if(state.bossState==='idle'){
    state.bossTimer-=dt;
    const recoveryWindow=state.bossTimer>.58;
+   const walking=!recoveryWindow&&(d>4.45*BOSS_ENGAGE_SCALE||d<2.35*BOSS_ENGAGE_SCALE);
    if(!recoveryWindow){
      if(d>4.45*BOSS_ENGAGE_SCALE)boss.position.addScaledVector(dir,dt*(state.legBroken?2.0:2.8));
      else if(d<2.35*BOSS_ENGAGE_SCALE)boss.position.addScaledVector(dir,-dt*.42);
@@ -5123,9 +5146,11 @@ function updateBoss(dt){
      // Vordt/Aldrich-style punish window: boss commits and briefly stays put.
      boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*1.4));
    }
+   animateBoss1QuadrupedWalk(dt,walking);
    head.rotation.x=Math.sin(state.time*2.2)*.05;tailPivot.rotation.y=Math.sin(state.time*2.8)*.24;resetDorsalArms(Math.min(1,dt*8));dorsalArms[0].shoulder.rotation.z+=Math.sin(state.time*1.8)*.035;dorsalArms[1].shoulder.rotation.z-=Math.sin(state.time*1.8)*.035;
    if(state.bossTimer<=0)chooseBossAttack();return;
  }
+ animateBoss1QuadrupedWalk(dt,false);
  state.bossTimer-=bossMotionDt;
  if(state.bossState==='rush'){
    if(state.bossTimer>.25)boss.position.addScaledVector(dir,dt*(state.legBroken?5.2:7.4));
