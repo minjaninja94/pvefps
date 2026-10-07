@@ -85,12 +85,12 @@ const weaponVisual=new THREE.Group();weaponPivot.add(weaponVisual);
 const swordPivot=weaponPivot; // combat-pose compatibility
 
 const WEAPONS=[
- {id:'straight',name:'직검',damage:1.00,posture:1.00,speed:1.00,stamina:1.00,reach:1.00,hitstop:1.00,guard:.58,motion:1.00,asset:'./assets/models/kaykit/sword_1handed.gltf',assetScale:.72,assetGripZ:-.13},
- {id:'greatsword',name:'대검',damage:1.58,posture:1.55,speed:.66,stamina:1.48,reach:1.22,hitstop:1.55,guard:.72,motion:1.35,asset:'./assets/models/kaykit/sword_2handed.gltf',assetScale:.78,assetGripZ:-.16},
+ {id:'straight',name:'직검',damage:1.00,posture:1.00,speed:1.00,stamina:1.00,reach:1.00,hitstop:1.00,guard:.58,motion:1.00,asset:'./assets/models/kaykit/sword_1handed.gltf',assetScale:1.0,assetGripZ:-.18},
+ {id:'greatsword',name:'대검',damage:1.58,posture:1.55,speed:.66,stamina:1.48,reach:1.22,hitstop:1.55,guard:.72,motion:1.35,asset:'./assets/models/kaykit/sword_2handed.gltf',assetScale:1.02,assetGripZ:-.204},
  {id:'hammer',name:'해머',damage:1.38,posture:1.92,speed:.59,stamina:1.58,reach:.93,hitstop:1.82,guard:.76,motion:1.52},
- {id:'spear',name:'창',damage:.98,posture:.86,speed:1.08,stamina:.92,reach:1.48,hitstop:.82,guard:.48,motion:.82,asset:'./assets/models/kenney/weapon-spear.glb',assetScale:.9},
- {id:'katana',name:'태도',damage:1.08,posture:.92,speed:1.18,stamina:.94,reach:1.08,hitstop:.9,guard:.45,motion:.74,asset:'./assets/models/kaykit/sword_1handed.gltf',assetScale:.8,assetThin:true,assetGripZ:-.145},
- {id:'axe',name:'전투도끼',damage:1.28,posture:1.36,speed:.78,stamina:1.27,reach:1.02,hitstop:1.32,guard:.65,motion:1.22,asset:'./assets/models/kaykit/axe_1handed.gltf',assetScale:.76,assetGripZ:-.025}
+ {id:'spear',name:'창',damage:.98,posture:.86,speed:1.08,stamina:.92,reach:1.48,hitstop:.82,guard:.48,motion:.82,asset:'./assets/models/kenney/weapon-spear.glb',assetScale:5.5,assetGripZ:.5},
+ {id:'katana',name:'태도',damage:1.08,posture:.92,speed:1.18,stamina:.94,reach:1.08,hitstop:.9,guard:.45,motion:.74,asset:'./assets/models/kaykit/sword_1handed.gltf',assetScale:1.16,assetThin:true,assetGripZ:-.209},
+ {id:'axe',name:'전투도끼',damage:1.28,posture:1.36,speed:.78,stamina:1.27,reach:1.02,hitstop:1.32,guard:.65,motion:1.22,asset:'./assets/models/kaykit/axe_1handed.gltf',assetScale:1.2,assetGripZ:-.096}
 ];
 let weaponIndex=0,twoHanded=false;
 const WEAPON_GRIPS={
@@ -4376,7 +4376,7 @@ function playerWeaponDamageZone(){
   hammer:{base:[-.38,0,-1.42],tip:[.38,0,-1.42],radius:.3},
   spear:{base:[0,0,-2.02],tip:[0,0,-2.78],radius:.105},
   katana:{base:[.04,0,-.08],tip:[.05,0,-1.84],radius:.075},
-  axe:{base:[-.16,0,-1.18],tip:[.5,0,-1.18],radius:.22}
+  axe:{base:[-.7,0,-1.18],tip:[.15,0,-1.18],radius:.22}
  };
  const z=zones[id]||zones.straight;
  return{base:new THREE.Vector3(...z.base),tip:new THREE.Vector3(...z.tip),radius:z.radius};
