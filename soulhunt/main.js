@@ -3529,6 +3529,8 @@ const b6Uniform=new THREE.MeshStandardMaterial({color:0x171c16,roughness:.7,meta
 const b6UniformTrim=new THREE.MeshStandardMaterial({color:0x30382b,roughness:.66,metalness:.12});
 const b6Boot=new THREE.MeshStandardMaterial({color:0x111310,roughness:.78,metalness:.18});
 const b6Metal=new THREE.MeshStandardMaterial({color:0x726c5d,roughness:.45,metalness:.5});
+const b6TankGreen=new THREE.MeshStandardMaterial({color:0x54783a,roughness:.58,metalness:.38});
+const b6TankGreenDark=new THREE.MeshStandardMaterial({color:0x263d21,roughness:.66,metalness:.42});
 const b6Red=new THREE.MeshStandardMaterial({color:0x8d130d,roughness:.5,metalness:.12,emissive:0x4a0503,emissiveIntensity:.35});
 const b6EyeWhite=new THREE.MeshStandardMaterial({color:0xc8bbaa,roughness:.8});
 const b6EyeGlow=new THREE.MeshBasicMaterial({color:0xff1200,depthTest:false,depthWrite:false,toneMapped:false});
@@ -3568,6 +3570,15 @@ function buildBoss6ProceduralModel(){
  const hips=boss6Joint(root,'hips',[0,1.39,0]);
  boss6Mesh(hips,new THREE.BoxGeometry(.74,.34,.44),b6Uniform,[0,.03,0],[1,1,1]);
  boss6Mesh(hips,new THREE.BoxGeometry(.82,.11,.49),b6Metal,[0,.18,0]);
+
+ // Hwang's oversized slapstick tank-cannon prop, centered between the legs.
+ const boss6GroinCannon=new THREE.Group();boss6GroinCannon.name='HwangGeunchulTankBarrel';
+ boss6GroinCannon.position.set(0,-.18,-.23);hips.add(boss6GroinCannon);
+ boss6Mesh(boss6GroinCannon,new THREE.BoxGeometry(.4,.3,.38),b6TankGreenDark,[0,.02,-.02]);
+ boss6Mesh(boss6GroinCannon,new THREE.CylinderGeometry(.12,.15,1.8,12),b6TankGreen,[0,-.01,-.98],[1,1,1],[Math.PI/2,0,0]);
+ boss6Mesh(boss6GroinCannon,new THREE.CylinderGeometry(.16,.16,.22,12),b6TankGreenDark,[0,-.01,-1.9],[1,1,1],[Math.PI/2,0,0]);
+ boss6Mesh(boss6GroinCannon,new THREE.CylinderGeometry(.14,.14,.13,12),b6Black,[0,-.01,-2.05],[1,1,1],[Math.PI/2,0,0]);
+ boss6GroinCannon.rotation.x=-.045;
 
  const spine=boss6Joint(hips,'spine',[0,.22,0]);
  boss6Mesh(spine,new THREE.BoxGeometry(.82,.43,.46),b6Uniform,[0,.2,0],[1.02,1,1]);
