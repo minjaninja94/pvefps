@@ -13,7 +13,6 @@ const BOSS2_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VR
 const BOSS3_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VRM_SAMPLE_REV}/vroid/beta/Vita.vrm`;
 const BOSS4_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VRM_SAMPLE_REV}/vroid/beta/Vivi.vrm`;
 const BOSS5_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VRM_SAMPLE_REV}/vroid/beta/Sendagaya_Shino.vrm`;
-const BOSS6_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${VRM_SAMPLE_REV}/vroid/beta/Sendagaya_Shibu.vrm`;
 
 const PLAYER_MAX_HP=1600;
 const PLAYER_MAX_STAMINA=130;
@@ -3511,7 +3510,7 @@ function boss5Once(tag,fn){if(boss5Fired.has(tag))return false;boss5Fired.add(ta
 
 /* -------------------------------------------------------------------------- */
 /* Boss 06: Hwang Geunchul — Marine-literature parody final boss              */
-/* Uses a CC0 VRoid male base plus runtime marine-style accessories.           */
+/* Fully procedural 3D male boss: no pretty/female VRM base.                  */
 /* -------------------------------------------------------------------------- */
 const boss6Root=new THREE.Group();boss6Root.name='HwangGeunchulFinalRoot';boss6Root.visible=BOSS_VARIANT===6;boss.add(boss6Root);
 let boss6Visual=null,boss6VRM=null,boss6Ready=false,boss6VisualBaseY=0;
@@ -3520,11 +3519,105 @@ const boss6Aura=new THREE.PointLight(0xff3f2a,11,15,2);boss6Aura.position.set(0,
 const boss6HaloMat=new THREE.MeshBasicMaterial({color:0xff492f,transparent:true,opacity:.12,depthWrite:false});
 const boss6Halo=new THREE.Mesh(new THREE.TorusGeometry(1.08,.025,7,44),boss6HaloMat);boss6Halo.rotation.x=Math.PI/2;boss6Halo.position.y=.035;boss6Root.add(boss6Halo);
 const boss6Fallback=new THREE.Group();boss6Root.add(boss6Fallback);
-const b6Skin=new THREE.MeshStandardMaterial({color:0xb88768,roughness:.5});
-const b6Uniform=new THREE.MeshStandardMaterial({color:0x151a15,roughness:.62,metalness:.15,emissive:0x130402,emissiveIntensity:.18});
-part(boss6Fallback,new THREE.CapsuleGeometry(.42,1.05,6,10),b6Skin,[0,1.35,0]);
-part(boss6Fallback,new THREE.BoxGeometry(.9,.84,.42),b6Uniform,[0,1.58,0]);
-part(boss6Fallback,new THREE.SphereGeometry(.34,16,12),b6Skin,[0,2.34,.02]);
+
+const b6Skin=new THREE.MeshStandardMaterial({color:0x9b6a50,roughness:.78,metalness:.02});
+const b6SkinDark=new THREE.MeshStandardMaterial({color:0x744936,roughness:.82});
+const b6Uniform=new THREE.MeshStandardMaterial({color:0x171c16,roughness:.7,metalness:.08,emissive:0x100301,emissiveIntensity:.16});
+const b6UniformTrim=new THREE.MeshStandardMaterial({color:0x30382b,roughness:.66,metalness:.12});
+const b6Boot=new THREE.MeshStandardMaterial({color:0x111310,roughness:.78,metalness:.18});
+const b6Metal=new THREE.MeshStandardMaterial({color:0x726c5d,roughness:.45,metalness:.5});
+const b6Red=new THREE.MeshStandardMaterial({color:0x8d130d,roughness:.5,metalness:.12,emissive:0x4a0503,emissiveIntensity:.35});
+const b6EyeWhite=new THREE.MeshStandardMaterial({color:0xc8bbaa,roughness:.8});
+const b6EyeGlow=new THREE.MeshBasicMaterial({color:0xff1a08});
+const b6Black=new THREE.MeshBasicMaterial({color:0x080808});
+
+function boss6Mesh(parent,geometry,material,pos=[0,0,0],scale=[1,1,1],rot=[0,0,0]){
+ const m=new THREE.Mesh(geometry,material);m.position.set(...pos);m.scale.set(...scale);m.rotation.set(...rot);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
+}
+function boss6Joint(parent,name,pos=[0,0,0]){
+ const g=new THREE.Group();g.name='HwangGeunchul_'+name;g.position.set(...pos);parent.add(g);cacheBoss6Bone(name,g);boss6RenderBones[name]=g;return g;
+}
+function buildBoss6ProceduralModel(){
+ const root=new THREE.Group();root.name='HwangGeunchulProceduralModel';
+
+ const hips=boss6Joint(root,'hips',[0,1.39,0]);
+ boss6Mesh(hips,new THREE.BoxGeometry(.74,.34,.44),b6Uniform,[0,.03,0],[1,1,1]);
+ boss6Mesh(hips,new THREE.BoxGeometry(.82,.11,.49),b6Metal,[0,.18,0]);
+
+ const spine=boss6Joint(hips,'spine',[0,.22,0]);
+ boss6Mesh(spine,new THREE.BoxGeometry(.82,.43,.46),b6Uniform,[0,.2,0],[1.02,1,1]);
+ const chest=boss6Joint(spine,'chest',[0,.36,0]);
+ boss6Mesh(chest,new THREE.BoxGeometry(1.12,.56,.53),b6Uniform,[0,.2,0],[1,1,1]);
+ boss6Mesh(chest,new THREE.BoxGeometry(1.19,.18,.59),b6UniformTrim,[0,.38,.005]);
+ boss6Mesh(chest,new THREE.BoxGeometry(.42,.18,.035),b6Red,[0,.25,-.285]);
+ boss6Mesh(chest,new THREE.BoxGeometry(.11,.3,.04),b6Metal,[-.33,.08,-.29],[1,1,1],[0,0,.04]);
+ boss6Mesh(chest,new THREE.BoxGeometry(.11,.3,.04),b6Metal,[.33,.08,-.29],[1,1,1],[0,0,-.04]);
+
+ const upperChest=boss6Joint(chest,'upperChest',[0,.36,0]);
+ boss6Mesh(upperChest,new THREE.BoxGeometry(1.18,.22,.54),b6UniformTrim,[0,.05,0]);
+ const neck=boss6Joint(upperChest,'neck',[0,.18,0]);
+ boss6Mesh(neck,new THREE.CylinderGeometry(.16,.2,.25,8),b6Skin,[0,.1,0]);
+
+ const head=boss6Joint(neck,'head',[0,.22,-.005]);
+ boss6Mesh(head,new THREE.BoxGeometry(.52,.53,.47),b6Skin,[0,.1,0],[1.03,1,1]);
+ boss6Mesh(head,new THREE.BoxGeometry(.58,.2,.5),b6SkinDark,[0,-.145,-.005],[1,1,1]);
+ boss6Mesh(head,new THREE.BoxGeometry(.14,.19,.16),b6SkinDark,[0,.08,-.29]);
+ boss6Mesh(head,new THREE.BoxGeometry(.15,.09,.06),b6SkinDark,[-.31,.08,0]);
+ boss6Mesh(head,new THREE.BoxGeometry(.15,.09,.06),b6SkinDark,[.31,.08,0]);
+ boss6Mesh(head,new THREE.BoxGeometry(.16,.08,.025),b6EyeWhite,[-.13,.15,-.247]);
+ boss6Mesh(head,new THREE.BoxGeometry(.16,.08,.025),b6EyeWhite,[.13,.15,-.247]);
+ boss6Mesh(head,new THREE.SphereGeometry(.031,8,6),b6EyeGlow,[-.13,.15,-.276]);
+ boss6Mesh(head,new THREE.SphereGeometry(.031,8,6),b6EyeGlow,[.13,.15,-.276]);
+ boss6Mesh(head,new THREE.BoxGeometry(.22,.045,.025),b6Black,[-.12,.245,-.272],[1,1,1],[0,0,.13]);
+ boss6Mesh(head,new THREE.BoxGeometry(.22,.045,.025),b6Black,[.12,.245,-.272],[1,1,1],[0,0,-.13]);
+ boss6Mesh(head,new THREE.BoxGeometry(.31,.045,.025),b6Black,[0,-.075,-.275]);
+ boss6Mesh(head,new THREE.BoxGeometry(.24,.035,.026),b6EyeWhite,[0,-.12,-.278]);
+
+ const cap=new THREE.Group();cap.name='HwangGeunchulMarineCap';cap.position.set(0,.42,-.01);head.add(cap);
+ boss6Mesh(cap,new THREE.CylinderGeometry(.24,.3,.17,8),b6UniformTrim,[0,.02,0]);
+ boss6Mesh(cap,new THREE.BoxGeometry(.52,.035,.29),b6Uniform, [0,-.055,-.13],[1,1,1],[.02,0,0]);
+ boss6Mesh(cap,new THREE.BoxGeometry(.14,.07,.025),b6Red,[0,.015,-.235]);
+
+ const lShoulder=boss6Joint(upperChest,'leftShoulder',[.6,.1,0]);
+ const rShoulder=boss6Joint(upperChest,'rightShoulder',[-.6,.1,0]);
+ boss6Mesh(lShoulder,new THREE.SphereGeometry(.23,10,8),b6UniformTrim,[0,-.03,0],[1.2,.8,1]);
+ boss6Mesh(rShoulder,new THREE.SphereGeometry(.23,10,8),b6UniformTrim,[0,-.03,0],[1.2,.8,1]);
+ boss6Mesh(lShoulder,new THREE.BoxGeometry(.43,.09,.42),b6Red,[.08,.08,0]);
+ boss6Mesh(rShoulder,new THREE.BoxGeometry(.43,.09,.42),b6Red,[-.08,.08,0]);
+
+ const lUpper=boss6Joint(lShoulder,'leftUpperArm',[.02,-.03,0]);
+ const rUpper=boss6Joint(rShoulder,'rightUpperArm',[-.02,-.03,0]);
+ boss6Mesh(lUpper,new THREE.CapsuleGeometry(.17,.35,5,8),b6Uniform,[0,-.31,0],[1.12,1,1.05]);
+ boss6Mesh(rUpper,new THREE.CapsuleGeometry(.17,.35,5,8),b6Uniform,[0,-.31,0],[1.12,1,1.05]);
+ const lLower=boss6Joint(lUpper,'leftLowerArm',[0,-.63,0]);
+ const rLower=boss6Joint(rUpper,'rightLowerArm',[0,-.63,0]);
+ boss6Mesh(lLower,new THREE.CapsuleGeometry(.18,.3,5,8),b6Skin,[0,-.28,0],[1.08,1,1.04]);
+ boss6Mesh(rLower,new THREE.CapsuleGeometry(.18,.3,5,8),b6Skin,[0,-.28,0],[1.08,1,1.04]);
+ const lHand=boss6Joint(lLower,'leftHand',[0,-.56,-.005]);
+ const rHand=boss6Joint(rLower,'rightHand',[0,-.56,-.005]);
+ boss6Mesh(lHand,new THREE.BoxGeometry(.28,.24,.28),b6SkinDark,[0,-.06,-.015],[1.05,1,1.05]);
+ boss6Mesh(rHand,new THREE.BoxGeometry(.28,.24,.28),b6SkinDark,[0,-.06,-.015],[1.05,1,1.05]);
+ boss6Mesh(lHand,new THREE.BoxGeometry(.32,.09,.3),b6Metal,[0,.08,0]);
+ boss6Mesh(rHand,new THREE.BoxGeometry(.32,.09,.3),b6Metal,[0,.08,0]);
+
+ const lUpperLeg=boss6Joint(hips,'leftUpperLeg',[.24,-.09,0]);
+ const rUpperLeg=boss6Joint(hips,'rightUpperLeg',[-.24,-.09,0]);
+ boss6Mesh(lUpperLeg,new THREE.CapsuleGeometry(.2,.46,5,8),b6Uniform,[0,-.41,0],[1.05,1,1.05]);
+ boss6Mesh(rUpperLeg,new THREE.CapsuleGeometry(.2,.46,5,8),b6Uniform,[0,-.41,0],[1.05,1,1.05]);
+ const lLowerLeg=boss6Joint(lUpperLeg,'leftLowerLeg',[0,-.84,0]);
+ const rLowerLeg=boss6Joint(rUpperLeg,'rightLowerLeg',[0,-.84,0]);
+ boss6Mesh(lLowerLeg,new THREE.CapsuleGeometry(.18,.4,5,8),b6UniformTrim,[0,-.36,0]);
+ boss6Mesh(rLowerLeg,new THREE.CapsuleGeometry(.18,.4,5,8),b6UniformTrim,[0,-.36,0]);
+ const lFoot=boss6Joint(lLowerLeg,'leftFoot',[0,-.72,-.03]);
+ const rFoot=boss6Joint(rLowerLeg,'rightFoot',[0,-.72,-.03]);
+ boss6Mesh(lFoot,new THREE.BoxGeometry(.39,.22,.64),b6Boot,[0,-.04,-.14],[1,1,1],[.02,0,0]);
+ boss6Mesh(rFoot,new THREE.BoxGeometry(.39,.22,.64),b6Boot,[0,-.04,-.14],[1,1,1],[.02,0,0]);
+
+ boss6Mesh(root,new THREE.BoxGeometry(.72,.12,.1),b6Red,[0,1.19,.25]);
+ root.scale.set(1.08,1.08,1.04);
+ root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+ return root;
+}
 
 state.boss6Phase=1;state.boss6HitReact=0;state.boss6AttackCount=0;state.boss6LockedDir=new THREE.Vector3();
 
@@ -3537,7 +3630,7 @@ function resetBoss6Pose(dt){
  for(const [name,b] of Object.entries(boss6Bones)){const r=boss6Rest[name];if(!r)continue;const a=1-Math.exp(-dt*14);
   b.rotation.x=THREE.MathUtils.lerp(b.rotation.x,r.rotation.x,a);b.rotation.y=THREE.MathUtils.lerp(b.rotation.y,r.rotation.y,a);b.rotation.z=THREE.MathUtils.lerp(b.rotation.z,r.rotation.z,a)}
 }
-function syncBoss6Rig(dt=0){if(!boss6VRM)return;boss6VRM.update?.(Math.max(0,dt));boss6Visual?.updateMatrixWorld?.(true)}
+function syncBoss6Rig(dt=0){boss6VRM?.update?.(Math.max(0,dt));boss6Visual?.updateMatrixWorld?.(true)}
 function addBoss6MarineAccessories(h){
  const head=h?.getRawBoneNode?.('head')||h?.getNormalizedBoneNode?.('head');
  if(head){
@@ -3563,24 +3656,16 @@ function addBoss6MarineAccessories(h){
 async function loadBoss6Avatar(){
  if(BOSS_VARIANT!==6)return;
  try{
-  const {VRMLoaderPlugin,VRMUtils}=await import('@pixiv/three-vrm');
-  const loader=new GLTFLoader();loader.setCrossOrigin('anonymous');loader.register(parser=>new VRMLoaderPlugin(parser));
-  loader.load(BOSS6_MODEL_URL,gltf=>{
-   const vrm=gltf.userData?.vrm||null;if(vrm)VRMUtils.rotateVRM0(vrm);
-   const root=vrm?.scene||gltf.scene;
-   root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(Array.isArray(o.material))o.material=o.material.map(m=>m.clone());else if(o.material)o.material=o.material.clone()}});
-   root.updateMatrixWorld(true);let box=new THREE.Box3().setFromObject(root,true),size=new THREE.Vector3();box.getSize(size);
-   const targetHeight=3.28,uniform=targetHeight/Math.max(size.y,.001);root.scale.set(uniform*1.11,uniform,uniform*1.08);
-   root.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(root,true);root.position.y-=box.min.y;root.position.z=.03;boss6VisualBaseY=root.position.y;
-   boss6Root.add(root);boss6Visual=root;boss6VRM=vrm;boss6Ready=true;boss6Fallback.visible=false;
-   const h=vrm?.humanoid;
-   for(const n of ['hips','spine','chest','upperChest','neck','head','leftShoulder','rightShoulder','leftUpperArm','rightUpperArm','leftLowerArm','rightLowerArm','leftHand','rightHand','leftUpperLeg','rightUpperLeg','leftLowerLeg','rightLowerLeg','leftFoot','rightFoot']){
-    const normalized=h?.getNormalizedBoneNode?.(n)||null,raw=h?.getRawBoneNode?.(n)||null,control=normalized||raw;
-    if(control)cacheBoss6Bone(n,control);boss6RenderBones[n]=raw||normalized||null;
-   }
-   addBoss6MarineAccessories(h);poseBoss6(.12);syncBoss6Rig(0);if(ui.bossName)ui.bossName.textContent=BOSS6_NAME;flash('기합! 황근출 해병 등장',1.0);
-  },undefined,err=>console.warn('Hwang Geunchul base VRM unavailable.',err));
- }catch(err){console.warn('three-vrm unavailable for Boss 06.',err)}
+  const root=buildBoss6ProceduralModel();
+  root.updateMatrixWorld(true);
+  boss6Root.add(root);boss6Visual=root;boss6VRM=null;boss6Ready=true;boss6Fallback.visible=false;boss6VisualBaseY=root.position.y;
+  poseBoss6(.12);syncBoss6Rig(0);
+  if(ui.bossName)ui.bossName.textContent=BOSS6_NAME;
+  flash('기합! 황근출 해병 등장',1.0);
+ }catch(err){
+  console.warn('Hwang Geunchul procedural model failed.',err);
+  boss6Fallback.visible=true;
+ }
 }
 function enforceBoss6Visibility(){
  if(BOSS_VARIANT!==6)return;for(const child of boss.children)child.visible=(child===boss6Root);boss6Root.visible=true;if(!boss6Ready)boss6Fallback.visible=true;
