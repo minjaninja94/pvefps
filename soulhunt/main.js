@@ -79,8 +79,8 @@ const weaponHandAnchor=new THREE.Group();player.add(weaponHandAnchor);
 const weaponPivot=new THREE.Group();weaponHandAnchor.add(weaponPivot);
 const shieldHandAnchor=new THREE.Group();player.add(shieldHandAnchor);
 const shieldPivot=new THREE.Group();shieldHandAnchor.add(shieldPivot);
-const shield=part(shieldPivot,new THREE.CylinderGeometry(.48,.48,.11,12),steelDark,[0,0,-.08],[Math.PI/2,0,0],[1,.95,1]);
-part(shieldPivot,new THREE.BoxGeometry(.12,.68,.14),steel,[0,0,.02]);
+const shield=part(shieldPivot,new THREE.CylinderGeometry(.36,.36,.085,12),steelDark,[0,0,-.045],[Math.PI/2,0,0],[1,.9,1]);
+part(shieldPivot,new THREE.BoxGeometry(.09,.5,.11),steel,[0,0,.025]);
 const weaponVisual=new THREE.Group();weaponPivot.add(weaponVisual);
 const swordPivot=weaponPivot; // combat-pose compatibility
 
@@ -108,8 +108,11 @@ function applyWeaponGrip(){
  weaponHandAnchor.rotation.set(...g.rot);
  weaponHandAnchor.scale.setScalar(g.scale||1);
  weaponPivot.position.set(0,0,0);weaponPivot.rotation.set(0,0,0);
- shieldHandAnchor.position.set(-.01,-.01,.015);
- shieldHandAnchor.rotation.set(-.04,0,-.06);
+ shieldHandAnchor.position.set(-.035,.012,.045);
+ shieldHandAnchor.rotation.set(-.12,.045,-.16);
+ shieldPivot.position.set(-.12,-.015,.105);
+ shieldPivot.rotation.set(-.18,.06,-.16);
+ shieldPivot.scale.setScalar(.94);
 }
 function clearWeapon(){while(weaponVisual.children.length){const o=weaponVisual.children.pop();o.geometry?.dispose?.();}}
 function addWeaponMesh(geo,material,pos,rot=[0,0,0]){return part(weaponVisual,geo,material,pos,rot)}
@@ -307,8 +310,12 @@ function playerReadyHand(id,reach,moving,phase,sprint){
  const a=PLAYER_READY_HANDS[id]||PLAYER_READY_HANDS.straight;
  const v=new THREE.Vector3(a[0]*reach,a[1]*reach,a[2]*reach);
  if(moving){
-  const bob=Math.sin(phase)*(sprint?.09:.055)*reach;
-  v.y+=Math.abs(bob)*.18;v.z+=bob*(id==='spear'?.22:.12);
+  const step=Math.sin(phase),lift=Math.abs(Math.cos(phase));
+  const heavy=id==='greatsword'||id==='hammer';
+  const travel=(sprint?.085:.052)*reach*(heavy?.72:1);
+  v.x+=step*(sprint?.025:.016)*reach;
+  v.y+=lift*(sprint?.018:.011)*reach;
+  v.z+=step*travel*(id==='spear'?.34:.18);
  }
  return v;
 }
@@ -351,14 +358,13 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
    if(side==='right'&&!attack&&!input.guard&&state.rolling<=0){
      delta=playerReadyHand(w.id,reach,moving,phase,sprint);
    }else if(side==='left'&&!attack&&!input.guard&&state.rolling<=0&&!twoHanded){
-     delta=new THREE.Vector3(-reach*.16,-reach*.4,reach*.34);
-     if(moving)delta.z+=Math.sin(phase)*(sprint?.08:.05)*reach;
+     delta=new THREE.Vector3(-reach*.29,-reach*.38,reach*.3);
+     if(moving){delta.z-=Math.sin(phase)*(sprint?.055:.035)*reach;delta.x-=Math.abs(Math.sin(phase))*.018*reach;}
    }else{
      delta=new THREE.Vector3(sx*reach*.13,-reach*.84,.04);
    }
    if(input.guard&&!attack&&state.rolling<=0){
-     delta.set(sx*reach*.12,-reach*.28,reach*.42);
-     if(side==='right')delta.z=reach*.26;
+     delta.set(side==='left'?-reach*.25:reach*.13,-reach*.28,side==='left'?reach*.36:reach*.27);
    }
    if(state.rolling>0){
      const lean=state.rollLean||1;
@@ -374,7 +380,7 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
        delta.set(-.12*reach,-.34*reach,.3*reach);
      }else{
        // Shield arm stays compact and protects the torso while the weapon hand attacks.
-       delta.set(-.16*reach,-.28*reach,.48*reach);
+       delta.set(-.29*reach,-.32*reach,.36*reach);
      }
    }
    const handTarget=shoulder.clone().add(playerLocalVector(delta));
@@ -603,7 +609,8 @@ function animateVroidPlayer(dt){
    playerVrmMotion.rotation.x=lerpAngle(playerVrmMotion.rotation.x,0,1-Math.exp(-dt*24));
    playerVrmMotion.rotation.y=lerpAngle(playerVrmMotion.rotation.y,0,1-Math.exp(-dt*24));
    playerVrmMotion.rotation.z=lerpAngle(playerVrmMotion.rotation.z,0,1-Math.exp(-dt*24));
-   playerVrmMotion.position.y=THREE.MathUtils.lerp(playerVrmMotion.position.y,playerVrmMotionRest.y,1-Math.exp(-dt*22));
+   const walkBob=moving&&state.attack<=0&&!input.guard&&state.stagger<=0&&!state.dead?Math.abs(Math.sin(phase))*(sprint?.035:.022):0;
+   playerVrmMotion.position.y=THREE.MathUtils.lerp(playerVrmMotion.position.y,playerVrmMotionRest.y+walkBob,1-Math.exp(-dt*22));
    playerVrmMotion.position.z=THREE.MathUtils.lerp(playerVrmMotion.position.z,0,1-Math.exp(-dt*22));
  }
  playerVrm?.update?.(dt);
@@ -1841,6 +1848,49 @@ function bossCombatOffset(x,y,z){
  const q=new THREE.Quaternion();boss.getWorldQuaternion(q);
  return new THREE.Vector3(x,y,z).applyQuaternion(q);
 }
+
+const bossWalkState={prev:new THREE.Vector3(),phase:0,ready:false};
+function applyBossHumanoidLocomotion(setBone,visual,baseY,dt,opts={}){
+ if(!setBone||dt<=0)return;
+ if(!bossWalkState.ready){bossWalkState.prev.copy(boss.position);bossWalkState.ready=true;return}
+ const delta=boss.position.clone().sub(bossWalkState.prev);delta.y=0;
+ const speed=delta.length()/Math.max(dt,.001);
+ bossWalkState.prev.copy(boss.position);
+ const active=state.bossHp>0&&state.bossState==='idle'&&state.bossPunish<=0&&speed>.16;
+ if(!active)return;
+
+ const forward=new THREE.Vector3(Math.sin(boss.rotation.y),0,Math.cos(boss.rotation.y));
+ const sign=delta.dot(forward)>=0?1:-1;
+ const freq=clamp(6.2+speed*.72,6.4,10.8);
+ bossWalkState.phase+=dt*freq*sign;
+
+ const p=bossWalkState.phase,sin=Math.sin(p),cos=Math.cos(p),sin2=Math.sin(p*2);
+ const amp=(opts.stride??1)*clamp(.31+speed*.035,.34,.53);
+ const knee=opts.knee??.68,foot=opts.foot??.18;
+ const bob=(opts.bob??.032)*Math.abs(sin);
+ const twist=(opts.twist??.075)*sin;
+ const lean=opts.lean??-.035;
+
+ setBone('hips',lean,-twist*.42,sin*.045,15,dt);
+ setBone('spine',lean*.75,twist,-sin*.035,15,dt);
+ setBone('chest',lean*.35,twist*.62,-sin*.022,14,dt);
+ setBone('head',.018,-twist*.28,sin*.018,12,dt);
+
+ setBone('leftUpperLeg',amp*sin,0,.025,18,dt);
+ setBone('rightUpperLeg',-amp*sin,0,-.025,18,dt);
+ setBone('leftLowerLeg',Math.max(0,-sin)*knee,0,0,19,dt);
+ setBone('rightLowerLeg',Math.max(0,sin)*knee,0,0,19,dt);
+ setBone('leftFoot',-sin*foot,0,0,17,dt);
+ setBone('rightFoot',sin*foot,0,0,17,dt);
+
+ setBone('leftShoulder',0,-twist*.18,-.05*sin,12,dt);
+ setBone('rightShoulder',0,-twist*.12,.035*sin,12,dt);
+
+ if(visual&&Number.isFinite(baseY)){
+  const targetY=baseY+bob+.006*sin2;
+  visual.position.y=THREE.MathUtils.lerp(visual.position.y,targetY,1-Math.exp(-dt*18));
+ }
+}
 function beginBossPunish(base){
  const r=Math.max(.82,base*1.32);
  state.bossPunish=r;state.bossTimer=r;
@@ -2434,7 +2484,7 @@ function updateBoss2(dt){
    });
    if(state.bossTimer<=0)finishBoss2Attack(1.45);
  }
- poseBoss2(dt);applyBoss2PrimaryArmIK(dt);updateBoss2Weapon();applyBoss2WeaponGripIK(dt);syncBoss2Rig(dt);updateBoss2Weapon();processBoss2PhysicalHits();
+ poseBoss2(dt);applyBossHumanoidLocomotion(setBoss2Bone,boss2Visual,boss2VisualBaseY,dt,{stride:state.boss2Style==='frenzy'?1.12:1,bob:.03});applyBoss2PrimaryArmIK(dt);updateBoss2Weapon();applyBoss2WeaponGripIK(dt);syncBoss2Rig(dt);updateBoss2Weapon();processBoss2PhysicalHits();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2985,7 +3035,7 @@ function updateBoss3(dt){
   });
   if(state.bossTimer<=0)finishBoss3Attack(1.3);
  }
- poseBoss3(dt);applyBoss3PrimaryArmIK(dt);updateBoss3Weapon();applyBoss3WeaponGripIK(dt);syncBoss3Rig(dt);updateBoss3Weapon();processBoss3PhysicalHits();
+ poseBoss3(dt);applyBossHumanoidLocomotion(setBoss3Bone,boss3Visual,boss3VisualBaseY,dt,{stride:state.boss3Phase===2?1.08:1,bob:.028,twist:.085});applyBoss3PrimaryArmIK(dt);updateBoss3Weapon();applyBoss3WeaponGripIK(dt);syncBoss3Rig(dt);updateBoss3Weapon();processBoss3PhysicalHits();
 }
 
 
@@ -3198,7 +3248,7 @@ function updateBoss4(dt){
   });
   if(state.bossTimer<=0)finishBoss4Attack(1.02);
  }
- poseBoss4(dt);applyBoss4PrimaryArmIK(dt);syncBoss4Rig(dt);updateBoss4Weapon();processBoss4PhysicalHits();
+ poseBoss4(dt);applyBossHumanoidLocomotion(setBoss4Bone,boss4Visual,boss4VisualBaseY,dt,{stride:.98,bob:.026,twist:.07});applyBoss4PrimaryArmIK(dt);syncBoss4Rig(dt);updateBoss4Weapon();processBoss4PhysicalHits();
 }
 function boss4Once(tag,fn){if(boss4Fired.has(tag))return false;boss4Fired.add(tag);fn?.();return true}
 
@@ -3503,7 +3553,7 @@ function updateBoss5(dt){
   if(state.bossTimer<=.72)boss5Once('roar-wave',()=>{spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1.0,0)),4.4,0xff6b35,.62);spawnDustBurst(boss.position,.85)});
   if(state.bossTimer<=0)finishBoss5Attack(.58);
  }
- poseBoss5(dt);applyBoss5PrimaryArmIK(dt);updateBoss5Weapon();applyBoss5GripIK(dt);syncBoss5Rig(dt);updateBoss5Weapon();processBoss5PhysicalHits();
+ poseBoss5(dt);applyBossHumanoidLocomotion(setBoss5Bone,boss5Visual,boss5VisualBaseY,dt,{stride:state.boss5Phase===2?1.16:1.05,bob:.035,twist:.065,knee:.72});applyBoss5PrimaryArmIK(dt);updateBoss5Weapon();applyBoss5GripIK(dt);syncBoss5Rig(dt);updateBoss5Weapon();processBoss5PhysicalHits();
 }
 function boss5Once(tag,fn){if(boss5Fired.has(tag))return false;boss5Fired.add(tag);fn?.();return true}
 
@@ -4136,7 +4186,7 @@ function updateBoss6(dt){
   if(state.bossTimer<=.8)boss6Once('roarburst',()=>{spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1.1,0)),5.2,0xff2718,.72);for(let i=0;i<10;i++)boss6FireKihap(i%5)});
   if(state.bossTimer<=0)finishBoss6Attack(.7);
  }
- poseBoss6(dt);syncBoss6Rig(dt);
+ poseBoss6(dt);applyBossHumanoidLocomotion(setBoss6Bone,boss6Visual,boss6VisualBaseY,dt,{stride:1.08,bob:.036,twist:.06,knee:.7});syncBoss6Rig(dt);
 }
 
 function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeout(flash.t);flash.t=setTimeout(()=>ui.msg.style.opacity='0',d*1000)}
@@ -5487,10 +5537,34 @@ function reportSoulhuntRuntimeError(err){
  document.body.appendChild(box);
  setTimeout(()=>box.remove(),6000);
 }
+function resolvePlayerBossBodyCollision(){
+ if(state.bossHp<=0)return;
+ const dx=player.position.x-boss.position.x,dz=player.position.z-boss.position.z;
+ let d2=dx*dx+dz*dz;
+ const playerR=.52;
+ const bossR=BOSS_VARIANT===1?1.85*BOSS_GIANT_SCALE:({2:.64,3:.61,4:.6,5:.68,6:.76}[BOSS_VARIANT]??.64);
+ const minD=playerR+bossR;
+ if(d2>=minD*minD)return;
+
+ let nx,nz,d;
+ if(d2<1e-8){
+  nx=Math.sin(player.rotation.y+Math.PI);nz=Math.cos(player.rotation.y+Math.PI);d=0;
+ }else{
+  d=Math.sqrt(d2);nx=dx/d;nz=dz/d;
+ }
+ const push=minD-d+.012;
+ const giant=BOSS_VARIANT===1;
+ const playerShare=giant?1:.76,bossShare=giant?0:.24;
+ player.position.x+=nx*push*playerShare;
+ player.position.z+=nz*push*playerShare;
+ boss.position.x-=nx*push*bossShare;
+ boss.position.z-=nz*push*bossShare;
+}
+
 function loop(){
  let dt=Math.min(clock.getDelta(),.033);state.time+=dt;
  try{
-   if(state.hitstop>0){state.hitstop-=dt;dt=0}else{updatePlayer(dt);updateBoss(dt)}
+   if(state.hitstop>0){state.hitstop-=dt;dt=0}else{updatePlayer(dt);updateBoss(dt);resolvePlayerBossBodyCollision()}
  }catch(err){
    reportSoulhuntRuntimeError(err);
    state.hitstop=0;
