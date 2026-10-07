@@ -2909,13 +2909,6 @@ function poseBoss3(dt){
   setBoss3Bone('head',.03,-.02*sway,-.03*sway,8,dt);
   setBoss3Bone('rightUpperArm',-.52,.08,-.32,10,dt);setBoss3Bone('rightLowerArm',-.58,0,-.18,10,dt);
   setBoss3Bone('leftUpperArm',-.10,-.05,.24,8,dt);
-  if(dist()>3.55||dist()<2.15){
-    const stride=Math.sin(state.time*(phase===2?9.2:7.8))*(phase===2?.5:.4);
-    setBoss3Bone('leftUpperLeg',stride,0,.045,13,dt);setBoss3Bone('rightUpperLeg',-stride,0,-.035,13,dt);
-    setBoss3Bone('leftLowerLeg',Math.max(0,-stride)*.75,0,0,14,dt);setBoss3Bone('rightLowerLeg',Math.max(0,stride)*.75,0,0,14,dt);
-  }else{
-    setBoss3Bone('leftUpperLeg',0,0,.07,8,dt);setBoss3Bone('rightUpperLeg',0,0,-.04,8,dt);
-  }
  }else if(st==='b3_dance2'){
   poseBoss3AerialDance(dt,t);
  }else if(['b3_triple','b3_cross','b3_wing_combo','b3_dance','b3_echoes'].includes(st)){
