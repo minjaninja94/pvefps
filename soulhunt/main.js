@@ -1926,7 +1926,10 @@ function applyBossHumanoidLocomotion(setBone,visual,baseY,dt,opts={}){
  bossWalkState.prev.copy(boss.position);
  const active=state.bossHp>0&&state.bossState==='idle'&&state.bossPunish<=0&&speed>.16;
  bossWalkState.active=active;bossWalkState.speed=speed;
- if(!active)return;
+ if(!active){
+  if(visual&&Number.isFinite(baseY)&&state.bossHp>0)visual.position.y=THREE.MathUtils.lerp(visual.position.y,baseY,1-Math.exp(-dt*18));
+  return;
+ }
 
  const forward=new THREE.Vector3(Math.sin(boss.rotation.y),0,Math.cos(boss.rotation.y));
  const sign=delta.dot(forward)>=0?1:-1;
