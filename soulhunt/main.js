@@ -1831,6 +1831,7 @@ async function loadBoss2Avatar(){
      box=new THREE.Box3().setFromObject(root,true);
      root.position.y-=box.min.y;
      root.position.z=.08;
+     boss2VisualBaseY=root.position.y;
      boss2Root.add(root);
      boss2Visual=root;boss2VRM=vrm;boss2Ready=true;boss2Fallback.visible=false;
      // Mature heroine silhouette: subtle upper-body emphasis without breaking the source rig.
@@ -1898,7 +1899,7 @@ function bossCombatOffset(x,y,z){
  return new THREE.Vector3(x,y,z).applyQuaternion(q);
 }
 
-const bossWalkState={prev:new THREE.Vector3(),phase:0,ready:false};
+const bossWalkState={prev:new THREE.Vector3(),phase:0,ready:false,active:false,speed:0};
 function applyBossHumanoidLocomotion(setBone,visual,baseY,dt,opts={}){
  if(!setBone||dt<=0)return;
  if(!bossWalkState.ready){bossWalkState.prev.copy(boss.position);bossWalkState.ready=true;return}
@@ -1906,6 +1907,7 @@ function applyBossHumanoidLocomotion(setBone,visual,baseY,dt,opts={}){
  const speed=delta.length()/Math.max(dt,.001);
  bossWalkState.prev.copy(boss.position);
  const active=state.bossHp>0&&state.bossState==='idle'&&state.bossPunish<=0&&speed>.16;
+ bossWalkState.active=active;bossWalkState.speed=speed;
  if(!active)return;
 
  const forward=new THREE.Vector3(Math.sin(boss.rotation.y),0,Math.cos(boss.rotation.y));
@@ -1914,31 +1916,41 @@ function applyBossHumanoidLocomotion(setBone,visual,baseY,dt,opts={}){
  bossWalkState.phase+=dt*freq*sign;
 
  const p=bossWalkState.phase,sin=Math.sin(p),cos=Math.cos(p),sin2=Math.sin(p*2);
- const amp=(opts.stride??1)*clamp(.31+speed*.035,.34,.53);
- const knee=opts.knee??.68,foot=opts.foot??.18;
- const bob=(opts.bob??.032)*Math.abs(sin);
- const twist=(opts.twist??.075)*sin;
- const lean=opts.lean??-.035;
+ const amp=(opts.stride??1)*clamp(.28+speed*.03,.31,.47);
+ const knee=opts.knee??.56,foot=opts.foot??.14;
+ const bob=(opts.bob??.022)*(1-Math.cos(p*2))*.5;
+ const twist=(opts.twist??.06)*sin;
+ const lean=opts.lean??-.025;
+ const leftSwing=Math.max(0,cos),rightSwing=Math.max(0,-cos);
 
- setBone('hips',lean,-twist*.42,sin*.045,15,dt);
- setBone('spine',lean*.75,twist,-sin*.035,15,dt);
- setBone('chest',lean*.35,twist*.62,-sin*.022,14,dt);
- setBone('head',.018,-twist*.28,sin*.018,12,dt);
+ setBone('hips',lean,-twist*.34,sin*.028,16,dt);
+ setBone('spine',lean*.68,twist,-sin*.024,15,dt);
+ setBone('chest',lean*.28,twist*.56,-sin*.016,14,dt);
+ setBone('head',.012,-twist*.22,sin*.012,12,dt);
 
- setBone('leftUpperLeg',amp*sin,0,.025,18,dt);
- setBone('rightUpperLeg',-amp*sin,0,-.025,18,dt);
- setBone('leftLowerLeg',Math.max(0,-sin)*knee,0,0,19,dt);
- setBone('rightLowerLeg',Math.max(0,sin)*knee,0,0,19,dt);
- setBone('leftFoot',-sin*foot,0,0,17,dt);
- setBone('rightFoot',sin*foot,0,0,17,dt);
+ // Heel-to-toe walk: hips alternate, knee flex peaks in swing, ankle counter-rotates.
+ setBone('leftUpperLeg',amp*sin,0,.018,19,dt);
+ setBone('rightUpperLeg',-amp*sin,0,-.018,19,dt);
+ setBone('leftLowerLeg',leftSwing*knee,0,0,20,dt);
+ setBone('rightLowerLeg',rightSwing*knee,0,0,20,dt);
+ setBone('leftFoot',-amp*sin*.3-leftSwing*foot,0,0,18,dt);
+ setBone('rightFoot',amp*sin*.3-rightSwing*foot,0,0,18,dt);
 
- setBone('leftShoulder',0,-twist*.18,-.05*sin,12,dt);
- setBone('rightShoulder',0,-twist*.12,.035*sin,12,dt);
+ setBone('leftShoulder',0,-twist*.14,-.035*sin,13,dt);
+ setBone('rightShoulder',0,-twist*.1,.026*sin,13,dt);
 
  if(visual&&Number.isFinite(baseY)){
-  const targetY=baseY+bob+.006*sin2;
-  visual.position.y=THREE.MathUtils.lerp(visual.position.y,targetY,1-Math.exp(-dt*18));
+  const targetY=baseY+bob+.003*sin2;
+  visual.position.y=THREE.MathUtils.lerp(visual.position.y,targetY,1-Math.exp(-dt*20));
  }
+}
+function bossWalkingHand(local,xAmp=.02,zAmp=.035,yAmp=.012){
+ if(!bossWalkState.active||state.bossState!=='idle')return local;
+ const p=bossWalkState.phase,s=Math.sin(p),c=Math.cos(p);
+ local.x+=s*xAmp;
+ local.y+=Math.max(0,c)*yAmp;
+ local.z+=s*zAmp;
+ return local;
 }
 function beginBossPunish(base){
  const r=Math.max(.82,base*1.32);
@@ -2072,7 +2084,7 @@ function applyBoss2PrimaryArmIK(dt){
  if(!boss2Ready||!boss2Bones.rightUpperArm||!boss2Bones.rightHand)return;
  const shoulder=new THREE.Vector3();boss2Bones.rightUpperArm.getWorldPosition(shoulder);
  const reach=getArmReach(boss2Bones,'right'),st=state.bossState,t=state.bossTimer;
- let local=new THREE.Vector3(.34,-.48,.22);
+ let local=bossWalkingHand(new THREE.Vector3(.34,-.48,.22),.018,.04,.012);
  if(st==='b2_sword_combo'||st==='b2_flame_combo'||st==='b2_frenzy'||st==='b2_final'){
    const marks=st==='b2_sword_combo'?BOSS2_SWORD_MARKS:st==='b2_flame_combo'?BOSS2_FLAME_MARKS:st==='b2_frenzy'?BOSS2_FRENZY_MARKS:BOSS2_FINAL_MARKS;
    const beat=bossKeyedSlash(t,marks,{wind:st==='b2_final'?.36:.3,cut:.16,recover:.28});
@@ -2331,15 +2343,6 @@ function poseBoss2(dt){
    setBoss2Bone('chest',-.065,-.012*charm,-.025*charm*phase,7,dt);
    setBoss2Bone('upperChest',-.035,0,-.018*charm*phase,7,dt);
    setBoss2Bone('head',.025,-.018*charm,-.025*charm,7,dt);
-   const ideal=state.boss2Style==='mage'?6.8:state.boss2Style==='spear'?4.7:3.2;
-   const walking=Math.abs(dist()-ideal)>.48;
-   if(walking){
-     const stride=Math.sin(state.time*7.4)*(state.boss2Style==='frenzy'?.52:.4);
-     setBoss2Bone('leftUpperLeg',stride,0,.035,12,dt);setBoss2Bone('rightUpperLeg',-stride,0,-.035,12,dt);
-     setBoss2Bone('leftLowerLeg',Math.max(0,-stride)*.72,0,0,13,dt);setBoss2Bone('rightLowerLeg',Math.max(0,stride)*.72,0,0,13,dt);
-   }else{
-     setBoss2Bone('leftUpperLeg',0,0,.055,7,dt);setBoss2Bone('rightUpperLeg',0,0,-.035,7,dt);
-   }
    setBoss2Bone('rightUpperArm',-.34,.03,-.22,8,dt);setBoss2Bone('leftUpperArm',-.12,-.02,.22,8,dt);
  }else if(st==='b2_sword_combo'||st==='b2_flame_combo'||st==='b2_frenzy'){
    const marks=st==='b2_sword_combo'?BOSS2_SWORD_MARKS:st==='b2_flame_combo'?BOSS2_FLAME_MARKS:BOSS2_FRENZY_MARKS;
@@ -2688,7 +2691,7 @@ function applyBoss3PrimaryArmIK(dt){
  if(!boss3Ready||!boss3Bones.rightUpperArm||!boss3Bones.rightHand)return;
  const shoulder=new THREE.Vector3();boss3Bones.rightUpperArm.getWorldPosition(shoulder);
  const reach=getArmReach(boss3Bones,'right'),st=state.bossState,t=state.bossTimer;
- let local=new THREE.Vector3(.36,-.5,.2);
+ let local=bossWalkingHand(new THREE.Vector3(.36,-.5,.2),.016,.038,.01);
  if(['b3_triple','b3_wing_combo','b3_dance'].includes(st)){
    const marks=st==='b3_triple'?BOSS3_TRIPLE_MARKS:st==='b3_wing_combo'?BOSS3_WING_MARKS:BOSS3_DANCE_MARKS;
    const beat=bossKeyedSlash(t,marks,{wind:.22,cut:.12,recover:.2});
@@ -3186,7 +3189,7 @@ function applyBoss4PrimaryArmIK(dt){
  if(!boss4Ready||!boss4Bones.rightUpperArm||!boss4Bones.rightHand)return;
  const shoulder=new THREE.Vector3();boss4Bones.rightUpperArm.getWorldPosition(shoulder);
  const reach=getArmReach(boss4Bones,'right'),st=state.bossState,t=state.bossTimer;
- let local=new THREE.Vector3(.3,-.52,.24);
+ let local=bossWalkingHand(new THREE.Vector3(.3,-.52,.24),.014,.034,.01);
  if(st==='b4_combo')local=boss4BeatTarget(t,BOSS4_COMBO_MARKS,reach,.78);
  else if(st==='b4_illusion')local=boss4BeatTarget(t,BOSS4_ILLUSION_MARKS,reach,.88);
  else if(st==='b4_batto'){
@@ -3208,7 +3211,6 @@ function poseBoss4(dt){
  }else if(st==='idle'){
   const sway=Math.sin(state.time*1.7);setBoss4Bone('hips',0,.03*sway,.05*sway,8,dt);setBoss4Bone('spine',-.04,.02*sway,-.035*sway,8,dt);
   setBoss4Bone('rightUpperArm',-.46,.06,-.3,10,dt);setBoss4Bone('rightLowerArm',-.62,0,-.14,10,dt);setBoss4Bone('leftUpperArm',-.12,-.03,.2,8,dt);
-  if(dist()>3.5){const stride=Math.sin(state.time*7.6)*.4;setBoss4Bone('leftUpperLeg',stride,0,.04,13,dt);setBoss4Bone('rightUpperLeg',-stride,0,-.04,13,dt)}
  }else if(st==='b4_batto'){
   const p=clamp(1-t/BOSS4_DUR.b4_batto,0,1),cut=Math.sin(clamp((p-.45)/.34,0,1)*Math.PI);
   setBoss4Bone('hips',.08,-.34+.62*cut,0,18,dt);setBoss4Bone('spine',-.16,-.42+.82*cut,-.08*cut,20,dt);
@@ -3398,7 +3400,7 @@ const BOSS5_RUSH_AXE_MARKS=[2.42,.52];
 function applyBoss5PrimaryArmIK(dt){
  if(!boss5Ready||!boss5Bones.rightUpperArm||!boss5Bones.rightHand)return;
  const shoulder=new THREE.Vector3();boss5Bones.rightUpperArm.getWorldPosition(shoulder);const reach=getArmReach(boss5Bones,'right'),st=state.bossState,t=state.bossTimer;
- let local=new THREE.Vector3(.34,-.42,.22);
+ let local=bossWalkingHand(new THREE.Vector3(.34,-.42,.22),.02,.042,.012);
  if(st==='b5_chain'){
   const beat=bossKeyedSlash(t,BOSS5_CHAIN_MARKS,{wind:.38,cut:.18,recover:.3});
   local.copy(bossSwordHandArc(beat,reach,{windX:.86,cutX:.92,baseY:-.3,liftY:.32,dropY:.24,baseZ:.02,windBack:-.42,forward:1.08,pullback:.5}).multiplyScalar(1/reach));
@@ -3435,7 +3437,6 @@ function poseBoss5(dt){
  }else if(st==='idle'){
   const sway=Math.sin(state.time*1.5);setBoss5Bone('hips',0,.025*sway,.045*sway,8,dt);setBoss5Bone('spine',-.055,.015*sway,-.03*sway,8,dt);
   setBoss5Bone('rightUpperArm',-.58,.06,-.3,10,dt);setBoss5Bone('rightLowerArm',-.56,0,-.16,10,dt);setBoss5Bone('leftUpperArm',-.44,-.04,.28,10,dt);
-  if(dist()>3.7){const stride=Math.sin(state.time*(phase===2?9.2:7.4))*(phase===2?.52:.42);setBoss5Bone('leftUpperLeg',stride,0,.04,14,dt);setBoss5Bone('rightUpperLeg',-stride,0,-.04,14,dt)}
  }else if(st==='b5_chain'){
   const beat=bossKeyedSlash(t,BOSS5_CHAIN_MARKS,{wind:.38,cut:.18,recover:.3}),cut=beat?.impact||0,side=beat?.side||1,wind=beat?.wind||0;
   setBoss5Bone('hips',-.05*wind,side*.28*cut,0,24,dt);setBoss5Bone('spine',-.14,side*.52*cut,-side*.15*cut,26,dt);setBoss5Bone('chest',-.04,side*.22*cut,-side*.06*cut,24,dt);
