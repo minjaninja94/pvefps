@@ -3328,7 +3328,12 @@ function boss4Once(tag,fn){if(boss4Fired.has(tag))return false;boss4Fired.add(ta
 const boss5Root=new THREE.Group();boss5Root.name='ShinoChampionRoot';boss5Root.visible=BOSS_VARIANT===5;boss.add(boss5Root);
 let boss5Visual=null,boss5VRM=null,boss5Ready=false,boss5VisualBaseY=0;
 const boss5Bones={},boss5Rest={},boss5RenderBones={},boss5Fired=new Set(),boss5MeleeRequests=[],boss5BodyRequests=[];
-const boss5WeaponTrace={valid:false,base:new THREE.Vector3(),tip:new THREE.Vector3()};
+const boss5WeaponTrace={
+ valid:false,
+ bladeABase:new THREE.Vector3(),bladeATip:new THREE.Vector3(),
+ bladeBBase:new THREE.Vector3(),bladeBTip:new THREE.Vector3(),
+ shaftBase:new THREE.Vector3(),shaftTip:new THREE.Vector3()
+};
 const boss5BodyTrace={kick:new THREE.Vector3(),shoulder:new THREE.Vector3(),elbow:new THREE.Vector3(),validKick:false,validShoulder:false,validElbow:false};
 const boss5Aura=new THREE.PointLight(0xe4703b,7.8,12.5,2);boss5Aura.position.set(0,1.25,.1);boss5Root.add(boss5Aura);
 const boss5HaloMat=new THREE.MeshBasicMaterial({color:0x9e3f24,transparent:true,opacity:.08,depthWrite:false});
@@ -3398,11 +3403,22 @@ function updateBoss5Weapon(){
  const lower=boss5RenderBones.rightLowerArm||boss5Bones.rightLowerArm||boss5RenderBones.rightUpperArm||boss5Bones.rightUpperArm;
  if(!hand||!lower){boss5WeaponRoot.visible=false;return}
  boss5WeaponRoot.visible=true;
+
+ // Right hand is the rear grip.  The left hand is the forward grip on the poleaxe.
+ // Prefer the real two-hand shaft axis once both hands are in a sane configuration;
+ // fall back to the right forearm axis during load/recovery so the poleaxe never flips.
  let axis=weaponArmAxis(lower,hand,bossCombatOffset(0,.12,1));
- // During the shoulder charge the axe is intentionally held rearward, but the head still stays on +Y.
- if(state.bossState==='b5_charge'){
-  axis=bossCombatOffset(.12,.2,.96).normalize();
+ const left=boss5RenderBones.leftHand||boss5Bones.leftHand;
+ if(left){
+  const rp=new THREE.Vector3(),lp=new THREE.Vector3();hand.getWorldPosition(rp);left.getWorldPosition(lp);
+  const handAxis=lp.sub(rp);
+  if(handAxis.lengthSq()>.04){
+   handAxis.normalize();
+   if(handAxis.dot(axis)>.18)axis.lerp(handAxis,.82).normalize();
+  }
  }
+ if(state.bossState==='b5_charge')axis=bossCombatOffset(.12,.2,.96).normalize();
+
  const marks=state.bossState==='b5_chain'?BOSS5_CHAIN_MARKS:state.bossState==='b5_rush'?BOSS5_RUSH_AXE_MARKS:null;
  const edge=marks?bossKeyedSlash(state.bossTimer,marks,{wind:state.bossState==='b5_chain'?.38:.24,cut:state.bossState==='b5_chain'?.18:.13,recover:state.bossState==='b5_chain'?.3:.22}):null;
  const roll=edge?edge.side*edge.impact*.34:0;
@@ -3499,7 +3515,8 @@ function poseBoss5(dt){
  }
 }
 function boss5Strike(tag,dmg,posture,ttl=.3,unblockable=false){
- if(boss5Fired.has(tag)||boss5MeleeRequests.some(r=>r.tag===tag))return;boss5MeleeRequests.push({tag,dmg,posture,ttl,unblockable});
+ if(boss5Fired.has(tag)||boss5MeleeRequests.some(r=>r.tag===tag))return;
+ boss5MeleeRequests.push({tag,dmg,posture,ttl:Math.max(ttl,.4),unblockable});
 }
 function boss5BodyStrike(tag,kind,dmg,posture,ttl=.28,unblockable=false){
  if(boss5Fired.has(tag)||boss5BodyRequests.some(r=>r.tag===tag))return;boss5BodyRequests.push({tag,kind,dmg,posture,ttl,unblockable});
@@ -3518,10 +3535,32 @@ function resetBoss5PhysicalTrace(){
 function processBoss5PhysicalHits(){
  const caps=combatHumanoidCapsules(playerVrmBones,player,2.0);
  if(boss5WeaponRoot.visible){
-  const seg=combatWorldSegment(boss5WeaponRoot,new THREE.Vector3(-.1,2.72,0),new THREE.Vector3(.66,3.02,0));let hit=null;
-  if(boss5WeaponTrace.valid)hit=combatSweptBladeContact(boss5WeaponTrace.base,boss5WeaponTrace.tip,seg.base,seg.tip,caps,.24);
-  boss5WeaponTrace.base.copy(seg.base);boss5WeaponTrace.tip.copy(seg.tip);boss5WeaponTrace.valid=true;
-  if(hit)for(const req of boss5MeleeRequests){if(boss5Fired.has(req.tag))continue;boss5Fired.add(req.tag);spawnSparks(hit.point,13,5.4);if(state.invuln>0){flash('회피',.12);break}hurtPlayer(req.dmg,req.posture,!!req.unblockable);break}
+  // Match the actual poleaxe mesh: broad blade, lower hook and a damaging upper shaft.
+  // Two crossing blade segments cover the full visible .78 x .72 head instead of the
+  // old single thin diagonal that let the weapon visibly pass through the player.
+  const bladeA=combatWorldSegment(boss5WeaponRoot,new THREE.Vector3(-.36,2.6,0),new THREE.Vector3(.72,3.18,0));
+  const bladeB=combatWorldSegment(boss5WeaponRoot,new THREE.Vector3(-.34,3.18,0),new THREE.Vector3(.72,2.58,0));
+  const shaft=combatWorldSegment(boss5WeaponRoot,new THREE.Vector3(0,.48,0),new THREE.Vector3(0,2.58,0));
+  let hit=null;
+  if(boss5WeaponTrace.valid){
+   const hits=[
+    combatSweptBladeContact(boss5WeaponTrace.bladeABase,boss5WeaponTrace.bladeATip,bladeA.base,bladeA.tip,caps,.29),
+    combatSweptBladeContact(boss5WeaponTrace.bladeBBase,boss5WeaponTrace.bladeBTip,bladeB.base,bladeB.tip,caps,.29),
+    combatSweptBladeContact(boss5WeaponTrace.shaftBase,boss5WeaponTrace.shaftTip,shaft.base,shaft.tip,caps,.105)
+   ].filter(Boolean).sort((a,b)=>a.distance-b.distance);
+   hit=hits[0]||null;
+  }
+  boss5WeaponTrace.bladeABase.copy(bladeA.base);boss5WeaponTrace.bladeATip.copy(bladeA.tip);
+  boss5WeaponTrace.bladeBBase.copy(bladeB.base);boss5WeaponTrace.bladeBTip.copy(bladeB.tip);
+  boss5WeaponTrace.shaftBase.copy(shaft.base);boss5WeaponTrace.shaftTip.copy(shaft.tip);boss5WeaponTrace.valid=true;
+  if(hit&&boss5MeleeRequests.length){
+   for(const req of boss5MeleeRequests){
+    if(boss5Fired.has(req.tag))continue;
+    boss5Fired.add(req.tag);spawnSparks(hit.point,14,5.8);
+    if(state.invuln>0){flash('회피',.12);break}
+    hurtPlayer(req.dmg,req.posture,!!req.unblockable);break;
+   }
+  }
  }
  for(const kind of ['kick','shoulder','elbow']){
   const cur=boss5BodyPoint(kind),key='valid'+kind[0].toUpperCase()+kind.slice(1),prev=boss5BodyTrace[kind];let bodyHit=null;
