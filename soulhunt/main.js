@@ -1741,7 +1741,7 @@ boss2Root.name='ArceliaRoot';
 boss2Root.visible=BOSS_VARIANT===2;
 boss.add(boss2Root);
 
-let boss2Visual=null,boss2VRM=null,boss2Ready=false;
+let boss2Visual=null,boss2VRM=null,boss2Ready=false,boss2VisualBaseY=0;
 const boss2Bones={},boss2Rest={},boss2RenderBones={},boss2BustNodes=[];
 const boss2Projectiles=[],boss2Fx=[];
 const boss2Fired=new Set(),boss2MeleeRequests=[];
