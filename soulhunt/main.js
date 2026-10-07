@@ -3772,7 +3772,7 @@ function buildBoss6SupportMarine(name,role,side){
 
  root.scale.setScalar(scale);
  root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
- boss6Root.add(root);
+ root.visible=false;boss6Root.add(root);
  return {name,role,side,root,pelvis,torso,head,lArm,rArm,lFore,rFore,lLeg,rLeg,lShin,rShin,weapon,muzzle,muzzleFlash,recoil:0,weaponBaseZ:-.43,seed:3.7};
 }
 function buildBoss6SupportSquad(){
