@@ -3619,6 +3619,133 @@ function buildBoss6ProceduralModel(){
  return root;
 }
 
+const boss6SupportMarines=[];
+let boss6SupportBuilt=false;
+
+function buildBoss6SupportMarine(name,role,side){
+ const root=new THREE.Group();root.name='HwangSupport_'+name;
+ const stocky=role==='heavy';
+ const scale=stocky?1.08:.96;
+ const uniform=stocky?new THREE.MeshStandardMaterial({color:0x20281e,roughness:.72,metalness:.08}):new THREE.MeshStandardMaterial({color:0x263127,roughness:.7,metalness:.06});
+ const trim=stocky?new THREE.MeshStandardMaterial({color:0x343d2f,roughness:.66,metalness:.16}):new THREE.MeshStandardMaterial({color:0x151b16,roughness:.72,metalness:.12});
+ const skin=stocky?new THREE.MeshStandardMaterial({color:0xa36f54,roughness:.8}):new THREE.MeshStandardMaterial({color:0x8e6049,roughness:.82});
+ const metal=new THREE.MeshStandardMaterial({color:stocky?0x3f4743:0x50564d,roughness:.42,metalness:.62});
+ const accent=new THREE.MeshStandardMaterial({color:stocky?0xaa3a18:0x8e1511,roughness:.5,metalness:.12,emissive:stocky?0x2b0902:0x310302,emissiveIntensity:.24});
+
+ const pelvis=new THREE.Group();pelvis.position.y=1.14;root.add(pelvis);
+ boss6Mesh(pelvis,new THREE.BoxGeometry(stocky?.7:.58,.3,.38),uniform,[0,0,0]);
+
+ const torso=new THREE.Group();torso.position.set(0,.38,0);pelvis.add(torso);
+ boss6Mesh(torso,new THREE.BoxGeometry(stocky?.92:.7,.62,.42),uniform,[0,.24,0]);
+ boss6Mesh(torso,new THREE.BoxGeometry(stocky?.98:.76,.14,.46),trim,[0,.43,0]);
+ boss6Mesh(torso,new THREE.BoxGeometry(.3,.13,.025),accent,[0,.27,-.225]);
+
+ const head=new THREE.Group();head.position.set(0,.94,-.015);pelvis.add(head);
+ boss6Mesh(head,new THREE.BoxGeometry(stocky?.43:.38,.43,.4),skin,[0,0,0]);
+ boss6Mesh(head,new THREE.BoxGeometry(stocky?.45:.4,.14,.43),skin,[0,-.18,0]);
+ boss6Mesh(head,new THREE.BoxGeometry(.11,.07,.025),b6EyeWhite,[-.095,.06,-.213]);
+ boss6Mesh(head,new THREE.BoxGeometry(.11,.07,.025),b6EyeWhite,[.095,.06,-.213]);
+ boss6Mesh(head,new THREE.BoxGeometry(.025,.025,.018),b6Black,[-.095,.06,-.23]);
+ boss6Mesh(head,new THREE.BoxGeometry(.025,.025,.018),b6Black,[.095,.06,-.23]);
+
+ const cap=new THREE.Group();cap.position.set(0,.29,0);head.add(cap);
+ boss6Mesh(cap,new THREE.CylinderGeometry(.19,.24,.14,8),trim,[0,0,0]);
+ boss6Mesh(cap,new THREE.BoxGeometry(.42,.03,.24),uniform,[0,-.06,-.11]);
+ boss6Mesh(cap,new THREE.BoxGeometry(.1,.055,.02),accent,[0,.005,-.205]);
+
+ const lArm=new THREE.Group(),rArm=new THREE.Group();
+ lArm.position.set(stocky?.53:.43,.62,0);rArm.position.set(stocky?-.53:-.43,.62,0);pelvis.add(lArm,rArm);
+ boss6Mesh(lArm,new THREE.CapsuleGeometry(stocky?.13:.11,.43,4,7),uniform,[0,-.26,0]);
+ boss6Mesh(rArm,new THREE.CapsuleGeometry(stocky?.13:.11,.43,4,7),uniform,[0,-.26,0]);
+ const lFore=new THREE.Group(),rFore=new THREE.Group();lFore.position.y=-.54;rFore.position.y=-.54;lArm.add(lFore);rArm.add(rFore);
+ boss6Mesh(lFore,new THREE.CapsuleGeometry(stocky?.12:.1,.31,4,7),skin,[0,-.19,0]);
+ boss6Mesh(rFore,new THREE.CapsuleGeometry(stocky?.12:.1,.31,4,7),skin,[0,-.19,0]);
+
+ const lLeg=new THREE.Group(),rLeg=new THREE.Group();lLeg.position.set(.2,-.12,0);rLeg.position.set(-.2,-.12,0);pelvis.add(lLeg,rLeg);
+ boss6Mesh(lLeg,new THREE.CapsuleGeometry(stocky?.16:.135,.55,4,7),uniform,[0,-.34,0]);
+ boss6Mesh(rLeg,new THREE.CapsuleGeometry(stocky?.16:.135,.55,4,7),uniform,[0,-.34,0]);
+ const lShin=new THREE.Group(),rShin=new THREE.Group();lShin.position.y=-.69;rShin.position.y=-.69;lLeg.add(lShin);rLeg.add(rShin);
+ boss6Mesh(lShin,new THREE.CapsuleGeometry(stocky?.145:.12,.43,4,7),trim,[0,-.27,0]);
+ boss6Mesh(rShin,new THREE.CapsuleGeometry(stocky?.145:.12,.43,4,7),trim,[0,-.27,0]);
+ boss6Mesh(lShin,new THREE.BoxGeometry(.29,.19,.48),b6Boot,[0,-.54,-.08]);
+ boss6Mesh(rShin,new THREE.BoxGeometry(.29,.19,.48),b6Boot,[0,-.54,-.08]);
+
+ const weapon=new THREE.Group();weapon.position.set(stocky?.16:.1,1.48,-.43);root.add(weapon);
+ if(stocky){
+  boss6Mesh(weapon,new THREE.BoxGeometry(.3,.3,.82),metal,[0,0,-.16]);
+  boss6Mesh(weapon,new THREE.CylinderGeometry(.12,.12,.92,10),metal,[0,0,-.72],[1,1,1],[Math.PI/2,0,0]);
+  boss6Mesh(weapon,new THREE.CylinderGeometry(.18,.18,.2,10),trim,[0,0,-.36],[1,1,1],[Math.PI/2,0,0]);
+  boss6Mesh(weapon,new THREE.BoxGeometry(.16,.42,.22),accent,[.19,-.05,-.12]);
+ }else{
+  boss6Mesh(weapon,new THREE.BoxGeometry(.16,.18,1.28),metal,[0,0,-.43]);
+  boss6Mesh(weapon,new THREE.BoxGeometry(.22,.28,.42),trim,[0,-.04,.12]);
+  boss6Mesh(weapon,new THREE.CylinderGeometry(.035,.035,.66,8),metal,[0,0,-1.36],[1,1,1],[Math.PI/2,0,0]);
+  boss6Mesh(weapon,new THREE.BoxGeometry(.055,.16,.22),accent,[0,.13,-.52]);
+ }
+ const muzzle=new THREE.Group();muzzle.position.set(0,0,stocky?-1.2:-1.72);weapon.add(muzzle);
+ const muzzleFlash=boss6Mesh(muzzle,new THREE.SphereGeometry(stocky?.11:.075,7,5),new THREE.MeshBasicMaterial({color:0xffc04a}),[0,0,-.02]);
+ muzzleFlash.visible=false;
+
+ root.scale.setScalar(scale);
+ root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+ boss6Root.add(root);
+ return {name,role,side,root,pelvis,torso,head,lArm,rArm,lFore,rFore,lLeg,rLeg,lShin,rShin,weapon,muzzle,muzzleFlash,recoil:0,seed:side>0?1.3:3.7};
+}
+function buildBoss6SupportSquad(){
+ if(boss6SupportBuilt)return;
+ boss6SupportBuilt=true;
+ boss6SupportMarines.push(
+  buildBoss6SupportMarine('톤톤정','heavy',1),
+  buildBoss6SupportMarine('무모칠','rifle',-1)
+ );
+}
+function updateBoss6SupportSquad(dt){
+ if(!boss6SupportBuilt)return;
+ const alive=state.bossHp>0&&BOSS_VARIANT===6;
+ const attack=state.bossState==='b6_support'||state.bossState==='b6_allfire';
+ for(const m of boss6SupportMarines){
+  m.root.visible=alive;if(!alive)continue;
+  const idleX=m.side*(m.role==='heavy'?2.35:2.6),attackX=m.side*(m.role==='heavy'?3.0:3.25);
+  const idleZ=1.35,attackZ=-.25;
+  const tx=attack?attackX:idleX,tz=attack?attackZ:idleZ;
+  const a=1-Math.exp(-dt*(attack?7.5:4.5));
+  m.root.position.x=THREE.MathUtils.lerp(m.root.position.x,tx,a);
+  m.root.position.z=THREE.MathUtils.lerp(m.root.position.z,tz,a);
+  const moving=Math.abs(m.root.position.x-tx)+Math.abs(m.root.position.z-tz)>.08;
+  const gait=Math.sin(state.time*(moving?11:3.1)+m.seed);
+  const breath=Math.sin(state.time*2.1+m.seed);
+  m.pelvis.position.y=1.14+(moving?Math.abs(gait)*.035:breath*.018);
+  m.lLeg.rotation.x=THREE.MathUtils.lerp(m.lLeg.rotation.x,moving?gait*.42:0,1-Math.exp(-dt*12));
+  m.rLeg.rotation.x=THREE.MathUtils.lerp(m.rLeg.rotation.x,moving?-gait*.42:0,1-Math.exp(-dt*12));
+  m.lShin.rotation.x=THREE.MathUtils.lerp(m.lShin.rotation.x,moving?Math.max(0,-gait)*.5:0,1-Math.exp(-dt*12));
+  m.rShin.rotation.x=THREE.MathUtils.lerp(m.rShin.rotation.x,moving?Math.max(0,gait)*.5:0,1-Math.exp(-dt*12));
+  const aim=attack?1:.55;
+  m.lArm.rotation.x=THREE.MathUtils.lerp(m.lArm.rotation.x,-.86*aim,1-Math.exp(-dt*14));
+  m.rArm.rotation.x=THREE.MathUtils.lerp(m.rArm.rotation.x,-.86*aim,1-Math.exp(-dt*14));
+  m.lArm.rotation.z=THREE.MathUtils.lerp(m.lArm.rotation.z,m.role==='heavy'?.32:.24,1-Math.exp(-dt*14));
+  m.rArm.rotation.z=THREE.MathUtils.lerp(m.rArm.rotation.z,m.role==='heavy'?-.32:-.24,1-Math.exp(-dt*14));
+  m.lFore.rotation.x=THREE.MathUtils.lerp(m.lFore.rotation.x,-.45*aim,1-Math.exp(-dt*14));
+  m.rFore.rotation.x=THREE.MathUtils.lerp(m.rFore.rotation.x,-.45*aim,1-Math.exp(-dt*14));
+  m.torso.rotation.x=THREE.MathUtils.lerp(m.torso.rotation.x,attack?-.12:.01*breath,1-Math.exp(-dt*10));
+  m.head.rotation.y=THREE.MathUtils.lerp(m.head.rotation.y,attack?m.side*.08:Math.sin(state.time*.7+m.seed)*.07,1-Math.exp(-dt*8));
+  m.recoil=Math.max(0,m.recoil-dt);
+  const recoil=m.recoil>0?Math.sin((m.recoil/.13)*Math.PI)*(m.role==='heavy'?.16:.1):0;
+  m.weapon.position.z=-.43+recoil;
+  m.muzzleFlash.visible=m.recoil>.075;
+ }
+}
+function fireBoss6SupportMarine(m,index=0){
+ if(!m)return false;
+ const start=new THREE.Vector3();m.muzzle.getWorldPosition(start);
+ const target=player.position.clone().add(new THREE.Vector3((index%3-1)*.18,1.0,0));
+ const dir=target.sub(start).normalize();
+ const heavy=m.role==='heavy';
+ spawnBoss6Shot('support',start,dir,{speed:heavy?16.2:20.5,dmg:heavy?15:12,posture:heavy?15:10,radius:heavy?.18:.11,life:1.65});
+ m.recoil=.13;
+ spawnSparks(start,heavy?8:5,heavy?3.4:2.5);
+ return true;
+}
+
 state.boss6Phase=1;state.boss6HitReact=0;state.boss6AttackCount=0;state.boss6LockedDir=new THREE.Vector3();
 
 function cacheBoss6Bone(name,node){if(!node)return;boss6Bones[name]=node;boss6Rest[name]={rotation:node.rotation.clone(),position:node.position.clone(),scale:node.scale.clone()}}
@@ -3658,8 +3785,9 @@ async function loadBoss6Avatar(){
  try{
   const root=buildBoss6ProceduralModel();
   root.updateMatrixWorld(true);
-  boss6Root.add(root);boss6Visual=root;boss6VRM=null;boss6Ready=true;boss6Fallback.visible=false;boss6VisualBaseY=root.position.y;
-  poseBoss6(.12);syncBoss6Rig(0);
+  boss6Root.add(root);boss6Visual=root;boss6VRM=null;boss6Fallback.visible=false;boss6VisualBaseY=root.position.y;
+  buildBoss6SupportSquad();boss6Ready=true;
+  poseBoss6(.12);updateBoss6SupportSquad(.12);syncBoss6Rig(0);
   if(ui.bossName)ui.bossName.textContent=BOSS6_NAME;
   flash('기합! 황근출 해병 등장',1.0);
  }catch(err){
@@ -3740,6 +3868,8 @@ function boss6FireVan(unblockable=true){
  const dir=flatDir(boss.position,player.position);spawnBoss6Shot('van',boss.position.clone().addScaledVector(dir,1.2).add(new THREE.Vector3(0,.55,0)),dir,{speed:14.5,dmg:26,posture:42,radius:1.05,unblockable,life:2.4,spin:0});
 }
 function boss6FireSupport(index=0){
+ const marine=boss6SupportMarines[index%Math.max(1,boss6SupportMarines.length)];
+ if(fireBoss6SupportMarine(marine,index))return;
  const side=index%2===0?1:-1,around=flatDir(player.position,boss.position),right=new THREE.Vector3(around.z,0,-around.x);
  const start=player.position.clone().addScaledVector(right,side*(5.8+(index%3))).add(new THREE.Vector3(0,1.45,0));
  const dir=player.position.clone().add(new THREE.Vector3(0,1.0,0)).sub(start).normalize();
@@ -3795,7 +3925,7 @@ function hitBoss6(base,posture=12,contact=null){
  else if(state.bossPosture>=BOSS_POSTURE_MAX[6]){resetBossPostureAfterBreak(.32);state.bossStagger=1.15;state.bossState='stagger';state.bossTimer=1.15;flash('황근출 자세 붕괴',.48)}
 }
 function updateBoss6(dt){
- enforceBoss6Visibility();updateBoss6Projectiles(dt);state.boss6HitReact=Math.max(0,state.boss6HitReact-dt);boss6Halo.rotation.z+=dt*(state.boss6Phase===2?2.0:.9);boss6Aura.intensity=(state.boss6Phase===2?15:11)+Math.sin(state.time*7)*1.0;
+ enforceBoss6Visibility();updateBoss6Projectiles(dt);updateBoss6SupportSquad(dt);state.boss6HitReact=Math.max(0,state.boss6HitReact-dt);boss6Halo.rotation.z+=dt*(state.boss6Phase===2?2.0:.9);boss6Aura.intensity=(state.boss6Phase===2?15:11)+Math.sin(state.time*7)*1.0;
  if(boss6Visual)boss6Visual.position.y=THREE.MathUtils.lerp(boss6Visual.position.y,boss6VisualBaseY,1-Math.exp(-dt*11));
  if(state.bossHp<=0){poseBoss6(dt);syncBoss6Rig(dt);return}
  if(state.boss6Phase===1&&state.bossHp<=state.bossMaxHp*.5){
