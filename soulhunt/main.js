@@ -3566,6 +3566,7 @@ function addBoss6EyeFx(head,x){
 }
 function buildBoss6ProceduralModel(){
  const root=new THREE.Group();root.name='HwangGeunchulProceduralModel';
+ root.rotation.y=Math.PI;
 
  const hips=boss6Joint(root,'hips',[0,1.39,0]);
  boss6Mesh(hips,new THREE.BoxGeometry(.74,.34,.44),b6Uniform,[0,.03,0],[1,1,1]);
@@ -3662,6 +3663,7 @@ let boss6SupportBuilt=false;
 
 function buildBoss6SupportMarine(name,role,side){
  const root=new THREE.Group();root.name='HwangSupport_'+name;
+ root.rotation.y=Math.PI;
  const isTonton=role==='tonton';
  const scale=isTonton?1.17:1.0;
 
