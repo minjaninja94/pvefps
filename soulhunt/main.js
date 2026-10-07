@@ -3530,6 +3530,16 @@ function boss5BodyPoint(kind){
  if(b){const q=new THREE.Vector3();b.getWorldPosition(q);p.lerp(q,kind==='shoulder'?.35:.15)}
  return p;
 }
+function boss5BodySegment(kind){
+ const bone=(name)=>boss5RenderBones[name]||boss5Bones[name]||null;
+ let a=null,b=null,r=.24;
+ if(kind==='kick'){a=bone('rightFoot');b=bone('rightLowerLeg');r=.24}
+ else if(kind==='elbow'){a=bone('rightLowerArm');b=bone('rightUpperArm');r=.205}
+ else{a=bone('rightShoulder')||bone('chest');b=bone('chest')||bone('upperChest');r=.36}
+ if(!a||!b)return null;
+ const p=new THREE.Vector3(),q=new THREE.Vector3();a.getWorldPosition(p);b.getWorldPosition(q);
+ return{a:p,b:q,r};
+}
 function resetBoss5PhysicalTrace(){
  boss5WeaponTrace.valid=false;boss5BodyTrace.validKick=boss5BodyTrace.validShoulder=boss5BodyTrace.validElbow=false;
 }
@@ -3565,11 +3575,17 @@ function processBoss5PhysicalHits(){
  }
  for(const kind of ['kick','shoulder','elbow']){
   const cur=boss5BodyPoint(kind),key='valid'+kind[0].toUpperCase()+kind.slice(1),prev=boss5BodyTrace[kind];let bodyHit=null;
+  const limb=boss5BodySegment(kind);
   if(boss5BodyTrace[key]){
-   for(const c of caps){const d=combatSegmentSegmentDistance(prev,cur,c.a,c.b);if(d<=c.r+(kind==='shoulder'?.42:.25)){bodyHit={point:cur.clone(),distance:d};break}}
+   for(const c of caps){
+    let d=combatSegmentSegmentDistance(prev,cur,c.a,c.b);
+    if(limb)d=Math.min(d,combatSegmentSegmentDistance(limb.a,limb.b,c.a,c.b)-limb.r);
+    const extra=kind==='shoulder'?.34:kind==='kick'?.18:.16;
+    if(d<=c.r+extra){bodyHit={point:limb?limb.a.clone().lerp(limb.b,.5):cur.clone(),distance:d};break}
+   }
   }
   prev.copy(cur);boss5BodyTrace[key]=true;
-  if(bodyHit)for(const req of boss5BodyRequests){if(req.kind!==kind||boss5Fired.has(req.tag))continue;boss5Fired.add(req.tag);spawnDustBurst(bodyHit.point,.18);if(state.invuln>0){flash('회피',.12);break}hurtPlayer(req.dmg,req.posture,!!req.unblockable);break}
+  if(bodyHit)for(const req of boss5BodyRequests){if(req.kind!==kind||boss5Fired.has(req.tag))continue;boss5Fired.add(req.tag);spawnDustBurst(bodyHit.point,.2);if(state.invuln>0){flash('회피',.12);break}hurtPlayer(req.dmg,req.posture,!!req.unblockable);break}
  }
  for(let i=boss5MeleeRequests.length-1;i>=0;i--)if(boss5Fired.has(boss5MeleeRequests[i].tag)||boss5MeleeRequests[i].ttl<=0)boss5MeleeRequests.splice(i,1);
  for(let i=boss5BodyRequests.length-1;i>=0;i--)if(boss5Fired.has(boss5BodyRequests[i].tag)||boss5BodyRequests[i].ttl<=0)boss5BodyRequests.splice(i,1);
