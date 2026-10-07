@@ -3531,8 +3531,11 @@ const b6Boot=new THREE.MeshStandardMaterial({color:0x111310,roughness:.78,metaln
 const b6Metal=new THREE.MeshStandardMaterial({color:0x726c5d,roughness:.45,metalness:.5});
 const b6Red=new THREE.MeshStandardMaterial({color:0x8d130d,roughness:.5,metalness:.12,emissive:0x4a0503,emissiveIntensity:.35});
 const b6EyeWhite=new THREE.MeshStandardMaterial({color:0xc8bbaa,roughness:.8});
-const b6EyeGlow=new THREE.MeshBasicMaterial({color:0xff1600});
-const b6EyeAura=new THREE.MeshBasicMaterial({color:0xff0800,transparent:true,opacity:.26,depthWrite:false,blending:THREE.AdditiveBlending});
+const b6EyeGlow=new THREE.MeshBasicMaterial({color:0xff1200,depthTest:false,depthWrite:false,toneMapped:false});
+const b6EyeAura=new THREE.MeshBasicMaterial({color:0xff0500,transparent:true,opacity:.5,depthTest:false,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false});
+const b6EyeFlareMat=new THREE.MeshBasicMaterial({color:0xff1a08,transparent:true,opacity:.86,depthTest:false,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,toneMapped:false});
+const b6EyeBeamMat=new THREE.MeshBasicMaterial({color:0xff0800,transparent:true,opacity:.34,depthTest:false,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false});
+const boss6EyeFx=[];
 const b6Black=new THREE.MeshBasicMaterial({color:0x080808});
 
 function boss6Mesh(parent,geometry,material,pos=[0,0,0],scale=[1,1,1],rot=[0,0,0]){
@@ -3540,6 +3543,24 @@ function boss6Mesh(parent,geometry,material,pos=[0,0,0],scale=[1,1,1],rot=[0,0,0
 }
 function boss6Joint(parent,name,pos=[0,0,0]){
  const g=new THREE.Group();g.name='HwangGeunchul_'+name;g.position.set(...pos);parent.add(g);cacheBoss6Bone(name,g);boss6RenderBones[name]=g;return g;
+}
+function addBoss6EyeFx(head,x){
+ const fx=new THREE.Group();fx.name=x<0?'HwangEyeFxL':'HwangEyeFxR';fx.position.set(x,.15,-.292);head.add(fx);
+
+ const core=boss6Mesh(fx,new THREE.SphereGeometry(.058,12,9),b6EyeGlow,[0,0,-.018],[1.25,.72,.8]);
+ core.renderOrder=1002;
+
+ const flare=boss6Mesh(fx,new THREE.PlaneGeometry(.34,.095),b6EyeFlareMat,[0,0,-.052]);
+ flare.renderOrder=1001;
+
+ const halo=boss6Mesh(fx,new THREE.SphereGeometry(.13,12,9),b6EyeAura,[0,0,-.055],[1.65,.68,.34]);
+ halo.renderOrder=1000;
+
+ const beam=boss6Mesh(fx,new THREE.CylinderGeometry(.022,.072,.78,8,1,true),b6EyeBeamMat,[0,0,-.43],[1,1,1],[Math.PI/2,0,0]);
+ beam.renderOrder=999;
+
+ boss6EyeFx.push({root:fx,core,flare,halo,beam});
+ return fx;
 }
 function buildBoss6ProceduralModel(){
  const root=new THREE.Group();root.name='HwangGeunchulProceduralModel';
@@ -3570,12 +3591,10 @@ function buildBoss6ProceduralModel(){
  boss6Mesh(head,new THREE.BoxGeometry(.15,.09,.06),b6FaceDark,[.31,.08,0]);
  boss6Mesh(head,new THREE.BoxGeometry(.17,.075,.027),b6EyeSocket,[-.13,.15,-.249]);
  boss6Mesh(head,new THREE.BoxGeometry(.17,.075,.027),b6EyeSocket,[.13,.15,-.249]);
- boss6Mesh(head,new THREE.SphereGeometry(.047,10,8),b6EyeGlow,[-.13,.15,-.282]);
- boss6Mesh(head,new THREE.SphereGeometry(.047,10,8),b6EyeGlow,[.13,.15,-.282]);
- boss6Mesh(head,new THREE.SphereGeometry(.095,10,8),b6EyeAura,[-.13,.15,-.294],[1.6,.72,.38]);
- boss6Mesh(head,new THREE.SphereGeometry(.095,10,8),b6EyeAura,[.13,.15,-.294],[1.6,.72,.38]);
- const leftEyeLight=new THREE.PointLight(0xff1200,3.4,2.5,2.0);leftEyeLight.position.set(-.13,.15,-.31);head.add(leftEyeLight);
- const rightEyeLight=new THREE.PointLight(0xff1200,3.4,2.5,2.0);rightEyeLight.position.set(.13,.15,-.31);head.add(rightEyeLight);
+ addBoss6EyeFx(head,-.13);
+ addBoss6EyeFx(head,.13);
+ const leftEyeLight=new THREE.PointLight(0xff1000,6.5,3.8,1.6);leftEyeLight.position.set(-.13,.15,-.34);head.add(leftEyeLight);
+ const rightEyeLight=new THREE.PointLight(0xff1000,6.5,3.8,1.6);rightEyeLight.position.set(.13,.15,-.34);head.add(rightEyeLight);
  boss6Mesh(head,new THREE.BoxGeometry(.22,.045,.025),b6Black,[-.12,.245,-.272],[1,1,1],[0,0,.13]);
  boss6Mesh(head,new THREE.BoxGeometry(.22,.045,.025),b6Black,[.12,.245,-.272],[1,1,1],[0,0,-.13]);
  boss6Mesh(head,new THREE.BoxGeometry(.31,.045,.025),b6Black,[0,-.075,-.275]);
@@ -4016,6 +4035,11 @@ function hitBoss6(base,posture=12,contact=null){
 }
 function updateBoss6(dt){
  enforceBoss6Visibility();updateBoss6Projectiles(dt);updateBoss6SupportSquad(dt);state.boss6HitReact=Math.max(0,state.boss6HitReact-dt);boss6Halo.rotation.z+=dt*(state.boss6Phase===2?2.0:.9);boss6Aura.intensity=(state.boss6Phase===2?15:11)+Math.sin(state.time*7)*1.0;
+ const eyePulse=1+Math.sin(state.time*10.5)*.14+(state.boss6Phase===2?.12:0);
+ b6EyeFlareMat.opacity=.82+Math.sin(state.time*12)*.12;
+ b6EyeBeamMat.opacity=(state.boss6Phase===2?.5:.34)+Math.sin(state.time*9)*.06;
+ b6EyeAura.opacity=(state.boss6Phase===2?.66:.5)+Math.sin(state.time*11)*.08;
+ for(const fx of boss6EyeFx){fx.core.scale.set(1.25*eyePulse,.72*eyePulse,.8);fx.flare.scale.setScalar(eyePulse);fx.halo.scale.set(1.65*eyePulse,.68*eyePulse,.34);}
  if(boss6Visual)boss6Visual.position.y=THREE.MathUtils.lerp(boss6Visual.position.y,boss6VisualBaseY,1-Math.exp(-dt*11));
  if(state.bossHp<=0){poseBoss6(dt);syncBoss6Rig(dt);return}
  if(state.boss6Phase===1&&state.bossHp<=state.bossMaxHp*.5){
