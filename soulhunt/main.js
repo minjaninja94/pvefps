@@ -2435,9 +2435,9 @@ function hitBoss2(base,posture=12,contact=null){
  addBossPosture(pd);
  state.boss2HitReact=.14;triggerPlayerHitImpact(contact||player.position.clone().lerp(boss.position,.58).add(new THREE.Vector3(0,1.1,0)));
  if(state.bossHp<=0){
-   state.bossState='dead';state.potionPunishQueued=false;setDanger(false);flash('잔불이 꺼졌다 · 토벌 완료',1.25);
+   state.bossState='dead';state.potionPunishQueued=false;setDanger(false);flash('박복자 오늘 장사 접음',1.25);
  }else if(state.bossPosture>=BOSS_POSTURE_MAX[2]){
-   resetBossPostureAfterBreak(.32);state.bossStagger=1.2;state.bossState='stagger';state.bossTimer=1.2;flash('자세 붕괴',.5);
+   resetBossPostureAfterBreak(.32);state.bossStagger=1.2;state.bossState='stagger';state.bossTimer=1.2;flash('복자 휘청',.5);
  }
 }
 function updateBoss2(dt){
@@ -2456,7 +2456,7 @@ function updateBoss2(dt){
  if(state.boss2Phase===1&&state.bossHp<=state.bossMaxHp*.5){
    state.boss2Phase=2;setBoss2Style('awakened',false);
    state.bossState='b2_awaken';state.bossTimer=BOSS2_DUR.b2_awaken;state.bossFxStamp='';boss2Fired.clear();
-   setDanger(false);flash('왕혼 해방 · 잿불 각성',1.0);
+   setDanger(false);flash('박복자: 불 더 올려!',1.0);
    spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1.1,0)),3.8,0xffa045,.7);
  }
  if(state.bossStagger>0){
@@ -2957,9 +2957,9 @@ function hitBoss3(base,posture=12,contact=null){
  state.bossHp=Math.max(0,state.bossHp-dmg);addBossPosture(pd);
  state.boss3HitReact=.14;triggerPlayerHitImpact(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)));
  if(state.bossHp<=0){
-  state.bossState='dead';state.potionPunishQueued=false;setDanger(false);flash('김말자 쓰러짐 · 피 그만 빨기',1.25);
+  state.bossState='dead';state.potionPunishQueued=false;setDanger(false);flash('김말자 오늘은 여기까지',1.25);
  }else if(state.bossPosture>=BOSS_POSTURE_MAX[3]){
-  resetBossPostureAfterBreak(.32);state.bossStagger=1.18;state.bossState='stagger';state.bossTimer=1.18;flash('자세 붕괴',.45);
+  resetBossPostureAfterBreak(.32);state.bossStagger=1.18;state.bossState='stagger';state.bossTimer=1.18;flash('말자 중심 잃음',.45);
  }
 }
 function updateBoss3(dt){
@@ -2985,7 +2985,7 @@ function updateBoss3(dt){
   boss3Aura.color.setHex(0xff4b73);boss3Aura.intensity=13.5;
   boss3HaloMat.color.setHex(0xff6d96);boss3HaloMat.opacity=.22;
   boss3BladeMat.emissive.setHex(0xb51e49);boss3BladeMat.emissiveIntensity=.75;
-  setDanger(false);spawnBoss3Petals(48,6.2);flash('혈화 개화 · 두 번째 검무',1.0);
+  setDanger(false);spawnBoss3Petals(48,6.2);flash('김말자: 피 냄새 좋네',1.0);
  }
  if(state.bossStagger>0){
   setDanger(false);state.bossStagger=Math.max(0,state.bossStagger-dt);boss.position.y=THREE.MathUtils.lerp(boss.position.y,0,1-Math.exp(-dt*13));
@@ -3285,8 +3285,8 @@ function finishBoss4Attack(recovery=.78){setDanger(false);state.bossState='idle'
 function hitBoss4(base,posture=12,contact=null){
  if(state.bossHp<=0)return;let dmg=base,pd=posture;[dmg,pd]=bossPunishDamage(dmg,pd);if(state.bossStagger>0){dmg*=1.6;pd*=.22}
  state.bossHp=Math.max(0,state.bossHp-dmg);addBossPosture(pd);state.boss4HitReact=.14;triggerPlayerHitImpact(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)));
- if(state.bossHp<=0){state.bossState='dead';setDanger(false);flash('이순자 쓰러짐 · 칼 내려놓음',1.2)}
- else if(state.bossPosture>=BOSS_POSTURE_MAX[4]){resetBossPostureAfterBreak(.32);state.bossStagger=1.22;state.bossState='stagger';state.bossTimer=1.22;flash('자세 붕괴',.45)}
+ if(state.bossHp<=0){state.bossState='dead';setDanger(false);flash('이순자 칼 놓침',1.2)}
+ else if(state.bossPosture>=BOSS_POSTURE_MAX[4]){resetBossPostureAfterBreak(.32);state.bossStagger=1.22;state.bossState='stagger';state.bossTimer=1.22;flash('순자 발 헛디딤',.45)}
 }
 function updateBoss4(dt){
  for(let i=boss4MeleeRequests.length-1;i>=0;i--){boss4MeleeRequests[i].ttl-=dt;if(boss4MeleeRequests[i].ttl<=0)boss4MeleeRequests.splice(i,1)}
@@ -3605,8 +3605,8 @@ function finishBoss5Attack(recovery=.76){setDanger(false);state.bossState='idle'
 function hitBoss5(base,posture=12,contact=null){
  if(state.bossHp<=0)return;let dmg=base,pd=posture;[dmg,pd]=bossPunishDamage(dmg,pd);if(state.bossStagger>0){dmg*=1.58;pd*=.2}
  state.bossHp=Math.max(0,state.bossHp-dmg);addBossPosture(pd);state.boss5HitReact=.14;triggerPlayerHitImpact(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.2,0)));
- if(state.bossHp<=0){state.bossState='dead';setDanger(false);flash('최춘자 쓰러짐 · 도끼 압수',1.25)}
- else if(state.bossPosture>=BOSS_POSTURE_MAX[5]){resetBossPostureAfterBreak(.32);state.bossStagger=1.18;state.bossState='stagger';state.bossTimer=1.18;flash('자세 붕괴',.45)}
+ if(state.bossHp<=0){state.bossState='dead';setDanger(false);flash('최춘자 도끼 놓침',1.25)}
+ else if(state.bossPosture>=BOSS_POSTURE_MAX[5]){resetBossPostureAfterBreak(.32);state.bossStagger=1.18;state.bossState='stagger';state.bossTimer=1.18;flash('춘자 비틀',.45)}
 }
 function updateBoss5(dt){
  for(const r of boss5MeleeRequests)r.ttl-=dt;for(const r of boss5BodyRequests)r.ttl-=dt;
@@ -3615,7 +3615,7 @@ function updateBoss5(dt){
  if(state.bossHp<=0){boss5WeaponRoot.visible=false;poseBoss5(dt);syncBoss5Rig(dt);return}
  if(state.boss5Phase===1&&state.bossHp<=state.bossMaxHp*.5){
   state.boss5Phase=2;state.bossState='b5_roar';state.bossTimer=BOSS5_DUR.b5_roar;boss5Fired.clear();boss5Aura.color.setHex(0xff6b35);boss5HaloMat.opacity=.16;
-  spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1,0)),4.2,0xff6832,.55);flash('투신 각성 · 흑철의 폭주',.9);
+  spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1,0)),4.2,0xff6832,.55);flash('최춘자: 이제 주먹도 쓴다',.9);
  }
  if(state.bossStagger>0){setDanger(false);state.bossStagger=Math.max(0,state.bossStagger-dt);poseBoss5(dt);applyBoss5PrimaryArmIK(dt);applyBoss5GripIK(dt);syncBoss5Rig(dt);updateBoss5Weapon();if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.72}return}
  state.bossTimer-=dt;updateBossPunish(dt);const d=dist(),liveDir=flatDir(boss.position,player.position),dur=BOSS5_DUR[state.bossState]||1,dir=state.bossState==='idle'?liveDir:bossCommittedDir(dur,state.bossTimer,.55),face=Math.atan2(dir.x,dir.z),p2=state.boss5Phase===2;
@@ -4106,7 +4106,7 @@ async function loadBoss6Avatar(){
   buildBoss6SupportSquad();boss6Ready=true;
   poseBoss6(.12);updateBoss6SupportSquad(.12);syncBoss6Rig(0);
   if(ui.bossName)ui.bossName.textContent=BOSS6_NAME;
-  flash('기합! 황근출 해병 등장',1.0);
+  flash('황근출 출근 완료',1.0);
  }catch(err){
   console.warn('Hwang Geunchul procedural model failed.',err);
   boss6Fallback.visible=true;
@@ -4122,6 +4122,7 @@ const BOSS6_MARKS={
  b6_jjajang:[1.95,1.5,1.05,.6],
  b6_support:[2.35,1.95,1.55,1.15,.75,.35]
 };
+const BOSS6_KIHAP_LINES=['아쎄이! 원위치!','새끼기합!','새끼기열!'];
 function boss6ProjectileMesh(kind,color){
  let g;
  if(kind==='van')g=new THREE.BoxGeometry(1.65,1.0,2.8);
@@ -4252,8 +4253,8 @@ function finishBoss6Attack(recovery=.9){setDanger(false);state.bossState='idle';
 function hitBoss6(base,posture=12,contact=null){
  if(state.bossHp<=0)return;let dmg=base,pd=posture;[dmg,pd]=bossPunishDamage(dmg,pd);if(state.bossStagger>0){dmg*=1.6;pd*=.2}
  state.bossHp=Math.max(0,state.bossHp-dmg);addBossPosture(pd);state.boss6HitReact=.15;triggerPlayerHitImpact(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.35,0)));
- if(state.bossHp<=0){state.bossState='dead';setDanger(false);clearBoss6Projectiles();flash('황근출 해병 격파 · 기합!',1.35)}
- else if(state.bossPosture>=BOSS_POSTURE_MAX[6]){resetBossPostureAfterBreak(.32);state.bossStagger=1.15;state.bossState='stagger';state.bossTimer=1.15;flash('황근출 자세 붕괴',.48)}
+ if(state.bossHp<=0){state.bossState='dead';setDanger(false);clearBoss6Projectiles();flash('황근출 오늘 일과 끝',1.35)}
+ else if(state.bossPosture>=BOSS_POSTURE_MAX[6]){resetBossPostureAfterBreak(.32);state.bossStagger=1.15;state.bossState='stagger';state.bossTimer=1.15;flash('황근출 휘청',.48)}
 }
 function updateBoss6(dt){
  enforceBoss6Visibility();updateBoss6Projectiles(dt);updateBoss6SupportSquad(dt);boss6TankRecoil=Math.max(0,boss6TankRecoil-dt);if(boss6TankMuzzleFlash)boss6TankMuzzleFlash.visible=boss6TankRecoil>.055;state.boss6HitReact=Math.max(0,state.boss6HitReact-dt);boss6Halo.rotation.z+=dt*(state.boss6Phase===2?2.0:.9);boss6Aura.intensity=(state.boss6Phase===2?15:11)+Math.sin(state.time*7)*1.0;
@@ -4266,7 +4267,7 @@ function updateBoss6(dt){
  if(state.bossHp<=0){poseBoss6(dt);syncBoss6Rig(dt);return}
  if(state.boss6Phase===1&&state.bossHp<=state.bossMaxHp*.5){
   state.boss6Phase=2;state.bossState='b6_roar';state.bossTimer=BOSS6_DUR.b6_roar;boss6Fired.clear();clearBoss6Projectiles();boss6HaloMat.opacity=.22;boss6Aura.color.setHex(0xff1800);
-  spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1.2,0)),4.8,0xff3018,.7);flash('악으로! 깡으로! · 오도짜세 2페이즈',1.0);
+  spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1.2,0)),4.8,0xff3018,.7);flash('악으로! 깡으로!',1.0);
  }
  if(state.bossStagger>0){setDanger(false);state.bossStagger=Math.max(0,state.bossStagger-dt);poseBoss6(dt);syncBoss6Rig(dt);if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.7}return}
  state.bossTimer-=dt;updateBossPunish(dt);const liveDir=flatDir(boss.position,player.position),d=dist(),dur=BOSS6_DUR[state.bossState]||1,dir=state.bossState==='idle'?liveDir:bossCommittedDir(dur,state.bossTimer,.58),face=Math.atan2(dir.x,dir.z),p2=state.boss6Phase===2;
@@ -4275,30 +4276,30 @@ function updateBoss6(dt){
   if(state.bossPunish<=0){boss.rotation.y=lerpAngle(boss.rotation.y,Math.atan2(liveDir.x,liveDir.z),1-Math.exp(-dt*5.5));if(d>5.0)boss.position.addScaledVector(liveDir,dt*(p2?3.8:3.1));else if(d<2.7)boss.position.addScaledVector(liveDir,-dt*.8)}
   if(state.bossTimer<=0&&state.bossPunish<=0)chooseBoss6Attack();
  }else if(state.bossState==='b6_kihap'){
-  BOSS6_MARKS.b6_kihap.forEach((m,i)=>{if(state.bossTimer<=m+.06&&state.bossTimer>m-.06)boss6Once('kihap'+i,()=>{flash('기합포!',.16);boss6FireKihap(i)})});
+  BOSS6_MARKS.b6_kihap.forEach((m,i)=>{if(state.bossTimer<=m+.06&&state.bossTimer>m-.06)boss6Once('kihap'+i,()=>{flash(BOSS6_KIHAP_LINES[i%BOSS6_KIHAP_LINES.length],.24);boss6FireKihap(i)})});
   if(state.bossTimer<=0)finishBoss6Attack(.88);
  }else if(state.bossState==='b6_grenade'){
-  BOSS6_MARKS.b6_grenade.forEach((m,i)=>{if(state.bossTimer<=m+.07&&state.bossTimer>m-.07)boss6Once('grenade'+i,()=>{if(i===0)flash('해병수류탄 투척!',.28);boss6FireGrenade(i)})});
+  BOSS6_MARKS.b6_grenade.forEach((m,i)=>{if(state.bossTimer<=m+.07&&state.bossTimer>m-.07)boss6Once('grenade'+i,()=>{if(i===0)flash('받아라 수류탄!',.28);boss6FireGrenade(i)})});
   if(state.bossTimer<=0)finishBoss6Attack(.92);
  }else if(state.bossState==='b6_jjajang'){
-  BOSS6_MARKS.b6_jjajang.forEach((m,i)=>{if(state.bossTimer<=m+.07&&state.bossTimer>m-.07)boss6Once('jjajang'+i,()=>{if(i===0)flash('해병짜장 포격!',.28);boss6FireJjajang(i)})});
+  BOSS6_MARKS.b6_jjajang.forEach((m,i)=>{if(state.bossTimer<=m+.07&&state.bossTimer>m-.07)boss6Once('jjajang'+i,()=>{if(i===0)flash('짜장 배달 왔다!',.28);boss6FireJjajang(i)})});
   if(state.bossTimer<=0)finishBoss6Attack(.9);
  }else if(state.bossState==='b6_van'){
-  if(state.bossTimer<=1.45)boss6Once('van',()=>{flash('오도봉고 출동!',.35);boss6FireVan(true)});
+  if(state.bossTimer<=1.45)boss6Once('van',()=>{flash('차 온다 비켜!',.35);boss6FireVan(true)});
   if(state.bossTimer<=0)finishBoss6Attack(1.12);
  }else if(state.bossState==='b6_reverse'){
   const p=clamp(1-state.bossTimer/BOSS6_DUR.b6_reverse,0,1);if(p>.16&&p<.42)boss.position.addScaledVector(state.boss6LockedDir,-dt*8.8);
-  for(const [j,m] of [[0,1.4],[1,1.05],[2,.7],[3,.38]])if(state.bossTimer<=m+.055&&state.bossTimer>m-.055)boss6Once('reverse'+j,()=>{if(j===0)flash('전술적 역돌격!',.3);boss6FireKihap(j)});
+  for(const [j,m] of [[0,1.4],[1,1.05],[2,.7],[3,.38]])if(state.bossTimer<=m+.055&&state.bossTimer>m-.055)boss6Once('reverse'+j,()=>{if(j===0)flash('후퇴 아니다 역돌격이다!',.3);boss6FireKihap(j)});
   if(state.bossTimer<=0)finishBoss6Attack(.82);
  }else if(state.bossState==='b6_support'){
-  BOSS6_MARKS.b6_support.forEach((m,i)=>{if(state.bossTimer<=m+.055&&state.bossTimer>m-.055)boss6Once('support'+i,()=>{if(i===0)flash('톤톤정·무모칠 지원사격!',.38);boss6FireSupport(i)})});
+  BOSS6_MARKS.b6_support.forEach((m,i)=>{if(state.bossTimer<=m+.055&&state.bossTimer>m-.055)boss6Once('support'+i,()=>{if(i===0)flash('무톤 듀오 출근!',.38);boss6FireSupport(i)})});
   if(state.bossTimer<=0)finishBoss6Attack(.96);
  }else if(state.bossState==='b6_enlist'){
-  if(state.bossTimer<=1.12)boss6Once('enlist',()=>{flash('자진입대 실시!',.34);boss6FireEnlist(true)});
+  if(state.bossTimer<=1.12)boss6Once('enlist',()=>{flash('너 오늘부터 해병이다!',.34);boss6FireEnlist(true)});
   if(state.bossTimer<=0)finishBoss6Attack(1.08);
  }else if(state.bossState==='b6_allfire'){
   const events=[
-   [4.65,'a0',()=>{flash('악으로! 깡으로! 전탄발사!',.46);boss6FireKihap(0);boss6FireKihap(1)}],
+   [4.65,'a0',()=>{flash('악으로! 깡으로! 다 쏴!',.46);boss6FireKihap(0);boss6FireKihap(1)}],
    [4.05,'a1',()=>boss6FireGrenade(0)],[3.55,'a2',()=>boss6FireJjajang(0)],
    [3.05,'a3',()=>boss6FireSupport(0)],[2.65,'a4',()=>boss6FireSupport(1)],
    [2.18,'a5',()=>boss6FireGrenade(2)],[1.7,'a6',()=>boss6FireJjajang(3)],
@@ -5666,7 +5667,7 @@ function updateCamera(dt){
 function partText(v,broken,label,max=100){return broken?label:(v<max*.45?'손상':'정상')}
 function updateUI(){
  ui.hp.style.width=(clamp(state.hp,0,state.hpMax)/state.hpMax*100)+'%';if(hpLabel)hpLabel.textContent=`HP ${Math.ceil(state.hp)} / ${state.hpMax}`;if(ui.stamina){ui.stamina.style.width=(clamp(state.stamina,0,state.staminaMax)/state.staminaMax*100)+'%';ui.stamina.parentElement.classList.toggle('exhausted',state.exhausted>0)}if(staminaLabel)staminaLabel.textContent=`STAMINA ${Math.ceil(state.stamina)} / ${state.staminaMax}`;ui.posture.style.width=clamp(state.posture,0,100)+'%';ui.bossHp.style.width=(clamp(state.bossHp,0,state.bossMaxHp)/state.bossMaxHp*100)+'%';ui.bossPosture.style.width=(clamp(state.bossPosture,0,BOSS_POSTURE_MAX[BOSS_VARIANT])/BOSS_POSTURE_MAX[BOSS_VARIANT]*100)+'%';
- if(BOSS_VARIANT===2){if(ui.parts)ui.parts.textContent=state.boss2Phase===2?'2페이즈 · 복자 빡침 · 불장난 강화':'1페이즈 · '+({sword:'칼',spear:'창',mage:'마법질',frenzy:'난동'}[state.boss2Style]||'칼')+' 모드';}else if(BOSS_VARIANT===3){if(ui.parts)ui.parts.textContent=state.boss3Phase===2?'2페이즈 · 말자 피맛 봄 · 회복 칼질':'1페이즈 · 칼 맞히면 지 혼자 회복';}else if(BOSS_VARIANT===4){if(ui.parts)ui.parts.textContent='순자 칼질 · 발도 / 환영검무 / 맹룡단공참';}else if(BOSS_VARIANT===5){if(ui.parts)ui.parts.textContent=state.boss5Phase===2?'2페이즈 · 춘자 빡침 · 도끼+주먹질':'1페이즈 · 큰 도끼 / 어깨빵 / 발차기 / 점프';}else if(BOSS_VARIANT===6){if(ui.parts)ui.parts.textContent=state.boss6Phase===2?'2페이즈 · 악으로 깡으로 · 전탄발사':'1페이즈 · 기합포 / 수류탄 / 해병짜장 / 오도봉고 / 지원사격';}else{ui.head.textContent=partText(state.headHp,state.headBroken,'파괴',BOSS1_PART_HP.head);ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴',BOSS1_PART_HP.leg);if(ui.spike){const alive=bossSpikeTargets.filter(s=>!s.broken).length,total=bossSpikeTargets.length;ui.spike.textContent=total?(alive?`${alive}/${total}`:'전부 파괴'):'로딩';}ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단',BOSS1_PART_HP.tail);}if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
+ if(BOSS_VARIANT===2){if(ui.parts)ui.parts.textContent=state.boss2Phase===2?'복자 성질 제대로 남':'복자 손에 든 것 · '+({sword:'칼',spear:'장대',mage:'불',frenzy:'아무거나'}[state.boss2Style]||'칼');}else if(BOSS_VARIANT===3){if(ui.parts)ui.parts.textContent=state.boss3Phase===2?'말자 피맛 봄':'말자 특징 · 때리면서 회복함';}else if(BOSS_VARIANT===4){if(ui.parts)ui.parts.textContent='순자 특징 · 칼 하나는 기막히게 씀';}else if(BOSS_VARIANT===5){if(ui.parts)ui.parts.textContent=state.boss5Phase===2?'춘자 이제 손발도 씀':'춘자 특징 · 도끼부터 휘두름';}else if(BOSS_VARIANT===6){if(ui.parts)ui.parts.textContent=state.boss6Phase===2?'악으로! 깡으로!':'기합포 / 수류탄 / 짜장 / 오도봉고 / 무톤 듀오';}else{ui.head.textContent=partText(state.headHp,state.headBroken,'파괴',BOSS1_PART_HP.head);ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴',BOSS1_PART_HP.leg);if(ui.spike){const alive=bossSpikeTargets.filter(s=>!s.broken).length,total=bossSpikeTargets.length;ui.spike.textContent=total?(alive?`${alive}/${total}`:'전부 파괴'):'로딩';}ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단',BOSS1_PART_HP.tail);}if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
  potionHud.textContent=`R · 포션 ${state.potions}/3`;
 }
 function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}addEventListener('resize',resize);resize();
