@@ -4870,7 +4870,7 @@ function hurtPlayer(dmg,posture=20,unblockable=false){
  if(!unblockable&&input.guard){
    if(state.deflect>0){
      addBossPosture(32,3.4);state.posture=Math.max(0,state.posture-15);state.stamina=Math.min(state.staminaMax,state.stamina+9);state.parryAnim=.28;hitStop(.085);const parryPoint=player.position.clone().lerp(boss.position,.42).add(new THREE.Vector3(0,1.45,0));state.shake=Math.max(state.shake,.24);state.impactFlash=Math.max(state.impactFlash,.46);state.impactFov=Math.min(state.impactFov,-2.1);ensureImpactOverlay();spawnImpactBurst(parryPoint,1.8,true);playImpactSound('heavy',1.7);flash('저스트 튕겨내기',.22);
-     if(state.bossPosture>=BOSS_POSTURE_MAX[BOSS_VARIANT]){state.bossStagger=1.42;resetBossPostureAfterBreak(.32);state.bossState='stagger';flash('자세 붕괴',.52)}
+     if(state.bossPosture>=BOSS_POSTURE_MAX[BOSS_VARIANT]){state.bossStagger=1.42;resetBossPostureAfterBreak(.32);state.bossState='stagger';flash('제대로 흔들렸다',.52)}
      return;
    }
    const w=currentWeapon();
@@ -4928,7 +4928,7 @@ function hitBoss(base,posture=12,contact=null){
  if(state.bossStagger>0){dmg*=1.65;pd*=.22}
  state.bossHp=Math.max(0,state.bossHp-dmg);addBossPosture(pd);triggerPlayerHitImpact(contact||player.position.clone().lerp(boss.position,.62).add(new THREE.Vector3(0,zone==='head' ? 2.15 : 1.15,0)),zone);
  if(state.bossHp===0){state.bossState='dead';state.potionPunishQueued=false;setDanger(false);flash('토벌 완료',1.2)}
- else if(state.bossPosture>=BOSS_POSTURE_MAX[1]){state.bossStagger=1.5;resetBossPostureAfterBreak(.32);state.bossState='stagger';flash('자세 붕괴',.52)}
+ else if(state.bossPosture>=BOSS_POSTURE_MAX[1]){state.bossStagger=1.5;resetBossPostureAfterBreak(.32);state.bossState='stagger';flash('거녀 비틀',.52)}
 }
 
 function chooseBossAttack(){
