@@ -56,6 +56,9 @@ export function createHorrorAudio(){
   const n=((Math.sin(seed*19.2+ctx.currentTime*3.1)+1)*.5);
   if(kind==='shot'){tone(165,44,.19,.28,'sawtooth');hiss(.15,.13,190,2100)}
   if(kind==='alert'){tone(340,172,.19,.10,'sawtooth');tone(240,112,.32,.09,'square',master,ctx.currentTime+.14);hiss(.31,.07,340,2200)}
+  if(kind==='civilian'){tone(310,185,.34,.054,'triangle');tone(520,260,.20,.027,'sine',master,ctx.currentTime+.27)}
+  if(kind==='rescued'){tone(360,525,.18,.057,'triangle');tone(525,750,.24,.061,'sine',master,ctx.currentTime+.19)}
+  if(kind==='pickup'){tone(430,600,.10,.08,'square');tone(600,860,.13,.08,'triangle',master,ctx.currentTime+.11)}
   if(kind==='interrupt'){tone(580,240,.13,.11,'triangle');hiss(.11,.07,800,2100)}
   if(kind==='reload'){tone(440,260,.075,.07,'triangle');tone(670,320,.09,.07,'triangle',master,ctx.currentTime+.16)}
   if(kind==='growl'){tone(67+n*24,39+n*18,.58+n*.6,.065,'sawtooth');tone(103+n*52,48,.44,.035,'square');hiss(.46,.11,95,580)}
