@@ -86,7 +86,7 @@ function anatomy(T,root,kind){
   }
   parts.push(...segments.map((node,i)=>({node,phase:i*.42})));
   bulk(T,head,meat,[0,-.67,.56],[.65,.37,.55],root,'mandible_skull');
-  cores.push(customCore(T,root,torso,[0,1.83,.66],glow,0),customCore(T,root,torso,[.42,1.97,-.30],glow,1),customCore(T,root,torso,[-.46,2.03,-.89],glow,2));
+  cores.push(customCore(T,root,torso,[0,1.83,.74],glow,0),customCore(T,root,torso,[.68,1.96,.38],glow,1),customCore(T,root,torso,[-.71,1.94,.28],glow,2));
  }else{ // heart engine: multiple inward-folded ventricles around armored core
   for(let j=0;j<9;j++){
    const a=j*Math.PI*2/9;bulk(T,torso,j%3?rag:meat,[Math.cos(a)*.9,1.92+Math.sin(a)*.75,Math.sin(a)*.45],[.49,.53,.44],root,'cardiac_chamber');
@@ -232,7 +232,7 @@ export function bossAttackPlan(kind,phase,pattern){
 export function bossShots(kind,phase,pattern){return bossAttackPlan(kind,phase,pattern).shots}
 export function animateBoss(T,root,d,dt,time){
  if(!d.bossCores)return;
- const active=(d.bossPhase||0)%d.bossCores.length;
+ const active=(d.bossActive??d.bossPhase??0)%d.bossCores.length;
  for(let i=0;i<d.bossCores.length;i++){
   const c=d.bossCores[i],on=i===active,rate=.95+Math.sin(time*4+i)*.07;
   c.node.scale.setScalar((on?1.18:.68)*rate);
