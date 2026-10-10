@@ -18,7 +18,7 @@ export function stageData(seed,index){
 }
 export function waveData(seed,index){
  const plan=stageData(seed,index),r=randomFromSeed(plan.roomSeed ^ 0xa33c77);
- const weights=index<2?[0,0,0,1,0,3]:index<4?[0,0,1,2,3,4,5]:[0,0,1,2,3,4,5,1,2,3,4,5];
+ const weights=index<2?[0,0,0,1,0,3,7]:index<4?[0,0,1,2,3,4,5,7]:[0,0,1,2,3,4,5,7,8,9,1,2,3,4,5];
  const enemies=[];
  const cap=plan.count;
  for(let k=0;k<cap;k++){
@@ -109,3 +109,6 @@ export function animateRoom(room,time){
    light.intensity=(light.color.getHex()===0xc34a3a?5.8:10)*(flicker+.08*Math.sin(time*3.3+phase));
  }
 }
+
+// Delete GPU-side stage resources when the camera leaves; endless runs stay bounded.
+export function disposeRoom(room,scene){if(!room)return;scene.remove(room.root);const geometries=new Set(),materials=new Set();room.root.traverse(o=>{if(o.geometry)geometries.add(o.geometry);if(o.material){const mm=Array.isArray(o.material)?o.material:[o.material];for(const m of mm)materials.add(m)}});for(const g of geometries)g.dispose?.();for(const m of materials)m.dispose?.()}
