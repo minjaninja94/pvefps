@@ -2,8 +2,8 @@
 let kit=null;
 function seeded(seed){return()=>{seed=(Math.imul(seed,1664525)+1013904223)|0;return (seed>>>0)/4294967296}}
 function texture(T,base,seed,style){const rand=seeded(seed),c=document.createElement('canvas');c.width=c.height=128;const ctx=c.getContext('2d');ctx.fillStyle=base;ctx.fillRect(0,0,128,128);for(let i=0;i<6800;i++){const v=rand(),x=Math.floor(rand()*128),y=Math.floor(rand()*128),w=1+Math.floor(rand()*9);ctx.fillStyle=v<.34?'rgba(17,12,12,.17)':v<.68?'rgba(148,142,113,.13)':'rgba(105,18,20,.18)';ctx.fillRect(x,y,w,1+Math.floor(rand()*3))}for(let i=0;i<55;i++){const x=rand()*130,y=rand()*128;ctx.strokeStyle=style==='cloth'?'rgba(20,17,20,.48)':'rgba(65,8,13,.65)';ctx.lineWidth=1+rand()*3;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(rand()-.5)*28,y+(rand()-.5)*17);ctx.lineTo(x+(rand()-.5)*33,y+(rand()-.5)*30);ctx.stroke()}if(style==='flesh'){for(let i=0;i<22;i++){const x=rand()*128,y=rand()*128;ctx.fillStyle='rgba(78,3,11,.68)';ctx.fillRect(x,y,5+rand()*20,2+rand()*12);ctx.fillStyle='rgba(161,52,50,.26)';ctx.fillRect(x,y,3+rand()*20,1+rand()*4)}}const tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;tex.magFilter=T.NearestFilter;tex.minFilter=T.NearestMipmapNearestFilter;tex.wrapS=tex.wrapT=T.RepeatWrapping;return tex}
-export async function prepareRetroAssets(T){if(kit)return true;const cfg=[['#858476','#384345'],['#777f70','#41473e'],['#675f56','#403b39'],['#88836e','#484037'],['#65574a','#47483f'],['#403c36','#242421'],['#5b5548','#292d2a']];const flesh=['#6c2929','#682321','#73312b','#782c27','#5f2428','#8b341a','#71231d'];const mk=(map,color,emissive=0)=>new T.MeshStandardMaterial({map,color,roughness:1,metalness:0,flatShading:true,side:T.DoubleSide,emissive,emissiveIntensity:emissive?.18:0});kit=cfg.map((cc,i)=>({skin:mk(texture(T,cc[0],215+i*31,'flesh'),0xc6c2b7),cloth:mk(texture(T,cc[1],621+i*57,'cloth'),0xb0b5ac),muscle:mk(texture(T,flesh[i],451+i*55,'flesh'),0xc99a8c),bone:mk(texture(T,'#b8ae8c',911+i*21,'bone'),0xe1dcba),wound:mk(texture(T,'#25080b',733+i*29,'flesh'),0x7b4040),worm:mk(texture(T,'#b9aa6b',112+i*33,'flesh'),0xd8cfad),fire:new T.MeshStandardMaterial({color:0xed4216,emissive:0xff3300,emissiveIntensity:2,flatShading:true})}));await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));return true}
-function poly(T,parent,rings,mat,root,kind,name,segments=9){const pos=[],uv=[],idx=[];const rnd=seeded(rings.length*2341+(name.length*176));for(let j=0;j<rings.length;j++){const r=rings[j];for(let i=0;i<segments;i++){const a=(i/segments)*Math.PI*2,noise=1+.055*Math.sin(i*3+j*5)+.03*(rnd()-.5);pos.push(r[0]+Math.cos(a)*r[2]*noise,r[1],r[3]+Math.sin(a)*r[4]*noise);uv.push(i/(segments-1),j/(rings.length-1))}}for(let j=0;j<rings.length-1;j++)for(let i=0;i<segments;i++){let a=j*segments+i,b=j*segments+(i+1)%segments,c=(j+1)*segments+i,d=(j+1)*segments+(i+1)%segments;idx.push(a,c,b,b,c,d)}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();const m=new T.Mesh(g,mat);m.name=name;m.castShadow=true;m.receiveShadow=true;if(kind)m.userData.hit={root,kind};parent.add(m);return m}
+export async function prepareRetroAssets(T){if(kit)return true;const cfg=[['#858476','#384345'],['#777f70','#41473e'],['#675f56','#403b39'],['#88836e','#484037'],['#65574a','#47483f'],['#403c36','#242421'],['#5b5548','#292d2a']];const flesh=['#6c2929','#682321','#73312b','#782c27','#5f2428','#8b341a','#71231d'];const mk=(map,color,emissive=0)=>new T.MeshStandardMaterial({map,color,roughness:1,metalness:0,flatShading:false,side:T.DoubleSide,emissive,emissiveIntensity:emissive?.18:0});kit=cfg.map((cc,i)=>({skin:mk(texture(T,cc[0],215+i*31,'flesh'),0xc6c2b7),cloth:mk(texture(T,cc[1],621+i*57,'cloth'),0xb0b5ac),muscle:mk(texture(T,flesh[i],451+i*55,'flesh'),0xc99a8c),bone:mk(texture(T,'#b8ae8c',911+i*21,'bone'),0xe1dcba),wound:mk(texture(T,'#25080b',733+i*29,'flesh'),0x7b4040),worm:mk(texture(T,'#b9aa6b',112+i*33,'flesh'),0xd8cfad),fire:new T.MeshStandardMaterial({color:0xed4216,emissive:0xff3300,emissiveIntensity:2,flatShading:true})}));await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));return true}
+function poly(T,parent,rings,mat,root,kind,name,segments=12){const pos=[],uv=[],idx=[];const rnd=seeded(rings.length*2341+(name.length*176));for(let j=0;j<rings.length;j++){const r=rings[j];for(let i=0;i<segments;i++){const a=(i/segments)*Math.PI*2,noise=1+.055*Math.sin(i*3+j*5)+.03*(rnd()-.5);pos.push(r[0]+Math.cos(a)*r[2]*noise,r[1],r[3]+Math.sin(a)*r[4]*noise);uv.push(i/(segments-1),j/(rings.length-1))}}for(let j=0;j<rings.length-1;j++)for(let i=0;i<segments;i++){let a=j*segments+i,b=j*segments+(i+1)%segments,c=(j+1)*segments+i,d=(j+1)*segments+(i+1)%segments;idx.push(a,c,b,b,c,d)}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();const m=new T.Mesh(g,mat);m.name=name;m.castShadow=true;m.receiveShadow=true;if(kind)m.userData.hit={root,kind};parent.add(m);return m}
 function limb(T,parent,root,mat,side,upper,thick,kind,name){const v=upper?[[0,.03,thick,0,thick*.76],[side*.035,-.17,thick*1.05,.04,thick],[side*.1,-.42,thick*.83,.10,thick*.85],[side*.13,-.69,thick*.63,.10,thick*.67],[side*.17,-.98,thick*.69,.12,thick*.72],[side*.19,-1.14,thick*.42,.16,thick*.46]]:[[0,.04,thick,0,thick],[side*.04,-.26,thick*.9,.01,thick*.84],[side*.07,-.58,thick*.76,.02,thick*.71],[side*.06,-.82,thick*.57,.04,thick*.61],[side*.07,-1.07,thick*.68,.13,thick],[side*.09,-1.13,thick*.42,.22,thick*1.08]];return poly(T,parent,v,mat,root,kind,name,8)}
 function patch(T,parent,points,mat,root,kind,name){const pp=[],uu=[],ind=[];for(let i=0;i<points.length;i++){pp.push(...points[i]);uu.push((points[i][0]+1)/2,points[i][1]/3)}for(let i=1;i<points.length-1;i++)ind.push(0,i,i+1);const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pp,3));g.setAttribute('uv',new T.Float32BufferAttribute(uu,2));g.setIndex(ind);g.computeVertexNormals();const m=new T.Mesh(g,mat);m.name=name;if(kind)m.userData.hit={root,kind};parent.add(m);return m}
 function strip(T,parent,a,b,w,mat,root,kind,name){const len=Math.hypot(b[0]-a[0],b[1]-a[1])||1,dx=-(b[1]-a[1])/len*w,dy=(b[0]-a[0])/len*w;return patch(T,parent,[[a[0]+dx,a[1]+dy,a[2]],[a[0]-dx,a[1]-dy,a[2]],[b[0]-dx,b[1]-dy,b[2]],[b[0]+dx,b[1]+dy,b[2]]],mat,root,kind,name)}
@@ -37,15 +37,97 @@ if(look){
  }
  if(look.damage>=2)patch(T,hip,[[-.22,1.97,.331],[-.06,2.12,.324],[.12,1.93,.351],[-.05,1.88,.357]],m.muscle,root,'body','variable_torn_chest');
 }
-const neck=poly(T,hip,[[.02,2.22,.14,-.07,.13],[.04,2.37,.125,-.08,.12],[.06,2.48,.11,-.035,.115]],m.skin,root,'body','broken_neck',8);
-const head=new T.Group();head.position.set(id===1?.11:.065,2.58,id===1?.13:.02);head.rotation.z=id%2?-.20:.18;hip.add(head);
-poly(T,head,[[.01,-.34,.20,.02,.21],[-.025,-.2,.28,.04,.23],[.015,.035,.32,0,.27],[-.015,.24,.265,-.04,.22],[.03,.35,.15,-.055,.14]],m.skin,root,'head','collapsed_human_skull',9);
-patch(T,head,[[-.26,-.035,.233],[-.17,.19,.247],[-.01,.23,.251],[.05,.11,.273],[-.07,-.18,.277]],m.wound,root,'head','torn_face');
-for(const side of [-1,1]){const x=side*.125;patch(T,head,[[x-.085,.085,.264],[x+.063,.095,.270],[x+.068,.025,.298],[x-.055,.012,.295]],m.wound,root,'head','empty_eye_socket');patch(T,head,[[x-.027,.065,.3],[x+.025,.067,.3],[x+.01,.031,.3]],m.bone,root,'head','cloudy_pupil')}
-const jaw=new T.Group();jaw.name='hinged_broken_jaw';jaw.position.set(0,-.20,.13);head.add(jaw);
-poly(T,jaw,[[0,-.20,.20,.07,.105],[0,-.075,.245,.095,.16],[0,.015,.19,.08,.105]],m.skin,root,'head','mandible',7);
-patch(T,head,[[-.19,-.17,.249],[.19,-.17,.249],[.18,-.32,.21],[-.15,-.34,.21]],m.wound,root,'head','black_mouth');
-for(let i=0;i<7;i++){let xx=(i-3)*.047;strip(T,jaw,[xx,-.045,.229],[xx+.006,.002,.235],.014,m.bone,root,'head','jagged_teeth')}
+// Adult human anatomy: reduced cranium (previously ~24% of body height),
+// narrower temporal bones, tapered cheeks, longer neck and a separately hinged mandible.
+// The coarse texture retains the PS1 horror style; 16-sided curved geometry avoids toy-like cubes.
+const neck=poly(T,hip,[
+ [.012,2.19,.145,-.045,.132],[.028,2.30,.128,-.049,.121],
+ [.045,2.42,.111,-.030,.115],[.038,2.52,.113,-.022,.112]
+],m.skin,root,'body','sternocleidomastoid_neck',13);
+const head=new T.Group();
+head.name='ADULT_PROPORTION_CRANIOFACIAL_RIG';
+head.position.set(id===1?.075:.042,2.56,id===1?.09:.035);
+head.scale.set(.79,.73,.84); // 20-27% smaller than old head, independently of body / headshot hit meshes
+head.rotation.z=id%2?-.095:.072;
+hip.add(head);
+// Skull loft: jaw hinge -> cheekbones -> recessed temples -> rounded cranial vault.
+// No spherical toy head or cube primitives.
+poly(T,head,[
+ [0,-.285,.120,.014,.135],
+ [-.012,-.221,.179,.005,.188],
+ [0,-.128,.212,.006,.223],
+ [.012,-.018,.240,-.006,.255],
+ [.009,.102,.249,-.018,.246],
+ [-.012,.216,.224,-.035,.225],
+ [-.022,.299,.156,-.051,.161],
+ [-.020,.334,.059,-.055,.079]
+],m.skin,root,'head','anatomical_cranium_cheeks_occiput',18);
+// Uneven temporal indentation and natural, flattened cheekbone facets.
+patch(T,head,[[-.238,.076,.159],[-.219,.187,.151],[-.102,.219,.189],[-.087,.102,.236],[-.161,-.025,.206]],
+ m.skin,root,'head','left_zygomatic_arch');
+patch(T,head,[[.104,.211,.184],[.216,.166,.164],[.231,.055,.181],[.168,-.027,.214],[.067,.072,.244]],
+ m.skin,root,'head','right_zygomatic_arch');
+// Eye cavities are inset visual planes below a continuous brow line; eyes never protrude like buttons.
+for(const side of [-1,1]){
+ const x=side*.108;
+ patch(T,head,[
+  [x-side*.060,.094,.235],[x+side*.062,.088,.236],
+  [x+side*.065,.003,.252],[x+.002,-.025,.250],[x-side*.053,.006,.249]
+ ],m.wound,root,'head','deep_sunken_orbit');
+ strip(T,head,[x-side*.074,.113,.234],[x+side*.064,.106,.233],.015,m.skin,root,'head','supraorbital_brow');
+ // A tiny occluded iris/remaining sclera sits INSIDE the dark hollow.
+ if((id+side+8)%3!==0){
+  patch(T,head,[[x-.025,.043,.247],[x+.025,.036,.247],[x+.006,.007,.249]],
+    m.bone,root,'head','clouded_eyeball_fragment');
+ }
+}
+// Broken nose bridge has facial depth and nostrils rather than a large polygon cone.
+patch(T,head,[[-.043,.105,.247],[.039,.100,.247],[.071,-.078,.284],[.004,-.128,.305],[-.067,-.080,.279]],
+ m.skin,root,'head','nasal_bridge_and_bridge_tip');
+patch(T,head,[[-.062,-.097,.289],[.066,-.097,.289],[.027,-.137,.299],[-.037,-.136,.298]],
+ m.wound,root,'head','necrotic_nostrils');
+// Skin damage follows the cheek surface, with layered fascia inside a small irregular cavity.
+// It is not a spike or an external floating organ prop.
+const tornSide=(look?.injury??(id*.177))>.43?-1:1;
+const sx=tornSide;
+patch(T,head,[
+ [sx*.215,.010,.185],[sx*.202,-.061,.200],[sx*.173,-.143,.196],
+ [sx*.095,-.190,.222],[sx*.114,-.065,.245],[sx*.165,.045,.225]
+],m.wound,root,'head','torn_cheek_depressed_cavity');
+patch(T,head,[
+ [sx*.186,-.016,.207],[sx*.177,-.106,.207],
+ [sx*.132,-.149,.222],[sx*.114,-.067,.246]
+],m.muscle,root,'head','exposed_buccinator_muscle');
+strip(T,head,[sx*.190,.006,.204],[sx*.131,-.126,.243],.012,m.bone,root,'head','exposed_malar_ridge');
+// Hairline/scalp erosion is flush with the skull; variation is localized to ONE side.
+if((look?.damage??id%3)!==0){
+ patch(T,head,[
+  [sx*.058,.284,.142],[sx*.158,.266,.129],[sx*.218,.186,.138],
+  [sx*.137,.179,.195],[sx*.051,.233,.200]
+ ],m.muscle,root,'head','receding_scalp_tissue');
+ strip(T,head,[sx*.069,.268,.185],[sx*.196,.193,.169],.009,m.bone,root,'head','skull_fissure');
+}
+// Proper short mandible, inset under cheekbones; supports animated jaw opening.
+const jaw=new T.Group();jaw.name='hinged_short_mandible';
+jaw.position.set(.003,-.245,.055);head.add(jaw);
+poly(T,jaw,[
+ [0,-.150,.094,.043,.115],[0,-.095,.167,.046,.167],
+ [0,-.016,.189,.045,.173],[0,.044,.151,.029,.128]
+],m.skin,root,'head','human_jaw_chin',13);
+patch(T,head,[[-.151,-.175,.226],[.158,-.181,.225],[.136,-.269,.206],[-.140,-.273,.209]],
+ m.wound,root,'head','recessed_oral_cavity');
+patch(T,jaw,[[-.118,-.023,.202],[.122,-.023,.202],[.099,-.073,.204],[-.111,-.072,.206]],
+ m.muscle,root,'head','gums_inside_lower_lip');
+for(let i=0;i<7;i++){
+ const x=(i-3)*.034;
+ strip(T,jaw,[x,-.003,.207],[x+.004,.038,.208],.009+(i%3)*.002,
+   m.bone,root,'head','short_uneven_incidents_teeth');
+}
+// A handful of torn lip fibres; avoids the old ear-to-ear black cartoon grin.
+for(let i=0;i<3;i++){
+ const x=-.115+i*.096;
+ strip(T,head,[x,-.213,.224],[x+.026,-.259,.208],.007,m.muscle,root,'head','torn_orbicularis_oris');
+}
 // Independently hinged elbows, knees and feet, rather than one rigid swinging rod per limb.
 const arms=[],elbows=[],legs=[],knees=[],feet=[];
 for(const side of [-1,1]){
@@ -67,7 +149,7 @@ for(const side of [-1,1]){
 }
 const cores=[];if(id===6){for(const data of [[-.37,2.12,.51],[.51,1.91,.57],[0,1.37,.55]])cores.push(core(T,hip,root,m,...data));const bossWorms=maggots(T,hip,m.worm,root,1993,.05,1.55,.345,12);worms.push(...bossWorms);for(let k=0;k<6;k++){const xx=(k-3)*.17;strip(T,hip,[xx,2.12,.41],[xx-.075,2.4,.27],.055,m.bone,root,'body','ragged_spine')} }
 if(id===5){for(let k=0;k<7;k++){const x=(k-3)*.115;strip(T,hip,[x,1.45,.39],[x+(k%2?.06:-.04),1.9,.36],.025,m.fire,root,'body','burning_fissure')}}
-if(id===3){const extra=maggots(T,head,m.worm,root,338,.04,-.28,.22,4);worms.push(...extra);jaw.position.y=-.18}
+if(id===3){const extra=maggots(T,head,m.worm,root,338,.04,-.24,.220,2);worms.push(...extra);jaw.position.y=-.255}
 let barrel=null;if(id===4){barrel=new T.Group();barrel.position.set(.55,1.37,.53);hip.add(barrel);const steel=new T.MeshStandardMaterial({color:0x65533a,roughness:.93,flatShading:true});const geo=new T.CylinderGeometry(.27,.27,.58,8,1);const b=new T.Mesh(geo,steel);b.rotation.z=.22;b.userData.hit={root,kind:'body'};barrel.add(b);for(const h of [-.22,.22]){const band=new T.Mesh(new T.CylinderGeometry(.281,.281,.045,8),m.wound);band.position.y=h;barrel.add(band)}}
 return {hip,head,jaw,arms,elbows,legs,knees,feet,extras:{worms,cores,barrel},meshCount:root.children.length}
 }
@@ -129,15 +211,15 @@ export function animateRetroInfected(T,root,d,dt,time){
  d.head.rotation.y=-d.hip.rotation.y*.75+Math.sin(phase-.65)*.028*w+
    Math.max(-.24,Math.min(.24,(d.turnDelta||0)*-.55));
  d.head.rotation.x=-lean*.36+Math.sin(age*1.3-.6)*.035;
- d.head.rotation.z=(d.type%2===0?-.07:.08)-d.hip.rotation.z*.62+
+ d.head.rotation.z=(d.type%2===0?-.035:.045)-d.hip.rotation.z*.48+
    Math.sin(phase-1.1)*.018*w;
  if(hit){d.head.rotation.x-=stress*.8;d.head.rotation.z+=Math.sin(age*14)*stress*.45}
  // Deliberate mouth opening for a ranged windup without overriding the jaw's hinge.
  const mouth=(d.spitState==='windup'&&(d.type===3||d.type===9))?
    Math.min(1,(d.spitTimer||0)/2.2)*.36:0;
  d.jaw.rotation.x=-mouth+Math.sin(age*2.1)*.025;
- d.jaw.position.y=-.20-(mouth*.11);
- if(d.type===3||d.type===8)d.jaw.position.y=-.18-mouth*.13;
+ d.jaw.position.y=-.245-(mouth*.068);
+ if(d.type===3||d.type===8)d.jaw.position.y=-.255-mouth*.084;
  for(const [i,worm] of e.worms.entries()){
    worm.node.rotation.z=Math.sin(age*1.6+worm.phase+i*.3)*.075;
    worm.node.scale.x=1+.042*Math.sin(age*2.1+worm.phase);
