@@ -9,7 +9,7 @@ function patch(T,parent,points,mat,root,kind,name){const pp=[],uu=[],ind=[];for(
 function strip(T,parent,a,b,w,mat,root,kind,name){const len=Math.hypot(b[0]-a[0],b[1]-a[1])||1,dx=-(b[1]-a[1])/len*w,dy=(b[0]-a[0])/len*w;return patch(T,parent,[[a[0]+dx,a[1]+dy,a[2]],[a[0]-dx,a[1]-dy,a[2]],[b[0]-dx,b[1]-dy,b[2]],[b[0]+dx,b[1]+dy,b[2]]],mat,root,kind,name)}
 function maggots(T,parent,mat,root,seed,cx,cy,cz,count){const rnd=seeded(seed),worms=[];for(let j=0;j<count;j++){const angle=rnd()*Math.PI*2,rr=Math.sqrt(rnd())*.135;let x=cx+Math.cos(angle)*rr,y=cy+Math.sin(angle)*rr*.8,z=cz+.004+rnd()*.007;const g=new T.Group();g.position.set(x,y,z);parent.add(g);const segs=3+Math.floor(rnd()*2);let last=[0,0,0];for(let k=0;k<segs;k++){const t=k/segs,xx=Math.cos(angle)*t*.062+(rnd()-.5)*.012,yy=Math.sin(angle)*t*.047+(rnd()-.5)*.010;const next=[xx,yy,0];strip(T,g,last,next,.007+Math.sin((t+.1)*Math.PI)*.006,mat,root,null,'maggot_segment');last=next}worms.push({node:g,phase:rnd()*6.28})}return worms}
 function core(T,parent,root,m,x,y,z){const wound=patch(T,parent,[[x-.35,y-.36,z-.015],[x+.30,y-.36,z-.015],[x+.41,y-.02,z-.015],[x+.20,y+.36,z-.015],[x-.32,y+.25,z-.015]],m.wound,root,null,'exposed_core_socket');const g=new T.Group();g.position.set(x,y,z);parent.add(g);poly(T,g,[[0,-.22,.19,0,.11],[0,-.07,.26,.025,.15],[0,.11,.24,.02,.14],[0,.23,.08,0,.08]],m.muscle,root,'weak','pulsating_weakpoint',7);const p=new T.PointLight(0xff3011,1.3,2.2);p.position.set(0,0,.24);g.add(p);return {node:g,light:p}}
-export function makeRetroInfected(T,root,type){if(!kit)throw new Error('retro assets not prepared');const id=Math.min(6,Math.max(0,type)),m=kit[id],heavy=id===2||id===6,large=id===6,bulge=id===3||id===6,scale=large?1.45:heavy?1.21:1;const hip=new T.Group();hip.name='INFECTED_TORSO_RIG';root.add(hip);
+export function makeRetroInfected(T,root,type){if(!kit)throw new Error('retro assets not prepared');const id=Math.min(6,Math.max(0,type===7?1:type===8?3:type===9?5:type)),m=kit[id],heavy=id===2||id===6,large=id===6,bulge=id===3||id===6,scale=large?1.45:heavy?1.21:1;const hip=new T.Group();hip.name='INFECTED_TORSO_RIG';root.add(hip);
 const torso=poly(T,hip,[[0,1.05,.25*scale,.005,.20*scale],[-.04,1.30,.39*scale,.01,.26*scale],[.035,1.68,.48*scale,.04,.34*scale],[.08,1.94,.46*scale,.02,.29*scale],[.025,2.19,.33*scale,-.06,.21*scale],[0,2.35,.16,-.06,.14]],m.cloth,root,'body','torn_patient_torso',10);
 // Recessed abdominal tear: the cavity sits INSIDE the cloth silhouette; no hanging rib cage or geometric organs.
 const tear=patch(T,hip,[[-.23*scale,1.43,.285],[-.11*scale,1.55,.309],[.035*scale,1.70,.329],[.20*scale,1.68,.305],[.24*scale,1.51,.285],[.06*scale,1.37,.281],[-.19*scale,1.36,.279]],m.wound,root,'body','recessed_abdominal_tear');
@@ -63,7 +63,7 @@ export function animateRetroInfected(T,root,d,dt,time){
  const ease=1-Math.exp(-Math.min(.06,dt)*6.8);
  d.walkBlend+=(Number(walking)-d.walkBlend)*ease;
  const w=d.walkBlend;
- const cadence=d.type===1?10.5:d.type===2?4.1:d.type===6?3.25:d.type===3?5.1:5.8;
+ const cadence=d.type===7?11:d.type===9?7.8:d.type===1?10.5:d.type===2?4.1:d.type===6?3.25:d.type===3?5.1:5.8;
  d.gaitPhase+=Math.min(.06,dt)*cadence*(.13+.87*w);
  const phase=d.gaitPhase;
  const limp=d.type===1?.27:d.type===2?.17:.11;
@@ -103,7 +103,7 @@ export function animateRetroInfected(T,root,d,dt,time){
  d.hip.position.y=dying?0:(-weight*w*stomp);
  d.hip.rotation.z=(d.type===2?-.065:.025)+(w*Math.sin(phase)*.035)+(still*Math.sin(age*.85)*.014);
  d.hip.rotation.y=w*Math.sin(phase)*.048;
- const lean=d.type===1?.19:d.type===2?.13:d.type===6?.10:.065;
+ const lean=d.type===7?.54:d.type===9?.22:d.type===1?.19:d.type===2?.13:d.type===6?.10:.065;
  d.hip.rotation.x=lean+Math.sin(age*1.1)*.009+stress;
  // Head reacts later than the chest and gently counter-rotates during turns.
  d.head.rotation.y=-d.hip.rotation.y*.75+Math.sin(phase-.65)*.028*w+
@@ -113,11 +113,11 @@ export function animateRetroInfected(T,root,d,dt,time){
    Math.sin(phase-1.1)*.018*w;
  if(hit){d.head.rotation.x-=stress*.8;d.head.rotation.z+=Math.sin(age*14)*stress*.45}
  // Deliberate mouth opening for a ranged windup without overriding the jaw's hinge.
- const mouth=(d.spitState==='windup'&&d.type===3)?
+ const mouth=(d.spitState==='windup'&&(d.type===3||d.type===9))?
    Math.min(1,(d.spitTimer||0)/2.2)*.36:0;
  d.jaw.rotation.x=-mouth+Math.sin(age*2.1)*.025;
  d.jaw.position.y=-.20-(mouth*.11);
- if(d.type===3)d.jaw.position.y=-.18-mouth*.13;
+ if(d.type===3||d.type===8)d.jaw.position.y=-.18-mouth*.13;
  for(const [i,worm] of e.worms.entries()){
    worm.node.rotation.z=Math.sin(age*1.6+worm.phase+i*.3)*.075;
    worm.node.scale.x=1+.042*Math.sin(age*2.1+worm.phase);
