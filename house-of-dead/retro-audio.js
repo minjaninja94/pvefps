@@ -1,6 +1,6 @@
 // Original WebAudio horror score + infected vocal design. Synthesized: no third-party audio assets.
 export function createHorrorAudio(){
- let ctx=null,master=null,ambient=null,noiseBuffer=null,active=false,muted=false,lastGrowl=-20,lastBeat=-20,voices=[];
+ let ctx=null,master=null,ambient=null,noiseBuffer=null,active=false,muted=false,lastGrowl=-20,lastBeat=-20,phrase=0,voices=[];
  const A=()=>window.AudioContext||window.webkitAudioContext;
  function init(){
   if(ctx)return ctx;
@@ -69,10 +69,10 @@ export function createHorrorAudio(){
  function tick(time,stage,alive){
   if(!active||!ctx||muted)return;
   if(time-lastBeat>(stage%5===4?1.2:2.3)){
-   lastBeat=time;const t=ctx.currentTime;
+   lastBeat=time;const t=ctx.currentTime;phrase++;
    tone(52,38,.42,.055,'sine',ambient,t);
    tone(47,29,.40,.035,'sine',ambient,t+.22);
-   if(stage%5===4){tone(92,43,.33,.07,'triangle',ambient,t+.48)}
+   if(stage%5===4){tone(92,43,.33,.07,'triangle',ambient,t+.48)}const steps=[0,0,3,1,-2,0,-5,2];const root=stage%5===4?54:46;const n=root*Math.pow(2,steps[phrase%steps.length]/12);tone(n,n*.985,1.1,.037,'triangle',ambient,t+.4);tone(n*1.5,n*1.46,.9,.023,'sine',ambient,t+.72);
    if(Math.sin(stage*19+time)>.15)hiss(.26,.031,70,370,ambient,t+.55);
   }
   if(alive>0&&time-lastGrowl>2.7+Math.abs(Math.sin(time*.13+stage))*2.2){
