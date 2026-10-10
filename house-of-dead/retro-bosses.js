@@ -159,17 +159,71 @@ export function makeBoss(T,root,kind,makeHuman){
  return {...rig,bossKind:kind,bossCores:cores,bossParts:rig.bossParts||[],bossWeakMeshes:tagged.length?tagged:cores.map(c=>c.node),
    tell,beamLight,tellMat,rigType:rig.rigType||'humanoid'};
 }
-export function bossShots(kind,phase,pattern){
- const plans=[
-  ['barrel','barrel','acid'],['acid','acid','acid','acid'],['barrel','barrel'],
-  ['acid','acid','fire','acid'],['fire','acid','fire','acid'],['fire','fire','fire','fire'],
-  ['acid','barrel','acid','barrel'],['acid','acid','acid','fire','acid'],
-  ['fire','fire','acid'],['fire','acid','fire','barrel','acid']
- ];
- const shots=plans[kind%10].slice(),n=shots.length;
- if(phase>1)shots.push(shots[phase%shots.length]);
- return shots.map((type,i)=>({kind:type,offset:(i-(shots.length-1)/2)*(kind===7?.7:kind===3?.62:.95)}));
+// Ten phase-dependent attacks; projectiles are released in *timed* sequences.
+// "spread" deliberately avoids stacking multiple unavoidable hits on one frame.
+const BOSS_ATTACK_TABLE=[
+ [ // Elevator: sliding metal rush -> chain -> falling scrap
+  {name:'문짝 충돌',windup:1.13,recover:.68,cooldown:2.9,shots:[['blade',0,0],['blade',.26,.62]]},
+  {name:'철판 연타',windup:.94,recover:.66,cooldown:2.7,shots:[['barrel',-.9,0],['blade',.85,.27],['blade',0,.55]]},
+  {name:'승강기 붕괴',windup:1.30,recover:.75,cooldown:2.8,shots:[['barrel',-1.35,0],['barrel',1.25,.24],['blade',0,.57]]}
+ ],
+ [ // Spider mother: web first, then venom spread/egg
+  {name:'거미줄 포획',windup:1.09,recover:.63,cooldown:3.0,shots:[['web',0,0],['acid',-.95,.38],['acid',.95,.60]]},
+  {name:'산란낭 산개',windup:1.20,recover:.60,cooldown:2.9,shots:[['spore',-1.20,0],['spore',0,.24],['spore',1.20,.48]]},
+  {name:'포식자 산성 난사',windup:.99,recover:.72,cooldown:2.7,shots:[['acid',-.85,0],['acid',.65,.18],['web',0,.48]]}
+ ],
+ [ // Morgue warden: telegraphed blade throws
+  {name:'절단기 휘두르기',windup:1.10,recover:.63,cooldown:2.9,shots:[['blade',-.8,0],['blade',.8,.35]]},
+  {name:'절단기 던지기',windup:1.34,recover:.61,cooldown:3.0,shots:[['blade',0,0],['barrel',1,.45]]},
+  {name:'냉각 파편',windup:.98,recover:.56,cooldown:2.7,shots:[['blade',-1.2,0],['blade',.0,.25],['blade',1.2,.50]]}
+ ],
+ [ // Leech: globs of viscous slime + pulses
+  {name:'점액 파열',windup:.95,recover:.58,cooldown:2.8,shots:[['acid',-.8,0],['acid',.8,.29]]},
+  {name:'내장 팽창',windup:1.34,recover:.69,cooldown:3.05,shots:[['spore',0,0],['shock',0,.45]]},
+  {name:'독액 폭우',windup:1.12,recover:.66,cooldown:2.8,shots:[['acid',-1.5,0],['acid',0,.22],['acid',1.5,.44]]}
+ ],
+ [ // Double surgeons: alternation (readability)
+  {name:'쌍두 교차',windup:.90,recover:.66,cooldown:2.8,shots:[['blade',-1.1,0],['acid',1.1,.28],['blade',0,.53]]},
+  {name:'양측 협공',windup:1.17,recover:.63,cooldown:3.0,shots:[['fire',1,0],['acid',-1,.30],['blade',.2,.66]]},
+  {name:'응급실 난도질',windup:.87,recover:.75,cooldown:2.7,shots:[['blade',-1.3,0],['blade',1.3,.23],['blade',0,.49]]}
+ ],
+ [ // Furnace: long embers, exhaust
+  {name:'연소 탄막',windup:1.03,recover:.63,cooldown:2.8,shots:[['fire',-1,0],['fire',1,.36]]},
+  {name:'화염 토출',windup:1.20,recover:.62,cooldown:3.0,shots:[['fire',0,0],['shock',0,.42]]},
+  {name:'고열 분출',windup:.96,recover:.77,cooldown:2.75,shots:[['fire',-1.4,0],['fire',0,.19],['fire',1.4,.38]]}
+ ],
+ [ // Fungal colony: spores, explosive pods
+  {name:'포자 흩뿌리기',windup:1.11,recover:.61,cooldown:3,shots:[['spore',-1.3,0],['spore',1.3,.27]]},
+  {name:'균사 낙하',windup:1.29,recover:.66,cooldown:3,shots:[['spore',0,0],['acid',-.6,.43],['acid',.6,.71]]},
+  {name:'숙주 증식',windup:.98,recover:.60,cooldown:2.7,shots:[['spore',-.85,0],['spore',.0,.22],['spore',.85,.44]]}
+ ],
+ [ // Centipede: rippling segments and angled volleys
+  {name:'절지 파동',windup:1.04,recover:.68,cooldown:2.9,shots:[['acid',-1.2,0],['acid',-.4,.15],['acid',.45,.30],['acid',1.2,.45]]},
+  {name:'다절 촉수 쇄도',windup:1.23,recover:.60,cooldown:2.94,shots:[['blade',-1,0],['blade',1,.40]]},
+  {name:'독니 맹공',windup:.91,recover:.63,cooldown:2.66,shots:[['acid',0,0],['acid',-1,.30],['acid',1,.53]]}
+ ],
+ [ // Shrieker: actual visible expanding sonic wave
+  {name:'초음파 비명',windup:1.28,recover:.83,cooldown:3.2,shots:[['shock',0,0]]},
+  {name:'경보 연속파',windup:.97,recover:.70,cooldown:2.9,shots:[['shock',-.45,0],['shock',.45,.53]]},
+  {name:'비명과 파편',windup:1.16,recover:.66,cooldown:3.0,shots:[['shock',0,0],['blade',-1,.65],['blade',1,.85]]}
+ ],
+ [ // Heart: ventricular shock followed by aimed shots
+  {name:'심실 수축',windup:1.22,recover:.70,cooldown:3.0,shots:[['shock',0,0],['fire',-.9,.48],['fire',.9,.76]]},
+  {name:'혈관 폭주',windup:.98,recover:.64,cooldown:2.8,shots:[['fire',-1.2,0],['acid',0,.32],['fire',1.2,.64]]},
+  {name:'핵맥 충격파',windup:1.32,recover:.75,cooldown:3.13,shots:[['shock',0,0],['shock',.60,.73]]}
+ ]
+];
+export function bossAttackPlan(kind,phase,pattern){
+ const id=Math.max(0,Math.min(9,kind|0));
+ const tier=Math.min(2,Math.max(0,Math.floor(phase/2)));
+ const choice=(Math.abs(pattern|0)+tier)%3;
+ const template=BOSS_ATTACK_TABLE[id][choice];
+ const rush=1-Math.min(.20,Math.max(0,phase)*.036);
+ const shots=template.shots.map(([kind,offset,delay])=>({kind,offset,delay:Math.max(0,delay)*rush}));
+ return {name:template.name,windup:Math.max(.72,template.windup*rush),recover:template.recover,
+  cooldown:Math.max(1.9,template.cooldown*rush),shots,tier,choice};
 }
+export function bossShots(kind,phase,pattern){return bossAttackPlan(kind,phase,pattern).shots}
 export function animateBoss(T,root,d,dt,time){
  if(!d.bossCores)return;
  const active=(d.bossPhase||0)%d.bossCores.length;
