@@ -73,7 +73,15 @@ export function buildEvent(T,scene,ev){
   }
   if(ev.variant===1)c(T,root,mat(T,0x9b3738),0,1.30,.235,.40,.18,.036,root);
   if(ev.variant===2)c(T,root,mat(T,0xcdbd66),0,1.57,.24,.65,.08,.027,root);
-  const label=prism(T,root,new T.PlaneGeometry(1.52,.26),new T.MeshBasicMaterial({color:0xd0cb9d,transparent:true,opacity:.55,side:T.DoubleSide}),0,3.03,.06,1,1,1);
+  const canvas=document.createElement('canvas');canvas.width=256;canvas.height=64;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,256,64);
+  ctx.fillStyle='#1a1717';ctx.fillRect(1,4,254,55);
+  ctx.strokeStyle='#f5dd95';ctx.lineWidth=4;ctx.strokeRect(4,6,248,51);
+  ctx.fillStyle='#f7df9f';ctx.font='bold 28px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(ev.variant===1?"DON'T SHOOT":'HELP ME!',128,34);
+  const labelTex=new T.CanvasTexture(canvas);labelTex.colorSpace=T.SRGBColorSpace;labelTex.magFilter=T.NearestFilter;
+  const label=prism(T,root,new T.PlaneGeometry(1.56,.36),new T.MeshBasicMaterial({map:labelTex,transparent:true,side:T.DoubleSide,depthWrite:false}),0,3.10,.12,1,1,1);
   parts.label=label;
  }
  root.userData={kind:ev.kind,event:true,id:ev.id,alive:true,collected:false,cross:ev.cross||false,theme:ev.theme,variant:ev.variant,parts,age:0,spawnX:root.position.x,spawnY:root.position.y,spawnZ:root.position.z};
