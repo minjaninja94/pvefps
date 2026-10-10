@@ -40,7 +40,7 @@ function anatomy(T,root,kind){
  const head=new T.Group();head.position.set(0,2.25,0);torso.add(head);
  const jaw=new T.Group();head.add(jaw);
  const rag=mat(T,0x55403b),meat=mat(T,0x642b26),bone=mat(T,0xa59b80),shell=mat(T,0x303130),dark=mat(T,0x1b1818),glow=mat(T,0xa32b20,0xd3190f);
- const arms=[],legs=[],knees=[],elbows=[],feet=[],parts=[],cores=[];
+ const arms=[],legs=[],knees=[],elbows=[],feet=[],parts=[],cores=[];for(let i=0;i<2;i++){for(const group of [arms,legs,knees,elbows,feet]){const joint=new T.Group();torso.add(joint);group.push(joint)}}
  if(kind===1){ // spider queen: arachnid abdomen + eight articulated climbing legs
   bulk(T,torso,meat,[0,2.12,-.72],[1.15,.88,1.65],root,'abdominal_nest');
   bulk(T,torso,shell,[0,2.18,.72],[.77,.63,.82],root,'thorax');
