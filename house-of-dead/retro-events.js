@@ -9,11 +9,12 @@ const themes=[
  {label:'소각 구역',cloth:0x4b4a4a,accent:0xa3836e,grime:0x3c2726},
  {label:'감염 원실',cloth:0x525f48,accent:0x8c9575,grime:0x443026}
 ];
-export function lookForEnemy(seed,stage,index,type){
+export function lookForEnemy(seed,stage,index,type,roomTheme=0){
  const r=seeded((seed^Math.imul(stage+1,0x6b459123)^Math.imul(index+3,0x41c64e6d))>>>0);
- const theme=Math.floor((stage*3+r()*7)%7);
+ const theme=r()<.76?roomTheme%7:Math.floor(r()*7);
  return {theme,palette:(theme+Math.floor(r()*3))%7,damage:Math.floor(r()*3),injury:r(),wrap:r()>.45,accessory:Math.floor(r()*4),height:.91+r()*.19,tilt:(r()-.5)*.14,wear:r(),maggots:r()>.57?1:0,themeName:themes[theme].label};
 }
+export function themeForPlan(plan){const n=plan.name||'';if(n.includes('수술'))return 1;if(n.includes('영안')||n.includes('사체'))return 2;if(n.includes('실험')||n.includes('배양'))return 3;if(n.includes('폐기')||n.includes('처리')||n.includes('지하'))return 4;if(n.includes('소각')||n.includes('용광'))return 5;if(n.includes('감염')||n.includes('균사'))return 6;return plan.layout%7}
 export function sectorEvents(seed,stage,plan){
  const r=seeded((seed^Math.imul(stage+1,0xabc983)^plan.roomSeed)>>>0);
  if(plan.boss)return [];
@@ -21,7 +22,7 @@ export function sectorEvents(seed,stage,plan){
  const lane=plan.look[0],zz=plan.look[2];
  if(r()<.61){
   const kind=r()<.54?'health':'grenade';
-  events.push({kind,id:'supply:'+stage,pos:[lane+(r()<.5?-1:1)*(3.2+r()*2.5),.45,zz+2.25+r()*1.1],theme:Math.floor((stage+r()*7)%7)})
+  events.push({kind,id:'supply:'+stage,pos:[lane+(r()<.5?-1:1)*(3.2+r()*2.5),.45,zz+2.25+r()*1.1],theme:themeForPlan(plan)})
  }
  if(stage>0&&r()<.46){
   events.push({kind:'civilian',id:'civilian:'+stage,pos:[lane+(r()<.5?-1:1)*(1.9+r()*2.0),0,zz+3.8+r()*1.1],theme:Math.floor((stage+r()*7)%7),variant:Math.floor(r()*3),cross:r()<.43})
