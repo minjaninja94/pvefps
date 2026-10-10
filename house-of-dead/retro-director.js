@@ -15,7 +15,7 @@ export function stageData(seed,index){
  const name=names[(Math.floor(r()*names.length)+index)%names.length];
  const boss=index%5===4,kind=boss?bossForStage(seed,index):-1;
  const lookZ=base-r()*2;
- return {name:boss?BOSSES[kind].name:name,index,layout:boss?kind:layout,boss,bossKind:kind,arena:boss?BOSSES[kind].arena:null,eye:[camX,elev,lookZ+11.7+r()*4],look:[lookX,1.75,lookZ],bend:[(r()-.5)*7,(r()-.5)*.8,(r()-.5)*2],roomSeed:Math.floor(r()*0xffffffff),hue:r(),count:boss?2+Math.floor(r()*2):4+Math.min(5,Math.floor(index/3))+Math.floor(r()*3)};
+ return {name:boss?BOSSES[kind].name:name,index,layout:boss?kind:layout,boss,bossKind:kind,arena:boss?BOSSES[kind].arena:null,eye:[camX,elev,lookZ+11.7+r()*4],look:[lookX,1.75,lookZ],bend:[(r()-.5)*7,(r()-.5)*.8,(r()-.5)*2],roomSeed:Math.floor(r()*0xffffffff),hue:r(),count:boss?2+Math.floor(r()*2):3+Math.min(3,Math.floor(index/4))+Math.floor(r()*3)};
 }
 export function waveData(seed,index){
  const plan=stageData(seed,index),r=randomFromSeed(plan.roomSeed ^ 0xa33c77);
@@ -25,11 +25,12 @@ export function waveData(seed,index){
  for(let k=0;k<cap;k++){
    const type=plan.boss&&k===cap-1?6:weights[Math.floor(r()*weights.length)];
    const lane=(k-(cap-1)/2)*1.32+(r()-.5)*.65;
-   const depth=2.0+(k%4)*1.6+r()*2.0;
+   // Enemies start in the sightline, not 20+ meters behind it; rear row rushes in later.
+   const depth=-(1.7+(k%3)*.85+r()*1.35);
    const angle=(r()-.5)*1.2;
    const pattern=type===6?Math.floor(r()*5):Math.floor(r()*6);
    const bossSpawn=plan.boss&&k===cap-1;
-   enemies.push({type,x:bossSpawn?plan.look[0]:plan.look[0]+lane+Math.sin(angle)*2,z:bossSpawn?plan.look[2]-3.1:plan.look[2]-depth,bossKind:bossSpawn?plan.bossKind:-1,pattern,tempo:.8+r()*.6,stagger:r()*2.8});
+   enemies.push({type,x:bossSpawn?plan.look[0]:plan.look[0]+lane+Math.sin(angle)*2,z:bossSpawn?plan.look[2]-3.1:plan.look[2]-depth,bossKind:bossSpawn?plan.bossKind:-1,pattern,tempo:.85+r()*.32,stagger:r()*.42,spawnDelay:bossSpawn?0:k<2?0:.32+(k-2)*.23+r()*.31});
  }
  return {plan,enemies};
 }
@@ -147,3 +148,26 @@ export function animateRoom(room,time){
 
 // Delete GPU-side stage resources when the camera leaves; endless runs stay bounded.
 export function disposeRoom(room,scene){if(!room)return;scene.remove(room.root);const geometries=new Set(),materials=new Set();room.root.traverse(o=>{if(o.geometry)geometries.add(o.geometry);if(o.material){const mm=Array.isArray(o.material)?o.material:[o.material];for(const m of mm)materials.add(m)}});for(const g of geometries)g.dispose?.();for(const m of materials)m.dispose?.()}
+
+// Shared arcade encounter timings: fast arrival, readable windups, interruptible attacks.
+// These are bespoke timings, not copied animation or combat assets from any game.
+export function arcadePace(stage,type,pattern=0,tempo=1){
+ const pressure=Math.min(1.24,1+Math.max(0,stage-1)*.017),t=Math.max(.75,Math.min(1.3,tempo));
+ const speed=[2.65,4.5,2.05,2.2,2.12,2.35,.48,4.0,2.6,3.0][type]||2.6;
+ const melee=[1.03,.78,1.35,0,0,0,0,.86,1.18,0][type]||1.10;
+ const attackWindup=type===6?Math.max(1.4,2.06-Math.floor(stage/8)*.10):
+   type===4?1.16:type===3?1.01:type===5?.98:type===9?.96:1.05;
+ return {
+   speed:speed*t*pressure,meleeWindup:melee/Math.min(1.14,t),
+   rangedWindup:attackWindup/Math.min(1.16,t),
+   rangedCooldown:(type===6?3.18:2.62)/Math.min(1.22,t*pressure),
+   rush:pattern%4===1?1.65:1.31,
+   startDelay:type===6?.70:.33,
+   projectileSpeed:type===6?7.4:7.0,
+   flinch:.19
+ };
+}
+export function cameraTravelSeconds(room){
+ return room.boss?1.28+room.roomSeed%27/100:0.90+room.roomSeed%37/100;
+}
+export function intermissionSeconds(nextBoss){return nextBoss?1.12:.72}
