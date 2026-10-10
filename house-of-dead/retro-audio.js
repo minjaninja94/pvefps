@@ -55,6 +55,8 @@ export function createHorrorAudio(){
   if(!active||!ctx||muted)return;
   const n=((Math.sin(seed*19.2+ctx.currentTime*3.1)+1)*.5);
   if(kind==='shot'){tone(165,44,.19,.28,'sawtooth');hiss(.15,.13,190,2100)}
+  if(kind==='alert'){tone(340,172,.19,.10,'sawtooth');tone(240,112,.32,.09,'square',master,ctx.currentTime+.14);hiss(.31,.07,340,2200)}
+  if(kind==='interrupt'){tone(580,240,.13,.11,'triangle');hiss(.11,.07,800,2100)}
   if(kind==='reload'){tone(440,260,.075,.07,'triangle');tone(670,320,.09,.07,'triangle',master,ctx.currentTime+.16)}
   if(kind==='growl'){tone(67+n*24,39+n*18,.58+n*.6,.065,'sawtooth');tone(103+n*52,48,.44,.035,'square');hiss(.46,.11,95,580)}
   if(kind==='lunge'){tone(125,57,.29,.11,'sawtooth');hiss(.25,.15,600,2200)}
@@ -68,12 +70,12 @@ export function createHorrorAudio(){
  }
  function tick(time,stage,alive){
   if(!active||!ctx||muted)return;
-  if(time-lastBeat>(stage%5===4?1.2:2.3)){
+  if(time-lastBeat>(stage%5===0?.84:alive>=4?1.08:1.32)){
    lastBeat=time;const t=ctx.currentTime;phrase++;
-   tone(52,38,.42,.055,'sine',ambient,t);
+   tone(52,38,.36,.074,'sine',ambient,t);
    tone(47,29,.40,.035,'sine',ambient,t+.22);
    if(stage%5===4){tone(92,43,.33,.07,'triangle',ambient,t+.48)}const steps=[0,0,3,1,-2,0,-5,2];const root=stage%5===4?54:46;const n=root*Math.pow(2,steps[phrase%steps.length]/12);tone(n,n*.985,1.1,.037,'triangle',ambient,t+.4);tone(n*1.5,n*1.46,.9,.023,'sine',ambient,t+.72);
-   if(Math.sin(stage*19+time)>.15)hiss(.26,.031,70,370,ambient,t+.55);
+   if(Math.sin(stage*19+time)>.15)hiss(.20,.048,70,570,ambient,t+.34);
   }
   if(alive>0&&time-lastGrowl>2.7+Math.abs(Math.sin(time*.13+stage))*2.2){
    lastGrowl=time;cue('growl',stage*13+time)
