@@ -1,7 +1,59 @@
 // DEAD SHIFT / PS1-era gore infected. Original procedural polygon meshes; no external character files.
 let kit=null;
 function seeded(seed){return()=>{seed=(Math.imul(seed,1664525)+1013904223)|0;return (seed>>>0)/4294967296}}
-function texture(T,base,seed,style){const rand=seeded(seed),c=document.createElement('canvas');c.width=c.height=128;const ctx=c.getContext('2d');ctx.fillStyle=base;ctx.fillRect(0,0,128,128);for(let i=0;i<6800;i++){const v=rand(),x=Math.floor(rand()*128),y=Math.floor(rand()*128),w=1+Math.floor(rand()*9);ctx.fillStyle=v<.34?'rgba(17,12,12,.17)':v<.68?'rgba(148,142,113,.13)':'rgba(105,18,20,.18)';ctx.fillRect(x,y,w,1+Math.floor(rand()*3))}for(let i=0;i<55;i++){const x=rand()*130,y=rand()*128;ctx.strokeStyle=style==='cloth'?'rgba(20,17,20,.48)':'rgba(65,8,13,.65)';ctx.lineWidth=1+rand()*3;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(rand()-.5)*28,y+(rand()-.5)*17);ctx.lineTo(x+(rand()-.5)*33,y+(rand()-.5)*30);ctx.stroke()}if(style==='flesh'){for(let i=0;i<22;i++){const x=rand()*128,y=rand()*128;ctx.fillStyle='rgba(78,3,11,.68)';ctx.fillRect(x,y,5+rand()*20,2+rand()*12);ctx.fillStyle='rgba(161,52,50,.26)';ctx.fillRect(x,y,3+rand()*20,1+rand()*4)}}const tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;tex.magFilter=T.NearestFilter;tex.minFilter=T.NearestMipmapNearestFilter;tex.wrapS=tex.wrapT=T.RepeatWrapping;return tex}
+// Deterministic, hand-drawn 256px decomposed-skin microtexture.
+// Broad diseased discoloration + tiny pores + organic scabs; NOT hard-edged red boxes.
+function texture(T,base,seed,style){
+ const rand=seeded(seed),c=document.createElement('canvas');
+ c.width=c.height=256;
+ const ctx=c.getContext('2d');
+ ctx.fillStyle=base;ctx.fillRect(0,0,256,256);
+ // Irregular translucent bruises; every seed generates a different distribution.
+ const blotches=style==='flesh'?23:style==='cloth'?12:7;
+ for(let n=0;n<blotches;n++){
+  const x=rand()*256,y=rand()*256,rx=(style==='cloth'?8:12)+rand()*20,ry=5+rand()*17;
+  const sides=7+Math.floor(rand()*5);
+  ctx.beginPath();
+  for(let i=0;i<=sides;i++){
+   const angle=i/sides*Math.PI*2,noise=.74+rand()*.48;
+   const xx=x+Math.cos(angle)*rx*noise,yy=y+Math.sin(angle)*ry*noise;
+   if(!i)ctx.moveTo(xx,yy);else ctx.lineTo(xx,yy);
+  }
+  ctx.closePath();
+  ctx.fillStyle=style==='cloth'?
+   (n%3===0?'rgba(16,14,15,.18)':'rgba(114,83,65,.11)'):
+   style==='bone'?'rgba(79,60,46,.11)':
+   n%4===0?'rgba(114,10,18,.35)':n%3===0?'rgba(41,49,27,.22)':'rgba(34,15,17,.16)';
+  ctx.fill();
+ }
+ const pores=style==='flesh'?10900:style==='cloth'?9200:4200;
+ for(let i=0;i<pores;i++){
+  const x=rand()*256,y=rand()*256;
+  ctx.fillStyle=rand()>.57?'rgba(211,189,160,.072)':'rgba(7,6,7,.11)';
+  const w=1+rand()*2;
+  ctx.fillRect(x,y,w,rand()*2+.4);
+ }
+ // Fibrous creases and torn-tissue lines are narrow and organically bent.
+ const lines=style==='flesh'?97:style==='cloth'?43:33;
+ for(let i=0;i<lines;i++){
+  const x=rand()*256,y=rand()*256;
+  ctx.strokeStyle=style==='cloth'?'rgba(17,16,17,.26)':
+   style==='bone'?'rgba(74,56,45,.20)':
+   rand()<.44?'rgba(55,7,13,.42)':'rgba(166,95,75,.23)';
+  ctx.lineWidth=.45+rand()*1.65;
+  ctx.beginPath();ctx.moveTo(x,y);
+  const dx=(rand()-.5)*32,dy=(rand()-.5)*25;
+  ctx.lineTo(x+dx*.48+(rand()-.5)*9,y+dy*.48);
+  ctx.lineTo(x+dx,y+dy);
+  ctx.stroke();
+ }
+ const tex=new T.CanvasTexture(c);
+ tex.colorSpace=T.SRGBColorSpace;
+ tex.magFilter=T.NearestFilter;
+ tex.minFilter=T.NearestMipmapNearestFilter;
+ tex.wrapS=tex.wrapT=T.RepeatWrapping;
+ return tex
+}
 export async function prepareRetroAssets(T){if(kit)return true;const cfg=[['#858476','#384345'],['#777f70','#41473e'],['#675f56','#403b39'],['#88836e','#484037'],['#65574a','#47483f'],['#403c36','#242421'],['#5b5548','#292d2a']];const flesh=['#6c2929','#682321','#73312b','#782c27','#5f2428','#8b341a','#71231d'];const mk=(map,color,emissive=0)=>new T.MeshStandardMaterial({map,color,roughness:1,metalness:0,flatShading:false,side:T.DoubleSide,emissive,emissiveIntensity:emissive?.18:0});kit=cfg.map((cc,i)=>({skin:mk(texture(T,cc[0],215+i*31,'flesh'),0xc6c2b7),cloth:mk(texture(T,cc[1],621+i*57,'cloth'),0xb0b5ac),muscle:mk(texture(T,flesh[i],451+i*55,'flesh'),0xc99a8c),bone:mk(texture(T,'#b8ae8c',911+i*21,'bone'),0xe1dcba),wound:mk(texture(T,'#25080b',733+i*29,'flesh'),0x7b4040),worm:mk(texture(T,'#b9aa6b',112+i*33,'flesh'),0xd8cfad),fire:new T.MeshStandardMaterial({color:0xed4216,emissive:0xff3300,emissiveIntensity:2,flatShading:true})}));await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));return true}
 function poly(T,parent,rings,mat,root,kind,name,segments=12){const pos=[],uv=[],idx=[];const rnd=seeded(rings.length*2341+(name.length*176));for(let j=0;j<rings.length;j++){const r=rings[j];for(let i=0;i<segments;i++){const a=(i/segments)*Math.PI*2,noise=1+.055*Math.sin(i*3+j*5)+.03*(rnd()-.5);pos.push(r[0]+Math.cos(a)*r[2]*noise,r[1],r[3]+Math.sin(a)*r[4]*noise);uv.push(i/(segments-1),j/(rings.length-1))}}for(let j=0;j<rings.length-1;j++)for(let i=0;i<segments;i++){let a=j*segments+i,b=j*segments+(i+1)%segments,c=(j+1)*segments+i,d=(j+1)*segments+(i+1)%segments;idx.push(a,c,b,b,c,d)}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();const m=new T.Mesh(g,mat);m.name=name;m.castShadow=true;m.receiveShadow=true;if(kind)m.userData.hit={root,kind};parent.add(m);return m}
 function limb(T,parent,root,mat,side,upper,thick,kind,name){const v=upper?[[0,.03,thick,0,thick*.76],[side*.035,-.17,thick*1.05,.04,thick],[side*.1,-.42,thick*.83,.10,thick*.85],[side*.13,-.69,thick*.63,.10,thick*.67],[side*.17,-.98,thick*.69,.12,thick*.72],[side*.19,-1.14,thick*.42,.16,thick*.46]]:[[0,.04,thick,0,thick],[side*.04,-.26,thick*.9,.01,thick*.84],[side*.07,-.58,thick*.76,.02,thick*.71],[side*.06,-.82,thick*.57,.04,thick*.61],[side*.07,-1.07,thick*.68,.13,thick],[side*.09,-1.13,thick*.42,.22,thick*1.08]];return poly(T,parent,v,mat,root,kind,name,8)}
@@ -66,7 +118,7 @@ const neck=poly(T,hip,[
 const head=new T.Group();
 head.name='ADULT_PROPORTION_CRANIOFACIAL_RIG';
 head.position.set(id===1?.075:.042,2.56,id===1?.09:.035);
-head.scale.set(.79,.73,.84); // 20-27% smaller than old head, independently of body / headshot hit meshes
+head.scale.set(.79,.68,.84); // 20-27% smaller than old head, independently of body / headshot hit meshes
 head.rotation.z=id%2?-.095:.072;
 hip.add(head);
 // Skull loft: jaw hinge -> cheekbones -> recessed temples -> rounded cranial vault.
@@ -79,7 +131,8 @@ poly(T,head,[
  [.009,.102,.249,-.018,.246],
  [-.012,.216,.224,-.035,.225],
  [-.022,.299,.156,-.051,.161],
- [-.020,.334,.059,-.055,.079]
+ [-.020,.334,.059,-.055,.079],
+ [-.019,.353,.009,-.055,.012]
 ],m.skin,root,'head','anatomical_cranium_cheeks_occiput',18);
 // Uneven temporal indentation and natural, flattened cheekbone facets.
 patch(T,head,[[-.238,.076,.159],[-.219,.187,.151],[-.102,.219,.189],[-.087,.102,.236],[-.161,-.025,.206]],
@@ -259,9 +312,9 @@ export function animateRetroInfected(T,root,d,dt,time){
  const lean=d.type===7?.54:d.type===9?.22:d.type===1?.19:d.type===2?.13:d.type===6?.10:.065;
  d.hip.rotation.x=lean+Math.sin(age*1.1)*.009+stress;
  // Head reacts later than the chest and gently counter-rotates during turns.
- d.head.rotation.y=-d.hip.rotation.y*.75+Math.sin(phase-.65)*.028*w+
+ d.head.rotation.y=-d.hip.rotation.y*.75+Math.sin(phase-.65)*.019*w+
    Math.max(-.24,Math.min(.24,(d.turnDelta||0)*-.55));
- d.head.rotation.x=-lean*.36+Math.sin(age*1.3-.6)*.035;
+ d.head.rotation.x=-lean*.36+Math.sin(age*1.3-.6)*.020;
  d.head.rotation.z=(d.type%2===0?-.035:.045)-d.hip.rotation.z*.48+
    Math.sin(phase-1.1)*.018*w;
  if(hit){d.head.rotation.x-=stress*.8;d.head.rotation.z+=Math.sin(age*14)*stress*.45}
