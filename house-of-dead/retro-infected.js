@@ -9,14 +9,34 @@ function patch(T,parent,points,mat,root,kind,name){const pp=[],uu=[],ind=[];for(
 function strip(T,parent,a,b,w,mat,root,kind,name){const len=Math.hypot(b[0]-a[0],b[1]-a[1])||1,dx=-(b[1]-a[1])/len*w,dy=(b[0]-a[0])/len*w;return patch(T,parent,[[a[0]+dx,a[1]+dy,a[2]],[a[0]-dx,a[1]-dy,a[2]],[b[0]-dx,b[1]-dy,b[2]],[b[0]+dx,b[1]+dy,b[2]]],mat,root,kind,name)}
 function maggots(T,parent,mat,root,seed,cx,cy,cz,count){const rnd=seeded(seed),worms=[];for(let j=0;j<count;j++){const angle=rnd()*Math.PI*2,rr=Math.sqrt(rnd())*.135;let x=cx+Math.cos(angle)*rr,y=cy+Math.sin(angle)*rr*.8,z=cz+.004+rnd()*.007;const g=new T.Group();g.position.set(x,y,z);parent.add(g);const segs=3+Math.floor(rnd()*2);let last=[0,0,0];for(let k=0;k<segs;k++){const t=k/segs,xx=Math.cos(angle)*t*.062+(rnd()-.5)*.012,yy=Math.sin(angle)*t*.047+(rnd()-.5)*.010;const next=[xx,yy,0];strip(T,g,last,next,.007+Math.sin((t+.1)*Math.PI)*.006,mat,root,null,'maggot_segment');last=next}worms.push({node:g,phase:rnd()*6.28})}return worms}
 function core(T,parent,root,m,x,y,z){const wound=patch(T,parent,[[x-.35,y-.36,z-.015],[x+.30,y-.36,z-.015],[x+.41,y-.02,z-.015],[x+.20,y+.36,z-.015],[x-.32,y+.25,z-.015]],m.wound,root,null,'exposed_core_socket');const g=new T.Group();g.position.set(x,y,z);parent.add(g);poly(T,g,[[0,-.22,.19,0,.11],[0,-.07,.26,.025,.15],[0,.11,.24,.02,.14],[0,.23,.08,0,.08]],m.muscle,root,'weak','pulsating_weakpoint',7);const p=new T.PointLight(0xff3011,1.3,2.2);p.position.set(0,0,.24);g.add(p);return {node:g,light:p}}
-export function makeRetroInfected(T,root,type){if(!kit)throw new Error('retro assets not prepared');const id=Math.min(6,Math.max(0,type===7?1:type===8?3:type===9?5:type)),m=kit[id],heavy=id===2||id===6,large=id===6,bulge=id===3||id===6,scale=large?1.45:heavy?1.21:1;const hip=new T.Group();hip.name='INFECTED_TORSO_RIG';root.add(hip);
+export function makeRetroInfected(T,root,type,look=null){if(!kit)throw new Error('retro assets not prepared');const id=Math.min(6,Math.max(0,type===7?1:type===8?3:type===9?5:type)),m=kit[look?.palette??id],heavy=id===2||id===6,large=id===6,bulge=id===3||id===6,scale=large?1.45:heavy?1.21:1;const hip=new T.Group();hip.name='INFECTED_TORSO_RIG';root.add(hip);if(look){hip.scale.y=look.height;root.rotation.z=look.tilt}
 const torso=poly(T,hip,[[0,1.05,.25*scale,.005,.20*scale],[-.04,1.30,.39*scale,.01,.26*scale],[.035,1.68,.48*scale,.04,.34*scale],[.08,1.94,.46*scale,.02,.29*scale],[.025,2.19,.33*scale,-.06,.21*scale],[0,2.35,.16,-.06,.14]],m.cloth,root,'body','torn_patient_torso',10);
 // Recessed abdominal tear: the cavity sits INSIDE the cloth silhouette; no hanging rib cage or geometric organs.
 const tear=patch(T,hip,[[-.23*scale,1.43,.285],[-.11*scale,1.55,.309],[.035*scale,1.70,.329],[.20*scale,1.68,.305],[.24*scale,1.51,.285],[.06*scale,1.37,.281],[-.19*scale,1.36,.279]],m.wound,root,'body','recessed_abdominal_tear');
 patch(T,hip,[[-.21*scale,1.55,.310],[-.15*scale,1.72,.338],[-.01*scale,1.69,.350],[.08*scale,1.52,.340]],m.muscle,root,'body','left_torn_skin_flap');
 patch(T,hip,[[.05*scale,1.40,.309],[.24*scale,1.46,.316],[.19*scale,1.63,.337],[.12*scale,1.53,.343]],m.cloth,root,'body','right_ragged_gown_edge');
 for(const [ax,ay,bx,by] of [[-.08,1.59,.07,1.55],[-.04,1.50,.10,1.46]])strip(T,hip,[ax*scale,ay,.345],[bx*scale,by,.348],.017,m.muscle,root,null,'subtle_tissue_fold');
-const worms=maggots(T,hip,m.worm,root,347+id*117,.03,1.52,.347,bulge?9:heavy?6:3);
+const worms=maggots(T,hip,m.worm,root,347+id*117+(look?.theme||0)*109,.03,1.52,.347,Math.max(1,(bulge?9:heavy?6:3)+(look?.maggots?2:-1)));
+// Map-specific clothing and mutations are integrated into the existing faceted body, not added spikes.
+if(look){
+ const theme=look.theme,wear=look.wear;
+ if(look.wrap){ // clinic straps / isolation bandage
+  const yy=1.65+(wear-.5)*.16;
+  strip(T,hip,[-.38*scale,yy,.334],[.35*scale,yy+.04,.337],.046,m.bone,root,'body','torn_medical_binding');
+ }
+ if(theme===0||theme===1){ // ward / theatre: stained apron and sleeve
+  patch(T,hip,[[-.24,1.28,.335],[.25,1.27,.34],[.26,1.70,.35],[-.23,1.68,.35]],m.cloth,root,'body','soiled_surgical_apron');
+  if(look.accessory%2===0)strip(T,hip,[0,2.01,.345],[.01,1.62,.356],.036,m.bone,root,'body','folded_uniform_seam');
+ }else if(theme===2){ // morgue: freezer frost and burial tag
+  patch(T,hip,[[-.32,2.02,.29],[-.10,2.22,.28],[.15,2.05,.325],[-.16,1.77,.335]],m.bone,root,'body','cold_pale_burial_tissue');
+ }else if(theme===3||theme===6){ // laboratory / infestation
+  patch(T,hip,[[-.28,1.79,.355],[-.13,1.96,.36],[.05,1.83,.369],[-.16,1.69,.35]],m.muscle,root,'body','laboratory_tissue_scab');
+  if(look.damage>0)strip(T,hip,[.08,2.14,.29],[.23,1.94,.335],.028,m.bone,root,'body','exposed_cervical_cartilage');
+ }else if(theme===4||theme===5){ // trash / incinerator
+  patch(T,hip,[[.06,1.53,.345],[.26,1.52,.321],[.27,1.80,.326],[.08,1.82,.353]],m.wound,root,'body','scorched_flesh');
+ }
+ if(look.damage>=2)patch(T,hip,[[-.22,1.97,.331],[-.06,2.12,.324],[.12,1.93,.351],[-.05,1.88,.357]],m.muscle,root,'body','variable_torn_chest');
+}
 const neck=poly(T,hip,[[.02,2.22,.14,-.07,.13],[.04,2.37,.125,-.08,.12],[.06,2.48,.11,-.035,.115]],m.skin,root,'body','broken_neck',8);
 const head=new T.Group();head.position.set(id===1?.11:.065,2.58,id===1?.13:.02);head.rotation.z=id%2?-.20:.18;hip.add(head);
 poly(T,head,[[.01,-.34,.20,.02,.21],[-.025,-.2,.28,.04,.23],[.015,.035,.32,0,.27],[-.015,.24,.265,-.04,.22],[.03,.35,.15,-.055,.14]],m.skin,root,'head','collapsed_human_skull',9);
