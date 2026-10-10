@@ -62,7 +62,7 @@ function voiceCivilian(){
   if('speechSynthesis' in window&&'SpeechSynthesisUtterance' in window){
    const speech=new SpeechSynthesisUtterance('Somebody! Help me!');
    speech.lang='en-US';speech.rate=1.27;speech.pitch=1.25;speech.volume=.58;
-   window.speechSynthesis.speak(speech)
+   window.speechSynthesis.cancel();window.speechSynthesis.speak(speech)
   }
  }catch{}
 }
@@ -111,10 +111,9 @@ function addWave(){
  }
  const layout=sectorEvents(runSeed,stage,room);for(const ev of layout)sceneEvents.push(buildEvent(T,S,ev));
  stage++;
- if(layout.some(ev=>ev.kind==='civilian')){voiceCivilian();note('SOMEBODY HELP ME! · DO NOT SHOOT')}
  bossArrival=performance.now();moveCamera(stage-1);waveTransition=false;
  if(mode==='coop'&&host&&stage>1)send({type:'wave',stage,seed:runSeed});
- hud();if(room.boss){audio.cue('boss');note('BOSS · '+BOSSES[room.bossKind].name)}else{audio.cue('alert');note('AMBUSH · '+room.name.toUpperCase())}
+ hud();if(room.boss){audio.cue('boss');note('BOSS · '+BOSSES[room.bossKind].name)}else{audio.cue('alert');note('AMBUSH · '+room.name.toUpperCase());if(layout.some(ev=>ev.kind==='civilian')){voiceCivilian();note('SOMEBODY HELP ME! · DO NOT SHOOT')}}
 }
 async function start(){if(running)return;audio.begin();$('overlay').style.display='grid';$('message').textContent='1996 RETRO HORROR · 감염체 메시 및 피부 텍스처 생성 중...';$('net').textContent='BUILDING INFECTED MESHES...';$('solo').disabled=true;$('host').disabled=true;$('join').disabled=true;const timeout=new Promise(r=>setTimeout(()=>r('timeout'),15000));let loaded=await Promise.race([loadInfected(),timeout]);$('solo').disabled=false;$('host').disabled=false;$('join').disabled=false;if(loaded!==true){$('net').textContent=loaded==='timeout'?'모델 로딩 시간 초과 — 네트워크를 확인하세요.':'감염체 모델 생성 실패. 새로고침 후 재시도하세요.';$('message').textContent='저폴리 감염체 메시를 생성하지 못했습니다. 다시 시도하세요.';$('fallbackStart').style.display='none';$('solo').textContent='모델 로딩 재시도';retroReady=false;return}$('fallbackStart').style.display='none';$('net').textContent='RETRO HORROR MODEL BUILT · PS1 GORE';beginGame();if(race&&host)send({type:'go',mode,seed:runSeed})}function beginGame(){for(const mix of mixers)mix.stopAllAction();mixers.length=0;document.body.classList.toggle('p2',race&&!host);other={progress:0,score:0,time:0,done:false,online:!!conn?.open};clearEvents();for(let z of enemies){S.remove(z);z.traverse(obj=>obj.geometry?.dispose())}for(let p of effects){S.remove(p.obj);p.obj.geometry?.dispose();p.obj.material?.dispose()};for(let p of stains){S.remove(p);p.geometry?.dispose();p.material?.dispose()}stains=[];for(let p of projectiles){S.remove(p.mesh);p.mesh.geometry?.dispose();p.mesh.material?.dispose()}for(let p of grenadeProjectiles){S.remove(p.mesh);p.mesh.geometry?.dispose();p.mesh.material?.dispose()}grenadeProjectiles=[];projectiles=[];effects=[];enemies=[];C.position.set(0,1.7,11);travel={from:null,to:null,t:1,duration:2.4,bend:[0,0,0]};goal=11;stage=previewBossKind===null?0:4;branch=0;resetDirector(pendingSeed??Math.floor(Math.random()*0xffffffff));pendingSeed=null;if(previewBossKind!==null){const pos=ensureRoom(stage);C.position.set(...pos.eye);C.lookAt(...pos.look)}life=5;ammo=8;grenades=3;peerGrenades=3;score=0;combo=0;elapsed=0;finished=false;running=true;reloading=false;waveTransition=false;begin=performance.now();$('overlay').style.display='none';$('race').style.display=race?'block':'none';hud();addWave()}
 function send(m){if(conn?.open)try{conn.send(m)}catch{}}function prog(){if(finished&&life)return 1;let done=Math.max(0,stage-1),n=PATH[Math.max(0,stage-1)]?waveData(runSeed,Math.max(0,stage-1)).enemies.length:4,dead=enemies.filter(e=>e.userData.wave===stage&&!e.userData.alive).length;return Math.min(1,(done+Math.min(1,dead/n))/(Math.max(5,stage+1)))}
@@ -168,6 +167,7 @@ function explodeGrenade(g){
  for(let i=projectiles.length-1;i>=0;i--)if(projectiles[i].mesh.position.distanceTo(center)<blastRadius+1){
   S.remove(projectiles[i].mesh);projectiles[i].mesh.geometry.dispose();projectiles[i].mesh.material.dispose();projectiles.splice(i,1);score+=35
  }
+ for(const ev of sceneEvents){if(!ev.userData.alive)continue;if(ev.position.distanceTo(center)<blastRadius){eventResolved(ev.userData.id,'shot')}}
  for(let i=0;i<enemies.length;i++){
   const e=enemies[i],d=e.userData;if(!d.alive)continue;
   const dist=e.position.distanceTo(center);
