@@ -20,7 +20,7 @@ export function bossForStage(seed,index){
  for(let i=9;i>0;i--){const j=Math.floor(r()*(i+1));[perm[i],perm[j]]=[perm[j],perm[i]]}
  return perm[nth];
 }
-function mat(T,color,emissive=0){return new T.MeshStandardMaterial({color,roughness:.94,flatShading:false,emissive,emissiveIntensity:emissive?.34:0,side:T.DoubleSide})}
+function mat(T,color,emissive=0){const material=new T.MeshStandardMaterial({color,roughness:.94,flatShading:false,emissive,emissiveIntensity:emissive?.34:0,side:T.DoubleSide});material.userData.bossOwned=true;return material}
 function shape(T,p,geo,material,pos,scale,root,hit='body',name=''){const m=new T.Mesh(geo,material);m.position.set(...pos);m.scale.set(...scale);m.castShadow=true;m.receiveShadow=true;m.name=name;if(hit)m.userData.hit={root,kind:hit};p.add(m);return m}
 function bulk(T,p,m,pos,scale,root,name=''){return shape(T,p,new T.SphereGeometry(1,12,9),m,pos,scale,root,'body',name)}
 function beam(T,p,m,aa,bb,radius,root,name){
@@ -143,13 +143,14 @@ export function makeBoss(T,root,kind,makeHuman){
  const cores=rig.extras.cores||[];
  const tagged=[];
  root.traverse(o=>{if(o.isMesh&&o.userData.hit?.kind==='weak'){o.userData.hit.bossSlot=tagged.length;tagged.push(o)}});
- for(const item of tagged){if(item.material?.isMeshStandardMaterial){item.material=item.material.clone();item.material.emissive.set(0xd62213);item.material.emissiveIntensity=.55;item.material.color.multiplyScalar(1.16)}}
+ for(const item of tagged){if(item.material?.isMeshStandardMaterial){item.material=item.material.clone();item.material.userData.bossOwned=true;item.material.emissive.set(0xd62213);item.material.emissiveIntensity=.55;item.material.color.multiplyScalar(1.16)}}
  if(!cores.length){ // fallback for a malformed asset, keep fight finishable
   cores.push(customCore(T,root,g,[0,2.1,.45],core,0));
  }
  // Draw windup glow around the whole monster; the indicator does not block bullets.
  const tellMat=new T.MeshBasicMaterial({color:kind===5?0xff7530:kind===1?0x8bb7a1:0xb63b31,
    transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide});
+ tellMat.userData.bossOwned=true;
  const tell=new T.Group();tell.position.set(0,1.85,1.02);g.add(tell);
  for(let i=0;i<3;i++){
   const band=new T.Mesh(new T.TorusGeometry(.43+i*.21,.013,5,40),tellMat);
