@@ -25,7 +25,7 @@ export function sectorEvents(seed,stage,plan){
   events.push({kind,id:'supply:'+stage,pos:[lane+(r()<.5?-1:1)*(3.2+r()*2.5),.45,zz+2.25+r()*1.1],theme:themeForPlan(plan)})
  }
  if(stage>0&&r()<.46){
-  events.push({kind:'civilian',id:'civilian:'+stage,pos:[lane+(r()<.5?-1:1)*(1.9+r()*2.0),0,zz+3.8+r()*1.1],theme:Math.floor((stage+r()*7)%7),variant:Math.floor(r()*3),cross:r()<.43})
+  events.push({kind:'civilian',id:'civilian:'+stage,pos:[lane+(r()<.5?-1:1)*(1.9+r()*2.0),0,zz+3.8+r()*1.1],theme:themeForPlan(plan),variant:Math.floor(r()*3),cross:r()<.43})
  }
  return events;
 }
