@@ -52,7 +52,7 @@ function anatomy(T,root,kind){
    beam(T,elbow,shell,[kn[0]-elbow.position.x,kn[1]-elbow.position.y,kn[2]-elbow.position.z],[tip[0]-elbow.position.x,tip[1]-elbow.position.y,tip[2]-elbow.position.z],.055,root,'spider_tibia');
   }
   for(let i=0;i<5;i++)bulk(T,torso,shell,[(i-2)*.31,2.55,-1.03+(i%2)*.3],[.16,.12,.22],root,'egg_wound');
-  cores.push(customCore(T,root,torso,[0,2.3,-.08],glow,0),customCore(T,root,torso,[-.55,2.22,.67],glow,1),customCore(T,root,torso,[.53,2.12,.64],glow,2));
+  cores.push(customCore(T,root,torso,[0,2.5,1.51],glow,0),customCore(T,root,torso,[-.56,2.16,1.43],glow,1),customCore(T,root,torso,[.56,2.16,1.43],glow,2));
  }else if(kind===3){ // leech worm: ragged segmented body, gaping mouth
   for(let i=0;i<8;i++)bulk(T,torso,i%2?rag:meat,[0,1.5+i*.22,-i*.29],[.82-i*.046,.39,.44],root,'leech_ring_'+i);
   bulk(T,head,meat,[0,0,.46],[.55,.54,.33],root,'mouth_collar');
@@ -68,7 +68,7 @@ function anatomy(T,root,kind){
     const aa=[Math.sin(j*2.4)*.51,1.6,0],bb=[Math.sin(j*2.4)*1.24,.1,Math.cos(j*2.4)*.87];
     beam(T,torso,meat,aa,bb,.10,root,'hanging_roots')
   }
-  cores.push(customCore(T,root,torso,[0,2.36,.54],glow,0),customCore(T,root,torso,[-.55,1.73,.61],glow,1),customCore(T,root,torso,[.62,1.76,.58],glow,2));
+  cores.push(customCore(T,root,torso,[0,2.4,1.05],glow,0),customCore(T,root,torso,[-.55,1.75,1.06],glow,1),customCore(T,root,torso,[.62,1.77,1.07],glow,2));
  }else if(kind===7){ // corpse centipede: vertebrae linked into long articulated train
   const segments=[];
   for(let i=0;i<10;i++){
@@ -87,7 +87,7 @@ function anatomy(T,root,kind){
   }
   bulk(T,torso,shell,[0,1.85,-.18],[.64,.80,.5],root,'armored_ventricle');
   for(let i=0;i<9;i++){const a=i*Math.PI*2/9;beam(T,torso,bone,[Math.sin(a)*.45,1.96+Math.cos(a)*.32,.26],[Math.sin(a)*1.31,.8+Math.cos(a)*1.1,.26],.064,root,'organic_conduit')}
-  cores.push(customCore(T,root,torso,[0,2.14,.43],glow,0),customCore(T,root,torso,[-.45,1.70,.55],glow,1),customCore(T,root,torso,[.43,1.70,.56],glow,2));
+  cores.push(customCore(T,root,torso,[0,2.14,1.02],glow,0),customCore(T,root,torso,[-.45,1.70,1.03],glow,1),customCore(T,root,torso,[.43,1.70,1.04],glow,2));
  }
  return {hip:torso,head,jaw,arms,elbows,legs,knees,feet,extras:{worms:[],cores,barrel:null},bossParts:parts,coreMeshes:cores.map(c=>c.node),rigType:'custom'}
 }
@@ -119,6 +119,7 @@ export function makeBoss(T,root,kind,makeHuman){
  const cores=rig.extras.cores||[];
  const tagged=[];
  root.traverse(o=>{if(o.isMesh&&o.userData.hit?.kind==='weak'){o.userData.hit.bossSlot=tagged.length;tagged.push(o)}});
+ for(const item of tagged){if(item.material?.isMeshStandardMaterial){item.material=item.material.clone();item.material.emissive.set(0xd62213);item.material.emissiveIntensity=.6;item.material.color.multiplyScalar(1.16)}}
  if(!cores.length){ // fallback for a malformed asset, keep fight finishable
   cores.push(customCore(T,root,g,[0,2.1,.45],core,0));
  }
@@ -141,7 +142,7 @@ export function animateBoss(T,root,d,dt,time){
  for(let i=0;i<d.bossCores.length;i++){
   const c=d.bossCores[i],on=i===active,rate=.95+Math.sin(time*4+i)*.07;
   c.node.scale.setScalar((on?1.18:.68)*rate);
-  c.light.intensity=on?1.8+Math.sin(time*6)*.4:.18;
+  c.light.intensity=on?1.8+Math.sin(time*6)*.4:.18;const mesh=d.bossWeakMeshes?.[i];if(mesh?.material?.isMeshStandardMaterial)mesh.material.emissiveIntensity=on?1.8:.05;
  }
  for(const [i,p] of d.bossParts.entries()){
   p.node.rotation.y=Math.sin(time*.65+p.phase)*.065;
@@ -155,9 +156,23 @@ export function animateBoss(T,root,d,dt,time){
  if(d.spitState==='windup'){d.hip.rotation.x=-.1-.13*Math.sin(Math.PI*Math.min(1,d.spitTimer/2.4))}
 }
 export function bossCamera(boss,plan,elapsed,position){
- const angle=Math.sin(elapsed*(boss===0?.41:boss===4?.36:.23)+plan.roomSeed*.000001)*(boss===0?1.08:boss===1?.76:1.0);
- const radius=boss===0?6.4:boss===7?10.5:boss===9?10.1:8.3;
- const eye=[position.x+Math.sin(angle)*radius,1.82+(boss%3)*.33+Math.sin(elapsed*.45)*.13,position.z+Math.cos(angle)*radius];
- const look=[position.x, boss===1?2.1:2.4,position.z];
+ const profiles=[
+  {radius:4.08,sweep:1.06,speed:.41,height:1.85,vertical:.18}, // lift: within inner cage walls
+  {radius:9.25,sweep:.79,speed:.27,height:2.6,vertical:.32}, // spider: see ceiling
+  {radius:8.3,sweep:.89,speed:.20,height:1.9,vertical:.11}, // morgue: slow lateral survey
+  {radius:8.5,sweep:.64,speed:.23,height:1.55,vertical:.40}, // flooded: low view
+  {radius:7.2,sweep:1.02,speed:.38,height:2.10,vertical:.14}, // twins: alternating sides
+  {radius:9.4,sweep:.46,speed:.16,height:1.85,vertical:.12}, // incinerator: looming push
+  {radius:8.2,sweep:.91,speed:.19,height:2.2,vertical:.29}, // hive: wide survey
+  {radius:11.1,sweep:.48,speed:.29,height:2.9,vertical:.35}, // centipede: long body
+  {radius:7.9,sweep:.87,speed:.31,height:1.66,vertical:.26}, // screamer: dizzy motion
+  {radius:9.6,sweep:.93,speed:.22,height:2.25,vertical:.22} // heart: orbiting chamber
+ ];
+ const p=profiles[boss],q=elapsed*p.speed+plan.roomSeed*.000001;
+ const angle=Math.sin(q)*p.sweep;
+ const distance=p.radius+(boss===5?Math.sin(elapsed*.28)*1.4:boss===8?Math.sin(elapsed*.72)*.6:0);
+ const height=p.height+p.vertical*Math.sin(elapsed*.58+boss*.3);
+ const eye=[position.x+Math.sin(angle)*distance,height,position.z+Math.cos(angle)*distance];
+ const look=[position.x,boss===1?2.5:boss===7?1.65:2.35,position.z+(boss===7?-1.25:0)];
  return {eye,look}
 }
