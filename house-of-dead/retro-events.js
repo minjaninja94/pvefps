@@ -25,7 +25,13 @@ export function sectorEvents(seed,stage,plan){
   events.push({kind,id:'supply:'+stage,pos:[lane+(r()<.5?-1:1)*(3.2+r()*2.5),.45,zz+2.25+r()*1.1],theme:themeForPlan(plan)})
  }
  if(stage>0&&r()<.46){
-  events.push({kind:'civilian',id:'civilian:'+stage,pos:[lane+(r()<.5?-1:1)*(1.9+r()*2.0),0,zz+3.8+r()*1.1],theme:themeForPlan(plan),variant:Math.floor(r()*3),cross:r()<.43})
+  // Civilians wait along a side evacuation lane, NEVER on the center firing lane.
+  // Their exit is time-driven, not dependent on the player shooting them.
+  const exitSide=plan.eye[0]>=lane?-1:1;
+  events.push({kind:'civilian',id:'civilian:'+stage,
+    pos:[lane+exitSide*(5.5+r()*1.2),0,zz+3.0+r()*.8],
+    escapeDir:exitSide,evacSeconds:3.8+r()*.8,
+    theme:themeForPlan(plan),variant:Math.floor(r()*3),cross:false})
  }
  return events;
 }
@@ -84,7 +90,7 @@ export function buildEvent(T,scene,ev){
   const label=prism(T,root,new T.PlaneGeometry(1.56,.36),new T.MeshBasicMaterial({map:labelTex,transparent:true,side:T.DoubleSide,depthWrite:false}),0,3.10,.12,1,1,1);
   parts.label=label;
  }
- root.userData={kind:ev.kind,event:true,id:ev.id,alive:true,collected:false,cross:ev.cross||false,theme:ev.theme,variant:ev.variant,parts,age:0,spawnX:root.position.x,spawnY:root.position.y,spawnZ:root.position.z};
+ root.userData={kind:ev.kind,event:true,id:ev.id,alive:true,collected:false,cross:ev.cross||false,escapeDir:ev.escapeDir||1,evacSeconds:ev.evacSeconds||4.2,theme:ev.theme,variant:ev.variant,parts,age:0,spawnX:root.position.x,spawnY:root.position.y,spawnZ:root.position.z};
  return root;
 }
 export function animateEvent(obj,dt,time){
@@ -94,7 +100,11 @@ export function animateEvent(obj,dt,time){
    d.parts.arms[i].rotation.x=-.35+.21*Math.sin(time*7+i*3+d.variant);
   }
   d.parts.head.rotation.z=Math.sin(time*3.1+d.variant)*.08;
-  if(d.cross&&d.age>1.15)obj.position.x=d.spawnX+Math.sin(Math.min(1,(d.age-1.15)/1.1)*Math.PI/2)*1.05;
+  // As the rescue timer advances, the civilian runs AWAY from the crosshair.
+  const flee=Math.max(0,d.age-.65);
+  obj.position.x=d.spawnX+d.escapeDir*Math.min(4.5,flee*1.7);
+  obj.rotation.y=d.escapeDir*-.22;
+  obj.position.y=d.spawnY+Math.abs(Math.sin(d.age*10))*.035;
  }else {
   obj.rotation.y+=dt*.9;
   d.parts.halo.material.opacity=.60+.20*Math.sin(time*5+d.theme)
