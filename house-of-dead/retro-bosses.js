@@ -20,16 +20,16 @@ export function bossForStage(seed,index){
  for(let i=9;i>0;i--){const j=Math.floor(r()*(i+1));[perm[i],perm[j]]=[perm[j],perm[i]]}
  return perm[nth];
 }
-function mat(T,color,emissive=0){return new T.MeshStandardMaterial({color,roughness:.94,flatShading:true,emissive,emissiveIntensity:emissive?.34:0,side:T.DoubleSide})}
+function mat(T,color,emissive=0){return new T.MeshStandardMaterial({color,roughness:.94,flatShading:false,emissive,emissiveIntensity:emissive?.34:0,side:T.DoubleSide})}
 function shape(T,p,geo,material,pos,scale,root,hit='body',name=''){const m=new T.Mesh(geo,material);m.position.set(...pos);m.scale.set(...scale);m.castShadow=true;m.receiveShadow=true;m.name=name;if(hit)m.userData.hit={root,kind:hit};p.add(m);return m}
-function bulk(T,p,m,pos,scale,root,name=''){return shape(T,p,new T.IcosahedronGeometry(1,1),m,pos,scale,root,'body',name)}
+function bulk(T,p,m,pos,scale,root,name=''){return shape(T,p,new T.SphereGeometry(1,12,9),m,pos,scale,root,'body',name)}
 function beam(T,p,m,aa,bb,radius,root,name){
  const v=new T.Vector3(...bb).sub(new T.Vector3(...aa)),len=v.length();
- const q=shape(T,p,new T.CylinderGeometry(radius*.85,radius,len,5),m,[(aa[0]+bb[0])/2,(aa[1]+bb[1])/2,(aa[2]+bb[2])/2],[1,1,1],root,'limb',name);
+ const q=shape(T,p,new T.CylinderGeometry(radius*.75,radius,len,8),m,[(aa[0]+bb[0])/2,(aa[1]+bb[1])/2,(aa[2]+bb[2])/2],[1,1,1],root,'limb',name);
  q.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),v.normalize());return q
 }
 function customCore(T,root,group,pos,material,slot){
- const core=shape(T,group,new T.IcosahedronGeometry(.22,1),material,pos,[1,1,.58],root,'weak','rupturable_core_'+slot);
+ const core=shape(T,group,new T.SphereGeometry(.22,14,10),material,pos,[1,1,.68],root,'weak','rupturable_core_'+slot);
  core.userData.hit.bossSlot=slot;
  const halo=new T.PointLight(0xff2912,1.1,2.5);halo.position.set(pos[0],pos[1],pos[2]+.23);group.add(halo);
  return {node:core,light:halo}
@@ -46,10 +46,16 @@ function anatomy(T,root,kind){
   bulk(T,torso,shell,[0,2.18,.72],[.77,.63,.82],root,'thorax');
   bulk(T,head,meat,[0,.08,.40],[.48,.47,.45],root,'fractured_face');
   for(let i=0;i<8;i++){const side=i<4?-1:1,k=i%4,zz=(k-1.5)*.75;
-   const elbow=new T.Group();elbow.position.set(side*.61,2.07,zz);torso.add(elbow);parts.push({node:elbow,phase:k*.88+side});
+   const elbow=new T.Group();elbow.position.set(side*.61,2.07,zz);torso.add(elbow);parts.push({node:elbow,phase:k*.88+side,role:'spiderHip',side,k});
    const kn=[side*(1.1+k*.09),2.64+k*.12,zz+(k-1.5)*.42],tip=[side*(2.5+k*.33),.06,zz+(k-1.5)*.56];
-   beam(T,elbow,bone,[0,0,0],[kn[0]-elbow.position.x,kn[1]-elbow.position.y,kn[2]-elbow.position.z],.095,root,'spider_femur');
-   beam(T,elbow,shell,[kn[0]-elbow.position.x,kn[1]-elbow.position.y,kn[2]-elbow.position.z],[tip[0]-elbow.position.x,tip[1]-elbow.position.y,tip[2]-elbow.position.z],.055,root,'spider_tibia');
+   const kneeLocal=[kn[0]-elbow.position.x,kn[1]-elbow.position.y,kn[2]-elbow.position.z];
+   beam(T,elbow,bone,[0,0,0],kneeLocal,.087,root,'jointed_spider_femur');
+   const joint=new T.Group();joint.position.set(...kneeLocal);elbow.add(joint);
+   parts.push({node:joint,phase:k*.88+side*.43,role:'spiderKnee',side,k});
+   beam(T,joint,shell,[0,0,0],[tip[0]-kn[0],tip[1]-kn[1],tip[2]-kn[2]],.053,root,'jointed_spider_tibia');
+   bulk(T,joint,meat,[0,0,0],[.115,.11,.12],root,'organic_knee_socket');
+   // Irregular exoskeletal scars wrap the *body*, not artificial spikes.
+   beam(T,torso,bone,[side*.34,2.34,.83],[side*.67,2.35,.92],.034,root,'spider_thorax_ridge');
   }
   for(let i=0;i<5;i++)bulk(T,torso,shell,[(i-2)*.31,2.55,-1.03+(i%2)*.3],[.16,.12,.22],root,'egg_wound');
   cores.push(customCore(T,root,torso,[0,2.5,1.51],glow,0),customCore(T,root,torso,[-.56,2.16,1.43],glow,1),customCore(T,root,torso,[.56,2.16,1.43],glow,2));
@@ -80,7 +86,7 @@ function anatomy(T,root,kind){
   }
   parts.push(...segments.map((node,i)=>({node,phase:i*.42})));
   bulk(T,head,meat,[0,-.67,.56],[.65,.37,.55],root,'mandible_skull');
-  cores.push(customCore(T,root,torso,[0,1.78,.52],glow,0),customCore(T,root,torso,[.22,1.46,-1.28],glow,1),customCore(T,root,torso,[-.23,1.43,-2.51],glow,2));
+  cores.push(customCore(T,root,torso,[0,1.83,.66],glow,0),customCore(T,root,torso,[.42,1.97,-.30],glow,1),customCore(T,root,torso,[-.46,2.03,-.89],glow,2));
  }else{ // heart engine: multiple inward-folded ventricles around armored core
   for(let j=0;j<9;j++){
    const a=j*Math.PI*2/9;bulk(T,torso,j%3?rag:meat,[Math.cos(a)*.9,1.92+Math.sin(a)*.75,Math.sin(a)*.45],[.49,.53,.44],root,'cardiac_chamber');
@@ -116,14 +122,42 @@ export function makeBoss(T,root,kind,makeHuman){
   shape(T,g,new T.TorusGeometry(.42,.11,6,12),burn,[0,2.51,.83],[1,1,1],root,'head','shrieking_ring');
   for(let j=0;j<4;j++)beam(T,g,bone,[-.45+j*.28,2.13,.51],[-.59+j*.32,1.65,.62],.038,root,'cervical_bones');
  }
+
+ // Tissue overlays follow the core musculature, rather than tacked-on spikes or cubes.
+ // Separate the weakpoint socket from the body and make the next target legible even at 760px.
+ const fracture=mat(T,0x4d1c22),tendon=mat(T,0x9c786c),viscera=mat(T,0x893b32),shadows=mat(T,0x2a1117);
+ const bossRng=(()=>{let q=(kind+1)*214013;return()=>{q=(Math.imul(q,1664525)+1013904223)>>>0;return q/4294967296}})();
+ for(let i=0;i<10;i++){
+  const ang=i*2.39996,x=Math.sin(ang)*(.24+bossRng()*.48),y=1.25+bossRng()*1.13;
+  const z=.34+bossRng()*.06;
+  const tone=i%3===0?fracture:i%3===1?viscera:tendon;
+  // Small asymmetric lesions built flush into the front shell.
+  const blister=shape(T,g,new T.SphereGeometry(1,8,6),tone,[x,y,z],[.095+bossRng()*.055,.045+bossRng()*.09,.025],root,null,'subdermal_lesion');
+  blister.rotation.z=(bossRng()-.5)*1.3;
+ }
+ // Thin crawling tendons make large organs look connected rather than floating.
+ for(let i=0;i<5;i++){
+  const x=(i-2)*.17,z=.40+bossRng()*.08;
+  beam(T,g,i%2?viscera:shadows,[x,1.12,z],[x+(bossRng()-.5)*.28,1.62+bossRng()*.58,z+.045],.026,root,'woven_chest_tendon')
+ }
  const cores=rig.extras.cores||[];
  const tagged=[];
  root.traverse(o=>{if(o.isMesh&&o.userData.hit?.kind==='weak'){o.userData.hit.bossSlot=tagged.length;tagged.push(o)}});
- for(const item of tagged){if(item.material?.isMeshStandardMaterial){item.material=item.material.clone();item.material.emissive.set(0xd62213);item.material.emissiveIntensity=.6;item.material.color.multiplyScalar(1.16)}}
+ for(const item of tagged){if(item.material?.isMeshStandardMaterial){item.material=item.material.clone();item.material.emissive.set(0xd62213);item.material.emissiveIntensity=.55;item.material.color.multiplyScalar(1.16)}}
  if(!cores.length){ // fallback for a malformed asset, keep fight finishable
   cores.push(customCore(T,root,g,[0,2.1,.45],core,0));
  }
- return {...rig,bossKind:kind,bossCores:cores,bossParts:rig.bossParts||[],bossWeakMeshes:tagged.length?tagged:cores.map(c=>c.node),rigType:rig.rigType||'humanoid'};
+ // Draw windup glow around the whole monster; the indicator does not block bullets.
+ const tellMat=new T.MeshBasicMaterial({color:kind===5?0xff7530:kind===1?0x8bb7a1:0xb63b31,
+   transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide});
+ const tell=new T.Group();tell.position.set(0,1.85,1.02);g.add(tell);
+ for(let i=0;i<3;i++){
+  const band=new T.Mesh(new T.TorusGeometry(.43+i*.21,.013,5,40),tellMat);
+  band.position.z=i*.018;band.userData.ignoreShots=true;tell.add(band);
+ }
+ const beamLight=new T.PointLight(kind===5?0xff5818:0xd52d24,0,3.0);beamLight.position.set(0,1.9,1.2);g.add(beamLight);
+ return {...rig,bossKind:kind,bossCores:cores,bossParts:rig.bossParts||[],bossWeakMeshes:tagged.length?tagged:cores.map(c=>c.node),
+   tell,beamLight,tellMat,rigType:rig.rigType||'humanoid'};
 }
 export function bossShots(kind,phase,pattern){
  const plans=[
@@ -145,15 +179,41 @@ export function animateBoss(T,root,d,dt,time){
   c.light.intensity=on?1.8+Math.sin(time*6)*.4:.18;const mesh=d.bossWeakMeshes?.[i];if(mesh?.material?.isMeshStandardMaterial)mesh.material.emissiveIntensity=on?1.8:.05;
  }
  for(const [i,p] of d.bossParts.entries()){
-  p.node.rotation.y=Math.sin(time*.65+p.phase)*.065;
-  p.node.rotation.x=Math.sin(time*1.1+p.phase)*.04;
+  const step=time*(p.role==='spiderKnee'?2.4:1.5)+p.phase;
+  if(p.role==='spiderHip'){
+    p.node.rotation.y=Math.sin(step)*.13;
+    p.node.rotation.x=Math.sin(step+.8)*.11;
+  }else if(p.role==='spiderKnee'){
+    p.node.rotation.x=.06+Math.max(0,Math.sin(step+.7))*.27;
+    p.node.rotation.z=Math.sin(step-.4)*.045*p.side;
+  }else{
+    p.node.rotation.y=Math.sin(time*1.65-p.phase)*.14;
+    p.node.rotation.x=Math.sin(time*1.30+p.phase)*.085;
+  }
  }
+ // Attack preparation travels through neck, shoulders, mouth and throat. 
+ // Its pulse is tied to ACTUAL remaining windup time, not a disconnected sine loop.
+ const preparing=d.spitState==='windup';
+ const duration=Math.max(.45,d.bossWindup||d.pace?.rangedWindup||1.55);
+ const ratio=preparing?Math.min(1,d.spitTimer/duration):0;
+ if(d.tell){
+   d.tell.visible=ratio>.01;
+   d.tell.scale.setScalar(.88+ratio*.46);
+   d.tell.rotation.z=Math.sin(time*7)*.11;
+   d.tellMat.opacity=ratio*.64;
+   d.beamLight.intensity=ratio*4.3;
+ }
+ if(d.jaw)d.jaw.rotation.x=-ratio*.35;
+ if(d.head)d.head.rotation.x=-ratio*.09;
+ if(d.arms?.length){d.arms[0].rotation.x=-ratio*.42;d.arms[1].rotation.x=-ratio*.51}
+ if(preparing)d.hip.rotation.x=-.035-ratio*.20;
+
  const boss=d.bossKind;
  if(boss===1){d.hip.rotation.z=Math.sin(time*.58)*.08;d.hip.position.y=.14+.16*Math.sin(time*.72)}
  else if(boss===7){d.hip.position.y=.14+Math.sin(time*1.4)*.07}
  else if(boss===9){d.hip.rotation.y+=dt*.35;d.hip.position.y=.11+Math.sin(time*1.6)*.09}
  else if(boss===5){d.hip.position.y=.025*Math.sin(time*2.1)}
- if(d.spitState==='windup'){d.hip.rotation.x=-.1-.13*Math.sin(Math.PI*Math.min(1,d.spitTimer/2.4))}
+ if(d.spitState==='recover')d.hip.rotation.x*=Math.max(.6,1-dt*1.8)
 }
 export function bossCamera(boss,plan,elapsed,position){
  const profiles=[
