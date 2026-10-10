@@ -51,5 +51,98 @@ if(id===3){const extra=maggots(T,head,m.worm,root,338,.04,-.28,.22,4);worms.push
 let barrel=null;if(id===4){barrel=new T.Group();barrel.position.set(.55,1.37,.53);hip.add(barrel);const steel=new T.MeshStandardMaterial({color:0x65533a,roughness:.93,flatShading:true});const geo=new T.CylinderGeometry(.27,.27,.58,8,1);const b=new T.Mesh(geo,steel);b.rotation.z=.22;b.userData.hit={root,kind:'body'};barrel.add(b);for(const h of [-.22,.22]){const band=new T.Mesh(new T.CylinderGeometry(.281,.281,.045,8),m.wound);band.position.y=h;barrel.add(band)}}
 return {hip,head,jaw,arms,elbows,legs,knees,feet,extras:{worms,cores,barrel},meshCount:root.children.length}
 }
-export function animateRetroInfected(T,root,d,dt,time){if(!d.extras)return;const e=d.extras;for(const [i,w] of e.worms.entries()){w.node.rotation.z=Math.sin(time*3.2+w.phase+i*.3)*.17;w.node.scale.x=1+.13*Math.sin(time*5+w.phase)}for(const [i,c] of e.cores.entries()){const pulse=.9+Math.sin(time*5+i*1.7)*.12;c.node.scale.setScalar(pulse);c.light.intensity=1.1+Math.sin(time*6+i)*.5}if(e.barrel){const wind=d.spitState==='windup';e.barrel.rotation.x=wind?-Math.min(1,d.spitTimer/2.2)*.75:0;e.barrel.position.y=1.37+(wind?Math.min(1,d.spitTimer/2.2)*.34:0);e.barrel.visible=d.spitState!=='recover'}if(d.type===2||d.type===6){d.hip.position.y=-.045+Math.cos(time*3+d.phase)*.045}else d.hip.position.y=Math.cos(time*4.3+d.phase)*.025;
-if(d.type===1)d.hip.rotation.x=.18+Math.sin(time*6+d.phase)*.035;if(d.spitState==='windup'&&d.type===3){d.jaw.rotation.x=-Math.min(1,d.spitTimer/2.2)*.38} else d.jaw.rotation.x*=.9}
+export function animateRetroInfected(T,root,d,dt,time){
+ if(!d.extras)return;
+ const e=d.extras;
+ // Unlike a synchronized sine-wave loop, each infected advances its gait from actual movement state.
+ d.walkBlend??=0;d.gaitPhase??=(d.phase||0);
+ const dying=!d.alive;
+ const ranged=d.spitState==='windup'||d.spitState==='recover';
+ const hit=d.flinch>0;
+ const walking=!dying&&!ranged&&!hit&&!!d.walkActive;
+ const ease=1-Math.exp(-Math.min(.06,dt)*6.8);
+ d.walkBlend+=(Number(walking)-d.walkBlend)*ease;
+ const w=d.walkBlend;
+ const cadence=d.type===1?10.5:d.type===2?4.1:d.type===6?3.25:d.type===3?5.1:5.8;
+ d.gaitPhase+=Math.min(.06,dt)*cadence*(.13+.87*w);
+ const phase=d.gaitPhase;
+ const limp=d.type===1?.27:d.type===2?.17:.11;
+ const stress=hit?Math.sin((d.flinch/.22)*Math.PI)*.19:0;
+ const still=1-w;
+ const age=time+(d.phase||0);
+ // Distinct, low-amplitude movement cycles prevent a marching toy silhouette.
+ const steps=[Math.sin(phase),Math.sin(phase+Math.PI)];
+ const lift=[Math.max(0,steps[0]),Math.max(0,steps[1])];
+ for(let i=0;i<2;i++){
+   const asym=i===0?1:-1;
+   const gait=steps[i];
+   const drag=i===0?1:1-limp;
+   const attack=d.meleeActive?Math.min(1,(d.attack||0)/1.35):0;
+   // Thigh leads; knee flexes only on the airborne half of its cycle.
+   d.legs[i].rotation.x=w*(-gait*.31*drag+(i===1?limp*.24:0));
+   if(d.knees?.[i])d.knees[i].rotation.x=w*(.035+lift[i]*(i===0?.44:.35)*drag);
+   if(d.feet?.[i]){
+     d.feet[i].rotation.x=w*(gait*.18-lift[i]*.24);
+     d.feet[i].rotation.z=w*asym*.025;
+   }
+   if(d.spitState==='windup'){
+     const a=Math.min(1,(d.spitTimer||0)/(d.type===6?3.1:2.2));
+     d.arms[i].rotation.x=-.17-a*(d.type===4?.9:1.15);
+   }else if(attack){
+     const hold=Math.sin(Math.min(1,attack)*Math.PI*.8);
+     d.arms[i].rotation.x=-.35-(i===0?.72:1.15)*hold;
+   }else{
+     d.arms[i].rotation.x=-.30+w*gait*.27+(i===1?.12:0)-still*.07*Math.sin(age*1.6+i*2);
+   }
+   d.arms[i].rotation.z=asym*(.04+(d.type===2?.17:.035)) +w*Math.sin(phase-i*.8)*.035;
+   if(d.elbows?.[i])d.elbows[i].rotation.x=-.16-.20*w*Math.max(0,-gait)-attack*.33;
+ }
+ // Keep the feet near the floor; vertical bounce is measured in centimetres, not body lengths.
+ const stomp=Math.abs(Math.sin(phase));
+ const weight=(d.type===2||d.type===6)?.020:.012;
+ d.hip.position.y=dying?0:(-weight*w*stomp);
+ d.hip.rotation.z=(d.type===2?-.065:.025)+(w*Math.sin(phase)*.035)+(still*Math.sin(age*.85)*.014);
+ d.hip.rotation.y=w*Math.sin(phase)*.048;
+ const lean=d.type===1?.19:d.type===2?.13:d.type===6?.10:.065;
+ d.hip.rotation.x=lean+Math.sin(age*1.1)*.009+stress;
+ // Head reacts later than the chest and gently counter-rotates during turns.
+ d.head.rotation.y=-d.hip.rotation.y*.75+Math.sin(phase-.65)*.028*w+
+   Math.max(-.24,Math.min(.24,(d.turnDelta||0)*-.55));
+ d.head.rotation.x=-lean*.36+Math.sin(age*1.3-.6)*.035;
+ d.head.rotation.z=(d.type%2===0?-.07:.08)-d.hip.rotation.z*.62+
+   Math.sin(phase-1.1)*.018*w;
+ if(hit){d.head.rotation.x-=stress*.8;d.head.rotation.z+=Math.sin(age*14)*stress*.45}
+ // Deliberate mouth opening for a ranged windup without overriding the jaw's hinge.
+ const mouth=(d.spitState==='windup'&&d.type===3)?
+   Math.min(1,(d.spitTimer||0)/2.2)*.36:0;
+ d.jaw.rotation.x=-mouth+Math.sin(age*2.1)*.025;
+ d.jaw.position.y=-.20-(mouth*.11);
+ if(d.type===3)d.jaw.position.y=-.18-mouth*.13;
+ for(const [i,worm] of e.worms.entries()){
+   worm.node.rotation.z=Math.sin(age*1.6+worm.phase+i*.3)*.075;
+   worm.node.scale.x=1+.042*Math.sin(age*2.1+worm.phase);
+ }
+ for(const [i,c] of e.cores.entries()){
+   const pulse=.94+Math.sin(time*4+i*1.7)*.065;
+   c.node.scale.setScalar(pulse);c.light.intensity=1.1+Math.sin(time*5+i)*.45;
+ }
+ if(e.barrel){
+   const wind=d.spitState==='windup';
+   const a=Math.min(1,(d.spitTimer||0)/2.2);
+   e.barrel.rotation.x=wind?-a*.75:0;
+   e.barrel.position.y=1.37+(wind?a*.34:0);
+   e.barrel.visible=d.spitState!=='recover';
+ }
+ if(dying){
+   // Knees buckle progressively while shoulders slump during collapse.
+   const fall=Math.min(1,(d.fall||0)/.75);
+   d.hip.position.y=-.22*fall;
+   d.hip.rotation.x=.22+fall*.32;
+   for(let i=0;i<2;i++){
+     d.legs[i].rotation.x=fall*(i===0?.52:-.37);
+     if(d.knees?.[i])d.knees[i].rotation.x=fall*.95;
+     if(d.elbows?.[i])d.elbows[i].rotation.x=-fall*.9;
+     d.arms[i].rotation.x=-fall*.7;
+   }
+ }
+}
