@@ -1,4 +1,5 @@
 // DEAD SHIFT: original procedural arcade-horror stage director. No borrowed geometry, music or stage names.
+import { BOSSES, bossForStage } from './retro-bosses.js';
 export function randomFromSeed(seed){
  let x=(seed>>>0)||0x51e4;return ()=>{x=(x+0x6d2b79f5)|0;let t=Math.imul(x^(x>>>15),1|x);t^=t+Math.imul(t^(t>>>7),61|t);return ((t^(t>>>14))>>>0)/4294967296};
 }
@@ -12,9 +13,9 @@ export function stageData(seed,index){
  const elev=1.65+r()*1.9;
  const layout=Math.floor(r()*5);
  const name=names[(Math.floor(r()*names.length)+index)%names.length];
- const boss=index%5===4;
+ const boss=index%5===4,kind=boss?bossForStage(seed,index):-1;
  const lookZ=base-r()*2;
- return {name,index,layout,boss,eye:[camX,elev,lookZ+11.7+r()*4],look:[lookX,1.75,lookZ],bend:[(r()-.5)*7,(r()-.5)*.8,(r()-.5)*2],roomSeed:Math.floor(r()*0xffffffff),hue:r(),count:boss?3+Math.floor(r()*3):4+Math.min(5,Math.floor(index/3))+Math.floor(r()*3)};
+ return {name:boss?BOSSES[kind].name:name,index,layout:boss?kind:layout,boss,bossKind:kind,arena:boss?BOSSES[kind].arena:null,eye:[camX,elev,lookZ+11.7+r()*4],look:[lookX,1.75,lookZ],bend:[(r()-.5)*7,(r()-.5)*.8,(r()-.5)*2],roomSeed:Math.floor(r()*0xffffffff),hue:r(),count:boss?2+Math.floor(r()*2):4+Math.min(5,Math.floor(index/3))+Math.floor(r()*3)};
 }
 export function waveData(seed,index){
  const plan=stageData(seed,index),r=randomFromSeed(plan.roomSeed ^ 0xa33c77);
@@ -27,7 +28,8 @@ export function waveData(seed,index){
    const depth=2.0+(k%4)*1.6+r()*2.0;
    const angle=(r()-.5)*1.2;
    const pattern=type===6?Math.floor(r()*5):Math.floor(r()*6);
-   enemies.push({type,x:plan.look[0]+lane+Math.sin(angle)*2,z:plan.look[2]-depth,pattern,tempo:.8+r()*.6,stagger:r()*2.8});
+   const bossSpawn=plan.boss&&k===cap-1;
+   enemies.push({type,x:bossSpawn?plan.look[0]:plan.look[0]+lane+Math.sin(angle)*2,z:bossSpawn?plan.look[2]-3.1:plan.look[2]-depth,bossKind:bossSpawn?plan.bossKind:-1,pattern,tempo:.8+r()*.6,stagger:r()*2.8});
  }
  return {plan,enemies};
 }
@@ -100,7 +102,40 @@ export function buildRoom(T,scene,plan){
      cube(T,p,red,xx,1.0,zz+.56,.58,.17,.1);
    }
  }
+ if(plan.boss)arenaDetails(T,p,plan);
  return {root:p,lights,plan};
+}
+function arenaDetails(T,p,plan){
+ const r=randomFromSeed(plan.roomSeed^0x810232a),cx=plan.look[0],z=plan.look[2]-3;
+ const steel=material(T,0x44474a),dark=material(T,0x1d2022),rust=material(T,0x765042),flesh=material(T,0x58221f),bone=material(T,0x9d8d74),slime=material(T,0x3d4a31),warning=material(T,0xb75127,0xe02b0a);
+ const type=plan.bossKind;
+ if(type===0){ // claustrophobic lift with slatted doors, 3 outside windows, moving camera inside
+  for(const side of [-1,1]){
+   cube(T,p,steel,cx+side*5,3.1,z,.20,6.2,10.6);
+   for(let i=0;i<9;i++)cube(T,p,rust,cx+side*4.92,1.0+i*.62,z,.24,.065,10.4);
+  }
+  cube(T,p,steel,cx,5.93,z,10.2,.2,10.3);
+  for(let i=0;i<7;i++){const zz=z-4.6+i*1.48;cube(T,p,steel,cx+5.05,3,zz,.16,5.4,.11)}
+  for(let i=0;i<4;i++)cube(T,p,dark,cx-4.5+i*2.8,5.63,z,1.3,.18,8.1);
+ }else if(type===1){ // veined spider web across the ceiling, never across enemy heads
+  for(let i=0;i<11;i++){const a=i/11*Math.PI*2;
+   const x=cx+Math.cos(a)*5.9,zz=z+Math.sin(a)*5.9;
+   face(T,p,bone,[[cx,5.7,z],[x,5.4,zz],[x+.12,5.4,zz+.08]]);
+  }
+  for(let i=0;i<13;i++){
+   const a=i/13*Math.PI*2;
+   const x=cx+Math.cos(a)*4.6,zz=z+Math.sin(a)*4.6;
+   cube(T,p,flesh,x,.17,zz,.18,.3,.4);
+  }
+ }else if(type===2){for(let i=0;i<6;i++){const zz=z-5+i*2.2;cube(T,p,steel,cx+8,.87,zz,1.4,1.5,1.8);cube(T,p,rust,cx-8,.8,zz,1.6,1.3,2.4)}}
+ else if(type===3){for(let i=0;i<15;i++){const x=cx+(r()-.5)*19,zz=z+(r()-.5)*17;patch(T,p,slime,x,.055,zz,.6+r()*1.1,r)}}
+ else if(type===4){for(const side of [-1,1]){for(let i=0;i<5;i++)cube(T,p,steel,cx+side*7,1.2,z-6+i*2.8,1.5,2.1,.6)}}
+ else if(type===5){for(let i=0;i<6;i++)cube(T,p,rust,cx+(i%2?9:-9),1.0,z-6+Math.floor(i/2)*5.2,1.7,1.8,2.3)}
+ else if(type===6){for(let i=0;i<13;i++){const a=i*2.39,x=cx+Math.sin(a)*(3+r()*5),zz=z+Math.cos(a)*(3+r()*5);
+   const plant=new T.Mesh(new T.IcosahedronGeometry(.6+r()*.4,0),flesh);plant.position.set(x,.55,zz);p.add(plant)}}
+ else if(type===7){for(let i=0;i<12;i++){const zz=z-11+i*2.0;cube(T,p,dark,cx-9,.24,zz,2.0,.4,1.4);cube(T,p,dark,cx+9,.24,zz,2.0,.4,1.4)}}
+ else if(type===8){for(let i=0;i<8;i++){const xx=cx+(i%2?-11:11),zz=z-6+Math.floor(i/2)*3.8;cube(T,p,warning,xx,3.8,zz,.45,.9,.7)}}
+ else if(type===9){for(let i=0;i<10;i++){const a=i*Math.PI*2/10;const x=cx+Math.cos(a)*6,zz=z+Math.sin(a)*6;cube(T,p,bone,x,1.3,zz,.24,2.55,.25)}}
 }
 export function animateRoom(room,time){
  if(!room)return;
