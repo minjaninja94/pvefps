@@ -10,7 +10,26 @@ function strip(T,parent,a,b,w,mat,root,kind,name){const len=Math.hypot(b[0]-a[0]
 function maggots(T,parent,mat,root,seed,cx,cy,cz,count){const rnd=seeded(seed),worms=[];for(let j=0;j<count;j++){const angle=rnd()*Math.PI*2,rr=Math.sqrt(rnd())*.135;let x=cx+Math.cos(angle)*rr,y=cy+Math.sin(angle)*rr*.8,z=cz+.004+rnd()*.007;const g=new T.Group();g.position.set(x,y,z);parent.add(g);const segs=3+Math.floor(rnd()*2);let last=[0,0,0];for(let k=0;k<segs;k++){const t=k/segs,xx=Math.cos(angle)*t*.062+(rnd()-.5)*.012,yy=Math.sin(angle)*t*.047+(rnd()-.5)*.010;const next=[xx,yy,0];strip(T,g,last,next,.007+Math.sin((t+.1)*Math.PI)*.006,mat,root,null,'maggot_segment');last=next}worms.push({node:g,phase:rnd()*6.28})}return worms}
 function core(T,parent,root,m,x,y,z){const wound=patch(T,parent,[[x-.35,y-.36,z-.015],[x+.30,y-.36,z-.015],[x+.41,y-.02,z-.015],[x+.20,y+.36,z-.015],[x-.32,y+.25,z-.015]],m.wound,root,null,'exposed_core_socket');const g=new T.Group();g.position.set(x,y,z);parent.add(g);poly(T,g,[[0,-.22,.19,0,.11],[0,-.07,.26,.025,.15],[0,.11,.24,.02,.14],[0,.23,.08,0,.08]],m.muscle,root,'weak','pulsating_weakpoint',7);const p=new T.PointLight(0xff3011,1.3,2.2);p.position.set(0,0,.24);g.add(p);return {node:g,light:p}}
 export function makeRetroInfected(T,root,type,look=null){if(!kit)throw new Error('retro assets not prepared');const id=Math.min(6,Math.max(0,type===7?1:type===8?3:type===9?5:type)),m=kit[look?.palette??id],heavy=id===2||id===6,large=id===6,bulge=id===3||id===6,scale=large?1.45:heavy?1.21:1;const hip=new T.Group();hip.name='INFECTED_TORSO_RIG';root.add(hip);if(look){hip.scale.y=look.height;root.rotation.z=look.tilt}
-const torso=poly(T,hip,[[0,1.05,.25*scale,.005,.20*scale],[-.04,1.30,.39*scale,.01,.26*scale],[.035,1.68,.48*scale,.04,.34*scale],[.08,1.94,.46*scale,.02,.29*scale],[.025,2.19,.33*scale,-.06,.21*scale],[0,2.35,.16,-.06,.14]],m.cloth,root,'body','torn_patient_torso',10);
+const torso=poly(T,hip,[
+ [0,1.02,.31*scale,.014,.225*scale],[-.015,1.15,.36*scale,.017,.245*scale],
+ [0,1.31,.355*scale,.026,.238*scale],
+ [.017,1.47,.413*scale,.030,.281*scale],
+ [.022,1.65,.466*scale,.016,.325*scale],
+ [.022,1.84,.495*scale,-.012,.340*scale],
+ [.011,2.015,.458*scale,-.038,.285*scale],
+ [0,2.16,.315*scale,-.057,.210*scale],
+ [0,2.285,.163,-.058,.142]
+],m.cloth,root,'body','anatomical_waist_ribcage_shoulder_loft',16);
+// Shoulder transitions and collarbone lines follow the torso contour, not added armour or spikes.
+for(const side of [-1,1]){
+ patch(T,hip,[
+ [side*.16*scale,2.117,.204],[side*.35*scale,2.045,.20],
+ [side*.45*scale,1.946,.196],[side*.22*scale,2.005,.275]
+ ],m.cloth,root,'body','sloped_deltoid_clavicular_transition');
+ strip(T,hip,[side*.077,2.152,.194],[side*.348*scale,2.060,.195],
+   .010,m.skin,root,null,'clavicle_under_skin');
+}
+
 // Recessed abdominal tear: the cavity sits INSIDE the cloth silhouette; no hanging rib cage or geometric organs.
 const tear=patch(T,hip,[[-.23*scale,1.43,.285],[-.11*scale,1.55,.309],[.035*scale,1.70,.329],[.20*scale,1.68,.305],[.24*scale,1.51,.285],[.06*scale,1.37,.281],[-.19*scale,1.36,.279]],m.wound,root,'body','recessed_abdominal_tear');
 patch(T,hip,[[-.21*scale,1.55,.310],[-.15*scale,1.72,.338],[-.01*scale,1.69,.350],[.08*scale,1.52,.340]],m.muscle,root,'body','left_torn_skin_flap');
@@ -133,19 +152,51 @@ const arms=[],elbows=[],legs=[],knees=[],feet=[];
 for(const side of [-1,1]){
  const arm=new T.Group();arm.position.set(side*(heavy?.62:.49)*scale,2.12,0);hip.add(arm);arms.push(arm);
  const fat=(heavy&&side===1?.33:.19)*scale;
- poly(T,arm,[[0,.02,fat,0,fat*.9],[side*.04,-.20,fat*1.08,.02,fat],[side*.09,-.43,fat*.9,.06,fat*.8],[side*.10,-.59,fat*.76,.08,fat*.75]],heavy&&side===1?m.muscle:m.cloth,root,'limb','upper_arm',8);
+ poly(T,arm,[
+ [0,.045,fat*.84,0,fat*.78],
+ [side*.012,-.040,fat*1.16,0,fat*1.04],
+ [side*.031,-.174,fat*1.11,.011,fat*.96],
+ [side*.055,-.320,fat*.93,.038,fat*.87],
+ [side*.083,-.479,fat*.79,.061,fat*.76],
+ [side*.094,-.585,fat*.71,.068,fat*.70]
+ ],heavy&&side===1?m.muscle:m.cloth,root,'limb','shoulder_to_elbow_biceps_triceps',12);
  const elbow=new T.Group();elbow.position.set(side*.1,-.57,.08);arm.add(elbow);elbows.push(elbow);
- poly(T,elbow,[[0,.02,fat*.77,0,fat*.75],[side*.04,-.20,fat*.67,.025,fat*.63],[side*.08,-.43,fat*.61,.04,fat*.52],[side*.10,-.55,fat*.48,.10,fat*.43]],m.skin,root,'limb','forearm',8);
+ poly(T,elbow,[
+ [0,.024,fat*.73,0,fat*.70],[side*.010,-.070,fat*.80,.014,fat*.70],
+ [side*.033,-.210,fat*.71,.021,fat*.63],
+ [side*.057,-.340,fat*.61,.035,fat*.52],
+ [side*.078,-.470,fat*.48,.077,fat*.43],
+ [side*.089,-.552,fat*.42,.087,fat*.40]
+ ],m.skin,root,'limb','anatomical_flexor_extensor_forearm',12);
  patch(T,elbow,[[0,-.14,fat*.63],[side*.13,-.23,fat*.59],[side*.14,-.39,fat*.5],[side*.005,-.39,fat*.53]],m.muscle,root,'limb','forearm_laceration');
  for(let k=0;k<3;k++)strip(T,elbow,[side*(.045+k*.038),-.48,.13],[side*(.05+k*.043),-.63,.17],.013,m.bone,root,'limb','finger');
  const leg=new T.Group();leg.position.set(side*.26*scale,1.12,.0);hip.add(leg);legs.push(leg);
  const thick=(heavy?.28:.235)*scale;
- poly(T,leg,[[0,.035,thick,0,thick*.95],[side*.028,-.15,thick*.99,.015,thick*.93],[side*.05,-.34,thick*.9,.03,thick*.82],[side*.06,-.55,thick*.72,.04,thick*.7]],m.cloth,root,'limb','upper_leg',8);
+ poly(T,leg,[
+ [0,.040,thick*.92,0,thick*.90],
+ [side*.015,-.060,thick*1.04,.006,thick*.93],
+ [side*.025,-.178,thick*1.02,.014,thick*.91],
+ [side*.038,-.312,thick*.93,.029,thick*.80],
+ [side*.052,-.457,thick*.77,.038,thick*.72],
+ [side*.056,-.557,thick*.68,.048,thick*.67]
+ ],m.cloth,root,'limb','thigh_quadriceps_taper',12);
  const knee=new T.Group();knee.position.set(side*.06,-.53,.04);leg.add(knee);knees.push(knee);
- poly(T,knee,[[0,.03,thick*.76,0,thick*.77],[side*.01,-.19,thick*.64,.015,thick*.61],[side*.02,-.39,thick*.53,.035,thick*.50],[side*.045,-.54,thick*.55,.07,thick*.5]],m.skin,root,'limb','lower_leg',8);
+ poly(T,knee,[
+ [0,.04,thick*.66,0,thick*.67],
+ [side*.008,-.048,thick*.68,.003,thick*.64],
+ [side*.018,-.180,thick*.67,.017,thick*.59],
+ [side*.018,-.287,thick*.59,.032,thick*.53],
+ [side*.027,-.422,thick*.49,.053,thick*.47],
+ [side*.041,-.555,thick*.45,.067,thick*.45]
+ ],m.skin,root,'limb','calf_tibia_ankle_taper',12);
  patch(T,knee,[[side*-.08,-.18,thick*.6],[side*.10,-.18,thick*.6],[side*.12,-.37,thick*.5],[side*-.09,-.33,thick*.5]],m.wound,root,'limb','torn_shin');
  const foot=new T.Group();foot.position.set(side*.04,-.53,.08);knee.add(foot);feet.push(foot);
- poly(T,foot,[[0,.045,thick*.56,.09,thick*.54],[0,-.025,thick*.72,.13,thick*.77],[0,-.08,thick*.73,.22,thick*.83]],m.cloth,root,'limb','deformed_shoe',7);
+ poly(T,foot,[
+ [0,.045,thick*.54,.047,thick*.51],
+ [0,.011,thick*.68,.098,thick*.70],
+ [0,-.046,thick*.77,.145,thick*.83],
+ [0,-.078,thick*.70,.176,thick*.88]
+ ],m.cloth,root,'limb','collapsed_human_shoe',11);
 }
 const cores=[];if(id===6){for(const data of [[-.37,2.12,.51],[.51,1.91,.57],[0,1.37,.55]])cores.push(core(T,hip,root,m,...data));const bossWorms=maggots(T,hip,m.worm,root,1993,.05,1.55,.345,12);worms.push(...bossWorms);for(let k=0;k<6;k++){const xx=(k-3)*.17;strip(T,hip,[xx,2.12,.41],[xx-.075,2.4,.27],.055,m.bone,root,'body','ragged_spine')} }
 if(id===5){for(let k=0;k<7;k++){const x=(k-3)*.115;strip(T,hip,[x,1.45,.39],[x+(k%2?.06:-.04),1.9,.36],.025,m.fire,root,'body','burning_fissure')}}
