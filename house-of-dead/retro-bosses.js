@@ -156,7 +156,13 @@ export function makeBoss(T,root,kind,makeHuman){
   band.position.z=i*.018;band.userData.ignoreShots=true;tell.add(band);
  }
  const beamLight=new T.PointLight(kind===5?0xff5818:0xd52d24,0,3.0);beamLight.position.set(0,1.9,1.2);g.add(beamLight);
- return {...rig,bossKind:kind,bossCores:cores,bossParts:rig.bossParts||[],bossWeakMeshes:tagged.length?tagged:cores.map(c=>c.node),
+ const important=new Set(['abdominal_nest','thorax','inflated_throat','mouth_collar','second_skull','charred_bulk','hypertrophied_arm',
+  'morgue_cleaver','cluster_nest','armoured_segment','cardiac_chamber','burning_chest_fissure','lift_crushed_shoulder']);
+ const bossProps=[];g.traverse(o=>{if(o.isMesh&&important.has(o.name))bossProps.push({
+   node:o,role:o.name,baseScale:[o.scale.x,o.scale.y,o.scale.z],basePos:[o.position.x,o.position.y,o.position.z]
+ })});
+ return {...rig,bossKind:kind,bossCores:cores,bossParts:rig.bossParts||[],bossProps,
+   bossWeakMeshes:tagged.length?tagged:cores.map(c=>c.node),
    tell,beamLight,tellMat,rigType:rig.rigType||'humanoid'};
 }
 // Ten phase-dependent attacks; projectiles are released in *timed* sequences.
@@ -243,6 +249,43 @@ export function animateBoss(T,root,d,dt,time){
   }else{
     p.node.rotation.y=Math.sin(time*1.65-p.phase)*.14;
     p.node.rotation.x=Math.sin(time*1.30+p.phase)*.085;
+  }
+ }
+ // Every boss has visibly different body mechanics, not just differently colored shots.
+ const kind=d.bossKind;
+ const anticipation=d.spitState==='windup'?Math.min(1,d.spitTimer/Math.max(.65,d.bossWindup||1.1)):0;
+ for(const [i,p] of (d.bossProps||[]).entries()){
+  const [sx,sy,sz]=p.baseScale,[x,y,z]=p.basePos,slow=Math.sin(time*(p.role==='cardiac_chamber'?3.8:1.8)+i*.61);
+  if(p.role==='abdominal_nest'){
+   p.node.scale.set(sx*(1+.043*slow+.09*anticipation),sy*(1+.035*slow),sz*(1+.025*slow));
+  }else if(p.role==='thorax'){
+   p.node.rotation.x=-anticipation*.18;
+   p.node.scale.set(sx,sy*(1+.07*anticipation),sz);
+  }else if(p.role==='inflated_throat'||p.role==='mouth_collar'){
+   const inflate=1+.06*slow+.21*anticipation;
+   p.node.scale.set(sx*inflate,sy*inflate,sz*(1+.15*anticipation));
+  }else if(p.role==='second_skull'){
+   p.node.rotation.y=Math.sin(time*2.4)*.21+anticipation*.26;
+   p.node.rotation.z=Math.sin(time*1.4+.8)*.075;
+  }else if(p.role==='hypertrophied_arm'||p.role==='morgue_cleaver'){
+   p.node.rotation.z=-anticipation*(p.role==='morgue_cleaver'?.45:.17);
+   p.node.position.y=y+.08*anticipation;
+  }else if(p.role==='charred_bulk'||p.role==='burning_chest_fissure'){
+   const swell=1+.09*anticipation+.018*slow;
+   p.node.scale.set(sx*swell,sy*swell,sz*swell);
+   if(p.role==='burning_chest_fissure'&&p.node.material?.isMeshStandardMaterial)
+      p.node.material.emissiveIntensity=.7+anticipation*2.1;
+  }else if(p.role==='cardiac_chamber'){
+   const pulse=1+.085*Math.max(0,slow)+anticipation*.07;
+   p.node.scale.set(sx*pulse,sy*pulse,sz*pulse);
+  }else if(p.role==='armoured_segment'){
+   p.node.rotation.y=Math.sin(time*3+i*.46)*.08;
+   p.node.rotation.z=Math.sin(time*2.1-i*.42)*.055;
+  }else if(p.role==='cluster_nest'){
+   const puff=1+.09*Math.sin(time*2.2+i*1.7)+anticipation*.06;
+   p.node.scale.set(sx*puff,sy*puff,sz*puff);
+  }else if(p.role==='lift_crushed_shoulder'){
+   p.node.position.y=y+anticipation*.18;
   }
  }
  // Attack preparation travels through neck, shoulders, mouth and throat. 
