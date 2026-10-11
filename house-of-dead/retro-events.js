@@ -22,7 +22,12 @@ export function sectorEvents(seed,stage,plan){
  const lane=plan.look[0],zz=plan.look[2];
  if(r()<.61){
   const kind=r()<.54?'health':'grenade';
-  events.push({kind,id:'supply:'+stage,pos:[lane+(r()<.5?-1:1)*(3.2+r()*2.5),.45,zz+2.25+r()*1.1],theme:themeForPlan(plan)})
+  // Place pickups in the camera's playable sightline, not at random world-space X.
+  const itemZ=zz+3.6+r()*1.0;
+  const cameraRatio=Math.max(.05,Math.min(1,(plan.eye[2]-itemZ)/(plan.eye[2]-zz)));
+  const sightX=plan.eye[0]+(lane-plan.eye[0])*cameraRatio;
+  const side=r()<.5?-1:1;
+  events.push({kind,id:'supply:'+stage,pos:[sightX+side*(1.35+r()*1.0),.40,itemZ],theme:themeForPlan(plan)})
  }
  if(stage>0&&r()<.46){
   // Civilians wait along a side evacuation lane, NEVER on the center firing lane.
@@ -54,7 +59,7 @@ export function buildEvent(T,scene,ev){
   c(T,root,band,0,.02,.338,ev.kind==='health'?.65:.52,.13,.028,root);
   if(ev.kind==='health')c(T,root,band,0,.02,.356,.13,.49,.035,root);
   else for(let i=-1;i<=1;i++)c(T,root,band,i*.21,.065,.357,.09,.29,.035,root);
-  const halo=prism(T,root,new T.RingGeometry(.46,.51,12),new T.MeshBasicMaterial({color:ev.kind==='health'?0xdd5151:0xf4d36d,transparent:true,opacity:.75,side:T.DoubleSide}),0,-.445,0,1.1,1.1,1.1);
+  const halo=prism(T,root,new T.RingGeometry(.46,.51,12),new T.MeshBasicMaterial({color:ev.kind==='health'?0xdd5151:0xf4d36d,transparent:true,opacity:.75,side:T.DoubleSide}),0,-.445,0,1.1,1.1,1.1,root);
   halo.rotation.x=-Math.PI/2;
   parts.halo=halo;
  }else{
