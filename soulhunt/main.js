@@ -4039,12 +4039,18 @@ function buildBoss6ProceduralModel(){
  }
 
  const chest=boss6Joint(spine,'chest',[0,.36,0]);
- // Huge split pectorals and lats: the canonical absurd bodybuilder silhouette.
- boss6Mesh(chest,new THREE.SphereGeometry(.36,18,12),b6Skin,[-.29,.22,-.08],[1.38,.7,.88],[0,0,-.08]);
- boss6Mesh(chest,new THREE.SphereGeometry(.36,18,12),b6Skin,[.29,.22,-.08],[1.38,.7,.88],[0,0,.08]);
- boss6Mesh(chest,new THREE.SphereGeometry(.3,16,10),b6SkinDark,[-.49,.06,.06],[.78,1.18,.85]);
- boss6Mesh(chest,new THREE.SphereGeometry(.3,16,10),b6SkinDark,[.49,.06,.06],[.78,1.18,.85]);
+ // Thumbnail silhouette: extremely broad bare chest, narrow waist, exaggerated deltoids.
+ boss6Mesh(chest,new THREE.SphereGeometry(.36,18,12),b6Skin,[-.31,.22,-.08],[1.5,.73,.9],[0,0,-.08]);
+ boss6Mesh(chest,new THREE.SphereGeometry(.36,18,12),b6Skin,[.31,.22,-.08],[1.5,.73,.9],[0,0,.08]);
+ boss6Mesh(chest,new THREE.SphereGeometry(.3,16,10),b6SkinDark,[-.53,.06,.06],[.84,1.22,.9]);
+ boss6Mesh(chest,new THREE.SphereGeometry(.3,16,10),b6SkinDark,[.53,.06,.06],[.84,1.22,.9]);
  boss6Mesh(chest,new THREE.BoxGeometry(.055,.43,.035),b6FaceDark,[0,.16,-.37]);
+ const nippleGlowMat=new THREE.MeshBasicMaterial({color:0xff1808,transparent:true,opacity:.94,depthWrite:false,toneMapped:false});
+ const nippleAuraMat=new THREE.MeshBasicMaterial({color:0xff1200,transparent:true,opacity:.3,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false});
+ for(const x of [-.31,.31]){
+  const glow=boss6Mesh(chest,new THREE.SphereGeometry(.045,10,8),nippleGlowMat,[x,.2,-.405],[1.25,.7,.45]);glow.name='HwangChestGlow';
+  boss6Mesh(chest,new THREE.SphereGeometry(.105,10,8),nippleAuraMat,[x,.2,-.425],[1.6,.72,.3]);
+ }
 
  const upperChest=boss6Joint(chest,'upperChest',[0,.36,0]);
  // Trapezius shelf under the head.
@@ -4079,10 +4085,10 @@ function buildBoss6ProceduralModel(){
  boss6Mesh(head,new THREE.BoxGeometry(.31,.045,.025),b6Black,[0,-.075,-.275]);
  boss6Mesh(head,new THREE.BoxGeometry(.24,.035,.026),b6EyeWhite,[0,-.12,-.278]);
 
- const cap=new THREE.Group();cap.name='HwangGeunchulMarineCap';cap.position.set(0,.42,-.01);head.add(cap);
- boss6Mesh(cap,new THREE.CylinderGeometry(.255,.315,.18,8),b6CapCamo,[0,.02,0]);
- boss6Mesh(cap,new THREE.BoxGeometry(.56,.04,.31),b6CapCamo,[0,-.06,-.145],[1,1,1],[.02,0,0]);
- const capName=boss6Mesh(cap,new THREE.PlaneGeometry(.28,.085),b6CapNameMat,[0,.02,-.273]);
+ const cap=new THREE.Group();cap.name='HwangGeunchulMarineCap';cap.position.set(0,.43,-.005);head.add(cap);
+ boss6Mesh(cap,new THREE.CylinderGeometry(.31,.36,.155,8),b6CapCamo,[0,.015,0],[1.12,.9,.96]);
+ boss6Mesh(cap,new THREE.BoxGeometry(.68,.045,.34),b6CapCamo,[0,-.055,-.16],[1,1,1],[.015,0,0]);
+ const capName=boss6Mesh(cap,new THREE.PlaneGeometry(.3,.09),b6CapNameMat,[0,.018,-.306]);
  capName.name='HwangCapNamePatch';capName.renderOrder=13;
 
  // Reference dog tags: two loose chains with a heavy steel tag resting on the bare chest.
@@ -4415,7 +4421,7 @@ async function loadBoss6Avatar(){
 function enforceBoss6Visibility(){
  if(BOSS_VARIANT!==6)return;for(const child of boss.children)child.visible=(child===boss6Root);boss6Root.visible=true;if(!boss6Ready)boss6Fallback.visible=true;
 }
-const BOSS6_DUR={b6_cannon_fencing:2.42,b6_axe_overhead:1.72,b6_axe_cleave:1.42,b6_axe_spin:2.05,b6_axe_boomerang:2.5,b6_axe_combo:2.72,b6_axe_quake:2.24,b6_axe_rush:2.46,b6_grab_execute:2.85,b6_kihap:2.45,b6_burger:2.8,b6_jjajang:2.7,b6_van:2.55,b6_reverse:2.75,b6_support:3.05,b6_enlist:2.35,b6_allfire:5.4,b6_roar:2.25};
+const BOSS6_DUR={b6_cannon_fencing:2.42,b6_axe_overhead:1.72,b6_axe_cleave:1.42,b6_axe_spin:2.05,b6_axe_boomerang:2.5,b6_axe_combo:2.72,b6_axe_quake:2.24,b6_axe_rush:2.46,b6_axe_rising:1.86,b6_tiger_kick:1.92,b6_grab_execute:2.85,b6_kihap:2.45,b6_burger:2.8,b6_jjajang:2.7,b6_van:2.55,b6_reverse:2.75,b6_support:3.05,b6_enlist:2.35,b6_allfire:5.4,b6_roar:2.25};
 const BOSS6_MARKS={
  b6_kihap:[1.8,1.48,1.16,.84,.52],
  b6_burger:[2.0,1.35,.7],
@@ -4599,7 +4605,7 @@ function updateBoss6CannonFencing(dt){
 }
 
 function isBoss6AxeState(st=state.bossState){
- return st==='b6_axe_overhead'||st==='b6_axe_cleave'||st==='b6_axe_spin'||st==='b6_axe_boomerang'||st==='b6_axe_combo'||st==='b6_axe_quake'||st==='b6_axe_rush'||st==='b6_grab_execute';
+ return st==='b6_axe_overhead'||st==='b6_axe_cleave'||st==='b6_axe_spin'||st==='b6_axe_boomerang'||st==='b6_axe_combo'||st==='b6_axe_quake'||st==='b6_axe_rush'||st==='b6_axe_rising'||st==='b6_grab_execute';
 }
 function boss6Smooth01(x){x=clamp(x,0,1);return x*x*(3-2*x)}
 function boss6WorldBasis(){
@@ -4670,6 +4676,10 @@ function boss6AxePrimaryPose(st,p){
   const wind=boss6Smooth01(p/.24),cut=boss6Smooth01((p-.55)/.25);
   grip.addScaledVector(right,side*(.54*wind-1.28*cut)).addScaledVector(forward,-.56*wind+1.15*cut).addScaledVector(up,-.12*wind+.18*cut);
   axis=forward.clone().multiplyScalar(.76+.42*cut).addScaledVector(right,side*(.72-1.62*cut)).addScaledVector(up,.08+.08*cut).normalize();
+ }else if(st==='b6_axe_rising'){
+  const crouch=boss6Smooth01(p/.34),rise=boss6Smooth01((p-.34)/.28),recover=boss6Smooth01((p-.7)/.24);
+  grip.addScaledVector(up,-.72*crouch+1.18*rise-.34*recover).addScaledVector(forward,.42*crouch+.72*rise-.26*recover).addScaledVector(right,side*(.28*crouch-.22*rise));
+  axis=forward.clone().multiplyScalar(.8-.35*crouch).addScaledVector(up,-.72*crouch+1.18*rise-.25*recover).addScaledVector(right,side*.18).normalize();
  }else if(st==='b6_grab_execute'){
   const caught=boss6Grabbed;
   const raise=boss6Smooth01((p-.42)/.28),chop=boss6Smooth01((p-.72)/.15);
@@ -4823,7 +4833,8 @@ function updateBoss6BattleAxe(dt){
    b6_axe_overhead:[.38,.7,38,48],
    b6_axe_cleave:[.3,.72,31,38],
    b6_axe_spin:[.25,.84,28,35],
-   b6_axe_rush:[.5,.86,39,46]
+   b6_axe_rush:[.5,.86,39,46],
+   b6_axe_rising:[.34,.68,36,44]
   };
   const w=windows[st];
   if(w&&p>=w[0]&&p<=w[1]){
@@ -4902,6 +4913,15 @@ function poseBoss6(dt){
   const p=clamp(1-t/BOSS6_DUR.b6_axe_rush,0,1),drive=boss6Smooth01((p-.12)/.46),cut=boss6Smooth01((p-.55)/.24),side=(state.boss6AttackCount&1)?1:-1;
   setBoss6Bone('hips',-.18*drive,side*.24*cut,0,31,dt);setBoss6Bone('spine',-.42*drive,side*.5*cut,0,32,dt);setBoss6Bone('chest',-.12*drive,side*.2*cut,0,29,dt);
   setBoss6Bone('leftUpperArm',-.48,-.16,.42,24,dt);setBoss6Bone('rightUpperLeg',-.45*drive,0,-.04,28,dt);setBoss6Bone('leftUpperLeg',.34*drive,0,.04,28,dt);
+ }else if(st==='b6_axe_rising'){
+  const p=clamp(1-t/BOSS6_DUR.b6_axe_rising,0,1),crouch=boss6Smooth01(p/.34),rise=boss6Smooth01((p-.34)/.28);
+  setBoss6Bone('hips',.22*crouch-.28*rise,0,0,30,dt);setBoss6Bone('spine',-.34*crouch+.42*rise,0,0,31,dt);setBoss6Bone('chest',-.12*crouch+.18*rise,0,0,28,dt);
+  setBoss6Bone('rightUpperLeg',-.44*crouch+.32*rise,0,-.03,28,dt);setBoss6Bone('leftUpperLeg',-.28*crouch+.18*rise,0,.03,28,dt);
+ }else if(st==='b6_tiger_kick'){
+  const p=clamp(1-t/BOSS6_DUR.b6_tiger_kick,0,1),load=boss6Smooth01(p/.3),kick=boss6Smooth01((p-.3)/.3),recover=boss6Smooth01((p-.68)/.25);
+  setBoss6Bone('hips',-.16*load+.18*kick,0,0,32,dt);setBoss6Bone('spine',-.3*load+.24*kick,0,0,31,dt);setBoss6Bone('chest',-.08*load+.12*kick,0,0,28,dt);
+  setBoss6Bone('rightUpperLeg',-1.22*kick+.22*recover,0,-.05,34,dt);setBoss6Bone('rightLowerLeg',.38+.62*(1-kick),0,0,34,dt);setBoss6Bone('rightFoot',-.34*kick,0,0,32,dt);
+  setBoss6Bone('leftUpperArm',-.62,-.14,.48,25,dt);setBoss6Bone('rightUpperArm',-.5,.12,-.36,25,dt);
  }else if(st==='b6_grab_execute'){
   const p=clamp(1-t/BOSS6_DUR.b6_grab_execute,0,1),grab=boss6Smooth01(p/.36),raise=boss6Smooth01((p-.42)/.28),chop=boss6Smooth01((p-.72)/.15);
   setBoss6Bone('hips',-.05*grab,.08*chop,0,26,dt);setBoss6Bone('spine',-.18*grab+.24*raise-.46*chop,0,0,28,dt);setBoss6Bone('chest',.08*raise-.18*chop,0,0,26,dt);
@@ -4917,16 +4937,16 @@ function chooseBoss6Attack(){
  const d=dist(),p2=state.boss6Phase===2;let pool;
  if(d<3.0){
   pool=p2
-   ?['b6_cannon_fencing','b6_axe_overhead','b6_axe_cleave','b6_axe_spin','b6_axe_combo','b6_axe_quake','b6_grab_execute','b6_reverse','b6_kihap','b6_enlist','b6_allfire']
-   :['b6_cannon_fencing','b6_axe_overhead','b6_axe_cleave','b6_axe_combo','b6_axe_quake','b6_grab_execute','b6_reverse','b6_kihap','b6_enlist'];
+   ?['b6_cannon_fencing','b6_axe_overhead','b6_axe_cleave','b6_axe_spin','b6_axe_combo','b6_axe_quake','b6_axe_rising','b6_tiger_kick','b6_grab_execute','b6_reverse','b6_kihap','b6_enlist','b6_allfire']
+   :['b6_cannon_fencing','b6_axe_overhead','b6_axe_cleave','b6_axe_combo','b6_axe_quake','b6_axe_rising','b6_tiger_kick','b6_grab_execute','b6_reverse','b6_kihap','b6_enlist'];
  }else if(d>7.0){
   pool=p2
    ?['b6_axe_boomerang','b6_axe_rush','b6_van','b6_burger','b6_support','b6_allfire']
    :['b6_axe_boomerang','b6_axe_rush','b6_van','b6_burger','b6_support'];
  }else{
   pool=p2
-   ?['b6_cannon_fencing','b6_axe_overhead','b6_axe_cleave','b6_axe_spin','b6_axe_boomerang','b6_axe_combo','b6_axe_quake','b6_axe_rush','b6_grab_execute','b6_kihap','b6_burger','b6_jjajang','b6_van','b6_reverse','b6_support','b6_enlist','b6_allfire']
-   :['b6_cannon_fencing','b6_axe_overhead','b6_axe_cleave','b6_axe_boomerang','b6_axe_combo','b6_axe_quake','b6_axe_rush','b6_grab_execute','b6_kihap','b6_burger','b6_jjajang','b6_van','b6_reverse','b6_support','b6_enlist'];
+   ?['b6_cannon_fencing','b6_axe_overhead','b6_axe_cleave','b6_axe_spin','b6_axe_boomerang','b6_axe_combo','b6_axe_quake','b6_axe_rush','b6_axe_rising','b6_tiger_kick','b6_grab_execute','b6_kihap','b6_burger','b6_jjajang','b6_van','b6_reverse','b6_support','b6_enlist','b6_allfire']
+   :['b6_cannon_fencing','b6_axe_overhead','b6_axe_cleave','b6_axe_boomerang','b6_axe_combo','b6_axe_quake','b6_axe_rush','b6_axe_rising','b6_tiger_kick','b6_grab_execute','b6_kihap','b6_burger','b6_jjajang','b6_van','b6_reverse','b6_support','b6_enlist'];
  }
  if(state.potionPunishQueued){
   state.potionPunishQueued=false;
@@ -5025,10 +5045,29 @@ function updateBoss6(dt){
    if(p>.08)boss6Once('rush-voice',()=>{flash('깡으로!',.24);playBoss6Voice('깡으로!')});
    if(p>.2&&p<.58)boss.position.addScaledVector(state.boss6LockedDir,dt*(p2?11.8:10.4));
    if(p>.53)boss6Once('rush-whoosh',()=>playBoss6AxeWhoosh(2.15));
+  }else if(st==='b6_axe_rising'){
+   if(p>.1)boss6Once('rising-voice',()=>{flash('기합!',.22);playBoss6Voice('기합!')});
+   if(p>.31)boss6Once('rising-whoosh',()=>playBoss6AxeWhoosh(1.95));
   }else if(st==='b6_grab_execute'){
    if(p>.12)boss6Once('grab-warn',()=>flash('황룡기열!!',.34));
   }
   if(state.bossTimer<=0)finishBoss6Attack(st==='b6_grab_execute'?1.25:st==='b6_axe_quake'?1.08:.92);
+ }else if(state.bossState==='b6_tiger_kick'){
+  const p=clamp(1-state.bossTimer/BOSS6_DUR.b6_tiger_kick,0,1);
+  if(p>.06)boss6Once('tiger-voice',()=>{flash('새끼... 기합!',.28);playBoss6Voice('새끼 기합!')});
+  if(p>.1&&p<.46)boss.position.addScaledVector(state.boss6LockedDir,dt*(p2?12.8:11.2));
+  if(p>.32&&p<.63){
+   boss6Once('tiger-kick-hit',()=>{
+    const to=player.position.clone().sub(boss.position);to.y=0;const d=to.length();
+    const fwd=state.boss6LockedDir.clone().normalize(),dot=d>.001?to.normalize().dot(fwd):1;
+    if(d<2.75&&dot>.35&&state.invuln<=0){
+     const hit=player.position.clone().add(new THREE.Vector3(0,1.05,0));
+     spawnImpactBurst(hit,2.2,true);spawnSparks(hit,18,6.2);playImpactSound('heavy',1.9);
+     hurtPlayer(42,55,true);player.position.addScaledVector(fwd,1.25);state.shake=Math.max(state.shake,.28);
+    }
+   });
+  }
+  if(state.bossTimer<=0)finishBoss6Attack(1.02);
  }else if(state.bossState==='b6_kihap'){
   BOSS6_MARKS.b6_kihap.forEach((m,i)=>{if(state.bossTimer<=m+.06&&state.bossTimer>m-.06)boss6Once('kihap'+i,()=>{flash(BOSS6_KIHAP_LINES[i%BOSS6_KIHAP_LINES.length],.24);playBoss6Voice(BOSS6_KIHAP_LINES[i%BOSS6_KIHAP_LINES.length]);boss6FireKihap(i)})});
   if(state.bossTimer<=0)finishBoss6Attack(.88);
