@@ -4513,7 +4513,7 @@ function updateBoss6(dt){
   if(state.bossPunish<=0){boss.rotation.y=lerpAngle(boss.rotation.y,Math.atan2(liveDir.x,liveDir.z),1-Math.exp(-dt*5.5));if(d>5.0)boss.position.addScaledVector(liveDir,dt*(p2?3.8:3.1));else if(d<2.7)boss.position.addScaledVector(liveDir,-dt*.8)}
   if(state.bossTimer<=0&&state.bossPunish<=0)chooseBoss6Attack();
  }else if(state.bossState==='b6_kihap'){
-  BOSS6_MARKS.b6_kihap.forEach((m,i)=>{if(state.bossTimer<=m+.06&&state.bossTimer>m-.06)boss6Once('kihap'+i,()=>{flash(BOSS6_KIHAP_LINES[i%BOSS6_KIHAP_LINES.length],.24);boss6FireKihap(i)})});
+  BOSS6_MARKS.b6_kihap.forEach((m,i)=>{if(state.bossTimer<=m+.06&&state.bossTimer>m-.06)boss6Once('kihap'+i,()=>{flash(BOSS6_KIHAP_LINES[i%BOSS6_KIHAP_LINES.length],.24);playBoss6Voice(BOSS6_KIHAP_LINES[i%BOSS6_KIHAP_LINES.length]);boss6FireKihap(i)})});
   if(state.bossTimer<=0)finishBoss6Attack(.88);
  }else if(state.bossState==='b6_grenade'){
   BOSS6_MARKS.b6_grenade.forEach((m,i)=>{if(state.bossTimer<=m+.07&&state.bossTimer>m-.07)boss6Once('grenade'+i,()=>{if(i===0)flash('수류탄',.2);boss6FireGrenade(i)})});
