@@ -3817,12 +3817,32 @@ function b6PatchTexture(){
   ctx.font='900 82px sans-serif';ctx.fillText('해병',n/2,n/2+3);
  },{srgb:true});
 }
+function b6CapCamoTexture(){
+ const rng=b6Seeded(6974);
+ return b6CanvasTexture(256,(ctx,n)=>{
+  ctx.fillStyle='#303735';ctx.fillRect(0,0,n,n);
+  const cols=['#48504b','#6b746d','#242b28','#8a9188','#3a4240'];
+  for(let y=0;y<n;y+=16)for(let x=0;x<n;x+=16){
+   if(rng()>.28){ctx.fillStyle=cols[Math.floor(rng()*cols.length)];ctx.fillRect(x,y,16*(1+Math.floor(rng()*2)),16*(1+Math.floor(rng()*2)))}
+  }
+ },{repeatX:2.2,repeatY:1.6});
+}
+function b6CapNameTexture(){
+ return b6CanvasTexture(512,(ctx,n)=>{
+  ctx.clearRect(0,0,n,n);
+  ctx.fillStyle='#8e130e';ctx.fillRect(26,142,n-52,n-284);
+  ctx.strokeStyle='#d5b24a';ctx.lineWidth=12;ctx.strokeRect(26,142,n-52,n-284);
+  ctx.fillStyle='#f0d06b';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font='900 112px sans-serif';ctx.fillText('황근출',n/2,n/2+4);
+ },{srgb:true});
+}
 
 const b6FaceMap=b6FaceTexture(),b6FaceBumpMap=b6FaceBump();
 const b6FabricMap=b6FabricTexture(),b6FabricBumpMap=b6FabricBump();
 const b6SkinMap=b6NoiseTexture(192,301,'#9b6a50',620,{repeatX:2.5,repeatY:2.5});
 const b6LeatherMap=b6LeatherTexture(),b6MetalMap=b6MetalTexture();
 const b6FaceDecalMap=b6FaceDecalTexture(),b6PatchMap=b6PatchTexture();
+const b6CapCamoMap=b6CapCamoTexture(),b6CapNameMap=b6CapNameTexture();
 
 const b6Skin=new THREE.MeshStandardMaterial({color:0xffffff,map:b6SkinMap,bumpMap:b6FaceBumpMap,bumpScale:.014,roughness:.8,metalness:.01});
 const b6SkinDark=new THREE.MeshStandardMaterial({color:0x805b48,map:b6SkinMap,bumpMap:b6FaceBumpMap,bumpScale:.012,roughness:.84});
@@ -3839,6 +3859,10 @@ const b6Red=new THREE.MeshStandardMaterial({color:0x8d130d,roughness:.52,metalne
 const b6EyeWhite=new THREE.MeshStandardMaterial({color:0xc8bbaa,roughness:.8});
 const b6FaceDecalMat=new THREE.MeshBasicMaterial({map:b6FaceDecalMap,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,side:THREE.DoubleSide,toneMapped:false});
 const b6PatchMat=new THREE.MeshStandardMaterial({map:b6PatchMap,transparent:true,roughness:.7,metalness:.02});
+const b6Shorts=new THREE.MeshStandardMaterial({color:0xb71913,roughness:.7,metalness:.01,bumpMap:b6FabricBumpMap,bumpScale:.02});
+const b6ShortsDark=new THREE.MeshStandardMaterial({color:0x6f0c0a,roughness:.76,metalness:.01,bumpMap:b6FabricBumpMap,bumpScale:.018});
+const b6CapCamo=new THREE.MeshStandardMaterial({color:0xffffff,map:b6CapCamoMap,roughness:.72,metalness:.04,bumpMap:b6FabricBumpMap,bumpScale:.012});
+const b6CapNameMat=new THREE.MeshStandardMaterial({map:b6CapNameMap,transparent:true,roughness:.62,metalness:.04});
 const b6EyeGlow=new THREE.MeshBasicMaterial({color:0xff1200,depthTest:false,depthWrite:false,toneMapped:false});
 const b6EyeAura=new THREE.MeshBasicMaterial({color:0xff0500,transparent:true,opacity:.5,depthTest:false,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false});
 const b6EyeFlareMat=new THREE.MeshBasicMaterial({color:0xff1a08,transparent:true,opacity:.86,depthTest:false,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,toneMapped:false});
@@ -3876,8 +3900,10 @@ function buildBoss6ProceduralModel(){
  root.rotation.y=Math.PI;
 
  const hips=boss6Joint(root,'hips',[0,1.39,0]);
- boss6Mesh(hips,new THREE.BoxGeometry(.74,.34,.44),b6Uniform,[0,.03,0],[1,1,1]);
- boss6Mesh(hips,new THREE.BoxGeometry(.82,.11,.49),b6Metal,[0,.18,0]);
+ // Iconic red marine shorts: instantly readable even at gameplay distance.
+ boss6Mesh(hips,new THREE.BoxGeometry(.86,.36,.5),b6Shorts,[0,.02,0],[1.04,1,1]);
+ boss6Mesh(hips,new THREE.BoxGeometry(.92,.09,.53),b6ShortsDark,[0,.19,0]);
+ boss6Mesh(hips,new THREE.BoxGeometry(.12,.16,.035),b6PatchMat,[.28,.01,-.27],[.68,.68,.68]);
 
  // Hwang's oversized slapstick tank-cannon prop, centered between the legs.
  const boss6GroinCannon=new THREE.Group();boss6GroinCannon.name='HwangGeunchulTankBarrel';
@@ -3892,20 +3918,27 @@ function buildBoss6ProceduralModel(){
  boss6GroinCannon.rotation.x=-.045;
 
  const spine=boss6Joint(hips,'spine',[0,.22,0]);
- boss6Mesh(spine,new THREE.BoxGeometry(.82,.43,.46),b6Uniform,[0,.2,0],[1.02,1,1]);
+ // Bare torso: V taper + segmented abdominal wall.
+ boss6Mesh(spine,new THREE.CapsuleGeometry(.27,.32,6,12),b6Skin,[0,.2,0],[1.45,1,1.18]);
+ boss6Mesh(spine,new THREE.SphereGeometry(.22,14,10),b6Skin,[-.22,.18,-.12],[1.35,.72,.62]);
+ boss6Mesh(spine,new THREE.SphereGeometry(.22,14,10),b6Skin,[.22,.18,-.12],[1.35,.72,.62]);
+ for(const [x,y,rz] of [[-.14,.08,-.05],[.14,.08,.05],[-.14,-.08,.04],[.14,-.08,-.04],[-.13,-.235,-.03],[.13,-.235,.03]]){
+   boss6Mesh(spine,new THREE.SphereGeometry(.11,12,8),b6SkinDark,[x,y,-.215],[1.05,.72,.38],[0,0,rz]);
+ }
+
  const chest=boss6Joint(spine,'chest',[0,.36,0]);
- boss6Mesh(chest,new THREE.BoxGeometry(1.12,.56,.53),b6Uniform,[0,.2,0],[1,1,1]);
- boss6Mesh(chest,new THREE.BoxGeometry(1.19,.18,.59),b6UniformTrim,[0,.38,.005]);
- boss6Mesh(chest,new THREE.BoxGeometry(.42,.18,.035),b6Red,[0,.25,-.285]);
- boss6Mesh(chest,new THREE.BoxGeometry(.11,.3,.04),b6Metal,[-.33,.08,-.29],[1,1,1],[0,0,.04]);
- boss6Mesh(chest,new THREE.BoxGeometry(.11,.3,.04),b6Metal,[.33,.08,-.29],[1,1,1],[0,0,-.04]);
- const marinePatch=boss6Mesh(chest,new THREE.PlaneGeometry(.28,.105),b6PatchMat,[0,.035,-.307]);
- marinePatch.name='HwangMarineChestPatch';marinePatch.renderOrder=8;
+ // Huge split pectorals and lats: the canonical absurd bodybuilder silhouette.
+ boss6Mesh(chest,new THREE.SphereGeometry(.36,18,12),b6Skin,[-.29,.22,-.08],[1.38,.7,.88],[0,0,-.08]);
+ boss6Mesh(chest,new THREE.SphereGeometry(.36,18,12),b6Skin,[.29,.22,-.08],[1.38,.7,.88],[0,0,.08]);
+ boss6Mesh(chest,new THREE.SphereGeometry(.3,16,10),b6SkinDark,[-.49,.06,.06],[.78,1.18,.85]);
+ boss6Mesh(chest,new THREE.SphereGeometry(.3,16,10),b6SkinDark,[.49,.06,.06],[.78,1.18,.85]);
+ boss6Mesh(chest,new THREE.BoxGeometry(.055,.43,.035),b6FaceDark,[0,.16,-.37]);
 
  const upperChest=boss6Joint(chest,'upperChest',[0,.36,0]);
- boss6Mesh(upperChest,new THREE.BoxGeometry(1.18,.22,.54),b6UniformTrim,[0,.05,0]);
+ // Trapezius shelf under the head.
+ boss6Mesh(upperChest,new THREE.SphereGeometry(.33,16,10),b6Skin,[0,.02,.03],[1.75,.52,.92]);
  const neck=boss6Joint(upperChest,'neck',[0,.18,0]);
- boss6Mesh(neck,new THREE.CylinderGeometry(.16,.2,.25,8),b6Skin,[0,.1,0]);
+ boss6Mesh(neck,new THREE.CylinderGeometry(.22,.27,.28,12),b6Skin,[0,.09,0]);
 
  const head=boss6Joint(neck,'head',[0,.22,-.005]);
  boss6Mesh(head,new THREE.BoxGeometry(.52,.53,.47),b6Face,[0,.1,0],[1.03,1,1]);
@@ -3935,21 +3968,22 @@ function buildBoss6ProceduralModel(){
  boss6Mesh(head,new THREE.BoxGeometry(.24,.035,.026),b6EyeWhite,[0,-.12,-.278]);
 
  const cap=new THREE.Group();cap.name='HwangGeunchulMarineCap';cap.position.set(0,.42,-.01);head.add(cap);
- boss6Mesh(cap,new THREE.CylinderGeometry(.24,.3,.17,8),b6UniformTrim,[0,.02,0]);
- boss6Mesh(cap,new THREE.BoxGeometry(.52,.035,.29),b6Uniform, [0,-.055,-.13],[1,1,1],[.02,0,0]);
- boss6Mesh(cap,new THREE.BoxGeometry(.14,.07,.025),b6Red,[0,.015,-.235]);
+ boss6Mesh(cap,new THREE.CylinderGeometry(.255,.315,.18,8),b6CapCamo,[0,.02,0]);
+ boss6Mesh(cap,new THREE.BoxGeometry(.56,.04,.31),b6CapCamo,[0,-.06,-.145],[1,1,1],[.02,0,0]);
+ const capName=boss6Mesh(cap,new THREE.PlaneGeometry(.28,.085),b6CapNameMat,[0,.02,-.273]);
+ capName.name='HwangCapNamePatch';capName.renderOrder=13;
 
- const lShoulder=boss6Joint(upperChest,'leftShoulder',[.6,.1,0]);
- const rShoulder=boss6Joint(upperChest,'rightShoulder',[-.6,.1,0]);
- boss6Mesh(lShoulder,new THREE.SphereGeometry(.23,10,8),b6UniformTrim,[0,-.03,0],[1.2,.8,1]);
- boss6Mesh(rShoulder,new THREE.SphereGeometry(.23,10,8),b6UniformTrim,[0,-.03,0],[1.2,.8,1]);
- boss6Mesh(lShoulder,new THREE.BoxGeometry(.43,.09,.42),b6Red,[.08,.08,0]);
- boss6Mesh(rShoulder,new THREE.BoxGeometry(.43,.09,.42),b6Red,[-.08,.08,0]);
+ const lShoulder=boss6Joint(upperChest,'leftShoulder',[.66,.08,0]);
+ const rShoulder=boss6Joint(upperChest,'rightShoulder',[-.66,.08,0]);
+ boss6Mesh(lShoulder,new THREE.SphereGeometry(.29,16,10),b6Skin,[0,-.035,0],[1.18,1.08,1.08]);
+ boss6Mesh(rShoulder,new THREE.SphereGeometry(.29,16,10),b6Skin,[0,-.035,0],[1.18,1.08,1.08]);
 
  const lUpper=boss6Joint(lShoulder,'leftUpperArm',[.02,-.03,0]);
  const rUpper=boss6Joint(rShoulder,'rightUpperArm',[-.02,-.03,0]);
- boss6Mesh(lUpper,new THREE.CapsuleGeometry(.17,.35,5,8),b6Uniform,[0,-.31,0],[1.12,1,1.05]);
- boss6Mesh(rUpper,new THREE.CapsuleGeometry(.17,.35,5,8),b6Uniform,[0,-.31,0],[1.12,1,1.05]);
+ boss6Mesh(lUpper,new THREE.CapsuleGeometry(.235,.35,7,12),b6Skin,[0,-.31,0],[1.16,1,1.08]);
+ boss6Mesh(rUpper,new THREE.CapsuleGeometry(.235,.35,7,12),b6Skin,[0,-.31,0],[1.16,1,1.08]);
+ boss6Mesh(lUpper,new THREE.SphereGeometry(.17,14,10),b6SkinDark,[.02,-.23,-.15],[1.1,1.28,.7]);
+ boss6Mesh(rUpper,new THREE.SphereGeometry(.17,14,10),b6SkinDark,[-.02,-.23,-.15],[1.1,1.28,.7]);
  const lLower=boss6Joint(lUpper,'leftLowerArm',[0,-.63,0]);
  const rLower=boss6Joint(rUpper,'rightLowerArm',[0,-.63,0]);
  boss6Mesh(lLower,new THREE.CapsuleGeometry(.18,.3,5,8),b6Skin,[0,-.28,0],[1.08,1,1.04]);
@@ -3961,21 +3995,22 @@ function buildBoss6ProceduralModel(){
  boss6Mesh(lHand,new THREE.BoxGeometry(.32,.09,.3),b6Metal,[0,.08,0]);
  boss6Mesh(rHand,new THREE.BoxGeometry(.32,.09,.3),b6Metal,[0,.08,0]);
 
- const lUpperLeg=boss6Joint(hips,'leftUpperLeg',[.24,-.09,0]);
- const rUpperLeg=boss6Joint(hips,'rightUpperLeg',[-.24,-.09,0]);
- boss6Mesh(lUpperLeg,new THREE.CapsuleGeometry(.2,.46,5,8),b6Uniform,[0,-.41,0],[1.05,1,1.05]);
- boss6Mesh(rUpperLeg,new THREE.CapsuleGeometry(.2,.46,5,8),b6Uniform,[0,-.41,0],[1.05,1,1.05]);
+ const lUpperLeg=boss6Joint(hips,'leftUpperLeg',[.26,-.1,0]);
+ const rUpperLeg=boss6Joint(hips,'rightUpperLeg',[-.26,-.1,0]);
+ boss6Mesh(lUpperLeg,new THREE.CapsuleGeometry(.245,.46,7,12),b6Skin,[0,-.41,0],[1.08,1,1.04]);
+ boss6Mesh(rUpperLeg,new THREE.CapsuleGeometry(.245,.46,7,12),b6Skin,[0,-.41,0],[1.08,1,1.04]);
+ boss6Mesh(lUpperLeg,new THREE.BoxGeometry(.5,.22,.48),b6Shorts,[0,-.11,0],[1,1,1]);
+ boss6Mesh(rUpperLeg,new THREE.BoxGeometry(.5,.22,.48),b6Shorts,[0,-.11,0],[1,1,1]);
  const lLowerLeg=boss6Joint(lUpperLeg,'leftLowerLeg',[0,-.84,0]);
  const rLowerLeg=boss6Joint(rUpperLeg,'rightLowerLeg',[0,-.84,0]);
- boss6Mesh(lLowerLeg,new THREE.CapsuleGeometry(.18,.4,5,8),b6UniformTrim,[0,-.36,0]);
- boss6Mesh(rLowerLeg,new THREE.CapsuleGeometry(.18,.4,5,8),b6UniformTrim,[0,-.36,0]);
+ boss6Mesh(lLowerLeg,new THREE.CapsuleGeometry(.205,.4,7,12),b6SkinDark,[0,-.36,0],[1.05,1,1]);
+ boss6Mesh(rLowerLeg,new THREE.CapsuleGeometry(.205,.4,7,12),b6SkinDark,[0,-.36,0],[1.05,1,1]);
  const lFoot=boss6Joint(lLowerLeg,'leftFoot',[0,-.72,-.03]);
  const rFoot=boss6Joint(rLowerLeg,'rightFoot',[0,-.72,-.03]);
  boss6Mesh(lFoot,new THREE.BoxGeometry(.39,.22,.64),b6Boot,[0,-.04,-.14],[1,1,1],[.02,0,0]);
  boss6Mesh(rFoot,new THREE.BoxGeometry(.39,.22,.64),b6Boot,[0,-.04,-.14],[1,1,1],[.02,0,0]);
 
- boss6Mesh(root,new THREE.BoxGeometry(.72,.12,.1),b6Red,[0,1.19,.25]);
- root.scale.set(1.08,1.08,1.04);
+ root.scale.set(1.12,1.08,1.08);
  root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
  return root;
 }
