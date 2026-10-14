@@ -3874,7 +3874,7 @@ const b6Black=new THREE.MeshBasicMaterial({color:0x080808});
 const b6AxeRed=new THREE.MeshStandardMaterial({color:0xa80707,roughness:.32,metalness:.78,emissive:0x4e0000,emissiveIntensity:.46});
 const b6AxeEdge=new THREE.MeshStandardMaterial({color:0xff2b1f,roughness:.2,metalness:.86,emissive:0x8f0600,emissiveIntensity:1.1});
 const b6AxeGrip=new THREE.MeshStandardMaterial({color:0x17110d,roughness:.72,metalness:.16});
-let boss6AxeRoot=null,boss6AxeHead=null,boss6Boomerang=null,boss6Grabbed=false,boss6GrabDamageDone=false;
+let boss6AxeRoot=null,boss6AxeHead=null,boss6Boomerang=null,boss6AxeAttached=false,boss6Grabbed=false,boss6GrabDamageDone=false;
 const boss6AxeRequests=[];
 const boss6AxeTrace={
  valid:false,
@@ -3913,8 +3913,41 @@ function createBoss6BattleAxe(){
 }
 function buildBoss6BattleAxe(){
  if(boss6AxeRoot)return boss6AxeRoot;
- boss6AxeRoot=createBoss6BattleAxe();boss6AxeRoot.visible=false;scene.add(boss6AxeRoot);boss6AxeHead=boss6AxeRoot;
+ boss6AxeRoot=createBoss6BattleAxe();boss6AxeRoot.visible=false;boss6AxeHead=boss6AxeRoot;
+ scene.add(boss6AxeRoot);boss6AxeAttached=false;
  return boss6AxeRoot;
+}
+function boss6AttachAxeToHand(){
+ if(!boss6AxeRoot)return false;
+ const hand=boss6RenderBones.rightHand||boss6Bones.rightHand;
+ if(!hand)return false;
+ if(boss6AxeRoot.parent!==hand)hand.attach(boss6AxeRoot);
+ boss6AxeAttached=true;
+ return true;
+}
+function boss6DetachAxeToScene(){
+ if(!boss6AxeRoot)return false;
+ if(boss6AxeRoot.parent!==scene)scene.attach(boss6AxeRoot);
+ boss6AxeAttached=false;
+ return true;
+}
+function boss6SetHeldAxeLocal(axisHint='carry',alpha=1){
+ if(!boss6AttachAxeToHand())return;
+ const targetPos=axisHint==='overhead'?new THREE.Vector3(0,-.32,.02):
+                 axisHint==='cleave'?new THREE.Vector3(0,-.34,.01):
+                 axisHint==='spin'?new THREE.Vector3(0,-.33,.01):
+                 axisHint==='execute'?new THREE.Vector3(0,-.34,.02):
+                 new THREE.Vector3(0,-.34,.015);
+ const targetEuler=axisHint==='carry'?new THREE.Euler(.08,0,-.18):
+                   axisHint==='overhead'?new THREE.Euler(.12,0,-.04):
+                   axisHint==='cleave'?new THREE.Euler(.08,0,-.02):
+                   axisHint==='spin'?new THREE.Euler(.04,0,0):
+                   axisHint==='execute'?new THREE.Euler(.1,0,-.04):
+                   new THREE.Euler(.08,0,-.12);
+ const q=new THREE.Quaternion().setFromEuler(targetEuler);
+ boss6AxeRoot.position.lerp(targetPos,clamp(alpha,0,1));
+ boss6AxeRoot.quaternion.slerp(q,clamp(alpha,0,1));
+ boss6AxeRoot.updateMatrixWorld(true);
 }
 let boss6MaleVoice=null;
 function selectBoss6MaleVoice(){
@@ -4613,99 +4646,80 @@ function boss6AxePrimaryPose(st,p){
  }
  return{grip,axis};
 }
-function boss6PlaceAxeAtRightHand(axis,dt){
- if(!boss6AxeRoot)return;
- const hand=boss6RenderBones.rightHand||boss6Bones.rightHand;
- if(!hand)return;
- const hp=new THREE.Vector3();hand.getWorldPosition(hp);
- const desiredQ=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),axis.clone().normalize());
- const ease=1-Math.exp(-dt*34);
- if(!boss6AxeRoot.userData.gripReady){boss6AxeRoot.quaternion.copy(desiredQ);boss6AxeRoot.userData.gripReady=true}
- else boss6AxeRoot.quaternion.slerp(desiredQ,ease);
- const actualAxis=new THREE.Vector3(0,1,0).applyQuaternion(boss6AxeRoot.quaternion).normalize();
- boss6AxeRoot.position.copy(hp).addScaledVector(actualAxis,-.34);
- boss6AxeRoot.updateMatrixWorld(true);
-}
 function boss6ApplyAxeArms(dt,st,p,pose){
  const rightUpper=boss6Bones.rightUpperArm,rightHand=boss6Bones.rightHand;
  if(rightUpper&&rightHand){
   const shoulder=new THREE.Vector3();rightUpper.getWorldPosition(shoulder);
   const reach=getArmReach(boss6Bones,'right');
-  const elbow=shoulder.clone().add(bossCombatOffset(.3*reach,-.31*reach,.18*reach));
-  solveArmCCD(boss6Bones,'right',pose.grip,elbow,1-Math.exp(-dt*30));
+  const elbow=shoulder.clone().add(bossCombatOffset(.26*reach,-.3*reach,.15*reach));
+  solveArmCCD(boss6Bones,'right',pose.grip,elbow,1-Math.exp(-dt*24));
  }
- syncBoss6Rig(0);boss6PlaceAxeAtRightHand(pose.axis,dt);
+ syncBoss6Rig(0);
+ const mode=st==='b6_axe_overhead'?'overhead':st==='b6_axe_cleave'?'cleave':st==='b6_axe_spin'?'spin':st==='b6_grab_execute'?'execute':'carry';
+ boss6SetHeldAxeLocal(mode,1-Math.exp(-dt*30));
 
+ // Secondary hand follows one fixed point on the shaft. It never controls weapon direction.
  const leftUpper=boss6Bones.leftUpperArm,leftHand=boss6Bones.leftHand;
  if(leftUpper&&leftHand){
   const shoulder=new THREE.Vector3();leftUpper.getWorldPosition(shoulder),reach=getArmReach(boss6Bones,'left');
-  let target;
-  if(st==='b6_grab_execute'&&boss6Grabbed){
-   target=player.position.clone().add(new THREE.Vector3(0,1.28,0));
-  }else{
-   target=boss6AxeRoot.localToWorld(new THREE.Vector3(0,1.14,0));
-  }
-  const elbow=shoulder.clone().add(bossCombatOffset(-.32*reach,-.3*reach,.18*reach));
-  solveArmCCD(boss6Bones,'left',target,elbow,1-Math.exp(-dt*28));
+  const target=(st==='b6_grab_execute'&&boss6Grabbed)
+   ?player.position.clone().add(new THREE.Vector3(0,1.28,0))
+   :boss6AxeRoot.localToWorld(new THREE.Vector3(0,1.02,0));
+  const elbow=shoulder.clone().add(bossCombatOffset(-.25*reach,-.28*reach,.15*reach));
+  solveArmCCD(boss6Bones,'left',target,elbow,1-Math.exp(-dt*22));
  }
- syncBoss6Rig(0);boss6PlaceAxeAtRightHand(pose.axis,dt);
+ syncBoss6Rig(0);boss6SetHeldAxeLocal(mode,1);
 }
 function boss6ShoulderAxe(dt){
- if(!boss6AxeRoot)return;
+ if(!boss6AxeRoot||!boss6Ready)return;
  boss6AxeRoot.visible=state.bossHp>0;
- const {forward,right,up}=boss6WorldBasis();
- const target=boss.position.clone().addScaledVector(right,.58).addScaledVector(forward,-.28).addScaledVector(up,1.42);
- const axis=up.clone().multiplyScalar(.86).addScaledVector(forward,.34).addScaledVector(right,-.12).normalize();
- const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),axis);
- const rollQ=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),-.42);q.multiply(rollQ);
- boss6AxeRoot.position.lerp(target,1-Math.exp(-dt*18));boss6AxeRoot.quaternion.slerp(q,1-Math.exp(-dt*18));
- boss6AxeRoot.updateMatrixWorld(true);boss6ResetAxeTrace();
+ boss6SetHeldAxeLocal('carry',1-Math.exp(-dt*20));
+ boss6ResetAxeTrace();
 }
 function boss6CarryAxe(dt){
  if(!boss6AxeRoot||!boss6Ready)return;
  boss6AxeRoot.visible=state.bossHp>0;
- const {forward,right,up}=boss6WorldBasis();
- const gait=bossWalkState.active?Math.sin(bossWalkState.phase):0;
- const grip=boss.position.clone().addScaledVector(right,.43).addScaledVector(forward,.24+.035*gait).addScaledVector(up,1.25+.025*Math.abs(gait));
- const axis=up.clone().multiplyScalar(.78).addScaledVector(forward,-.22).addScaledVector(right,-.34).normalize();
-
+ const {forward,right,up}=boss6WorldBasis(),gait=bossWalkState.active?Math.sin(bossWalkState.phase):0;
+ const grip=boss.position.clone().addScaledVector(right,.4).addScaledVector(forward,.2+.025*gait).addScaledVector(up,1.28+.015*Math.abs(gait));
  const ru=boss6Bones.rightUpperArm,rh=boss6Bones.rightHand;
  if(ru&&rh){
   const shoulder=new THREE.Vector3();ru.getWorldPosition(shoulder),reach=getArmReach(boss6Bones,'right');
-  const elbow=shoulder.clone().add(bossCombatOffset(.24*reach,-.32*reach,.12*reach));
-  solveArmCCD(boss6Bones,'right',grip,elbow,1-Math.exp(-dt*24));
+  const elbow=shoulder.clone().add(bossCombatOffset(.22*reach,-.3*reach,.13*reach));
+  solveArmCCD(boss6Bones,'right',grip,elbow,1-Math.exp(-dt*20));
  }
- syncBoss6Rig(0);boss6PlaceAxeAtRightHand(axis,dt);
-
+ syncBoss6Rig(0);boss6SetHeldAxeLocal('carry',1);
  const lu=boss6Bones.leftUpperArm,lh=boss6Bones.leftHand;
  if(lu&&lh){
   const shoulder=new THREE.Vector3();lu.getWorldPosition(shoulder),reach=getArmReach(boss6Bones,'left');
   const secondary=boss6AxeRoot.localToWorld(new THREE.Vector3(0,1.02,0));
-  const elbow=shoulder.clone().add(bossCombatOffset(-.2*reach,-.3*reach,.16*reach));
-  solveArmCCD(boss6Bones,'left',secondary,elbow,1-Math.exp(-dt*22));
+  const elbow=shoulder.clone().add(bossCombatOffset(-.2*reach,-.28*reach,.14*reach));
+  solveArmCCD(boss6Bones,'left',secondary,elbow,1-Math.exp(-dt*20));
  }
- syncBoss6Rig(0);boss6PlaceAxeAtRightHand(axis,dt);boss6ResetAxeTrace();
+ syncBoss6Rig(0);boss6SetHeldAxeLocal('carry',1);boss6ResetAxeTrace();
 }
 function boss6UpdateBoomerang(dt,p){
  if(!boss6AxeRoot)return;
  const {forward,right,up}=boss6WorldBasis(),side=(state.boss6AttackCount&1)?1:-1;
- if(p<.34){
+ if(p<.3){
   const pose=boss6AxePrimaryPose('b6_axe_boomerang',p);boss6ApplyAxeArms(dt,'b6_axe_boomerang',p,pose);boss6ResetAxeTrace();return;
  }
- const flight=clamp((p-.34)/.54,0,1),out=Math.sin(flight*Math.PI);
- const center=boss.position.clone().addScaledVector(up,1.48);
- const target=center.addScaledVector(forward,1.2+7.2*out).addScaledVector(right,side*Math.sin(flight*Math.PI*2)*2.0);
- boss6AxeRoot.position.lerp(target,1-Math.exp(-dt*30));
- const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),forward.clone().addScaledVector(up,.18).normalize());
- boss6AxeRoot.quaternion.copy(q);boss6AxeRoot.rotateY(flight*Math.PI*8*side);boss6AxeRoot.rotateZ(flight*Math.PI*10);
- boss6AxeRoot.updateMatrixWorld(true);
-
- const caps=combatHumanoidCapsules(playerVrmBones,player,PLAYER_VISUAL_HEIGHT),seg=boss6AxeSegments(),hit=boss6AxeContact(caps,seg,.29);
- if(hit){
-  const tag=flight<.52?'boomOutHit':'boomBackHit';
-  if(boss6Once(tag,()=>{})){spawnSparks(hit.point,16,6);hurtPlayer(27,32,false);playBoss6AxeWhoosh(1.7)}
+ if(p>=.3&&p<.86){
+  if(boss6AxeAttached)boss6DetachAxeToScene();
+  const flight=clamp((p-.3)/.56,0,1),out=Math.sin(flight*Math.PI);
+  const center=boss.position.clone().addScaledVector(up,1.52);
+  const target=center.addScaledVector(forward,1.25+7*out).addScaledVector(right,side*Math.sin(flight*Math.PI*2)*1.9);
+  boss6AxeRoot.position.lerp(target,1-Math.exp(-dt*34));
+  const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),forward.clone().addScaledVector(up,.12).normalize());
+  boss6AxeRoot.quaternion.copy(q);boss6AxeRoot.rotateY(flight*Math.PI*8*side);boss6AxeRoot.rotateZ(flight*Math.PI*10);
+  boss6AxeRoot.updateMatrixWorld(true);
+  const caps=combatHumanoidCapsules(playerVrmBones,player,PLAYER_VISUAL_HEIGHT),seg=boss6AxeSegments(),hit=boss6AxeContact(caps,seg,.29);
+  if(hit){
+   const tag=flight<.52?'boomOutHit':'boomBackHit';
+   if(boss6Once(tag,()=>{})){spawnSparks(hit.point,16,6);hurtPlayer(27,32,false);playBoss6AxeWhoosh(1.7)}
+  }
+  boss6StoreAxeTrace(seg);return;
  }
- boss6StoreAxeTrace(seg);
+ boss6AttachAxeToHand();boss6SetHeldAxeLocal('carry',1-Math.exp(-dt*34));boss6ResetAxeTrace();
 }
 function boss6UpdateGrab(dt,p){
  const {forward}=boss6WorldBasis();
@@ -4733,6 +4747,7 @@ function updateBoss6BattleAxe(dt){
  if(!boss6AxeRoot||!boss6Ready)return;
  const st=state.bossState;
  if(!isBoss6AxeState(st)){
+  if(!boss6AxeAttached)boss6AttachAxeToHand();
   if(st==='idle')boss6CarryAxe(dt);else boss6ShoulderAxe(dt);
   return;
  }
@@ -4740,6 +4755,7 @@ function updateBoss6BattleAxe(dt){
  const dur=BOSS6_DUR[st]||1,p=clamp(1-state.bossTimer/dur,0,1);
 
  if(st==='b6_axe_boomerang'){boss6UpdateBoomerang(dt,p);return}
+ if(!boss6AxeAttached)boss6AttachAxeToHand();
  const pose=boss6AxePrimaryPose(st,p);boss6ApplyAxeArms(dt,st,p,pose);
 
  if(st==='b6_grab_execute'){
@@ -4895,7 +4911,7 @@ function updateBoss6(dt){
  b6EyeAura.opacity=(state.boss6Phase===2?.66:.5)+Math.sin(state.time*11)*.08;
  for(const fx of boss6EyeFx){fx.core.scale.set(1.25*eyePulse,.72*eyePulse,.8);fx.flare.scale.setScalar(eyePulse);fx.halo.scale.set(1.65*eyePulse,.68*eyePulse,.34);}
  if(boss6Visual)boss6Visual.position.y=THREE.MathUtils.lerp(boss6Visual.position.y,boss6VisualBaseY,1-Math.exp(-dt*11));
- if(state.bossHp<=0){boss6Grabbed=false;poseBoss6(dt);syncBoss6Rig(dt);if(boss6AxeRoot)boss6AxeRoot.visible=false;return}
+ if(state.bossHp<=0){boss6Grabbed=false;poseBoss6(dt);syncBoss6Rig(dt);if(boss6AxeRoot){boss6DetachAxeToScene();boss6AxeRoot.visible=false}return}
  if(state.boss6Phase===1&&state.bossHp<=state.bossMaxHp*.5){
   state.boss6Phase=2;state.bossState='b6_roar';state.bossTimer=BOSS6_DUR.b6_roar;boss6Fired.clear();boss6Grabbed=false;boss6GrabDamageDone=false;boss6ResetAxeTrace();boss6ResetCannonTrace();clearBoss6Projectiles();boss6HaloMat.opacity=.22;boss6Aura.color.setHex(0xff1800);
   spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1.2,0)),4.8,0xff3018,.7);flash('악으로! 깡으로!',1.0);
