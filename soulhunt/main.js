@@ -3870,12 +3870,69 @@ const b6EyeBeamMat=new THREE.MeshBasicMaterial({color:0xff0800,transparent:true,
 const boss6EyeFx=[];
 let boss6TankMuzzle=null,boss6TankMuzzleFlash=null,boss6TankRecoil=0;
 const b6Black=new THREE.MeshBasicMaterial({color:0x080808});
+const b6AxeRed=new THREE.MeshStandardMaterial({color:0xa80707,roughness:.32,metalness:.78,emissive:0x4e0000,emissiveIntensity:.46});
+const b6AxeEdge=new THREE.MeshStandardMaterial({color:0xff2b1f,roughness:.2,metalness:.86,emissive:0x8f0600,emissiveIntensity:1.1});
+const b6AxeGrip=new THREE.MeshStandardMaterial({color:0x17110d,roughness:.72,metalness:.16});
+let boss6AxeRoot=null,boss6AxeHead=null,boss6Boomerang=null,boss6Grabbed=false,boss6GrabDamageDone=false;
+const boss6AxeRequests=[];
+const boss6AxeTrace={
+ valid:false,
+ a0:new THREE.Vector3(),a1:new THREE.Vector3(),
+ b0:new THREE.Vector3(),b1:new THREE.Vector3(),
+ shaft0:new THREE.Vector3(),shaft1:new THREE.Vector3()
+};
+let boss6VoiceLast=0;
 
 function boss6Mesh(parent,geometry,material,pos=[0,0,0],scale=[1,1,1],rot=[0,0,0]){
  const m=new THREE.Mesh(geometry,material);m.position.set(...pos);m.scale.set(...scale);m.rotation.set(...rot);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
 }
 function boss6Joint(parent,name,pos=[0,0,0]){
  const g=new THREE.Group();g.name='HwangGeunchul_'+name;g.position.set(...pos);parent.add(g);cacheBoss6Bone(name,g);boss6RenderBones[name]=g;return g;
+}
+function createBoss6BattleAxe(){
+ const root=new THREE.Group();root.name='HwangRedBattleAxe';
+ const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.065,.085,2.75,12),b6AxeGrip);
+ shaft.position.y=1.15;shaft.castShadow=true;root.add(shaft);
+ const butt=new THREE.Mesh(new THREE.CylinderGeometry(.115,.09,.22,10),b6AxeRed);butt.position.y=-.25;butt.castShadow=true;root.add(butt);
+ const collar=new THREE.Mesh(new THREE.CylinderGeometry(.14,.11,.28,10),b6AxeRed);collar.position.y=2.42;collar.castShadow=true;root.add(collar);
+
+ const bladeShape=new THREE.Shape();
+ bladeShape.moveTo(.02,2.18);bladeShape.lineTo(.58,2.12);bladeShape.lineTo(.92,2.34);
+ bladeShape.lineTo(.82,2.68);bladeShape.lineTo(.42,2.9);bladeShape.lineTo(.02,2.72);bladeShape.closePath();
+ const bladeGeo=new THREE.ExtrudeGeometry(bladeShape,{depth:.13,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.035,bevelThickness:.025});
+ bladeGeo.translate(0,0,-.065);
+ const rightBlade=new THREE.Mesh(bladeGeo,b6AxeRed);rightBlade.castShadow=true;root.add(rightBlade);
+ const leftBlade=new THREE.Mesh(bladeGeo,b6AxeRed);leftBlade.scale.x=-1;leftBlade.castShadow=true;root.add(leftBlade);
+
+ const edgeGeo=new THREE.BoxGeometry(1.78,.055,.18);
+ const edge=new THREE.Mesh(edgeGeo,b6AxeEdge);edge.position.set(0,2.62,0);edge.rotation.z=.03;edge.castShadow=true;root.add(edge);
+ const spike=new THREE.Mesh(new THREE.ConeGeometry(.105,.48,10),b6AxeEdge);spike.position.set(0,3.02,0);spike.castShadow=true;root.add(spike);
+ root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+ return root;
+}
+function buildBoss6BattleAxe(){
+ if(boss6AxeRoot)return boss6AxeRoot;
+ boss6AxeRoot=createBoss6BattleAxe();boss6AxeRoot.visible=false;scene.add(boss6AxeRoot);boss6AxeHead=boss6AxeRoot;
+ return boss6AxeRoot;
+}
+function playBoss6Voice(line,key=''){
+ if(!line||typeof window==='undefined')return;
+ const now=performance.now();if(now-boss6VoiceLast<180)return;boss6VoiceLast=now;
+ try{
+  const synth=window.speechSynthesis;if(!synth)return;
+  synth.cancel();
+  const u=new SpeechSynthesisUtterance(line);u.lang='ko-KR';u.rate=key==='execute'?.82:1.12;u.pitch=.58;u.volume=.92;
+  const voices=synth.getVoices?.()||[];
+  const ko=voices.find(v=>/^ko/i.test(v.lang)&&/male|남|google|microsoft/i.test(v.name))||voices.find(v=>/^ko/i.test(v.lang));
+  if(ko)u.voice=ko;synth.speak(u);
+ }catch{}
+}
+function playBoss6AxeWhoosh(power=1){
+ const ctx=ensureImpactAudio();if(!ctx||!impactNoiseBuffer)return;
+ const now=ctx.currentTime,src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();
+ src.buffer=impactNoiseBuffer;filter.type='bandpass';filter.frequency.setValueAtTime(720+power*180,now);filter.Q.value=.7;
+ gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(Math.min(.34,.12*power),now+.018);gain.gain.exponentialRampToValueAtTime(.0001,now+.22+.05*power);
+ src.connect(filter).connect(gain).connect(ctx.destination);src.start(now);src.stop(now+.3);
 }
 function addBoss6EyeFx(head,x){
  const fx=new THREE.Group();fx.name=x<0?'HwangEyeFxL':'HwangEyeFxR';fx.position.set(x,.15,-.292);head.add(fx);
@@ -3992,6 +4049,7 @@ function buildBoss6ProceduralModel(){
  const rHand=boss6Joint(rLower,'rightHand',[0,-.56,-.005]);
  boss6Mesh(lHand,new THREE.BoxGeometry(.28,.24,.28),b6SkinDark,[0,-.06,-.015],[1.05,1,1.05]);
  boss6Mesh(rHand,new THREE.BoxGeometry(.28,.24,.28),b6SkinDark,[0,-.06,-.015],[1.05,1,1.05]);
+ buildBoss6BattleAxe();
  boss6Mesh(lHand,new THREE.BoxGeometry(.32,.09,.3),b6Metal,[0,.08,0]);
  boss6Mesh(rHand,new THREE.BoxGeometry(.32,.09,.3),b6Metal,[0,.08,0]);
 
