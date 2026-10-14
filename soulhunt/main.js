@@ -1916,7 +1916,7 @@ function updateBoss2Weapon(){
    if(aim.lengthSq()>1e-6)axis=aim.normalize();
  }
  const marks=state.bossState==='b2_sword_combo'?BOSS2_SWORD_MARKS:state.bossState==='b2_flame_combo'?BOSS2_FLAME_MARKS:state.bossState==='b2_frenzy'?BOSS2_FRENZY_MARKS:state.bossState==='b2_final'?BOSS2_FINAL_MARKS:null;
- const edge=marks?bossKeyedSlash(state.bossTimer,marks,{wind:.3,cut:.16,recover:.28}):null;
+ const edge=marks?bossKeyedSlash(state.bossTimer,marks,state.bossState==='b2_frenzy'?{wind:.22,cut:.12,recover:.2}:{wind:.25,cut:.14,recover:.22}):null;
  const gripY=boss2Spear.visible?.08:-.21;
  const roll=edge&&!boss2Spear.visible?edge.side*edge.impact*.28:0;
  placeWeaponAtPrimaryGrip(boss2WeaponRoot,hand,gripY,axis,roll);
@@ -2117,8 +2117,13 @@ function applyBoss2PrimaryArmIK(dt){
  let local=bossWalkingHand(new THREE.Vector3(.34,-.48,.22),.018,.04,.012);
  if(st==='b2_sword_combo'||st==='b2_flame_combo'||st==='b2_frenzy'||st==='b2_final'){
    const marks=st==='b2_sword_combo'?BOSS2_SWORD_MARKS:st==='b2_flame_combo'?BOSS2_FLAME_MARKS:st==='b2_frenzy'?BOSS2_FRENZY_MARKS:BOSS2_FINAL_MARKS;
-   const beat=bossKeyedSlash(t,marks,{wind:st==='b2_final'?.36:.3,cut:.16,recover:.28});
-   local.copy(bossSwordHandArc(beat,reach,{windX:.78,cutX:.84,baseY:-.28,liftY:.28,dropY:.2,baseZ:.12,windBack:-.34,forward:st==='b2_final'?1.18:1.02,pullback:.5}).multiplyScalar(1/reach));
+   const isFrenzy=st==='b2_frenzy',isFinal=st==='b2_final';
+   const beat=bossKeyedSlash(t,marks,{wind:isFinal?.32:isFrenzy?.22:.25,cut:isFrenzy?.12:.14,recover:isFrenzy?.2:.22});
+   local.copy(bossSwordHandArc(beat,reach,{
+    windX:isFrenzy?.5:.54,cutX:isFrenzy?.66:.62,
+    baseY:-.43,liftY:.13,dropY:.1,baseZ:.14,windBack:-.2,
+    forward:isFinal?1.12:isFrenzy?1.02:.92,pullback:.34,recoverX:.09
+   }).multiplyScalar(1/reach));
  }else if(st==='b2_spear_thrust'){
    const e=BOSS2_DUR.b2_spear_thrust-t;
    const p=clamp(e/BOSS2_DUR.b2_spear_thrust,0,1);
@@ -2173,7 +2178,7 @@ function boss2FacingDot(){
 }
 function boss2Strike(tag,range,dmg,posture,unblockable=false,minDot=-.25){
  if(boss2Fired.has(tag)||boss2MeleeRequests.some(r=>r.tag===tag))return;
- boss2MeleeRequests.push({tag,dmg,posture,unblockable,minDot,kind:'weapon',ttl:.28});
+ boss2MeleeRequests.push({tag,dmg,posture,unblockable,minDot,kind:'weapon',ttl:state.bossState==='b2_frenzy'?.38:.32});
 }
 function boss2GrabStrike(tag,dmg,posture,unblockable=true,minDot=-.1){
  if(boss2Fired.has(tag)||boss2MeleeRequests.some(r=>r.tag===tag))return;
@@ -2184,11 +2189,11 @@ function processBoss2PhysicalHits(){
  const playerCaps=combatHumanoidCapsules(playerVrmBones,player,2.0);
  let weaponHit=null,handHit=null;
  if(boss2WeaponRoot.visible){
-  const base=boss2Spear.visible?new THREE.Vector3(0,2.62,0):new THREE.Vector3(0,.08,0);
-  const tip=boss2Spear.visible?new THREE.Vector3(0,3.46,0):new THREE.Vector3(0,2.24,0);
-  const seg=combatWorldSegment(boss2WeaponRoot,base,tip);
-  if(boss2WeaponTrace.valid)weaponHit=combatSweptBladeContact(boss2WeaponTrace.base,boss2WeaponTrace.tip,seg.base,seg.tip,playerCaps,boss2Spear.visible?.15:.145);
-  boss2WeaponTrace.base.copy(seg.base);boss2WeaponTrace.tip.copy(seg.tip);boss2WeaponTrace.valid=true;
+  if(boss2Spear.visible){
+   const seg=combatWorldSegment(boss2WeaponRoot,new THREE.Vector3(0,2.62,0),new THREE.Vector3(0,3.46,0));
+   if(boss2WeaponTrace.valid)weaponHit=combatSweptBladeContact(boss2WeaponTrace.base,boss2WeaponTrace.tip,seg.base,seg.tip,playerCaps,.15);
+   boss2WeaponTrace.base.copy(seg.base);boss2WeaponTrace.tip.copy(seg.tip);boss2WeaponTrace.valid=true;
+  }else weaponHit=combatSwordSweep(boss2WeaponRoot,boss2WeaponTrace,playerCaps,.07,2.29,.14);
  }else boss2WeaponTrace.valid=false;
  const hand=boss2Bones.rightHand;
  if(hand){
@@ -2526,7 +2531,7 @@ function updateBoss2(dt){
        boss2Once('fz-vfx'+i,()=>spawnBoss2Slash(1.42+i*.07,0xff386b));
        boss2Strike('fz-dmg'+i,3.7,13+i*2,14+i*2,false,-.62);
      }
-     if(state.bossTimer<=mark+.2&&state.bossTimer>mark+.04&&d>2.55)boss.position.addScaledVector(dir,dt*3.6);
+     if(state.bossTimer<=mark+.24&&state.bossTimer>mark-.02&&d>1.95)boss.position.addScaledVector(dir,dt*4.15);
    });
    if(state.bossTimer<=0)finishBoss2Attack(.9);
  }else if(state.bossState==='b2_awaken'){
@@ -2790,11 +2795,8 @@ function boss3Strike(tag,range,dmg,posture,unblockable=false,minDot=-.35,healMul
 function resetBoss3PhysicalTrace(){boss3WeaponTrace.valid=false}
 function processBoss3PhysicalHits(){
  if(!boss3WeaponRoot.visible){boss3WeaponTrace.valid=false;boss3MeleeRequests.length=0;return}
- const seg=combatWorldSegment(boss3WeaponRoot,new THREE.Vector3(0,.08,0),new THREE.Vector3(0,2.22,0));
  const caps=combatHumanoidCapsules(playerVrmBones,player,2.0);
- let hit=null;
- if(boss3WeaponTrace.valid)hit=combatSweptBladeContact(boss3WeaponTrace.base,boss3WeaponTrace.tip,seg.base,seg.tip,caps,.13);
- boss3WeaponTrace.base.copy(seg.base);boss3WeaponTrace.tip.copy(seg.tip);boss3WeaponTrace.valid=true;
+ const hit=combatSwordSweep(boss3WeaponRoot,boss3WeaponTrace,caps,.07,2.27,.14);
  if(hit){
   for(const req of boss3MeleeRequests){
    if(boss3Fired.has(req.tag))continue;
@@ -3261,10 +3263,8 @@ function boss4Strike(tag,dmg,posture,ttl=.26,unblockable=false){
 function resetBoss4PhysicalTrace(){boss4WeaponTrace.valid=false}
 function processBoss4PhysicalHits(){
  if(!boss4WeaponRoot.visible){boss4WeaponTrace.valid=false;boss4MeleeRequests.length=0;return}
- const seg=combatWorldSegment(boss4WeaponRoot,new THREE.Vector3(0,.07,0),new THREE.Vector3(0,2.39,0));
- const caps=combatHumanoidCapsules(playerVrmBones,player,2.0);let hit=null;
- if(boss4WeaponTrace.valid)hit=combatSweptBladeContact(boss4WeaponTrace.base,boss4WeaponTrace.tip,seg.base,seg.tip,caps,.14);
- boss4WeaponTrace.base.copy(seg.base);boss4WeaponTrace.tip.copy(seg.tip);boss4WeaponTrace.valid=true;
+ const caps=combatHumanoidCapsules(playerVrmBones,player,2.0);
+ const hit=combatSwordSweep(boss4WeaponRoot,boss4WeaponTrace,caps,.07,2.39,.14);
  if(hit){
   for(const req of boss4MeleeRequests){
    if(boss4Fired.has(req.tag))continue;boss4Fired.add(req.tag);spawnSparks(hit.point,11,5);state.shake=Math.max(state.shake,.09);
@@ -4422,6 +4422,13 @@ function combatSweptBladeContact(prevBase,prevTip,base,tip,capsules,bladeRadius=
  return best;
 }
 function combatWorldSegment(root,baseLocal,tipLocal){root.updateWorldMatrix?.(true,true);return{base:root.localToWorld(baseLocal.clone()),tip:root.localToWorld(tipLocal.clone())}}
+function combatSwordSweep(root,trace,caps,baseY,tipY,radius=.14){
+ const seg=combatWorldSegment(root,new THREE.Vector3(0,baseY,0),new THREE.Vector3(0,tipY,0));
+ let hit=null;
+ if(trace.valid)hit=combatSweptBladeContact(trace.base,trace.tip,seg.base,seg.tip,caps,radius);
+ trace.base.copy(seg.base);trace.tip.copy(seg.tip);trace.valid=true;
+ return hit;
+}
 const playerWeaponTrace={valid:false,base:new THREE.Vector3(),tip:new THREE.Vector3(),step:0};
 function resetPlayerWeaponTrace(){playerWeaponTrace.valid=false;playerWeaponTrace.step=state.attackStep}
 function playerWeaponDamageZone(){
