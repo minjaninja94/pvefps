@@ -3872,8 +3872,8 @@ let boss6TankMuzzle=null,boss6TankMuzzleFlash=null,boss6TankRecoil=0,boss6GroinC
 const boss6CannonTrace={valid:false,base:new THREE.Vector3(),tip:new THREE.Vector3()};
 const b6Black=new THREE.MeshBasicMaterial({color:0x080808});
 const b6AxeRed=new THREE.MeshStandardMaterial({color:0xa80707,roughness:.32,metalness:.78,emissive:0x4e0000,emissiveIntensity:.46});
-const b6AxeEdge=new THREE.MeshStandardMaterial({color:0xff2b1f,roughness:.2,metalness:.86,emissive:0x8f0600,emissiveIntensity:1.1});
-const b6AxeGrip=new THREE.MeshStandardMaterial({color:0x17110d,roughness:.72,metalness:.16});
+const b6AxeEdge=new THREE.MeshStandardMaterial({color:0xb9b9bc,roughness:.2,metalness:.92,emissive:0x2b0503,emissiveIntensity:.18});
+const b6AxeGrip=new THREE.MeshStandardMaterial({color:0x52382f,roughness:.7,metalness:.08});
 let boss6AxeRoot=null,boss6AxeHead=null,boss6Boomerang=null,boss6AxeAttached=false,boss6Grabbed=false,boss6GrabDamageDone=false;
 const boss6AxeRequests=[];
 const boss6AxeTrace={
@@ -3891,24 +3891,29 @@ function boss6Joint(parent,name,pos=[0,0,0]){
  const g=new THREE.Group();g.name='HwangGeunchul_'+name;g.position.set(...pos);parent.add(g);cacheBoss6Bone(name,g);boss6RenderBones[name]=g;return g;
 }
 function createBoss6BattleAxe(){
- const root=new THREE.Group();root.name='HwangRedOneHandBattleAxe';
- // One-handed battle axe: short haft, heavy red double blade, grip origin at the right fist.
- const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.052,.068,1.62,12),b6AxeGrip);
- shaft.position.y=.64;shaft.castShadow=true;root.add(shaft);
- const butt=new THREE.Mesh(new THREE.CylinderGeometry(.095,.072,.18,10),b6AxeRed);butt.position.y=-.18;butt.castShadow=true;root.add(butt);
- const collar=new THREE.Mesh(new THREE.CylinderGeometry(.115,.09,.2,10),b6AxeRed);collar.position.y=1.37;collar.castShadow=true;root.add(collar);
+ const root=new THREE.Group();root.name='HwangRedOversizedOneHandBattleAxe';
+ // Huge reference-style axe: nearly body-length, but deliberately controlled with ONE hand.
+ // Local origin is the fist/grip. The haft extends below the fist and far above it.
+ const shaft=new THREE.Mesh(new THREE.BoxGeometry(.115,2.78,.105),b6AxeGrip);
+ shaft.position.y=.87;shaft.castShadow=true;root.add(shaft);
+ const gripWrap=new THREE.Mesh(new THREE.CylinderGeometry(.085,.085,.58,10),b6AxeRed);
+ gripWrap.position.y=-.02;gripWrap.castShadow=true;root.add(gripWrap);
+ const butt=new THREE.Mesh(new THREE.BoxGeometry(.18,.22,.17),b6AxeRed);butt.position.y=-.56;butt.rotation.z=.03;butt.castShadow=true;root.add(butt);
+ const collar=new THREE.Mesh(new THREE.BoxGeometry(.24,.28,.19),b6AxeRed);collar.position.y=2.18;collar.castShadow=true;root.add(collar);
 
  const bladeShape=new THREE.Shape();
- bladeShape.moveTo(.02,1.18);bladeShape.lineTo(.43,1.15);bladeShape.lineTo(.66,1.29);
- bladeShape.lineTo(.61,1.52);bladeShape.lineTo(.34,1.67);bladeShape.lineTo(.02,1.56);bladeShape.closePath();
- const bladeGeo=new THREE.ExtrudeGeometry(bladeShape,{depth:.12,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.03,bevelThickness:.022});
- bladeGeo.translate(0,0,-.06);
- const rightBlade=new THREE.Mesh(bladeGeo,b6AxeRed);rightBlade.castShadow=true;root.add(rightBlade);
- const leftBlade=new THREE.Mesh(bladeGeo,b6AxeRed);leftBlade.scale.x=-1;leftBlade.castShadow=true;root.add(leftBlade);
+ bladeShape.moveTo(-.02,2.03);bladeShape.lineTo(.42,2.05);bladeShape.lineTo(.92,2.3);
+ bladeShape.lineTo(.83,2.72);bladeShape.lineTo(.47,3.05);bladeShape.lineTo(.02,2.91);
+ bladeShape.lineTo(-.1,2.58);bladeShape.closePath();
+ const bladeGeo=new THREE.ExtrudeGeometry(bladeShape,{depth:.16,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.04,bevelThickness:.03});
+ bladeGeo.translate(0,0,-.08);
+ const mainBlade=new THREE.Mesh(bladeGeo,b6AxeRed);mainBlade.castShadow=true;root.add(mainBlade);
+ const backBlade=new THREE.Mesh(bladeGeo,b6AxeRed);backBlade.scale.x=-.58;backBlade.position.x=-.02;backBlade.castShadow=true;root.add(backBlade);
 
- const edgeGeo=new THREE.BoxGeometry(1.27,.05,.16);
- const edge=new THREE.Mesh(edgeGeo,b6AxeEdge);edge.position.set(0,1.48,0);edge.rotation.z=.025;edge.castShadow=true;root.add(edge);
- const spike=new THREE.Mesh(new THREE.ConeGeometry(.085,.34,10),b6AxeEdge);spike.position.set(0,1.78,0);spike.castShadow=true;root.add(spike);
+ // Silver cutting cap visible in the reference.
+ const topEdge=boss6Mesh(root,new THREE.BoxGeometry(1.82,.105,.21),b6AxeEdge,[.03,2.88,0],[1,1,1],[0,0,.08]);
+ const lowerEdge=boss6Mesh(root,new THREE.BoxGeometry(.82,.075,.205),b6AxeEdge,[.5,2.28,0],[1,1,1],[0,0,-.28]);
+ const rearSpike=boss6Mesh(root,new THREE.ConeGeometry(.11,.48,10),b6AxeRed,[-.61,2.45,0],[1,1,1],[0,0,Math.PI/2]);
  root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
  return root;
 }
@@ -4079,6 +4084,14 @@ function buildBoss6ProceduralModel(){
  boss6Mesh(cap,new THREE.BoxGeometry(.56,.04,.31),b6CapCamo,[0,-.06,-.145],[1,1,1],[.02,0,0]);
  const capName=boss6Mesh(cap,new THREE.PlaneGeometry(.28,.085),b6CapNameMat,[0,.02,-.273]);
  capName.name='HwangCapNamePatch';capName.renderOrder=13;
+
+ // Reference dog tags: two loose chains with a heavy steel tag resting on the bare chest.
+ const tags=new THREE.Group();tags.name='HwangGeunchulDogTags';upperChest.add(tags);
+ boss6Mesh(tags,new THREE.CylinderGeometry(.012,.012,.7,6),b6Metal,[-.13,-.22,-.35],[1,1,1],[0,0,-.32]);
+ boss6Mesh(tags,new THREE.CylinderGeometry(.012,.012,.7,6),b6Metal,[.13,-.22,-.35],[1,1,1],[0,0,.32]);
+ const tagPlate=boss6Mesh(tags,new THREE.BoxGeometry(.18,.25,.035),b6Metal,[0,-.52,-.38],[1,1,1],[0,0,.04]);
+ tagPlate.geometry.translate(0,-.02,0);
+ boss6Mesh(tags,new THREE.SphereGeometry(.025,8,6),b6Black,[0,-.43,-.405]);
 
  const lShoulder=boss6Joint(upperChest,'leftShoulder',[.66,.08,0]);
  const rShoulder=boss6Joint(upperChest,'rightShoulder',[-.66,.08,0]);
@@ -4402,7 +4415,7 @@ async function loadBoss6Avatar(){
 function enforceBoss6Visibility(){
  if(BOSS_VARIANT!==6)return;for(const child of boss.children)child.visible=(child===boss6Root);boss6Root.visible=true;if(!boss6Ready)boss6Fallback.visible=true;
 }
-const BOSS6_DUR={b6_cannon_fencing:2.42,b6_axe_overhead:1.72,b6_axe_cleave:1.42,b6_axe_spin:2.05,b6_axe_boomerang:2.5,b6_grab_execute:2.85,b6_kihap:2.45,b6_burger:2.8,b6_jjajang:2.7,b6_van:2.55,b6_reverse:2.75,b6_support:3.05,b6_enlist:2.35,b6_allfire:5.4,b6_roar:2.25};
+const BOSS6_DUR={b6_cannon_fencing:2.42,b6_axe_overhead:1.72,b6_axe_cleave:1.42,b6_axe_spin:2.05,b6_axe_boomerang:2.5,b6_axe_combo:2.72,b6_axe_quake:2.24,b6_axe_rush:2.46,b6_grab_execute:2.85,b6_kihap:2.45,b6_burger:2.8,b6_jjajang:2.7,b6_van:2.55,b6_reverse:2.75,b6_support:3.05,b6_enlist:2.35,b6_allfire:5.4,b6_roar:2.25};
 const BOSS6_MARKS={
  b6_kihap:[1.8,1.48,1.16,.84,.52],
  b6_burger:[2.0,1.35,.7],
@@ -4586,7 +4599,7 @@ function updateBoss6CannonFencing(dt){
 }
 
 function isBoss6AxeState(st=state.bossState){
- return st==='b6_axe_overhead'||st==='b6_axe_cleave'||st==='b6_axe_spin'||st==='b6_axe_boomerang'||st==='b6_grab_execute';
+ return st==='b6_axe_overhead'||st==='b6_axe_cleave'||st==='b6_axe_spin'||st==='b6_axe_boomerang'||st==='b6_axe_combo'||st==='b6_axe_quake'||st==='b6_axe_rush'||st==='b6_grab_execute';
 }
 function boss6Smooth01(x){x=clamp(x,0,1);return x*x*(3-2*x)}
 function boss6WorldBasis(){
@@ -4597,9 +4610,9 @@ function boss6WorldBasis(){
 function boss6AxeSegments(){
  boss6AxeRoot.updateMatrixWorld(true);
  return{
-  bladeA:combatWorldSegment(boss6AxeRoot,new THREE.Vector3(-.63,1.44,0),new THREE.Vector3(.63,1.52,0)),
-  bladeB:combatWorldSegment(boss6AxeRoot,new THREE.Vector3(-.48,1.18,0),new THREE.Vector3(.48,1.66,0)),
-  shaft:combatWorldSegment(boss6AxeRoot,new THREE.Vector3(0,.02,0),new THREE.Vector3(0,1.34,0))
+  bladeA:combatWorldSegment(boss6AxeRoot,new THREE.Vector3(-.9,2.84,0),new THREE.Vector3(.91,2.94,0)),
+  bladeB:combatWorldSegment(boss6AxeRoot,new THREE.Vector3(-.61,2.13,0),new THREE.Vector3(.78,3.02,0)),
+  shaft:combatWorldSegment(boss6AxeRoot,new THREE.Vector3(0,-.5,0),new THREE.Vector3(0,2.22,0))
  };
 }
 function boss6ResetAxeTrace(){boss6AxeTrace.valid=false}
@@ -4639,6 +4652,24 @@ function boss6AxePrimaryPose(st,p){
   const wind=boss6Smooth01(p/.32);
   grip.addScaledVector(right,side*.58*wind).addScaledVector(forward,-.42*wind).addScaledVector(up,.38*wind);
   axis=forward.clone().multiplyScalar(.35).addScaledVector(right,side*.8).addScaledVector(up,.35).normalize();
+ }else if(st==='b6_axe_combo'){
+  const phase=p<.34?0:p<.67?1:2,lp=phase===0?p/.34:phase===1?(p-.34)/.33:(p-.67)/.33;
+  const wind=boss6Smooth01(lp/.3),cut=boss6Smooth01((lp-.3)/.48),sgn=phase===1?-side:side;
+  if(phase<2){
+   grip.addScaledVector(right,sgn*(.7*wind-1.18*cut)).addScaledVector(forward,-.22*wind+.96*cut).addScaledVector(up,.18*wind-.06*cut);
+   axis=forward.clone().multiplyScalar(.4+.65*cut).addScaledVector(right,sgn*(.94-1.9*cut)).addScaledVector(up,.14).normalize();
+  }else{
+   grip.addScaledVector(up,.94*wind-.9*cut).addScaledVector(forward,-.4*wind+1.12*cut);
+   axis=up.clone().multiplyScalar(.98-1.18*cut).addScaledVector(forward,-.2*wind+1.28*cut).addScaledVector(right,-.06).normalize();
+  }
+ }else if(st==='b6_axe_quake'){
+  const wind=boss6Smooth01(p/.48),slam=boss6Smooth01((p-.48)/.18),recover=boss6Smooth01((p-.72)/.22);
+  grip.addScaledVector(up,1.08*wind-1.05*slam+.28*recover).addScaledVector(forward,-.5*wind+1.3*slam-.3*recover);
+  axis=up.clone().multiplyScalar(1-.15*wind-1.18*slam+.35*recover).addScaledVector(forward,-.28*wind+1.45*slam-.4*recover).normalize();
+ }else if(st==='b6_axe_rush'){
+  const wind=boss6Smooth01(p/.24),cut=boss6Smooth01((p-.55)/.25);
+  grip.addScaledVector(right,side*(.54*wind-1.28*cut)).addScaledVector(forward,-.56*wind+1.15*cut).addScaledVector(up,-.12*wind+.18*cut);
+  axis=forward.clone().multiplyScalar(.76+.42*cut).addScaledVector(right,side*(.72-1.62*cut)).addScaledVector(up,.08+.08*cut).normalize();
  }else if(st==='b6_grab_execute'){
   const caught=boss6Grabbed;
   const raise=boss6Smooth01((p-.42)/.28),chop=boss6Smooth01((p-.72)/.15);
@@ -4677,8 +4708,8 @@ function boss6ShoulderAxe(dt){
  boss6AxeRoot.visible=state.bossHp>0;
  const {forward,right,up}=boss6WorldBasis();
  const pose={
-  grip:boss.position.clone().addScaledVector(right,.48).addScaledVector(forward,.06).addScaledVector(up,1.48),
-  axis:up.clone().multiplyScalar(.88).addScaledVector(forward,-.34).addScaledVector(right,-.08).normalize()
+  grip:boss.position.clone().addScaledVector(right,.5).addScaledVector(forward,.02).addScaledVector(up,1.43),
+  axis:up.clone().multiplyScalar(.96).addScaledVector(forward,-.22).addScaledVector(right,-.05).normalize()
  };
  boss6DriveRightHandToGrip(dt,pose.grip,20);syncBoss6Rig(0);boss6PlaceOneHandAxe(pose,1-Math.exp(-dt*24));
  boss6ResetAxeTrace();
@@ -4686,8 +4717,8 @@ function boss6ShoulderAxe(dt){
 function boss6CarryPose(){
  const {forward,right,up}=boss6WorldBasis(),gait=bossWalkState.active?Math.sin(bossWalkState.phase):0;
  return{
-  grip:boss.position.clone().addScaledVector(right,.43).addScaledVector(forward,.16+.025*gait).addScaledVector(up,1.22+.015*Math.abs(gait)),
-  axis:up.clone().multiplyScalar(.92).addScaledVector(forward,.3).addScaledVector(right,-.1).normalize()
+  grip:boss.position.clone().addScaledVector(right,.48).addScaledVector(forward,.08+.02*gait).addScaledVector(up,1.34+.015*Math.abs(gait)),
+  axis:up.clone().multiplyScalar(.97).addScaledVector(forward,-.12).addScaledVector(right,-.06).normalize()
  };
 }
 function boss6CarryAxe(dt){
@@ -4761,18 +4792,47 @@ function updateBoss6BattleAxe(dt){
   boss6UpdateGrab(dt,p);boss6ResetAxeTrace();return;
  }
 
- const windows={
-  b6_axe_overhead:[.38,.7,38,48],
-  b6_axe_cleave:[.3,.72,31,38],
-  b6_axe_spin:[.25,.84,28,35]
- };
- const w=windows[st],seg=boss6AxeSegments(),caps=combatHumanoidCapsules(playerVrmBones,player,PLAYER_VISUAL_HEIGHT);
- if(w&&p>=w[0]&&p<=w[1]){
-  const hit=boss6AxeContact(caps,seg,st==='b6_axe_spin'?.31:.285);
-  if(hit&&boss6Once(st+'Hit',()=>{})){
-   spawnSparks(hit.point,18,6.5);playBoss6AxeWhoosh(st==='b6_axe_overhead'?2:1.6);
-   hurtPlayer(w[2],w[3],st==='b6_axe_overhead');
-   if(st==='b6_axe_overhead')spawnDustBurst(hit.point,.48);
+ const seg=boss6AxeSegments(),caps=combatHumanoidCapsules(playerVrmBones,player,PLAYER_VISUAL_HEIGHT);
+ if(st==='b6_axe_combo'){
+  const combo=[
+   [.14,.34,27,26,'combo0'],
+   [.39,.61,30,30,'combo1'],
+   [.7,.91,42,48,'combo2']
+  ];
+  for(const w of combo){
+   if(p>=w[0]&&p<=w[1]){
+    const hit=boss6AxeContact(caps,seg,.31);
+    if(hit&&boss6Once(w[4],()=>{})){
+     spawnSparks(hit.point,w[4]==='combo2'?22:15,w[4]==='combo2'?7:5.8);playBoss6AxeWhoosh(w[4]==='combo2'?2.05:1.55);
+     hurtPlayer(w[2],w[3],w[4]==='combo2');
+    }
+   }
+  }
+ }else if(st==='b6_axe_quake'){
+  if(p>=.49&&p<=.68){
+   const hit=boss6AxeContact(caps,seg,.34);
+   if(hit&&boss6Once('quakeBlade',()=>{})){spawnSparks(hit.point,24,7.2);hurtPlayer(34,42,true)}
+  }
+  if(p>.59)boss6Once('quakeImpact',()=>{
+   const {forward}=boss6WorldBasis(),impact=boss.position.clone().addScaledVector(forward,1.35);
+   impact.y=.08;spawnDustBurst(impact,1.15);spawnBoss2Pulse(impact,4.35,0xff2518,.52);state.shake=Math.max(state.shake,.34);playImpactSound('heavy',2.2);
+   const d=player.position.distanceTo(impact);if(d<4.25&&state.invuln<=0)hurtPlayer(d<2.35?46:34,d<2.35?62:45,d<2.35);
+  });
+ }else{
+  const windows={
+   b6_axe_overhead:[.38,.7,38,48],
+   b6_axe_cleave:[.3,.72,31,38],
+   b6_axe_spin:[.25,.84,28,35],
+   b6_axe_rush:[.5,.86,39,46]
+  };
+  const w=windows[st];
+  if(w&&p>=w[0]&&p<=w[1]){
+   const hit=boss6AxeContact(caps,seg,st==='b6_axe_spin'?.33:st==='b6_axe_rush'?.34:.3);
+   if(hit&&boss6Once(st+'Hit',()=>{})){
+    spawnSparks(hit.point,st==='b6_axe_rush'?22:18,st==='b6_axe_rush'?7.2:6.5);playBoss6AxeWhoosh(st==='b6_axe_overhead'||st==='b6_axe_rush'?2:1.6);
+    hurtPlayer(w[2],w[3],st==='b6_axe_overhead'||st==='b6_axe_rush');
+    if(st==='b6_axe_overhead'||st==='b6_axe_rush')spawnDustBurst(hit.point,.48);
+   }
   }
  }
  boss6StoreAxeTrace(seg);
@@ -4829,6 +4889,19 @@ function poseBoss6(dt){
   const p=clamp(1-t/BOSS6_DUR.b6_axe_boomerang,0,1),throwP=boss6Smooth01(p/.34);
   setBoss6Bone('hips',0,-.22*throwP,0,24,dt);setBoss6Bone('spine',-.08,-.38*throwP,0,26,dt);setBoss6Bone('chest',0,-.14*throwP,0,24,dt);
   setBoss6Bone('rightUpperArm',-1.02+.58*throwP,.08,-.52,28,dt);setBoss6Bone('rightLowerArm',-.72+.46*throwP,0,-.1,28,dt);
+ }else if(st==='b6_axe_combo'){
+  const p=clamp(1-t/BOSS6_DUR.b6_axe_combo,0,1),phase=p<.34?0:p<.67?1:2,lp=phase===0?p/.34:phase===1?(p-.34)/.33:(p-.67)/.33;
+  const cut=boss6Smooth01((lp-.26)/.52),sgn=(phase===1?-1:1)*((state.boss6AttackCount&1)?1:-1);
+  setBoss6Bone('hips',-.06,sgn*.34*cut,0,29,dt);setBoss6Bone('spine',-.12,sgn*.48*cut,sgn*.06*cut,30,dt);setBoss6Bone('chest',0,sgn*.22*cut,0,27,dt);
+  setBoss6Bone('rightUpperLeg',-.1*cut,0,-.03,22,dt);setBoss6Bone('leftUpperLeg',.1*cut,0,.03,22,dt);
+ }else if(st==='b6_axe_quake'){
+  const p=clamp(1-t/BOSS6_DUR.b6_axe_quake,0,1),wind=boss6Smooth01(p/.48),slam=boss6Smooth01((p-.48)/.18);
+  setBoss6Bone('hips',-.12*wind+.18*slam,0,0,30,dt);setBoss6Bone('spine',.3*wind-.72*slam,0,0,32,dt);setBoss6Bone('chest',.18*wind-.28*slam,0,0,30,dt);
+  setBoss6Bone('leftUpperArm',-.35,-.12,.3,22,dt);setBoss6Bone('rightUpperLeg',-.22*wind+.16*slam,0,-.04,24,dt);setBoss6Bone('leftUpperLeg',.18*wind,0,.04,24,dt);
+ }else if(st==='b6_axe_rush'){
+  const p=clamp(1-t/BOSS6_DUR.b6_axe_rush,0,1),drive=boss6Smooth01((p-.12)/.46),cut=boss6Smooth01((p-.55)/.24),side=(state.boss6AttackCount&1)?1:-1;
+  setBoss6Bone('hips',-.18*drive,side*.24*cut,0,31,dt);setBoss6Bone('spine',-.42*drive,side*.5*cut,0,32,dt);setBoss6Bone('chest',-.12*drive,side*.2*cut,0,29,dt);
+  setBoss6Bone('leftUpperArm',-.48,-.16,.42,24,dt);setBoss6Bone('rightUpperLeg',-.45*drive,0,-.04,28,dt);setBoss6Bone('leftUpperLeg',.34*drive,0,.04,28,dt);
  }else if(st==='b6_grab_execute'){
   const p=clamp(1-t/BOSS6_DUR.b6_grab_execute,0,1),grab=boss6Smooth01(p/.36),raise=boss6Smooth01((p-.42)/.28),chop=boss6Smooth01((p-.72)/.15);
   setBoss6Bone('hips',-.05*grab,.08*chop,0,26,dt);setBoss6Bone('spine',-.18*grab+.24*raise-.46*chop,0,0,28,dt);setBoss6Bone('chest',.08*raise-.18*chop,0,0,26,dt);
@@ -4844,16 +4917,16 @@ function chooseBoss6Attack(){
  const d=dist(),p2=state.boss6Phase===2;let pool;
  if(d<3.0){
   pool=p2
-   ?['b6_cannon_fencing','b6_axe_overhead','b6_axe_cleave','b6_axe_spin','b6_grab_execute','b6_reverse','b6_kihap','b6_enlist','b6_allfire']
-   :['b6_cannon_fencing','b6_axe_overhead','b6_axe_cleave','b6_grab_execute','b6_reverse','b6_kihap','b6_enlist'];
+   ?['b6_cannon_fencing','b6_axe_overhead','b6_axe_cleave','b6_axe_spin','b6_axe_combo','b6_axe_quake','b6_grab_execute','b6_reverse','b6_kihap','b6_enlist','b6_allfire']
+   :['b6_cannon_fencing','b6_axe_overhead','b6_axe_cleave','b6_axe_combo','b6_axe_quake','b6_grab_execute','b6_reverse','b6_kihap','b6_enlist'];
  }else if(d>7.0){
   pool=p2
-   ?['b6_axe_boomerang','b6_van','b6_burger','b6_support','b6_allfire']
-   :['b6_axe_boomerang','b6_van','b6_burger','b6_support'];
+   ?['b6_axe_boomerang','b6_axe_rush','b6_van','b6_burger','b6_support','b6_allfire']
+   :['b6_axe_boomerang','b6_axe_rush','b6_van','b6_burger','b6_support'];
  }else{
   pool=p2
-   ?['b6_cannon_fencing','b6_axe_overhead','b6_axe_cleave','b6_axe_spin','b6_axe_boomerang','b6_grab_execute','b6_kihap','b6_burger','b6_jjajang','b6_van','b6_reverse','b6_support','b6_enlist','b6_allfire']
-   :['b6_cannon_fencing','b6_axe_overhead','b6_axe_cleave','b6_axe_boomerang','b6_grab_execute','b6_kihap','b6_burger','b6_jjajang','b6_van','b6_reverse','b6_support','b6_enlist'];
+   ?['b6_cannon_fencing','b6_axe_overhead','b6_axe_cleave','b6_axe_spin','b6_axe_boomerang','b6_axe_combo','b6_axe_quake','b6_axe_rush','b6_grab_execute','b6_kihap','b6_burger','b6_jjajang','b6_van','b6_reverse','b6_support','b6_enlist','b6_allfire']
+   :['b6_cannon_fencing','b6_axe_overhead','b6_axe_cleave','b6_axe_boomerang','b6_axe_combo','b6_axe_quake','b6_axe_rush','b6_grab_execute','b6_kihap','b6_burger','b6_jjajang','b6_van','b6_reverse','b6_support','b6_enlist'];
  }
  if(state.potionPunishQueued){
   state.potionPunishQueued=false;
@@ -4940,10 +5013,22 @@ function updateBoss6(dt){
   }else if(st==='b6_axe_boomerang'){
    if(p>.27)boss6Once('axe-boomerang-voice',()=>{flash('원위치!',.24);playBoss6Voice('원위치!')});
    if(p>.31)boss6Once('axe-boomerang-whoosh',()=>playBoss6AxeWhoosh(1.55));
+  }else if(st==='b6_axe_combo'){
+   if(p>.07)boss6Once('combo-voice',()=>{flash('오도짜세!',.24);playBoss6Voice('오도짜세!')});
+   if(p>.15)boss6Once('combo-w0',()=>playBoss6AxeWhoosh(1.45));
+   if(p>.4)boss6Once('combo-w1',()=>playBoss6AxeWhoosh(1.55));
+   if(p>.7)boss6Once('combo-w2',()=>playBoss6AxeWhoosh(2.05));
+  }else if(st==='b6_axe_quake'){
+   if(p>.12)boss6Once('quake-voice',()=>{flash('악으로!',.24);playBoss6Voice('악으로!')});
+   if(p>.46)boss6Once('quake-whoosh',()=>playBoss6AxeWhoosh(2.25));
+  }else if(st==='b6_axe_rush'){
+   if(p>.08)boss6Once('rush-voice',()=>{flash('깡으로!',.24);playBoss6Voice('깡으로!')});
+   if(p>.2&&p<.58)boss.position.addScaledVector(state.boss6LockedDir,dt*(p2?11.8:10.4));
+   if(p>.53)boss6Once('rush-whoosh',()=>playBoss6AxeWhoosh(2.15));
   }else if(st==='b6_grab_execute'){
    if(p>.12)boss6Once('grab-warn',()=>flash('황룡기열!!',.34));
   }
-  if(state.bossTimer<=0)finishBoss6Attack(st==='b6_grab_execute'?1.25:.92);
+  if(state.bossTimer<=0)finishBoss6Attack(st==='b6_grab_execute'?1.25:st==='b6_axe_quake'?1.08:.92);
  }else if(state.bossState==='b6_kihap'){
   BOSS6_MARKS.b6_kihap.forEach((m,i)=>{if(state.bossTimer<=m+.06&&state.bossTimer>m-.06)boss6Once('kihap'+i,()=>{flash(BOSS6_KIHAP_LINES[i%BOSS6_KIHAP_LINES.length],.24);playBoss6Voice(BOSS6_KIHAP_LINES[i%BOSS6_KIHAP_LINES.length]);boss6FireKihap(i)})});
   if(state.bossTimer<=0)finishBoss6Attack(.88);
