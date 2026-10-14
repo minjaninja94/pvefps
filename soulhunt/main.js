@@ -3688,19 +3688,157 @@ const boss6HaloMat=new THREE.MeshBasicMaterial({color:0xff492f,transparent:true,
 const boss6Halo=new THREE.Mesh(new THREE.TorusGeometry(1.08,.025,7,44),boss6HaloMat);boss6Halo.rotation.x=Math.PI/2;boss6Halo.position.y=.035;boss6Root.add(boss6Halo);
 const boss6Fallback=new THREE.Group();boss6Root.add(boss6Fallback);
 
-const b6Skin=new THREE.MeshStandardMaterial({color:0x9b6a50,roughness:.78,metalness:.02});
-const b6SkinDark=new THREE.MeshStandardMaterial({color:0x744936,roughness:.82});
-const b6Face=new THREE.MeshStandardMaterial({color:0x070606,roughness:.94,metalness:.01});
-const b6FaceDark=new THREE.MeshStandardMaterial({color:0x010101,roughness:.98,metalness:0});
+function b6Seeded(seed=1){
+ let x=seed>>>0;
+ return()=>{x=(x*1664525+1013904223)>>>0;return x/4294967296};
+}
+function b6CanvasTexture(size,paint,{repeatX=1,repeatY=1,srgb=true}={}){
+ const c=document.createElement('canvas');c.width=c.height=size;
+ const ctx=c.getContext('2d',{alpha:true});paint(ctx,size);
+ const tex=new THREE.CanvasTexture(c);
+ tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(repeatX,repeatY);
+ if(srgb&&'colorSpace' in tex)tex.colorSpace=THREE.SRGBColorSpace;
+ tex.needsUpdate=true;return tex;
+}
+function b6NoiseTexture(size,seed,base,spots,{repeatX=2,repeatY=2}={}){
+ const rng=b6Seeded(seed);
+ return b6CanvasTexture(size,(ctx,n)=>{
+  ctx.fillStyle=base;ctx.fillRect(0,0,n,n);
+  for(let i=0;i<spots;i++){
+   const x=rng()*n,y=rng()*n,r=.5+rng()*2.4,a=.025+rng()*.1;
+   ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+   if(i%3===0){ctx.fillStyle=`rgba(0,0,0,${a*.8})`;ctx.fillRect(x,y,.5+rng()*1.2,.5+rng()*1.2)}
+  }
+ },{repeatX,repeatY});
+}
+function b6FabricTexture(){
+ const rng=b6Seeded(617);
+ return b6CanvasTexture(256,(ctx,n)=>{
+  ctx.fillStyle='#20271d';ctx.fillRect(0,0,n,n);
+  ctx.lineWidth=1;
+  for(let i=-n;i<n*2;i+=5){
+   ctx.strokeStyle=i%10===0?'rgba(124,142,103,.13)':'rgba(3,8,3,.22)';
+   ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i-n,n);ctx.stroke();
+  }
+  for(let y=0;y<n;y+=6){
+   ctx.strokeStyle='rgba(143,156,118,.07)';ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(n,y+2);ctx.stroke();
+  }
+  for(let i=0;i<90;i++){
+   const x=rng()*n,y=rng()*n,w=5+rng()*18,h=2+rng()*7;
+   ctx.fillStyle=rng()>.5?'rgba(6,12,5,.16)':'rgba(84,91,57,.12)';
+   ctx.fillRect(x,y,w,h);
+  }
+ },{repeatX:3.2,repeatY:3.2});
+}
+function b6FabricBump(){
+ return b6CanvasTexture(128,(ctx,n)=>{
+  ctx.fillStyle='#777';ctx.fillRect(0,0,n,n);
+  for(let i=-n;i<n*2;i+=4){
+   ctx.strokeStyle=i%8===0?'#a2a2a2':'#555';ctx.lineWidth=1;
+   ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i-n,n);ctx.stroke();
+  }
+  for(let y=0;y<n;y+=5){ctx.strokeStyle='#858585';ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(n,y);ctx.stroke()}
+ },{repeatX:5,repeatY:5,srgb:false});
+}
+function b6FaceTexture(){
+ const rng=b6Seeded(94);
+ return b6CanvasTexture(256,(ctx,n)=>{
+  const g=ctx.createLinearGradient(0,0,n,n);
+  g.addColorStop(0,'#17100e');g.addColorStop(.5,'#090707');g.addColorStop(1,'#21130f');
+  ctx.fillStyle=g;ctx.fillRect(0,0,n,n);
+  for(let i=0;i<900;i++){
+   const x=rng()*n,y=rng()*n,r=.25+rng()*1.35;
+   const v=rng()>.54?255:0,a=.018+rng()*.065;
+   ctx.fillStyle=`rgba(${v},${v*.72},${v*.58},${a})`;
+   ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+  }
+  ctx.strokeStyle='rgba(88,49,38,.18)';ctx.lineWidth=2;
+  for(let y=38;y<220;y+=36){ctx.beginPath();ctx.moveTo(18,y);ctx.bezierCurveTo(70,y+5,180,y-5,238,y+2);ctx.stroke()}
+ },{repeatX:1.4,repeatY:1.4});
+}
+function b6FaceBump(){
+ const rng=b6Seeded(771);
+ return b6CanvasTexture(192,(ctx,n)=>{
+  ctx.fillStyle='#777';ctx.fillRect(0,0,n,n);
+  for(let i=0;i<1250;i++){
+   const v=70+Math.floor(rng()*90),x=rng()*n,y=rng()*n,r=.25+rng()*1.2;
+   ctx.fillStyle=`rgb(${v},${v},${v})`;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+  }
+ },{repeatX:2,repeatY:2,srgb:false});
+}
+function b6LeatherTexture(){
+ const rng=b6Seeded(409);
+ return b6CanvasTexture(192,(ctx,n)=>{
+  ctx.fillStyle='#151612';ctx.fillRect(0,0,n,n);
+  for(let i=0;i<220;i++){
+   const x=rng()*n,y=rng()*n,w=2+rng()*12;
+   ctx.strokeStyle=`rgba(185,179,144,${.015+rng()*.08})`;
+   ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+w,y+(rng()-.5)*4);ctx.stroke();
+  }
+ },{repeatX:2.3,repeatY:2.3});
+}
+function b6MetalTexture(){
+ const rng=b6Seeded(833);
+ return b6CanvasTexture(192,(ctx,n)=>{
+  const g=ctx.createLinearGradient(0,0,n,0);g.addColorStop(0,'#67665e');g.addColorStop(.5,'#8a887d');g.addColorStop(1,'#585951');
+  ctx.fillStyle=g;ctx.fillRect(0,0,n,n);
+  for(let i=0;i<180;i++){
+   const y=rng()*n,x=rng()*n,l=5+rng()*44;
+   ctx.strokeStyle=`rgba(20,20,18,${.03+rng()*.13})`;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+l,y+(rng()-.5)*1.5);ctx.stroke();
+  }
+ },{repeatX:2.2,repeatY:2.2});
+}
+function b6FaceDecalTexture(){
+ return b6CanvasTexture(512,(ctx,n)=>{
+  ctx.clearRect(0,0,n,n);
+  ctx.lineCap='round';
+  // forehead and brow wrinkles
+  ctx.strokeStyle='rgba(104,63,50,.48)';ctx.lineWidth=7;
+  for(const y of [112,132]){ctx.beginPath();ctx.moveTo(125,y);ctx.quadraticCurveTo(256,y-18,387,y);ctx.stroke()}
+  // cheek / nasolabial structure
+  ctx.strokeStyle='rgba(120,70,54,.35)';ctx.lineWidth=9;
+  ctx.beginPath();ctx.moveTo(178,245);ctx.quadraticCurveTo(150,310,188,372);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(334,245);ctx.quadraticCurveTo(362,310,324,372);ctx.stroke();
+  // one rough diagonal scar
+  ctx.strokeStyle='rgba(132,58,45,.65)';ctx.lineWidth=5;
+  ctx.beginPath();ctx.moveTo(337,170);ctx.lineTo(300,264);ctx.stroke();
+  ctx.strokeStyle='rgba(18,5,4,.75)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(342,168);ctx.lineTo(305,265);ctx.stroke();
+  // lower-face stubble, kept subtle on the blackened face
+  const rng=b6Seeded(1229);ctx.fillStyle='rgba(15,10,9,.72)';
+  for(let i=0;i<420;i++){const x=130+rng()*250,y=300+rng()*125;if(Math.abs(x-256)<132)ctx.fillRect(x,y,1.2,1.2)}
+ },{srgb:true});
+}
+function b6PatchTexture(){
+ return b6CanvasTexture(256,(ctx,n)=>{
+  ctx.clearRect(0,0,n,n);
+  ctx.fillStyle='#67120e';ctx.fillRect(18,58,n-36,n-116);
+  ctx.strokeStyle='#b59c72';ctx.lineWidth=8;ctx.strokeRect(18,58,n-36,n-116);
+  ctx.fillStyle='#d8c6a1';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font='900 82px sans-serif';ctx.fillText('해병',n/2,n/2+3);
+ },{srgb:true});
+}
+
+const b6FaceMap=b6FaceTexture(),b6FaceBumpMap=b6FaceBump();
+const b6FabricMap=b6FabricTexture(),b6FabricBumpMap=b6FabricBump();
+const b6SkinMap=b6NoiseTexture(192,301,'#9b6a50',620,{repeatX:2.5,repeatY:2.5});
+const b6LeatherMap=b6LeatherTexture(),b6MetalMap=b6MetalTexture();
+const b6FaceDecalMap=b6FaceDecalTexture(),b6PatchMap=b6PatchTexture();
+
+const b6Skin=new THREE.MeshStandardMaterial({color:0xffffff,map:b6SkinMap,bumpMap:b6FaceBumpMap,bumpScale:.014,roughness:.8,metalness:.01});
+const b6SkinDark=new THREE.MeshStandardMaterial({color:0x805b48,map:b6SkinMap,bumpMap:b6FaceBumpMap,bumpScale:.012,roughness:.84});
+const b6Face=new THREE.MeshStandardMaterial({color:0xffffff,map:b6FaceMap,bumpMap:b6FaceBumpMap,bumpScale:.028,roughness:.88,metalness:.005});
+const b6FaceDark=new THREE.MeshStandardMaterial({color:0x25201d,map:b6FaceMap,bumpMap:b6FaceBumpMap,bumpScale:.024,roughness:.93,metalness:0});
 const b6EyeSocket=new THREE.MeshStandardMaterial({color:0x210303,roughness:.74,emissive:0x230000,emissiveIntensity:.42});
-const b6Uniform=new THREE.MeshStandardMaterial({color:0x171c16,roughness:.7,metalness:.08,emissive:0x100301,emissiveIntensity:.16});
-const b6UniformTrim=new THREE.MeshStandardMaterial({color:0x30382b,roughness:.66,metalness:.12});
-const b6Boot=new THREE.MeshStandardMaterial({color:0x111310,roughness:.78,metalness:.18});
-const b6Metal=new THREE.MeshStandardMaterial({color:0x726c5d,roughness:.45,metalness:.5});
-const b6TankGreen=new THREE.MeshStandardMaterial({color:0x54783a,roughness:.58,metalness:.38});
-const b6TankGreenDark=new THREE.MeshStandardMaterial({color:0x263d21,roughness:.66,metalness:.42});
-const b6Red=new THREE.MeshStandardMaterial({color:0x8d130d,roughness:.5,metalness:.12,emissive:0x4a0503,emissiveIntensity:.35});
+const b6Uniform=new THREE.MeshStandardMaterial({color:0xffffff,map:b6FabricMap,bumpMap:b6FabricBumpMap,bumpScale:.025,roughness:.82,metalness:.025});
+const b6UniformTrim=new THREE.MeshStandardMaterial({color:0x7f8870,map:b6FabricMap,bumpMap:b6FabricBumpMap,bumpScale:.018,roughness:.76,metalness:.05});
+const b6Boot=new THREE.MeshStandardMaterial({color:0x4d5145,map:b6LeatherMap,bumpMap:b6FabricBumpMap,bumpScale:.012,roughness:.72,metalness:.12});
+const b6Metal=new THREE.MeshStandardMaterial({color:0xffffff,map:b6MetalMap,roughness:.36,metalness:.68});
+const b6TankGreen=new THREE.MeshStandardMaterial({color:0x68894b,map:b6MetalMap,roughness:.48,metalness:.48});
+const b6TankGreenDark=new THREE.MeshStandardMaterial({color:0x3a512e,map:b6MetalMap,roughness:.56,metalness:.52});
+const b6Red=new THREE.MeshStandardMaterial({color:0x8d130d,roughness:.52,metalness:.12,emissive:0x4a0503,emissiveIntensity:.35});
 const b6EyeWhite=new THREE.MeshStandardMaterial({color:0xc8bbaa,roughness:.8});
+const b6FaceDecalMat=new THREE.MeshBasicMaterial({map:b6FaceDecalMap,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,side:THREE.DoubleSide,toneMapped:false});
+const b6PatchMat=new THREE.MeshStandardMaterial({map:b6PatchMap,transparent:true,roughness:.7,metalness:.02});
 const b6EyeGlow=new THREE.MeshBasicMaterial({color:0xff1200,depthTest:false,depthWrite:false,toneMapped:false});
 const b6EyeAura=new THREE.MeshBasicMaterial({color:0xff0500,transparent:true,opacity:.5,depthTest:false,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false});
 const b6EyeFlareMat=new THREE.MeshBasicMaterial({color:0xff1a08,transparent:true,opacity:.86,depthTest:false,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,toneMapped:false});
