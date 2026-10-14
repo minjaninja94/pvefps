@@ -4555,8 +4555,8 @@ function boss6StowAxe(dt){
  boss6AxeRoot.position.lerp(target,1-Math.exp(-dt*14));
  const axis=up.clone().multiplyScalar(.9).addScaledVector(forward,.28).normalize();
  const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),axis);
+ const rollQ=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),-.35);q.multiply(rollQ);
  boss6AxeRoot.quaternion.slerp(q,1-Math.exp(-dt*14));
- boss6AxeRoot.rotateZ(-.35);
  boss6AxeRoot.updateMatrixWorld(true);boss6ResetAxeTrace();
 }
 function boss6UpdateBoomerang(dt,p){
@@ -4714,7 +4714,7 @@ function finishBoss6Attack(recovery=.9){setDanger(false);boss6Grabbed=false;boss
 function hitBoss6(base,posture=12,contact=null){
  if(state.bossHp<=0)return;let dmg=base,pd=posture;[dmg,pd]=bossPunishDamage(dmg,pd);if(state.bossStagger>0){dmg*=1.6;pd*=.2}
  state.bossHp=Math.max(0,state.bossHp-dmg);addBossPosture(pd);state.boss6HitReact=.15;triggerPlayerHitImpact(contact||player.position.clone().lerp(boss.position,.6).add(new THREE.Vector3(0,1.35,0)));
- if(state.bossHp<=0){state.bossState='dead';setDanger(false);clearBoss6Projectiles();flash('황근출 격파',1.0)}
+ if(state.bossHp<=0){state.bossState='dead';boss6Grabbed=false;boss6GrabDamageDone=false;boss6ResetAxeTrace();if(boss6AxeRoot)boss6AxeRoot.visible=false;setDanger(false);clearBoss6Projectiles();flash('황근출 격파',1.0)}
  else if(state.bossPosture>=BOSS_POSTURE_MAX[6]){resetBossPostureAfterBreak(.32);state.bossStagger=1.15;state.bossState='stagger';state.bossTimer=1.15;flash('기열',.32)}
 }
 function updateBoss6(dt){
@@ -4727,7 +4727,7 @@ function updateBoss6(dt){
  if(boss6Visual)boss6Visual.position.y=THREE.MathUtils.lerp(boss6Visual.position.y,boss6VisualBaseY,1-Math.exp(-dt*11));
  if(state.bossHp<=0){boss6Grabbed=false;poseBoss6(dt);syncBoss6Rig(dt);if(boss6AxeRoot)boss6AxeRoot.visible=false;return}
  if(state.boss6Phase===1&&state.bossHp<=state.bossMaxHp*.5){
-  state.boss6Phase=2;state.bossState='b6_roar';state.bossTimer=BOSS6_DUR.b6_roar;boss6Fired.clear();clearBoss6Projectiles();boss6HaloMat.opacity=.22;boss6Aura.color.setHex(0xff1800);
+  state.boss6Phase=2;state.bossState='b6_roar';state.bossTimer=BOSS6_DUR.b6_roar;boss6Fired.clear();boss6Grabbed=false;boss6GrabDamageDone=false;boss6ResetAxeTrace();clearBoss6Projectiles();boss6HaloMat.opacity=.22;boss6Aura.color.setHex(0xff1800);
   spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1.2,0)),4.8,0xff3018,.7);flash('악으로! 깡으로!',1.0);
  }
  if(state.bossStagger>0){setDanger(false);boss6Grabbed=false;state.bossStagger=Math.max(0,state.bossStagger-dt);poseBoss6(dt);syncBoss6Rig(dt);boss6StowAxe(dt);if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.7}return}
@@ -6151,7 +6151,7 @@ function updateCamera(dt){
 function partText(v,broken,label,max=100){return broken?label:(v<max*.45?'손상':'정상')}
 function updateUI(){
  ui.hp.style.width=(clamp(state.hp,0,state.hpMax)/state.hpMax*100)+'%';if(hpLabel)hpLabel.textContent=`HP ${Math.ceil(state.hp)} / ${state.hpMax}`;if(ui.stamina){ui.stamina.style.width=(clamp(state.stamina,0,state.staminaMax)/state.staminaMax*100)+'%';ui.stamina.parentElement.classList.toggle('exhausted',state.exhausted>0)}if(staminaLabel)staminaLabel.textContent=`STAMINA ${Math.ceil(state.stamina)} / ${state.staminaMax}`;ui.posture.style.width=clamp(state.posture,0,100)+'%';ui.bossHp.style.width=(clamp(state.bossHp,0,state.bossMaxHp)/state.bossMaxHp*100)+'%';ui.bossPosture.style.width=(clamp(state.bossPosture,0,BOSS_POSTURE_MAX[BOSS_VARIANT])/BOSS_POSTURE_MAX[BOSS_VARIANT]*100)+'%';
- if(BOSS_VARIANT===2){if(ui.parts)ui.parts.textContent=state.boss2Phase===2?'2페이즈':'현재 · '+({sword:'칼',spear:'창',mage:'술법',frenzy:'난전'}[state.boss2Style]||'칼');}else if(BOSS_VARIANT===3){if(ui.parts)ui.parts.textContent=state.boss3Phase===2?'2페이즈 · 흡혈 강화':'흡혈';}else if(BOSS_VARIANT===4){if(ui.parts)ui.parts.textContent='발도 / 검무 / 돌진';}else if(BOSS_VARIANT===5){if(ui.parts)ui.parts.textContent=state.boss5Phase===2?'2페이즈 · 체술':'도끼';}else if(BOSS_VARIANT===6){if(ui.parts)ui.parts.textContent=state.boss6Phase===2?'2페이즈':'기합포 / 수류탄 / 짜장 / 오도봉고 / 무톤';}else{ui.head.textContent=partText(state.headHp,state.headBroken,'파괴',BOSS1_PART_HP.head);ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴',BOSS1_PART_HP.leg);if(ui.spike){const alive=bossSpikeTargets.filter(s=>!s.broken).length,total=bossSpikeTargets.length;ui.spike.textContent=total?(alive?`${alive}/${total}`:'전부 파괴'):'로딩';}ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단',BOSS1_PART_HP.tail);}if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
+ if(BOSS_VARIANT===2){if(ui.parts)ui.parts.textContent=state.boss2Phase===2?'2페이즈':'현재 · '+({sword:'칼',spear:'창',mage:'술법',frenzy:'난전'}[state.boss2Style]||'칼');}else if(BOSS_VARIANT===3){if(ui.parts)ui.parts.textContent=state.boss3Phase===2?'2페이즈 · 흡혈 강화':'흡혈';}else if(BOSS_VARIANT===4){if(ui.parts)ui.parts.textContent='발도 / 검무 / 돌진';}else if(BOSS_VARIANT===5){if(ui.parts)ui.parts.textContent=state.boss5Phase===2?'2페이즈 · 체술':'도끼';}else if(BOSS_VARIANT===6){if(ui.parts)ui.parts.textContent=state.boss6Phase===2?'2페이즈 · 붉은 도끼 강화':'붉은 배틀엑스 / 기합포 / 수류탄 / 오도봉고 / 무톤';}else{ui.head.textContent=partText(state.headHp,state.headBroken,'파괴',BOSS1_PART_HP.head);ui.leg.textContent=partText(state.legHp,state.legBroken,'파괴',BOSS1_PART_HP.leg);if(ui.spike){const alive=bossSpikeTargets.filter(s=>!s.broken).length,total=bossSpikeTargets.length;ui.spike.textContent=total?(alive?`${alive}/${total}`:'전부 파괴'):'로딩';}ui.tail.textContent=partText(state.tailHp,state.tailBroken,'절단',BOSS1_PART_HP.tail);}if(ui.weapon)ui.weapon.textContent=`${weaponIndex+1}. ${currentWeapon().name} · ${twoHanded?'양손/무기 가드':'한손/방패 가드'}`;
  potionHud.textContent=`R · 포션 ${state.potions}/3`;
 }
 function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}addEventListener('resize',resize);resize();
