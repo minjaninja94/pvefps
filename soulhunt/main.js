@@ -3409,15 +3409,6 @@ function updateBoss5Weapon(){
  // Prefer the real two-hand shaft axis once both hands are in a sane configuration;
  // fall back to the right forearm axis during load/recovery so the poleaxe never flips.
  let axis=weaponArmAxis(lower,hand,bossCombatOffset(0,.12,1));
- const left=boss5RenderBones.leftHand||boss5Bones.leftHand;
- if(left){
-  const rp=new THREE.Vector3(),lp=new THREE.Vector3();hand.getWorldPosition(rp);left.getWorldPosition(lp);
-  const handAxis=lp.sub(rp);
-  if(handAxis.lengthSq()>.04){
-   handAxis.normalize();
-   if(handAxis.dot(axis)>.18)axis.lerp(handAxis,.82).normalize();
-  }
- }
  if(state.bossState==='b5_charge')axis=bossCombatOffset(.12,.2,.96).normalize();
 
  const marks=state.bossState==='b5_chain'?BOSS5_CHAIN_MARKS:state.bossState==='b5_rush'?BOSS5_RUSH_AXE_MARKS:null;
@@ -3431,7 +3422,7 @@ function applyBoss5GripIK(dt){
  boss5WeaponRoot.updateWorldMatrix(true,true);
  const target=boss5WeaponRoot.localToWorld(new THREE.Vector3(0,.78,0));
  const elbow=shoulder.clone().add(bossCombatOffset(-.4*reach,-.3*reach,.18*reach));
- solveArmCCD(boss5Bones,'left',target,elbow,1-Math.exp(-dt*44));
+ solveArmCCD(boss5Bones,'left',target,elbow,1-Math.exp(-dt*28));
 }
 const BOSS5_DUR={b5_chain:2.92,b5_charge:1.68,b5_kick:1.58,b5_upper:1.9,b5_leap:2.18,b5_rush:3.95,b5_roar:2.0};
 const BOSS5_CHAIN_MARKS=[2.24,1.43,.54];
@@ -3441,8 +3432,11 @@ function applyBoss5PrimaryArmIK(dt){
  const shoulder=new THREE.Vector3();boss5Bones.rightUpperArm.getWorldPosition(shoulder);const reach=getArmReach(boss5Bones,'right'),st=state.bossState,t=state.bossTimer;
  let local=bossWalkingHand(new THREE.Vector3(.34,-.42,.22),.02,.042,.012);
  if(st==='b5_chain'){
-  const beat=bossKeyedSlash(t,BOSS5_CHAIN_MARKS,{wind:.38,cut:.18,recover:.3});
-  local.copy(bossSwordHandArc(beat,reach,{windX:.86,cutX:.92,baseY:-.3,liftY:.32,dropY:.24,baseZ:.02,windBack:-.42,forward:1.08,pullback:.5}).multiplyScalar(1/reach));
+  const beat=bossKeyedSlash(t,BOSS5_CHAIN_MARKS,{wind:.42,cut:.2,recover:.34});
+  local.copy(bossSwordHandArc(beat,reach,{
+   windX:.58,cutX:.64,baseY:-.4,liftY:.17,dropY:.12,
+   baseZ:.08,windBack:-.24,forward:.94,pullback:.34,recoverX:.1
+  }).multiplyScalar(1/reach));
  }else if(st==='b5_upper'){
   const p=clamp(1-t/BOSS5_DUR.b5_upper,0,1),wind=motionSmooth(0,.4,p),rise=motionSmooth(.42,.66,p),recover=motionSmooth(.72,1,p);
   local.set(.28-.14*rise,-.62+.96*rise-.3*recover,-.18-.28*wind+1.26*rise-.62*recover);
@@ -3450,9 +3444,12 @@ function applyBoss5PrimaryArmIK(dt){
   const p=clamp(1-t/BOSS5_DUR.b5_leap,0,1),slam=motionSmooth(.52,.78,p),recover=motionSmooth(.82,1,p);
   local.set(.1,.24-.9*slam+.28*recover,.34+1.04*slam-.42*recover);
  }else if(st==='b5_rush'){
-  const beat=bossKeyedSlash(t,BOSS5_RUSH_AXE_MARKS,{wind:.24,cut:.13,recover:.22});
-  if(beat)local.copy(bossSwordHandArc(beat,reach,{windX:.78,cutX:.9,baseY:-.3,liftY:.2,dropY:.18,baseZ:.05,windBack:-.3,forward:1.12,pullback:.44}).multiplyScalar(1/reach));
-  else local.set(.36,-.5,-.02);
+  const beat=bossKeyedSlash(t,BOSS5_RUSH_AXE_MARKS,{wind:.28,cut:.15,recover:.26});
+  if(beat)local.copy(bossSwordHandArc(beat,reach,{
+   windX:.54,cutX:.62,baseY:-.42,liftY:.14,dropY:.1,
+   baseZ:.07,windBack:-.22,forward:.98,pullback:.32,recoverX:.09
+  }).multiplyScalar(1/reach));
+  else local.set(.32,-.48,.08);
  }else if(st==='b5_charge'){
   const p=clamp(1-t/BOSS5_DUR.b5_charge,0,1),drive=motionSmooth(.28,.68,p)*(1-motionSmooth(.78,1,p));
   local.set(.46,-.46,-.18-.2*drive);
@@ -3462,7 +3459,7 @@ function applyBoss5PrimaryArmIK(dt){
  }
  const target=shoulder.clone().add(bossCombatOffset(local.x*reach,local.y*reach,local.z*reach));
  const elbow=shoulder.clone().add(bossCombatOffset(.3*reach,-.32*reach,.18*reach));
- solveArmCCD(boss5Bones,'right',target,elbow,1-Math.exp(-dt*45));
+ solveArmCCD(boss5Bones,'right',target,elbow,1-Math.exp(-dt*30));
 }
 function poseBoss5(dt){
  if(!boss5Ready)return;resetBoss5Pose(dt);
@@ -3478,9 +3475,8 @@ function poseBoss5(dt){
   setBoss5Bone('rightUpperArm',-.58,.06,-.3,10,dt);setBoss5Bone('rightLowerArm',-.56,0,-.16,10,dt);setBoss5Bone('leftUpperArm',-.44,-.04,.28,10,dt);
  }else if(st==='b5_chain'){
   const beat=bossKeyedSlash(t,BOSS5_CHAIN_MARKS,{wind:.38,cut:.18,recover:.3}),cut=beat?.impact||0,side=beat?.side||1,wind=beat?.wind||0;
-  setBoss5Bone('hips',-.05*wind,side*.28*cut,0,24,dt);setBoss5Bone('spine',-.14,side*.52*cut,-side*.15*cut,26,dt);setBoss5Bone('chest',-.04,side*.22*cut,-side*.06*cut,24,dt);
-  setBoss5Bone('rightUpperArm',-.62+.12*wind,.08,side*.38*cut,26,dt);setBoss5Bone('rightLowerArm',-.72+.34*cut,0,-side*.18*cut,27,dt);
-  setBoss5Bone('leftUpperArm',-.54,-.04,-side*.24*cut,24,dt);setBoss5Bone('leftUpperLeg',-.28*wind,0,.04,21,dt);setBoss5Bone('rightUpperLeg',.28*cut,0,-.04,21,dt);
+  setBoss5Bone('hips',-.05*wind,side*.22*cut,0,22,dt);setBoss5Bone('spine',-.14,side*.42*cut,-side*.1*cut,23,dt);setBoss5Bone('chest',-.04,side*.18*cut,-side*.04*cut,22,dt);
+  setBoss5Bone('leftUpperLeg',-.24*wind,0,.04,20,dt);setBoss5Bone('rightUpperLeg',.22*cut,0,-.04,20,dt);
  }else if(st==='b5_charge'){
   const p=clamp(1-t/BOSS5_DUR.b5_charge,0,1),drive=motionSmooth(.28,.72,p)*(1-motionSmooth(.78,1,p));
   setBoss5Bone('spine',-.48*drive,0,0,24,dt);setBoss5Bone('hips',-.12*drive,0,0,22,dt);setBoss5Bone('head',.16*drive,0,0,20,dt);
@@ -3502,17 +3498,15 @@ function poseBoss5(dt){
  }else if(st==='b5_rush'){
   const beat=bossKeyedSlash(t,BOSS5_RUSH_AXE_MARKS,{wind:.24,cut:.13,recover:.22}),cut=beat?.impact||0,side=beat?.side||1;
   const shoulder=t>2.72&&t<3.38?1:0,kick=t>1.48&&t<1.92?Math.sin(clamp((1.92-t)/.44,0,1)*Math.PI):0,elbow=t>.88&&t<1.28?Math.sin(clamp((1.28-t)/.4,0,1)*Math.PI):0;
-  setBoss5Bone('hips',-.1*shoulder,side*.2*cut-.14*kick,0,26,dt);setBoss5Bone('spine',-.38*shoulder-.12*cut,side*.38*cut-.18*elbow,.08*kick,28,dt);
+  setBoss5Bone('hips',-.1*shoulder,side*.16*cut-.14*kick,0,24,dt);setBoss5Bone('spine',-.38*shoulder-.1*cut,side*.3*cut-.18*elbow,.08*kick,25,dt);
   setBoss5Bone('rightUpperLeg',-1.12*kick,0,-.12*kick,30,dt);setBoss5Bone('rightLowerLeg',.26+.3*(1-kick),0,0,28,dt);
-  setBoss5Bone('rightUpperArm',-.72-.22*shoulder+.18*elbow,.06,side*.34*cut-.46*elbow,28,dt);setBoss5Bone('rightLowerArm',-.6+.32*cut-.34*elbow,0,-side*.16*cut,28,dt);
-  setBoss5Bone('leftUpperArm',-.5,-.08,-side*.18*cut,24,dt);
  }else if(st==='b5_roar'){
   setBoss5Bone('spine',.16,0,0,16,dt);setBoss5Bone('chest',.22,0,0,16,dt);setBoss5Bone('leftUpperArm',-.34,-.52,.88,16,dt);setBoss5Bone('rightUpperArm',-.34,.52,-.88,16,dt);
  }
  {
   const marks=st==='b5_chain'?BOSS5_CHAIN_MARKS:st==='b5_rush'?BOSS5_RUSH_AXE_MARKS:null;
   const beat=marks?bossKeyedSlash(t,marks,{wind:st==='b5_chain'?.38:.24,cut:st==='b5_chain'?.18:.13,recover:st==='b5_chain'?.3:.22}):null,side=beat?.side||1,edge=beat?.impact||0;
-  setBoss5Bone('rightHand',-.05,-.03-side*.08*edge,-.08-side*.14*edge,28,dt);setBoss5Bone('leftHand',-.04,.03+side*.03*edge,.06,24,dt);
+  setBoss5Bone('rightHand',-.05,-.02-side*.035*edge,-.07-side*.055*edge,22,dt);setBoss5Bone('leftHand',-.04,.02+side*.015*edge,.05,20,dt);
  }
 }
 function boss5Strike(tag,dmg,posture,ttl=.3,unblockable=false){
@@ -3617,7 +3611,7 @@ function updateBoss5(dt){
   state.boss5Phase=2;state.bossState='b5_roar';state.bossTimer=BOSS5_DUR.b5_roar;boss5Fired.clear();boss5Aura.color.setHex(0xff6b35);boss5HaloMat.opacity=.16;
   spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1,0)),4.2,0xff6832,.55);flash('체술 추가',.7);
  }
- if(state.bossStagger>0){setDanger(false);state.bossStagger=Math.max(0,state.bossStagger-dt);poseBoss5(dt);applyBoss5PrimaryArmIK(dt);applyBoss5GripIK(dt);syncBoss5Rig(dt);updateBoss5Weapon();if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.72}return}
+ if(state.bossStagger>0){setDanger(false);state.bossStagger=Math.max(0,state.bossStagger-dt);poseBoss5(dt);applyBoss5PrimaryArmIK(dt);syncBoss5Rig(dt);updateBoss5Weapon();applyBoss5GripIK(dt);syncBoss5Rig(0);updateBoss5Weapon();if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.72}return}
  state.bossTimer-=dt;updateBossPunish(dt);const d=dist(),liveDir=flatDir(boss.position,player.position),dur=BOSS5_DUR[state.bossState]||1,dir=state.bossState==='idle'?liveDir:bossCommittedDir(dur,state.bossTimer,.55),face=Math.atan2(dir.x,dir.z),p2=state.boss5Phase===2;
  if(state.bossState!=='idle'&&(!['b5_charge','b5_rush','b5_leap'].includes(state.bossState)||state.bossTimer>.55))boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*(p2?11:8.5)));
  if(state.bossState==='idle'){
@@ -3677,7 +3671,7 @@ function updateBoss5(dt){
   if(state.bossTimer<=.72)boss5Once('roar-wave',()=>{spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1.0,0)),4.4,0xff6b35,.62);spawnDustBurst(boss.position,.85)});
   if(state.bossTimer<=0)finishBoss5Attack(.58);
  }
- poseBoss5(dt);applyBossHumanoidLocomotion(setBoss5Bone,boss5Visual,boss5VisualBaseY,dt,{stride:state.boss5Phase===2?1.16:1.05,bob:.035,twist:.065,knee:.72});applyBoss5PrimaryArmIK(dt);updateBoss5Weapon();applyBoss5GripIK(dt);syncBoss5Rig(dt);updateBoss5Weapon();processBoss5PhysicalHits();
+ poseBoss5(dt);applyBossHumanoidLocomotion(setBoss5Bone,boss5Visual,boss5VisualBaseY,dt,{stride:state.boss5Phase===2?1.16:1.05,bob:.035,twist:.065,knee:.72});applyBoss5PrimaryArmIK(dt);syncBoss5Rig(dt);updateBoss5Weapon();applyBoss5GripIK(dt);syncBoss5Rig(0);updateBoss5Weapon();processBoss5PhysicalHits();
 }
 function boss5Once(tag,fn){if(boss5Fired.has(tag))return false;boss5Fired.add(tag);fn?.();return true}
 
