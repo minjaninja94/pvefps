@@ -3899,6 +3899,8 @@ function buildBoss6ProceduralModel(){
  boss6Mesh(chest,new THREE.BoxGeometry(.42,.18,.035),b6Red,[0,.25,-.285]);
  boss6Mesh(chest,new THREE.BoxGeometry(.11,.3,.04),b6Metal,[-.33,.08,-.29],[1,1,1],[0,0,.04]);
  boss6Mesh(chest,new THREE.BoxGeometry(.11,.3,.04),b6Metal,[.33,.08,-.29],[1,1,1],[0,0,-.04]);
+ const marinePatch=boss6Mesh(chest,new THREE.PlaneGeometry(.28,.105),b6PatchMat,[0,.035,-.307]);
+ marinePatch.name='HwangMarineChestPatch';marinePatch.renderOrder=8;
 
  const upperChest=boss6Joint(chest,'upperChest',[0,.36,0]);
  boss6Mesh(upperChest,new THREE.BoxGeometry(1.18,.22,.54),b6UniformTrim,[0,.05,0]);
@@ -3908,6 +3910,16 @@ function buildBoss6ProceduralModel(){
  const head=boss6Joint(neck,'head',[0,.22,-.005]);
  boss6Mesh(head,new THREE.BoxGeometry(.52,.53,.47),b6Face,[0,.1,0],[1.03,1,1]);
  boss6Mesh(head,new THREE.BoxGeometry(.58,.2,.5),b6FaceDark,[0,-.145,-.005],[1,1,1]);
+
+ // Front-face shaping: cheekbones/chin break the old clay-box silhouette without changing the rig.
+ boss6Mesh(head,new THREE.SphereGeometry(.13,16,10),b6Face,[-.17,.015,-.225],[1.05,.68,.34]);
+ boss6Mesh(head,new THREE.SphereGeometry(.13,16,10),b6Face,[.17,.015,-.225],[1.05,.68,.34]);
+ boss6Mesh(head,new THREE.SphereGeometry(.125,16,10),b6FaceDark,[0,-.145,-.22],[1.0,.58,.38]);
+
+ // UV-style front decal: wrinkles, scar and stubble sit on top of the textured skin.
+ const faceDecal=boss6Mesh(head,new THREE.PlaneGeometry(.51,.49),b6FaceDecalMat,[0,.09,-.247]);
+ faceDecal.name='HwangFaceDetailDecal';faceDecal.renderOrder=12;
+
  boss6Mesh(head,new THREE.BoxGeometry(.14,.19,.16),b6FaceDark,[0,.08,-.29]);
  boss6Mesh(head,new THREE.BoxGeometry(.15,.09,.06),b6FaceDark,[-.31,.08,0]);
  boss6Mesh(head,new THREE.BoxGeometry(.15,.09,.06),b6FaceDark,[.31,.08,0]);
