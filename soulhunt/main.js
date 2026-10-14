@@ -4352,7 +4352,7 @@ async function loadBoss6Avatar(){
 function enforceBoss6Visibility(){
  if(BOSS_VARIANT!==6)return;for(const child of boss.children)child.visible=(child===boss6Root);boss6Root.visible=true;if(!boss6Ready)boss6Fallback.visible=true;
 }
-const BOSS6_DUR={b6_kihap:2.45,b6_grenade:2.8,b6_jjajang:2.7,b6_van:2.55,b6_reverse:2.75,b6_support:3.05,b6_enlist:2.35,b6_allfire:5.4,b6_roar:2.25};
+const BOSS6_DUR={b6_axe_overhead:1.72,b6_axe_cleave:1.42,b6_axe_spin:2.05,b6_axe_boomerang:2.5,b6_grab_execute:2.85,b6_kihap:2.45,b6_grenade:2.8,b6_jjajang:2.7,b6_van:2.55,b6_reverse:2.75,b6_support:3.05,b6_enlist:2.35,b6_allfire:5.4,b6_roar:2.25};
 const BOSS6_MARKS={
  b6_kihap:[1.8,1.48,1.16,.84,.52],
  b6_grenade:[2.0,1.35,.7],
@@ -4447,6 +4447,192 @@ function boss6FireEnlist(unblockable=true){
  pulseBoss6TankMuzzle();
  const dir=boss6Aim(1.05);spawnBoss6Shot('enlist',boss6Origin(1.65),dir,{speed:11.5,dmg:18,posture:30,radius:.36,unblockable,pull:true,life:2.0});
 }
+
+function isBoss6AxeState(st=state.bossState){
+ return st==='b6_axe_overhead'||st==='b6_axe_cleave'||st==='b6_axe_spin'||st==='b6_axe_boomerang'||st==='b6_grab_execute';
+}
+function boss6Smooth01(x){x=clamp(x,0,1);return x*x*(3-2*x)}
+function boss6WorldBasis(){
+ const forward=new THREE.Vector3(Math.sin(boss.rotation.y),0,Math.cos(boss.rotation.y)).normalize();
+ const right=new THREE.Vector3(forward.z,0,-forward.x).normalize();
+ return{forward,right,up:new THREE.Vector3(0,1,0)};
+}
+function boss6AxeSegments(){
+ boss6AxeRoot.updateMatrixWorld(true);
+ return{
+  bladeA:combatWorldSegment(boss6AxeRoot,new THREE.Vector3(-.88,2.58,0),new THREE.Vector3(.88,2.68,0)),
+  bladeB:combatWorldSegment(boss6AxeRoot,new THREE.Vector3(-.67,2.18,0),new THREE.Vector3(.67,2.88,0)),
+  shaft:combatWorldSegment(boss6AxeRoot,new THREE.Vector3(0,.52,0),new THREE.Vector3(0,2.32,0))
+ };
+}
+function boss6ResetAxeTrace(){boss6AxeTrace.valid=false}
+function boss6StoreAxeTrace(seg){
+ boss6AxeTrace.a0.copy(seg.bladeA.base);boss6AxeTrace.a1.copy(seg.bladeA.tip);
+ boss6AxeTrace.b0.copy(seg.bladeB.base);boss6AxeTrace.b1.copy(seg.bladeB.tip);
+ boss6AxeTrace.shaft0.copy(seg.shaft.base);boss6AxeTrace.shaft1.copy(seg.shaft.tip);
+ boss6AxeTrace.valid=true;
+}
+function boss6AxeContact(caps,seg,radius=.27){
+ if(!boss6AxeTrace.valid)return null;
+ const hits=[
+  combatSweptBladeContact(boss6AxeTrace.a0,boss6AxeTrace.a1,seg.bladeA.base,seg.bladeA.tip,caps,radius),
+  combatSweptBladeContact(boss6AxeTrace.b0,boss6AxeTrace.b1,seg.bladeB.base,seg.bladeB.tip,caps,radius),
+  combatSweptBladeContact(boss6AxeTrace.shaft0,boss6AxeTrace.shaft1,seg.shaft.base,seg.shaft.tip,caps,.11)
+ ].filter(Boolean).sort((a,b)=>a.distance-b.distance);
+ return hits[0]||null;
+}
+function boss6AxePrimaryPose(st,p){
+ const {forward,right,up}=boss6WorldBasis(),side=(state.boss6AttackCount&1)?1:-1;
+ const base=boss.position.clone().addScaledVector(right,.42).addScaledVector(forward,.18).addScaledVector(up,1.52);
+ let grip=base.clone(),axis=up.clone().multiplyScalar(.8).addScaledVector(forward,.28).normalize();
+
+ if(st==='b6_axe_overhead'){
+  const wind=boss6Smooth01(p/.4),cut=boss6Smooth01((p-.4)/.25),recover=boss6Smooth01((p-.7)/.25);
+  grip.addScaledVector(up,.82*wind-.76*cut+.22*recover).addScaledVector(forward,-.42*wind+1.02*cut-.34*recover);
+  axis=up.clone().multiplyScalar(.96-1.02*cut).addScaledVector(forward,-.22*wind+1.22*cut-.38*recover).addScaledVector(right,-.08).normalize();
+ }else if(st==='b6_axe_cleave'){
+  const wind=boss6Smooth01(p/.3),cut=boss6Smooth01((p-.3)/.34),recover=boss6Smooth01((p-.7)/.24);
+  grip.addScaledVector(right,side*(.62*wind-1.08*cut+.28*recover)).addScaledVector(forward,-.25*wind+.9*cut-.25*recover).addScaledVector(up,.22*wind-.08*cut);
+  axis=forward.clone().multiplyScalar(.45+.58*cut).addScaledVector(right,side*(.9-1.75*cut+.45*recover)).addScaledVector(up,.16).normalize();
+ }else if(st==='b6_axe_spin'){
+  const wind=boss6Smooth01(p/.2),spin=boss6Smooth01((p-.2)/.63),a=side*spin*Math.PI*2;
+  grip=boss.position.clone().addScaledVector(up,1.5).addScaledVector(forward,.35).addScaledVector(right,.3);
+  axis=forward.clone().multiplyScalar(Math.cos(a)).addScaledVector(right,Math.sin(a)).addScaledVector(up,.18+.2*wind).normalize();
+ }else if(st==='b6_axe_boomerang'){
+  const wind=boss6Smooth01(p/.32);
+  grip.addScaledVector(right,side*.58*wind).addScaledVector(forward,-.42*wind).addScaledVector(up,.38*wind);
+  axis=forward.clone().multiplyScalar(.35).addScaledVector(right,side*.8).addScaledVector(up,.35).normalize();
+ }else if(st==='b6_grab_execute'){
+  const caught=boss6Grabbed;
+  const raise=boss6Smooth01((p-.42)/.28),chop=boss6Smooth01((p-.72)/.15);
+  grip=boss.position.clone().addScaledVector(right,.48).addScaledVector(forward,caught?.2:.32).addScaledVector(up,1.48+.85*raise-.95*chop);
+  axis=up.clone().multiplyScalar(.9-1.15*chop).addScaledVector(forward,.18+1.15*chop).addScaledVector(right,-.08).normalize();
+ }
+ return{grip,axis};
+}
+function boss6PlaceAxeAtRightHand(axis,dt){
+ if(!boss6AxeRoot)return;
+ const hand=boss6RenderBones.rightHand||boss6Bones.rightHand;
+ if(!hand)return;
+ const hp=new THREE.Vector3();hand.getWorldPosition(hp);
+ const desiredQ=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),axis.clone().normalize());
+ const ease=1-Math.exp(-dt*34);
+ if(!boss6AxeRoot.userData.gripReady){boss6AxeRoot.quaternion.copy(desiredQ);boss6AxeRoot.userData.gripReady=true}
+ else boss6AxeRoot.quaternion.slerp(desiredQ,ease);
+ const actualAxis=new THREE.Vector3(0,1,0).applyQuaternion(boss6AxeRoot.quaternion).normalize();
+ boss6AxeRoot.position.copy(hp).addScaledVector(actualAxis,-.34);
+ boss6AxeRoot.updateMatrixWorld(true);
+}
+function boss6ApplyAxeArms(dt,st,p,pose){
+ const rightUpper=boss6Bones.rightUpperArm,rightHand=boss6Bones.rightHand;
+ if(rightUpper&&rightHand){
+  const shoulder=new THREE.Vector3();rightUpper.getWorldPosition(shoulder);
+  const reach=getArmReach(boss6Bones,'right');
+  const elbow=shoulder.clone().add(bossCombatOffset(.3*reach,-.31*reach,.18*reach));
+  solveArmCCD(boss6Bones,'right',pose.grip,elbow,1-Math.exp(-dt*30));
+ }
+ syncBoss6Rig(0);boss6PlaceAxeAtRightHand(pose.axis,dt);
+
+ const leftUpper=boss6Bones.leftUpperArm,leftHand=boss6Bones.leftHand;
+ if(leftUpper&&leftHand){
+  const shoulder=new THREE.Vector3();leftUpper.getWorldPosition(shoulder),reach=getArmReach(boss6Bones,'left');
+  let target;
+  if(st==='b6_grab_execute'&&boss6Grabbed){
+   target=player.position.clone().add(new THREE.Vector3(0,1.28,0));
+  }else{
+   target=boss6AxeRoot.localToWorld(new THREE.Vector3(0,1.14,0));
+  }
+  const elbow=shoulder.clone().add(bossCombatOffset(-.32*reach,-.3*reach,.18*reach));
+  solveArmCCD(boss6Bones,'left',target,elbow,1-Math.exp(-dt*28));
+ }
+ syncBoss6Rig(0);boss6PlaceAxeAtRightHand(pose.axis,dt);
+}
+function boss6StowAxe(dt){
+ if(!boss6AxeRoot)return;
+ boss6AxeRoot.visible=state.bossHp>0;
+ const {forward,right,up}=boss6WorldBasis();
+ const target=boss.position.clone().addScaledVector(right,.7).addScaledVector(forward,-.34).addScaledVector(up,1.35);
+ boss6AxeRoot.position.lerp(target,1-Math.exp(-dt*14));
+ const axis=up.clone().multiplyScalar(.9).addScaledVector(forward,.28).normalize();
+ const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),axis);
+ boss6AxeRoot.quaternion.slerp(q,1-Math.exp(-dt*14));
+ boss6AxeRoot.rotateZ(-.35);
+ boss6AxeRoot.updateMatrixWorld(true);boss6ResetAxeTrace();
+}
+function boss6UpdateBoomerang(dt,p){
+ if(!boss6AxeRoot)return;
+ const {forward,right,up}=boss6WorldBasis(),side=(state.boss6AttackCount&1)?1:-1;
+ if(p<.34){
+  const pose=boss6AxePrimaryPose('b6_axe_boomerang',p);boss6ApplyAxeArms(dt,'b6_axe_boomerang',p,pose);boss6ResetAxeTrace();return;
+ }
+ const flight=clamp((p-.34)/.54,0,1),out=Math.sin(flight*Math.PI);
+ const center=boss.position.clone().addScaledVector(up,1.48);
+ const target=center.addScaledVector(forward,1.2+7.2*out).addScaledVector(right,side*Math.sin(flight*Math.PI*2)*2.0);
+ boss6AxeRoot.position.lerp(target,1-Math.exp(-dt*30));
+ const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),forward.clone().addScaledVector(up,.18).normalize());
+ boss6AxeRoot.quaternion.copy(q);boss6AxeRoot.rotateY(flight*Math.PI*8*side);boss6AxeRoot.rotateZ(flight*Math.PI*10);
+ boss6AxeRoot.updateMatrixWorld(true);
+
+ const caps=combatHumanoidCapsules(playerVrmBones,player,PLAYER_VISUAL_HEIGHT),seg=boss6AxeSegments(),hit=boss6AxeContact(caps,seg,.29);
+ if(hit){
+  const tag=flight<.52?'boomOutHit':'boomBackHit';
+  if(boss6Once(tag,()=>{})){spawnSparks(hit.point,16,6);hurtPlayer(27,32,false);playBoss6AxeWhoosh(1.7)}
+ }
+ boss6StoreAxeTrace(seg);
+}
+function boss6UpdateGrab(dt,p){
+ const {forward}=boss6WorldBasis();
+ if(!boss6Grabbed&&p>.18&&p<.42&&dist()<2.7&&state.invuln<=0&&!state.dead){
+  boss6Grabbed=true;boss6GrabDamageDone=false;
+  flash('황룡기열!!',.38);playBoss6Voice('황룡기열!','execute');setDanger(true);
+ }
+ if(!boss6Grabbed)return;
+ const hold=boss.position.clone().addScaledVector(forward,1.28);hold.y=player.position.y;
+ player.position.lerp(hold,Math.min(1,dt*18));player.rotation.y=lerpAngle(player.rotation.y,boss.rotation.y+Math.PI,1-Math.exp(-dt*18));
+ state.stagger=Math.max(state.stagger,.16);state.stamina=Math.max(0,state.stamina-dt*8);
+ if(playerVrmBones?.spine)setPlayerVrmBone('spine',.42,0,.08,32,dt);
+ if(playerVrmBones?.head)setPlayerVrmBone('head',.26,0,-.08,32,dt);
+
+ if(p>.74&&!boss6GrabDamageDone){
+  boss6GrabDamageDone=true;state.invuln=0;state.damageGrace=0;
+  const neck=player.position.clone().add(new THREE.Vector3(0,1.62,0));
+  spawnImpactBurst(neck,2.5,true);spawnSparks(neck,22,7.5);playImpactSound('heavy',2);playBoss6AxeWhoosh(2.1);
+  hurtPlayer(74,82,true);
+  if(state.dead&&playerVrmBones?.head)playerVrmBones.head.scale.setScalar(.04);
+ }
+ if(p>.86)boss6Grabbed=false;
+}
+function updateBoss6BattleAxe(dt){
+ if(!boss6AxeRoot||!boss6Ready)return;
+ const st=state.bossState;
+ if(!isBoss6AxeState(st)){boss6StowAxe(dt);return}
+ boss6AxeRoot.visible=true;
+ const dur=BOSS6_DUR[st]||1,p=clamp(1-state.bossTimer/dur,0,1);
+
+ if(st==='b6_axe_boomerang'){boss6UpdateBoomerang(dt,p);return}
+ const pose=boss6AxePrimaryPose(st,p);boss6ApplyAxeArms(dt,st,p,pose);
+
+ if(st==='b6_grab_execute'){
+  boss6UpdateGrab(dt,p);boss6ResetAxeTrace();return;
+ }
+
+ const windows={
+  b6_axe_overhead:[.38,.7,38,48],
+  b6_axe_cleave:[.3,.72,31,38],
+  b6_axe_spin:[.25,.84,28,35]
+ };
+ const w=windows[st],seg=boss6AxeSegments(),caps=combatHumanoidCapsules(playerVrmBones,player,PLAYER_VISUAL_HEIGHT);
+ if(w&&p>=w[0]&&p<=w[1]){
+  const hit=boss6AxeContact(caps,seg,st==='b6_axe_spin'?.31:.285);
+  if(hit&&boss6Once(st+'Hit',()=>{})){
+   spawnSparks(hit.point,18,6.5);playBoss6AxeWhoosh(st==='b6_axe_overhead'?2:1.6);
+   hurtPlayer(w[2],w[3],st==='b6_axe_overhead');
+   if(st==='b6_axe_overhead')spawnDustBurst(hit.point,.48);
+  }
+ }
+ boss6StoreAxeTrace(seg);
+}
+
 function boss6Once(tag,fn){if(boss6Fired.has(tag))return false;boss6Fired.add(tag);fn?.();return true}
 function poseBoss6(dt){
  if(!boss6Ready)return;resetBoss6Pose(dt);const st=state.bossState,t=state.bossTimer,hit=state.boss6HitReact>0?Math.sin((state.boss6HitReact/.15)*Math.PI):0;
