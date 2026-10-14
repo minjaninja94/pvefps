@@ -4584,17 +4584,41 @@ function boss6ApplyAxeArms(dt,st,p,pose){
  }
  syncBoss6Rig(0);boss6PlaceAxeAtRightHand(pose.axis,dt);
 }
-function boss6StowAxe(dt){
+function boss6ShoulderAxe(dt){
  if(!boss6AxeRoot)return;
  boss6AxeRoot.visible=state.bossHp>0;
  const {forward,right,up}=boss6WorldBasis();
- const target=boss.position.clone().addScaledVector(right,.7).addScaledVector(forward,-.34).addScaledVector(up,1.35);
- boss6AxeRoot.position.lerp(target,1-Math.exp(-dt*14));
- const axis=up.clone().multiplyScalar(.9).addScaledVector(forward,.28).normalize();
+ const target=boss.position.clone().addScaledVector(right,.58).addScaledVector(forward,-.28).addScaledVector(up,1.42);
+ const axis=up.clone().multiplyScalar(.86).addScaledVector(forward,.34).addScaledVector(right,-.12).normalize();
  const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),axis);
- const rollQ=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),-.35);q.multiply(rollQ);
- boss6AxeRoot.quaternion.slerp(q,1-Math.exp(-dt*14));
+ const rollQ=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),-.42);q.multiply(rollQ);
+ boss6AxeRoot.position.lerp(target,1-Math.exp(-dt*18));boss6AxeRoot.quaternion.slerp(q,1-Math.exp(-dt*18));
  boss6AxeRoot.updateMatrixWorld(true);boss6ResetAxeTrace();
+}
+function boss6CarryAxe(dt){
+ if(!boss6AxeRoot||!boss6Ready)return;
+ boss6AxeRoot.visible=state.bossHp>0;
+ const {forward,right,up}=boss6WorldBasis();
+ const gait=bossWalkState.active?Math.sin(bossWalkState.phase):0;
+ const grip=boss.position.clone().addScaledVector(right,.43).addScaledVector(forward,.24+.035*gait).addScaledVector(up,1.25+.025*Math.abs(gait));
+ const axis=up.clone().multiplyScalar(.78).addScaledVector(forward,-.22).addScaledVector(right,-.34).normalize();
+
+ const ru=boss6Bones.rightUpperArm,rh=boss6Bones.rightHand;
+ if(ru&&rh){
+  const shoulder=new THREE.Vector3();ru.getWorldPosition(shoulder),reach=getArmReach(boss6Bones,'right');
+  const elbow=shoulder.clone().add(bossCombatOffset(.24*reach,-.32*reach,.12*reach));
+  solveArmCCD(boss6Bones,'right',grip,elbow,1-Math.exp(-dt*24));
+ }
+ syncBoss6Rig(0);boss6PlaceAxeAtRightHand(axis,dt);
+
+ const lu=boss6Bones.leftUpperArm,lh=boss6Bones.leftHand;
+ if(lu&&lh){
+  const shoulder=new THREE.Vector3();lu.getWorldPosition(shoulder),reach=getArmReach(boss6Bones,'left');
+  const secondary=boss6AxeRoot.localToWorld(new THREE.Vector3(0,1.02,0));
+  const elbow=shoulder.clone().add(bossCombatOffset(-.2*reach,-.3*reach,.16*reach));
+  solveArmCCD(boss6Bones,'left',secondary,elbow,1-Math.exp(-dt*22));
+ }
+ syncBoss6Rig(0);boss6PlaceAxeAtRightHand(axis,dt);boss6ResetAxeTrace();
 }
 function boss6UpdateBoomerang(dt,p){
  if(!boss6AxeRoot)return;
@@ -4642,7 +4666,10 @@ function boss6UpdateGrab(dt,p){
 function updateBoss6BattleAxe(dt){
  if(!boss6AxeRoot||!boss6Ready)return;
  const st=state.bossState;
- if(!isBoss6AxeState(st)){boss6StowAxe(dt);return}
+ if(!isBoss6AxeState(st)){
+  if(st==='idle')boss6CarryAxe(dt);else boss6ShoulderAxe(dt);
+  return;
+ }
  boss6AxeRoot.visible=true;
  const dur=BOSS6_DUR[st]||1,p=clamp(1-state.bossTimer/dur,0,1);
 
@@ -4678,7 +4705,7 @@ function poseBoss6(dt){
   const r=clamp(state.bossPunish/1.8,0,1);setBoss6Bone('hips',.1*r,-.06*r,0,18,dt);setBoss6Bone('spine',-.28*r,.08*r,.03*r,20,dt);setBoss6Bone('rightUpperArm',-.4,.02,-.28,18,dt);setBoss6Bone('leftUpperArm',-.38,-.02,.26,18,dt);
  }else if(st==='idle'){
   const b=Math.sin(state.time*1.3);setBoss6Bone('hips',0,.025*b,.03*b,9,dt);setBoss6Bone('spine',-.04,.015*b,-.025*b,9,dt);
-  setBoss6Bone('leftUpperArm',-.48,-.06,.38,11,dt);setBoss6Bone('rightUpperArm',-.48,.06,-.38,11,dt);setBoss6Bone('leftLowerArm',-.38,0,.08,11,dt);setBoss6Bone('rightLowerArm',-.38,0,-.08,11,dt);
+  setBoss6Bone('leftUpperArm',-.62,-.18,.46,15,dt);setBoss6Bone('rightUpperArm',-.5,.12,-.34,15,dt);setBoss6Bone('leftLowerArm',-.52,0,.12,16,dt);setBoss6Bone('rightLowerArm',-.44,0,-.08,16,dt);
  }else if(st==='b6_kihap'){
   const p=clamp(1-t/BOSS6_DUR.b6_kihap,0,1),pulse=Math.sin(p*Math.PI*5)*.12;setBoss6Bone('spine',-.22+pulse,0,0,24,dt);setBoss6Bone('chest',.14,0,0,22,dt);
   setBoss6Bone('leftUpperArm',-.9,-.12,.28,26,dt);setBoss6Bone('rightUpperArm',-.9,.12,-.28,26,dt);setBoss6Bone('leftLowerArm',-.18,0,0,26,dt);setBoss6Bone('rightLowerArm',-.18,0,0,26,dt);
@@ -4754,6 +4781,37 @@ function hitBoss6(base,posture=12,contact=null){
  if(state.bossHp<=0){state.bossState='dead';boss6Grabbed=false;boss6GrabDamageDone=false;boss6ResetAxeTrace();if(boss6AxeRoot)boss6AxeRoot.visible=false;setDanger(false);clearBoss6Projectiles();flash('황근출 격파',1.0)}
  else if(state.bossPosture>=BOSS_POSTURE_MAX[6]){resetBossPostureAfterBreak(.32);state.bossStagger=1.15;state.bossState='stagger';state.bossTimer=1.15;flash('기열',.32)}
 }
+function applyBoss6HeavyLocomotion(dt){
+ if(!bossWalkState.ready){bossWalkState.prev.copy(boss.position);bossWalkState.ready=true;return}
+ const delta=boss.position.clone().sub(bossWalkState.prev);delta.y=0;
+ const speed=delta.length()/Math.max(dt,.001);bossWalkState.prev.copy(boss.position);
+ const active=state.bossHp>0&&state.bossState==='idle'&&state.bossPunish<=0&&speed>.12;
+ bossWalkState.active=active;bossWalkState.speed=speed;
+ if(!active){
+  if(boss6Visual&&Number.isFinite(boss6VisualBaseY))boss6Visual.position.y=THREE.MathUtils.lerp(boss6Visual.position.y,boss6VisualBaseY,1-Math.exp(-dt*16));
+  return;
+ }
+ const fwd=new THREE.Vector3(Math.sin(boss.rotation.y),0,Math.cos(boss.rotation.y)),sign=delta.dot(fwd)>=0?1:-1;
+ const freq=clamp(4.6+speed*.46,4.8,7.4);bossWalkState.phase+=dt*freq*sign;
+ const p=bossWalkState.phase,sin=Math.sin(p),cos=Math.cos(p),amp=clamp(.22+speed*.024,.24,.36);
+ const leftLift=Math.max(0,cos),rightLift=Math.max(0,-cos);
+ // Heavy planted steps: smaller hip twist, larger knee bend, almost no bouncing.
+ setBoss6Bone('hips',-.055,-sin*.025,sin*.018,18,dt);
+ setBoss6Bone('spine',-.035,sin*.035,-sin*.014,16,dt);
+ setBoss6Bone('chest',.01,-sin*.018,0,15,dt);
+ setBoss6Bone('head',.01,sin*.008,0,14,dt);
+ setBoss6Bone('leftUpperLeg',amp*sin,0,.014,22,dt);
+ setBoss6Bone('rightUpperLeg',-amp*sin,0,-.014,22,dt);
+ setBoss6Bone('leftLowerLeg',leftLift*.58,0,0,24,dt);
+ setBoss6Bone('rightLowerLeg',rightLift*.58,0,0,24,dt);
+ setBoss6Bone('leftFoot',-amp*sin*.22-leftLift*.1,0,0,20,dt);
+ setBoss6Bone('rightFoot',amp*sin*.22-rightLift*.1,0,0,20,dt);
+ if(boss6Visual&&Number.isFinite(boss6VisualBaseY)){
+  const bob=.012*(1-Math.cos(p*2))*.5;
+  boss6Visual.position.y=THREE.MathUtils.lerp(boss6Visual.position.y,boss6VisualBaseY+bob,1-Math.exp(-dt*18));
+ }
+}
+
 function updateBoss6(dt){
  enforceBoss6Visibility();updateBoss6Projectiles(dt);updateBoss6SupportSquad(dt);boss6TankRecoil=Math.max(0,boss6TankRecoil-dt);if(boss6TankMuzzleFlash)boss6TankMuzzleFlash.visible=boss6TankRecoil>.055;state.boss6HitReact=Math.max(0,state.boss6HitReact-dt);boss6Halo.rotation.z+=dt*(state.boss6Phase===2?2.0:.9);boss6Aura.intensity=(state.boss6Phase===2?15:11)+Math.sin(state.time*7)*1.0;
  const eyePulse=1+Math.sin(state.time*10.5)*.14+(state.boss6Phase===2?.12:0);
@@ -4767,7 +4825,7 @@ function updateBoss6(dt){
   state.boss6Phase=2;state.bossState='b6_roar';state.bossTimer=BOSS6_DUR.b6_roar;boss6Fired.clear();boss6Grabbed=false;boss6GrabDamageDone=false;boss6ResetAxeTrace();clearBoss6Projectiles();boss6HaloMat.opacity=.22;boss6Aura.color.setHex(0xff1800);
   spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1.2,0)),4.8,0xff3018,.7);flash('악으로! 깡으로!',1.0);
  }
- if(state.bossStagger>0){setDanger(false);boss6Grabbed=false;state.bossStagger=Math.max(0,state.bossStagger-dt);poseBoss6(dt);syncBoss6Rig(dt);boss6StowAxe(dt);if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.7}return}
+ if(state.bossStagger>0){setDanger(false);boss6Grabbed=false;state.bossStagger=Math.max(0,state.bossStagger-dt);poseBoss6(dt);syncBoss6Rig(dt);boss6ShoulderAxe(dt);if(state.bossStagger<=0){state.bossState='idle';state.bossTimer=.7}return}
  state.bossTimer-=dt;updateBossPunish(dt);const liveDir=flatDir(boss.position,player.position),d=dist(),dur=BOSS6_DUR[state.bossState]||1,dir=state.bossState==='idle'?liveDir:bossCommittedDir(dur,state.bossTimer,.58),face=Math.atan2(dir.x,dir.z),p2=state.boss6Phase===2;
  if(state.bossState!=='idle')boss.rotation.y=lerpAngle(boss.rotation.y,face,1-Math.exp(-dt*(p2?12:9)));
  if(state.bossState==='idle'){
@@ -4825,7 +4883,7 @@ function updateBoss6(dt){
   if(state.bossTimer<=.8)boss6Once('roarburst',()=>{spawnBoss2Pulse(boss.position.clone().add(new THREE.Vector3(0,1.1,0)),5.2,0xff2718,.72);for(let i=0;i<10;i++)boss6FireKihap(i%5)});
   if(state.bossTimer<=0)finishBoss6Attack(.7);
  }
- poseBoss6(dt);applyBossHumanoidLocomotion(setBoss6Bone,boss6Visual,boss6VisualBaseY,dt,{stride:1.08,bob:.036,twist:.06,knee:.7});syncBoss6Rig(dt);updateBoss6BattleAxe(dt);
+ poseBoss6(dt);applyBoss6HeavyLocomotion(dt);syncBoss6Rig(dt);updateBoss6BattleAxe(dt);
 }
 
 function flash(t,d=.35){ui.msg.textContent=t;ui.msg.style.opacity='1';clearTimeout(flash.t);flash.t=setTimeout(()=>ui.msg.style.opacity='0',d*1000)}
