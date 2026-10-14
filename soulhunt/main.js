@@ -3891,23 +3891,24 @@ function boss6Joint(parent,name,pos=[0,0,0]){
  const g=new THREE.Group();g.name='HwangGeunchul_'+name;g.position.set(...pos);parent.add(g);cacheBoss6Bone(name,g);boss6RenderBones[name]=g;return g;
 }
 function createBoss6BattleAxe(){
- const root=new THREE.Group();root.name='HwangRedBattleAxe';
- const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.065,.085,2.75,12),b6AxeGrip);
- shaft.position.y=1.15;shaft.castShadow=true;root.add(shaft);
- const butt=new THREE.Mesh(new THREE.CylinderGeometry(.115,.09,.22,10),b6AxeRed);butt.position.y=-.25;butt.castShadow=true;root.add(butt);
- const collar=new THREE.Mesh(new THREE.CylinderGeometry(.14,.11,.28,10),b6AxeRed);collar.position.y=2.42;collar.castShadow=true;root.add(collar);
+ const root=new THREE.Group();root.name='HwangRedOneHandBattleAxe';
+ // One-handed battle axe: short haft, heavy red double blade, grip origin at the right fist.
+ const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.052,.068,1.62,12),b6AxeGrip);
+ shaft.position.y=.64;shaft.castShadow=true;root.add(shaft);
+ const butt=new THREE.Mesh(new THREE.CylinderGeometry(.095,.072,.18,10),b6AxeRed);butt.position.y=-.18;butt.castShadow=true;root.add(butt);
+ const collar=new THREE.Mesh(new THREE.CylinderGeometry(.115,.09,.2,10),b6AxeRed);collar.position.y=1.37;collar.castShadow=true;root.add(collar);
 
  const bladeShape=new THREE.Shape();
- bladeShape.moveTo(.02,2.18);bladeShape.lineTo(.58,2.12);bladeShape.lineTo(.92,2.34);
- bladeShape.lineTo(.82,2.68);bladeShape.lineTo(.42,2.9);bladeShape.lineTo(.02,2.72);bladeShape.closePath();
- const bladeGeo=new THREE.ExtrudeGeometry(bladeShape,{depth:.13,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.035,bevelThickness:.025});
- bladeGeo.translate(0,0,-.065);
+ bladeShape.moveTo(.02,1.18);bladeShape.lineTo(.43,1.15);bladeShape.lineTo(.66,1.29);
+ bladeShape.lineTo(.61,1.52);bladeShape.lineTo(.34,1.67);bladeShape.lineTo(.02,1.56);bladeShape.closePath();
+ const bladeGeo=new THREE.ExtrudeGeometry(bladeShape,{depth:.12,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.03,bevelThickness:.022});
+ bladeGeo.translate(0,0,-.06);
  const rightBlade=new THREE.Mesh(bladeGeo,b6AxeRed);rightBlade.castShadow=true;root.add(rightBlade);
  const leftBlade=new THREE.Mesh(bladeGeo,b6AxeRed);leftBlade.scale.x=-1;leftBlade.castShadow=true;root.add(leftBlade);
 
- const edgeGeo=new THREE.BoxGeometry(1.78,.055,.18);
- const edge=new THREE.Mesh(edgeGeo,b6AxeEdge);edge.position.set(0,2.62,0);edge.rotation.z=.03;edge.castShadow=true;root.add(edge);
- const spike=new THREE.Mesh(new THREE.ConeGeometry(.105,.48,10),b6AxeEdge);spike.position.set(0,3.02,0);spike.castShadow=true;root.add(spike);
+ const edgeGeo=new THREE.BoxGeometry(1.27,.05,.16);
+ const edge=new THREE.Mesh(edgeGeo,b6AxeEdge);edge.position.set(0,1.48,0);edge.rotation.z=.025;edge.castShadow=true;root.add(edge);
+ const spike=new THREE.Mesh(new THREE.ConeGeometry(.085,.34,10),b6AxeEdge);spike.position.set(0,1.78,0);spike.castShadow=true;root.add(spike);
  root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
  return root;
 }
@@ -4596,9 +4597,9 @@ function boss6WorldBasis(){
 function boss6AxeSegments(){
  boss6AxeRoot.updateMatrixWorld(true);
  return{
-  bladeA:combatWorldSegment(boss6AxeRoot,new THREE.Vector3(-.88,2.58,0),new THREE.Vector3(.88,2.68,0)),
-  bladeB:combatWorldSegment(boss6AxeRoot,new THREE.Vector3(-.67,2.18,0),new THREE.Vector3(.67,2.88,0)),
-  shaft:combatWorldSegment(boss6AxeRoot,new THREE.Vector3(0,.52,0),new THREE.Vector3(0,2.32,0))
+  bladeA:combatWorldSegment(boss6AxeRoot,new THREE.Vector3(-.63,1.44,0),new THREE.Vector3(.63,1.52,0)),
+  bladeB:combatWorldSegment(boss6AxeRoot,new THREE.Vector3(-.48,1.18,0),new THREE.Vector3(.48,1.66,0)),
+  shaft:combatWorldSegment(boss6AxeRoot,new THREE.Vector3(0,.02,0),new THREE.Vector3(0,1.34,0))
  };
 }
 function boss6ResetAxeTrace(){boss6AxeTrace.valid=false}
@@ -4646,56 +4647,55 @@ function boss6AxePrimaryPose(st,p){
  }
  return{grip,axis};
 }
-function boss6ApplyAxeArms(dt,st,p,pose){
+function boss6PlaceOneHandAxe(pose,alpha=1){
+ if(!boss6AxeRoot||!pose)return;
+ // Keep the weapon in world space. The right hand follows the grip; the left hand is never constrained to the haft.
+ boss6DetachAxeToScene();
+ const a=clamp(alpha,0,1),axis=pose.axis.clone().normalize();
+ boss6AxeRoot.position.lerp(pose.grip,a);
+ const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),axis);
+ boss6AxeRoot.quaternion.slerp(q,a);
+ boss6AxeRoot.updateMatrixWorld(true);
+}
+function boss6DriveRightHandToGrip(dt,grip,speed=24){
  const rightUpper=boss6Bones.rightUpperArm,rightHand=boss6Bones.rightHand;
- if(rightUpper&&rightHand){
-  const shoulder=new THREE.Vector3();rightUpper.getWorldPosition(shoulder);
-  const reach=getArmReach(boss6Bones,'right');
-  const elbow=shoulder.clone().add(bossCombatOffset(.26*reach,-.3*reach,.15*reach));
-  solveArmCCD(boss6Bones,'right',pose.grip,elbow,1-Math.exp(-dt*24));
- }
+ if(!rightUpper||!rightHand)return;
+ const shoulder=new THREE.Vector3();rightUpper.getWorldPosition(shoulder);
+ const reach=getArmReach(boss6Bones,'right');
+ const elbow=shoulder.clone().add(bossCombatOffset(.26*reach,-.3*reach,.15*reach));
+ solveArmCCD(boss6Bones,'right',grip,elbow,1-Math.exp(-dt*speed));
+}
+function boss6ApplyAxeArms(dt,st,p,pose){
+ boss6DriveRightHandToGrip(dt,pose.grip,26);
  syncBoss6Rig(0);
- const mode=st==='b6_axe_overhead'?'overhead':st==='b6_axe_cleave'?'cleave':st==='b6_axe_spin'?'spin':st==='b6_grab_execute'?'execute':'carry';
- boss6SetHeldAxeLocal(mode,1-Math.exp(-dt*30));
-
- // Secondary hand follows one fixed point on the shaft. It never controls weapon direction.
- const leftUpper=boss6Bones.leftUpperArm,leftHand=boss6Bones.leftHand;
- if(leftUpper&&leftHand){
-  const shoulder=new THREE.Vector3();leftUpper.getWorldPosition(shoulder),reach=getArmReach(boss6Bones,'left');
-  const target=(st==='b6_grab_execute'&&boss6Grabbed)
-   ?player.position.clone().add(new THREE.Vector3(0,1.28,0))
-   :boss6AxeRoot.localToWorld(new THREE.Vector3(0,1.02,0));
-  const elbow=shoulder.clone().add(bossCombatOffset(-.25*reach,-.28*reach,.15*reach));
-  solveArmCCD(boss6Bones,'left',target,elbow,1-Math.exp(-dt*22));
- }
- syncBoss6Rig(0);boss6SetHeldAxeLocal(mode,1);
+ boss6PlaceOneHandAxe(pose,1-Math.exp(-dt*34));
+ // True one-handed weapon: never solve the left arm toward the axe.
+ syncBoss6Rig(0);boss6PlaceOneHandAxe(pose,1);
 }
 function boss6ShoulderAxe(dt){
  if(!boss6AxeRoot||!boss6Ready)return;
  boss6AxeRoot.visible=state.bossHp>0;
- boss6SetHeldAxeLocal('carry',1-Math.exp(-dt*20));
+ const {forward,right,up}=boss6WorldBasis();
+ const pose={
+  grip:boss.position.clone().addScaledVector(right,.48).addScaledVector(forward,.06).addScaledVector(up,1.48),
+  axis:up.clone().multiplyScalar(.88).addScaledVector(forward,-.34).addScaledVector(right,-.08).normalize()
+ };
+ boss6DriveRightHandToGrip(dt,pose.grip,20);syncBoss6Rig(0);boss6PlaceOneHandAxe(pose,1-Math.exp(-dt*24));
  boss6ResetAxeTrace();
+}
+function boss6CarryPose(){
+ const {forward,right,up}=boss6WorldBasis(),gait=bossWalkState.active?Math.sin(bossWalkState.phase):0;
+ return{
+  grip:boss.position.clone().addScaledVector(right,.43).addScaledVector(forward,.16+.025*gait).addScaledVector(up,1.22+.015*Math.abs(gait)),
+  axis:up.clone().multiplyScalar(.92).addScaledVector(forward,.3).addScaledVector(right,-.1).normalize()
+ };
 }
 function boss6CarryAxe(dt){
  if(!boss6AxeRoot||!boss6Ready)return;
  boss6AxeRoot.visible=state.bossHp>0;
- const {forward,right,up}=boss6WorldBasis(),gait=bossWalkState.active?Math.sin(bossWalkState.phase):0;
- const grip=boss.position.clone().addScaledVector(right,.4).addScaledVector(forward,.2+.025*gait).addScaledVector(up,1.28+.015*Math.abs(gait));
- const ru=boss6Bones.rightUpperArm,rh=boss6Bones.rightHand;
- if(ru&&rh){
-  const shoulder=new THREE.Vector3();ru.getWorldPosition(shoulder),reach=getArmReach(boss6Bones,'right');
-  const elbow=shoulder.clone().add(bossCombatOffset(.22*reach,-.3*reach,.13*reach));
-  solveArmCCD(boss6Bones,'right',grip,elbow,1-Math.exp(-dt*20));
- }
- syncBoss6Rig(0);boss6SetHeldAxeLocal('carry',1);
- const lu=boss6Bones.leftUpperArm,lh=boss6Bones.leftHand;
- if(lu&&lh){
-  const shoulder=new THREE.Vector3();lu.getWorldPosition(shoulder),reach=getArmReach(boss6Bones,'left');
-  const secondary=boss6AxeRoot.localToWorld(new THREE.Vector3(0,1.02,0));
-  const elbow=shoulder.clone().add(bossCombatOffset(-.2*reach,-.28*reach,.14*reach));
-  solveArmCCD(boss6Bones,'left',secondary,elbow,1-Math.exp(-dt*20));
- }
- syncBoss6Rig(0);boss6SetHeldAxeLocal('carry',1);boss6ResetAxeTrace();
+ const pose=boss6CarryPose();
+ boss6DriveRightHandToGrip(dt,pose.grip,21);syncBoss6Rig(0);boss6PlaceOneHandAxe(pose,1-Math.exp(-dt*25));
+ boss6ResetAxeTrace();
 }
 function boss6UpdateBoomerang(dt,p){
  if(!boss6AxeRoot)return;
@@ -4704,7 +4704,7 @@ function boss6UpdateBoomerang(dt,p){
   const pose=boss6AxePrimaryPose('b6_axe_boomerang',p);boss6ApplyAxeArms(dt,'b6_axe_boomerang',p,pose);boss6ResetAxeTrace();return;
  }
  if(p>=.3&&p<.86){
-  if(boss6AxeAttached)boss6DetachAxeToScene();
+  boss6DetachAxeToScene();
   const flight=clamp((p-.3)/.56,0,1),out=Math.sin(flight*Math.PI);
   const center=boss.position.clone().addScaledVector(up,1.52);
   const target=center.addScaledVector(forward,1.25+7*out).addScaledVector(right,side*Math.sin(flight*Math.PI*2)*1.9);
@@ -4719,7 +4719,8 @@ function boss6UpdateBoomerang(dt,p){
   }
   boss6StoreAxeTrace(seg);return;
  }
- boss6AttachAxeToHand();boss6SetHeldAxeLocal('carry',1-Math.exp(-dt*34));boss6ResetAxeTrace();
+ const carry=boss6CarryPose();
+ boss6DriveRightHandToGrip(dt,carry.grip,28);syncBoss6Rig(0);boss6PlaceOneHandAxe(carry,1-Math.exp(-dt*34));boss6ResetAxeTrace();
 }
 function boss6UpdateGrab(dt,p){
  const {forward}=boss6WorldBasis();
@@ -4747,7 +4748,6 @@ function updateBoss6BattleAxe(dt){
  if(!boss6AxeRoot||!boss6Ready)return;
  const st=state.bossState;
  if(!isBoss6AxeState(st)){
-  if(!boss6AxeAttached)boss6AttachAxeToHand();
   if(st==='idle')boss6CarryAxe(dt);else boss6ShoulderAxe(dt);
   return;
  }
@@ -4755,7 +4755,6 @@ function updateBoss6BattleAxe(dt){
  const dur=BOSS6_DUR[st]||1,p=clamp(1-state.bossTimer/dur,0,1);
 
  if(st==='b6_axe_boomerang'){boss6UpdateBoomerang(dt,p);return}
- if(!boss6AxeAttached)boss6AttachAxeToHand();
  const pose=boss6AxePrimaryPose(st,p);boss6ApplyAxeArms(dt,st,p,pose);
 
  if(st==='b6_grab_execute'){
