@@ -186,7 +186,7 @@ async function newRound(presetConfig){
    finishTime=chart.duration;
    $('analysisStatus').textContent='채보 로딩 완료 · '+notes.length+'개 노트';
   }catch(e){showPrepError(e);return}
- }else if(sourceMode==='youtube'&&cfg.chart){try{chart=cfg.chart;notes=window.RhythmChart.unpack(chart,onlineMode?net.role:'guest');matchGroups=chart.groups;record.bpm=chart.bpm;beat=60/record.bpm;record.offset=chart.offset||0;finishTime=chart.duration;$('analysisStatus').textContent='실제 음원 분석 채보 적용: '+notes.length+'개 노트'}catch(e){showPrepError(e);return}
+ }else if(sourceMode==='youtube'&&cfg.chart){try{chart=cfg.chart;notes=window.RhythmChart.unpack(chart,onlineMode?net.role:'guest');matchGroups=chart.groups;record.bpm=chart.bpm;beat=60/record.bpm;record.offset=Number(cfg.offset)||0;for(const n of notes)n.t+=record.offset;finishTime=chart.duration+record.offset;$('analysisStatus').textContent='실제 음원 분석 채보 적용: '+notes.length+'개 노트'}catch(e){showPrepError(e);return}
  }else{
   chart=generateChart();notes=chart.items;matchGroups=GROUPS;finishTime=chart.duration+(record.offset||0);
  }
