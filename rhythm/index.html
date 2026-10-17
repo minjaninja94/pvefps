@@ -369,7 +369,7 @@ function settleFight(t,force=false){
  const count=Math.floor(matchGroups/2);
  while(fight.nextRound<count){
    const boundary=intro+(record.offset||0)+(fight.nextRound+1)*SEG*beat*2;
-   if(!force&&t<boundary+.035)break;
+   if(t<boundary+(force?0:.035))break;
    if(onlineMode&&net.role!=='host')break; // Host arbitrates turn score and damage.
    const result=window.RhythmClash.resolve(fight,fight.nextRound);
    if(!result)break;
