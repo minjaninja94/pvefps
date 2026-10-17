@@ -177,7 +177,7 @@ function loop(){
  if(!values.capturing)return;
  const t=values.player?Number(values.player.getCurrentTime())||0:0;
  if(values.playing){
-  if(!validateDuration()){return}
+  if(!validateDuration()){if(values.capturing)values.raf=requestAnimationFrame(loop);return}
   if(values.lastMediaTime && t+1.5<values.lastMediaTime){
    label('영상 재생 위치가 뒤로 이동했습니다. 검출 결과를 새로 시작합니다.');
    resetAnalysis();
