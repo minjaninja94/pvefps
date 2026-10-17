@@ -13,6 +13,16 @@ const {RhythmClash:b}=load('battle-system.js');
 const {NeonFighters:f}=load('fighters.js');
 assert.equal(f.PROFILES.length,4);
 assert.ok(f.PROFILES.every(p=>p.species&&p.outfit&&p.skin&&p.eye));
+const drawContext=new Proxy({}, {get(obj,key){return key in obj?obj[key]:()=>{}},set(obj,key,val){obj[key]=val;return true}});
+for(const preset of f.PROFILES){
+ for(const costume of ['armor','idol','street','mage','cyber']){
+  for(const build of ['slender','balanced','curvy','athletic','petite','giant']){
+   const profile={...preset,costume,body:build,species:'cat',eyeShape:'soft',bust:'large'};
+   assert.doesNotThrow(()=>f.draw(drawContext,120,270,profile,{facing:1,t:1.2,attack:.4,hit:.2,scale:.75}));
+  }
+ }
+}
+
 const notes=[];for(let phrase=0;phrase<4;phrase++)for(let lane=0;lane<6;lane++)notes.push({id:notes.length,phrase,side:phrase%2?'player':'bot',t:phrase*2+lane*.2,lane:lane%4});
 const state=b.make(notes);
 for(const n of notes)assert.equal(b.register(state,n.side,n.id,n.side==='player'?'perfect':'miss'),true);
@@ -39,4 +49,4 @@ assert.equal(draw.winner,'draw');
 assert.equal(draw.damage,0);
 assert.equal(draw.hp.player,100);
 assert.equal(draw.hp.bot,100);
-console.log('Rhythm Clash: 4 fighter presets, round scoring, HP damage, duplicate prevention, mirror sync, and draws PASS');
+console.log('Rhythm Clash: 4 fighter presets, 120 costume/body render variants, round scoring, HP damage, duplicate prevention, mirror sync, and draws PASS');
