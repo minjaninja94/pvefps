@@ -81,6 +81,14 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
   <div id="musicExtras" class="musicExtras" style="display:none">
    <label class="setting" id="youtubeField">YOUTUBE LINK<input id="youtubeUrl" type="url" value="https://www.youtube.com/watch?v=rYx3BJ1zQ34" placeholder="https://youtu.be/VIDEO_ID"></label>
    <label class="setting" id="fileField" style="display:none">5분 이내 보유 음원 (채보 분석용, YouTube에도 연결 가능)<input id="audioFile" type="file" accept="audio/*"></label>
+   <div id="directAudioField" class="setting" style="grid-column:1/-1;display:none">
+      <label for="directAudioUrl">직접 오디오 파일 URL (권한 있는 MP3·WAV·OGG 링크만)</label>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input id="directAudioUrl" type="url" style="flex:1;min-width:190px" placeholder="https://your-site.example/music.mp3" aria-label="직접 오디오 파일 링크">
+        <button type="button" class="small" id="importAudioUrl" style="min-height:46px">↧ URL 음원 가져오기 · 채보 분석</button>
+      </div>
+      <span style="display:block;color:#af9fc8;margin-top:6px;font-size:11px;line-height:1.5">브라우저가 접근할 수 있는 원본 오디오 주소만 지원합니다. YouTube 및 변환 사이트 URL은 지원하지 않으며, 파일 제공 서버의 CORS 허용이 필요합니다.</span>
+   </div>
    <label class="setting">BPM (직접 입력 / 박자 두드리기)<input id="customBpm" type="number" min="60" max="220" value="136"><button type="button" id="tapBpm" class="small" style="margin-top:7px;width:100%">♫ TAP BPM</button></label>
    <label class="setting">첫 박자 위치 (초)<input id="beatOffset" type="number" min="0" max="60" step="0.1" value="0"></label>
    <div class="notice" id="analysisNotice">최대 5분. YouTube는 공식 플레이어로 재생합니다. 동일한 보유 음원을 선택하면 재생 전에 파형을 분석해 실제 강세 채보를 생성합니다(음원과 영상의 싱크는 원본에 따라 달라질 수 있음). 음원을 제공하지 않은 YouTube는 입력 BPM 채보를 이용합니다. 온라인 파일전은 양쪽에서 같은 음원을 선택하세요.</div>
@@ -99,7 +107,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
 <section id="results"><div class="eyebrow">BATTLE RESULT</div><h2 id="resulttitle">YOU WIN!</h2><p id="resultdesc"></p><div class="grid">
 <div>SCORE<strong id="rscore">0</strong></div><div>ACCURACY<strong id="racc">0%</strong></div><div>MAX COMBO<strong id="rmax">0</strong></div><div>PERFECT<strong id="rperfect">0</strong></div><div>GREAT / GOOD<strong id="rmedium">0</strong></div><div>MISS<strong id="rmiss">0</strong></div>
 </div><div class="resultsbtn"><button class="start" id="retry">↻ REMATCH</button><button class="small" id="select">SONG SELECT</button></div></section>
-<script src="../firebase-config.js"></script><script src="../firebase-network.js"></script><script src="./duel-online.js"></script><script src="./chart-analysis.js"></script><script src="https://www.youtube.com/iframe_api" async></script>\n<script>
+<script src="../firebase-config.js"></script><script src="../firebase-network.js"></script><script src="./duel-online.js"></script><script src="./chart-analysis.js"></script><script src="./audio-import.js"></script><script src="https://www.youtube.com/iframe_api" async></script>\n<script>
 'use strict';
 (()=>{
 const $=id=>document.getElementById(id), canvas=$('stage'), g=canvas.getContext('2d'), ARROWS=['←','↓','↑','→'], COLORS=['#ff4b68','#35cafa','#39ed8a','#af70ff'], KEYMAP=['ArrowLeft','ArrowDown','ArrowUp','ArrowRight'];
@@ -270,6 +278,7 @@ function settingsUI(){
  $('musicExtras').style.display=kind==='youtube'||kind==='file'?'grid':'none';
  $('youtubeField').style.display=kind==='youtube'?'block':'none';
  $('fileField').style.display=kind==='file'||kind==='youtube'?'block':'none';
+ $('directAudioField').style.display=kind==='file'||kind==='youtube'?'block':'none';
  $('customBpm').parentElement.style.display=kind==='file'?'none':'block';
  $('beatOffset').parentElement.style.display=kind==='file'?'none':'block';
  /* Local audio is allowed online when both players choose identical files. */
@@ -284,6 +293,22 @@ function modeUI(){
 }
 $('track').onchange=()=>{preparedAudio=null;settingsUI()};
 $('audioFile').onchange=e=>{localFile=e.target.files[0]||null;preparedAudio=null;peerAudioHash='';$('analysisStatus').textContent='';if(net.readySelf)net.ready(false)};
+$('importAudioUrl').onclick=async()=>{
+ const button=$('importAudioUrl'),url=$('directAudioUrl').value.trim();
+ if(!url){$('analysisStatus').textContent='먼저 MP3·WAV·OGG 원본 파일 주소를 입력하세요.';return}
+ button.disabled=true;
+ try{
+   $('analysisStatus').textContent='권한 있는 오디오 파일 다운로드 중 (이 브라우저 안에서만 처리)';
+   const file=await window.RhythmAudioImport.load(url,(got,total)=>{
+     $('analysisStatus').textContent='오디오 가져오는 중 · '+(got/1048576).toFixed(1)+' MB'+(total?' / '+(total/1048576).toFixed(1)+' MB':'');
+   });
+   localFile=file;preparedAudio=null;peerAudioHash='';
+   $('audioFile').value='';
+   if(net.readySelf)net.ready(false);
+   const prep=await prepareLocalAudio();
+   $('analysisStatus').textContent='URL 음원 로딩·분석 완료: '+prep.file.name+' · '+prep.analysis.bpm+' BPM · '+prep.chart.entries.length+'개 노트. 이제 시작할 수 있습니다.';
+ }catch(e){showPrepError(e)}finally{button.disabled=false}
+};
 $('soloMode').onclick=async()=>{if(st==='game')return;onlineMode=false;await net.leave();modeUI()};
 $('onlineMode').onclick=()=>{if(st==='game')return;onlineMode=true;modeUI()};
 $('createRoom').onclick=async()=>{try{let cfg=selectedConfig();if(!cfg)return;roomStatus('방 생성 중…');let id=await net.create(cfg);roomStatus('초대 코드 '+id+' · 친구가 입장하면 준비를 누르세요.')}catch(e){roomStatus('오류: '+(e.message||e))}};
