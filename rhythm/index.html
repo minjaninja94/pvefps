@@ -48,6 +48,26 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
 .grid strong{display:block;font-size:25px;color:white;margin-top:7px}
 .resultsbtn{display:flex;justify-content:center;gap:12px}
 @media(max-width:760px){header{padding:14px}header a{font-size:10px}.hero{padding:32px 24px;min-height:340px}.versusart{top:auto;bottom:8px;right:14px;opacity:.32}.setup{grid-template-columns:1fr 1fr;gap:12px;padding:16px}.setup .setting:nth-child(3){grid-column:1/-1}#game{padding:0 5px}.scoreline{flex-direction:column;align-items:stretch}.tools{justify-content:center}.stats{justify-content:space-evenly;gap:8px}.touch{margin-top:11px}.touch button{height:58px}.grid{grid-template-columns:repeat(2,1fr)}#results{margin:20px 12px;padding:20px}}
+
+.musicExtras{grid-column:1/-1;display:grid;grid-template-columns:1.7fr .8fr .8fr;gap:14px;align-items:end}
+.musicExtras .setting input{width:100%;margin-top:9px;min-height:46px;border:1px solid #645476;background:#241c40;color:#fff;padding:12px 14px;border-radius:10px}
+.musicExtras input[type=file]{padding:9px;font-size:12px}
+.musicExtras .notice{grid-column:1/-1;font-size:12px;color:#cab9df;line-height:1.6}
+#battleMode{background:#1b1635;border:1px solid #ffffff25;border-radius:18px;padding:18px;margin-top:16px}
+.modebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:13px}
+.modebar button{background:#262242;border:1px solid #6c5b86;color:#e1d6f3;border-radius:9px;padding:10px 17px}
+.modebar button.chosen{background:#3f5987;border-color:#79dbff;color:white}
+#roomPanel{display:none}.roomcontrols{display:flex;flex-wrap:wrap;align-items:center;gap:9px}
+.roomcontrols input{background:#100f2b;color:#fff;border:1px solid #71608e;border-radius:9px;padding:10px 14px;max-width:175px;text-transform:uppercase}
+.roomcontrols button{font-size:13px;border:1px solid #6c5887;background:#302045;color:white;border-radius:9px;padding:11px 14px}
+#roomStatus{color:#cecae2;font-size:13px;margin:12px 0 0;min-height:20px}
+#roomCode{color:#80edff;font-size:20px;font-weight:950;letter-spacing:.16em}
+.gameboard{position:relative}
+#youtubeOverlay{display:none;position:absolute;z-index:5;top:34%;left:33%;width:34%;aspect-ratio:16/9;background:#000;border:3px solid #e18cff;border-radius:10px;box-shadow:0 0 32px #c955e766;overflow:hidden}
+#ytPlayer,#ytPlayer iframe{width:100%!important;height:100%!important;border:0}
+#playHint{display:none;text-align:center;background:#292048dd;color:#fff;padding:12px;font-size:13px}
+#syncInfo{color:#a9e8ff;font-size:12px;text-align:center;margin:8px 0}
+@media(max-width:780px){.musicExtras{grid-template-columns:1fr 1fr}.musicExtras .setting:first-child{grid-column:1/-1}#youtubeOverlay{position:relative;top:auto;left:auto;width:min(100%,440px);min-height:220px;margin:8px auto}#ytPlayer{min-height:220px}}
 </style>
 </head>
 <body>
@@ -55,23 +75,30 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
 <main id="menu">
  <div class="hero"><div class="herocontent"><div class="eyebrow">CALL · RESPONSE · BATTLE</div><h1>BEAT<br><span>BATTLE.</span></h1><p>네가 왼쪽, 봇이 오른쪽. 상대가 노래하면 듣고, 네 턴에는 방향키로 받아쳐라. 정확한 비트로 무대를 지배하는 1:1 리듬 배틀.</p></div><div class="versusart" aria-hidden="true"><span>YOU</span><strong>VS</strong><span>BOT</span></div></div>
  <div class="setup">
-  <label class="setting">TRACK<select id="track"><option value="neon">NEON SHOWDOWN — 136 BPM</option><option value="midnight">MIDNIGHT CLASH — 158 BPM</option></select></label>
+  <label class="setting">TRACK / MUSIC SOURCE<select id="track"><option value="neon">내장 데모 — NEON SHOWDOWN</option><option value="midnight">내장 데모 — MIDNIGHT CLASH</option><option value="youtube">YouTube 공식 임베드 / 링크 입력</option><option value="file">내 음원 업로드 / 실제 파형 분석 (솔로)</option></select></label>
   <label class="setting">DIFFICULTY<select id="difficulty"><option value="easy">EASY / 봇 약함 · 연습용</option><option value="normal" selected>NORMAL / 균형 조정</option><option value="hard">HARD / 강한 봇 · 고속 배틀</option></select></label>
   <label class="setting">NOTE SPEED<select id="speed"><option value="1">1.0×</option><option value="1.25" selected>1.25×</option><option value="1.5">1.5×</option><option value="1.8">1.8×</option></select></label>
+  <div id="musicExtras" class="musicExtras" style="display:none">
+   <label class="setting" id="youtubeField">YOUTUBE LINK<input id="youtubeUrl" type="url" value="https://www.youtube.com/watch?v=rYx3BJ1zQ34" placeholder="https://youtu.be/VIDEO_ID"></label>
+   <label class="setting" id="fileField" style="display:none">오디오 파일 (기기에만 저장)<input id="audioFile" type="file" accept="audio/*"></label>
+   <label class="setting">BPM (유튜브는 직접 입력)<input id="customBpm" type="number" min="60" max="220" value="136"></label>
+   <label class="setting">첫 박자 위치 (초)<input id="beatOffset" type="number" min="0" max="60" step="0.1" value="0"></label>
+   <div class="notice" id="analysisNotice">YouTube 공식 플레이어의 영상/음성을 추출하거나 저장하지 않습니다. YouTube 채보는 입력한 BPM과 박자 위치로 생성하며 스트림 파형을 실제 분석한 결과가 아닙니다. 파일 모드에서는 기기 내부에서 음향 강세를 분석합니다.</div>
+  </div>
   <div class="full"><button class="start" id="start">▶ START BATTLE</button></div>
  </div>
- <p class="hint"><b>← ↓ ↑ →</b> 방향키로 자신의 차례에 노트를 입력하세요. 상대 차례는 자동 진행.<br>상대보다 잘 부르면 게이지를 빼앗습니다. 홀드 노트는 누른 채 유지하세요. <b>ESC</b> 일시정지.</p>
+ <div id="battleMode"><div class="modebar"><button id="soloMode" class="chosen">🤖 혼자 vs 봇</button><button id="onlineMode">⚔️ 온라인 2인 VS</button></div><div id="roomPanel"><div class="roomcontrols"><button id="createRoom">방 만들기</button><input id="joinCode" maxlength="5" placeholder="초대 코드 5자리" aria-label="방 코드"><button id="joinRoom">입장</button><button id="readyRoom">준비</button><button id="leaveRoom">나가기</button><span id="roomCode"></span></div><div id="roomStatus">방을 만들거나 친구의 초대 코드를 입력하세요. 다른 플레이어가 입장한 뒤 서로 준비하면 방장이 시작할 수 있습니다.</div></div></div>\n <p class="hint"><b>← ↓ ↑ →</b> 방향키로 자신의 차례에 노트를 입력하세요. 상대 차례는 자동 진행.<br>상대보다 잘 부르면 게이지를 빼앗습니다. 홀드 노트는 누른 채 유지하세요. <b>ESC</b> 일시정지.</p>
 </main>
 <section id="game">
  <div class="matchHeader"><span class="your">● PLAYER / LEFT</span><strong id="trackname">NEON SHOWDOWN</strong><span class="enemy">BOT / RIGHT ●</span></div>
- <div class="gameboard"><canvas id="stage" width="1200" height="700" aria-label="리듬 배틀 게임 화면"></canvas></div>
+ <div class="gameboard"><canvas id="stage" width="1200" height="700" aria-label="리듬 배틀 게임 화면"></canvas><div id="youtubeOverlay"><div id="ytPlayer"></div></div></div><div id="syncInfo" aria-live="polite"></div><div id="playHint">유튜브의 자체 ▶ 버튼을 눌러 재생을 시작하세요. 임베드가 제한된 영상은 다른 링크를 사용하세요.</div>
  <div class="scoreline"><div class="stats"><span>SCORE <strong id="score">0</strong></span><span>COMBO <strong id="combo">0</strong></span><span>ACCURACY <strong id="accuracy">100%</strong></span><span>ROUND <strong id="round">1/10</strong></span></div><div class="tools"><button class="small" id="pause">Ⅱ PAUSE (ESC)</button><button class="small" id="quit">✕ QUIT</button></div></div>
  <div class="touch" aria-label="화면 방향키"><button data-lane="0" aria-label="왼쪽">←</button><button data-lane="1" aria-label="아래">↓</button><button data-lane="2" aria-label="위">↑</button><button data-lane="3" aria-label="오른쪽">→</button></div>
 </section>
 <section id="results"><div class="eyebrow">BATTLE RESULT</div><h2 id="resulttitle">YOU WIN!</h2><p id="resultdesc"></p><div class="grid">
 <div>SCORE<strong id="rscore">0</strong></div><div>ACCURACY<strong id="racc">0%</strong></div><div>MAX COMBO<strong id="rmax">0</strong></div><div>PERFECT<strong id="rperfect">0</strong></div><div>GREAT / GOOD<strong id="rmedium">0</strong></div><div>MISS<strong id="rmiss">0</strong></div>
 </div><div class="resultsbtn"><button class="start" id="retry">↻ REMATCH</button><button class="small" id="select">SONG SELECT</button></div></section>
-<script>
+<script src="../firebase-config.js"></script><script src="../firebase-network.js"></script><script src="./duel-online.js"></script><script src="https://www.youtube.com/iframe_api" async></script>\n<script>
 'use strict';
 (()=>{
 const $=id=>document.getElementById(id), canvas=$('stage'), g=canvas.getContext('2d'), ARROWS=['←','↓','↑','→'], COLORS=['#ff4b68','#35cafa','#39ed8a','#af70ff'], KEYMAP=['ArrowLeft','ArrowDown','ArrowUp','ArrowRight'];
