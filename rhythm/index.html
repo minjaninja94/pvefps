@@ -68,7 +68,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
 #playHint{display:none;text-align:center;background:#292048dd;color:#fff;padding:12px;font-size:13px}
 #syncInfo{color:#a9e8ff;font-size:12px;text-align:center;margin:8px 0}
 @media(max-width:780px){.musicExtras{grid-template-columns:1fr 1fr}.musicExtras .setting:first-child{grid-column:1/-1}#youtubeOverlay{position:relative;top:auto;left:auto;width:min(100%,440px);min-height:220px;margin:8px auto}#ytPlayer{min-height:220px}}
-#analysisStatus:empty{display:none}#start:disabled,#readyRoom:disabled{opacity:.55;cursor:progress}</style>
+#analysisStatus:empty{display:none}#savedCharts button{background:#251f42;border:1px solid #52639f;margin:3px;padding:9px 13px;border-radius:9px;display:inline-flex;gap:10px;align-items:center;font-size:12px}#savedCharts button[data-selected=true]{border-color:#82ebff;background:#12465c}#savedCharts button:hover{background:#234e6b}#start:disabled,#readyRoom:disabled{opacity:.55;cursor:progress}</style>
 </head>
 <body>
 <header><div class="logo">NEON <em>DUEL</em> <span style="font-size:11px;color:#b1accb">/ RHYTHM VS</span></div><a href="../index.html">← GAME SELECT</a></header>
@@ -100,11 +100,11 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
  <a href="./chart-maker.html" style="display:inline-block;padding:10px 20px;background:linear-gradient(90deg,#117da0,#9a4284);border-radius:10px;color:#fff;font-weight:900;font-size:14px">♫ 유튜브 링크만으로 실제 리듬 채보 제작</a>
  <p style="font-size:12px;color:#c1b5d0;margin:8px 0 0">음원 파일 없이 Chrome/Edge 탭 오디오 공유로 박자를 분석합니다. 제작 후 같은 영상 URL로 게임을 시작하세요.</p>
  </div>
- <div id="analysisStatus" role="status" aria-live="polite" style="text-align:center;color:#8fe9fb;font-size:13px;margin:16px 0"></div><p class="hint"><b>← ↓ ↑ →</b> 방향키로 자신의 차례에 노트를 입력하세요. 상대 차례는 자동 진행.<br>상대보다 잘 부르면 게이지를 빼앗습니다. 홀드 노트는 누른 채 유지하세요. <b>ESC</b> 일시정지.</p>
+ <section id="savedChartLibrary" style="margin:16px auto;padding:16px;background:#15172c;border:1px solid #7adcfc44;border-radius:14px;max-width:840px"><strong style="color:#79eaff;font-size:14px">🎼 저장된 유튜브 채보</strong><div id="savedCharts" style="margin-top:10px;font-size:13px;color:#c5bed8">저장된 채보를 확인하는 중...</div><div id="selectedChartStatus" aria-live="polite" style="margin-top:11px;font-size:13px;color:#acdaee"></div></section><div id="analysisStatus" role="status" aria-live="polite" style="text-align:center;color:#8fe9fb;font-size:13px;margin:16px 0"></div><p class="hint"><b>← ↓ ↑ →</b> 방향키로 자신의 차례에 노트를 입력하세요. 상대 차례는 자동 진행.<br>상대보다 잘 부르면 게이지를 빼앗습니다. 홀드 노트는 누른 채 유지하세요. <b>ESC</b> 일시정지.</p>
 </main>
 <section id="game">
  <div class="matchHeader"><span class="your">● PLAYER / LEFT</span><strong id="trackname">NEON SHOWDOWN</strong><span class="enemy">BOT / RIGHT ●</span></div>
- <div class="gameboard"><canvas id="stage" width="1200" height="700" aria-label="리듬 배틀 게임 화면"></canvas><div id="youtubeOverlay"><div id="ytPlayer"></div></div></div><div id="syncInfo" aria-live="polite"></div><div id="playHint">유튜브의 자체 ▶ 버튼을 눌러 재생을 시작하세요. 임베드가 제한된 영상은 다른 링크를 사용하세요.</div>
+ <div class="gameboard"><canvas id="stage" width="1200" height="700" aria-label="리듬 배틀 게임 화면"></canvas><div id="youtubeOverlay"><div id="ytPlayer"></div></div></div><div id="chartSource" aria-live="polite" style="margin:9px auto;text-align:center;color:#87efc6;font-weight:800;font-size:13px"></div><div id="syncInfo" aria-live="polite"></div><div id="playHint">유튜브의 자체 ▶ 버튼을 눌러 재생을 시작하세요. 임베드가 제한된 영상은 다른 링크를 사용하세요.</div>
  <div class="scoreline"><div class="stats"><span>SCORE <strong id="score">0</strong></span><span>COMBO <strong id="combo">0</strong></span><span>ACCURACY <strong id="accuracy">100%</strong></span><span>ROUND <strong id="round">1/10</strong></span></div><div class="tools"><button class="small" id="pause">Ⅱ PAUSE (ESC)</button><button class="small" id="quit">✕ QUIT</button></div></div>
  <div class="touch" aria-label="화면 방향키"><button data-lane="0" aria-label="왼쪽">←</button><button data-lane="1" aria-label="아래">↓</button><button data-lane="2" aria-label="위">↑</button><button data-lane="3" aria-label="오른쪽">→</button></div>
 </section>
@@ -136,7 +136,69 @@ function hashId(str){let n=2166136261;for(let c of str)n=Math.imul(n^c.charCodeA
 function parseYouTube(raw){try{let u=new URL(raw),host=u.hostname.toLowerCase().replace(/^www\./,''),id=null;if(host==='youtu.be')id=u.pathname.slice(1).split('/')[0];else if(['youtube.com','m.youtube.com','music.youtube.com','youtube-nocookie.com'].includes(host))id=u.searchParams.get('v')||u.pathname.match(/\/(?:embed|shorts|live)\/([\w-]{11})/)?.[1];return /^[\w-]{11}$/.test(id||'')?id:null}catch{return null}}
 
 function chartCacheKey(videoId){return 'neon-duel-chart-v2:'+videoId}
-function cachedYouTubeChart(videoId){try{let raw=localStorage.getItem(chartCacheKey(videoId));if(!raw)return null;let data=JSON.parse(raw);window.RhythmChart.unpack(data,'guest');return data}catch(e){return null}}
+function cachedYouTubeChart(videoId){
+ try{
+  let raw=localStorage.getItem(chartCacheKey(videoId));if(!raw)return null;
+  const data=JSON.parse(raw);
+  window.RhythmChart.unpack(data,'guest');
+  if(!data.entries.length)throw Error('노트가 없습니다');
+  return data;
+ }catch(e){return null}
+}
+function listSavedCharts(){
+ const result=[];
+ try{
+  for(let i=0;i<localStorage.length;i++){
+   const key=localStorage.key(i);
+   if(!key||!key.startsWith('neon-duel-chart-v2:'))continue;
+   const id=key.slice('neon-duel-chart-v2:'.length);
+   if(!/^[A-Za-z0-9_-]{11}$/.test(id))continue;
+   const data=cachedYouTubeChart(id);
+   if(data)result.push({id,count:data.entries.length,bpm:data.bpm,duration:data.duration});
+  }
+ }catch(e){$('selectedChartStatus').textContent='브라우저 저장소에 접근할 수 없습니다. 저장한 브라우저와 주소에서 접속해 주세요.'}
+ return result
+}
+function refreshSavedCharts(){
+ const saved=listSavedCharts();
+ const container=$('savedCharts');
+ const selected=parseYouTube($('youtubeUrl').value);
+ if(saved.length){
+  container.innerHTML=saved.map(x=>'<button type="button" data-chart="'+x.id+'" data-selected="'+(x.id===selected)+'">♫ '+x.id+' <span style="opacity:.8">'+x.count+'노트 · '+Math.round(x.bpm)+' BPM</span></button>').join('');
+ }else{
+  container.textContent='저장된 채보 없음. 위 「유튜브 링크만으로 실제 리듬 채보 제작」에서 저장한 뒤 돌아오세요.';
+ }
+ updateSelectedChartStatus()
+}
+function updateSelectedChartStatus(){
+ const id=parseYouTube($('youtubeUrl').value);
+ const isYT=$('track').value==='youtube';
+ const status=$('selectedChartStatus');
+ if(!isYT){status.textContent=listSavedCharts().length+'개의 유튜브 채보가 저장돼 있습니다. 사용하려면 위에서 YouTube를 선택하세요.';return}
+ if(!id){status.textContent='유효한 YouTube 영상 링크를 입력하세요.';return}
+ const chart=cachedYouTubeChart(id);
+ status.textContent=chart
+ ?'✓ 분석 완료된 저장 채보 연결됨 · '+chart.entries.length+'노트 · '+chart.bpm+' BPM · '+Math.round(chart.duration)+'초 · 게임 시작 시 이 채보를 사용합니다.'
+ :'⚠ 이 영상에 저장된 분석 채보가 없습니다. 채보 제작기에서 저장한 동일한 영상을 선택하세요.';
+ $('savedCharts').querySelectorAll('button[data-chart]').forEach(btn=>btn.dataset.selected=String(btn.dataset.chart===id))
+}
+function restoreSavedChartSelection(){
+ let id=null;
+ try{
+  const params=new URLSearchParams(location.search),fromLink=params.get('chart');
+  if(fromLink&&/^[A-Za-z0-9_-]{11}$/.test(fromLink))id=fromLink;
+  if(!id){
+   const last=localStorage.getItem('neon-duel-last-video');
+   if(last&&cachedYouTubeChart(last))id=last;
+  }
+ }catch(e){}
+ if(!id){const charts=listSavedCharts();if(charts.length)id=charts[charts.length-1].id}
+ if(id){
+  $('track').value='youtube';
+  $('youtubeUrl').value='https://www.youtube.com/watch?v='+id;
+ }
+ settingsUI();refreshSavedCharts();
+}
 function rememberYouTubeChart(videoId,chart){try{localStorage.setItem(chartCacheKey(videoId),JSON.stringify(chart));return true}catch(e){return false}}
 
 function selectedConfig(){let mode=$('track').value,cfg={mode,diff:$('difficulty').value,speed:Number($('speed').value)};if(mode==='youtube'){let id=parseYouTube($('youtubeUrl').value);if(!id){alert('유튜브 링크를 확인하세요.');return null}cfg.videoId=id;cfg.bpm=clamp(Number($('customBpm').value)||136,60,220);cfg.offset=clamp(Number($('beatOffset').value)||0,0,60);cfg.root=40+hashId(id)%24;cfg.title='YOUTUBE / '+id;cfg.chart=cachedYouTubeChart(id)||undefined}return cfg}
@@ -295,7 +357,9 @@ function modeUI(){
  $('start').textContent=onlineMode?'⚔ HOST START (BOTH READY)':'▶ START BATTLE';document.querySelector('.matchHeader .enemy').textContent=onlineMode?'RIVAL / RIGHT ●':'BOT / RIGHT ●';
  settingsUI()
 }
-$('track').onchange=()=>{preparedAudio=null;settingsUI()};
+$('track').onchange=()=>{preparedAudio=null;settingsUI();refreshSavedCharts()};
+$('youtubeUrl').addEventListener('input',refreshSavedCharts);
+$('savedCharts').addEventListener('click',e=>{const target=e.target.closest('button[data-chart]');if(!target)return;const id=target.dataset.chart;$('track').value='youtube';$('youtubeUrl').value='https://www.youtube.com/watch?v='+id;settingsUI();refreshSavedCharts()});
 $('audioFile').onchange=e=>{localFile=e.target.files[0]||null;preparedAudio=null;peerAudioHash='';$('analysisStatus').textContent='';if(net.readySelf)net.ready(false)};
 $('importAudioUrl').onclick=async()=>{
  const button=$('importAudioUrl'),url=$('directAudioUrl').value.trim();
@@ -353,7 +417,7 @@ for(let b of touchBtns){let lane=Number(b.dataset.lane);b.addEventListener('poin
 canvas.addEventListener('pointerdown',e=>{if(st!=='game'||paused)return;let r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*1200;if(x>=45&&x<360){let lane=Math.round((x-86)/76);lane=clamp(lane,0,3);canvas.setPointerCapture(e.pointerId);canvas.dataset.pointerLane=lane;keyDown(lane)}});
 canvas.addEventListener('pointerup',()=>{if(canvas.dataset.pointerLane!==undefined){keyUp(Number(canvas.dataset.pointerLane));delete canvas.dataset.pointerLane}});
 canvas.addEventListener('pointercancel',()=>{if(canvas.dataset.pointerLane!==undefined){keyUp(Number(canvas.dataset.pointerLane));delete canvas.dataset.pointerLane}});
-$('start').onclick=async()=>{if(!onlineMode){await newRound();return}if(net.role!=='host'||!net.isConnected()||!net.readySelf||!net.readyPeer){roomStatus('방장과 친구 모두 P2P 접속 및 준비 완료가 필요합니다.');return}let cfg=selectedConfig();if(!cfg)return;if(cfg.mode==='file'){let asset;try{asset=await prepareLocalAudio()}catch(e){showPrepError(e);return}if(peerAudioHash!==asset.hash){roomStatus('상대방이 동일한 음원을 로딩했는지 확인하세요.');return}cfg.bpm=asset.chart.bpm;cfg.chart=asset.chart;cfg.assetHash=asset.hash;cfg.title=localFile.name.slice(0,36)}else if(cfg.mode==='youtube'&&localFile){try{const asset=await prepareLocalAudio();cfg.chart=asset.chart;rememberYouTubeChart(cfg.videoId,cfg.chart)}catch(e){showPrepError(e);return}}if(cfg.chart){try{window.RhythmChart.unpack(cfg.chart,'host')}catch(e){showPrepError(e);return}}pendingStart=cfg;roomStatus('채보 준비 완료 · 친구의 로딩 응답을 기다리는 중');if(!net.send({type:'prepare',cfg})){pendingStart=null;roomStatus('준비 패킷 전송 실패')}};$('retry').onclick=()=>{if(onlineMode){show('menu');net.ready(false);roomStatus('온라인 재대결은 양쪽에서 준비를 다시 해주세요.')}else newRound()};$('pause').onclick=()=>togglePause();$('quit').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};$('select').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};modeUI();
+$('start').onclick=async()=>{if(!onlineMode){await newRound();return}if(net.role!=='host'||!net.isConnected()||!net.readySelf||!net.readyPeer){roomStatus('방장과 친구 모두 P2P 접속 및 준비 완료가 필요합니다.');return}let cfg=selectedConfig();if(!cfg)return;if(cfg.mode==='file'){let asset;try{asset=await prepareLocalAudio()}catch(e){showPrepError(e);return}if(peerAudioHash!==asset.hash){roomStatus('상대방이 동일한 음원을 로딩했는지 확인하세요.');return}cfg.bpm=asset.chart.bpm;cfg.chart=asset.chart;cfg.assetHash=asset.hash;cfg.title=localFile.name.slice(0,36)}else if(cfg.mode==='youtube'&&localFile){try{const asset=await prepareLocalAudio();cfg.chart=asset.chart;rememberYouTubeChart(cfg.videoId,cfg.chart)}catch(e){showPrepError(e);return}}if(cfg.chart){try{window.RhythmChart.unpack(cfg.chart,'host')}catch(e){showPrepError(e);return}}pendingStart=cfg;roomStatus('채보 준비 완료 · 친구의 로딩 응답을 기다리는 중');if(!net.send({type:'prepare',cfg})){pendingStart=null;roomStatus('준비 패킷 전송 실패')}};$('retry').onclick=()=>{if(onlineMode){show('menu');net.ready(false);roomStatus('온라인 재대결은 양쪽에서 준비를 다시 해주세요.')}else newRound()};$('pause').onclick=()=>togglePause();$('quit').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};$('select').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};modeUI();restoreSavedChartSelection();
 })();
 </script>
 </body></html>
