@@ -118,6 +118,22 @@ if(s===0||s===6||s===8||s===14){let hz=440*Math.pow(2,((record.root-24+rootShift
 if(s%4===0){let hz=440*Math.pow(2,((record.root+12+rootShift+[0,3,7,10][Math.floor(step/4)%4])-69)/12);tone(hz,at,.15,'triangle',.045)}
 }
 function stopSound(){if(timer){clearInterval(timer);timer=null}if(master){try{master.gain.cancelScheduledValues(audio.currentTime);master.gain.setValueAtTime(.00001,audio.currentTime);master.disconnect()}catch(e){}master=null}for(let o of activeVoices){try{o.stop()}catch(e){}}activeVoices=[]}
+
+function hashId(str){let n=2166136261;for(let c of str)n=Math.imul(n^c.charCodeAt(0),16777619);return n>>>0}
+function parseYouTube(raw){try{let u=new URL(raw),host=u.hostname.toLowerCase().replace(/^www\./,''),id=null;if(host==='youtu.be')id=u.pathname.slice(1).split('/')[0];else if(['youtube.com','m.youtube.com','music.youtube.com','youtube-nocookie.com'].includes(host))id=u.searchParams.get('v')||u.pathname.match(/\/(?:embed|shorts|live)\/([\w-]{11})/)?.[1];return /^[\w-]{11}$/.test(id||'')?id:null}catch{return null}}
+function selectedConfig(){let mode=$('track').value,cfg={mode,diff:$('difficulty').value,speed:Number($('speed').value)};if(mode==='youtube'){let id=parseYouTube($('youtubeUrl').value);if(!id){alert('유튜브 링크를 확인하세요.');return null}cfg.videoId=id;cfg.bpm=clamp(Number($('customBpm').value)||136,60,220);cfg.offset=clamp(Number($('beatOffset').value)||0,0,60);cfg.root=40+hashId(id)%24;cfg.title='YOUTUBE / '+id}return cfg}
+function analyzeFile(buffer){let pcm=buffer.getChannelData(0),sr=buffer.sampleRate,hop=512,values=[],onsets=[];let len=Math.min(pcm.length,sr*270);
+for(let i=0;i+hop<len;i+=hop){let power=0;for(let j=0;j<hop;j+=4)power+=pcm[i+j]*pcm[i+j];values.push(Math.sqrt(power/(hop/4)))}
+let prior=-100;for(let i=25;i<values.length-2;i++){let avg=0;for(let j=1;j<=20;j++)avg+=values[i-j]/20;let delta=values[i]-values[i-3];if(i-prior>sr/hop*.13&&values[i]>Math.max(.012,avg*1.38)&&delta>Math.max(.004,avg*.22)&&values[i]>=values[i+1]){onsets.push(i*hop/sr);prior=i}}
+let votes=new Map();for(let i=0;i<onsets.length;i++)for(let j=i+1;j<Math.min(i+8,onsets.length);j++){let x=60/(onsets[j]-onsets[i]);while(x<75)x*=2;while(x>180)x/=2;let k=Math.round(x);votes.set(k,(votes.get(k)||0)+1)}
+let bpm=[...votes].sort((a,b)=>b[1]-a[1])[0]?.[0]||136;return {bpm,onsets:onsets.slice(0,1500)}}
+window.onYouTubeIframeAPIReady=()=>{};
+async function prepareYouTube(id){
+if(!window.YT?.Player){await new Promise((resolve,reject)=>{let start=Date.now();const check=()=>{if(window.YT?.Player)resolve();else if(Date.now()-start>15000)reject(Error('YouTube API가 응답하지 않습니다.'));else setTimeout(check,100)};check()})}
+if(!yt){ytReady=false;yt=await new Promise((resolve,reject)=>{let player=new YT.Player('ytPlayer',{videoId:id,playerVars:{controls:1,playsinline:1,origin:location.origin},events:{onReady:()=>{ytReady=true;resolve(player)},onStateChange:ev=>{ytPlaying=ev.data===1;if(st!=='game'||sourceMode!=='youtube')return;if(ytPlaying){$('playHint').style.display='none';$('syncInfo').textContent='공식 YouTube 재생 시간으로 채보 동기화 · '+record.bpm+' BPM (직접 입력)';let length=yt.getDuration();if(length>12)finishTime=Math.min(finishTime,length)}else if(ev.data===0)complete();else if(ev.data===2||ev.data===3)$('syncInfo').textContent='영상 일시정지/버퍼링 중 — 채보도 멈춥니다.'},onError:()=>{$('syncInfo').textContent='이 영상은 임베드가 제한될 수 있습니다. 다른 링크로 시도하세요.'}}});setTimeout(()=>reject(Error('유튜브 초기화 타임아웃')),16000)})}
+return yt
+}
+
 function generateChart(){let diff=$('difficulty').value,denom=diff==='easy'?1:diff==='normal'?.5:.25,notesOut=[],duration=intro+GROUPS*SEG*beat+1.4;for(let phrase=0;phrase<GROUPS;phrase++){let side=(onlineMode&&net.role==='host')?(phrase%2===0?'player':'bot'):(phrase%2===0?'bot':'player'),base=intro+phrase*SEG*beat+(record.offset||0),steps=Math.round(SEG/denom);for(let i=0;i<steps;i++){let seed=phrase*233+i*41+record.root,lane=Math.floor(rand(seed+14)*4),pick=rand(seed+37),should=diff==='easy'?pick>.13:diff==='normal'?pick>.22:(i%2===0||pick>.44);if(!should)continue;
 let when=base+i*denom*beat;let sustain=diff==='easy'?0:(i%11===4&&i<steps-3?denom*beat*1.8:0);
 notesOut.push({id:notesOut.length,side,lane,t:when,duration:sustain,done:false,hold:false,missed:false,botDone:false})}}return {items:notesOut.sort((a,b)=>a.t-b.t),duration}}
