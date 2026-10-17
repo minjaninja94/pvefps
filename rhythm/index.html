@@ -104,7 +104,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
 (()=>{
 const $=id=>document.getElementById(id), canvas=$('stage'), g=canvas.getContext('2d'), ARROWS=['←','↓','↑','→'], COLORS=['#ff4b68','#35cafa','#39ed8a','#af70ff'], KEYMAP=['ArrowLeft','ArrowDown','ArrowUp','ArrowRight'];
 const intro=2.5, SEG=8, GROUPS=20, BALANCE={easy:{botHit:.61,botPush:.20,miss:0.85,perfect:3.20,great:2.45,good:1.40,window:.235,perfectWindow:.070,greatWindow:.150},normal:{botHit:.77,botPush:.41,miss:1.35,perfect:2.30,great:1.65,good:.95,window:.195,perfectWindow:.055,greatWindow:.125},hard:{botHit:.90,botPush:.65,miss:2.25,perfect:1.85,great:1.30,good:.65,window:.155,perfectWindow:.045,greatWindow:.098}}, SETTINGS={neon:{bpm:136,root:52,title:'NEON SHOWDOWN'},midnight:{bpm:158,root:48,title:'MIDNIGHT CLASH'}};
-let onlineMode=false, sourceMode="neon", yt=null, ytReady=false, ytPlaying=false, ytPromise=null, localFile=null, fileSource=null, remoteSeen=new Set(),localSeq=0, net=window.RhythmOnline;let audio=null,master=null,noise=null,activeVoices=[],timer=null,raf=0,session=0,st='menu',paused=false,record=null,notes=[],beat=0,finishTime=0,startAt=0,stepCursor=0,noteCursor=0;
+let onlineMode=false, sourceMode="neon", yt=null, ytReady=false, ytPlaying=false, ytPromise=null, localFile=null, fileSource=null, remoteSeen=new Set(),localSeq=0,lastClockSent=0, net=window.RhythmOnline;let audio=null,master=null,noise=null,activeVoices=[],timer=null,raf=0,session=0,st='menu',paused=false,record=null,notes=[],beat=0,finishTime=0,startAt=0,stepCursor=0,noteCursor=0;
 let pressed=[false,false,false,false],strength=50,score=0,combo=0,maxCombo=0,accSum=0,counts={perfect:0,great:0,good:0,miss:0},botHits=0,botMissUntil=0,judgement='',judgeEnd=0,prevPhrase=-1,flashLanes=[0,0,0,0],playerSing=0,botSing=0,lastShown=0,effects=[],wasFinished=false;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rand=(n)=>{let x=Math.sin(n*127.1+78.233)*43758.5453;return x-Math.floor(x)};
@@ -155,7 +155,7 @@ async function newRound(presetConfig){
   for(let n of notes){let closest=null,gap=.17;for(let t of record.onsets){let d=Math.abs(n.t-t);if(d<gap){closest=t;gap=d}}if(closest!==null)n.t=closest}
  }
  stepCursor=noteCursor=0;strength=50;score=combo=maxCombo=accSum=botHits=0;counts={perfect:0,great:0,good:0,miss:0};
- pressed=[false,false,false,false];flashLanes=[0,0,0,0];judgeEnd=0;prevPhrase=-1;playerSing=botSing=0;botMissUntil=0;effects=[];lastShown=0;paused=false;ytPlaying=false;remoteSeen.clear();localSeq=0;
+ pressed=[false,false,false,false];flashLanes=[0,0,0,0];judgeEnd=0;prevPhrase=-1;playerSing=botSing=0;botMissUntil=0;effects=[];lastShown=0;paused=false;ytPlaying=false;remoteSeen.clear();localSeq=0;lastClockSent=0;
  $('pause').textContent='Ⅱ PAUSE (ESC)';$('trackname').textContent=record.title;$('round').textContent='1/10';updateHUD();
  $('youtubeOverlay').style.display=sourceMode==='youtube'?'block':'none';
  $('playHint').style.display=sourceMode==='youtube'?'block':'none';
@@ -183,7 +183,7 @@ function hit(lane){if(st!=='game'||paused)return;let t=time();let candidate=null
 function release(lane){let t=time();for(let n of notes){if(n.side==='player'&&n.lane===lane&&n.hold&&!n.done){if(t<n.holdUntil-.105){n.done=true;n.hold=false;judge('miss',lane,n.id)}else{n.done=true;n.hold=false;score+=250;updateHUD()}}}}
 function autoBot(t){if(onlineMode)return;const balance=BALANCE[record.diff];for(let n of notes){if(n.side==='bot'&&!n.done&&t>=n.t-.07){n.done=true;let succeeds=rand(n.id*99+record.root)<balance.botHit;if(succeeds){let at=Math.max(audio.currentTime,startAt+n.t);musicalNote(n.lane,'bot',at);botHits++;botSing=n.t+.29;modifyStrength(-balance.botPush)}else{botMissUntil=t+.37;modifyStrength(.16)}}}}
 function progress(t){let anchor=intro+(record?.offset||0);if(t<anchor)return {phrase:-1,side:'intro',round:0,fraction:0};let q=Math.floor((t-anchor)/(SEG*beat));q=clamp(q,0,GROUPS-1);return {phrase:q,side:q%2===0?'bot':'player',round:Math.floor(q/2)+1,fraction:((t-anchor)/(SEG*beat))%1}}
-function loop(){if(st!=='game')return;let t=time();if(!paused){if(sourceMode==='youtube'&&!ytPlaying){render(lastShown);raf=requestAnimationFrame(loop);return}autoBot(t);for(let n of notes){if(n.side!=='player'||n.done)continue;if(n.hold){if(t>=n.holdUntil){n.done=true;n.hold=false;score+=250;updateHUD()}else if(!pressed[n.lane]){n.done=true;n.hold=false;judge('miss',n.lane)}}else if(t>n.t+BALANCE[record.diff].window){n.done=true;judge('miss',n.lane,n.id)}}let p=progress(t);if(p.phrase!==prevPhrase){prevPhrase=p.phrase;$('round').textContent=p.round+'/10'}if(t>=finishTime){complete();return}/* Give the player a full response turn before allowing a knockout. */ if(strength<=0&&p.side==='bot'&&p.phrase>=2&&t>intro+(record.offset||0)+p.phrase*SEG*beat+.12){complete(true);return}lastShown=t}
+function loop(){if(st!=='game')return;let t=time();if(!paused){if(sourceMode==='youtube'&&!ytPlaying){render(lastShown);raf=requestAnimationFrame(loop);return}if(onlineMode&&sourceMode==='youtube'&&net.role==='host'&&t-lastClockSent>3&&net.isConnected()){lastClockSent=t;net.send({type:'clock',t})}autoBot(t);for(let n of notes){if(n.side!=='player'||n.done)continue;if(n.hold){if(t>=n.holdUntil){n.done=true;n.hold=false;score+=250;updateHUD()}else if(!pressed[n.lane]){n.done=true;n.hold=false;judge('miss',n.lane)}}else if(t>n.t+BALANCE[record.diff].window){n.done=true;judge('miss',n.lane,n.id)}}let p=progress(t);if(p.phrase!==prevPhrase){prevPhrase=p.phrase;$('round').textContent=p.round+'/10'}if(t>=finishTime){complete();return}/* Give the player a full response turn before allowing a knockout. */ if(strength<=0&&p.side==='bot'&&p.phrase>=2&&t>intro+(record.offset||0)+p.phrase*SEG*beat+.12){complete(true);return}lastShown=t}
 render(lastShown);raf=requestAnimationFrame(loop)}
 function complete(fail=false){if(st!=='game'||wasFinished)return;wasFinished=true;stop();let total=counts.perfect+counts.great+counts.good+counts.miss,acc=total?accSum/total*100:0;let win=!fail&&strength>=50,grade=acc>=95?'SS':acc>=86?'S':acc>=76?'A':acc>=62?'B':'C';$('results').classList.toggle('lose',!win);$('resulttitle').textContent=win?'YOU WIN!':(onlineMode?'RIVAL WINS!':'BOT WINS!');$('resultdesc').textContent=(win?'네 리듬으로 배틀을 가져왔습니다. ':'봇에게 밀렸습니다. 리듬을 다시 잡아보세요. ')+'최종 랭크 '+grade+' · 게이지 '+Math.round(strength)+'%';$('rscore').textContent=score.toLocaleString();$('racc').textContent=acc.toFixed(1)+'%';$('rmax').textContent=maxCombo;$('rperfect').textContent=counts.perfect;$('rmedium').textContent=counts.great+' / '+counts.good;$('rmiss').textContent=counts.miss;show('results')}
 function togglePause(remote=false){if(st!=='game')return;paused=!paused;if(sourceMode==='youtube'){if(paused)yt?.pauseVideo();else yt?.playVideo()}else if(audio){if(paused)audio.suspend();else audio.resume()}$('pause').textContent=paused?'▶ RESUME':'Ⅱ PAUSE (ESC)';if(!remote&&onlineMode)net.send({type:'pause',paused})}
@@ -244,7 +244,7 @@ function modeUI(){
  $('roomPanel').style.display=onlineMode?'block':'none';
  $('track').querySelector('option[value="file"]').disabled=onlineMode;
  if(onlineMode&&$('track').value==='file')$('track').value='youtube';
- $('start').textContent=onlineMode?'⚔ HOST START (BOTH READY)':'▶ START BATTLE';
+ $('start').textContent=onlineMode?'⚔ HOST START (BOTH READY)':'▶ START BATTLE';document.querySelector('.matchHeader .enemy').textContent=onlineMode?'RIVAL / RIGHT ●':'BOT / RIGHT ●';
  settingsUI()
 }
 $('track').onchange=settingsUI;
@@ -265,6 +265,7 @@ net.on('packet',v=>{
  if(!onlineMode)return;
  if(v.type==='start'&&st==='menu'&&net.role==='guest'&&v.cfg){newRound(v.cfg);return}
  if(v.type==='pause'&&st==='game'&&paused!==!!v.paused){togglePause(true);return}
+ if(v.type==='clock'&&st==='game'&&net.role==='guest'&&sourceMode==='youtube'&&ytReady&&ytPlaying&&Number.isFinite(v.t)){let diff=Number(v.t)+.1-time();if(Math.abs(diff)>.6){yt.seekTo(Math.max(0,Number(v.t)+.1),true);$('syncInfo').textContent='상대 영상 재생 위치에 맞춰 '+Math.abs(diff).toFixed(1)+'초 동기화 보정';}return}
  if(v.type==='judge'&&st==='game'&&record&&Number.isInteger(v.seq)&&!remoteSeen.has(v.seq)&&Number.isInteger(v.id)&&['perfect','great','good','miss'].includes(v.kind)){
    let n=notes.find(x=>x.id===v.id&&x.side==='bot');if(!n)return;
    remoteSeen.add(v.seq);if(remoteSeen.size>600)remoteSeen.clear();
