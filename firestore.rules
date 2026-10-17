@@ -88,6 +88,64 @@ service cloud.firestore {
         allow delete: if participant();
       }
     }
+
+    // Two-player rhythm rooms (signaling only; gameplay packets use WebRTC).
+    match /rhythmRooms/{roomId} {
+      function validRoom(r) {
+        return r.keys().hasOnly(['host','guest','status','videoId','bpm','offset','track','created','expires','startsAt'])
+          && r.host is string && r.host.size() > 0
+          && (r.guest == null || r.guest is string)
+          && r.status == 'lobby'
+          && r.track in ['neon','midnight','youtube']
+          && r.videoId is string && r.videoId.size() <= 11
+          && r.bpm is number && r.bpm >= 0 && r.bpm <= 220
+          && r.offset is number && r.offset >= 0 && r.offset <= 60
+          && r.created is number && r.expires is number
+          && r.expires <= r.created + 1800000 && r.expires <= now() + 1860000
+          && r.startsAt == null;
+      }
+      function joined(r) {
+        return signed() && (r.host == request.auth.uid || r.guest == request.auth.uid);
+      }
+      allow get: if signed();
+      allow list: if false;
+      allow create: if signed() && validRoom(request.resource.data)
+        && request.resource.data.host == request.auth.uid && request.resource.data.guest == null
+        && request.resource.data.created >= now()-60000 && request.resource.data.created <= now()+60000
+        && request.resource.data.expires > now();
+      allow update: if signed() && validRoom(request.resource.data)
+        && resource.data.expires > now()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guest'])
+        && (
+          (resource.data.guest == null && request.resource.data.guest == request.auth.uid && resource.data.host != request.auth.uid)
+          || (resource.data.guest == request.auth.uid && request.resource.data.guest == null)
+        );
+      allow delete: if signed() && resource.data.host == request.auth.uid;
+
+      match /signals/{signalId} {
+        function parent() { return get(/databases/$(database)/documents/rhythmRooms/$(roomId)).data; }
+        function member() { return signed() && (parent().host == request.auth.uid || parent().guest == request.auth.uid) && parent().expires > now(); }
+        function signalOK(v) {
+          return v.keys().hasOnly(['offer','answer','expires'])
+            && v.offer is string && v.offer.size() <= 40000
+            && v.answer is string && v.answer.size() <= 40000
+            && v.expires is number && v.expires <= now()+1860000;
+        }
+        allow get: if signalId == 'channel' && member();
+        allow list: if false;
+        allow create: if signalId == 'channel' && member()
+          && request.auth.uid == parent().host && signalOK(request.resource.data);
+        allow update: if signalId == 'channel' && member() && signalOK(request.resource.data)
+          && (
+            (request.auth.uid == parent().host)
+            || (request.auth.uid == parent().guest
+                && request.resource.data.offer == resource.data.offer
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answer']))
+          );
+        allow delete: if signalId == 'channel' && member() && request.auth.uid == parent().host;
+      }
+    }
+
     match /{document=**} { allow read, write: if false; }
   }
 }
