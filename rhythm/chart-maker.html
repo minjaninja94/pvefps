@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#090c1b">
+<title>NEON DUEL / YouTube Beat Lab</title>
+<style>
+:root{color-scheme:dark;--cyan:#74ecfc;--pink:#f678c0}*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 5% 15%,#113956 0,transparent 45%),radial-gradient(ellipse at 90% 80%,#4d234a 0,transparent 44%),#090c1b;color:#f7f6ff;font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;min-height:100vh}
+header{max-width:1180px;margin:auto;padding:22px 24px;display:flex;justify-content:space-between;align-items:center;gap:15px}a{color:var(--cyan);text-decoration:none}a:hover{text-decoration:underline}
+.brand{font-weight:1000;letter-spacing:.13em}.brand b{color:var(--cyan)}
+main{max-width:1110px;padding:0 20px 65px;margin:0 auto}
+.hero{border:1px solid #ffffff21;padding:28px 36px;background:#15132be8;border-radius:20px}
+.eyebrow{font-size:11px;font-weight:850;color:var(--cyan);letter-spacing:.23em}
+h1{font-size:clamp(34px,6vw,65px);letter-spacing:-.055em;margin:14px 0 10px;line-height:1.1}h1 em{font-style:normal;color:#fa72b5}
+p{line-height:1.7;color:#bbb9d1;font-size:14px}label{font-size:12px;color:#b8b5ca;font-weight:700}
+.controls{margin:24px 0;display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+label.url{flex:1 1 390px}input,select{display:block;width:100%;min-height:45px;margin-top:8px;border:1px solid #695c88;border-radius:10px;background:#0b1128;color:#fff;padding:10px 13px;font:inherit}
+button{cursor:pointer;background:#212542;border:1px solid #77679e;color:white;padding:12px 18px;border-radius:10px;font:inherit;font-size:13px;font-weight:800}
+button.primary{background:linear-gradient(115deg,#18a0be,#7d53e5,#e44696);border:0}
+button:disabled{opacity:.45;cursor:not-allowed}button:hover:not(:disabled){filter:brightness(1.15)}
+.layout{display:grid;grid-template-columns: minmax(0,1.5fr) minmax(270px,.85fr);gap:18px}
+.videoBox,.sidePanel,.result{border:1px solid #ffffff25;border-radius:18px;background:#12162be8;overflow:hidden}
+.videoBox{padding:14px}.player{aspect-ratio:16/9;background:#020513;border-radius:10px;overflow:hidden}
+#youtube-player,#youtube-player iframe{width:100%;height:100%;border:0}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.sidePanel{padding:20px}
+ol{margin:12px 0 0 20px;padding:0;color:#bbb9d1;line-height:1.85;font-size:13px}li{margin-bottom:7px}
+.status{min-height:50px;border:1px solid #73daf333;border-radius:10px;background:#112638;margin:15px 0;padding:13px;font-size:13px;color:#a9e7f1;line-height:1.55}
+.caution{font-size:12px;color:#d4a5c7;line-height:1.6;margin-top:14px}
+.meters{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.meters article{border-radius:12px;padding:14px 7px;background:#ffffff0b;text-align:center;color:#a9a6c6;font-size:11px}
+.meters strong{display:block;color:#fff;font-size:23px;margin-top:5px;font-variant-numeric:tabular-nums}
+.result{padding:23px;margin-top:18px}
+.result h2{font-size:23px;margin:4px 0 14px}
+.bar{height:8px;background:#20263a;border-radius:100px;overflow:hidden;margin:10px 0}
+#bar{width:0;height:100%;background:linear-gradient(90deg,#21bbf3,#b264e9)}
+.row{display:flex;justify-content:space-between;color:#aaa8c0;font-size:12px}
+#beats{height:128px;width:100%;display:block;margin-top:12px;background:#0b1226;border-radius:10px}
+.small{font-size:11px;color:#aaa6c0}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.hero{padding:24px}.sidePanel{padding:18px}}
+</style></head><body>
+<header><div class="brand">NEON <b>DUEL</b> <span style="color:#a9a6c0;font-size:12px">/ BEAT LAB</span></div><a href="./index.html">← 리듬 배틀로 돌아가기</a></header>
+<main><div class="hero"><span class="eyebrow">YOUTUBE LINK → BEAT DETECTION → VS CHART</span><h1>LINK TO <em>RHYTHM.</em></h1><p>유튜브 링크 하나로 채보를 제작하세요. 보유 음악 파일을 업로드할 필요는 없습니다. 영상 재생 중 브라우저의 <strong>탭 오디오 공유</strong> 허가를 받아 박자를 검출하고, 분석된 채보만 게임에 저장합니다.</p></div>
+<div class="controls">
+<label class="url">YOUTUBE URL<input id="url" type="url" value="https://www.youtube.com/watch?v=rYx3BJ1zQ34" placeholder="https://youtu.be/xxxxxxxxxxx"></label>
+<label>난이도<select id="difficulty"><option value="easy">EASY</option><option value="normal" selected>NORMAL</option><option value="hard">HARD</option></select></label>
+<button id="load" class="primary">① 영상 불러오기</button>
+</div>
+<div class="layout">
+<section class="videoBox">
+ <div class="player"><div id="youtube-player"></div></div>
+ <div class="actions">
+  <button id="capture" class="primary" disabled>② 이 탭 오디오 공유</button>
+  <button id="finish" disabled>③ 분석 종료 · 채보 생성</button>
+  <button id="reset">분석 초기화</button>
+ </div>
+ <div class="status" id="status" role="status" aria-live="polite">① 영상을 불러오세요. 최대 5분(300초)까지 분석할 수 있습니다.</div>
+ <div class="bar"><div id="bar"></div></div>
+ <div class="row"><span id="position">0:00 / 0:00</span><span id="stateLabel">대기 중</span></div>
+ <canvas id="beats" width="900" height="128" aria-label="검출된 비트 타임라인"></canvas>
+ <p class="small">게임용 노트 타임스탬프만 저장하며 동영상·MP3·녹화 화면은 저장하거나 서버로 업로드하지 않습니다. 분석하려는 콘텐츠에 필요한 이용 권한을 확인하세요.</p>
+</section>
+<aside class="sidePanel">
+ <span class="eyebrow">WORKFLOW</span><h2 style="font-size:22px;margin:12px 0">사용 순서</h2>
+ <ol>
+  <li>유튜브 링크를 넣고 영상을 불러옵니다.</li>
+  <li><b>이 탭 오디오 공유</b>를 누른 뒤 Chrome/Edge 공유 창에서 <b>현재 탭</b>을 선택하고 <b>탭 오디오 공유</b>를 체크합니다.</li>
+  <li>공식 플레이어에서 영상 재생을 누릅니다. 음악을 재생하는 동안 비트 분석이 진행됩니다.</li>
+  <li>영상이 끝나면 자동으로, 또는 <b>분석 종료</b>를 눌러 채보를 완성합니다.</li>
+  <li><b>게임에 채보 저장</b>을 누른 후 리듬 배틀을 실행합니다.</li>
+ </ol>
+ <div class="caution">유튜브 링크만으로 음원 파형에 직접 접근할 수는 없습니다. 따라서 사용자 동의에 따른 실시간 탭 오디오 공유가 필요하며, 영상 재생 시간만큼 분석 시간이 걸립니다. 일부 브라우저·영상에서는 오디오 공유가 지원되지 않을 수 있습니다.</div>
+ <div class="meters">
+   <article>감지 비트<strong id="onsetCount">0</strong></article><article>채보 노트<strong id="noteCount">0</strong></article><article>추정 BPM<strong id="bpm">—</strong></article>
+ </div>
+</aside></div>
+<section class="result" id="result" hidden>
+ <span class="eyebrow">READY TO BATTLE</span><h2>채보 생성 완료</h2>
+ <p id="resultText"></p>
+ <div class="actions">
+  <button class="primary" id="save">④ 게임에 채보 저장</button>
+  <button id="export">채보 JSON 내보내기</button>
+  <a id="play" href="./index.html" style="align-self:center">배틀게임 실행 →</a>
+ </div>
+</section>
+</main>
+<script src="./chart-analysis.js"></script>
+<script src="https://www.youtube.com/iframe_api" async></script>
+<script src="./chart-maker.js"></script>
+</body></html>
