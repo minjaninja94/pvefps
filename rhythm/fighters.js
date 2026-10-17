@@ -40,9 +40,19 @@ function draw(g,x,footY,profile,opts={}){
  line(g,[[-29,-74],[-11,-73]],p.trim,3);line(g,[[10,-74],[35,-73]],p.trim,3);
  fill(g,z=>{z.moveTo(-31,-36);z.lineTo(-32,-11);z.lineTo(-56,-4);z.lineTo(-54,2);z.lineTo(-4,2);z.lineTo(-5,-32);z.closePath()},'#181e44',p.trim,3);
  fill(g,z=>{z.moveTo(9,-35);z.lineTo(8,-11);z.lineTo(31,-3);z.lineTo(57,1);z.lineTo(6,3);z.closePath()},'#181e44',p.trim,3);
- // skirt / armored coat flares
- fill(g,z=>{z.moveTo(-35,-191);z.quadraticCurveTo(-64,-149,-73,-116);z.quadraticCurveTo(-19,-99,6,-120);z.quadraticCurveTo(52,-105,76,-122);z.quadraticCurveTo(57,-159,36,-194);z.closePath()},p.bottom,'#141729',5);
- for(let k=-2;k<=2;k++)line(g,[[k*26,-153],[k*28,-121]],p.trim,2);
+ // Distinct fully-clothed costume silhouettes.
+ if(p.costume==='mage'){
+  fill(g,z=>{z.moveTo(-43,-229);z.quadraticCurveTo(-115,-182,-99,-53);z.quadraticCurveTo(-48,-93,-23,-132);z.lineTo(27,-129);z.quadraticCurveTo(55,-92,98,-52);z.quadraticCurveTo(111,-196,39,-230);z.closePath()},p.outfit,'#252041',5);
+  for(let k of [-1,1])line(g,[[k*72,-190],[k*89,-90]],p.trim,4);
+ }
+ if(p.costume!=='street'&&p.costume!=='cyber'){
+  fill(g,z=>{z.moveTo(-35,-191);z.quadraticCurveTo(-64,-149,-73,p.costume==='idol'?-98:-116);z.quadraticCurveTo(-19,-99,6,-120);z.quadraticCurveTo(52,-105,76,p.costume==='idol'?-98:-122);z.quadraticCurveTo(57,-159,36,-194);z.closePath()},p.bottom,'#141729',5);
+  for(let k=-2;k<=2;k++)line(g,[[k*26,-153],[k*28,p.costume==='idol'?-105:-121]],p.trim,2);
+  if(p.costume==='idol'){for(let k=-2;k<=2;k++)circle(g,k*27,-112,7,p.trim);line(g,[[-67,-123],[0,-138],[70,-122]],'#fff4f3',3)}
+ }else{
+  fill(g,z=>{z.moveTo(-39,-186);z.lineTo(40,-186);z.lineTo(39,-137);z.lineTo(-35,-137);z.closePath()},p.bottom,'#191a33',4);
+  for(let k of [-1,1])line(g,[[k*25,-137],[k*25,-70]],p.trim,p.costume==='cyber'?5:2);
+ }
  // shoulder, torso jacket with fitted but nonsexual fashion
  fill(g,z=>{z.moveTo(-45,-222);z.lineTo(-20,-241);z.quadraticCurveTo(5,-254,27,-239);z.lineTo(47,-219);z.lineTo(37,-163);z.quadraticCurveTo(0,-154,-37,-165);z.closePath()},p.outfit,'#1c1738',5);
  fill(g,z=>{z.moveTo(-22,-237);z.lineTo(0,-198);z.lineTo(24,-239);z.lineTo(14,-185);z.lineTo(-11,-184);z.closePath()},p.trim,'#242a55',2);
@@ -50,6 +60,23 @@ function draw(g,x,footY,profile,opts={}){
  if(bust){g.save();g.globalAlpha=.42;g.lineWidth=2;g.strokeStyle=p.hairDark;g.beginPath();g.moveTo(-24,-215);g.quadraticCurveTo(-33-bust/2,-197,-8,-196);g.moveTo(24,-215);g.quadraticCurveTo(33+bust/2,-197,8,-196);g.stroke();g.restore()}
  fill(g,z=>{z.moveTo(-32,-188);z.quadraticCurveTo(2,-178,33,-188);z.lineTo(36,-174);z.quadraticCurveTo(0,-160,-34,-177);z.closePath()},p.hairDark,null,0);
  circle(g,0,-190,6,p.trim);
+ if(p.costume==='armor'||!p.costume){
+  fill(g,z=>{z.moveTo(-39,-225);z.lineTo(-10,-221);z.lineTo(-19,-197);z.lineTo(-49,-200);z.closePath()},'#ced8ef',p.trim,3);
+  fill(g,z=>{z.moveTo(34,-225);z.lineTo(50,-200);z.lineTo(19,-197);z.lineTo(9,-221);z.closePath()},'#c6cee9',p.trim,3);
+ }else if(p.costume==='idol'){
+  fill(g,z=>{z.moveTo(-17,-204);z.lineTo(0,-186);z.lineTo(17,-204);z.lineTo(2,-210);z.closePath()},'#ffd8e9',p.trim,2);
+  circle(g,0,-200,7,p.trim);
+  line(g,[[-35,-183],[0,-174],[35,-183]],'#fff4ed',4);
+ }else if(p.costume==='street'){
+  line(g,[[-25,-234],[-9,-206],[-20,-187]],p.trim,6);
+  line(g,[[28,-235],[9,-205],[23,-189]],p.trim,6);
+  for(let y of [-171,-165])line(g,[[-25,y],[-7,y]],'#ffffff9a',2);
+ }else if(p.costume==='cyber'){
+  for(const side of [-1,1])line(g,[[side*35,-218],[side*22,-192],[side*30,-173]],p.trim,5);
+  circle(g,0,-208,10,p.trim);circle(g,0,-208,5,'#fff');
+ }else if(p.costume==='mage'){
+  fill(g,z=>{z.moveTo(-45,-239);z.quadraticCurveTo(0,-218,44,-239);z.lineTo(22,-204);z.lineTo(-22,-204);z.closePath()},p.trim,'#24183d',3);
+ }
  // left sleeve and gloved hand
  fill(g,z=>{z.moveTo(-42,-221);z.quadraticCurveTo(-63,-204,-69,-165);z.lineTo(-51,-160);z.quadraticCurveTo(-44,-185,-28,-205);z.closePath()},p.outfit,'#20172c',4);
  fill(g,z=>{z.moveTo(-69,-172);z.quadraticCurveTo(-83,-150,-64,-137);z.quadraticCurveTo(-46,-139,-52,-169);z.closePath()},p.trim,'#22203c',3);
