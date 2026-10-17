@@ -29,7 +29,7 @@ class RhythmOnline{
   }finally{this.connecting=false}}
   async gather(pc){if(pc.iceGatheringState==='complete')return;await new Promise(resolve=>{const finish=()=>{clearTimeout(timeout);pc.removeEventListener('icegatheringstatechange',check);resolve()},check=()=>{if(pc.iceGatheringState==='complete')finish()},timeout=setTimeout(finish,8500);pc.addEventListener('icegatheringstatechange',check)})}
   wire(channel){this.channel=channel;channel.onopen=()=>{this.emit('connected');this.send({type:'hello'});if(this.readySelf)this.send({type:'ready',ready:true})};
-    channel.onmessage=e=>{let v;try{if(typeof e.data!=='string'||e.data.length>2000)return;v=JSON.parse(e.data)}catch{return}if(!v||typeof v.type!=='string')return;if(v.type==='ready'){this.readyPeer=!!v.ready;this.emit('ready',{self:this.readySelf,peer:this.readyPeer})}else if(v.type==='hello'){this.emit('connected');if(this.readySelf)this.send({type:'ready',ready:true})}else this.emit('packet',v)};
+    channel.onmessage=e=>{let v;try{if(typeof e.data!=='string'||e.data.length>65000)return;v=JSON.parse(e.data)}catch{return}if(!v||typeof v.type!=='string')return;if(v.type==='ready'){this.readyPeer=!!v.ready;this.emit('ready',{self:this.readySelf,peer:this.readyPeer})}else if(v.type==='hello'){this.emit('connected');if(this.readySelf)this.send({type:'ready',ready:true})}else this.emit('packet',v)};
     channel.onclose=()=>{this.readyPeer=false;this.emit('disconnect','상대와 연결이 종료되었습니다.')}};
   ready(yes){this.readySelf=!!yes;this.send({type:'ready',ready:this.readySelf});this.emit('ready',{self:this.readySelf,peer:this.readyPeer})}
   send(v){if(this.channel?.readyState==='open'){this.channel.send(JSON.stringify(v));return true}return false}
