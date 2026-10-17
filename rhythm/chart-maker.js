@@ -100,7 +100,7 @@ async function shareTabAudio(){
  if(!navigator.mediaDevices?.getDisplayMedia){label('이 브라우저는 탭 오디오 공유를 지원하지 않습니다. 데스크톱 Chrome 또는 Edge의 HTTPS 페이지에서 실행하세요.');return}
  // Must be invoked synchronously from the button's user activation.
  const task=navigator.mediaDevices.getDisplayMedia({
-  video:{displaySurface:'browser'},audio:{echoCancellation:false,noiseSuppression:false},
+  video:{displaySurface:'browser'},audio:{echoCancellation:false,noiseSuppression:false,suppressLocalAudioPlayback:false},
   preferCurrentTab:true,selfBrowserSurface:'include',systemAudio:'exclude',surfaceSwitching:'exclude'
  });
  $('capture').disabled=true;
@@ -182,8 +182,8 @@ function loop(){
    label('영상 재생 위치가 뒤로 이동했습니다. 검출 결과를 새로 시작합니다.');
    resetAnalysis();
   }
-  if(t>=values.duration-.06&&values.duration>0){finishCapture();return}
-  if(t>=0&&t<=MAX){captureFrame(t);values.started=true}
+  if(t>=MAX){if(values.duration>MAX||!values.duration){label('최대 분석 길이 5분에 도달했습니다.');closeCapture();return}finishCapture();return}if(t>=values.duration-.06&&values.duration>0){finishCapture();return}
+  if(t>=0&&t<=MAX){captureFrame(t);values.started=true;if(t>9&&values.peaks.length===0)label('분석 중이지만 비트가 검출되지 않습니다. 「탭 오디오 공유」가 체크됐는지 확인하세요.')}
  }
  $('position').textContent=fmt(Math.max(0,t))+' / '+fmt(values.duration||0);
  $('bar').style.width=(values.duration?clamp(t/values.duration*100,0,100):0)+'%';
