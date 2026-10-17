@@ -81,13 +81,14 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
   <div id="musicExtras" class="musicExtras" style="display:none">
    <label class="setting" id="youtubeField">YOUTUBE LINK<input id="youtubeUrl" type="url" value="https://www.youtube.com/watch?v=rYx3BJ1zQ34" placeholder="https://youtu.be/VIDEO_ID"></label>
    <label class="setting" id="fileField" style="display:none">오디오 파일 (기기에만 저장)<input id="audioFile" type="file" accept="audio/*"></label>
-   <label class="setting">BPM (유튜브는 직접 입력)<input id="customBpm" type="number" min="60" max="220" value="136"></label>
+   <label class="setting">BPM (직접 입력 / 박자 두드리기)<input id="customBpm" type="number" min="60" max="220" value="136"><button type="button" id="tapBpm" class="small" style="margin-top:7px;width:100%">♫ TAP BPM</button></label>
    <label class="setting">첫 박자 위치 (초)<input id="beatOffset" type="number" min="0" max="60" step="0.1" value="0"></label>
    <div class="notice" id="analysisNotice">YouTube 공식 플레이어의 영상/음성을 추출하거나 저장하지 않습니다. YouTube 채보는 입력한 BPM과 박자 위치로 생성하며 스트림 파형을 실제 분석한 결과가 아닙니다. 파일 모드에서는 기기 내부에서 음향 강세를 분석합니다.</div>
   </div>
   <div class="full"><button class="start" id="start">▶ START BATTLE</button></div>
  </div>
- <div id="battleMode"><div class="modebar"><button id="soloMode" class="chosen">🤖 혼자 vs 봇</button><button id="onlineMode">⚔️ 온라인 2인 VS</button></div><div id="roomPanel"><div class="roomcontrols"><button id="createRoom">방 만들기</button><input id="joinCode" maxlength="5" placeholder="초대 코드 5자리" aria-label="방 코드"><button id="joinRoom">입장</button><button id="readyRoom">준비</button><button id="leaveRoom">나가기</button><span id="roomCode"></span></div><div id="roomStatus">방을 만들거나 친구의 초대 코드를 입력하세요. 다른 플레이어가 입장한 뒤 서로 준비하면 방장이 시작할 수 있습니다.</div></div></div>\n <p class="hint"><b>← ↓ ↑ →</b> 방향키로 자신의 차례에 노트를 입력하세요. 상대 차례는 자동 진행.<br>상대보다 잘 부르면 게이지를 빼앗습니다. 홀드 노트는 누른 채 유지하세요. <b>ESC</b> 일시정지.</p>
+ <div id="battleMode"><div class="modebar"><button id="soloMode" class="chosen">🤖 혼자 vs 봇</button><button id="onlineMode">⚔️ 온라인 2인 VS</button></div><div id="roomPanel"><div class="roomcontrols"><button id="createRoom">방 만들기</button><input id="joinCode" maxlength="5" placeholder="초대 코드 5자리" aria-label="방 코드"><button id="joinRoom">입장</button><button id="readyRoom">준비</button><button id="leaveRoom">나가기</button><span id="roomCode"></span></div><div id="roomStatus">방을 만들거나 친구의 초대 코드를 입력하세요. 다른 플레이어가 입장한 뒤 서로 준비하면 방장이 시작할 수 있습니다.</div></div></div>
+ <p class="hint"><b>← ↓ ↑ →</b> 방향키로 자신의 차례에 노트를 입력하세요. 상대 차례는 자동 진행.<br>상대보다 잘 부르면 게이지를 빼앗습니다. 홀드 노트는 누른 채 유지하세요. <b>ESC</b> 일시정지.</p>
 </main>
 <section id="game">
  <div class="matchHeader"><span class="your">● PLAYER / LEFT</span><strong id="trackname">NEON SHOWDOWN</strong><span class="enemy">BOT / RIGHT ●</span></div>
@@ -148,7 +149,7 @@ async function newRound(presetConfig){
   try{if(!localFile)throw Error('파일을 선택하세요.');initAudio();record.buffer=await audio.decodeAudioData(await localFile.arrayBuffer());let analysis=analyzeFile(record.buffer);record.bpm=analysis.bpm;record.onsets=analysis.onsets;beat=60/record.bpm;record.title=localFile.name.slice(0,34);$('customBpm').value=record.bpm}
   catch(e){alert('파일 분석 실패: '+e.message);return}
  }
- let chart=generateChart();notes=chart.items;finishTime=chart.duration;
+ let chart=generateChart();notes=chart.items;finishTime=chart.duration+(record.offset||0);
  if(sourceMode==='file'){
   notes=notes.filter(n=>n.t<record.buffer.duration-.2);finishTime=Math.min(finishTime,record.buffer.duration);
   for(let n of notes){let closest=null,gap=.17;for(let t of record.onsets){let d=Math.abs(n.t-t);if(d<gap){closest=t;gap=d}}if(closest!==null)n.t=closest}
@@ -181,8 +182,8 @@ function updateHUD(){let total=counts.perfect+counts.great+counts.good+counts.mi
 function hit(lane){if(st!=='game'||paused)return;let t=time();let candidate=null,balance=BALANCE[record.diff],diff=balance.window;for(let n of notes){if(n.side!=='player'||n.done||n.hold||n.lane!==lane)continue;let d=Math.abs(n.t-t);if(d<diff){diff=d;candidate=n}}if(!candidate)return;let grade=diff<=balance.perfectWindow?'perfect':diff<=balance.greatWindow?'great':'good';candidate.grade=grade;if(candidate.duration>0){candidate.hold=true;candidate.holdUntil=candidate.t+candidate.duration;judge(grade,lane,candidate.id)}else{candidate.done=true;judge(grade,lane,candidate.id)}}
 function release(lane){let t=time();for(let n of notes){if(n.side==='player'&&n.lane===lane&&n.hold&&!n.done){if(t<n.holdUntil-.105){n.done=true;n.hold=false;judge('miss',lane,n.id)}else{n.done=true;n.hold=false;score+=250;updateHUD()}}}}
 function autoBot(t){if(onlineMode)return;const balance=BALANCE[record.diff];for(let n of notes){if(n.side==='bot'&&!n.done&&t>=n.t-.07){n.done=true;let succeeds=rand(n.id*99+record.root)<balance.botHit;if(succeeds){let at=Math.max(audio.currentTime,startAt+n.t);musicalNote(n.lane,'bot',at);botHits++;botSing=n.t+.29;modifyStrength(-balance.botPush)}else{botMissUntil=t+.37;modifyStrength(.16)}}}}
-function progress(t){if(t<intro)return {phrase:-1,side:'intro',round:0,fraction:0};let q=Math.floor((t-intro)/(SEG*beat));q=clamp(q,0,GROUPS-1);return {phrase:q,side:q%2===0?'bot':'player',round:Math.floor(q/2)+1,fraction:((t-intro)/(SEG*beat))%1}}
-function loop(){if(st!=='game')return;let t=time();if(!paused){if(sourceMode==='youtube'&&!ytPlaying){render(lastShown);raf=requestAnimationFrame(loop);return}autoBot(t);for(let n of notes){if(n.side!=='player'||n.done)continue;if(n.hold){if(t>=n.holdUntil){n.done=true;n.hold=false;score+=250;updateHUD()}else if(!pressed[n.lane]){n.done=true;n.hold=false;judge('miss',n.lane)}}else if(t>n.t+BALANCE[record.diff].window){n.done=true;judge('miss',n.lane,n.id)}}let p=progress(t);if(p.phrase!==prevPhrase){prevPhrase=p.phrase;$('round').textContent=p.round+'/10'}if(t>=finishTime){complete();return}/* Give the player a full response turn before allowing a knockout. */ if(strength<=0&&p.side==='bot'&&p.phrase>=2&&t>intro+p.phrase*SEG*beat+.12){complete(true);return}lastShown=t}
+function progress(t){let anchor=intro+(record?.offset||0);if(t<anchor)return {phrase:-1,side:'intro',round:0,fraction:0};let q=Math.floor((t-anchor)/(SEG*beat));q=clamp(q,0,GROUPS-1);return {phrase:q,side:q%2===0?'bot':'player',round:Math.floor(q/2)+1,fraction:((t-anchor)/(SEG*beat))%1}}
+function loop(){if(st!=='game')return;let t=time();if(!paused){if(sourceMode==='youtube'&&!ytPlaying){render(lastShown);raf=requestAnimationFrame(loop);return}autoBot(t);for(let n of notes){if(n.side!=='player'||n.done)continue;if(n.hold){if(t>=n.holdUntil){n.done=true;n.hold=false;score+=250;updateHUD()}else if(!pressed[n.lane]){n.done=true;n.hold=false;judge('miss',n.lane)}}else if(t>n.t+BALANCE[record.diff].window){n.done=true;judge('miss',n.lane,n.id)}}let p=progress(t);if(p.phrase!==prevPhrase){prevPhrase=p.phrase;$('round').textContent=p.round+'/10'}if(t>=finishTime){complete();return}/* Give the player a full response turn before allowing a knockout. */ if(strength<=0&&p.side==='bot'&&p.phrase>=2&&t>intro+(record.offset||0)+p.phrase*SEG*beat+.12){complete(true);return}lastShown=t}
 render(lastShown);raf=requestAnimationFrame(loop)}
 function complete(fail=false){if(st!=='game'||wasFinished)return;wasFinished=true;stop();let total=counts.perfect+counts.great+counts.good+counts.miss,acc=total?accSum/total*100:0;let win=!fail&&strength>=50,grade=acc>=95?'SS':acc>=86?'S':acc>=76?'A':acc>=62?'B':'C';$('results').classList.toggle('lose',!win);$('resulttitle').textContent=win?'YOU WIN!':(onlineMode?'RIVAL WINS!':'BOT WINS!');$('resultdesc').textContent=(win?'네 리듬으로 배틀을 가져왔습니다. ':'봇에게 밀렸습니다. 리듬을 다시 잡아보세요. ')+'최종 랭크 '+grade+' · 게이지 '+Math.round(strength)+'%';$('rscore').textContent=score.toLocaleString();$('racc').textContent=acc.toFixed(1)+'%';$('rmax').textContent=maxCombo;$('rperfect').textContent=counts.perfect;$('rmedium').textContent=counts.great+' / '+counts.good;$('rmiss').textContent=counts.miss;show('results')}
 function togglePause(remote=false){if(st!=='game')return;paused=!paused;if(sourceMode==='youtube'){if(paused)yt?.pauseVideo();else yt?.playVideo()}else if(audio){if(paused)audio.suspend();else audio.resume()}$('pause').textContent=paused?'▶ RESUME':'Ⅱ PAUSE (ESC)';if(!remote&&onlineMode)net.send({type:'pause',paused})}
@@ -215,7 +216,7 @@ function lanes(t,p){let baseY=125,travel=1.62/record.speed,v=345/travel;for(let 
 for(let n of notes){if(n.side!==side||n.done)continue;let y=baseY+(n.t-t)*v;if(y>496||y<45)continue;let x=offset+n.lane*76;let alpha=turn?1:.8;let tail=n.duration*v;if(tail>0){rounded(x-9,y+8,18,Math.max(6,tail),7,COLORS[n.lane]+'88')}arrow(x,y,n.lane,36,COLORS[n.lane],alpha)}
 text(side==='player'?'YOUR NOTES':(onlineMode?'RIVAL NOTES':'BOT NOTES'),offset+114,480,'bold 14px system-ui',turn?side==='player'?'#60f1fa':'#ff66b3':'#7c7396')}}
 function banner(t,p){if(p.side==='intro'){text('GET READY',600,202,'900 44px system-ui','#fff');text('BATTLE STARTS IN '+Math.max(1,Math.ceil(intro-t)),600,237,'bold 17px system-ui','#d4c4fc');return}
-let sectionStart=intro+p.phrase*SEG*beat,delta=t-sectionStart,round=Math.floor(p.phrase/2)+1;
+let sectionStart=intro+(record.offset||0)+p.phrase*SEG*beat,delta=t-sectionStart,round=Math.floor(p.phrase/2)+1;
 rounded(458,80,284,54,13,p.side==='bot'?'#6f235edb':'#146c80d6');text(p.side==='bot'?(onlineMode?'RIVAL TURN':'BOT TURN'):'YOUR TURN',600,115,'900 27px system-ui','#fff');
 if(delta<.68){g.globalAlpha=clamp(1-delta/.68,0,1);text(p.side==='player'?'YOUR RESPONSE!':(onlineMode?'RIVAL CALLS!':'BOT CALLS!'),600,270,'900 43px system-ui',p.side==='player'?'#57f4ff':'#ff76bd');g.globalAlpha=1}
 text('ROUND '+round+' / 10',600,153,'bold 13px system-ui','#c5bfe2');rounded(481,164,238,6,3,'#ffffff30');rect(481,164,238*clamp(delta/(SEG*beat),0,1),6,p.side==='player'?'#57f2ff':'#fd66b2')}
@@ -227,6 +228,7 @@ let elapsed=clamp(t,0,finishTime);text(Math.floor(elapsed/60)+':'+String(Math.fl
 if(paused){rect(0,0,1200,700,'#050619df');text('PAUSED',600,321,'900 83px system-ui','#fff');text('ESC / RESUME 버튼으로 계속',600,366,'bold 21px system-ui','#ddd1ee')}
 g.restore()}
 
+let tapTimes=[];$('tapBpm').onclick=()=>{let now=performance.now();tapTimes.push(now);tapTimes=tapTimes.filter(t=>now-t<5500).slice(-12);if(tapTimes.length>=3){let gaps=tapTimes.slice(1).map((t,i)=>t-tapTimes[i]).filter(x=>x>=260&&x<=1000).sort((a,b)=>a-b);if(gaps.length){let median=gaps[Math.floor(gaps.length/2)];$('customBpm').value=Math.round(60000/median);$('tapBpm').textContent='♫ '+$('customBpm').value+' BPM'}}};
 function settingsUI(){
  const kind=$('track').value;
  $('musicExtras').style.display=kind==='youtube'||kind==='file'?'grid':'none';
