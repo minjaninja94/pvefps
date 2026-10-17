@@ -34,3 +34,11 @@ YouTube + 분석 채보 온라인 배틀도 가능합니다. 이 경우 호스�
 - 브라우저 간 실제 Firebase 접속·게임플레이는 아직 별도 실기 테스트가 필요합니다.
 
 공식 참고: [YouTube IFrame API](https://developers.google.com/youtube/iframe_api_reference), [YouTube 개발자 정책](https://developers.google.com/youtube/terms/developer-policies).
+
+
+## 직접 MP3 파일 URL 가져오기
+- 소유하거나 이용 허락을 받은 **원본 오디오 파일의 HTTPS 주소**를 입력하고 **URL 음원 가져오기 · 채보 분석**을 클릭합니다.
+- 오디오 서버가 브라우저의 **CORS** 다운로드를 허용해야 합니다. 별도 서버 프록시 또는 유튜브 변환 우회는 사용하지 않습니다.
+- 브라우저에서 최대 80MB의 오디오를 읽어 음원 길이(최대 5분), SHA-256, BPM 및 강세 시점으로 채보를 분석합니다. 외부 서버로 오디오 파일을 업로드하지 않습니다.
+- **YouTube/watch 주소나 ss.youtube·ssyoutube 링크를 MP3로 변환하는 기능은 제공하지 않습니다.** YouTube API 정책은 승인 없는 다운로드·분리·저장을 금지합니다. 공식 YouTube 임베드는 계속 지원하며, 해당 음악에 대한 권리가 있는 원본 파일은 직접 선택하거나 권한 있는 파일 URL로 가져와 채보화할 수 있습니다.
+- 온라인 2인 파일 배틀에선 양측이 같은 오디오 파일을 로드해야 합니다. 직접 URL이어도 SHA-256 일치 여부를 확인하며, 실제 오디오 데이터는 서로 공유하지 않습니다.
