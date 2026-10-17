@@ -264,24 +264,23 @@ function settingsUI(){
  $('fileField').style.display=kind==='file'?'block':'none';
  $('customBpm').parentElement.style.display=kind==='file'?'none':'block';
  $('beatOffset').parentElement.style.display=kind==='file'?'none':'block';
- if(onlineMode&&kind==='file'){$('track').value='youtube';settingsUI()}
+ /* Local audio is allowed online when both players choose identical files. */
 }
 function roomStatus(value){$('roomStatus').textContent=value}
 function modeUI(){
  $('soloMode').classList.toggle('chosen',!onlineMode);$('onlineMode').classList.toggle('chosen',onlineMode);
  $('roomPanel').style.display=onlineMode?'block':'none';
- $('track').querySelector('option[value="file"]').disabled=onlineMode;
- if(onlineMode&&$('track').value==='file')$('track').value='youtube';
+ $('track').querySelector('option[value="file"]').disabled=false;
  $('start').textContent=onlineMode?'⚔ HOST START (BOTH READY)':'▶ START BATTLE';document.querySelector('.matchHeader .enemy').textContent=onlineMode?'RIVAL / RIGHT ●':'BOT / RIGHT ●';
  settingsUI()
 }
 $('track').onchange=settingsUI;
-$('audioFile').onchange=e=>{localFile=e.target.files[0]||null};
+$('audioFile').onchange=e=>{localFile=e.target.files[0]||null;preparedAudio=null;peerAudioHash='';$('analysisStatus').textContent='';if(net.readySelf)net.ready(false)};
 $('soloMode').onclick=async()=>{if(st==='game')return;onlineMode=false;await net.leave();modeUI()};
 $('onlineMode').onclick=()=>{if(st==='game')return;onlineMode=true;modeUI()};
 $('createRoom').onclick=async()=>{try{let cfg=selectedConfig();if(!cfg)return;roomStatus('방 생성 중…');let id=await net.create(cfg);roomStatus('초대 코드 '+id+' · 친구가 입장하면 준비를 누르세요.')}catch(e){roomStatus('오류: '+(e.message||e))}};
 $('joinRoom').onclick=async()=>{try{roomStatus('입장 중…');await net.join($('joinCode').value);roomStatus('상대와 P2P 연결을 설정 중입니다.')}catch(e){roomStatus('오류: '+(e.message||e))}};
-$('readyRoom').onclick=async()=>{if(!net.isConnected()){roomStatus('친구와 P2P 연결이 된 뒤 준비할 수 있습니다.');return}try{initAudio();await audio.resume()}catch(e){}net.ready(!net.readySelf);$('readyRoom').textContent=net.readySelf?'준비 취소':'준비'};
+$('readyRoom').onclick=async()=>{if(!net.isConnected()){roomStatus('친구와 P2P 연결이 된 뒤 준비할 수 있습니다.');return}const ready=!net.readySelf;$('readyRoom').disabled=true;try{initAudio();await audio.resume();if(ready&&$('track').value==='file'){let asset=await prepareLocalAudio();net.send({type:'asset',hash:asset.hash,duration:asset.chart.duration});if(peerAudioHash&&peerAudioHash!==asset.hash)throw Error('상대방과 음원 파일이 달라서 준비할 수 없습니다.');}net.ready(ready);$('readyRoom').textContent=net.readySelf?'준비 취소':'준비'}catch(e){showPrepError(e);net.ready(false)}finally{$('readyRoom').disabled=false}};
 $('leaveRoom').onclick=async()=>{await net.leave();$('roomCode').textContent='';roomStatus('방에서 나갔습니다.')};
 net.on('code',id=>{$('roomCode').textContent=id});
 net.on('room',r=>{if(r&&st==='menu'){if(net.role==='guest'){$('track').value=r.videoId?'youtube':r.track||'neon';if(r.videoId)$('youtubeUrl').value='https://youtu.be/'+r.videoId;if(r.bpm)$('customBpm').value=r.bpm;if(Number.isFinite(r.offset))$('beatOffset').value=r.offset;settingsUI()}roomStatus(r.guest?'2명 입장 완료 · 연결 후 서로 준비하세요.':'친구 대기 중 · 코드 '+net.roomId)}});
@@ -291,6 +290,7 @@ net.on('error',message=>roomStatus('연결 오류: '+message));
 net.on('disconnect',message=>{roomStatus('상대 연결 종료: '+message);if(st==='game'&&onlineMode)complete(true)});
 net.on('packet',v=>{
  if(!onlineMode)return;
+ if(v.type==='asset'&&typeof v.hash==='string'&&/^[a-f0-9]{64}$/.test(v.hash)){peerAudioHash=v.hash;if(preparedAudio&&preparedAudio.hash!==v.hash)roomStatus('음원 불일치! 양쪽에서 동일한 파일을 선택하세요.');else roomStatus('친구 음원 검증 완료 · 서로 준비하세요.');return}
  if(v.type==='start'&&st==='menu'&&net.role==='guest'&&v.cfg){newRound(v.cfg);return}
  if(v.type==='pause'&&st==='game'&&paused!==!!v.paused){togglePause(true);return}
  if(v.type==='sync'&&st==='game'&&net.role==='guest'&&Number.isFinite(v.strength)){strength=clamp(100-v.strength,0,100);if(sourceMode==='youtube'&&ytReady&&ytPlaying&&Number.isFinite(v.t)){let diff=Number(v.t)+.1-time();if(Math.abs(diff)>.6){yt.seekTo(Math.max(0,Number(v.t)+.1),true);$('syncInfo').textContent='상대 영상 시간 '+Math.abs(diff).toFixed(1)+'초 보정';}}return}
@@ -313,7 +313,7 @@ for(let b of touchBtns){let lane=Number(b.dataset.lane);b.addEventListener('poin
 canvas.addEventListener('pointerdown',e=>{if(st!=='game'||paused)return;let r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*1200;if(x>=45&&x<360){let lane=Math.round((x-86)/76);lane=clamp(lane,0,3);canvas.setPointerCapture(e.pointerId);canvas.dataset.pointerLane=lane;keyDown(lane)}});
 canvas.addEventListener('pointerup',()=>{if(canvas.dataset.pointerLane!==undefined){keyUp(Number(canvas.dataset.pointerLane));delete canvas.dataset.pointerLane}});
 canvas.addEventListener('pointercancel',()=>{if(canvas.dataset.pointerLane!==undefined){keyUp(Number(canvas.dataset.pointerLane));delete canvas.dataset.pointerLane}});
-$('start').onclick=async()=>{if(!onlineMode){await newRound();return}if(net.role!=='host'||!net.isConnected()||!net.readySelf||!net.readyPeer){roomStatus('방장과 친구 모두 P2P 접속 및 준비 완료가 필요합니다.');return}let cfg=selectedConfig();if(!cfg)return;cfg.startsAt=Date.now()+4500;if(!net.send({type:'start',cfg})){roomStatus('시작 패킷 전송 실패');return}await newRound(cfg)};$('retry').onclick=()=>{if(onlineMode){show('menu');net.ready(false);roomStatus('온라인 재대결은 양쪽에서 준비를 다시 해주세요.')}else newRound()};$('pause').onclick=togglePause;$('quit').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};$('select').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};modeUI();
+$('start').onclick=async()=>{if(!onlineMode){await newRound();return}if(net.role!=='host'||!net.isConnected()||!net.readySelf||!net.readyPeer){roomStatus('방장과 친구 모두 P2P 접속 및 준비 완료가 필요합니다.');return}let cfg=selectedConfig();if(!cfg)return;if(cfg.mode==='file'){let asset;try{asset=await prepareLocalAudio()}catch(e){showPrepError(e);return}if(peerAudioHash!==asset.hash){roomStatus('상대방이 동일한 음원을 로딩했는지 확인하세요.');return}cfg.bpm=asset.chart.bpm;cfg.chart=asset.chart;cfg.assetHash=asset.hash;cfg.title=localFile.name.slice(0,36)}cfg.startsAt=Date.now()+6500;if(!net.send({type:'start',cfg})){roomStatus('시작 패킷 전송 실패');return}await newRound(cfg)};$('retry').onclick=()=>{if(onlineMode){show('menu');net.ready(false);roomStatus('온라인 재대결은 양쪽에서 준비를 다시 해주세요.')}else newRound()};$('pause').onclick=togglePause;$('quit').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};$('select').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};modeUI();
 })();
 </script>
 </body></html>
