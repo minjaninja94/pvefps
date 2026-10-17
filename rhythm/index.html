@@ -31,7 +31,7 @@ h1 span{color:#ff69c4}.hero p{max-width:500px;line-height:1.75;color:#ded0e8;fon
 #game{display:none;max-width:1390px;margin:8px auto 30px;padding:0 16px}
 .matchHeader{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;color:#a5a2c6;font-size:12px;letter-spacing:.09em}
 .matchHeader strong{font-size:16px;color:#fff}.matchHeader .your{color:#69ebff}.matchHeader .enemy{color:#ff76b5}
-.gameboard{overflow:hidden;border:2px solid #9679d277;border-radius:19px;background:#101028;box-shadow:0 24px 75px #0009,0 0 45px #8743fa24}
+.gameboard{position:relative;isolation:isolate;overflow:hidden;border:2px solid #9679d277;border-radius:19px;background:#101028;box-shadow:0 24px 75px #0009,0 0 45px #8743fa24}
 canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
 .scoreline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}
 .stats{display:flex;flex-wrap:wrap;gap:18px;color:#b7afd0;font-size:12px}
@@ -104,8 +104,8 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
 </main>
 <section id="game">
  <div class="matchHeader"><span class="your">● PLAYER / LEFT</span><strong id="trackname">NEON SHOWDOWN</strong><span class="enemy">BOT / RIGHT ●</span></div>
- <div class="gameboard"><canvas id="stage" width="1200" height="700" aria-label="리듬 배틀 게임 화면"></canvas><div id="youtubeOverlay"><div id="ytPlayer"></div></div></div><div id="chartSource" aria-live="polite" style="margin:9px auto;text-align:center;color:#87efc6;font-weight:800;font-size:13px"></div><div id="syncInfo" aria-live="polite"></div><div id="playHint">유튜브의 자체 ▶ 버튼을 눌러 재생을 시작하세요. 임베드가 제한된 영상은 다른 링크를 사용하세요.</div>
- <div class="scoreline"><div class="stats"><span>SCORE <strong id="score">0</strong></span><span>COMBO <strong id="combo">0</strong></span><span>ACCURACY <strong id="accuracy">100%</strong></span><span>ROUND <strong id="round">1/10</strong></span></div><div class="tools"><button class="small" id="pause">Ⅱ PAUSE (ESC)</button><button class="small" id="quit">✕ QUIT</button></div></div>
+ <div class="gameboard"><canvas id="stage" width="1200" height="700" tabindex="0" aria-label="리듬 배틀 게임 화면: 방향키 입력"></canvas><div id="youtubeOverlay"><div id="ytPlayer"></div></div></div><div id="chartSource" aria-live="polite" style="margin:9px auto;text-align:center;color:#87efc6;font-weight:800;font-size:13px"></div><div id="syncInfo" aria-live="polite"></div><div id="playHint">유튜브의 자체 ▶ 버튼을 눌러 재생을 시작하세요. 임베드가 제한된 영상은 다른 링크를 사용하세요.</div>
+ <div class="scoreline"><div class="stats"><span>SCORE <strong id="score">0</strong></span><span>COMBO <strong id="combo">0</strong></span><span>ACCURACY <strong id="accuracy">100%</strong></span><span>ROUND <strong id="round">1/10</strong></span></div><div class="tools"><button class="small" id="focusControls" type="button">⌨ 방향키 입력 활성화</button><button class="small" id="pause">Ⅱ PAUSE (ESC)</button><button class="small" id="quit">✕ QUIT</button></div></div>
  <div class="touch" aria-label="화면 방향키"><button data-lane="0" aria-label="왼쪽">←</button><button data-lane="1" aria-label="아래">↓</button><button data-lane="2" aria-label="위">↑</button><button data-lane="3" aria-label="오른쪽">→</button></div>
 </section>
 <section id="results"><div class="eyebrow">BATTLE RESULT</div><h2 id="resulttitle">YOU WIN!</h2><p id="resultdesc"></p><div class="grid">
@@ -213,7 +213,7 @@ window.onYouTubeIframeAPIReady=()=>{};
 function validateYTDuration(){if(!ytReady||!yt)return false;const duration=Number(yt.getDuration());if(duration>window.RhythmChart.LIMIT+.01){yt.stopVideo();ytPlaying=false;stop();show('menu');$('analysisStatus').textContent='이 영상은 '+Math.round(duration)+'초입니다. 5분(300초) 이하 영상만 사용할 수 있습니다.';return false}if(duration>0){ytValidated=true;finishTime=Math.min(finishTime,duration);return true}return false}
 async function prepareYouTube(id){
 if(!window.YT?.Player){await new Promise((resolve,reject)=>{let start=Date.now();const check=()=>{if(window.YT?.Player)resolve();else if(Date.now()-start>15000)reject(Error('YouTube API가 응답하지 않습니다.'));else setTimeout(check,100)};check()})}
-if(!yt){ytReady=false;yt=await new Promise((resolve,reject)=>{let player=new YT.Player('ytPlayer',{videoId:id,playerVars:{controls:1,playsinline:1,origin:location.origin},events:{onReady:()=>{ytReady=true;resolve(player)},onStateChange:ev=>{ytPlaying=ev.data===1;if(st!=='game'||sourceMode!=='youtube')return;if(ytPlaying){if(!validateYTDuration()){$('syncInfo').textContent='영상 길이를 확인 중입니다 (최대 5분).';return}$('playHint').style.display='none';$('syncInfo').textContent='공식 YouTube 재생 시간으로 채보 동기화 · '+record.bpm+' BPM '+(record.chart?'(파형 분석 채보)':'(직접 입력 채보)');let length=yt.getDuration();if(length>12)finishTime=Math.min(finishTime,length)}else if(ev.data===0)complete();else if(ev.data===2||ev.data===3)$('syncInfo').textContent='영상 일시정지/버퍼링 중 — 채보도 멈춥니다.'},onError:()=>{$('syncInfo').textContent='이 영상은 임베드가 제한될 수 있습니다. 다른 링크로 시도하세요.'}}});setTimeout(()=>reject(Error('유튜브 초기화 타임아웃')),16000)})}
+if(!yt){ytReady=false;yt=await new Promise((resolve,reject)=>{let player=new YT.Player('ytPlayer',{videoId:id,playerVars:{controls:1,playsinline:1,origin:location.origin},events:{onReady:()=>{ytReady=true;resolve(player)},onStateChange:ev=>{ytPlaying=ev.data===1;if(st!=='game'||sourceMode!=='youtube')return;if(ytPlaying){if(!validateYTDuration()){$('syncInfo').textContent='영상 길이를 확인 중입니다 (최대 5분).';return}$('playHint').style.display='none';canvas.focus({preventScroll:true});$('syncInfo').textContent='공식 YouTube 재생 시간으로 채보 동기화 · '+record.bpm+' BPM '+(record.chart?'(파형 분석 채보)':'(직접 입력 채보)');let length=yt.getDuration();if(length>12)finishTime=Math.min(finishTime,length)}else if(ev.data===0)complete();else if(ev.data===2||ev.data===3)$('syncInfo').textContent='영상 일시정지/버퍼링 중 — 채보도 멈춥니다.'},onError:()=>{$('syncInfo').textContent='이 영상은 임베드가 제한될 수 있습니다. 다른 링크로 시도하세요.'}}});setTimeout(()=>reject(Error('유튜브 초기화 타임아웃')),16000)})}
 return yt
 }
 
@@ -419,7 +419,8 @@ function keyDown(lane){if(pressed[lane])return;pressed[lane]=true;hit(lane);let 
 function keyUp(lane){if(!pressed[lane])return;pressed[lane]=false;release(lane);let btn=touchBtns[lane];if(btn)btn.classList.remove('held')}
 window.addEventListener('keydown',e=>{if(e.code==='Escape'){e.preventDefault();if(!e.repeat)togglePause();return}let k=KEYMAP.indexOf(e.code);if(k>=0){e.preventDefault();if(!e.repeat&&st==='game'&&!paused)keyDown(k)}});
 window.addEventListener('keyup',e=>{let k=KEYMAP.indexOf(e.code);if(k>=0){e.preventDefault();keyUp(k)}});
-window.addEventListener('blur',()=>{if(st==='game'&&!paused)togglePause();for(let i=0;i<4;i++)keyUp(i)});
+window.addEventListener('blur',()=>{const focusedIframe=sourceMode==='youtube';if(st==='game'&&!paused&&!focusedIframe)togglePause();for(let i=0;i<4;i++)keyUp(i)});
+$('focusControls').onclick=()=>{canvas.focus({preventScroll:true});$('syncInfo').textContent='⌨ 게임 조작 활성화 · 방향키 ← ↓ ↑ → 를 누르세요. (영상 재생 중에는 자동 일시정지되지 않습니다.)'};
 for(let b of touchBtns){let lane=Number(b.dataset.lane);b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);if(st==='game'&&!paused)keyDown(lane)});b.addEventListener('pointerup',e=>{e.preventDefault();keyUp(lane)});b.addEventListener('pointercancel',()=>keyUp(lane))}
 canvas.addEventListener('pointerdown',e=>{if(st!=='game'||paused)return;let r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*1200;if(x>=45&&x<360){let lane=Math.round((x-86)/76);lane=clamp(lane,0,3);canvas.setPointerCapture(e.pointerId);canvas.dataset.pointerLane=lane;keyDown(lane)}});
 canvas.addEventListener('pointerup',()=>{if(canvas.dataset.pointerLane!==undefined){keyUp(Number(canvas.dataset.pointerLane));delete canvas.dataset.pointerLane}});
