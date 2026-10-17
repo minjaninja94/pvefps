@@ -7,6 +7,7 @@ const PROFILES=Object.freeze([
  {id:'violet',name:'아스트라',title:'밤의 마도사',hair:'#c9a6ff',hairDark:'#583cb6',skin:'#e9c5ad',eye:'#a05cff',outfit:'#48306d',trim:'#cba5ff',bottom:'#1f1a42',accent:'#e58fff',style:'wave',species:'human',weapon:'spell'},
  {id:'jade',name:'미라',title:'네온 사이버 닌자',hair:'#b9ffcc',hairDark:'#268d7f',skin:'#e5bdab',eye:'#3dfbe9',outfit:'#173e54',trim:'#51e4b4',bottom:'#132134',accent:'#63ffe0',style:'short',species:'cat',weapon:'blade'}
 ]);
+const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 const fill=(g,path,c,stroke='#15142c',width=4)=>{g.beginPath();path(g);g.fillStyle=c;g.fill();if(stroke){g.strokeStyle=stroke;g.lineWidth=width;g.stroke()}};
 const line=(g,pts,c,w=4)=>{g.beginPath();g.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)g.lineTo(pts[i][0],pts[i][1]);g.strokeStyle=c;g.lineWidth=w;g.lineCap='round';g.lineJoin='round';g.stroke()};
 const circle=(g,x,y,r,c)=>{g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fillStyle=c;g.fill()};
