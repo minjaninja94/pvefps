@@ -229,7 +229,10 @@ function save(){
  if(!values.chart)return;
  try{
   localStorage.setItem('neon-duel-chart-v2:'+values.videoId,JSON.stringify(values.chart));
-  $('status').textContent='✓ 게임에 채보 저장 완료. NEON DUEL에서 같은 YouTube 링크로 시작하세요.';
+  localStorage.setItem('neon-duel-last-video',values.videoId);
+  $('play').href='./index.html?chart='+encodeURIComponent(values.videoId);
+  $('play').hidden=false;
+  $('status').textContent='✓ '+values.chart.entries.length+'개 노트 저장 완료! 「저장한 채보로 배틀 시작」을 누르면 이 곡과 채보가 자동 선택됩니다.';
   $('save').textContent='✓ 저장됨';
  }catch(e){label('차트 저장 실패 (브라우저 저장소 사용 제한): '+e.message)}
 }
