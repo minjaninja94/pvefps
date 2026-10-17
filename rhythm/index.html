@@ -103,7 +103,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
 (()=>{
 const $=id=>document.getElementById(id), canvas=$('stage'), g=canvas.getContext('2d'), ARROWS=['←','↓','↑','→'], COLORS=['#ff4b68','#35cafa','#39ed8a','#af70ff'], KEYMAP=['ArrowLeft','ArrowDown','ArrowUp','ArrowRight'];
 const intro=2.5, SEG=8, GROUPS=20, BALANCE={easy:{botHit:.61,botPush:.20,miss:0.85,perfect:3.20,great:2.45,good:1.40,window:.235,perfectWindow:.070,greatWindow:.150},normal:{botHit:.77,botPush:.41,miss:1.35,perfect:2.30,great:1.65,good:.95,window:.195,perfectWindow:.055,greatWindow:.125},hard:{botHit:.90,botPush:.65,miss:2.25,perfect:1.85,great:1.30,good:.65,window:.155,perfectWindow:.045,greatWindow:.098}}, SETTINGS={neon:{bpm:136,root:52,title:'NEON SHOWDOWN'},midnight:{bpm:158,root:48,title:'MIDNIGHT CLASH'}};
-let audio=null,master=null,noise=null,activeVoices=[],timer=null,raf=0,session=0,st='menu',paused=false,record=null,notes=[],beat=0,finishTime=0,startAt=0,stepCursor=0,noteCursor=0;
+let onlineMode=false, sourceMode="neon", yt=null, ytReady=false, ytPlaying=false, ytPromise=null, localFile=null, fileSource=null, remoteSeen=new Set(), net=window.RhythmOnline;let audio=null,master=null,noise=null,activeVoices=[],timer=null,raf=0,session=0,st='menu',paused=false,record=null,notes=[],beat=0,finishTime=0,startAt=0,stepCursor=0,noteCursor=0;
 let pressed=[false,false,false,false],strength=50,score=0,combo=0,maxCombo=0,accSum=0,counts={perfect:0,great:0,good:0,miss:0},botHits=0,botMissUntil=0,judgement='',judgeEnd=0,prevPhrase=-1,flashLanes=[0,0,0,0],playerSing=0,botSing=0,lastShown=0,effects=[],wasFinished=false;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rand=(n)=>{let x=Math.sin(n*127.1+78.233)*43758.5453;return x-Math.floor(x)};
@@ -118,12 +118,46 @@ if(s===0||s===6||s===8||s===14){let hz=440*Math.pow(2,((record.root-24+rootShift
 if(s%4===0){let hz=440*Math.pow(2,((record.root+12+rootShift+[0,3,7,10][Math.floor(step/4)%4])-69)/12);tone(hz,at,.15,'triangle',.045)}
 }
 function stopSound(){if(timer){clearInterval(timer);timer=null}if(master){try{master.gain.cancelScheduledValues(audio.currentTime);master.gain.setValueAtTime(.00001,audio.currentTime);master.disconnect()}catch(e){}master=null}for(let o of activeVoices){try{o.stop()}catch(e){}}activeVoices=[]}
-function generateChart(){let diff=$('difficulty').value,denom=diff==='easy'?1:diff==='normal'?.5:.25,notesOut=[],duration=intro+GROUPS*SEG*beat+1.4;for(let phrase=0;phrase<GROUPS;phrase++){let side=phrase%2===0?'bot':'player',base=intro+phrase*SEG*beat,steps=Math.round(SEG/denom);for(let i=0;i<steps;i++){let seed=phrase*233+i*41+record.root,lane=Math.floor(rand(seed+14)*4),pick=rand(seed+37),should=diff==='easy'?pick>.13:diff==='normal'?pick>.22:(i%2===0||pick>.44);if(!should)continue;
+function generateChart(){let diff=$('difficulty').value,denom=diff==='easy'?1:diff==='normal'?.5:.25,notesOut=[],duration=intro+GROUPS*SEG*beat+1.4;for(let phrase=0;phrase<GROUPS;phrase++){let side=(onlineMode&&net.role==='host')?(phrase%2===0?'player':'bot'):(phrase%2===0?'bot':'player'),base=intro+phrase*SEG*beat+(record.offset||0),steps=Math.round(SEG/denom);for(let i=0;i<steps;i++){let seed=phrase*233+i*41+record.root,lane=Math.floor(rand(seed+14)*4),pick=rand(seed+37),should=diff==='easy'?pick>.13:diff==='normal'?pick>.22:(i%2===0||pick>.44);if(!should)continue;
 let when=base+i*denom*beat;let sustain=diff==='easy'?0:(i%11===4&&i<steps-3?denom*beat*1.8:0);
 notesOut.push({id:notesOut.length,side,lane,t:when,duration:sustain,done:false,hold:false,missed:false,botDone:false})}}return {items:notesOut.sort((a,b)=>a.t-b.t),duration}}
-function newRound(){stop();wasFinished=false;const preset=SETTINGS[$('track').value];record={...preset,diff:$('difficulty').value,speed:Number($('speed').value)};beat=60/record.bpm;let c=generateChart();notes=c.items;finishTime=c.duration;stepCursor=0;noteCursor=0;strength=50;score=combo=maxCombo=accSum=botHits=0;counts={perfect:0,great:0,good:0,miss:0};pressed=[false,false,false,false];flashLanes=[0,0,0,0];judgeEnd=0;prevPhrase=-1;playerSing=botSing=0;botMissUntil=0;effects=[];lastShown=0;paused=false;$('pause').textContent='Ⅱ PAUSE (ESC)';$('trackname').textContent=record.title;$('round').textContent='1/10';updateHUD();initAudio().resume().then(()=>{if(st!=='menu'&&st!=='results')return;master=audio.createGain();master.gain.value=.72;master.connect(audio.destination);startAt=audio.currentTime+.35;session++;const current=session;timer=setInterval(()=>{if(current!==session||st!=='game'||paused)return;let until=audio.currentTime+.18;let maxSteps=GROUPS*SEG*4;while(stepCursor<maxSteps&&startAt+intro+stepCursor*beat/4<until){percussion(stepCursor,startAt+intro+stepCursor*beat/4);stepCursor++}},28);show('game');raf=requestAnimationFrame(loop)}).catch(e=>alert('오디오를 시작하지 못했습니다: '+e.message))}
-function stop(){session++;cancelAnimationFrame(raf);stopSound();paused=false}
-function time(){return audio?audio.currentTime-startAt:0}
+async function newRound(presetConfig){
+ stop();wasFinished=false;
+ let cfg=presetConfig||selectedConfig();if(!cfg)return;
+ if(cfg.mode==='file'&&onlineMode){alert('오디오 파일 업로드는 솔로 전용입니다. 온라인에는 유튜브 또는 데모곡을 선택하세요.');return}
+ let base=SETTINGS[cfg.mode]||SETTINGS.neon;
+ record={...base,...cfg,diff:cfg.diff||$('difficulty').value,speed:cfg.speed||Number($('speed').value),root:cfg.root||base.root,bpm:cfg.bpm||base.bpm,title:cfg.title||base.title};
+ sourceMode=cfg.mode;beat=60/record.bpm;
+ if(sourceMode==='file'){
+  try{if(!localFile)throw Error('파일을 선택하세요.');initAudio();record.buffer=await audio.decodeAudioData(await localFile.arrayBuffer());let analysis=analyzeFile(record.buffer);record.bpm=analysis.bpm;record.onsets=analysis.onsets;beat=60/record.bpm;record.title=localFile.name.slice(0,34);$('customBpm').value=record.bpm}
+  catch(e){alert('파일 분석 실패: '+e.message);return}
+ }
+ let chart=generateChart();notes=chart.items;finishTime=chart.duration;
+ if(sourceMode==='file'){
+  notes=notes.filter(n=>n.t<record.buffer.duration-.2);finishTime=Math.min(finishTime,record.buffer.duration);
+  for(let n of notes){let closest=null,gap=.17;for(let t of record.onsets){let d=Math.abs(n.t-t);if(d<gap){closest=t;gap=d}}if(closest!==null)n.t=closest}
+ }
+ stepCursor=noteCursor=0;strength=50;score=combo=maxCombo=accSum=botHits=0;counts={perfect:0,great:0,good:0,miss:0};
+ pressed=[false,false,false,false];flashLanes=[0,0,0,0];judgeEnd=0;prevPhrase=-1;playerSing=botSing=0;botMissUntil=0;effects=[];lastShown=0;paused=false;ytPlaying=false;remoteSeen.clear();
+ $('pause').textContent='Ⅱ PAUSE (ESC)';$('trackname').textContent=record.title;$('round').textContent='1/10';updateHUD();
+ $('youtubeOverlay').style.display=sourceMode==='youtube'?'block':'none';
+ $('playHint').style.display=sourceMode==='youtube'?'block':'none';
+ $('syncInfo').textContent=sourceMode==='youtube'?'유튜브 플레이어에서 ▶을 눌러 시작하세요 (입력 BPM 채보).':sourceMode==='file'?'기기 내 음원 강세 분석 적용':'자체 제작 배틀곡';
+ show('game');
+ if(sourceMode==='youtube'){
+  try{await prepareYouTube(record.videoId);yt.cueVideoById(record.videoId);raf=requestAnimationFrame(loop)}
+  catch(e){alert('유튜브 임베드 실패: '+e.message);show('menu')}
+  return
+ }
+ try{
+  initAudio();await audio.resume();master=audio.createGain();master.gain.value=.72;master.connect(audio.destination);startAt=audio.currentTime+.45;
+  if(sourceMode==='file'){fileSource=audio.createBufferSource();fileSource.buffer=record.buffer;fileSource.connect(master);fileSource.start(startAt)}
+  else{session++;let current=session;timer=setInterval(()=>{if(current!==session||st!=='game'||paused)return;let until=audio.currentTime+.18,maxSteps=GROUPS*SEG*4;while(stepCursor<maxSteps&&startAt+intro+stepCursor*beat/4<until){percussion(stepCursor,startAt+intro+stepCursor*beat/4);stepCursor++}},28)}
+  raf=requestAnimationFrame(loop)
+ }catch(e){alert('오디오 재생 실패: '+e.message);stop();show('menu')}
+}
+function stop(){session++;cancelAnimationFrame(raf);if(fileSource){try{fileSource.stop()}catch(e){}fileSource.disconnect();fileSource=null}if(yt&&ytPlaying)try{yt.pauseVideo()}catch(e){}ytPlaying=false;stopSound();paused=false}
+function time(){return sourceMode==='youtube'?(ytReady&&yt?Math.max(0,Number(yt.getCurrentTime())||0):0):(audio?audio.currentTime-startAt:0)}
 function modifyStrength(v){strength=clamp(strength+v,0,100)}
 function judge(kind,lane){const balance=BALANCE[record.diff];counts[kind]++;judgement=kind.toUpperCase();judgeEnd=time()+.55;flashLanes[lane]=time()+.25;if(kind==='miss'){combo=0;modifyStrength(-balance.miss)}else{combo++;maxCombo=Math.max(maxCombo,combo);let val={perfect:1,great:.68,good:.34}[kind];accSum+=val;score+=Math.round({perfect:1000,great:650,good:300}[kind]*(1+Math.min(combo,120)/150));modifyStrength(balance[kind]);playerSing=time()+.27;musicalNote(lane,'player',Math.max(audio.currentTime,startAt),0);for(let i=0;i<10;i++)effects.push({x:86+lane*76,y:120,vx:(rand(i+time()*37)-.5)*12,vy:(rand(i+time()*19+45)-.7)*12,life:1,col:COLORS[lane]})}
 updateHUD()}
