@@ -116,7 +116,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
 (()=>{
 const $=id=>document.getElementById(id), canvas=$('stage'), g=canvas.getContext('2d'), ARROWS=['←','↓','↑','→'], COLORS=['#ff4b68','#35cafa','#39ed8a','#af70ff'], KEYMAP=['ArrowLeft','ArrowDown','ArrowUp','ArrowRight'];
 const intro=2.5, SEG=8, GROUPS=20, BALANCE={easy:{botHit:.61,botPush:.20,miss:0.85,perfect:3.20,great:2.45,good:1.40,window:.235,perfectWindow:.070,greatWindow:.150},normal:{botHit:.77,botPush:.41,miss:1.35,perfect:2.30,great:1.65,good:.95,window:.195,perfectWindow:.055,greatWindow:.125},hard:{botHit:.90,botPush:.65,miss:2.25,perfect:1.85,great:1.30,good:.65,window:.155,perfectWindow:.045,greatWindow:.098}}, SETTINGS={neon:{bpm:136,root:52,title:'NEON SHOWDOWN'},midnight:{bpm:158,root:48,title:'MIDNIGHT CLASH'}};
-let onlineMode=false, sourceMode="neon", yt=null, ytReady=false, ytPlaying=false, ytPromise=null, localFile=null, fileSource=null, remoteSeen=new Set(),localSeq=0,lastClockSent=0,preparedAudio=null,peerAudioHash="",matchGroups=GROUPS,ytValidated=false,pendingStart=null, net=window.RhythmOnline;let audio=null,master=null,noise=null,activeVoices=[],timer=null,raf=0,session=0,st='menu',paused=false,record=null,notes=[],beat=0,finishTime=0,startAt=0,stepCursor=0,noteCursor=0;
+let onlineMode=false, sourceMode="neon", yt=null, ytReady=false, ytPlaying=false, ytPromise=null, localFile=null, fileSource=null, remoteSeen=new Set(),localSeq=0,lastClockSent=0,preparedAudio=null,peerAudioHash="",matchGroups=GROUPS,ytValidated=false,pendingStart=null,requestedChartId='', net=window.RhythmOnline;let audio=null,master=null,noise=null,activeVoices=[],timer=null,raf=0,session=0,st='menu',paused=false,record=null,notes=[],beat=0,finishTime=0,startAt=0,stepCursor=0,noteCursor=0;
 let pressed=[false,false,false,false],strength=50,score=0,combo=0,maxCombo=0,accSum=0,counts={perfect:0,great:0,good:0,miss:0},botHits=0,botMissUntil=0,judgement='',judgeEnd=0,prevPhrase=-1,flashLanes=[0,0,0,0],playerSing=0,botSing=0,lastShown=0,effects=[],wasFinished=false;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rand=(n)=>{let x=Math.sin(n*127.1+78.233)*43758.5453;return x-Math.floor(x)};
@@ -188,7 +188,7 @@ function restoreSavedChartSelection(){
  let id=null;
  try{
   const params=new URLSearchParams(location.search),fromLink=params.get('chart');
-  if(fromLink&&/^[A-Za-z0-9_-]{11}$/.test(fromLink))id=fromLink;
+  if(fromLink&&/^[A-Za-z0-9_-]{11}$/.test(fromLink)){id=fromLink;requestedChartId=id}
   if(!id){
    const last=localStorage.getItem('neon-duel-last-video');
    if(last&&cachedYouTubeChart(last))id=last;
@@ -241,6 +241,10 @@ notesOut.push({id:notesOut.length,side,lane,t:when,duration:sustain,done:false,h
 async function newRound(presetConfig){
  stop();wasFinished=false;
  let cfg=presetConfig||selectedConfig();if(!cfg)return;
+ if(cfg.mode==='youtube'&&requestedChartId===cfg.videoId&&!cfg.chart&&!localFile){
+  $('analysisStatus').textContent='저장된 채보를 찾지 못했습니다. 제작기에서 저장한 브라우저·사이트 주소가 동일한지 확인하세요. BPM 임시 채보로 대체하지 않았습니다.';
+  show('menu');refreshSavedCharts();return;
+ }
  let base=SETTINGS[cfg.mode]||SETTINGS.neon;
  record={...base,...cfg,diff:cfg.diff||$('difficulty').value,speed:cfg.speed||Number($('speed').value),root:cfg.root||base.root,bpm:cfg.bpm||base.bpm,title:cfg.title||base.title};
  sourceMode=cfg.mode;beat=60/record.bpm;
@@ -361,8 +365,8 @@ function modeUI(){
  settingsUI()
 }
 $('track').onchange=()=>{preparedAudio=null;settingsUI();refreshSavedCharts()};
-$('youtubeUrl').addEventListener('input',refreshSavedCharts);
-$('savedCharts').addEventListener('click',e=>{const target=e.target.closest('button[data-chart]');if(!target)return;const id=target.dataset.chart;$('track').value='youtube';$('youtubeUrl').value='https://www.youtube.com/watch?v='+id;settingsUI();refreshSavedCharts()});
+$('youtubeUrl').addEventListener('input',()=>{requestedChartId='';refreshSavedCharts()});
+$('savedCharts').addEventListener('click',e=>{const target=e.target.closest('button[data-chart]');if(!target)return;const id=target.dataset.chart;requestedChartId=id;$('track').value='youtube';$('youtubeUrl').value='https://www.youtube.com/watch?v='+id;settingsUI();refreshSavedCharts()});
 $('audioFile').onchange=e=>{localFile=e.target.files[0]||null;preparedAudio=null;peerAudioHash='';$('analysisStatus').textContent='';if(net.readySelf)net.ready(false)};
 $('importAudioUrl').onclick=async()=>{
  const button=$('importAudioUrl'),url=$('directAudioUrl').value.trim();
