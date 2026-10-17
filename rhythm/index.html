@@ -104,7 +104,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
 (()=>{
 const $=id=>document.getElementById(id), canvas=$('stage'), g=canvas.getContext('2d'), ARROWS=['←','↓','↑','→'], COLORS=['#ff4b68','#35cafa','#39ed8a','#af70ff'], KEYMAP=['ArrowLeft','ArrowDown','ArrowUp','ArrowRight'];
 const intro=2.5, SEG=8, GROUPS=20, BALANCE={easy:{botHit:.61,botPush:.20,miss:0.85,perfect:3.20,great:2.45,good:1.40,window:.235,perfectWindow:.070,greatWindow:.150},normal:{botHit:.77,botPush:.41,miss:1.35,perfect:2.30,great:1.65,good:.95,window:.195,perfectWindow:.055,greatWindow:.125},hard:{botHit:.90,botPush:.65,miss:2.25,perfect:1.85,great:1.30,good:.65,window:.155,perfectWindow:.045,greatWindow:.098}}, SETTINGS={neon:{bpm:136,root:52,title:'NEON SHOWDOWN'},midnight:{bpm:158,root:48,title:'MIDNIGHT CLASH'}};
-let onlineMode=false, sourceMode="neon", yt=null, ytReady=false, ytPlaying=false, ytPromise=null, localFile=null, fileSource=null, remoteSeen=new Set(),localSeq=0,lastClockSent=0, net=window.RhythmOnline;let audio=null,master=null,noise=null,activeVoices=[],timer=null,raf=0,session=0,st='menu',paused=false,record=null,notes=[],beat=0,finishTime=0,startAt=0,stepCursor=0,noteCursor=0;
+let onlineMode=false, sourceMode="neon", yt=null, ytReady=false, ytPlaying=false, ytPromise=null, localFile=null, fileSource=null, remoteSeen=new Set(),localSeq=0,lastClockSent=0,preparedAudio=null,peerAudioHash="",matchGroups=GROUPS,ytValidated=false, net=window.RhythmOnline;let audio=null,master=null,noise=null,activeVoices=[],timer=null,raf=0,session=0,st='menu',paused=false,record=null,notes=[],beat=0,finishTime=0,startAt=0,stepCursor=0,noteCursor=0;
 let pressed=[false,false,false,false],strength=50,score=0,combo=0,maxCombo=0,accSum=0,counts={perfect:0,great:0,good:0,miss:0},botHits=0,botMissUntil=0,judgement='',judgeEnd=0,prevPhrase=-1,flashLanes=[0,0,0,0],playerSing=0,botSing=0,lastShown=0,effects=[],wasFinished=false;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rand=(n)=>{let x=Math.sin(n*127.1+78.233)*43758.5453;return x-Math.floor(x)};
@@ -135,31 +135,59 @@ if(!yt){ytReady=false;yt=await new Promise((resolve,reject)=>{let player=new YT.
 return yt
 }
 
+
+async function prepareLocalAudio(){
+ if(preparedAudio?.file===localFile)return preparedAudio;
+ if(!localFile)throw Error('음악 파일을 선택하세요. 양쪽에서 같은 파일을 선택해야 합니다.');
+ if(localFile.size>80*1024*1024)throw Error('파일 크기는 80MB 이하여야 합니다.');
+ $('analysisStatus').textContent='음원 로딩 중 (1/3) · 파일을 읽고 있습니다';
+ const bytes=await localFile.arrayBuffer();
+ const digest=await window.RhythmChart.fingerprint(bytes);
+ $('analysisStatus').textContent='파형 분석 중 (2/3) · 리듬 강세와 BPM 추출';
+ initAudio();const decoded=await audio.decodeAudioData(bytes.slice(0));
+ const analysis=window.RhythmChart.inspect(decoded);
+ const chart=window.RhythmChart.makeChart(analysis,{difficulty:$('difficulty').value,seed:Number.parseInt(digest.slice(0,8),16)});
+ $('analysisStatus').textContent='채보 준비 완료 (3/3) · '+Math.round(analysis.bpm)+' BPM / '+chart.entries.length+' 노트 / '+Math.round(decoded.duration)+'초';
+ preparedAudio={file:localFile,buffer:decoded,hash:digest,chart,analysis};
+ return preparedAudio;
+}
+function showPrepError(e){$('analysisStatus').textContent='준비 오류: '+(e?.message||e);if(onlineMode)roomStatus('준비 오류: '+(e?.message||e))}
+
 function generateChart(){let diff=$('difficulty').value,denom=diff==='easy'?1:diff==='normal'?.5:.25,notesOut=[],duration=intro+GROUPS*SEG*beat+1.4;for(let phrase=0;phrase<GROUPS;phrase++){let side=(onlineMode&&net.role==='host')?(phrase%2===0?'player':'bot'):(phrase%2===0?'bot':'player'),base=intro+phrase*SEG*beat+(record.offset||0),steps=Math.round(SEG/denom);for(let i=0;i<steps;i++){let seed=phrase*233+i*41+record.root,lane=Math.floor(rand(seed+14)*4),pick=rand(seed+37),should=diff==='easy'?pick>.13:diff==='normal'?pick>.22:(i%2===0||pick>.44);if(!should)continue;
 let when=base+i*denom*beat;let sustain=diff==='easy'?0:(i%11===4&&i<steps-3?denom*beat*1.8:0);
 notesOut.push({id:notesOut.length,side,lane,t:when,duration:sustain,done:false,hold:false,missed:false,botDone:false})}}return {items:notesOut.sort((a,b)=>a.t-b.t),duration}}
 async function newRound(presetConfig){
  stop();wasFinished=false;
  let cfg=presetConfig||selectedConfig();if(!cfg)return;
- if(cfg.mode==='file'&&onlineMode){alert('오디오 파일 업로드는 솔로 전용입니다. 온라인에는 유튜브 또는 데모곡을 선택하세요.');return}
  let base=SETTINGS[cfg.mode]||SETTINGS.neon;
  record={...base,...cfg,diff:cfg.diff||$('difficulty').value,speed:cfg.speed||Number($('speed').value),root:cfg.root||base.root,bpm:cfg.bpm||base.bpm,title:cfg.title||base.title};
  sourceMode=cfg.mode;beat=60/record.bpm;
+
+ let chart;
  if(sourceMode==='file'){
-  try{if(!localFile)throw Error('파일을 선택하세요.');initAudio();record.buffer=await audio.decodeAudioData(await localFile.arrayBuffer());let analysis=analyzeFile(record.buffer);record.bpm=analysis.bpm;record.onsets=analysis.onsets;beat=60/record.bpm;record.title=localFile.name.slice(0,34);$('customBpm').value=record.bpm}
-  catch(e){alert('파일 분석 실패: '+e.message);return}
- }
- let chart=generateChart();notes=chart.items;finishTime=chart.duration+(record.offset||0);
- if(sourceMode==='file'){
-  notes=notes.filter(n=>n.t<record.buffer.duration-.2);finishTime=Math.min(finishTime,record.buffer.duration);
-  for(let n of notes){let closest=null,gap=.17;for(let t of record.onsets){let d=Math.abs(n.t-t);if(d<gap){closest=t;gap=d}}if(closest!==null)n.t=closest}
+  try{
+   const prep=await prepareLocalAudio();
+   if(onlineMode&&cfg.assetHash!==prep.hash)throw Error('양쪽 음원 파일이 서로 다릅니다. 같은 파일을 골라주세요.');
+   record.buffer=prep.buffer;
+   chart=onlineMode?cfg.chart:prep.chart;
+   if(!chart)throw Error('호스트 채보를 아직 받지 못했습니다.');
+   record.bpm=chart.bpm;
+   beat=60/record.bpm;
+   record.title=localFile.name.slice(0,36);
+   notes=window.RhythmChart.unpack(chart,onlineMode?net.role:'guest');
+   matchGroups=chart.groups;
+   finishTime=chart.duration;
+   $('analysisStatus').textContent='채보 로딩 완료 · '+notes.length+'개 노트';
+  }catch(e){showPrepError(e);return}
+ }else{
+  chart=generateChart();notes=chart.items;matchGroups=GROUPS;finishTime=chart.duration+(record.offset||0);
  }
  stepCursor=noteCursor=0;strength=50;score=combo=maxCombo=accSum=botHits=0;counts={perfect:0,great:0,good:0,miss:0};
  pressed=[false,false,false,false];flashLanes=[0,0,0,0];judgeEnd=0;prevPhrase=-1;playerSing=botSing=0;botMissUntil=0;effects=[];lastShown=0;paused=false;ytPlaying=false;remoteSeen.clear();localSeq=0;lastClockSent=0;
- $('pause').textContent='Ⅱ PAUSE (ESC)';$('trackname').textContent=record.title;$('round').textContent='1/10';updateHUD();
+ $('pause').textContent='Ⅱ PAUSE (ESC)';$('trackname').textContent=record.title;$('round').textContent='1/'+Math.ceil(matchGroups/2);updateHUD();
  $('youtubeOverlay').style.display=sourceMode==='youtube'?'block':'none';
  $('playHint').style.display=sourceMode==='youtube'?'block':'none';
- $('syncInfo').textContent=sourceMode==='youtube'?'유튜브 플레이어에서 ▶을 눌러 시작하세요 (입력 BPM 채보).':sourceMode==='file'?'기기 내 음원 강세 분석 적용':'자체 제작 배틀곡';
+ $('syncInfo').textContent=sourceMode==='youtube'?'유튜브 플레이어에서 ▶을 눌러 시작하세요 (입력 BPM 채보).':sourceMode==='file'?'음향 강세 분석 완료 · '+notes.length+'개 채보를 로딩했습니다':'자체 제작 배틀곡';
  show('game');
  if(sourceMode==='youtube'){
   try{await prepareYouTube(record.videoId);yt.cueVideoById(record.videoId);raf=requestAnimationFrame(loop)}
@@ -182,8 +210,8 @@ function updateHUD(){let total=counts.perfect+counts.great+counts.good+counts.mi
 function hit(lane){if(st!=='game'||paused)return;let t=time();let candidate=null,balance=BALANCE[record.diff],diff=balance.window;for(let n of notes){if(n.side!=='player'||n.done||n.hold||n.lane!==lane)continue;let d=Math.abs(n.t-t);if(d<diff){diff=d;candidate=n}}if(!candidate)return;let grade=diff<=balance.perfectWindow?'perfect':diff<=balance.greatWindow?'great':'good';candidate.grade=grade;if(candidate.duration>0){candidate.hold=true;candidate.holdUntil=candidate.t+candidate.duration;judge(grade,lane,candidate.id)}else{candidate.done=true;judge(grade,lane,candidate.id)}}
 function release(lane){let t=time();for(let n of notes){if(n.side==='player'&&n.lane===lane&&n.hold&&!n.done){if(t<n.holdUntil-.105){n.done=true;n.hold=false;judge('miss',lane,n.id)}else{n.done=true;n.hold=false;score+=250;updateHUD()}}}}
 function autoBot(t){if(onlineMode)return;const balance=BALANCE[record.diff];for(let n of notes){if(n.side==='bot'&&!n.done&&t>=n.t-.07){n.done=true;let succeeds=rand(n.id*99+record.root)<balance.botHit;if(succeeds){let at=Math.max(audio.currentTime,startAt+n.t);musicalNote(n.lane,'bot',at);botHits++;botSing=n.t+.29;modifyStrength(-balance.botPush)}else{botMissUntil=t+.37;modifyStrength(.16)}}}}
-function progress(t){let anchor=intro+(record?.offset||0);if(t<anchor)return {phrase:-1,side:'intro',round:0,fraction:0};let q=Math.floor((t-anchor)/(SEG*beat));q=clamp(q,0,GROUPS-1);return {phrase:q,side:q%2===0?'bot':'player',round:Math.floor(q/2)+1,fraction:((t-anchor)/(SEG*beat))%1}}
-function loop(){if(st!=='game')return;let t=time();if(!paused){if(sourceMode==='youtube'&&!ytPlaying){render(lastShown);raf=requestAnimationFrame(loop);return}if(onlineMode&&net.role==='host'&&t-lastClockSent>3&&net.isConnected()){lastClockSent=t;net.send({type:'sync',t,strength})}autoBot(t);for(let n of notes){if(n.side!=='player'||n.done)continue;if(n.hold){if(t>=n.holdUntil){n.done=true;n.hold=false;score+=250;updateHUD()}else if(!pressed[n.lane]){n.done=true;n.hold=false;judge('miss',n.lane)}}else if(t>n.t+BALANCE[record.diff].window){n.done=true;judge('miss',n.lane,n.id)}}let p=progress(t);if(p.phrase!==prevPhrase){prevPhrase=p.phrase;$('round').textContent=p.round+'/10'}if(t>=finishTime){complete();return}/* Give the player a full response turn before allowing a knockout. */ if(strength<=0&&p.side==='bot'&&p.phrase>=2&&t>intro+(record.offset||0)+p.phrase*SEG*beat+.12){complete(true);return}lastShown=t}
+function progress(t){let anchor=intro+(record?.offset||0);if(t<anchor)return {phrase:-1,side:'intro',round:0,fraction:0};let q=Math.floor((t-anchor)/(SEG*beat));q=clamp(q,0,matchGroups-1);return {phrase:q,side:q%2===0?'bot':'player',round:Math.floor(q/2)+1,fraction:((t-anchor)/(SEG*beat))%1}}
+function loop(){if(st!=='game')return;let t=time();if(!paused){if(sourceMode==='youtube'&&!ytPlaying){render(lastShown);raf=requestAnimationFrame(loop);return}if(onlineMode&&net.role==='host'&&t-lastClockSent>3&&net.isConnected()){lastClockSent=t;net.send({type:'sync',t,strength})}autoBot(t);for(let n of notes){if(n.side!=='player'||n.done)continue;if(n.hold){if(t>=n.holdUntil){n.done=true;n.hold=false;score+=250;updateHUD()}else if(!pressed[n.lane]){n.done=true;n.hold=false;judge('miss',n.lane)}}else if(t>n.t+BALANCE[record.diff].window){n.done=true;judge('miss',n.lane,n.id)}}let p=progress(t);if(p.phrase!==prevPhrase){prevPhrase=p.phrase;$('round').textContent=p.round+'/'+Math.ceil(matchGroups/2)}if(t>=finishTime){complete();return}/* Give the player a full response turn before allowing a knockout. */ if(strength<=0&&p.side==='bot'&&p.phrase>=2&&t>intro+(record.offset||0)+p.phrase*SEG*beat+.12){complete(true);return}lastShown=t}
 render(lastShown);raf=requestAnimationFrame(loop)}
 function complete(fail=false){if(st!=='game'||wasFinished)return;wasFinished=true;stop();let total=counts.perfect+counts.great+counts.good+counts.miss,acc=total?accSum/total*100:0;let win=!fail&&strength>=50,grade=acc>=95?'SS':acc>=86?'S':acc>=76?'A':acc>=62?'B':'C';$('results').classList.toggle('lose',!win);$('resulttitle').textContent=win?'YOU WIN!':(onlineMode?'RIVAL WINS!':'BOT WINS!');$('resultdesc').textContent=(win?'네 리듬으로 배틀을 가져왔습니다. ':'봇에게 밀렸습니다. 리듬을 다시 잡아보세요. ')+'최종 랭크 '+grade+' · 게이지 '+Math.round(strength)+'%';$('rscore').textContent=score.toLocaleString();$('racc').textContent=acc.toFixed(1)+'%';$('rmax').textContent=maxCombo;$('rperfect').textContent=counts.perfect;$('rmedium').textContent=counts.great+' / '+counts.good;$('rmiss').textContent=counts.miss;show('results')}
 function togglePause(remote=false){if(st!=='game')return;paused=!paused;if(sourceMode==='youtube'){if(paused)yt?.pauseVideo();else yt?.playVideo()}else if(audio){if(paused)audio.suspend();else audio.resume()}$('pause').textContent=paused?'▶ RESUME':'Ⅱ PAUSE (ESC)';if(!remote&&onlineMode)net.send({type:'pause',paused})}
@@ -219,7 +247,7 @@ function banner(t,p){if(p.side==='intro'){text('GET READY',600,202,'900 44px sys
 let sectionStart=intro+(record.offset||0)+p.phrase*SEG*beat,delta=t-sectionStart,round=Math.floor(p.phrase/2)+1;
 rounded(458,80,284,54,13,p.side==='bot'?'#6f235edb':'#146c80d6');text(p.side==='bot'?(onlineMode?'RIVAL TURN':'BOT TURN'):'YOUR TURN',600,115,'900 27px system-ui','#fff');
 if(delta<.68){g.globalAlpha=clamp(1-delta/.68,0,1);text(p.side==='player'?'YOUR RESPONSE!':(onlineMode?'RIVAL CALLS!':'BOT CALLS!'),600,270,'900 43px system-ui',p.side==='player'?'#57f4ff':'#ff76bd');g.globalAlpha=1}
-text('ROUND '+round+' / 10',600,153,'bold 13px system-ui','#c5bfe2');rounded(481,164,238,6,3,'#ffffff30');rect(481,164,238*clamp(delta/(SEG*beat),0,1),6,p.side==='player'?'#57f2ff':'#fd66b2')}
+text('ROUND '+round+' / '+Math.ceil(matchGroups/2),600,153,'bold 13px system-ui','#c5bfe2');rounded(481,164,238,6,3,'#ffffff30');rect(481,164,238*clamp(delta/(SEG*beat),0,1),6,p.side==='player'?'#57f2ff':'#fd66b2')}
 function render(t){g.save();background(t);healthHUD();let p=progress(t);lanes(t,p);
 performer(440,514,false,t);performer(766,514,true,t);banner(t,p);text('VS',600,330,'italic 1000 78px system-ui','#ffe5ff');
 if(botMissUntil>t){text(onlineMode?'RIVAL MISS':'BOT MISS',770,277,'900 25px system-ui','#ffb4da')} if(judgeEnd>t){let col=judgement==='PERFECT'?'#67fdff':judgement==='GREAT'?'#fff08d':judgement==='GOOD'?'#b5a1ff':'#ff6489';text(judgement,440,277,'1000 29px system-ui',col);if(combo>1)text(combo+' COMBO',440,307,'bold 20px system-ui','#fff')}
