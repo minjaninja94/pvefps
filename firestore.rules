@@ -96,7 +96,7 @@ service cloud.firestore {
           && r.host is string && r.host.size() > 0
           && (r.guest == null || r.guest is string)
           && r.status == 'lobby'
-          && r.track in ['neon','midnight','youtube']
+          && r.track in ['neon','midnight','youtube','file']
           && r.videoId is string && r.videoId.size() <= 11
           && r.bpm is number && r.bpm >= 0 && r.bpm <= 220
           && r.offset is number && r.offset >= 0 && r.offset <= 60
