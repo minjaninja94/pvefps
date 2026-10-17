@@ -150,6 +150,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
 const $=id=>document.getElementById(id), canvas=$('stage'), g=canvas.getContext('2d'), ARROWS=['←','↓','↑','→'], COLORS=['#ff4b68','#35cafa','#39ed8a','#af70ff'], KEYMAP=['ArrowLeft','ArrowDown','ArrowUp','ArrowRight'];
 const intro=2.5, SEG=8, GROUPS=20, BALANCE={easy:{botHit:.61,botPush:.20,miss:0.85,perfect:3.20,great:2.45,good:1.40,window:.235,perfectWindow:.070,greatWindow:.150},normal:{botHit:.77,botPush:.41,miss:1.35,perfect:2.30,great:1.65,good:.95,window:.195,perfectWindow:.055,greatWindow:.125},hard:{botHit:.90,botPush:.65,miss:2.25,perfect:1.85,great:1.30,good:.65,window:.155,perfectWindow:.045,greatWindow:.098}}, SETTINGS={neon:{bpm:136,root:52,title:'NEON SHOWDOWN'},midnight:{bpm:158,root:48,title:'MIDNIGHT CLASH'}};
 let onlineMode=false, sourceMode="neon", yt=null, ytReady=false, ytPlaying=false, ytPromise=null, localFile=null, fileSource=null, remoteSeen=new Set(),localSeq=0,lastClockSent=0,preparedAudio=null,peerAudioHash="",matchGroups=GROUPS,ytValidated=false,pendingStart=null,requestedChartId='', net=window.RhythmOnline;let audio=null,master=null,noise=null,activeVoices=[],timer=null,raf=0,session=0,st='menu',paused=false,record=null,notes=[],beat=0,finishTime=0,startAt=0,stepCursor=0,noteCursor=0;
+let fight=null,attackFx=null,fighterP='celeste',fighterB='ruby';
 let pressed=[false,false,false,false],strength=50,score=0,combo=0,maxCombo=0,accSum=0,counts={perfect:0,great:0,good:0,miss:0},botHits=0,botMissUntil=0,judgement='',judgeEnd=0,prevPhrase=-1,flashLanes=[0,0,0,0],playerSing=0,botSing=0,lastShown=0,effects=[],wasFinished=false;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rand=(n)=>{let x=Math.sin(n*127.1+78.233)*43758.5453;return x-Math.floor(x)};
@@ -270,7 +271,7 @@ function showPrepError(e){$('analysisStatus').textContent='준비 오류: '+(e?.
 
 function generateChart(){let diff=$('difficulty').value,denom=diff==='easy'?1:diff==='normal'?.5:.25,notesOut=[],duration=intro+GROUPS*SEG*beat+1.4;for(let phrase=0;phrase<GROUPS;phrase++){let side=(onlineMode&&net.role==='host')?(phrase%2===0?'player':'bot'):(phrase%2===0?'bot':'player'),base=intro+phrase*SEG*beat+(record.offset||0),steps=Math.round(SEG/denom);for(let i=0;i<steps;i++){let seed=phrase*233+i*41+record.root,lane=Math.floor(rand(seed+14)*4),pick=rand(seed+37),should=diff==='easy'?pick>.13:diff==='normal'?pick>.22:(i%2===0||pick>.44);if(!should)continue;
 let when=base+i*denom*beat;let sustain=diff==='easy'?0:(i%11===4&&i<steps-3?denom*beat*1.8:0);
-notesOut.push({id:notesOut.length,side,lane,t:when,duration:sustain,done:false,hold:false,missed:false,botDone:false})}}return {items:notesOut.sort((a,b)=>a.t-b.t),duration}}
+notesOut.push({id:notesOut.length,phrase,side,lane,t:when,duration:sustain,done:false,hold:false,missed:false,botDone:false})}}return {items:notesOut.sort((a,b)=>a.t-b.t),duration}}
 async function newRound(presetConfig){
  stop();wasFinished=false;
  let cfg=presetConfig||selectedConfig();if(!cfg)return;
@@ -303,6 +304,12 @@ async function newRound(presetConfig){
  }else{
   chart=generateChart();notes=chart.items;matchGroups=GROUPS;finishTime=chart.duration+(record.offset||0);
  }
+ fight=window.RhythmClash.make(notes);attackFx=null;
+ fighterP=$('avatarP').value;fighterB=$('avatarB').value;
+ $('fighterPName').textContent=window.NeonFighters.get(fighterP).name;
+ $('fighterBName').textContent=window.NeonFighters.get(fighterB).name;
+ $('rivalType').textContent=onlineMode?'2P · RIVAL':'CPU · RIVAL';
+ updateFightHUD();
  stepCursor=noteCursor=0;strength=50;score=combo=maxCombo=accSum=botHits=0;counts={perfect:0,great:0,good:0,miss:0};
  pressed=[false,false,false,false];flashLanes=[0,0,0,0];judgeEnd=0;prevPhrase=-1;playerSing=botSing=0;botMissUntil=0;effects=[];lastShown=0;paused=false;ytPlaying=false;ytValidated=false;remoteSeen.clear();localSeq=0;lastClockSent=0;
  $('chartSource').textContent=sourceMode==='youtube'?(record.chart?'✓ 저장된 실제 분석 채보 '+notes.length+'개 사용 중 · 영상 '+record.videoId:'⚠ 저장 채보 없음 — '+notes.length+'개의 BPM 기반 임시 채보'):(sourceMode==='file'?'✓ 로컬 음원 분석 채보 '+notes.length+'개':'내장 데모 채보 '+notes.length+'개');
@@ -326,13 +333,53 @@ async function newRound(presetConfig){
 function stop(){session++;cancelAnimationFrame(raf);if(fileSource){try{fileSource.stop()}catch(e){}fileSource.disconnect();fileSource=null}if(yt&&ytPlaying)try{yt.pauseVideo()}catch(e){}ytPlaying=false;stopSound();paused=false}
 function time(){return sourceMode==='youtube'?(ytReady&&yt?Math.max(0,Number(yt.getCurrentTime())||0):0):(audio?audio.currentTime-startAt:0)}
 function modifyStrength(v){strength=clamp(strength+v,0,100)}
-function judge(kind,lane,noteId){const balance=BALANCE[record.diff];if(onlineMode&&net.isConnected())net.send({type:'judge',id:noteId,kind,seq:++localSeq});counts[kind]++;judgement=kind.toUpperCase();judgeEnd=time()+.55;flashLanes[lane]=time()+.25;if(kind==='miss'){combo=0;modifyStrength(-balance.miss)}else{combo++;maxCombo=Math.max(maxCombo,combo);let val={perfect:1,great:.68,good:.34}[kind];accSum+=val;score+=Math.round({perfect:1000,great:650,good:300}[kind]*(1+Math.min(combo,120)/150));modifyStrength(balance[kind]);playerSing=time()+.27;if(sourceMode!=='youtube'&&audio&&master)musicalNote(lane,'player',Math.max(audio.currentTime,startAt),0);for(let i=0;i<10;i++)effects.push({x:86+lane*76,y:120,vx:(rand(i+time()*37)-.5)*12,vy:(rand(i+time()*19+45)-.7)*12,life:1,col:COLORS[lane]})}
-updateHUD()}
+function judge(kind,lane,noteId){const balance=BALANCE[record.diff];if(onlineMode&&net.isConnected())net.send({type:'judge',id:noteId,kind,seq:++localSeq});
+ if(fight)window.RhythmClash.register(fight,'player',noteId,kind);counts[kind]++;judgement=kind.toUpperCase();judgeEnd=time()+.55;flashLanes[lane]=time()+.25;if(kind==='miss'){combo=0}else{combo++;maxCombo=Math.max(maxCombo,combo);let val={perfect:1,great:.68,good:.34}[kind];accSum+=val;score+=Math.round({perfect:1000,great:650,good:300}[kind]*(1+Math.min(combo,120)/150));playerSing=time()+.27;if(sourceMode!=='youtube'&&audio&&master)musicalNote(lane,'player',Math.max(audio.currentTime,startAt),0);for(let i=0;i<10;i++)effects.push({x:86+lane*76,y:120,vx:(rand(i+time()*37)-.5)*12,vy:(rand(i+time()*19+45)-.7)*12,life:1,col:COLORS[lane]})}
+updateHUD();updateFightHUD()}
 function updateHUD(){let total=counts.perfect+counts.great+counts.good+counts.miss;$('score').textContent=score.toLocaleString();$('combo').textContent=combo;$('accuracy').textContent=(total?accSum/total*100:100).toFixed(1)+'%'}
 function hit(lane){if(st!=='game'||paused)return;let t=time();let candidate=null,balance=BALANCE[record.diff],diff=balance.window;for(let n of notes){if(n.side!=='player'||n.done||n.hold||n.lane!==lane)continue;let d=Math.abs(n.t-t);if(d<diff){diff=d;candidate=n}}if(!candidate)return;let grade=diff<=balance.perfectWindow?'perfect':diff<=balance.greatWindow?'great':'good';candidate.grade=grade;if(candidate.duration>0){candidate.hold=true;candidate.holdUntil=candidate.t+candidate.duration;judge(grade,lane,candidate.id)}else{candidate.done=true;judge(grade,lane,candidate.id)}}
 function release(lane){let t=time();for(let n of notes){if(n.side==='player'&&n.lane===lane&&n.hold&&!n.done){if(t<n.holdUntil-.105){n.done=true;n.hold=false;judge('miss',lane,n.id)}else{n.done=true;n.hold=false;score+=250;updateHUD()}}}}
-function autoBot(t){if(onlineMode)return;const balance=BALANCE[record.diff];for(let n of notes){if(n.side==='bot'&&!n.done&&t>=n.t-.07){n.done=true;let succeeds=rand(n.id*99+record.root)<balance.botHit;if(succeeds){if(sourceMode!=='youtube'&&audio&&master){let at=Math.max(audio.currentTime,startAt+n.t);musicalNote(n.lane,'bot',at)}botHits++;botSing=n.t+.29;modifyStrength(-balance.botPush)}else{botMissUntil=t+.37;modifyStrength(.16)}}}}
-function progress(t){let anchor=intro+(record?.offset||0);if(t<anchor)return {phrase:-1,side:'intro',round:0,fraction:0};let q=Math.floor((t-anchor)/(SEG*beat));q=clamp(q,0,matchGroups-1);return {phrase:q,side:q%2===0?'bot':'player',round:Math.floor(q/2)+1,fraction:((t-anchor)/(SEG*beat))%1}}
+function autoBot(t){if(onlineMode)return;const balance=BALANCE[record.diff];for(let n of notes){if(n.side==='bot'&&!n.done&&t>=n.t-.07){n.done=true;let succeeds=rand(n.id*99+record.root)<balance.botHit;if(succeeds){if(sourceMode!=='youtube'&&audio&&master){let at=Math.max(audio.currentTime,startAt+n.t);musicalNote(n.lane,'bot',at)}botHits++;botSing=n.t+.29;window.RhythmClash.register(fight,'bot',n.id,rand(n.id*131+record.root)>.4?'perfect':'great')}else{botMissUntil=t+.37;window.RhythmClash.register(fight,'bot',n.id,'miss')}}}}
+
+function updateFightHUD(){
+ if(!fight)return;
+ for(const [side,h,superEl,name] of [['player','p','pSuper','fighterPName'],['bot','b','bSuper','fighterBName']]){
+   const amount=Math.max(0,Math.min(100,fight.hp[side]));
+   $(h+'HP').textContent=Math.round(amount);
+   $(h+'HPBar').style.width=amount+'%';
+   $(superEl).textContent=Math.round(fight.super[side]);
+ }
+ $('matchRound').textContent='ROUND '+String(Math.min(Math.ceil(matchGroups/2),fight.nextRound+1)).padStart(2,'0');
+ const round=fight.nextRound;
+ const p=window.RhythmClash.stats(fight,'player',round);
+ const b=window.RhythmClash.stats(fight,'bot',round);
+ $('pTurnScore').textContent='1P '+p.score+' / 1000';
+ $('bTurnScore').textContent=(onlineMode?'2P ':'CPU ')+b.score+' / 1000';
+}
+function onFightResult(result){
+ attackFx={side:result.winner,t:time(),damage:result.damage,finisher:result.finisher};
+ let names={player:window.NeonFighters.get(fighterP).name,bot:window.NeonFighters.get(fighterB).name};
+ $('battleAnnounce').textContent=result.winner==='draw'
+ ?'DRAW · 양쪽 방어 성공!'
+ :names[result.winner]+' 공격! -'+result.damage+' HP'+(result.finisher?' · FINISHER!':'');
+ updateFightHUD();
+}
+function settleFight(t,force=false){
+ if(!fight)return;
+ const count=Math.floor(matchGroups/2);
+ while(fight.nextRound<count){
+   const boundary=intro+(record.offset||0)+(fight.nextRound+1)*SEG*beat*2;
+   if(!force&&t<boundary+.035)break;
+   if(onlineMode&&net.role!=='host')break; // Host arbitrates turn score and damage.
+   const result=window.RhythmClash.resolve(fight,fight.nextRound);
+   if(!result)break;
+   if(onlineMode&&net.isConnected())net.send({type:'roundResult',result});
+   onFightResult(result);
+   if(fight.hp.player<=0||fight.hp.bot<=0){complete();return}
+ }
+}
+
+function progress(t){let anchor=intro+(record?.offset||0);if(t<anchor)return {phrase:-1,side:'intro',round:0,fraction:0};let q=Math.floor((t-anchor)/(SEG*beat));q=clamp(q,0,matchGroups-1);return {phrase:q,side:(onlineMode&&net.role==='host')?(q%2===0?'player':'bot'):(q%2===0?'bot':'player'),round:Math.floor(q/2)+1,fraction:((t-anchor)/(SEG*beat))%1}}
 function safeLoop(){try{loop()}catch(e){console.error('NEON DUEL rendering error',e);const message='게임 화면 처리 오류: '+String(e?.message||e).slice(0,160);stop();show('menu');$('analysisStatus').textContent=message+' · 다시 시작해 주세요.'}}
 function loop(){if(st!=='game')return;let t=time();if(!paused){if(sourceMode==='youtube'&&(!ytPlaying||!ytValidated)){if(ytPlaying)validateYTDuration();render(lastShown);raf=requestAnimationFrame(safeLoop);return}if(onlineMode&&net.role==='host'&&t-lastClockSent>3&&net.isConnected()){lastClockSent=t;net.send({type:'sync',t,strength})}autoBot(t);for(let n of notes){if(n.side!=='player'||n.done)continue;if(n.hold){if(t>=n.holdUntil){n.done=true;n.hold=false;score+=250;updateHUD()}else if(!pressed[n.lane]){n.done=true;n.hold=false;judge('miss',n.lane)}}else if(t>n.t+BALANCE[record.diff].window){n.done=true;judge('miss',n.lane,n.id)}}let p=progress(t);if(p.phrase!==prevPhrase){prevPhrase=p.phrase;$('round').textContent=p.round+'/'+Math.ceil(matchGroups/2)}if(t>=finishTime){complete();return}/* Give the player a full response turn before allowing a knockout. */ if(strength<=0&&p.side==='bot'&&p.phrase>=2&&t>intro+(record.offset||0)+p.phrase*SEG*beat+.12){complete(true);return}lastShown=t}
 render(lastShown);raf=requestAnimationFrame(safeLoop)}
