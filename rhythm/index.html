@@ -226,6 +226,52 @@ for(let e of effects){e.x+=e.vx;e.y+=e.vy;e.vy+=.3;e.life-=.035;g.globalAlpha=Ma
 let elapsed=clamp(t,0,finishTime);text(Math.floor(elapsed/60)+':'+String(Math.floor(elapsed%60)).padStart(2,'0')+' / '+Math.floor(finishTime/60)+':'+String(Math.floor(finishTime%60)).padStart(2,'0'),600,655,'bold 17px system-ui','#e0d9f4');rect(360,670,480,5,'#77738f88');rect(360,670,480*elapsed/finishTime,5,'#7be9ff');
 if(paused){rect(0,0,1200,700,'#050619df');text('PAUSED',600,321,'900 83px system-ui','#fff');text('ESC / RESUME 버튼으로 계속',600,366,'bold 21px system-ui','#ddd1ee')}
 g.restore()}
+
+function settingsUI(){
+ const kind=$('track').value;
+ $('musicExtras').style.display=kind==='youtube'||kind==='file'?'grid':'none';
+ $('youtubeField').style.display=kind==='youtube'?'block':'none';
+ $('fileField').style.display=kind==='file'?'block':'none';
+ $('customBpm').parentElement.style.display=kind==='file'?'none':'block';
+ $('beatOffset').parentElement.style.display=kind==='file'?'none':'block';
+ if(onlineMode&&kind==='file'){$('track').value='youtube';settingsUI()}
+}
+function roomStatus(value){$('roomStatus').textContent=value}
+function modeUI(){
+ $('soloMode').classList.toggle('chosen',!onlineMode);$('onlineMode').classList.toggle('chosen',onlineMode);
+ $('roomPanel').style.display=onlineMode?'block':'none';
+ $('track').querySelector('option[value="file"]').disabled=onlineMode;
+ if(onlineMode&&$('track').value==='file')$('track').value='youtube';
+ $('start').textContent=onlineMode?'⚔ HOST START (BOTH READY)':'▶ START BATTLE';
+ settingsUI()
+}
+$('track').onchange=settingsUI;
+$('audioFile').onchange=e=>{localFile=e.target.files[0]||null};
+$('soloMode').onclick=async()=>{if(st==='game')return;onlineMode=false;await net.leave();modeUI()};
+$('onlineMode').onclick=()=>{if(st==='game')return;onlineMode=true;modeUI()};
+$('createRoom').onclick=async()=>{try{let cfg=selectedConfig();if(!cfg)return;roomStatus('방 생성 중…');let id=await net.create(cfg);roomStatus('초대 코드 '+id+' · 친구가 입장하면 준비를 누르세요.')}catch(e){roomStatus('오류: '+(e.message||e))}};
+$('joinRoom').onclick=async()=>{try{roomStatus('입장 중…');await net.join($('joinCode').value);roomStatus('상대와 P2P 연결을 설정 중입니다.')}catch(e){roomStatus('오류: '+(e.message||e))}};
+$('readyRoom').onclick=()=>{if(!net.isConnected()){roomStatus('친구와 P2P 연결이 된 뒤 준비할 수 있습니다.');return}net.ready(!net.readySelf);$('readyRoom').textContent=net.readySelf?'준비 취소':'준비'};
+$('leaveRoom').onclick=async()=>{await net.leave();$('roomCode').textContent='';roomStatus('방에서 나갔습니다.')};
+net.on('code',id=>{$('roomCode').textContent=id});
+net.on('room',r=>{if(r&&st==='menu'){if(net.role==='guest'){$('track').value=r.videoId?'youtube':r.track||'neon';if(r.videoId)$('youtubeUrl').value='https://youtu.be/'+r.videoId;if(r.bpm)$('customBpm').value=r.bpm;if(Number.isFinite(r.offset))$('beatOffset').value=r.offset;settingsUI()}roomStatus(r.guest?'2명 입장 완료 · 연결 후 서로 준비하세요.':'친구 대기 중 · 코드 '+net.roomId)}});
+net.on('connected',()=>{roomStatus('P2P 연결 완료! 양쪽 모두 준비를 누르세요.')});
+net.on('ready',v=>{roomStatus('나: '+(v.self?'준비 완료':'대기')+' | 친구: '+(v.peer?'준비 완료':'대기')+(net.role==='host'&&v.self&&v.peer?' → START BATTLE을 누르세요.':''))});
+net.on('error',message=>roomStatus('연결 오류: '+message));
+net.on('disconnect',message=>{roomStatus('상대 연결 종료: '+message);if(st==='game'&&onlineMode)complete(true)});
+net.on('packet',v=>{
+ if(!onlineMode)return;
+ if(v.type==='start'&&st==='menu'&&net.role==='guest'&&v.cfg){newRound(v.cfg);return}
+ if(v.type==='pause'&&st==='game'&&paused!==!!v.paused){togglePause(true);return}
+ if(v.type==='judge'&&st==='game'&&record&&Number.isInteger(v.seq)&&!remoteSeen.has(v.seq)&&Number.isInteger(v.id)&&['perfect','great','good','miss'].includes(v.kind)){
+   let n=notes.find(x=>x.id===v.id&&x.side==='bot');if(!n)return;
+   remoteSeen.add(v.seq);if(remoteSeen.size>600)remoteSeen.clear();
+   n.done=true;
+   let b=BALANCE[record.diff];modifyStrength(v.kind==='miss'?b.miss:-b[v.kind]);
+   if(v.kind==='miss')botMissUntil=time()+.36;else botSing=time()+.29
+ }
+});
+
 const touchBtns=Array.from(document.querySelectorAll('[data-lane]'));
 function keyDown(lane){if(pressed[lane])return;pressed[lane]=true;hit(lane);let btn=touchBtns[lane];if(btn)btn.classList.add('held')}
 function keyUp(lane){if(!pressed[lane])return;pressed[lane]=false;release(lane);let btn=touchBtns[lane];if(btn)btn.classList.remove('held')}
@@ -236,7 +282,7 @@ for(let b of touchBtns){let lane=Number(b.dataset.lane);b.addEventListener('poin
 canvas.addEventListener('pointerdown',e=>{if(st!=='game'||paused)return;let r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*1200;if(x>=45&&x<360){let lane=Math.round((x-86)/76);lane=clamp(lane,0,3);canvas.setPointerCapture(e.pointerId);canvas.dataset.pointerLane=lane;keyDown(lane)}});
 canvas.addEventListener('pointerup',()=>{if(canvas.dataset.pointerLane!==undefined){keyUp(Number(canvas.dataset.pointerLane));delete canvas.dataset.pointerLane}});
 canvas.addEventListener('pointercancel',()=>{if(canvas.dataset.pointerLane!==undefined){keyUp(Number(canvas.dataset.pointerLane));delete canvas.dataset.pointerLane}});
-$('start').onclick=newRound;$('retry').onclick=newRound;$('pause').onclick=togglePause;$('quit').onclick=()=>{stop();show('menu')};$('select').onclick=()=>{stop();show('menu')};
+$('start').onclick=async()=>{if(!onlineMode){await newRound();return}if(net.role!=='host'||!net.isConnected()||!net.readySelf||!net.readyPeer){roomStatus('방장과 친구 모두 P2P 접속 및 준비 완료가 필요합니다.');return}let cfg=selectedConfig();if(!cfg)return;cfg.startsAt=Date.now()+4500;if(!net.send({type:'start',cfg})){roomStatus('시작 패킷 전송 실패');return}await newRound(cfg)};$('retry').onclick=()=>{if(onlineMode){show('menu');net.ready(false);roomStatus('온라인 재대결은 양쪽에서 준비를 다시 해주세요.')}else newRound()};$('pause').onclick=togglePause;$('quit').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};$('select').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};modeUI();
 })();
 </script>
 </body></html>
