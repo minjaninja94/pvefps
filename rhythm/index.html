@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0a0820">
-<title>NEON DUEL — TURN-BASED RHYTHM BATTLE</title>
+<title>NEON CLASH — RHYTHM FIGHTERS</title>
 <style>
 :root{color-scheme:dark;--blue:#44e6ff;--pink:#ff4b9f;--muted:#b8a9d2;--dark:#0c0920}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;background:#080719;color:#fff;font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif}
@@ -68,13 +68,40 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
 #playHint{display:none;text-align:center;background:#292048dd;color:#fff;padding:12px;font-size:13px}
 #syncInfo{color:#a9e8ff;font-size:12px;text-align:center;margin:8px 0}
 @media(max-width:780px){.musicExtras{grid-template-columns:1fr 1fr}.musicExtras .setting:first-child{grid-column:1/-1}#youtubeOverlay{position:relative;top:auto;left:auto;width:min(100%,440px);min-height:220px;margin:8px auto}#ytPlayer{min-height:220px}}
-#analysisStatus:empty{display:none}#savedCharts button{background:#251f42;border:1px solid #52639f;margin:3px;padding:9px 13px;border-radius:9px;display:inline-flex;gap:10px;align-items:center;font-size:12px}#savedCharts button[data-selected=true]{border-color:#82ebff;background:#12465c}#savedCharts button:hover{background:#234e6b}#start:disabled,#readyRoom:disabled{opacity:.55;cursor:progress}</style>
+#analysisStatus:empty{display:none}#savedCharts button{background:#251f42;border:1px solid #52639f;margin:3px;padding:9px 13px;border-radius:9px;display:inline-flex;gap:10px;align-items:center;font-size:12px}#savedCharts button[data-selected=true]{border-color:#82ebff;background:#12465c}#savedCharts button:hover{background:#234e6b}#start:disabled,#readyRoom:disabled{opacity:.55;cursor:progress}
+/* Fighting-game stage, replacing the old tug-of-war strip */
+.fighterSetup{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;background:#0b1834;border:1px solid #a6dcff32;padding:15px;border-radius:15px}
+.fighterSetup select{margin-top:8px;width:100%;padding:12px;background:#1c213e;color:#fff;border:1px solid #6c73b7;border-radius:8px;font-size:13px}
+.matchupLabel{text-align:center;font-weight:1000;letter-spacing:.17em;color:#8fefff;font-size:17px}
+.matchupLabel b{color:#ff78c5}.matchupLabel small{display:block;font-size:10px;color:#beb1ce;letter-spacing:.05em;margin-top:6px;font-weight:500}
+.fightHUD{display:grid;grid-template-columns:minmax(0,1fr) 150px minmax(0,1fr);gap:12px;align-items:center;padding:13px 18px;border:1px solid #ffffff2c;background:linear-gradient(90deg,#0a2a47,#251833 50%,#4a1838);border-radius:17px 17px 4px 4px;margin-bottom:8px}
+.fightCard{min-width:0}.fightName{display:flex;align-items:baseline;justify-content:space-between;gap:9px}
+.fightName strong{font-size:clamp(14px,2vw,22px);color:#9af4ff;text-shadow:0 0 20px #42ddfa77}
+.enemyCard .fightName strong{color:#ff91cd}.fightName small{font-size:10px;color:#b6b0c6;white-space:nowrap}
+.healthRail{height:22px;background:#060b20;border:2px solid #ffffff78;border-radius:5px;overflow:hidden;margin:7px 0 4px;box-shadow:0 3px 10px #0009}
+.healthFill{height:100%;width:100%;background:linear-gradient(90deg,#2fdded,#64fbb5);transition:width .34s cubic-bezier(.15,.7,.3,1)}
+.enemyCard .healthFill{margin-left:auto;background:linear-gradient(90deg,#ffba52,#f05297)}
+.fightStats{display:flex;justify-content:space-between;font-size:11px;color:#d9cfeb;font-variant-numeric:tabular-nums}
+.centerRound{text-align:center;color:#fff;font-weight:1000;text-shadow:0 2px 0 #131428}
+.centerRound small{font-size:11px;display:block;letter-spacing:.25em;color:#8aeaff}
+.centerRound strong{display:block;color:#fff;font-size:27px;line-height:1.1;letter-spacing:-.04em}
+.centerRound span{display:block;font-size:11px;color:#fdb7eb;margin-top:4px;letter-spacing:.09em}
+.turnScoreHUD{display:flex;justify-content:space-between;gap:8px;align-items:center;text-align:center;font-size:12px;color:#9edcfc;padding:7px 15px;background:#101a31;border:1px solid #5870a555;border-radius:8px;margin-bottom:8px}
+.turnScoreHUD strong{color:#fff;font-size:clamp(11px,1.5vw,16px);letter-spacing:.03em}
+#youtubeOverlay{z-index:7;top:24%;left:38%;width:24%;border-color:#75dbee}
+@media(max-width:750px){.fighterSetup{grid-template-columns:1fr 1fr}.matchupLabel{grid-column:1/-1;grid-row:1}.fightHUD{grid-template-columns:1fr 80px 1fr;gap:5px;padding:9px}.centerRound strong{font-size:16px}.centerRound small,.fightName small{font-size:8px}.turnScoreHUD{font-size:9px}.fightStats{font-size:9px}}
+</style>
 </head>
 <body>
 <header><div class="logo">NEON <em>DUEL</em> <span style="font-size:11px;color:#b1accb">/ RHYTHM VS</span></div><a href="../index.html">← GAME SELECT</a></header>
 <main id="menu">
  <div class="hero"><div class="herocontent"><div class="eyebrow">CALL · RESPONSE · BATTLE</div><h1>BEAT<br><span>BATTLE.</span></h1><p>네가 왼쪽, 봇이 오른쪽. 상대가 노래하면 듣고, 네 턴에는 방향키로 받아쳐라. 정확한 비트로 무대를 지배하는 1:1 리듬 배틀.</p></div><div class="versusart" aria-hidden="true"><span>YOU</span><strong>VS</strong><span>BOT</span></div></div>
  <div class="setup">
+ <div class="fighterSetup" style="grid-column:1/-1">
+ <label class="setting">1P · 성인 파이터 <select id="avatarP"><option value="celeste">세레스티아 — 빙결의 검희</option><option value="ruby">루비나 — 화염의 여우 검사</option><option value="violet">아스트라 — 밤의 마도사</option><option value="jade">미라 — 네온 사이버 닌자</option></select></label>
+ <div class="matchupLabel">RHYTHM <b>CLASH</b><small>점수 승리 → 공격 → HP 차감</small></div>
+ <label class="setting">상대 파이터 <select id="avatarB"><option value="ruby">루비나 — 화염의 여우 검사</option><option value="celeste">세레스티아 — 빙결의 검희</option><option value="violet">아스트라 — 밤의 마도사</option><option value="jade">미라 — 네온 사이버 닌자</option></select></label>
+ </div>
   <label class="setting">TRACK / MUSIC SOURCE<select id="track"><option value="neon">내장 데모 — NEON SHOWDOWN</option><option value="midnight">내장 데모 — MIDNIGHT CLASH</option><option value="youtube">YouTube 공식 임베드 / 최대 5분</option><option value="file">보유 음원 분석 / 봇전 · 온라인 2인</option></select></label>
   <label class="setting">DIFFICULTY<select id="difficulty"><option value="easy">EASY / 봇 약함 · 연습용</option><option value="normal" selected>NORMAL / 균형 조정</option><option value="hard">HARD / 강한 봇 · 고속 배틀</option></select></label>
   <label class="setting">NOTE SPEED<select id="speed"><option value="1">1.0×</option><option value="1.25" selected>1.25×</option><option value="1.5">1.5×</option><option value="1.8">1.8×</option></select></label>
@@ -104,6 +131,12 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
 </main>
 <section id="game">
  <div class="matchHeader"><span class="your">● PLAYER / LEFT</span><strong id="trackname">NEON SHOWDOWN</strong><span class="enemy">BOT / RIGHT ●</span></div>
+ <div class="fightHUD">
+ <div class="fightCard playerCard"><div class="fightName"><strong id="fighterPName">세레스티아</strong><small>1P · YOU</small></div><div class="healthRail"><div class="healthFill" id="pHPBar"></div></div><div class="fightStats"><span>HP <b id="pHP">100</b> / 100</span><span>SUPER <b id="pSuper">0</b>%</span></div></div>
+ <div class="centerRound"><small>RHYTHM</small><strong>CLASH</strong><span id="matchRound">ROUND 01</span></div>
+ <div class="fightCard enemyCard"><div class="fightName"><strong id="fighterBName">루비나</strong><small id="rivalType">CPU · RIVAL</small></div><div class="healthRail"><div class="healthFill" id="bHPBar"></div></div><div class="fightStats"><span>HP <b id="bHP">100</b> / 100</span><span>SUPER <b id="bSuper">0</b>%</span></div></div>
+ </div>
+ <div class="turnScoreHUD"><span id="pTurnScore">1P SCORE —</span><strong id="battleAnnounce">턴 점수로 승리하면 상대를 공격!</strong><span id="bTurnScore">RIVAL SCORE —</span></div>
  <div class="gameboard"><canvas id="stage" width="1200" height="700" tabindex="0" aria-label="리듬 배틀 게임 화면: 방향키 입력"></canvas><div id="youtubeOverlay"><div id="ytPlayer"></div></div></div><div id="chartSource" aria-live="polite" style="margin:9px auto;text-align:center;color:#87efc6;font-weight:800;font-size:13px"></div><div id="syncInfo" aria-live="polite"></div><div id="playHint">유튜브의 자체 ▶ 버튼을 눌러 재생을 시작하세요. 임베드가 제한된 영상은 다른 링크를 사용하세요.</div>
  <div class="scoreline"><div class="stats"><span>SCORE <strong id="score">0</strong></span><span>COMBO <strong id="combo">0</strong></span><span>ACCURACY <strong id="accuracy">100%</strong></span><span>ROUND <strong id="round">1/10</strong></span></div><div class="tools"><button class="small" id="focusControls" type="button">⌨ 방향키 입력 활성화</button><button class="small" id="pause">Ⅱ PAUSE (ESC)</button><button class="small" id="quit">✕ QUIT</button></div></div>
  <div class="touch" aria-label="화면 방향키"><button data-lane="0" aria-label="왼쪽">←</button><button data-lane="1" aria-label="아래">↓</button><button data-lane="2" aria-label="위">↑</button><button data-lane="3" aria-label="오른쪽">→</button></div>
@@ -111,7 +144,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
 <section id="results"><div class="eyebrow">BATTLE RESULT</div><h2 id="resulttitle">YOU WIN!</h2><p id="resultdesc"></p><div class="grid">
 <div>SCORE<strong id="rscore">0</strong></div><div>ACCURACY<strong id="racc">0%</strong></div><div>MAX COMBO<strong id="rmax">0</strong></div><div>PERFECT<strong id="rperfect">0</strong></div><div>GREAT / GOOD<strong id="rmedium">0</strong></div><div>MISS<strong id="rmiss">0</strong></div>
 </div><div class="resultsbtn"><button class="start" id="retry">↻ REMATCH</button><button class="small" id="select">SONG SELECT</button></div></section>
-<script src="../firebase-config.js"></script><script src="../firebase-network.js"></script><script src="./duel-online.js"></script><script src="./chart-analysis.js"></script><script src="./audio-import.js"></script><script src="https://www.youtube.com/iframe_api" async></script>\n<script>
+<script src="../firebase-config.js"></script><script src="../firebase-network.js"></script><script src="./duel-online.js"></script><script src="./chart-analysis.js"></script><script src="./battle-system.js"></script><script src="./fighters.js"></script><script src="./audio-import.js"></script><script src="https://www.youtube.com/iframe_api" async></script>\n<script>
 'use strict';
 (()=>{
 const $=id=>document.getElementById(id), canvas=$('stage'), g=canvas.getContext('2d'), ARROWS=['←','↓','↑','→'], COLORS=['#ff4b68','#35cafa','#39ed8a','#af70ff'], KEYMAP=['ArrowLeft','ArrowDown','ArrowUp','ArrowRight'];
