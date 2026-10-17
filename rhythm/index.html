@@ -327,7 +327,7 @@ async function newRound(presetConfig){
   chart=generateChart();notes=chart.items;matchGroups=GROUPS;finishTime=chart.duration+(record.offset||0);
  }
  fight=window.RhythmClash.make(notes);attackFx=null;
- fighterP=$('avatarP').value;fighterB=$('avatarB').value;
+ fighterP=fromForm('P');fighterB=onlineMode&&remoteAppearance?remoteAppearance:fromForm('B');
  $('fighterPName').textContent=window.NeonFighters.get(fighterP).name;
  $('fighterBName').textContent=window.NeonFighters.get(fighterB).name;
  $('rivalType').textContent=onlineMode?'2P · RIVAL':'CPU · RIVAL';
@@ -362,6 +362,75 @@ function updateHUD(){let total=counts.perfect+counts.great+counts.good+counts.mi
 function hit(lane){if(st!=='game'||paused)return;let t=time();let candidate=null,balance=BALANCE[record.diff],diff=balance.window;for(let n of notes){if(n.side!=='player'||n.done||n.hold||n.lane!==lane)continue;let d=Math.abs(n.t-t);if(d<diff){diff=d;candidate=n}}if(!candidate)return;let grade=diff<=balance.perfectWindow?'perfect':diff<=balance.greatWindow?'great':'good';candidate.grade=grade;if(candidate.duration>0){candidate.hold=true;candidate.holdUntil=candidate.t+candidate.duration;judge(grade,lane,candidate.id)}else{candidate.done=true;judge(grade,lane,candidate.id)}}
 function release(lane){let t=time();for(let n of notes){if(n.side==='player'&&n.lane===lane&&n.hold&&!n.done){if(t<n.holdUntil-.105){n.done=true;n.hold=false;judge('miss',lane,n.id)}else{n.done=true;n.hold=false;score+=250;updateHUD()}}}}
 function autoBot(t){if(onlineMode)return;const balance=BALANCE[record.diff];for(let n of notes){if(n.side==='bot'&&!n.done&&t>=n.t-.07){n.done=true;let succeeds=rand(n.id*99+record.root)<balance.botHit;if(succeeds){if(sourceMode!=='youtube'&&audio&&master){let at=Math.max(audio.currentTime,startAt+n.t);musicalNote(n.lane,'bot',at)}botHits++;botSing=n.t+.29;window.RhythmClash.register(fight,'bot',n.id,rand(n.id*131+record.root)>.4?'perfect':'great')}else{botMissUntil=t+.37;window.RhythmClash.register(fight,'bot',n.id,'miss')}}}}
+
+
+let remoteAppearance=null;
+function shade(hex,mul=.57){
+ if(!/^#[0-9a-f]{6}$/i.test(hex))return '#25335d';
+ return '#'+[1,3,5].map(i=>Math.round(parseInt(hex.slice(i,i+2),16)*mul).toString(16).padStart(2,'0')).join('');
+}
+function fromForm(side){
+ const base=window.NeonFighters.get($('avatar'+side).value);
+ const hair=$('color'+side).value,eye=$('eyeColor'+side).value,outfit=$('dressColor'+side).value;
+ return {...base,hair,hairDark:shade(hair),eye,outfit,style:$('hair'+side).value,
+   species:$('species'+side).value,body:$('body'+side).value,
+   bust:$('bust'+side).value,eyeShape:$('eyes'+side).value};
+}
+function legalAppearance(data){
+ if(!data||typeof data!=='object')return null;
+ const base=window.NeonFighters.PROFILES.find(p=>p.id===data.id);
+ if(!base)return null;
+ const variants={
+  style:['long','wave','short','twin'],species:['human','cat','fox','rabbit'],
+  body:['slender','balanced','curvy','athletic','petite','giant'],
+  bust:['small','standard','large','full'],eyeShape:['normal','sharp','soft']
+ };
+ const p={...base};
+ for(const [key,allowed] of Object.entries(variants))if(allowed.includes(data[key]))p[key]=data[key];
+ for(const key of ['hair','hairDark','eye','outfit'])if(/^#[a-f0-9]{6}$/i.test(data[key]||''))p[key]=data[key];
+ return p;
+}
+function applyProfile(side,profile){
+ const p=legalAppearance(profile)||window.NeonFighters.PROFILES[side==='P'?0:1];
+ $('avatar'+side).value=p.id;
+ for(const [k,v] of [['hair',p.style||'long'],['species',p.species||'human'],['body',p.body||'balanced'],['bust',p.bust||'standard'],['eyes',p.eyeShape||'normal'],['color',p.hair],['eyeColor',p.eye],['dressColor',p.outfit]])$(k+side).value=v;
+ previewProfile(side);
+}
+function previewProfile(side){
+ const canvas=$('preview'+side),ctx=canvas.getContext('2d'),p=fromForm(side);
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ ctx.save();
+ window.NeonFighters.draw(ctx,115,257,p,{facing:side==='P'?1:-1,scale:.68,t:performance.now()/1000});
+ ctx.restore();
+}
+function sendAppearance(){
+ if(onlineMode&&net.isConnected())net.send({type:'appearance',profile:fromForm('P')});
+}
+function randomStyle(side){
+ const pick=(list)=>list[Math.floor(Math.random()*list.length)];
+ for(const id of ['avatar','hair','species','body','bust','eyes']){
+  const select=$(id+side);
+  const options=[...select.options].filter(o=>!o.disabled);
+  select.value=pick(options).value;
+ }
+ const colors=['#82eaff','#ffa5dc','#e3b0ff','#ffe3aa','#bbfc93','#f4769e','#b3bafc','#57dcc9','#f4eaf8'];
+ $('color'+side).value=pick(colors);
+ $('eyeColor'+side).value=pick(['#4beeff','#f3ae56','#ac7cfb','#48e49d','#d7567f','#438ae8']);
+ $('dressColor'+side).value=pick(['#efeefc','#d45481','#5b3687','#365b85','#103e48','#443b60']);
+ previewProfile(side);sendAppearance()
+}
+function setupCharacterStudio(){
+ for(const side of ['P','B']){
+  const choose=$('avatar'+side);
+  choose.addEventListener('change',()=>{applyProfile(side,window.NeonFighters.get(choose.value));sendAppearance()});
+  for(const k of ['hair','species','body','bust','eyes','color','eyeColor','dressColor'])
+   $(k+side).addEventListener('input',()=>{previewProfile(side);if(side==='P')sendAppearance()});
+  $('random'+side).onclick=()=>randomStyle(side);
+  $('save'+side).onclick=()=>{try{localStorage.setItem('neon-duel-fighter-'+side,JSON.stringify(fromForm(side)));$('save'+side).textContent='✓ 저장됨'}catch(e){$('save'+side).textContent='저장 실패'}};
+  let saved;try{saved=JSON.parse(localStorage.getItem('neon-duel-fighter-'+side)||'null')}catch(e){}
+  applyProfile(side,saved||window.NeonFighters.PROFILES[side==='P'?0:1]);
+ }
+}
 
 function updateFightHUD(){
  if(!fight)return;
@@ -542,12 +611,13 @@ $('readyRoom').onclick=async()=>{if(!net.isConnected()){roomStatus('친구와 P2
 $('leaveRoom').onclick=async()=>{await net.leave();$('roomCode').textContent='';roomStatus('방에서 나갔습니다.')};
 net.on('code',id=>{$('roomCode').textContent=id});
 net.on('room',r=>{if(r&&st==='menu'){if(net.role==='guest'){$('track').value=r.videoId?'youtube':r.track||'neon';if(r.videoId)$('youtubeUrl').value='https://youtu.be/'+r.videoId;if(r.bpm)$('customBpm').value=r.bpm;if(Number.isFinite(r.offset))$('beatOffset').value=r.offset;settingsUI()}roomStatus(r.guest?'2명 입장 완료 · 연결 후 서로 준비하세요.':'친구 대기 중 · 코드 '+net.roomId)}});
-net.on('connected',()=>{roomStatus('P2P 연결 완료! 양쪽 모두 준비를 누르세요.')});
+net.on('connected',()=>{roomStatus('P2P 연결 완료! 양쪽 모두 준비를 누르세요.');sendAppearance()});
 net.on('ready',v=>{roomStatus('나: '+(v.self?'준비 완료':'대기')+' | 친구: '+(v.peer?'준비 완료':'대기')+(net.role==='host'&&v.self&&v.peer?' → START BATTLE을 누르세요.':''))});
 net.on('error',message=>roomStatus('연결 오류: '+message));
-net.on('disconnect',message=>{roomStatus('상대 연결 종료: '+message);if(st==='game'&&onlineMode)complete(true)});
+net.on('disconnect',message=>{remoteAppearance=null;roomStatus('상대 연결 종료: '+message);if(st==='game'&&onlineMode)complete(true)});
 net.on('packet',v=>{
  if(!onlineMode)return;
+ if(v.type==='appearance'){remoteAppearance=legalAppearance(v.profile);if(remoteAppearance)roomStatus('상대 커스텀 파이터: '+remoteAppearance.name+' · 준비 가능');return}
  if(v.type==='asset'&&typeof v.hash==='string'&&/^[a-f0-9]{64}$/.test(v.hash)){peerAudioHash=v.hash;if(preparedAudio&&preparedAudio.hash!==v.hash)roomStatus('음원 불일치! 양쪽에서 동일한 파일을 선택하세요.');else roomStatus('친구 음원 검증 완료 · 서로 준비하세요.');return}
  if(v.type==='prepare'&&st==='menu'&&net.role==='guest'&&v.cfg){(async()=>{try{if(v.cfg.mode==='file'){let file=await prepareLocalAudio();if(file.hash!==v.cfg.assetHash)throw Error('양쪽 음악 파일이 달라서 시작할 수 없습니다.');}if(v.cfg.chart)window.RhythmChart.unpack(v.cfg.chart,'guest');net.send({type:'loaded'});roomStatus('내 채보 로딩 완료 · 방장 시작 신호 대기 중')}catch(e){net.send({type:'loadError',message:String(e?.message||e).slice(0,110)});showPrepError(e)}})();return}
  if(v.type==='loaded'&&st==='menu'&&net.role==='host'&&pendingStart){const cfg=pendingStart;pendingStart=null;cfg.startsAt=Date.now()+6500;roomStatus('양쪽 채보 로딩 완료 · 잠시 후 경기 시작');if(net.send({type:'start',cfg}))newRound(cfg);return}
@@ -576,7 +646,7 @@ for(let b of touchBtns){let lane=Number(b.dataset.lane);b.addEventListener('poin
 canvas.addEventListener('pointerdown',e=>{if(st!=='game'||paused)return;let r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*1200;if(x>=45&&x<360){let lane=Math.round((x-86)/76);lane=clamp(lane,0,3);canvas.setPointerCapture(e.pointerId);canvas.dataset.pointerLane=lane;keyDown(lane)}});
 canvas.addEventListener('pointerup',()=>{if(canvas.dataset.pointerLane!==undefined){keyUp(Number(canvas.dataset.pointerLane));delete canvas.dataset.pointerLane}});
 canvas.addEventListener('pointercancel',()=>{if(canvas.dataset.pointerLane!==undefined){keyUp(Number(canvas.dataset.pointerLane));delete canvas.dataset.pointerLane}});
-$('start').onclick=async()=>{if(!onlineMode){await newRound();return}if(net.role!=='host'||!net.isConnected()||!net.readySelf||!net.readyPeer){roomStatus('방장과 친구 모두 P2P 접속 및 준비 완료가 필요합니다.');return}let cfg=selectedConfig();if(!cfg)return;if(cfg.mode==='file'){let asset;try{asset=await prepareLocalAudio()}catch(e){showPrepError(e);return}if(peerAudioHash!==asset.hash){roomStatus('상대방이 동일한 음원을 로딩했는지 확인하세요.');return}cfg.bpm=asset.chart.bpm;cfg.chart=asset.chart;cfg.assetHash=asset.hash;cfg.title=localFile.name.slice(0,36)}else if(cfg.mode==='youtube'&&localFile){try{const asset=await prepareLocalAudio();cfg.chart=asset.chart;rememberYouTubeChart(cfg.videoId,cfg.chart)}catch(e){showPrepError(e);return}}if(cfg.chart){try{window.RhythmChart.unpack(cfg.chart,'host')}catch(e){showPrepError(e);return}}pendingStart=cfg;roomStatus('채보 준비 완료 · 친구의 로딩 응답을 기다리는 중');if(!net.send({type:'prepare',cfg})){pendingStart=null;roomStatus('준비 패킷 전송 실패')}};$('retry').onclick=()=>{if(onlineMode){show('menu');net.ready(false);roomStatus('온라인 재대결은 양쪽에서 준비를 다시 해주세요.')}else newRound()};$('pause').onclick=()=>togglePause();$('quit').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};$('select').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};modeUI();restoreSavedChartSelection();
+$('start').onclick=async()=>{if(!onlineMode){await newRound();return}if(net.role!=='host'||!net.isConnected()||!net.readySelf||!net.readyPeer){roomStatus('방장과 친구 모두 P2P 접속 및 준비 완료가 필요합니다.');return}let cfg=selectedConfig();if(!cfg)return;if(cfg.mode==='file'){let asset;try{asset=await prepareLocalAudio()}catch(e){showPrepError(e);return}if(peerAudioHash!==asset.hash){roomStatus('상대방이 동일한 음원을 로딩했는지 확인하세요.');return}cfg.bpm=asset.chart.bpm;cfg.chart=asset.chart;cfg.assetHash=asset.hash;cfg.title=localFile.name.slice(0,36)}else if(cfg.mode==='youtube'&&localFile){try{const asset=await prepareLocalAudio();cfg.chart=asset.chart;rememberYouTubeChart(cfg.videoId,cfg.chart)}catch(e){showPrepError(e);return}}if(cfg.chart){try{window.RhythmChart.unpack(cfg.chart,'host')}catch(e){showPrepError(e);return}}pendingStart=cfg;roomStatus('채보 준비 완료 · 친구의 로딩 응답을 기다리는 중');if(!net.send({type:'prepare',cfg})){pendingStart=null;roomStatus('준비 패킷 전송 실패')}};$('retry').onclick=()=>{if(onlineMode){show('menu');net.ready(false);roomStatus('온라인 재대결은 양쪽에서 준비를 다시 해주세요.')}else newRound()};$('pause').onclick=()=>togglePause();$('quit').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};$('select').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};modeUI();setupCharacterStudio();restoreSavedChartSelection();
 })();
 </script>
 </body></html>
