@@ -230,7 +230,7 @@ function save(){
  try{
   localStorage.setItem('neon-duel-chart-v2:'+values.videoId,JSON.stringify(values.chart));
   localStorage.setItem('neon-duel-last-video',values.videoId);
-  $('play').href='./index.html?chart='+encodeURIComponent(values.videoId);
+  $('play').href='./index.html?chart='+encodeURIComponent(values.videoId)+'&v=saved-chart-3';
   $('play').hidden=false;
   $('status').textContent='✓ '+values.chart.entries.length+'개 노트 저장 완료! 「저장한 채보로 배틀 시작」을 누르면 이 곡과 채보가 자동 선택됩니다.';
   $('save').textContent='✓ 저장됨';
