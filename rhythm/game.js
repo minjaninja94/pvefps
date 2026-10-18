@@ -660,9 +660,9 @@ window.NeonStudioUI.bindMotion((side,action)=>{
  previewActions[side]={action,start:performance.now()/1000};
  previewProfile(side);
 });
-window.NeonStudioUI.bindExport(async(side,action)=>{
+window.NeonStudioUI.bindExport(async(side,action,count=24)=>{
  const p=fromForm(side);if(p.art!=='doll')throw Error('프레임 생성은 일러스트 파츠 모드에서 지원합니다.');
- const result=await window.NeonFrameExport.download(p,action);
+ const result=await window.NeonFrameExport.download(p,action,count);
  $('studioStatus').textContent=p.name+' · '+action+' · '+result.count+'프레임 PNG 저장 완료 ('+result.width+'×'+result.height+')';
 });
 restoreSavedChartSelection();renderWardrobe();
