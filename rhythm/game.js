@@ -255,7 +255,8 @@ function previewProfile(side){
  ctx.save();
  const now=performance.now()/1000,a=previewActions[side],age=now-a.start;
  const presence=portraitPresence[side].tick(now,{reduced:options.reduced,expression:p.expression});
- presence.lookX*=p.lookStrength??.85;presence.lookY*=p.lookStrength??.85;presence.tilt*=p.lookStrength??.85;
+ const facing=side==='P'?1:-1,strength=p.lookStrength??.85;
+ presence.lookX*=strength*facing;presence.lookY*=strength;presence.tilt*=strength*facing;
  window.NeonStudio.draw(ctx,210,canvas.height-25,p,{facing:side==='P'?1:-1,scale:1.33,t:now,action:a.action,actionTime:age,presence,reduced:options.reduced});
  $('motionLabel'+side).textContent=age<1.15?a.action.toUpperCase():'IDLE';
  document.querySelectorAll('[data-doll-side="'+side+'"]').forEach(el=>el.classList.toggle('selected',el.dataset.dollKind==='head'?el.dataset.dollValue===p.style:el.dataset.dollValue===p.costume));
