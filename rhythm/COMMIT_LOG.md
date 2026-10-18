@@ -7,3 +7,5 @@
 현재 체크포인트 자체의 최신 커밋은 GitHub history 또는 git log -1 -- rhythm/WORK_CHECKPOINT.md로 확인.
 
 - 1170daf0cea052adc81321cee98cd78c9052667d: 작업 순서와 재개 체크포인트 최초 업로드.
+
+- be8753ce057097e5fd551c54252748788dc14468: 레인 시야 확장, DFJK/터치, 홀드 1회 판정, 마지막 턴 정산, 채보 검증. Node 검사 통과. 브라우저 시작/일시정지/재시작 오류 없음.

@@ -61,3 +61,15 @@ YouTube + 분석 채보 온라인 배틀도 가능합니다. 이 경우 호스�
 - https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia
 - https://developers.google.com/youtube/iframe_api_reference
 - https://developers.google.com/youtube/terms/developer-policies
+
+## NEON CLASH 2026-10-18 拡張
+
+- `CHARACTER STUDIO`: 파츠 꾸미기 / AI 일러스트 4종 / 개인 PNG·JPEG·WebP. AI 모드는 미리 제작한 완성 일러스트이며 실시간 AI 생성 API를 호출하지 않습니다. 헤어·의상·눈·색·종족·체형의 개별 조합은 파츠 모드에서 사용하세요.
+- 양쪽 이름·피부·무기 스타일, 최근 24개 보관함, JSON 내보내기/가져오기. 개인 이미지는 브라우저에서 압축해 저장하고 온라인 대결 시 상대에게 외형 데이터로 공유됩니다.
+- 검술/격투/마법, 돌진·피격·KO·자동 필살기, 네온 옥상/달빛 신전/사이버 코어.
+- 방향키 및 D/F/J/K, 화면 버튼, 캔버스 왼쪽 4레인 터치. 홀드는 끝까지 유지해야 1회 유효 판정됩니다.
+- 입력 보정 −250~+250ms, 음악/타격/노트 연주음, 이펙트 줄이기. 설정은 브라우저에 자동 저장됩니다.
+- 완주 연습과 자동 시연은 KO로 중단하지 않으며 전적에 포함하지 않습니다. 온라인은 정식 대결만 지원합니다.
+- 저장된 YouTube 채보 JSON 가져오기·내보내기·삭제. Beat Lab에서 내보낸 기존 형식과 호환됩니다.
+- 최근 100전 로컬 기록, 화면에는 최근 20전, 결과창에는 턴별 점수/공격/피해. 기존 FPS 네트워크와 랭킹은 수정하지 않습니다.
+- 코드 및 업로드 복구: `WORK_CHECKPOINT.md`, `COMMIT_LOG.md`부터 읽습니다.

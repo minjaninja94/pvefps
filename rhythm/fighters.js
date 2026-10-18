@@ -21,6 +21,7 @@ function draw(g,x,footY,profile,opts={}){
  g.save();g.translate(x,footY+idle);g.scale(facing*(opts.scale||1)*width,(opts.scale||1)*height);
  if(hit>0)g.translate(-Math.sin(Math.min(1,hit)*Math.PI)*17,3);
  if(atk>0)g.translate(25*Math.sin(Math.min(1,atk)*Math.PI),-3);
+ if(opts.ko){g.rotate(-.8*opts.ko);g.translate(-25*opts.ko,35*opts.ko)}
  g.lineJoin='round';g.lineCap='round';
  // soft ground shadow
  g.save();g.scale(1/facing,1);g.beginPath();g.ellipse(0,5,76,13,0,0,Math.PI*2);g.fillStyle='#0509168b';g.fill();g.restore();
