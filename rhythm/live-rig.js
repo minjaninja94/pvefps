@@ -7,13 +7,14 @@ function pose(p={},o={}){
  let impulse=0;if(age>=0&&(o.action==='attack'||o.action==='hit')){const a=age-(o.action==='attack'?.2:0);if(a>=0)impulse=Math.sin(a*16/Math.sqrt(mass))*Math.exp(-a*4.5)*(o.action==='hit'?7:5)}
  const gain=strength*support*mass;
  const presence=o.presence||window.NeonPresence?.idle(t,o.seed||0,o.reduced)||{};
- const lookX=clamp(Number(presence.lookX)||0,-1.1,1.1),lookY=clamp(Number(presence.lookY)||0,-1.1,1.1);
+ const follow=o.presence?1:clamp(Number.isFinite(p.lookStrength)?p.lookStrength:.85,0,1);
+ const lookX=clamp((Number(presence.lookX)||0)*follow,-1.1,1.1),lookY=clamp((Number(presence.lookY)||0)*follow,-1.1,1.1);
  const blink=o.reduced||o.ko?0:clamp(Number(presence.blink)||0,0,1);
  const lag=lookX*(1-Math.exp(-Math.max(0,t)*.5))*.6;
  return {sway:Math.sin(t*1.25)*3.6*m+lookX*1.3*m,
   breath:-Math.sin(t*2.1)*2.4*m,head:Math.sin(t*1.15-.3)*.026*m+(Number(presence.tilt)||0),
   hair:Math.sin(t*1.55-.5)*3.2*m-lag*2.2*m,
-  lookX,lookY,blink,smile:clamp(Number(presence.smile)||0,-1,1),
+  lookX,lookY,blink,smile:clamp(o.presence?(Number(presence.smile)||0):p.expression==='smile'?.8:p.expression==='serious'?-.35:(Number(presence.smile)||0),-1,1),
   left:(Math.sin(t*3.9-.7)*6.2+Math.sin(t*2.1)*1.1+impulse)*gain,
   right:(Math.sin(t*3.9-.95)*6.2+Math.sin(t*2.1)*1.1+impulse)*gain};
 
