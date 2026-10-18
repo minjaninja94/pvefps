@@ -145,6 +145,13 @@ function draw(g,x,footY,p,o={}){
    (b.t-f.faceY)*hsc*(p.headScale??1),
    (b.r-b.l)*hsc*(p.headScale??1),
    (b.b-b.t)*hsc*(p.headScale??1));
+ // Composite real illustrated closed-eyelid / mouth-expression patches onto
+ // the unwarped painted head. An independent feature layer never stretches
+ // the head texture, preventing the previous melted-eye regression.
+ if(p.faceParts!==false)window.NeonFaceParts?.draw(g,{
+   source,sheet:face,style:head,frame:f,scale:hsc,profile:p,rig,
+   time:t,action:state.state,reduced:o.reduced||o.ko
+ });
  if(p.accessory&&p.accessory!=='none'){g.save();g.fillStyle=p.accessory==='star'?'#ffe7a2':'#b9faff';g.shadowColor=g.fillStyle;g.shadowBlur=6;g.scale(p.headScale??1,p.headScale??1);if(p.accessory==='halo'){g.strokeStyle=g.fillStyle;g.lineWidth=2;g.beginPath();g.ellipse(0,-60,35,8,-.1,0,Math.PI*2);g.stroke()}else{g.translate(-26,-24);g.beginPath();if(p.accessory==='crystal'){g.moveTo(0,-10);g.lineTo(6,0);g.lineTo(0,11);g.lineTo(-6,0)}else for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,r=i%2?3:8;g.lineTo(Math.cos(a)*r,Math.sin(a)*r)}g.closePath();g.fill()}g.restore()}g.restore();g.restore();return true;
 }
 function headIcon(g,style,w,h){const sheet=sheets.get('head:'+(HEADS.includes(style)?style:'long'));if(!sheet)return;const f=sheet.frames[0],b=f.b,sc=Math.min(w/(b.r-b.l),h/(b.b-b.t))*.94;g.drawImage(sheet.im,f.sx+b.l,f.sy+b.t,b.r-b.l,b.b-b.t,(w-(b.r-b.l)*sc)/2,(h-(b.b-b.t)*sc)/2,(b.r-b.l)*sc,(b.b-b.t)*sc)}
