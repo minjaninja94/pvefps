@@ -27,14 +27,15 @@ function analyze(im,f){
  const c=document.createElement('canvas');c.width=Math.floor(im.width/f.cols);c.height=Math.floor(im.height/f.rows);const ctx=c.getContext('2d',{willReadFrequently:true}),w=c.width,h=c.height,frames=[];
  for(let i=0;i<f.cols*f.rows;i++){
   const sx=(i%f.cols)*w,sy=Math.floor(i/f.cols)*h;ctx.clearRect(0,0,w,h);ctx.drawImage(im,sx,sy,w,h,0,0,w,h);const bytes=ctx.getImageData(0,0,w,h).data,b=bounds(bytes,w,h);
-  let nx=w*.5,ny=f.kind==='body'?h*.25:h*.88;
+  let nx=w*.5,ny=f.kind==='body'?h*.25:h*.88,faceX=w*.57,faceY=h*.12;
   if(f.kind==='head'){
    let last=-1,totalX=0,count=0;
    for(let y=Math.floor(h*.5);y<Math.min(h,b.b);y++)for(let x=Math.floor(w*.33);x<w*.72;x++){const n=(y*w+x)*4;if(bytes[n+3]>180&&warm(bytes[n],bytes[n+1],bytes[n+2])){if(y>last){last=y;totalX=0;count=0}if(y===last){totalX+=x;count++}}}
    if(last>h*.55){ny=last;nx=count?totalX/count:nx}
+   let sxFace=0,syFace=0,nFace=0;for(let y=Math.floor(h*.32);y<h*.66;y++)for(let x=Math.floor(w*.33);x<w*.82;x++){const k=(y*w+x)*4;if(bytes[k+3]>180&&warm(bytes[k],bytes[k+1],bytes[k+2])){sxFace+=x;syFace+=y;nFace++}}if(nFace){faceX=sxFace/nFace;faceY=syFace/nFace}
   }
-  // Full-body generated sheets use a short haircut: remove the original head at collar level.
-  let headMask=null;
+  // Locate face features on the original full-body underpaint. Bind the larger
+  // independent head to the face in each pose; never crop arms at a neck line.
   if(f.kind==='body'){
    // Find the largest connected warm-skin region near the face. Gold costume trim
    // must not be mistaken for the neck; retain arms/shoulders above collar height.
@@ -43,14 +44,15 @@ function analyze(im,f){
    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
     const start=y*w+x;if(seen[start])continue;seen[start]=1;if(!skin(x,y))continue;const queue=[start];
     for(let q=0;q<queue.length;q++){const pos=queue[q],xx=pos%w,yy=Math.floor(pos/w);for(const [dx,dy]of [[1,0],[-1,0],[0,1],[0,-1]]){const tx=xx+dx,ty=yy+dy,k=ty*w+tx;if(tx<x0||tx>=x1||ty<y0||ty>=y1||seen[k])continue;seen[k]=1;if(skin(tx,ty))queue.push(k)}}
-    if(queue.length>best.length)best=queue;
+    if(queue.length>best.length&&Math.min(...queue.map(v=>Math.floor(v/w)))<h*.155)best=queue;
    }
-   if(best.length>20){const bottom=Math.max(...best.map(v=>Math.floor(v/w))),band=best.filter(v=>Math.floor(v/w)>=bottom-2);ny=bottom+1;nx=band.reduce((sum,v)=>sum+v%w,0)/band.length;}else{ny=h*.19;nx=w*.52;}
-   headMask={l:Math.max(0,nx-w*.19),r:Math.min(w,nx+w*.19),bottom:ny};
+   if(best.length>20){const bottom=Math.max(...best.map(v=>Math.floor(v/w))),band=best.filter(v=>Math.floor(v/w)>=bottom-2);ny=bottom+1;nx=band.reduce((sum,v)=>sum+v%w,0)/band.length;
+    const top=Math.min(...best.map(v=>Math.floor(v/w))),faceBand=best.filter(v=>Math.floor(v/w)<=top+h*.08);faceX=faceBand.reduce((sum,v)=>sum+v%w,0)/faceBand.length;faceY=faceBand.reduce((sum,v)=>sum+Math.floor(v/w),0)/faceBand.length;
+   }else{ny=h*.19;nx=w*.52;}
   }
-  frames.push({sx,sy,w,h,b,nx,ny,headMask});
+  frames.push({sx,sy,w,h,b,nx,ny,faceX,faceY});
  }
- return {im,frames,...f};
+ return {im,frames,scale:350/Math.max(1,frames[0].b.b-frames[0].b.t),...f};
 }
 function ready(){if(readyTask)return readyTask;readyTask=Promise.all(files.map(f=>new Promise(resolve=>{const im=new Image();im.onload=()=>{try{sheets.set(f.key,analyze(im,f));resolve(true)}catch{resolve(false)}refresh()};im.onerror=()=>{resolve(false);refresh()};im.src=f.url}))).then(result=>result.every(Boolean));return readyTask}
 function rgb(hex){return [1,3,5].map(i=>parseInt(hex.slice(i,i+2),16))}
@@ -70,14 +72,14 @@ function tinted(sheet,p){
  ctx.putImageData(data,0,0);dyed.set(key,c);while(dyed.size>10){const old=dyed.keys().next().value;dyed.delete(old)}return c;
 }
 function drawBody(g,sheet,index,p,o,alpha){
- const f=sheet.frames[index],b=f.b,source=tinted(sheet,p),height=272,sc=height/Math.max(1,b.b-f.ny),width={slender:.93,balanced:1,curvy:1.05,athletic:1.04,petite:.97,giant:1.04}[p.body]||1;
+ const f=sheet.frames[index],b=f.b,source=tinted(sheet,p),height=272,sc=sheet.scale,width={slender:.93,balanced:1,curvy:1.05,athletic:1.04,petite:.97,giant:1.04}[p.body]||1;
  const chest={small:.93,standard:1,large:1.04,full:1.07}[p.bust]||1,physics=o.reduced?0:clamp(Number.isFinite(p.motion)?p.motion:.7,0,1),t=o.t||0;
  const breathe=Math.sin(t*2.25)*1.1*physics;
  g.save();g.globalAlpha*=alpha;
  for(let y=b.t;y<b.b;y+=5){const h=Math.min(5,b.b-y),u=(y-f.ny)/(b.b-f.ny),chestWeight=Math.exp(-Math.pow((u-.18)/.115,2)),hipWeight=Math.exp(-Math.pow((u-.45)/.14,2));
   const stretch=width*(1+(chest-1)*chestWeight+(p.body==='curvy'?.035:0)*hipWeight),sway=Math.sin(t*1.55+.5)*Math.sin(Math.PI*clamp(u,0,1))*.7*physics;
   const reaction=Number.isFinite(o.actionTime)&&o.actionTime>=0?Math.sin(o.actionTime*22)*Math.exp(-o.actionTime*6)*physics*.65:0;
-  const yy=-272+(y-f.ny)*sc+breathe*(1-clamp(u*1.8,0,1))+reaction*chestWeight,xx=(b.l-f.nx)*sc*stretch+sway;
+  const yy=(y-b.b)*sc+breathe*(1-clamp(u*1.8,0,1))+reaction*chestWeight,xx=(b.l-f.w*.5)*sc*stretch+sway;
   const paint=(l,r)=>{if(r<=l)return;g.drawImage(source,f.sx+l,f.sy+y,r-l,h,xx+(l-b.l)*sc*stretch,yy,(r-l)*sc*stretch,h*sc+.45)};
   paint(b.l,b.r);
  }
@@ -93,7 +95,8 @@ function draw(g,x,footY,p,o={}){
  // Use opaque primary frames; short crossfades soften hand/cloth transitions.
  if(state.mix<.5){drawBody(g,body,state.a,p,o,1);if(state.mix>.36)drawBody(g,body,state.b,p,o,(state.mix-.36)/.14)}else{drawBody(g,body,state.b,p,o,1);if(state.mix<.64)drawBody(g,body,state.a,p,o,(.64-state.mix)/.14)}
  const f=face.frames[state.head],b=f.b,hsc=79/Math.max(1,f.ny-b.t),source=tinted(face,p),headSway=Math.sin(t*1.55)*.014*physics;
- g.save();g.translate(0,-270+Math.sin(t*2.25)*1.1*physics);g.rotate(headSway+(state.state==='hit'?-.06:state.state==='attack'?.035:0));g.drawImage(source,f.sx+b.l,f.sy+b.t,b.r-b.l,b.b-b.t,(b.l-f.nx)*hsc,(b.t-f.ny)*hsc,(b.r-b.l)*hsc,(b.b-b.t)*hsc);g.restore();g.restore();return true;
+ const ba=body.frames[state.a],bb=body.frames[state.b],mix=clamp(state.mix,0,1),facePX=((ba.faceX-ba.w*.5)*(1-mix)+(bb.faceX-bb.w*.5)*mix)*body.scale,facePY=((ba.faceY-ba.b.b)*(1-mix)+(bb.faceY-bb.b.b)*mix)*body.scale;
+ g.save();g.translate(facePX,facePY+Math.sin(t*2.25)*1.1*physics);g.rotate(headSway+(state.state==='hit'?-.06:state.state==='attack'?.035:0));g.drawImage(source,f.sx+b.l,f.sy+b.t,b.r-b.l,b.b-b.t,(b.l-f.faceX)*hsc,(b.t-f.faceY)*hsc,(b.r-b.l)*hsc,(b.b-b.t)*hsc);g.restore();g.restore();return true;
 }
 function headIcon(g,style,w,h){const sheet=sheets.get('head:'+(HEADS.includes(style)?style:'long'));if(!sheet)return;const f=sheet.frames[0],b=f.b,sc=Math.min(w/(b.r-b.l),h/(b.b-b.t))*.94;g.drawImage(sheet.im,f.sx+b.l,f.sy+b.t,b.r-b.l,b.b-b.t,(w-(b.r-b.l)*sc)/2,(h-(b.b-b.t)*sc)/2,(b.r-b.l)*sc,(b.b-b.t)*sc)}
 function status(){return {loaded:sheets.size,total:files.length,ready:sheets.size===files.length}}

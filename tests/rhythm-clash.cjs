@@ -82,3 +82,13 @@ memory.set('neon-clash-settings-v1','broken');assert.equal(store.load().speed,1.
 for(let i=0;i<105;i++)store.result({title:'song',key:'song',score:i,accuracy:96,combo:2,outcome:'win'});assert.equal(store.history().length,100);
 for(const t of [0,.1,.3,.5,1,2])assert.ok(Number.isFinite(context.window.NeonCombatFX.motion(t).reach));
 console.log('Profile validation, corrupted storage, bounded wardrobe/history, invalid import atomicity and combat timeline PASS');
+
+const {NeonDoll:doll}=load('doll-renderer.js');
+assert.equal(doll.frameAt('attack',.25,0).head,2);
+assert.equal(doll.frameAt('hit',.2,0).head,3);
+assert.equal(doll.frameAt('attack',2,0).state,'idle');
+assert.equal(doll.frameAt('idle',0,4.2).head,1);
+assert.equal(studio.legal({id:'ruby',art:'doll',palette:'rose',motion:.4}).art,'doll');
+assert.equal(studio.legal({id:'ruby',art:'doll',palette:'bad',motion:99}).palette,'original');
+assert.equal(studio.legal({id:'ruby',motion:99}).motion,1);
+console.log('Painted wardrobe profile/motion bounds and action/expression timeline PASS');
