@@ -53,7 +53,7 @@ function state(action='idle',age=0,clock=0,style='balanced',reduced=false){
   case 'lose':shiftY=10*smooth(time/.6);angle=-.09*smooth(time/.6);break;
  }
  if(reduced){shiftX*=.15;shiftY*=.15;angle*=.15}
- return {a:frame,b:frame,mix,head,state:key,shiftX:shiftX*personality,shiftY:shiftY*personality,angle:angle*personality,
+ return {a:frame,b:frame,mix,anchorA:a[1],anchorB:b[1],anchorMix:mix,head,state:key,shiftX:shiftX*personality,shiftY:shiftY*personality,angle:angle*personality,
   frameIndex:Math.min(Math.floor(time*24),Math.floor(clip.duration*24)),frameCount:Math.ceil(clip.duration*24),duration:clip.duration};
 }
 function sequence(action,style='balanced',fps=24){
