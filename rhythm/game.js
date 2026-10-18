@@ -177,7 +177,7 @@ async function prepareRound(presetConfig){
  feedback.clear();rivalCombo=0;pressed=[false,false,false,false];flashLanes=[0,0,0,0];judgeEnd=0;prevPhrase=-1;playerSing=botSing=0;botMissUntil=0;effects=[];lastShown=0;paused=false;ytPlaying=false;ytValidated=false;remoteSeen.clear();localSeq=0;lastClockSent=0;
  $('chartSource').textContent=sourceMode==='youtube'?(record.chart?'✓ 저장된 실제 분석 채보 '+notes.length+'개 사용 중 · 영상 '+record.videoId:'⚠ 저장 채보 없음 — '+notes.length+'개의 BPM 기반 임시 채보'):(sourceMode==='file'?'✓ 로컬 음원 분석 채보 '+notes.length+'개':'내장 데모 채보 '+notes.length+'개');
  $('pause').disabled=false;$('skipFinish').hidden=true;$('pause').textContent='Ⅱ PAUSE (ESC)';$('trackname').textContent=record.title;$('round').textContent='1/'+Math.ceil(matchGroups/2);updateHUD();
- $('youtubeOverlay').style.display=sourceMode==='youtube'?'block':'none';document.querySelector('.gameboard').classList.toggle('hasTV',sourceMode==='youtube');$('tvPlay').hidden=false;$('tvPlay').disabled=true;$('tvPlay').textContent='로딩…';
+ $('youtubeOverlay').style.display=sourceMode==='youtube'?'block':'none';document.querySelector('.gameboard').classList.toggle('hasTV',sourceMode==='youtube');document.querySelector('.fightHUD').classList.toggle('hasTV',sourceMode==='youtube');$('tvPlay').hidden=false;$('tvPlay').disabled=true;$('tvPlay').textContent='로딩…';
  $('playHint').style.display=sourceMode==='youtube'?'block':'none';
  $('syncInfo').textContent=sourceMode==='youtube'?(cfg.chart?'저장 채보 적용 완료 · '+notes.length+'노트 · 공식 영상 ▶을 눌러주세요':'저장된 채보 없음 · 임시 BPM 채보 · 영상 ▶을 눌러주세요'):sourceMode==='file'?'음향 강세 분석 완료 · '+notes.length+'개 채보를 로딩했습니다':'자체 제작 배틀곡';
  show('game');render(0);const loadSession=session;
@@ -378,7 +378,7 @@ function complete(fail=false){
  const winner=fight.hp.player===fight.hp.bot?'draw':fight.hp.player>fight.hp.bot?'player':'bot';
  const cinematic=!fail&&winner!=='draw'&&(!record.practice||record.practice==='off');
  stop();const token=session;ending={start:performance.now(),fail,cinematic,winner,cueIndex:0};
- if(cinematic){$('youtubeOverlay').style.display='none';document.querySelector('.gameboard').classList.remove('hasTV');$('pause').disabled=true;$('skipFinish').hidden=false;$('battleAnnounce').textContent=(winner==='player'?fighterP.name:fighterB.name)+' WIN';$('syncInfo').textContent='마무리 공격 · 상대를 장외로 날려보냅니다.'}
+ if(cinematic){$('youtubeOverlay').style.display='none';document.querySelector('.gameboard').classList.remove('hasTV');document.querySelector('.fightHUD').classList.remove('hasTV');$('pause').disabled=true;$('skipFinish').hidden=false;$('battleAnnounce').textContent=(winner==='player'?fighterP.name:fighterB.name)+' WIN';$('syncInfo').textContent='마무리 공격 · 상대를 장외로 날려보냅니다.'}
  const animate=()=>{if(session!==token||st!=='game'||!ending)return;try{render(lastShown);if(performance.now()-ending.start<(cinematic?window.NeonFinisher.DURATION*1000:1000))raf=requestAnimationFrame(animate);else{ending=null;finishMatch(fail)}}catch(e){console.error('Victory animation failed',e);finishMatch(fail)}};
  raf=requestAnimationFrame(animate);
 }
