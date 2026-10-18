@@ -224,23 +224,28 @@ function shade(hex,mul=.57){
 function fromForm(side){
  const base=window.NeonFighters.get($('avatar'+side).value);
  const hair=$('color'+side).value,eye=$('eyeColor'+side).value,outfit=$('dressColor'+side).value;
- return {...base,name:$('name'+side).value||base.name,skin:$('skin'+side).value,weapon:$('weapon'+side).value,art:$('art'+side).value,image:customImages[side],hair,hairDark:shade(hair),eye,outfit,style:$('hair'+side).value,
+ return {...base,palette:$('palette'+side).value,motion:Number($('motion'+side).value),name:$('name'+side).value||base.name,skin:$('skin'+side).value,weapon:$('weapon'+side).value,art:$('art'+side).value,image:customImages[side],hair,hairDark:shade(hair),eye,outfit,style:$('hair'+side).value,
    species:$('species'+side).value,body:$('body'+side).value,
    bust:$('bust'+side).value,eyeShape:$('eyes'+side).value,costume:$('costume'+side).value};
 }
 function legalAppearance(data){return window.NeonStudio.legal(data)}
 function applyProfile(side,profile){
  const p=legalAppearance(profile)||window.NeonFighters.PROFILES[side==='P'?0:1];
+ $('palette'+side).value=p.palette||'original';$('motion'+side).value=p.motion??.7;
  $('avatar'+side).value=p.id;customImages[side]=p.image||'';
  $('name'+side).value=p.name;$('skin'+side).value=p.skin;$('weapon'+side).value=p.weapon;$('art'+side).value=p.art||'vector';
  for(const [k,v] of [['hair',p.style||'long'],['species',p.species||'human'],['body',p.body||'balanced'],['bust',p.bust||'standard'],['costume',p.costume||'armor'],['eyes',p.eyeShape||'normal'],['color',p.hair],['eyeColor',p.eye],['dressColor',p.outfit]])$(k+side).value=v;
- previewProfile(side);
+ syncStudioMode(side);previewProfile(side);
 }
+const previewActions={P:{action:'idle',start:0},B:{action:'idle',start:0}};
 function previewProfile(side){
  const canvas=$('preview'+side),ctx=canvas.getContext('2d'),p=fromForm(side);
  ctx.clearRect(0,0,canvas.width,canvas.height);
  ctx.save();
- window.NeonStudio.draw(ctx,115,257,p,{facing:side==='P'?1:-1,scale:.68,t:performance.now()/1000});
+ const now=performance.now()/1000,a=previewActions[side],age=now-a.start;
+ window.NeonStudio.draw(ctx,210,canvas.height-25,p,{facing:side==='P'?1:-1,scale:1.33,t:now,action:a.action,actionTime:age});
+ $('motionLabel'+side).textContent=age<1.15?a.action.toUpperCase():'IDLE';
+ document.querySelectorAll('[data-doll-side="'+side+'"]').forEach(el=>el.classList.toggle('selected',el.dataset.dollKind==='head'?el.dataset.dollValue===p.style:el.dataset.dollValue===p.costume));
  ctx.restore();
 }
 function sendAppearance(){
@@ -257,26 +262,49 @@ function randomStyle(side){
  $('color'+side).value=pick(colors);
  $('eyeColor'+side).value=pick(['#4beeff','#f3ae56','#ac7cfb','#48e49d','#d7567f','#438ae8']);
  $('dressColor'+side).value=pick(['#efeefc','#d45481','#5b3687','#365b85','#103e48','#443b60']);
- $('art'+side).value='vector';$('name'+side).value=window.NeonFighters.get($('avatar'+side).value).name;previewProfile(side);sendAppearance()
+ $('art'+side).value='doll';$('palette'+side).value=pick(['original','rose','midnight','emerald']);$('name'+side).value=window.NeonFighters.get($('avatar'+side).value).name;previewProfile(side);sendAppearance()
 }
 function setupCharacterStudio(){
  for(const side of ['P','B']){
   const choose=$('avatar'+side);
-  choose.addEventListener('change',()=>{applyProfile(side,window.NeonFighters.get(choose.value));sendAppearance()});
-  for(const k of ['name','skin','weapon','art','hair','species','body','bust','eyes','costume','color','eyeColor','dressColor'])
-   $(k+side).addEventListener('input',()=>{previewProfile(side);if(side==='P')sendAppearance()});
+  choose.addEventListener('change',()=>{applyProfile(side,{...window.NeonFighters.get(choose.value),art:'doll'});sendAppearance()});
+  for(const k of ['palette','motion','name','skin','weapon','art','hair','species','body','bust','eyes','costume','color','eyeColor','dressColor'])
+   $(k+side).addEventListener('input',()=>{syncStudioMode(side);previewProfile(side);if(side==='P')sendAppearance()});
   $('random'+side).onclick=()=>randomStyle(side);
   $('save'+side).onclick=()=>{try{const p=fromForm(side);window.NeonStudio.save(p);localStorage.setItem('neon-duel-fighter-'+side,JSON.stringify(p));$('save'+side).textContent='✓ 저장됨';renderWardrobe();$('studioStatus').textContent='보관함 저장 완료 · 최근 24명까지 보관합니다.'}catch(e){$('save'+side).textContent='저장 실패'}};
   let saved;try{saved=JSON.parse(localStorage.getItem('neon-duel-fighter-'+side)||'null')}catch(e){}
-  applyProfile(side,saved||{...window.NeonFighters.PROFILES[side==='P'?0:1],art:side==='P'?'celeste':'ruby'});
-  $('image'+side).onchange=async e=>{try{customImages[side]=await window.NeonStudio.imageFile(e.target.files[0]);$('art'+side).value='custom';previewProfile(side);sendAppearance();$('studioStatus').textContent='개인 이미지 적용 완료. 저장 버튼으로 보관하세요.'}catch(e){$('studioStatus').textContent=e.message}finally{e.target.value=''}};
+  applyProfile(side,saved?{...saved,art:saved.art==='custom'?'custom':'doll'}:{...window.NeonFighters.PROFILES[side==='P'?0:1],art:'doll',costume:side==='P'?'armor':'idol'});
+  $('image'+side).onchange=async e=>{try{customImages[side]=await window.NeonStudio.imageFile(e.target.files[0]);$('art'+side).value='custom';syncStudioMode(side);previewProfile(side);sendAppearance();$('studioStatus').textContent='개인 이미지 적용 완료. 저장 버튼으로 보관하세요.'}catch(e){$('studioStatus').textContent=e.message}finally{e.target.value=''}};
  }
 }
+
+function syncStudioMode(side){
+ const mode=$('art'+side).value,isDoll=mode==='doll';$('dollChoices'+side).hidden=!isDoll;
+ for(const key of ['species','eyes','eyeColor','dressColor'])$(key+side).closest('label').hidden=isDoll;
+ for(const key of ['palette','motion'])$(key+side).closest('label').hidden=!isDoll;
+}
+function buildDollChoices(){
+ for(const side of ['P','B']){
+  for(const [kind,values,names]of [['head',window.NeonDoll.HEADS,['빙결','화염 여우','별빛','사이버 고양이']],['outfit',window.NeonDoll.COSTUMES,['기사','스테이지','스트리트','마도사','사이버']]]){
+   const root=$(kind==='head'?'headChoices'+side:'outfitChoices'+side);root.replaceChildren();
+   for(let i=0;i<values.length;i++){
+    const value=values[i],btn=document.createElement('button'),c=document.createElement('canvas'),label=document.createElement('span');btn.type='button';btn.className='dollChoice';btn.dataset.dollSide=side;btn.dataset.dollKind=kind;btn.dataset.dollValue=value;btn.setAttribute('aria-label',names[i]);c.width=80;c.height=kind==='head'?80:114;
+    if(kind==='head')window.NeonDoll.headIcon(c.getContext('2d'),value,c.width,c.height);else window.NeonDoll.draw(c.getContext('2d'),40,110,{...fromForm(side),costume:value,motion:0},{scale:.29,t:0,reduced:true});
+    label.textContent=names[i];btn.append(c,label);btn.onclick=()=>{$((kind==='head'?'hair':'costume')+side).value=value;$('art'+side).value='doll';if(kind==='head')$('color'+side).value={long:'#84ebff',twin:'#ff7a98',wave:'#c9a6ff',short:'#b9ffcc'}[value];syncStudioMode(side);previewProfile(side);if(side==='P')sendAppearance()};root.append(btn);
+   }
+  }
+ }
+}
+for(const btn of document.querySelectorAll('[data-preview-action]'))btn.onclick=()=>{const side=btn.dataset.previewSide;previewActions[side]={action:btn.dataset.previewAction,start:performance.now()/1000};previewProfile(side)};
+let lastPreview=0;function animateStudio(now){if(st==='menu'&&document.querySelector('.fighterWorkshop').open&&now-lastPreview>40){lastPreview=now;previewProfile('P');previewProfile('B')}requestAnimationFrame(animateStudio)}
+window.NeonDoll.onRefresh(()=>{const status=window.NeonDoll.status();$('dollLoadStatus').textContent='AI 파츠 '+status.loaded+' / '+status.total+' 로딩 중…'});
+window.NeonDoll.ready().then(ok=>{$('dollLoadStatus').textContent=ok?'얼굴·헤어 4세트 × 의상 5종 · 대기/공격/피격 모션 준비 완료':'일부 파츠를 불러오지 못했습니다. 페이지를 새로고침해 주세요.';buildDollChoices();renderWardrobe();previewProfile('P');previewProfile('B')});
+requestAnimationFrame(animateStudio);
 
 function renderWardrobe(){
  const root=$('wardrobe');root.replaceChildren();
  for(const item of window.NeonStudio.list()){
-  const card=document.createElement('article'),title=document.createElement('strong');title.textContent=item.profile.name;card.append(title);
+  const card=document.createElement('article'),title=document.createElement('strong');title.textContent=item.profile.name;card.append(title);const thumb=document.createElement('canvas');thumb.width=100;thumb.height=135;window.NeonStudio.draw(thumb.getContext('2d'),50,130,item.profile,{scale:.35,t:0});card.append(thumb);
   for(const [label,fn] of [['1P 적용',()=>{applyProfile('P',item.profile);sendAppearance()}],['상대 적용',()=>applyProfile('B',item.profile)],['삭제',()=>{try{window.NeonStudio.remove(item.id);renderWardrobe()}catch(e){$('studioStatus').textContent=e.message}}]]){const btn=document.createElement('button');btn.type='button';btn.textContent=label;btn.onclick=fn;card.append(btn)}root.append(card);
  }
 }
@@ -374,8 +402,8 @@ function fighterStage(t){
  const pKO=ending&&(ending.fail||fight.hp.player<fight.hp.bot)?endAge:0,bKO=ending&&!ending.fail&&fight.hp.bot<fight.hp.player?endAge:0;
  if(reduced)m.reach=0;
  const pX=430+(active?(isP?m.reach:-m.hit*25):0),bX=770+(active?(!isP?-m.reach:m.hit*25):0);
- window.NeonStudio.draw(g,pX,538,fighterP,{facing:1,t,attack:active&&isP?m.strike:0,hit:active&&!isP?m.hit:0,scale:1.07,super:attackFx?.finisher,ko:pKO});
- window.NeonStudio.draw(g,bX,538,fighterB,{facing:-1,t,attack:active&&!isP?m.strike:0,hit:active&&isP?m.hit:0,scale:1.07,super:attackFx?.finisher,ko:bKO});
+ window.NeonStudio.draw(g,pX,538,fighterP,{facing:1,t,attack:active&&isP?m.strike:0,hit:active&&!isP?m.hit:0,scale:1.07,super:attackFx?.finisher,ko:pKO,action:active?(isP?'attack':'hit'):'idle',actionTime:isP?age:age-.34,reduced});
+ window.NeonStudio.draw(g,bX,538,fighterB,{facing:-1,t,attack:active&&!isP?m.strike:0,hit:active&&isP?m.hit:0,scale:1.07,super:attackFx?.finisher,ko:bKO,action:active?(!isP?'attack':'hit'):'idle',actionTime:!isP?age:age-.34,reduced});
  if(active&&age>=.34&&!attackFx.sounded){attackFx.sounded=true;window.NeonCombatFX.sound(audio,attackFx.finisher,options.sfx)}
  if(active)window.NeonCombatFX.draw(g,age,attackFx,(isP?fighterP:fighterB).weapon,reduced);
  if(ending){g.save();g.globalAlpha=Math.min(1,endAge*2);rounded(390,250,420,85,10,'#0a102dcc');text(fight.hp.player===fight.hp.bot?'DRAW':fight.hp.player<=0||fight.hp.bot<=0?'K.O.':'BATTLE OVER',600,310,'italic 1000 49px system-ui','#fff');g.restore()}

@@ -1,0 +1,167 @@
+{
+  "date": "2026-10-18",
+  "tool": "built-in image_gen",
+  "format": "WebP quality86, alpha preserved; no crop/resampling on source files",
+  "assets": [
+    {
+      "file": "head-long.webp",
+      "grid": [
+        2,
+        2
+      ],
+      "frames": [
+        "idle",
+        "blink",
+        "attack",
+        "hit"
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: interchangeable HEAD+HAIR expression sprite atlas for a 2D paper-doll anime fighter. Image 1 is STYLE REFERENCE ONLY: match polished painted anime game-art detail and adult proportions. Make EXACTLY a 2 columns x 2 rows atlas of FOUR equal square cells, genuine transparent background, no lines, no text. Each cell contains the SAME character HEAD and hairstyle, with a SHORT NECK but absolutely NO torso, clothing, shoulder, hands, or body. Clean fashion-game paper-doll head cut at the neck base, no injury, no gore. Character: a beautiful mature adult ice knight woman age 27, long silver-blue hair with side swept bangs and two front strands, blue eyes, elegant sharp adult face, small cyan crystal hair ornament. Keep hair only down to the shoulders, no long hair extending below the cut neckline. Three quarter face looking RIGHT. Warm light peach skin tone matching the reference. Mouth closed or slightly open in normal combat expression. Maintain identical head shape, hair ornament, hairstyle, scale and position across cells. Face center at 50 percent cell width, 45 percent cell height, top of hair/ears at 8 percent, clean neck base at 85 percent. Hair may reach 92 percent but leave the central neck clearly visible to attach to clothes. Head occupies 75 percent cell width. Every ear and hair tip must fit in own cell with transparent margins. Cell 1 top-left: confident relaxed, softly alluring smile, eyes open. Cell 2 top-right: SAME idle expression with eyes gently closed for a blink. Cell 3 bottom-left: focused determined attack expression, brows drawn, eyes open, small assertive smile. Cell 4 bottom-right: ordinary flinching combat-hit expression, eyes narrowed/closed and brows tightened, no ecstasy, no distress fetish. Entire atlas is heads only for mature adult fighters in a stylish non-explicit fantasy game.",
+      "source": "exec-d2b29ba8-b869-48ad-9bc0-0a19ed533e28.png"
+    },
+    {
+      "file": "head-twin.webp",
+      "grid": [
+        2,
+        2
+      ],
+      "frames": [
+        "idle",
+        "blink",
+        "attack",
+        "hit"
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: interchangeable HEAD+HAIR expression sprite atlas for a 2D paper-doll anime fighter. Image 1 is STYLE REFERENCE ONLY: match polished painted anime game-art detail and adult proportions. Make EXACTLY a 2 columns x 2 rows atlas of FOUR equal square cells, genuine transparent background, no lines, no text. Each cell contains the SAME character HEAD and hairstyle, with a SHORT NECK but absolutely NO torso, clothing, shoulder, hands, or body. Clean fashion-game paper-doll head cut at the neck base, no injury, no gore. Character: a beautiful mature adult fox woman age 28, pink twin tails tied close to the ears, adult fox ears, amber eyes, confident mature face, small burgundy and gold hair ribbon. Twin tail tips stop at shoulder level. Three quarter face looking RIGHT. Warm light peach skin tone matching the reference. Mouth closed or slightly open in normal combat expression. Maintain identical head shape, hair ornament, hairstyle, scale and position across cells. Face center at 50 percent cell width, 45 percent cell height, top of hair/ears at 8 percent, clean neck base at 85 percent. Hair may reach 92 percent but leave the central neck clearly visible to attach to clothes. Head occupies 75 percent cell width. Every ear and hair tip must fit in own cell with transparent margins. Cell 1 top-left: confident relaxed, softly alluring smile, eyes open. Cell 2 top-right: SAME idle expression with eyes gently closed for a blink. Cell 3 bottom-left: focused determined attack expression, brows drawn, eyes open, small assertive smile. Cell 4 bottom-right: ordinary flinching combat-hit expression, eyes narrowed/closed and brows tightened, no ecstasy, no distress fetish. Entire atlas is heads only for mature adult fighters in a stylish non-explicit fantasy game.",
+      "source": "exec-e04c44a0-4953-424a-a763-b8a61bf531ff.png"
+    },
+    {
+      "file": "head-wave.webp",
+      "grid": [
+        2,
+        2
+      ],
+      "frames": [
+        "idle",
+        "blink",
+        "attack",
+        "hit"
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: interchangeable HEAD+HAIR expression sprite atlas for a 2D paper-doll anime fighter. Image 1 is STYLE REFERENCE ONLY: match polished painted anime game-art detail and adult proportions. Make EXACTLY a 2 columns x 2 rows atlas of FOUR equal square cells, genuine transparent background, no lines, no text. Each cell contains the SAME character HEAD and hairstyle, with a SHORT NECK but absolutely NO torso, clothing, shoulder, hands, or body. Clean fashion-game paper-doll head cut at the neck base, no injury, no gore. Character: a beautiful mature adult sorceress age 30, violet shoulder-length wavy hair, violet eyes, elegant long-lashed mature face, small silver star hairpin. Hair ends around shoulders. Three quarter face looking RIGHT. Warm light peach skin tone matching the reference. Mouth closed or slightly open in normal combat expression. Maintain identical head shape, hair ornament, hairstyle, scale and position across cells. Face center at 50 percent cell width, 45 percent cell height, top of hair/ears at 8 percent, clean neck base at 85 percent. Hair may reach 92 percent but leave the central neck clearly visible to attach to clothes. Head occupies 75 percent cell width. Every ear and hair tip must fit in own cell with transparent margins. Cell 1 top-left: confident relaxed, softly alluring smile, eyes open. Cell 2 top-right: SAME idle expression with eyes gently closed for a blink. Cell 3 bottom-left: focused determined attack expression, brows drawn, eyes open, small assertive smile. Cell 4 bottom-right: ordinary flinching combat-hit expression, eyes narrowed/closed and brows tightened, no ecstasy, no distress fetish. Entire atlas is heads only for mature adult fighters in a stylish non-explicit fantasy game.",
+      "source": "exec-04ba30d3-d29a-4874-9ad6-c2d011ba88bd.png"
+    },
+    {
+      "file": "head-short.webp",
+      "grid": [
+        2,
+        2
+      ],
+      "frames": [
+        "idle",
+        "blink",
+        "attack",
+        "hit"
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: interchangeable HEAD+HAIR expression sprite atlas for a 2D paper-doll anime fighter. Image 1 is STYLE REFERENCE ONLY: match polished painted anime game-art detail and adult proportions. Make EXACTLY a 2 columns x 2 rows atlas of FOUR equal square cells, genuine transparent background, no lines, no text. Each cell contains the SAME character HEAD and hairstyle, with a SHORT NECK but absolutely NO torso, clothing, shoulder, hands, or body. Clean fashion-game paper-doll head cut at the neck base, no injury, no gore. Character: a beautiful mature adult cat ninja woman age 26, mint-green bob cut with side bangs, small cat ears, emerald eyes, refined adult face, black and teal hair clip. Three quarter face looking RIGHT. Warm light peach skin tone matching the reference. Mouth closed or slightly open in normal combat expression. Maintain identical head shape, hair ornament, hairstyle, scale and position across cells. Face center at 50 percent cell width, 45 percent cell height, top of hair/ears at 8 percent, clean neck base at 85 percent. Hair may reach 92 percent but leave the central neck clearly visible to attach to clothes. Head occupies 75 percent cell width. Every ear and hair tip must fit in own cell with transparent margins. Cell 1 top-left: confident relaxed, softly alluring smile, eyes open. Cell 2 top-right: SAME idle expression with eyes gently closed for a blink. Cell 3 bottom-left: focused determined attack expression, brows drawn, eyes open, small assertive smile. Cell 4 bottom-right: ordinary flinching combat-hit expression, eyes narrowed/closed and brows tightened, no ecstasy, no distress fetish. Entire atlas is heads only for mature adult fighters in a stylish non-explicit fantasy game.",
+      "source": "exec-92f8ff05-d33a-4402-8efc-bb215d25f2b3.png"
+    },
+    {
+      "file": "body-armor.webp",
+      "grid": [
+        3,
+        3
+      ],
+      "frames": [
+        "idle-1",
+        "idle-2",
+        "idle-3",
+        "attack-windup",
+        "attack-contact",
+        "attack-recover",
+        "hit-flinch",
+        "hit-recoil",
+        "hit-recover"
+      ],
+      "prompt": "Use case: stylized-concept. Create a production-quality 2D fighting-game sprite animation sheet of one mature adult woman age 28 wearing silver and white full-coverage plate armor over a cyan high-neck tunic, fitted waist, short decorative blue tabard over opaque armored leggings and tall silver boots, gauntlets. Refined painted Japanese fantasy game art, detailed cel shading, elegant adult facial features, silver-blue SHORT BOB haircut ending at the jaw, NO long hair or hat. Entire figure fully clothed with ordinary adult proportions. Full body including head and all boots visible in every frame. A SQUARE canvas with EXACTLY 3 columns and 3 rows, nine equally sized square cells, transparent background, no labels, text, border or grid lines. Same character, same exact outfit and same drawing scale in every cell. Three-quarter view facing RIGHT. Keep each entire character strictly inside its own cell with generous transparent gaps. Top of head at 5 percent cell height, collar at 25 percent, boot soles at 95 percent. Frames left to right, top to bottom: row ONE = three sequential relaxed idle frames with breathing and gentle shoulder/hip sway; row TWO = three sequential martial combat attack frames, first wind up an arm and rotate torso, second strike the right arm straight forward, third follow through with arm extended and recover stance; row THREE = three normal combat hit-reaction frames, first flinch and raise guard, second lean torso back with knees bent, third recover the stance. Hands stay below face level and inside the cell. Hands empty, effects added later. All poses must visibly differ but remain consistent in anatomy, costume and scale. Focus on functional battle animation and clear silhouettes. No injury, blood, torn clothing, lingerie, exposed torso, cleavage, or sexual posing.",
+      "source": "exec-9951ed02-afdc-4042-9b3e-df9020030071.png"
+    },
+    {
+      "file": "body-idol.webp",
+      "grid": [
+        3,
+        3
+      ],
+      "frames": [
+        "idle-1",
+        "idle-2",
+        "idle-3",
+        "attack-windup",
+        "attack-contact",
+        "attack-recover",
+        "hit-flinch",
+        "hit-recoil",
+        "hit-recover"
+      ],
+      "prompt": "Use case: stylized-concept. Create a production-quality 2D fighting-game sprite animation sheet of one mature adult woman age 28 wearing burgundy and gold long-sleeved high-neck stage jacket with fitted waist, layered skirt over opaque black dance leggings, ankle boots, gloves and ribbons. Refined painted Japanese fantasy game art, detailed cel shading, elegant adult facial features, silver-blue SHORT BOB haircut ending at the jaw, NO long hair or hat. Entire figure fully clothed with ordinary adult proportions. Full body including head and all boots visible in every frame. A SQUARE canvas with EXACTLY 3 columns and 3 rows, nine equally sized square cells, transparent background, no labels, text, border or grid lines. Same character, same exact outfit and same drawing scale in every cell. Three-quarter view facing RIGHT. Keep each entire character strictly inside its own cell with generous transparent gaps. Top of head at 5 percent cell height, collar at 25 percent, boot soles at 95 percent. Frames left to right, top to bottom: row ONE = three sequential relaxed idle frames with breathing and gentle shoulder/hip sway; row TWO = three sequential martial combat attack frames, first wind up an arm and rotate torso, second strike the right arm straight forward, third follow through with arm extended and recover stance; row THREE = three normal combat hit-reaction frames, first flinch and raise guard, second lean torso back with knees bent, third recover the stance. Hands stay below face level and inside the cell. Hands empty, effects added later. All poses must visibly differ but remain consistent in anatomy, costume and scale. Focus on functional battle animation and clear silhouettes. No injury, blood, torn clothing, lingerie, exposed torso, cleavage, or sexual posing.",
+      "source": "exec-c57ae087-0a64-4972-8a74-597503bcaf6e.png"
+    },
+    {
+      "file": "body-street.webp",
+      "grid": [
+        3,
+        3
+      ],
+      "frames": [
+        "idle-1",
+        "idle-2",
+        "idle-3",
+        "attack-windup",
+        "attack-contact",
+        "attack-recover",
+        "hit-flinch",
+        "hit-recoil",
+        "hit-recover"
+      ],
+      "prompt": "Use case: stylized-concept. Create a production-quality 2D fighting-game sprite animation sheet of one mature adult woman age 28 wearing red leather motorcycle jacket over a black crew-neck top, fitted black trousers, combat boots, fingerless gloves and silver buckles. Refined painted Japanese fantasy game art, detailed cel shading, elegant adult facial features, silver-blue SHORT BOB haircut ending at the jaw, NO long hair or hat. Entire figure fully clothed with ordinary adult proportions. Full body including head and all boots visible in every frame. A SQUARE canvas with EXACTLY 3 columns and 3 rows, nine equally sized square cells, transparent background, no labels, text, border or grid lines. Same character, same exact outfit and same drawing scale in every cell. Three-quarter view facing RIGHT. Keep each entire character strictly inside its own cell with generous transparent gaps. Top of head at 5 percent cell height, collar at 25 percent, boot soles at 95 percent. Frames left to right, top to bottom: row ONE = three sequential relaxed idle frames with breathing and gentle shoulder/hip sway; row TWO = three sequential martial combat attack frames, first wind up an arm and rotate torso, second strike the right arm straight forward, third follow through with arm extended and recover stance; row THREE = three normal combat hit-reaction frames, first flinch and raise guard, second lean torso back with knees bent, third recover the stance. Hands stay below face level and inside the cell. Hands empty, effects added later. All poses must visibly differ but remain consistent in anatomy, costume and scale. Focus on functional battle animation and clear silhouettes. No injury, blood, torn clothing, lingerie, exposed torso, cleavage, or sexual posing.",
+      "source": "exec-a492ed90-2908-4366-8dd1-f91128bbe245.png"
+    },
+    {
+      "file": "body-mage.webp",
+      "grid": [
+        3,
+        3
+      ],
+      "frames": [
+        "idle-1",
+        "idle-2",
+        "idle-3",
+        "attack-windup",
+        "attack-contact",
+        "attack-recover",
+        "hit-flinch",
+        "hit-recoil",
+        "hit-recover"
+      ],
+      "prompt": "Use case: stylized-concept. Create a production-quality 2D fighting-game sprite animation sheet of one mature adult woman age 28 wearing violet and gold high-collar long-sleeved mage robe, defined waist belt, layered long overskirt over opaque fitted trousers, heeled boots, gemstone embroidery. Refined painted Japanese fantasy game art, detailed cel shading, elegant adult facial features, silver-blue SHORT BOB haircut ending at the jaw, NO long hair or hat. Entire figure fully clothed with ordinary adult proportions. Full body including head and all boots visible in every frame. A SQUARE canvas with EXACTLY 3 columns and 3 rows, nine equally sized square cells, transparent background, no labels, text, border or grid lines. Same character, same exact outfit and same drawing scale in every cell. Three-quarter view facing RIGHT. Keep each entire character strictly inside its own cell with generous transparent gaps. Top of head at 5 percent cell height, collar at 25 percent, boot soles at 95 percent. Frames left to right, top to bottom: row ONE = three sequential relaxed idle frames with breathing and gentle shoulder/hip sway; row TWO = three sequential martial combat attack frames, first wind up an arm and rotate torso, second strike the right arm straight forward, third follow through with arm extended and recover stance; row THREE = three normal combat hit-reaction frames, first flinch and raise guard, second lean torso back with knees bent, third recover the stance. Hands stay below face level and inside the cell. Hands empty, effects added later. All poses must visibly differ but remain consistent in anatomy, costume and scale. Focus on functional battle animation and clear silhouettes. No injury, blood, torn clothing, lingerie, exposed torso, cleavage, or sexual posing.",
+      "source": "exec-8d68bdc3-073e-4aae-a7b3-9a2108bd187b.png"
+    },
+    {
+      "file": "body-cyber.webp",
+      "grid": [
+        3,
+        3
+      ],
+      "frames": [
+        "idle-1",
+        "idle-2",
+        "idle-3",
+        "attack-windup",
+        "attack-contact",
+        "attack-recover",
+        "hit-flinch",
+        "hit-recoil",
+        "hit-recover"
+      ],
+      "prompt": "Use case: stylized-concept. Create a production-quality 2D fighting-game sprite animation sheet of one mature adult woman age 28 wearing full-coverage black and teal high-neck tactical armored suit, fitted waist, sculpted protective shoulder and hip pieces, gloves, high boots, fine mint glowing circuitry. Refined painted Japanese fantasy game art, detailed cel shading, elegant adult facial features, silver-blue SHORT BOB haircut ending at the jaw, NO long hair or hat. Entire figure fully clothed with ordinary adult proportions. Full body including head and all boots visible in every frame. A SQUARE canvas with EXACTLY 3 columns and 3 rows, nine equally sized square cells, transparent background, no labels, text, border or grid lines. Same character, same exact outfit and same drawing scale in every cell. Three-quarter view facing RIGHT. Keep each entire character strictly inside its own cell with generous transparent gaps. Top of head at 5 percent cell height, collar at 25 percent, boot soles at 95 percent. Frames left to right, top to bottom: row ONE = three sequential relaxed idle frames with breathing and gentle shoulder/hip sway; row TWO = three sequential martial combat attack frames, first wind up an arm and rotate torso, second strike the right arm straight forward, third follow through with arm extended and recover stance; row THREE = three normal combat hit-reaction frames, first flinch and raise guard, second lean torso back with knees bent, third recover the stance. Hands stay below face level and inside the cell. Hands empty, effects added later. All poses must visibly differ but remain consistent in anatomy, costume and scale. Focus on functional battle animation and clear silhouettes. No injury, blood, torn clothing, lingerie, exposed torso, cleavage, or sexual posing.",
+      "source": "exec-93574059-69a5-4599-a772-adb56cd85897.png"
+    }
+  ]
+}

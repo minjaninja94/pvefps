@@ -1,6 +1,6 @@
 /* Local wardrobe and illustration renderer. AI assets are pre-generated; no API keys. */
 (()=>{'use strict';
-const KEY='neon-clash-wardrobe-v1',ART=['vector','celeste','ruby','violet','jade','custom'];
+const KEY='neon-clash-wardrobe-v1',ART=['doll','vector','celeste','ruby','violet','jade','custom'];
 const variants={style:['long','wave','short','twin'],species:['human','cat','fox','rabbit'],body:['slender','balanced','curvy','athletic','petite','giant'],bust:['small','standard','large','full'],eyeShape:['normal','sharp','soft'],costume:['armor','idol','street','mage','cyber'],weapon:['blade','claw','spell']};
 function legal(data){
  if(!data||typeof data!=='object')return null;
@@ -8,7 +8,7 @@ function legal(data){
  const p={...base};for(const [k,allowed]of Object.entries(variants))if(allowed.includes(data[k]))p[k]=data[k];
  for(const k of ['hair','hairDark','eye','outfit','skin'])if(/^#[a-f\d]{6}$/i.test(data[k]||''))p[k]=data[k];
  p.name=String(data.name||base.name).replace(/[<>\x00-\x1f]/g,'').trim().slice(0,24)||base.name;
- p.art=ART.includes(data.art)?data.art:'vector';
+ p.art=ART.includes(data.art)?data.art:'vector';p.palette=['original','rose','midnight','emerald'].includes(data.palette)?data.palette:'original';p.motion=Number.isFinite(data.motion)?Math.max(0,Math.min(1,data.motion)):.7;
  if(p.art==='custom'&&typeof data.image==='string'&&data.image.length<=48000&&/^data:image\/(?:webp|png|jpeg);base64,[A-Za-z\d+/=]+$/.test(data.image))p.image=data.image;
  else if(p.art==='custom')p.art='vector';
  return p;
@@ -30,6 +30,7 @@ const cache=new Map();let refresh=()=>{};
 function imageFor(p){const src=p.art==='custom'?p.image:'./assets/fighters/'+p.art+'.webp';if(!src)return null;if(!cache.has(src)){const im=new Image();im.onload=()=>refresh();im.onerror=()=>refresh();im.src=src;cache.set(src,im)}const im=cache.get(src);return im.complete&&im.naturalWidth?im:null}
 function draw(g,x,y,profile,o={}){
  const p=typeof profile==='object'?profile:window.NeonFighters.get(profile);
+ if(p.art==='doll'){if(window.NeonDoll.draw(g,x,y,p,o))return;const fallback={...p,art:p.id||'celeste'};draw(g,x,y,fallback,o);return}
  if(!p.art||p.art==='vector'){window.NeonFighters.draw(g,x,y,p,o);return}
  const im=imageFor(p);if(!im){window.NeonFighters.draw(g,x,y,p,o);return}
  const scale=o.scale||1,height=350*scale*(p.body==='giant'?1.1:p.body==='petite'?.92:1),w=height*im.width/im.height;

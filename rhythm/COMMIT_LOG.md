@@ -9,3 +9,5 @@
 | c4a417944a3fb5831631df3907be374dbed0344c | 저장 채보 우선순위·YouTube 로딩 화면·시작 중복 방지·검증 자동화·최종 안내 | Node 및 통합 Chromium 검사 전체 PASS |
 
 최신 완료 문서·캐시 버전 커밋은 이 파일의 GitHub history 또는 `git log -1 -- rhythm/WORK_CHECKPOINT.md`로 확인합니다. 자신의 SHA는 같은 커밋 안에 넣을 수 없으므로 코드가 확정된 직전 SHA를 위에 기록합니다. 다음 세션은 `WORK_CHECKPOINT.md`부터 읽습니다.
+
+- eb0c6e348e9049233ebca20c15cb89154d83f5e6: AI 파츠 옷입히기와 생성 애니메이션의 새 구현 순서 기록.
