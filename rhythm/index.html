@@ -215,6 +215,10 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
 .studioGrid .lookPresetArt{width:100%;height:auto;aspect-ratio:4/5;max-width:112px;object-fit:contain;border-radius:7px;background:radial-gradient(ellipse at 50% 30%,#304563,#13192a 75%)}
 .studioGrid .lookPresetSwatch{height:7px}
 .studioGrid .lookPreset span:last-child{font-size:10px;min-height:24px;line-height:1.2}
+
+.motionLibrary{grid-template-columns:minmax(0,1fr) auto auto auto}
+.motionLibrary select{font-size:11px}
+@media(max-width:650px){.motionLibrary{grid-template-columns:1fr 1fr}.motionLibrary select:first-child{grid-column:1/-1}}
 </style>
 </head>
 <body>
@@ -285,6 +289,6 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
 <section id="results"><div class="eyebrow">BATTLE RESULT</div><h2 id="resulttitle">YOU WIN!</h2><p id="resultdesc"></p><div class="grid">
 <div>SCORE<strong id="rscore">0</strong></div><div>ACCURACY<strong id="racc">0%</strong></div><div>MAX COMBO<strong id="rmax">0</strong></div><div>PERFECT<strong id="rperfect">0</strong></div><div>GREAT / GOOD<strong id="rmedium">0</strong></div><div>MISS<strong id="rmiss">0</strong></div>
 </div><div id="roundHistory" class="resultsRounds"></div><div class="resultsbtn"><button class="start" id="retry">↻ REMATCH</button><button class="small" id="select">SONG SELECT</button></div></section>
-<script src="../firebase-config.js"></script><script src="../firebase-network.js"></script><script src="./duel-online.js?v=rig-20261018-1"></script><script src="./chart-analysis.js?v=rig-20261018-1"></script><script src="./power-notes.js?v=compact-hp-tv-2"></script><script src="./battle-system.js?v=rig-20261018-1"></script><script src="./fighters.js?v=rig-20261018-1"></script><script src="./finisher.js?v=rig-20261018-1"></script><script src="./feedback.js?v=rig-20261018-1"></script><script src="./combat-fx.js?v=weapon-clash-1"></script><script src="./live-presence.js?v=stable-eyes-1"></script><script src="./live-rig.js?v=stable-eyes-1"></script><script src="./studio-ui.js?v=studio-v3"></script><script src="./motion-library.js?v=studio-v3"></script><script src="./doll-renderer.js?v=studio-v3"></script><script src="./frame-export.js?v=studio-v3"></script><script src="./studio.js?v=wardrobe-v2"></script><script src="./wardrobe-generator.js?v=wardrobe-v2"></script><script src="./audio-import.js?v=rig-20261018-1"></script><script src="https://www.youtube.com/iframe_api" async></script>
-<script src="./profile-store.js?v=rig-20261018-1"></script><script src="./game.js?v=studio-v4"></script>
+<script src="../firebase-config.js"></script><script src="../firebase-network.js"></script><script src="./duel-online.js?v=rig-20261018-1"></script><script src="./chart-analysis.js?v=rig-20261018-1"></script><script src="./power-notes.js?v=compact-hp-tv-2"></script><script src="./battle-system.js?v=rig-20261018-1"></script><script src="./fighters.js?v=rig-20261018-1"></script><script src="./finisher.js?v=rig-20261018-1"></script><script src="./feedback.js?v=rig-20261018-1"></script><script src="./combat-fx.js?v=weapon-clash-1"></script><script src="./live-presence.js?v=stable-eyes-1"></script><script src="./live-rig.js?v=stable-eyes-1"></script><script src="./studio-ui.js?v=studio-v5"></script><script src="./motion-library.js?v=studio-v3"></script><script src="./doll-renderer.js?v=studio-v3"></script><script src="./frame-export.js?v=studio-v5"></script><script src="./studio.js?v=wardrobe-v2"></script><script src="./wardrobe-generator.js?v=wardrobe-v2"></script><script src="./audio-import.js?v=rig-20261018-1"></script><script src="https://www.youtube.com/iframe_api" async></script>
+<script src="./profile-store.js?v=rig-20261018-1"></script><script src="./game.js?v=studio-v5"></script>
 </body></html>
