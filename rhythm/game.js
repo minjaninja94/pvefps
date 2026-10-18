@@ -453,10 +453,15 @@ function fighterStage(t){
  // Both fighters lunge, brace against each other's weapon, struggle, then recoil.
  // Their atlas poses are held at the weapon-contact frame during the lock.
  const strike=['attack','attack2','attack3'][Math.abs(attackFx?.round||0)%3];
- const pAction=clashing?'drawClash':active?(isP?strike:'hit'):'idleA';
- const bAction=clashing?'drawClash':active?(!isP?strike:'hit'):'idleA';
- const pActionTime=clashing?clash.poseTime:isP?age:age-.34;
- const bActionTime=clashing?clash.poseTime:!isP?age:age-.34;
+ const phase=progress(t),elapsed=t-(intro+(record?.offset||0)+Math.max(0,phase.phrase)*SEG*beat);
+ const pIdle=fighterP?.animationStyle==='graceful'?'idleB':fighterP?.animationStyle==='energetic'?'idleC':'idleA';
+ const bIdle=fighterB?.animationStyle==='graceful'?'idleB':fighterB?.animationStyle==='energetic'?'idleC':'idleA';
+ const pReady=phase.side==='player'&&elapsed>=0&&elapsed<.8;
+ const bReady=phase.side==='bot'&&elapsed>=0&&elapsed<.8;
+ const pAction=clashing?'drawClash':active?(isP?strike:'hit'):pReady?'ready':pIdle;
+ const bAction=clashing?'drawClash':active?(!isP?strike:'hit'):bReady?'ready':bIdle;
+ const pActionTime=clashing?clash.poseTime:active?(isP?age:age-.34):pReady?elapsed:rigClock;
+ const bActionTime=clashing?clash.poseTime:active?(!isP?age:age-.34):bReady?elapsed:rigClock;
  window.NeonStudio.draw(g,pX,538,fighterP,{facing:1,t:rigClock,attack:clashing?clash.lock:active&&isP?m.strike:0,hit:active&&!isP?m.hit:0,scale:1.07,super:attackFx?.finisher,ko:pKO,action:pAction,actionTime:pActionTime,reduced});
  window.NeonStudio.draw(g,bX,538,fighterB,{facing:-1,t:rigClock,attack:clashing?clash.lock:active&&!isP?m.strike:0,hit:active&&isP?m.hit:0,scale:1.07,super:attackFx?.finisher,ko:bKO,action:bAction,actionTime:bActionTime,reduced});
  if(clashing){
