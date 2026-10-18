@@ -355,7 +355,7 @@ function onFightResult(result){
 
  let names={player:window.NeonFighters.get(fighterP).name,bot:window.NeonFighters.get(fighterB).name};
  $('battleAnnounce').textContent=result.winner==='draw'
- ?'DRAW · 양쪽 방어 성공!'
+ ?'DRAW · 무기 충돌! 힘겨루기!'
  :names[result.winner]+' 공격! -'+result.damage+' HP'+'';
  updateFightHUD();
 }
@@ -422,16 +422,32 @@ function arrow(x,y,lane,size,col,alpha=1){g.save();g.translate(x,y);g.globalAlph
 function speakers(){g.save();g.translate(600,535);rounded(-70,-74,140,195,10,'#080d23');rounded(-64,-67,128,182,8,'#38324e');for(let pos of [-22,66]){circle(0,pos,44,'#11182d');circle(0,pos,33,'#6853b9');circle(0,pos,24,'#241e48');circle(0,pos,10,'#a872ff')}rounded(-45,-65,90,16,4,'#120d24');g.restore()}
 // Vector anime fighters are supplied by NeonFighters.draw().
 function fighterStage(t){
- const age=attackFx?Math.max(0,t-attackFx.t)+(ending?(performance.now()-ending.start)/1000:0):99,active=age<1.3&&attackFx?.side!=='draw';
+ const age=attackFx?Math.max(0,t-attackFx.t)+(ending?(performance.now()-ending.start)/1000:0):99;
+ const isDraw=attackFx?.winner==='draw';
+ const clash=isDraw?window.NeonCombatFX.clashMotion(age,options.reduced):null;
+ const clashing=!!clash?.active;
+ const active=!clashing&&age<1.3&&attackFx?.side!=='draw';
  const m=window.NeonCombatFX.motion(age,attackFx?.finisher),isP=attackFx?.side==='player',reduced=typeof options!=='undefined'&&options.reduced;
  const endAge=ending?Math.min(1,(performance.now()-ending.start)/750):0;
  const pKO=ending&&(ending.fail||fight.hp.player<fight.hp.bot)?endAge:0,bKO=ending&&!ending.fail&&fight.hp.bot<fight.hp.player?endAge:0;
  if(reduced)m.reach=0;
- const pX=430+(active?(isP?m.reach:-m.hit*25):0),bX=770+(active?(!isP?-m.reach:m.hit*25):0);
- window.NeonStudio.draw(g,pX,538,fighterP,{facing:1,t:rigClock,attack:active&&isP?m.strike:0,hit:active&&!isP?m.hit:0,scale:1.07,super:attackFx?.finisher,ko:pKO,action:active?(isP?'attack':'hit'):'idle',actionTime:isP?age:age-.34,reduced});
- window.NeonStudio.draw(g,bX,538,fighterB,{facing:-1,t:rigClock,attack:active&&!isP?m.strike:0,hit:active&&isP?m.hit:0,scale:1.07,super:attackFx?.finisher,ko:bKO,action:active?(!isP?'attack':'hit'):'idle',actionTime:!isP?age:age-.34,reduced});
- if(active&&age>=.34&&!attackFx.sounded){attackFx.sounded=true;window.NeonCombatFX.sound(audio,attackFx.finisher,options.sfx)}
- if(active)window.NeonCombatFX.draw(g,age,attackFx,(isP?fighterP:fighterB).weapon,reduced);
+ const pX=430+(clashing?clash.advance+clash.shove:active?(isP?m.reach:-m.hit*25):0);
+ const bX=770+(clashing?-clash.advance-clash.shove:active?(!isP?-m.reach:m.hit*25):0);
+ // Both fighters lunge, brace against each other's weapon, struggle, then recoil.
+ // Their atlas poses are held at the weapon-contact frame during the lock.
+ const pAction=clashing?'attack':active?(isP?'attack':'hit'):'idle';
+ const bAction=clashing?'attack':active?(!isP?'attack':'hit'):'idle';
+ const pActionTime=clashing?clash.poseTime:isP?age:age-.34;
+ const bActionTime=clashing?clash.poseTime:!isP?age:age-.34;
+ window.NeonStudio.draw(g,pX,538,fighterP,{facing:1,t:rigClock,attack:clashing?clash.lock:active&&isP?m.strike:0,hit:active&&!isP?m.hit:0,scale:1.07,super:attackFx?.finisher,ko:pKO,action:pAction,actionTime:pActionTime,reduced});
+ window.NeonStudio.draw(g,bX,538,fighterB,{facing:-1,t:rigClock,attack:clashing?clash.lock:active&&!isP?m.strike:0,hit:active&&isP?m.hit:0,scale:1.07,super:attackFx?.finisher,ko:bKO,action:bAction,actionTime:bActionTime,reduced});
+ if(clashing){
+  if(age>=.33&&!attackFx.sounded){attackFx.sounded=true;window.NeonCombatFX.clashSound(audio,options.sfx)}
+  window.NeonCombatFX.drawClash(g,age,fighterP.weapon,fighterB.weapon,reduced);
+ }else{
+  if(active&&age>=.34&&!attackFx.sounded){attackFx.sounded=true;window.NeonCombatFX.sound(audio,attackFx.finisher,options.sfx)}
+  if(active)window.NeonCombatFX.draw(g,age,attackFx,(isP?fighterP:fighterB).weapon,reduced);
+ }
  if(ending){g.save();g.globalAlpha=Math.min(1,endAge*2);rounded(390,250,420,85,10,'#0a102dcc');text(fight.hp.player===fight.hp.bot?'DRAW':fight.hp.player<=0||fight.hp.bot<=0?'K.O.':'BATTLE OVER',600,310,'italic 1000 49px system-ui','#fff');g.restore()}
 }
 function background(t){let grd=g.createLinearGradient(0,0,1200,700);const palettes={city:['#112a48','#25133d','#48142e'],temple:['#10283e','#292746','#323d66'],reactor:['#062c35','#101a31','#143d3e']},pal=palettes[record?.arena]||palettes.city;grd.addColorStop(0,pal[0]);grd.addColorStop(.48,pal[1]);grd.addColorStop(1,pal[2]);g.fillStyle=grd;g.fillRect(0,0,1200,700);
@@ -484,9 +500,9 @@ function banner(t,p){
  if(attackFx&&t-attackFx.t<1.25){
    const remaining=1.25-(t-attackFx.t);
    g.save();g.globalAlpha=clamp(remaining,0,1);
-   const message=attackFx.side==='draw'?'CLASH!':(attackFx.finisher?'SUPER FINISH!':'COUNTER STRIKE!');
-
-   if(attackFx.side!=='draw')text('-'+attackFx.damage+' HP',600,335,'900 30px system-ui','#ffdc8b');
+   const message=attackFx.side==='draw'?'WEAPON CLASH!':(attackFx.finisher?'SUPER FINISH!':'COUNTER STRIKE!');
+   if(attackFx.side==='draw')text(message,600,213,'italic 1000 29px system-ui','#ffe7aa');
+   else text('-'+attackFx.damage+' HP',600,335,'900 30px system-ui','#ffdc8b');
    g.restore();
  }
 }
