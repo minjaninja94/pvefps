@@ -25,7 +25,7 @@
     if(round!==state.nextRound)return null;
     const player=stats(state,'player',round),bot=stats(state,'bot',round);
     const difference=player.score-bot.score;
-    const winner=Math.abs(difference)<40?'draw':difference>0?'player':'bot';
+    const winner=!player.notes||!bot.notes||Math.abs(difference)<40?'draw':difference>0?'player':'bot';
     const loser=winner==='player'?'bot':'player';
     // 4-16 HP per clash; mitigates long songs while rewarding rhythm.
     const damage=winner==='draw'?0:clamp(Math.round(4+Math.abs(difference)/67+(Math.max(player.score,bot.score)>=940?2:0)),4,16);
@@ -49,6 +49,7 @@
   }
   function applyRemote(state,packet){
     if(!packet||!Number.isInteger(packet.round)||packet.round!==state.nextRound||!['player','bot','draw'].includes(packet.winner))return null;
+    if(!['player','bot'].every(k=>Number.isFinite(packet.hp?.[k])&&Number.isFinite(packet.super?.[k])))return null;
     const result={
       round:packet.round,
       winner:packet.winner==='player'?'bot':packet.winner==='bot'?'player':'draw',

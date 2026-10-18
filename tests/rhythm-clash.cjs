@@ -50,3 +50,18 @@ assert.equal(draw.damage,0);
 assert.equal(draw.hp.player,100);
 assert.equal(draw.hp.bot,100);
 console.log('Rhythm Clash: 4 fighter presets, 120 costume/body render variants, round scoring, HP damage, duplicate prevention, mirror sync, and draws PASS');
+
+// Incomplete final phrases cannot create a free strike against a missing side.
+const partial=b.make([{id:0,side:'player',phrase:0}]);b.register(partial,'player',0,'perfect');assert.equal(b.resolve(partial,0).winner,'draw');
+assert.equal(b.applyRemote(b.make(notes),{round:0,winner:'player',hp:{player:'bad'}}),null);
+const {RhythmChart:chart}=load('chart-analysis.js');
+const valid={bpm:120,duration:12,groups:3,offset:0,entries:[[3,0,1,0],[5,1,0,0],[11,2,0,2]]};
+assert.equal(chart.unpack(valid).length,3);
+for(const bad of [
+ {...valid,groups:0},{...valid,bpm:NaN},{...valid,duration:-2},
+ {...valid,entries:[[3,0,-1,0]]},{...valid,entries:[[3,0,20,0]]},
+ {...valid,entries:[[4,0,0,0],[3,1,0,0]]},
+ {...valid,entries:[[3,0,2,0],[4,0,0,0]]},
+ {...valid,entries:[[3,0,0,9]]}
+])assert.throws(()=>chart.unpack(bad));
+console.log('Final-phrase fairness, malformed packets, chart clock/hold/group validation PASS');

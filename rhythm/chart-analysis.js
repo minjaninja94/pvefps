@@ -50,12 +50,13 @@ function makeChart(analysis,{difficulty='normal',seed=2,offset=0}={}){
  return {bpm,entries,duration:analysis.duration,groups:count,offset};
 }
 function unpack(chart,side='guest'){
- if(!chart||!Array.isArray(chart.entries)||chart.entries.length>1000||!Number.isFinite(chart.duration)||chart.duration>LIMIT+.01)throw Error('채보 데이터가 유효하지 않습니다.');
- const host=side==='host';
+ if(!chart||!Array.isArray(chart.entries)||!chart.entries.length||chart.entries.length>1000||!Number.isFinite(chart.duration)||chart.duration<=0||chart.duration>LIMIT+.01||!Number.isFinite(chart.bpm)||chart.bpm<60||chart.bpm>220||!Number.isInteger(chart.groups)||chart.groups<1||chart.groups>96||!Number.isFinite(chart.offset??0)||Math.abs(chart.offset||0)>60)throw Error('채보 데이터가 유효하지 않습니다.');
+ const host=side==='host';let last=-1;const lanes=[-1,-1,-1,-1];
  return chart.entries.map((entry,id)=>{
    if(!Array.isArray(entry)||entry.length!==4)throw Error('채보가 손상되었습니다.');
    const [t,lane,duration,phrase]=entry;
-   if(!Number.isFinite(t)||t<0||t>LIMIT||!Number.isInteger(lane)||lane<0||lane>3||!Number.isInteger(phrase)||phrase<0||phrase>=96)throw Error('채보 좌표가 잘못되었습니다.');
+   if(!Number.isFinite(t)||t<0||t>chart.duration||t<last||!Number.isFinite(duration)||duration<0||duration>8||t+duration>chart.duration+.001||!Number.isInteger(lane)||lane<0||lane>3||!Number.isInteger(phrase)||phrase<0||phrase>=chart.groups)throw Error('채보 좌표가 잘못되었습니다.');
+   if(t<lanes[lane]-.001)throw Error('동일 레인의 홀드 노트가 겹칩니다.');last=t;lanes[lane]=t+duration;
    return {id,t,lane,duration:duration||0,phrase,side:phrase%2==0?(host?'player':'bot'):(host?'bot':'player'),done:false,hold:false}
  });
 }
