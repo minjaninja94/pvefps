@@ -1,7 +1,7 @@
 (()=>{'use strict';
 let generator=null,preset=null,motion=null,exporter=null;
 function readLocks(side){return [...document.querySelectorAll('input[data-lock-group="'+side+'"]:checked')].map(n=>n.value)}
-const groups={face:['name','skin','headScale','eyes','eyeColor','expression'],hair:['hair','color','accessory'],body:['body','bust','bustSize','waist','hips','height'],outfit:['costume','palette','weapon','dressColor'],motion:['motion','bustMotion','lookStrength','animationStyle'],extra:['art','image','species']},active={P:'face',B:'face'};let mounted=false;
+const groups={face:['name','skin','headScale','eyes','eyeColor','expression','faceParts','blinkMode'],hair:['hair','color','accessory','hairAccent'],body:['body','bust','bustSize','waist','hips','height'],outfit:['costume','palette','weapon','dressColor'],motion:['motion','bustMotion','lookStrength','animationStyle'],extra:['art','image','species']},active={P:'face',B:'face'};let mounted=false;
 function refresh(side){
  if(!mounted)return;
  for(const [group,keys]of Object.entries(groups))for(const key of keys){const input=document.getElementById(key+side);input?.closest('label').classList.toggle('categoryHidden',group!==active[side])}
