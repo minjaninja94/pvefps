@@ -111,3 +111,13 @@ assert.ok(response(cp,.1)>response({...cp,costume:'armor'},.1));
 assert.ok(response(cp,0)<response(cp,.1));
 assert.ok(Number.isFinite(doll.chestMotion(cp,{t:NaN,actionTime:NaN}).y));
 console.log('Localized chest spring: strength, support, delay, decay, bounds, pause determinism and reduced motion PASS');
+
+const {NeonFeedback:feedbackModule}=load('feedback.js');
+const audioEvents=[],destination={};
+const param={setValueAtTime(){},exponentialRampToValueAtTime(){}};
+const fakeAudio={state:'running',currentTime:3,destination,createGain(){return {gain:param,connect(to){if(to===destination)audioEvents.push('destination')},disconnect(){}}},createOscillator(){return {frequency:param,connect(){},start(at){audioEvents.push(at)},stop(){},addEventListener(){}}}};
+assert.equal(feedbackModule.keySound(fakeAudio,0,0).length,0);
+assert.equal(feedbackModule.keySound({...fakeAudio,state:'suspended'},0,1).length,0);
+assert.equal(feedbackModule.keySound(fakeAudio,3,.7).length,2);
+assert.deepEqual(audioEvents,['destination',3,3]);
+console.log('Input beats: independent destination, two bounded voices, mute and suspended context PASS');

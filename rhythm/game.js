@@ -6,6 +6,7 @@ const intro=2.5, SEG=8, GROUPS=20, BALANCE={easy:{botHit:.61,botPush:.20,miss:0.
 let onlineMode=false, sourceMode="neon", yt=null, ytReady=false, ytPlaying=false, ytPromise=null, localFile=null, youtubeAudioAttached=false, fileSource=null, remoteSeen=new Set(),localSeq=0,lastClockSent=0,preparedAudio=null,peerAudioHash="",matchGroups=GROUPS,ytValidated=false,pendingStart=null,requestedChartId='', net=window.RhythmOnline;let audio=null,master=null,noise=null,activeVoices=[],timer=null,raf=0,session=0,st='menu',paused=false,record=null,notes=[],beat=0,finishTime=0,startAt=0,stepCursor=0,noteCursor=0;
 let preparing=false;let ending=null,remoteComplete=false,awaitingEnd=0;let fight=null,attackFx=null,fighterP='celeste',fighterB='ruby';
 let pressed=[false,false,false,false],strength=50,score=0,combo=0,maxCombo=0,accSum=0,counts={perfect:0,great:0,good:0,miss:0},botHits=0,botMissUntil=0,judgement='',judgeEnd=0,prevPhrase=-1,flashLanes=[0,0,0,0],playerSing=0,botSing=0,lastShown=0,effects=[],wasFinished=false;
+const feedback=window.NeonFeedback.create(),feedbackG=$('feedbackStage').getContext('2d');let rivalCombo=0;
 let options=window.NeonProfileStore.load();
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rand=(n)=>{let x=Math.sin(n*127.1+78.233)*43758.5453;return x-Math.floor(x)};
@@ -171,7 +172,7 @@ async function prepareRound(presetConfig){
  $('rivalType').textContent=onlineMode?'2P · RIVAL':'CPU · RIVAL';
  updateFightHUD();
  stepCursor=noteCursor=0;strength=50;score=combo=maxCombo=accSum=botHits=0;counts={perfect:0,great:0,good:0,miss:0};
- pressed=[false,false,false,false];flashLanes=[0,0,0,0];judgeEnd=0;prevPhrase=-1;playerSing=botSing=0;botMissUntil=0;effects=[];lastShown=0;paused=false;ytPlaying=false;ytValidated=false;remoteSeen.clear();localSeq=0;lastClockSent=0;
+ feedback.clear();rivalCombo=0;pressed=[false,false,false,false];flashLanes=[0,0,0,0];judgeEnd=0;prevPhrase=-1;playerSing=botSing=0;botMissUntil=0;effects=[];lastShown=0;paused=false;ytPlaying=false;ytValidated=false;remoteSeen.clear();localSeq=0;lastClockSent=0;
  $('chartSource').textContent=sourceMode==='youtube'?(record.chart?'✓ 저장된 실제 분석 채보 '+notes.length+'개 사용 중 · 영상 '+record.videoId:'⚠ 저장 채보 없음 — '+notes.length+'개의 BPM 기반 임시 채보'):(sourceMode==='file'?'✓ 로컬 음원 분석 채보 '+notes.length+'개':'내장 데모 채보 '+notes.length+'개');
  $('pause').textContent='Ⅱ PAUSE (ESC)';$('trackname').textContent=record.title;$('round').textContent='1/'+Math.ceil(matchGroups/2);updateHUD();
  $('youtubeOverlay').style.display=sourceMode==='youtube'?'block':'none';
@@ -179,6 +180,7 @@ async function prepareRound(presetConfig){
  $('syncInfo').textContent=sourceMode==='youtube'?(cfg.chart?'저장 채보 적용 완료 · '+notes.length+'노트 · 공식 영상 ▶을 눌러주세요':'저장된 채보 없음 · 임시 BPM 채보 · 영상 ▶을 눌러주세요'):sourceMode==='file'?'음향 강세 분석 완료 · '+notes.length+'개 채보를 로딩했습니다':'자체 제작 배틀곡';
  show('game');render(0);const loadSession=session;
  if(sourceMode==='youtube'){
+  initAudio();await audio.resume();
   $('syncInfo').textContent='채보 준비 완료 · 공식 YouTube 플레이어를 불러오는 중…';raf=requestAnimationFrame(safeLoop);
   try{await prepareYouTube(record.videoId);if(session!==loadSession)return;yt.cueVideoById(record.videoId);yt.setVolume(options.music*100);$('syncInfo').textContent='채보 '+notes.length+'개 적용 완료 · 공식 영상 ▶을 눌러주세요'}
   catch(e){stop();show('menu');showPrepError(Error('YouTube 플레이어 로딩 실패: '+e.message))}
@@ -195,8 +197,8 @@ function stop(){session++;ending=null;cancelAnimationFrame(raf);if(fileSource){t
 function time(){return sourceMode==='youtube'?(ytReady&&yt?Math.max(0,Number(yt.getCurrentTime())||0):0):(audio?audio.currentTime-startAt:0)}
 function modifyStrength(v){strength=clamp(strength+v,0,100)}
 function judge(kind,lane,noteId){const balance=BALANCE[record.diff];if(onlineMode&&net.isConnected())net.send({type:'judge',id:noteId,kind,seq:++localSeq});
- if(fight)window.RhythmClash.register(fight,'player',noteId,kind);counts[kind]++;judgement=kind.toUpperCase();judgeEnd=time()+.55;flashLanes[lane]=time()+.25;if(kind==='miss'){combo=0}else{combo++;maxCombo=Math.max(maxCombo,combo);let val={perfect:1,great:.68,good:.34}[kind];accSum+=val;score+=Math.round({perfect:1000,great:650,good:300}[kind]*(1+Math.min(combo,120)/150));playerSing=time()+.27;if(sourceMode!=='youtube'&&audio&&master)musicalNote(lane,'player',Math.max(audio.currentTime,startAt),0);for(let i=0;i<10;i++)effects.push({x:74+lane*68,y:553,vx:(rand(i+time()*37)-.5)*12,vy:(rand(i+time()*19+45)-.7)*12,life:1,col:COLORS[lane]})}
-updateHUD();updateFightHUD()}
+ if(fight)window.RhythmClash.register(fight,'player',noteId,kind);counts[kind]++;judgement=kind.toUpperCase();judgeEnd=time()+.55;flashLanes[lane]=time()+.25;if(kind==='miss'){combo=0}else{combo++;maxCombo=Math.max(maxCombo,combo);let val={perfect:1,great:.68,good:.34}[kind];accSum+=val;score+=Math.round({perfect:1000,great:650,good:300}[kind]*(1+Math.min(combo,120)/150));playerSing=time()+.27;if(record.practice==='auto'&&sourceMode!=='youtube'&&audio&&master)musicalNote(lane,'player',Math.max(audio.currentTime,startAt),0);for(let i=0;i<10;i++)effects.push({x:74+lane*68,y:553,vx:(rand(i+time()*37)-.5)*12,vy:(rand(i+time()*19+45)-.7)*12,life:1,col:COLORS[lane]})}
+feedback.show('player',kind,lane,time(),combo);updateHUD();updateFightHUD()}
 function updateHUD(){let total=counts.perfect+counts.great+counts.good+counts.miss;$('score').textContent=score.toLocaleString();$('combo').textContent=combo;$('accuracy').textContent=(total?accSum/total*100:100).toFixed(1)+'%'}
 function hit(lane){
  if(st!=='game'||paused||ending)return;
@@ -204,7 +206,7 @@ function hit(lane){
  for(const n of notes){if(n.side!=='player'||n.done||n.hold||n.lane!==lane)continue;const d=Math.abs(n.t-t);if(d<diff){diff=d;candidate=n}}
  if(!candidate)return;
  candidate.grade=diff<=balance.perfectWindow?'perfect':diff<=balance.greatWindow?'great':'good';
- if(candidate.duration>0){candidate.hold=true;candidate.holdUntil=candidate.t+candidate.duration;judgement='HOLD';judgeEnd=t+.4;flashLanes[lane]=t+.25}
+ if(candidate.duration>0){candidate.hold=true;candidate.holdUntil=candidate.t+candidate.duration;judgement='HOLD';judgeEnd=t+.4;flashLanes[lane]=t+.25;feedback.show('player','hold',lane,time(),combo)}
  else finishNote(candidate,candidate.grade);
 }
 function finishNote(n,grade){
@@ -213,7 +215,11 @@ function finishNote(n,grade){
  if(grade!=='miss'&&n.duration>0){score+=250;updateHUD()}
 }
 function release(lane){const t=inputTime();for(const n of notes)if(n.side==='player'&&n.lane===lane&&n.hold&&!n.done)finishNote(n,t<n.holdUntil-.105?'miss':n.grade||'good')}
-function autoBot(t){if(onlineMode)return;const balance=BALANCE[record.diff];for(let n of notes){if(n.side==='bot'&&!n.done&&t>=n.t-.07){n.done=true;let succeeds=rand(n.id*99+record.root)<balance.botHit;if(succeeds){if(sourceMode!=='youtube'&&audio&&master){let at=Math.max(audio.currentTime,startAt+n.t);musicalNote(n.lane,'bot',at)}botHits++;botSing=n.t+.29;window.RhythmClash.register(fight,'bot',n.id,rand(n.id*131+record.root)>.4?'perfect':'great')}else{botMissUntil=t+.37;window.RhythmClash.register(fight,'bot',n.id,'miss')}}}}
+function rivalJudgement(kind,lane,t){rivalCombo=kind==='miss'?0:rivalCombo+1;feedback.show('bot',kind,lane,t,rivalCombo)}
+function autoBot(t){if(onlineMode)return;const balance=BALANCE[record.diff];for(let n of notes){if(n.side==='bot'&&!n.done&&t>=n.t-.07){n.done=true;const succeeds=rand(n.id*99+record.root)<balance.botHit,kind=succeeds?(rand(n.id*131+record.root)>.4?'perfect':'great'):'miss';
+ if(succeeds){if(sourceMode!=='youtube'&&audio&&master)musicalNote(n.lane,'bot',Math.max(audio.currentTime,startAt+n.t));botHits++;botSing=n.t+.29}else botMissUntil=t+.37;
+ window.RhythmClash.register(fight,'bot',n.id,kind);rivalJudgement(kind,n.lane,t);
+}}}
 
 
 let remoteAppearance=null;const customImages={P:'',B:''};
@@ -465,11 +471,11 @@ function banner(t,p){
  }
 }
 function render(t){g.save();const a=attackFx?t-attackFx.t:99;g.save();if(!options.reduced&&a>.34&&a<.5)g.translate(Math.sin(a*240)*4,Math.cos(a*210)*2);background(options.reduced?0:t);fighterStage(t);g.restore();healthHUD();let p=progress(t);lanes(t,p);banner(t,p);
-if(botMissUntil>t){text(onlineMode?'RIVAL MISS':'BOT MISS',770,277,'900 25px system-ui','#ffb4da')} if(judgeEnd>t){let col=judgement==='PERFECT'?'#67fdff':judgement==='GREAT'?'#fff08d':judgement==='GOOD'?'#b5a1ff':'#ff6489';text(judgement,440,277,'1000 29px system-ui',col);if(combo>1)text(combo+' COMBO',440,307,'bold 20px system-ui','#fff')}
+
 for(let e of options.reduced?[]:effects){e.x+=e.vx;e.y+=e.vy;e.vy+=.3;e.life-=.035;g.globalAlpha=Math.max(0,e.life);star(e.x,e.y,7,e.col)}g.globalAlpha=1;effects=effects.filter(e=>e.life>0);
 let elapsed=clamp(t,0,finishTime);text(Math.floor(elapsed/60)+':'+String(Math.floor(elapsed%60)).padStart(2,'0')+' / '+Math.floor(finishTime/60)+':'+String(Math.floor(finishTime%60)).padStart(2,'0'),600,655,'bold 17px system-ui','#e0d9f4');rect(360,670,480,5,'#77738f88');rect(360,670,480*elapsed/finishTime,5,'#7be9ff');
 if(paused){rect(0,0,1200,700,'#050619df');text('PAUSED',600,321,'900 83px system-ui','#fff');text('ESC / RESUME 버튼으로 계속',600,366,'bold 21px system-ui','#ddd1ee')}
-g.restore()}
+g.restore();feedback.draw(feedbackG,t,{reduced:options.reduced,paused,rival:onlineMode})}
 
 function renderHistory(){
  const root=$('historyList'),items=window.NeonProfileStore.history();root.replaceChildren();
@@ -562,13 +568,13 @@ net.on('packet',v=>{
    let n=notes.find(x=>x.id===v.id&&x.side==='bot');if(!n)return;
    remoteSeen.add(v.seq);if(remoteSeen.size>600)remoteSeen.clear();
    n.done=true;
-   window.RhythmClash.register(fight,'bot',n.id,v.kind);updateFightHUD();
+   window.RhythmClash.register(fight,'bot',n.id,v.kind);rivalJudgement(v.kind,n.lane,time());updateFightHUD();
    if(v.kind==='miss')botMissUntil=time()+.36;else botSing=time()+.29
  }
 });
 
 const touchBtns=Array.from(document.querySelectorAll('[data-lane]'));
-function keyDown(lane){if(pressed[lane])return;pressed[lane]=true;hit(lane);let btn=touchBtns[lane];if(btn)btn.classList.add('held')}
+function keyDown(lane){if(st!=='game'||paused||ending||pressed[lane])return;pressed[lane]=true;for(const voice of window.NeonFeedback.keySound(audio,lane,options.notes))trackVoice(voice);flashLanes[lane]=time()+.18;hit(lane);let btn=touchBtns[lane];if(btn)btn.classList.add('held')}
 function keyUp(lane){if(!pressed[lane])return;pressed[lane]=false;release(lane);let btn=touchBtns[lane];if(btn)btn.classList.remove('held')}
 window.addEventListener('keydown',e=>{if(st!=='game'||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(e.code==='Escape'){e.preventDefault();if(!e.repeat)togglePause();return}let k=KEYMAP.indexOf(e.code);if(k<0)k=['KeyD','KeyF','KeyJ','KeyK'].indexOf(e.code);if(k>=0){e.preventDefault();if(!e.repeat&&st==='game'&&!paused)keyDown(k)}});
 window.addEventListener('keyup',e=>{let k=KEYMAP.indexOf(e.code);if(k<0)k=['KeyD','KeyF','KeyJ','KeyK'].indexOf(e.code);if(k>=0){e.preventDefault();keyUp(k)}});
