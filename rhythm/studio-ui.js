@@ -41,13 +41,29 @@ function mount(){
    }
    designer.append(lockGroup);
    const caption=document.createElement('p');caption.textContent='마음에 드는 얼굴·의상을 고정한 상태로 나머지만 다시 생성할 수 있습니다.';designer.append(caption);
-   const cards=document.createElement('div');cards.className='lookPresets';for(const [i,p]of gen.curated().entries()){
+   const cards=document.createElement('div');cards.className='lookPresets';const previews=[];for(const [i,p]of gen.curated().entries()){
     const item=document.createElement('button');item.type='button';item.className='lookPreset';
     const swatch=document.createElement('span');swatch.className='lookPresetSwatch';swatch.style.background='linear-gradient(135deg,'+p.hair+', '+p.outfit+')';
     const label=document.createElement('span');label.textContent=p.name+' '+(i%2===0?'A':'B');
-    item.append(swatch,label);item.title='이 프리셋 적용';item.onclick=()=>preset?.(side,p);cards.append(item);
+    const art=document.createElement('canvas');art.width=96;art.height=120;art.className='lookPresetArt';art.setAttribute('aria-hidden','true');
+    previews.push({art,profile:p});
+    item.append(art,swatch,label);item.title='이 프리셋 적용';item.onclick=()=>preset?.(side,p);cards.append(item);
    }
    designer.append(cards);nav.before(designer);
+   // Real preview thumbnails are rendered from the same local illustrated
+   // wardrobe used in battle, not color-only approximations.
+   window.NeonDoll?.ready().then(ok=>{
+    if(!ok)return;
+    let i=0;const paint=()=>{
+     const entry=previews[i++];if(!entry)return;
+     if(entry.art.isConnected){
+      const ctx=entry.art.getContext('2d');ctx.clearRect(0,0,96,120);
+      window.NeonStudio.draw(ctx,48,117,{...entry.profile,art:'doll'},{scale:.28,t:0,reduced:true});
+     }
+     if(i<previews.length)requestAnimationFrame(paint);
+    };requestAnimationFrame(paint);
+   }).catch(()=>{});
+
   }
   for(const key of ['skin','color']){const input=document.getElementById(key+side),row=document.createElement('div');row.className='swatchRow';const values=key==='skin'?['#ffe4d4','#f8d7c1','#d6a17c','#9c6954','#704d43']:['#84ebff','#ff7a98','#c9a6ff','#b9ffcc','#eee8df','#272f48'];for(const value of values){const b=document.createElement('button');b.type='button';b.style.background=value;b.setAttribute('aria-label',key+' '+value);b.onclick=()=>{input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}))};row.append(b)}input.after(row)}refresh(side);
  }
