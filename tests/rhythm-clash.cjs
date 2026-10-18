@@ -87,7 +87,7 @@ const {NeonDoll:doll}=load('doll-renderer.js');
 assert.equal(doll.frameAt('attack',.25,0).head,2);
 assert.equal(doll.frameAt('hit',.2,0).head,3);
 assert.equal(doll.frameAt('attack',2,0).state,'idle');
-assert.equal(doll.frameAt('idle',0,4.2).head,1);
+assert.equal(doll.frameAt('idle',0,4.2).head,0);
 assert.equal(studio.legal({id:'ruby',art:'doll',palette:'rose',motion:.4}).art,'doll');
 assert.equal(studio.legal({id:'ruby',art:'doll',palette:'bad',motion:99}).palette,'original');
 assert.equal(studio.legal({id:'ruby',motion:99}).motion,1);
@@ -137,3 +137,20 @@ assert.equal(finisher.sample(10).phase,'최후의 일격');assert.equal(finisher
 assert.notEqual(finisher.sample(7,'spell').hero.y,finisher.sample(7,'claw').hero.y);
 assert.equal(finisher.sample(NaN).t,0);assert.equal(finisher.sample(-10).t,0);
 console.log('20s victory choreography: phases, finite poses, mirrored winners, full ring-out and exact duration PASS');
+
+// Direction randomization preserves the exact rhythm/holds and remains reproducible.
+const variedNotes=Array.from({length:160},(_,i)=>({id:i,t:2.5+i*.25,duration:i%17===0?.65:0,phrase:Math.floor(i/16),side:i%32<16?'player':'bot',lane:i%4}));
+const copy=x=>JSON.parse(JSON.stringify(x));
+const remixed=chart.remix(copy(variedNotes),82),again=chart.remix(copy(variedNotes),82),other=chart.remix(copy(variedNotes),83);
+assert.equal(JSON.stringify(remixed),JSON.stringify(again));assert.notEqual(JSON.stringify(remixed.map(n=>n.lane)),JSON.stringify(other.map(n=>n.lane)));
+assert.deepEqual(remixed.map(n=>[n.t,n.duration,n.phrase]),variedNotes.map(n=>[n.t,n.duration,n.phrase]));
+const blocked=[-1,-1,-1,-1];for(const n of remixed){assert.ok(n.t>=blocked[n.lane]-.001);blocked[n.lane]=n.t+n.duration}
+const quiet=chart.makeChart({bpm:120,duration:24,beats:[]},{seed:1});assert.ok(quiet.entries.length>10);assert.equal(new Set(quiet.entries.map(n=>n[1])).size,4);chart.unpack(quiet);for(let i=3;i<quiet.entries.length;i++){const h=quiet.entries.slice(i-3,i+1).map(n=>n[1]),d=(h[1]-h[0]+4)%4;assert.ok(!((d===1||d===3)&&(h[2]-h[1]+4)%4===d&&(h[3]-h[2]+4)%4===d))}
+const sparse=chart.makeChart({bpm:120,duration:12,beats:[[3,.8],[5,.7],[7,.5]]},{seed:8});assert.equal(sparse.entries.length,3);assert.equal(JSON.stringify(sparse.entries.map(n=>n[0])),'[3,5,7]');
+const powerContext={window:{RhythmChart:chart},console};vm.runInNewContext(fs.readFileSync(path.join(dir,'power-notes.js'),'utf8'),powerContext);
+const powered=powerContext.window.NeonPowerNotes.apply(copy(remixed),82,43),power=powered.filter(n=>n.kind==='power');assert.ok(power.length>0&&power.length<variedNotes.length/5);
+for(const n of power){assert.equal(n.lane,4);assert.equal(n.duration,0);assert.ok(n.t>=5);assert.equal(n.t,variedNotes[n.id].t)}
+const charge=b.make(powered),target=power[0];assert.equal(b.register(charge,target.side,target.id,'perfect'),true);assert.equal(charge.super[target.side],24);assert.equal(b.register(charge,target.side,target.id,'perfect'),false);assert.equal(charge.super[target.side],24);
+const missed=b.make(powered);b.register(missed,target.side,target.id,'miss');assert.equal(missed.super[target.side],0);
+for(let t=0;t<12;t+=.01){const idle=doll.frameAt('idle',0,t);assert.equal(idle.a,0);assert.equal(idle.b,0);assert.equal(idle.head,0)}
+console.log('Random lanes preserve rhythm/holds, seeded reproducibility, sparse onset safety, power timing/charge once, stable idle pose PASS');

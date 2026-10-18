@@ -18,8 +18,9 @@ function frameAt(action='idle',age=0,t=0){
   if(age<.4)return {a:7,b:8,mix:(age-.13)/.27,head:3,state:'hit'};
   return {a:8,b:0,mix:(age-.4)/.45,head:0,state:'recover'};
  }
- const q=((t%3.2)+3.2)%3.2/3.2*4,seq=[0,1,2,1,0],i=Math.floor(q);
- return {a:seq[i],b:seq[i+1],mix:q-i,head:t%4.3>4.08?1:0,state:'idle'};
+ // Generated idle tiles differ in anatomy and cloth contours, so crossfading
+ // them produced ghosting/static. Keep one stable painting and animate locally.
+ return {a:0,b:0,mix:0,head:0,state:'idle'};
 }
 function warm(r,g,b){return r>90&&g>55&&r>g*1.04&&g>b*1.03&&(r-Math.min(g,b))/Math.max(r,1)<.57}
 function bounds(data,w,h){let l=w,r=0,t=h,b=0;for(let y=0;y<h;y+=2)for(let x=0;x<w;x+=2){if(data[(y*w+x)*4+3]>100){l=Math.min(l,x);r=Math.max(r,x+2);t=Math.min(t,y);b=Math.max(b,y+2)}}return t<h?{l:Math.max(0,l-2),r:Math.min(w,r+2),t:Math.max(0,t-2),b:Math.min(h,b+2)}:{l:0,r:w,t:0,b:h}}
@@ -97,10 +98,10 @@ function drawBody(g,sheet,index,p,o,alpha){
  }
  const f=sheet.frames[index],b=f.b,source=tinted(sheet,p),height=272,sc=sheet.scale,width={slender:.93,balanced:1,curvy:1.05,athletic:1.04,petite:.97,giant:1.04}[p.body]||1;
  const chest={small:.93,standard:1,large:1.04,full:1.07}[p.bust]||1,physics=o.reduced?0:clamp(Number.isFinite(p.motion)?p.motion:.7,0,1),t=o.t||0;
- const breathe=Math.sin(t*2.25)*1.1*physics,secondary=chestMotion(p,o);
+ const breathe=0,secondary=chestMotion(p,o);
  g.save();g.globalAlpha*=alpha;
  for(let y=b.t;y<b.b;y+=5){const h=Math.min(5,b.b-y),u=(y-f.ny)/(b.b-f.ny),chestWeight=Math.exp(-Math.pow((u-.18)/.115,2)),hipWeight=Math.exp(-Math.pow((u-.45)/.14,2));
-  const stretch=width*(1+(chest-1)*chestWeight+(p.body==='curvy'?.035:0)*hipWeight),sway=Math.sin(t*1.55+.5)*Math.sin(Math.PI*clamp(u,0,1))*.7*physics;
+  const stretch=width*(1+(chest-1)*chestWeight+(p.body==='curvy'?.035:0)*hipWeight),sway=0;
   const yy=(y-b.b)*sc+breathe*(1-clamp(u*1.8,0,1)),xx=(b.l-f.w*.5)*sc*stretch+sway;
   // A local torso mesh leaves neck, shoulders, arms and hem anchored. Adjacent
   // strips share the same displacement function, including their bottom edge.

@@ -13,6 +13,7 @@
     const n=state.expected[side].find(n=>n.id===noteId);
     if(!n||state.grades.has(noteId))return false;
     state.grades.set(noteId,{side,grade});
+    if(n.kind==='power'&&grade!=='miss')state.super[side]=clamp(state.super[side]+({perfect:24,great:18,good:12}[grade]||0),0,100);
     return true;
   }
   function stats(state,side,round){

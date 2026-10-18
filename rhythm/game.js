@@ -6,7 +6,7 @@ const intro=2.5, SEG=8, GROUPS=20, BALANCE={easy:{botHit:.61,botPush:.20,miss:0.
 let onlineMode=false, sourceMode="neon", yt=null, ytReady=false, ytPlaying=false, ytPromise=null, localFile=null, youtubeAudioAttached=false, fileSource=null, remoteSeen=new Set(),localSeq=0,lastClockSent=0,preparedAudio=null,peerAudioHash="",matchGroups=GROUPS,ytValidated=false,pendingStart=null,requestedChartId='', net=window.RhythmOnline;let audio=null,master=null,noise=null,activeVoices=[],timer=null,raf=0,session=0,st='menu',paused=false,record=null,notes=[],beat=0,finishTime=0,startAt=0,stepCursor=0,noteCursor=0;
 let preparing=false;let ending=null,remoteComplete=false,awaitingEnd=0;let fight=null,attackFx=null,fighterP='celeste',fighterB='ruby';
 let pressed=[false,false,false,false],strength=50,score=0,combo=0,maxCombo=0,accSum=0,counts={perfect:0,great:0,good:0,miss:0},botHits=0,botMissUntil=0,judgement='',judgeEnd=0,prevPhrase=-1,flashLanes=[0,0,0,0],playerSing=0,botSing=0,lastShown=0,effects=[],wasFinished=false;
-const feedback=window.NeonFeedback.create(),feedbackG=$('feedbackStage').getContext('2d');let rivalCombo=0;
+const feedback=window.NeonFeedback.create(),feedbackG=$('feedbackStage').getContext('2d');let rivalCombo=0,powerPulse=null;
 let options=window.NeonProfileStore.load();
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rand=(n)=>{let x=Math.sin(n*127.1+78.233)*43758.5453;return x-Math.floor(x)};
@@ -165,6 +165,8 @@ async function prepareRound(presetConfig){
  }else{
   chart=generateChart();notes=chart.items;matchGroups=GROUPS;finishTime=chart.duration+(record.offset||0);
  }
+ const layoutSeed=hashId(JSON.stringify(notes.map(n=>[n.id,n.t,n.duration,n.phrase]))+'|'+record.bpm);
+ window.RhythmChart.remix(notes,layoutSeed);window.NeonPowerNotes.apply(notes,layoutSeed,finishTime);powerPulse=null;
  fight=window.RhythmClash.make(notes);attackFx=null;$('battleAnnounce').textContent='턴 점수가 높으면 상대를 공격합니다!';
  fighterP=fromForm('P');fighterB=onlineMode&&remoteAppearance?remoteAppearance:fromForm('B');
  $('fighterPName').textContent=window.NeonFighters.get(fighterP).name;
@@ -197,8 +199,8 @@ function stop(){session++;ending=null;$('skipFinish').hidden=true;cancelAnimatio
 function time(){return sourceMode==='youtube'?(ytReady&&yt?Math.max(0,Number(yt.getCurrentTime())||0):0):(audio?audio.currentTime-startAt:0)}
 function modifyStrength(v){strength=clamp(strength+v,0,100)}
 function judge(kind,lane,noteId){const balance=BALANCE[record.diff];if(onlineMode&&net.isConnected())net.send({type:'judge',id:noteId,kind,seq:++localSeq});
- if(fight)window.RhythmClash.register(fight,'player',noteId,kind);counts[kind]++;judgement=kind.toUpperCase();judgeEnd=time()+.55;flashLanes[lane]=time()+.25;if(kind==='miss'){combo=0}else{combo++;maxCombo=Math.max(maxCombo,combo);let val={perfect:1,great:.68,good:.34}[kind];accSum+=val;score+=Math.round({perfect:1000,great:650,good:300}[kind]*(1+Math.min(combo,120)/150));playerSing=time()+.27;if(record.practice==='auto'&&sourceMode!=='youtube'&&audio&&master)musicalNote(lane,'player',Math.max(audio.currentTime,startAt),0);for(let i=0;i<10;i++)effects.push({x:74+lane*68,y:553,vx:(rand(i+time()*37)-.5)*12,vy:(rand(i+time()*19+45)-.7)*12,life:1,col:COLORS[lane]})}
-feedback.show('player',kind,lane,time(),combo);updateHUD();updateFightHUD()}
+ if(fight)window.RhythmClash.register(fight,'player',noteId,kind);counts[kind]++;judgement=kind.toUpperCase();judgeEnd=time()+.55;flashLanes[lane]=time()+.25;if(kind==='miss'){combo=0}else{combo++;maxCombo=Math.max(maxCombo,combo);let val={perfect:1,great:.68,good:.34}[kind];accSum+=val;score+=Math.round({perfect:1000,great:650,good:300}[kind]*(1+Math.min(combo,120)/150));playerSing=time()+.27;if(lane<4&&record.practice==='auto'&&sourceMode!=='youtube'&&audio&&master)musicalNote(lane,'player',Math.max(audio.currentTime,startAt),0);for(let i=0;i<(lane===4?0:10);i++)effects.push({x:74+lane*68,y:553,vx:(rand(i+time()*37)-.5)*12,vy:(rand(i+time()*19+45)-.7)*12,life:1,col:COLORS[lane]})}
+if(lane===4)powerPulse={side:'player',kind,t:time(),energy:{perfect:24,great:18,good:12}[kind]||0};else feedback.show('player',kind,lane,time(),combo);updateHUD();updateFightHUD()}
 function updateHUD(){let total=counts.perfect+counts.great+counts.good+counts.miss;$('score').textContent=score.toLocaleString();$('combo').textContent=combo;$('accuracy').textContent=(total?accSum/total*100:100).toFixed(1)+'%'}
 function hit(lane){
  if(st!=='game'||paused||ending)return;
@@ -215,9 +217,9 @@ function finishNote(n,grade){
  if(grade!=='miss'&&n.duration>0){score+=250;updateHUD()}
 }
 function release(lane){const t=inputTime();for(const n of notes)if(n.side==='player'&&n.lane===lane&&n.hold&&!n.done)finishNote(n,t<n.holdUntil-.105?'miss':n.grade||'good')}
-function rivalJudgement(kind,lane,t){rivalCombo=kind==='miss'?0:rivalCombo+1;feedback.show('bot',kind,lane,t,rivalCombo)}
+function rivalJudgement(kind,lane,t){rivalCombo=kind==='miss'?0:rivalCombo+1;if(lane===4)powerPulse={side:'bot',kind,t,energy:{perfect:24,great:18,good:12}[kind]||0};else feedback.show('bot',kind,lane,t,rivalCombo)}
 function autoBot(t){if(onlineMode)return;const balance=BALANCE[record.diff];for(let n of notes){if(n.side==='bot'&&!n.done&&t>=n.t-.07){n.done=true;const succeeds=rand(n.id*99+record.root)<balance.botHit,kind=succeeds?(rand(n.id*131+record.root)>.4?'perfect':'great'):'miss';
- if(succeeds){if(sourceMode!=='youtube'&&audio&&master)musicalNote(n.lane,'bot',Math.max(audio.currentTime,startAt+n.t));botHits++;botSing=n.t+.29}else botMissUntil=t+.37;
+ if(succeeds){if(n.lane<4&&sourceMode!=='youtube'&&audio&&master)musicalNote(n.lane,'bot',Math.max(audio.currentTime,startAt+n.t));botHits++;botSing=n.t+.29}else botMissUntil=t+.37;
  window.RhythmClash.register(fight,'bot',n.id,kind);rivalJudgement(kind,n.lane,t);
 }}}
 
@@ -443,7 +445,7 @@ function lanes(t,p){
    if(side==='player'&&(pressed[lane]||flashLanes[lane]>t))arrow(x,hitY,lane,30,COLORS[lane]);
   }
   for(const n of notes){
-   if(n.done||n.side!==side)continue;
+   if(n.done||n.side!==side||n.kind==='power')continue;
    const y=hitY-(n.t-laneTime)*v,endY=y-(n.duration||0)*v;
    if(y<top-35||endY>bottom+35)continue;
    const x=offset+n.lane*step,head=n.hold?hitY:y;
@@ -486,7 +488,7 @@ function render(t){
 for(let e of options.reduced?[]:effects){e.x+=e.vx;e.y+=e.vy;e.vy+=.3;e.life-=.035;g.globalAlpha=Math.max(0,e.life);star(e.x,e.y,7,e.col)}g.globalAlpha=1;effects=effects.filter(e=>e.life>0);
 let elapsed=clamp(t,0,finishTime);text(Math.floor(elapsed/60)+':'+String(Math.floor(elapsed%60)).padStart(2,'0')+' / '+Math.floor(finishTime/60)+':'+String(Math.floor(finishTime%60)).padStart(2,'0'),600,655,'bold 17px system-ui','#e0d9f4');rect(360,670,480,5,'#77738f88');rect(360,670,480*elapsed/finishTime,5,'#7be9ff');
 if(paused){rect(0,0,1200,700,'#050619df');text('PAUSED',600,321,'900 83px system-ui','#fff');text('ESC / RESUME 버튼으로 계속',600,366,'bold 21px system-ui','#ddd1ee')}
-g.restore();feedback.draw(feedbackG,t,{reduced:options.reduced,paused,rival:onlineMode})}
+g.restore();feedback.draw(feedbackG,t,{reduced:options.reduced,paused,rival:onlineMode});if(!paused)window.NeonPowerNotes.draw(feedbackG,notes,t,t-options.offset/1000,powerPulse,options.reduced)}
 
 function renderHistory(){
  const root=$('historyList'),items=window.NeonProfileStore.history();root.replaceChildren();
@@ -587,13 +589,13 @@ net.on('packet',v=>{
 const touchBtns=Array.from(document.querySelectorAll('[data-lane]'));
 function keyDown(lane){if(st!=='game'||paused||ending||pressed[lane])return;pressed[lane]=true;for(const voice of window.NeonFeedback.keySound(audio,lane,options.notes))trackVoice(voice);flashLanes[lane]=time()+.18;hit(lane);let btn=touchBtns[lane];if(btn)btn.classList.add('held')}
 function keyUp(lane){if(!pressed[lane])return;pressed[lane]=false;release(lane);let btn=touchBtns[lane];if(btn)btn.classList.remove('held')}
-window.addEventListener('keydown',e=>{if(st!=='game'||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(e.code==='Escape'){e.preventDefault();if(!e.repeat)togglePause();return}let k=KEYMAP.indexOf(e.code);if(k<0)k=['KeyD','KeyF','KeyJ','KeyK'].indexOf(e.code);if(k>=0){e.preventDefault();if(!e.repeat&&st==='game'&&!paused)keyDown(k)}});
-window.addEventListener('keyup',e=>{let k=KEYMAP.indexOf(e.code);if(k<0)k=['KeyD','KeyF','KeyJ','KeyK'].indexOf(e.code);if(k>=0){e.preventDefault();keyUp(k)}});
+window.addEventListener('keydown',e=>{if(st!=='game'||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(e.code==='Escape'){e.preventDefault();if(!e.repeat)togglePause();return}let k=KEYMAP.indexOf(e.code);if(k<0)k=['KeyD','KeyF','KeyJ','KeyK'].indexOf(e.code);if(e.code==='Space')k=4;if(k>=0){e.preventDefault();if(!e.repeat&&st==='game'&&!paused)keyDown(k)}});
+window.addEventListener('keyup',e=>{let k=KEYMAP.indexOf(e.code);if(k<0)k=['KeyD','KeyF','KeyJ','KeyK'].indexOf(e.code);if(e.code==='Space')k=4;if(k>=0){e.preventDefault();keyUp(k)}});
 window.addEventListener('blur',()=>{const focusedIframe=sourceMode==='youtube';if(st==='game'&&!paused&&!focusedIframe)togglePause();for(let i=0;i<4;i++)keyUp(i)});
 $('focusControls').onclick=()=>{canvas.focus({preventScroll:true});$('syncInfo').textContent='⌨ 게임 조작 활성화 · 방향키 ← ↓ ↑ → 를 누르세요. (영상 재생 중에는 자동 일시정지되지 않습니다.)'};
 for(let b of touchBtns){let lane=Number(b.dataset.lane);b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);if(st==='game'&&!paused)keyDown(lane)});b.addEventListener('pointerup',e=>{e.preventDefault();keyUp(lane)});b.addEventListener('pointercancel',()=>keyUp(lane))}
 const canvasPointers=new Map();
-canvas.addEventListener('pointerdown',e=>{if(st!=='game'||paused||ending)return;const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*1200,y=(e.clientY-r.top)/r.height*700;if(x>=40&&x<312&&y>=145&&y<=620){const lane=clamp(Math.floor((x-40)/68),0,3);e.preventDefault();canvas.setPointerCapture(e.pointerId);canvasPointers.set(e.pointerId,lane);keyDown(lane)}});
+canvas.addEventListener('pointerdown',e=>{if(st!=='game'||paused||ending)return;const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*1200,y=(e.clientY-r.top)/r.height*700;if(Math.hypot(x-600,y-445)<85){e.preventDefault();canvas.setPointerCapture(e.pointerId);canvasPointers.set(e.pointerId,4);keyDown(4);return}if(x>=40&&x<312&&y>=145&&y<=620){const lane=clamp(Math.floor((x-40)/68),0,3);e.preventDefault();canvas.setPointerCapture(e.pointerId);canvasPointers.set(e.pointerId,lane);keyDown(lane)}});
 function endPointer(e){if(canvasPointers.has(e.pointerId)){const lane=canvasPointers.get(e.pointerId);canvasPointers.delete(e.pointerId);if(![...canvasPointers.values()].includes(lane))keyUp(lane)}}
 canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);
 $('skipFinish').onclick=()=>{if(ending&&st==='game')finishMatch(ending.fail)};
