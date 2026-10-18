@@ -1,0 +1,37 @@
+// node tests/rhythm-live-presence.cjs
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const path=require('node:path');
+const root=path.resolve(__dirname,'../rhythm');
+const env={window:{}};
+for(const file of ['live-presence.js','live-rig.js'])vm.runInNewContext(fs.readFileSync(path.join(root,file),'utf8'),env,{filename:file});
+const {NeonPresence,NeonLiveRig}=env.window;
+assert.ok(NeonPresence&&NeonLiveRig);
+const portrait=NeonPresence.create(.25),samples=[];
+for(let i=0;i<=30;i++){portrait.aim(1,-.5);samples.push(portrait.tick(i/50,{expression:'smile'}))}
+assert.ok(samples[0].lookX<.1,'Gaze must not snap');
+assert.ok(samples.at(-1).lookX>.8,'Gaze must follow pointer');
+assert.ok(samples.at(-1).lookY<-.35,'Vertical response expected');
+assert.ok(samples.at(-1).smile>.7,'Expression should fade in smoothly');
+portrait.release();
+for(let i=31;i<=65;i++)portrait.tick(i/50,{expression:'calm'});
+assert.ok(Math.abs(portrait.tick(1.34).lookX)<.08,'Gaze must spring home');
+const withBlink=Array.from({length:600},(_,i)=>NeonPresence.blinkAt(i/100,.25));
+assert.ok(withBlink.some(x=>x>.95),'Eyes should close occasionally');
+assert.ok(withBlink.some(x=>x===0),'Eyes should be open most of the time');
+const paused=portrait.tick(1.35,{reduced:true});
+assert.equal(paused.blink,0,'Reduced motion should disable blinking');
+assert.equal(paused.lookX,0,'Reduced motion should disable gaze');
+const alt=NeonLiveRig.pose({motion:.7,bustMotion:.7},{t:1,presence:{lookX:.9,lookY:.1,tilt:.1,blink:1,smile:1}});
+const original=NeonLiveRig.pose({motion:.7,bustMotion:.7},{t:1,presence:{lookX:0,lookY:0,tilt:0,blink:0,smile:0}});
+assert.ok(alt.head-original.head>.09,'Head tilts independently');
+assert.ok(alt.hair!==original.hair,'Hair must lag during head movement');
+assert.equal(alt.blink,1);
+const index=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const game=fs.readFileSync(path.join(root,'game.js'),'utf8');
+assert.ok(index.indexOf('live-presence.js')<index.indexOf('live-rig.js'),'Presence must load before rig');
+for(const side of ['P','B'])assert.ok(index.includes('id="expression'+side+'"')&&index.includes('id="lookStrength'+side+'"'));
+assert.match(game,/portrait\.addEventListener\('pointermove'/);
+assert.match(game,/presence\.lookX\*=strength\*facing/);
+console.log('Live portrait: spring gaze, return, blinking, reduced motion, head/hair, mirrored pointer PASS');
