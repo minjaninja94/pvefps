@@ -11,7 +11,7 @@ function wav(seconds){const sr=8000,len=sr*seconds,b=Buffer.alloc(44+len*2);b.wr
 const p=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[],missing=[];
 p.on('pageerror',e=>errors.push(e.message));p.on('response',r=>{if(r.status()===404)missing.push(r.url())});
 await p.route('https://www.youtube.com/iframe_api',r=>r.fulfill({contentType:'text/javascript',body:stub}));
-await p.route('**/rhythm/game.js',r=>{let s=fs.readFileSync(path.join(root,'rhythm/game.js'),'utf8').replace('let onlineMode=false','let testClock=null;let onlineMode=false').replace('async function prepareRound(presetConfig){','async function prepareRound(presetConfig){testClock=null;').replace('function time(){','function time(){if(testClock!==null)return testClock;');const i=s.lastIndexOf('})();');s=s.slice(0,i)+hook+s.slice(i);return r.fulfill({contentType:'text/javascript',body:s})});
+await p.route('**/rhythm/game.js*',r=>{let s=fs.readFileSync(path.join(root,'rhythm/game.js'),'utf8').replace('let onlineMode=false','let testClock=null;let onlineMode=false').replace('async function prepareRound(presetConfig){','async function prepareRound(presetConfig){testClock=null;').replace('function time(){','function time(){if(testClock!==null)return testClock;');const i=s.lastIndexOf('})();');s=s.slice(0,i)+hook+s.slice(i);return r.fulfill({contentType:'text/javascript',body:s})});
 await p.goto('http://127.0.0.1:'+server.address().port+'/rhythm/');
 const waitGame=()=>p.waitForFunction(()=>T.st==='game'),waitResult=()=>p.waitForFunction(()=>T.st==='results');
 const at=t=>p.evaluate(t=>T.at(t),t),file=(name,obj)=>({name,mimeType:'application/json',buffer:Buffer.from(JSON.stringify(obj))});
