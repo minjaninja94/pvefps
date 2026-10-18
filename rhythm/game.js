@@ -391,9 +391,11 @@ function complete(fail=false){
  if(onlineMode&&net.role==='host'&&net.isConnected())net.send({type:'finish'});
  const winner=fight.hp.player===fight.hp.bot?'draw':fight.hp.player>fight.hp.bot?'player':'bot';
  const cinematic=!fail&&winner!=='draw'&&(!record.practice||record.practice==='off');
- stop();const token=session;ending={start:performance.now(),fail,cinematic,winner,cueIndex:0};
+ const finalClash=!fail&&winner==='draw'&&(!record.practice||record.practice==='off');
+ stop();const token=session;ending={start:performance.now(),fail,cinematic,finalClash,winner,cueIndex:0};
+ if(finalClash){attackFx={side:'draw',winner:'draw',t:lastShown,damage:0,finisher:false,sounded:false};$('battleAnnounce').textContent='DRAW · 최종 합 겨루기!'}
  if(cinematic){$('youtubeOverlay').style.display='none';document.querySelector('.gameboard').classList.remove('hasTV');document.querySelector('.fightHUD').classList.remove('hasTV');$('pause').disabled=true;$('skipFinish').hidden=false;$('battleAnnounce').textContent=(winner==='player'?fighterP.name:fighterB.name)+' WIN';$('syncInfo').textContent='마무리 공격 · 상대를 장외로 날려보냅니다.'}
- const animate=()=>{if(session!==token||st!=='game'||!ending)return;try{render(lastShown);if(performance.now()-ending.start<(cinematic?window.NeonFinisher.DURATION*1000:1000))raf=requestAnimationFrame(animate);else{ending=null;finishMatch(fail)}}catch(e){console.error('Victory animation failed',e);finishMatch(fail)}};
+ const animate=()=>{if(session!==token||st!=='game'||!ending)return;try{render(lastShown);if(performance.now()-ending.start<(cinematic?window.NeonFinisher.DURATION*1000:finalClash?window.NeonCombatFX.CLASH_DURATION*1000:1000))raf=requestAnimationFrame(animate);else{ending=null;finishMatch(fail)}}catch(e){console.error('Victory animation failed',e);finishMatch(fail)}};
  raf=requestAnimationFrame(animate);
 }
 function finishMatch(fail=false){
