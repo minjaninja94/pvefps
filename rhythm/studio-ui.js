@@ -19,9 +19,11 @@ function mount(){
     const op=document.createElement('option');op.value=key;op.textContent=title;actions.append(op);
    }
    const play=document.createElement('button');play.type='button';play.textContent='▶ 모션 재생';play.onclick=()=>motion?.(side,actions.value);
-   const exportBtn=document.createElement('button');exportBtn.type='button';exportBtn.textContent='24프레임 PNG 생성';
-   exportBtn.onclick=async()=>{if(!exporter)return;exportBtn.disabled=true;exportBtn.textContent='PNG 만드는 중…';try{await exporter(side,actions.value)}catch(e){const node=document.getElementById('studioStatus');node.textContent='프레임 생성 실패: '+(e?.message||e)}finally{exportBtn.disabled=false;exportBtn.textContent='24프레임 PNG 생성'}};
-   motionBar.append(actions,play,exportBtn);panel.append(motionBar);
+   const count=document.createElement('select');count.setAttribute('aria-label','생성할 프레임 수');
+   for(const total of [24,48]){const op=document.createElement('option');op.value=total;op.textContent=total+' 프레임';count.append(op)}
+   const exportBtn=document.createElement('button');exportBtn.type='button';exportBtn.textContent='PNG 추출';
+   exportBtn.onclick=async()=>{if(!exporter)return;exportBtn.disabled=true;exportBtn.textContent='PNG 만드는 중…';try{await exporter(side,actions.value,Number(count.value))}catch(e){const node=document.getElementById('studioStatus');node.textContent='프레임 생성 실패: '+(e?.message||e)}finally{exportBtn.disabled=false;exportBtn.textContent='PNG 추출'}};
+   motionBar.append(actions,play,count,exportBtn);panel.append(motionBar);
   }const hint=document.createElement('div');hint.className='livePreviewHint';hint.innerHTML='<b>LIVE PORTRAIT</b> · 마우스를 움직이면 고개와 시선이 따라옵니다. 클릭하면 살짝 고개를 끄덕입니다. 눈·얼굴은 원형을 유지합니다.';panel.append(hint);
   const choices=document.getElementById('dollChoices'+side);for(const [kind,group]of [['head','hair'],['outfit','outfit']]){const root=document.getElementById(kind+'Choices'+side),title=root.previousElementSibling,wrap=document.createElement('div');wrap.dataset.choiceGroup=group;wrap.append(title,root);choices.append(wrap)}card.querySelector('.styleInputs').append(choices);
   const nav=document.createElement('div');nav.className='studioCategoryTabs';for(const [key,label]of [['face','얼굴'],['hair','헤어'],['body','체형'],['outfit','의상'],['motion','움직임'],['extra','기타']]){const b=document.createElement('button');b.type='button';b.textContent=label;b.dataset.studioCategory=key;b.dataset.side=side;b.classList.toggle('selected',key==='face');b.onclick=()=>{active[side]=key;nav.querySelectorAll('button').forEach(n=>n.classList.toggle('selected',n===b));refresh(side)};nav.append(b)}card.querySelector('.styleCardTitle').after(nav);
