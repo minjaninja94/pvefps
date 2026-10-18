@@ -232,7 +232,7 @@ function shade(hex,mul=.57){
 function fromForm(side){
  const base=window.NeonFighters.get($('avatar'+side).value);
  const hair=$('color'+side).value,eye=$('eyeColor'+side).value,outfit=$('dressColor'+side).value;
- return {...base,...Object.fromEntries(['bustSize','waist','hips','height','headScale'].map(k=>[k,Number($(k+side).value)])),accessory:$('accessory'+side).value,palette:$('palette'+side).value,motion:Number($('motion'+side).value),bustMotion:Number($('bustMotion'+side).value),expression:$('expression'+side).value,animationStyle:$('animationStyle'+side).value,lookStrength:Number($('lookStrength'+side).value),name:$('name'+side).value||base.name,skin:$('skin'+side).value,weapon:$('weapon'+side).value,art:$('art'+side).value,image:customImages[side],hair,hairDark:shade(hair),eye,outfit,style:$('hair'+side).value,
+ return {...base,...Object.fromEntries(['bustSize','waist','hips','height','headScale'].map(k=>[k,Number($(k+side).value)])),accessory:$('accessory'+side).value,palette:$('palette'+side).value,motion:Number($('motion'+side).value),bustMotion:Number($('bustMotion'+side).value),expression:$('expression'+side).value,faceParts:$('faceParts'+side).value!=='off',blinkMode:$('blinkMode'+side).value,hairAccent:$('hairAccent'+side).value!=='off',animationStyle:$('animationStyle'+side).value,lookStrength:Number($('lookStrength'+side).value),name:$('name'+side).value||base.name,skin:$('skin'+side).value,weapon:$('weapon'+side).value,art:$('art'+side).value,image:customImages[side],hair,hairDark:shade(hair),eye,outfit,style:$('hair'+side).value,
    species:$('species'+side).value,body:$('body'+side).value,
    bust:$('bust'+side).value,eyeShape:$('eyes'+side).value,costume:$('costume'+side).value};
 }
@@ -241,7 +241,7 @@ function applyProfile(side,profile){
  const p=legalAppearance(profile)||window.NeonFighters.PROFILES[side==='P'?0:1];
  for(const k of ['bustSize','waist','hips','height','headScale'])$(k+side).value=p[k]??(k==='bustSize'?.5:1);$('accessory'+side).value=p.accessory||'none';
  $('palette'+side).value=p.palette||'original';$('motion'+side).value=p.motion??.7;$('bustMotion'+side).value=p.bustMotion??.7;
- $('expression'+side).value=p.expression||'calm';$('lookStrength'+side).value=p.lookStrength??.85;$('animationStyle'+side).value=p.animationStyle||'balanced';
+ $('expression'+side).value=p.expression||'calm';$('faceParts'+side).value=p.faceParts===false?'off':'on';$('blinkMode'+side).value=p.blinkMode||'auto';$('hairAccent'+side).value=p.hairAccent===false?'off':'on';$('lookStrength'+side).value=p.lookStrength??.85;$('animationStyle'+side).value=p.animationStyle||'balanced';
  $('avatar'+side).value=p.id;customImages[side]=p.image||'';
  $('name'+side).value=p.name;$('skin'+side).value=p.skin;$('weapon'+side).value=p.weapon;$('art'+side).value=p.art||'vector';
  for(const [k,v] of [['hair',p.style||'long'],['species',p.species||'human'],['body',p.body||'balanced'],['bust',p.bust||'standard'],['costume',p.costume||'armor'],['eyes',p.eyeShape||'normal'],['color',p.hair],['eyeColor',p.eye],['dressColor',p.outfit]])$(k+side).value=v;
@@ -297,7 +297,7 @@ function setupCharacterStudio(){
  for(const side of ['P','B']){
   const choose=$('avatar'+side);
   choose.addEventListener('change',()=>{applyProfile(side,{...window.NeonFighters.get(choose.value),art:'doll'});sendAppearance()});
-  for(const k of ['bustSize','waist','hips','height','headScale','accessory','palette','motion','bustMotion','expression','lookStrength','animationStyle','name','skin','weapon','art','hair','species','body','bust','eyes','costume','color','eyeColor','dressColor'])
+  for(const k of ['bustSize','waist','hips','height','headScale','accessory','palette','motion','bustMotion','expression','faceParts','blinkMode','hairAccent','lookStrength','animationStyle','name','skin','weapon','art','hair','species','body','bust','eyes','costume','color','eyeColor','dressColor'])
    $(k+side).addEventListener('input',()=>{syncStudioMode(side);previewProfile(side);if(side==='P')sendAppearance()});
   const portrait=$('preview'+side),controller=portraitPresence[side];
   portrait.addEventListener('pointermove',ev=>{
