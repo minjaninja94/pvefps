@@ -232,7 +232,7 @@ function shade(hex,mul=.57){
 function fromForm(side){
  const base=window.NeonFighters.get($('avatar'+side).value);
  const hair=$('color'+side).value,eye=$('eyeColor'+side).value,outfit=$('dressColor'+side).value;
- return {...base,...Object.fromEntries(['bustSize','waist','hips','height','headScale'].map(k=>[k,Number($(k+side).value)])),accessory:$('accessory'+side).value,palette:$('palette'+side).value,motion:Number($('motion'+side).value),bustMotion:Number($('bustMotion'+side).value),expression:$('expression'+side).value,lookStrength:Number($('lookStrength'+side).value),name:$('name'+side).value||base.name,skin:$('skin'+side).value,weapon:$('weapon'+side).value,art:$('art'+side).value,image:customImages[side],hair,hairDark:shade(hair),eye,outfit,style:$('hair'+side).value,
+ return {...base,...Object.fromEntries(['bustSize','waist','hips','height','headScale'].map(k=>[k,Number($(k+side).value)])),accessory:$('accessory'+side).value,palette:$('palette'+side).value,motion:Number($('motion'+side).value),bustMotion:Number($('bustMotion'+side).value),expression:$('expression'+side).value,animationStyle:$('animationStyle'+side).value,lookStrength:Number($('lookStrength'+side).value),name:$('name'+side).value||base.name,skin:$('skin'+side).value,weapon:$('weapon'+side).value,art:$('art'+side).value,image:customImages[side],hair,hairDark:shade(hair),eye,outfit,style:$('hair'+side).value,
    species:$('species'+side).value,body:$('body'+side).value,
    bust:$('bust'+side).value,eyeShape:$('eyes'+side).value,costume:$('costume'+side).value};
 }
@@ -241,7 +241,7 @@ function applyProfile(side,profile){
  const p=legalAppearance(profile)||window.NeonFighters.PROFILES[side==='P'?0:1];
  for(const k of ['bustSize','waist','hips','height','headScale'])$(k+side).value=p[k]??(k==='bustSize'?.5:1);$('accessory'+side).value=p.accessory||'none';
  $('palette'+side).value=p.palette||'original';$('motion'+side).value=p.motion??.7;$('bustMotion'+side).value=p.bustMotion??.7;
- $('expression'+side).value=p.expression||'calm';$('lookStrength'+side).value=p.lookStrength??.85;
+ $('expression'+side).value=p.expression||'calm';$('lookStrength'+side).value=p.lookStrength??.85;$('animationStyle'+side).value=p.animationStyle||'balanced';
  $('avatar'+side).value=p.id;customImages[side]=p.image||'';
  $('name'+side).value=p.name;$('skin'+side).value=p.skin;$('weapon'+side).value=p.weapon;$('art'+side).value=p.art||'vector';
  for(const [k,v] of [['hair',p.style||'long'],['species',p.species||'human'],['body',p.body||'balanced'],['bust',p.bust||'standard'],['costume',p.costume||'armor'],['eyes',p.eyeShape||'normal'],['color',p.hair],['eyeColor',p.eye],['dressColor',p.outfit]])$(k+side).value=v;
@@ -265,6 +265,20 @@ function previewProfile(side){
 function sendAppearance(){
  if(onlineMode&&net.isConnected())net.send({type:'appearance',profile:fromForm('P')});
 }
+function generateStyle(side,theme,locked=[]){
+ const base=fromForm(side);
+ const next=window.NeonWardrobeGenerator.create(base,{theme,locked,seed:Math.floor(Math.random()*0x7fffffff)});
+ const profile=window.NeonStudio.legal(next);
+ if(!profile)return;
+ applyProfile(side,profile);if(side==='P')sendAppearance();
+ $('studioStatus').textContent=profile.name+' · 테마 생성 완료'+(locked.length?' · 고정 '+locked.length+'개':'');
+}
+function applyLook(side,look){
+ const valid=window.NeonStudio.legal({...fromForm(side),...look});
+ if(!valid)return;
+ applyProfile(side,valid);if(side==='P')sendAppearance();
+ $('studioStatus').textContent='프리셋 적용: '+valid.name+' · 마음에 들면 저장해 주세요.';
+}
 function randomStyle(side){
  const pick=(list)=>list[Math.floor(Math.random()*list.length)];
  for(const id of ['avatar','hair','species','body','bust','eyes','costume']){
@@ -282,7 +296,7 @@ function setupCharacterStudio(){
  for(const side of ['P','B']){
   const choose=$('avatar'+side);
   choose.addEventListener('change',()=>{applyProfile(side,{...window.NeonFighters.get(choose.value),art:'doll'});sendAppearance()});
-  for(const k of ['bustSize','waist','hips','height','headScale','accessory','palette','motion','bustMotion','expression','lookStrength','name','skin','weapon','art','hair','species','body','bust','eyes','costume','color','eyeColor','dressColor'])
+  for(const k of ['bustSize','waist','hips','height','headScale','accessory','palette','motion','bustMotion','expression','lookStrength','animationStyle','name','skin','weapon','art','hair','species','body','bust','eyes','costume','color','eyeColor','dressColor'])
    $(k+side).addEventListener('input',()=>{syncStudioMode(side);previewProfile(side);if(side==='P')sendAppearance()});
   const portrait=$('preview'+side),controller=portraitPresence[side];
   portrait.addEventListener('pointermove',ev=>{
@@ -293,7 +307,7 @@ function setupCharacterStudio(){
   portrait.addEventListener('pointerleave',()=>controller.release());
   portrait.addEventListener('pointercancel',()=>controller.release());
   portrait.addEventListener('pointerdown',()=>{controller.tap(performance.now()/1000);previewProfile(side)});
-  $('random'+side).onclick=()=>randomStyle(side);
+  $('random'+side).onclick=()=>generateStyle(side,$('theme'+side)?.value||'mixed',[...document.querySelectorAll('input[data-lock-group="'+side+'"]:checked')].map(c=>c.value));
   $('save'+side).onclick=()=>{try{const p=fromForm(side);window.NeonStudio.save(p);localStorage.setItem('neon-duel-fighter-'+side,JSON.stringify(p));$('save'+side).textContent='✓ 저장됨';renderWardrobe();$('studioStatus').textContent='보관함 저장 완료 · 최근 24명까지 보관합니다.'}catch(e){$('save'+side).textContent='저장 실패'}};
   let saved;try{saved=JSON.parse(localStorage.getItem('neon-duel-fighter-'+side)||'null')}catch(e){}
   applyProfile(side,saved?{...saved,art:saved.art==='custom'?'custom':'doll'}:{...window.NeonFighters.PROFILES[side==='P'?0:1],art:'doll',costume:side==='P'?'armor':'idol'});
@@ -633,5 +647,7 @@ function endPointer(e){if(canvasPointers.has(e.pointerId)){const lane=canvasPoin
 canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);
 $('tvPlay').onclick=()=>{if(st==='game'&&ytReady){initAudio().resume();yt.playVideo()}};
 $('skipFinish').onclick=()=>{if(ending&&st==='game')finishMatch(ending.fail)};
-$('start').onclick=async()=>{if(!onlineMode){await newRound();return}if(net.role!=='host'||!net.isConnected()||!net.readySelf||!net.readyPeer){roomStatus('방장과 친구 모두 P2P 접속 및 준비 완료가 필요합니다.');return}let cfg=selectedConfig();if(!cfg)return;if(cfg.mode==='file'){let asset;try{asset=await prepareLocalAudio()}catch(e){showPrepError(e);return}if(peerAudioHash!==asset.hash){roomStatus('상대방이 동일한 음원을 로딩했는지 확인하세요.');return}cfg.bpm=asset.chart.bpm;cfg.chart=asset.chart;cfg.assetHash=asset.hash;cfg.title=localFile.name.slice(0,36)}else if(cfg.mode==='youtube'&&youtubeAudioAttached&&localFile){try{const asset=await prepareLocalAudio();cfg.chart=asset.chart;rememberYouTubeChart(cfg.videoId,cfg.chart)}catch(e){showPrepError(e);return}}if(cfg.chart){try{window.RhythmChart.unpack(cfg.chart,'host')}catch(e){showPrepError(e);return}}pendingStart=cfg;roomStatus('채보 준비 완료 · 친구의 로딩 응답을 기다리는 중');if(!net.send({type:'prepare',cfg})){pendingStart=null;roomStatus('준비 패킷 전송 실패')}};$('retry').onclick=()=>{if(onlineMode){show('menu');net.ready(false);roomStatus('온라인 재대결은 양쪽에서 준비를 다시 해주세요.')}else newRound()};$('pause').onclick=()=>togglePause();$('quit').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};$('select').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};setupPreferences();renderHistory();modeUI();setupCharacterStudio();window.NeonStudioUI.mount();restoreSavedChartSelection();renderWardrobe();
+$('start').onclick=async()=>{if(!onlineMode){await newRound();return}if(net.role!=='host'||!net.isConnected()||!net.readySelf||!net.readyPeer){roomStatus('방장과 친구 모두 P2P 접속 및 준비 완료가 필요합니다.');return}let cfg=selectedConfig();if(!cfg)return;if(cfg.mode==='file'){let asset;try{asset=await prepareLocalAudio()}catch(e){showPrepError(e);return}if(peerAudioHash!==asset.hash){roomStatus('상대방이 동일한 음원을 로딩했는지 확인하세요.');return}cfg.bpm=asset.chart.bpm;cfg.chart=asset.chart;cfg.assetHash=asset.hash;cfg.title=localFile.name.slice(0,36)}else if(cfg.mode==='youtube'&&youtubeAudioAttached&&localFile){try{const asset=await prepareLocalAudio();cfg.chart=asset.chart;rememberYouTubeChart(cfg.videoId,cfg.chart)}catch(e){showPrepError(e);return}}if(cfg.chart){try{window.RhythmChart.unpack(cfg.chart,'host')}catch(e){showPrepError(e);return}}pendingStart=cfg;roomStatus('채보 준비 완료 · 친구의 로딩 응답을 기다리는 중');if(!net.send({type:'prepare',cfg})){pendingStart=null;roomStatus('준비 패킷 전송 실패')}};$('retry').onclick=()=>{if(onlineMode){show('menu');net.ready(false);roomStatus('온라인 재대결은 양쪽에서 준비를 다시 해주세요.')}else newRound()};$('pause').onclick=()=>togglePause();$('quit').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};$('select').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};setupPreferences();renderHistory();modeUI();setupCharacterStudio();window.NeonStudioUI.mount();
+window.NeonStudioUI.bindGenerator(generateStyle);window.NeonStudioUI.bindPreset(applyLook);
+restoreSavedChartSelection();renderWardrobe();
 })();
