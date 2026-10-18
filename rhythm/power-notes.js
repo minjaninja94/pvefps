@@ -12,19 +12,46 @@ function apply(notes,seed,duration){
  if(!picked.length&&groups.size){const list=[...groups.values()][0],n=list[Math.floor(rng()*list.length)];n.kind='power';n.originalLane=n.lane;n.lane=4;picked.push(n)}
  return notes;
 }
-function draw(g,notes,t,inputT,pulse,reduced=false){
- const pending=notes.filter(n=>n.kind==='power'&&!n.done&&n.t-t<2.4&&n.t-t>-.3).sort((a,b)=>a.t-b.t),n=pending[0];
- const flash=pulse&&t-pulse.t>=0&&t-pulse.t<.75;
- if(!n&&!flash)return;
- const cx=600,cy=445,r=61,delta=n?n.t-(n.side==='player'?inputT:t):0,approach=Math.max(0,Math.min(1,delta/2.2));
- g.save();g.textAlign='center';g.fillStyle='#090c1bf2';g.strokeStyle=COLOR;g.lineWidth=4;g.shadowColor=COLOR;g.shadowBlur=reduced?0:18;
- g.beginPath();g.arc(cx,cy,r,0,Math.PI*2);g.fill();g.stroke();
- if(n){g.globalAlpha=.85;g.lineWidth=5;g.beginPath();g.arc(cx,cy,r+approach*67,0,Math.PI*2);g.stroke();g.globalAlpha=1;
-  g.fillStyle=n.side==='player'?'#fff':'#ffb6dd';g.font='900 13px system-ui';g.fillText(n.side==='player'?'YOUR POWER':'RIVAL POWER',cx,cy-r-18);g.fillStyle=COLOR;g.font='1000 22px system-ui';g.fillText(n.side==='player'?'SPACE':'CPU',cx,cy+7);g.font='800 12px system-ui';g.fillText('POWER UP',cx,cy+28);
-  if(Math.abs(delta)<WINDOW){g.strokeStyle='#fff';g.lineWidth=7;g.beginPath();g.arc(cx,cy,r-8,0,Math.PI*2);g.stroke()}
+function draw(g,notes,t,inputT,pulse,reduced=false,online=false,layout=null){
+ const bounds=layout||{player:{x:74,step:68},bot:{x:922,step:68},top:150,bottom:608};
+ const cy=(bounds.top+bounds.bottom)*.5+12;
+ const pending=notes.filter(n=>n.kind==='power'&&!n.done&&n.t-t<2.4&&n.t-t>-.32);
+ for(const side of ['player','bot']){
+  const n=pending.filter(n=>n.side===side).sort((a,b)=>a.t-b.t)[0];
+  const flash=pulse&&pulse.side===side&&t-pulse.t>=0&&t-pulse.t<.8;
+  if(!n&&!flash)continue;
+  // Align the SPACE/POWER prompt with the exact center of this fighter's four-note lane.
+  const region=bounds[side],cx=region.x+region.step*1.5,r=47;
+  const delta=n?n.t-(side==='player'?inputT:t):0,approach=Math.max(0,Math.min(1,delta/2.2));
+  const accent=side==='player'?'#68efff':'#fca1cf';
+  g.save();g.textAlign='center';g.textBaseline='middle';
+  g.shadowColor=COLOR;g.shadowBlur=reduced?0:18;g.lineWidth=3;
+  g.fillStyle='#090d20ed';g.strokeStyle=accent;
+  g.beginPath();g.arc(cx,cy,r,0,Math.PI*2);g.fill();g.stroke();
+  if(n){
+   g.strokeStyle=COLOR;g.lineWidth=5;g.globalAlpha=.92;
+   g.beginPath();g.arc(cx,cy,r+8+approach*34,0,Math.PI*2);g.stroke();
+   g.globalAlpha=1;g.fillStyle=accent;g.font='900 13px system-ui';
+   g.fillText(side==='player'?'1P · POWER':online?'2P · POWER':'CPU · POWER',cx,cy-r-16);
+   g.fillStyle='#ffe4a1';g.font='1000 23px system-ui';
+   g.fillText(side==='player'?'SPACE':online?'POWER':'CPU',cx,cy-4);
+   g.font='800 11px system-ui';g.fillText('POWER UP',cx,cy+19);
+   if(Math.abs(delta)<WINDOW){
+    g.strokeStyle='#ffffff';g.lineWidth=6;g.beginPath();g.arc(cx,cy,r-7,0,Math.PI*2);g.stroke();
+   }
+  }
+  if(flash){
+   const age=t-pulse.t;
+   g.globalAlpha=Math.max(0,Math.min(1,(.8-age)/.2));
+   g.fillStyle=pulse.kind==='miss'?'#ff7594':COLOR;
+   g.font='1000 20px system-ui';
+   g.fillText(pulse.kind==='miss'?'MISS':'+'+pulse.energy+' POWER',cx,cy-5);
+   g.font='800 12px system-ui';
+   g.fillText(side==='player'?'YOU':online?'RIVAL':'CPU',cx,cy+22);
+   if(!reduced){g.strokeStyle=COLOR;g.lineWidth=Math.max(1,6*(1-age/.8));g.beginPath();g.arc(cx,cy,r+age*76,0,Math.PI*2);g.stroke()}
+  }
+  g.restore();
  }
- if(flash){const age=t-pulse.t;g.globalAlpha=Math.min(1,(.75-age)/.2);g.fillStyle=pulse.kind==='miss'?'#ff7594':COLOR;g.font='1000 21px system-ui';g.fillText(pulse.kind==='miss'?'MISS':'+'+pulse.energy+' POWER',cx,cy-6);g.font='800 13px system-ui';g.fillText(pulse.side==='player'?'YOU':'RIVAL',cx,cy+20);if(!reduced){g.lineWidth=6*(1-age/.75);g.beginPath();g.arc(cx,cy,r+age*110,0,Math.PI*2);g.stroke()}}
- g.restore();
 }
 window.NeonPowerNotes=Object.freeze({apply,draw,WINDOW});
 })();
