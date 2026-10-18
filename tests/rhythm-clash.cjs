@@ -121,3 +121,19 @@ assert.equal(feedbackModule.keySound({...fakeAudio,state:'suspended'},0,1).lengt
 assert.equal(feedbackModule.keySound(fakeAudio,3,.7).length,2);
 assert.deepEqual(audioEvents,['destination',3,3]);
 console.log('Input beats: independent destination, two bounded voices, mute and suspended context PASS');
+
+const {NeonFinisher:finisher}=load('finisher.js');
+assert.equal(finisher.DURATION,20);
+for(const weapon of ['blade','claw','spell'])for(let t=0;t<=20;t+=.05){
+ const a=finisher.sample(t,weapon,'player'),b=finisher.sample(t,weapon,'bot');
+ for(const actor of [a.hero,a.foe,b.hero,b.foe])for(const key of ['x','y','rotation','scale','actionTime'])assert.ok(Number.isFinite(actor[key]));
+ assert.ok(Math.abs(a.hero.x+b.hero.x-1200)<.001);assert.ok(Math.abs(a.foe.x+b.foe.x-1200)<.001);
+ assert.ok(a.hero.scale>0&&a.foe.scale>0);
+}
+assert.equal(finisher.sample(19.999).done,false);assert.equal(finisher.sample(20).done,true);
+assert.ok(finisher.sample(16,'blade','player').foe.x>2000);
+assert.ok(finisher.sample(16,'claw','bot').foe.x< -800);
+assert.equal(finisher.sample(10).phase,'최후의 일격');assert.equal(finisher.sample(18).phase,'완전 승리');
+assert.notEqual(finisher.sample(7,'spell').hero.y,finisher.sample(7,'claw').hero.y);
+assert.equal(finisher.sample(NaN).t,0);assert.equal(finisher.sample(-10).t,0);
+console.log('20s victory choreography: phases, finite poses, mirrored winners, full ring-out and exact duration PASS');

@@ -174,7 +174,7 @@ async function prepareRound(presetConfig){
  stepCursor=noteCursor=0;strength=50;score=combo=maxCombo=accSum=botHits=0;counts={perfect:0,great:0,good:0,miss:0};
  feedback.clear();rivalCombo=0;pressed=[false,false,false,false];flashLanes=[0,0,0,0];judgeEnd=0;prevPhrase=-1;playerSing=botSing=0;botMissUntil=0;effects=[];lastShown=0;paused=false;ytPlaying=false;ytValidated=false;remoteSeen.clear();localSeq=0;lastClockSent=0;
  $('chartSource').textContent=sourceMode==='youtube'?(record.chart?'✓ 저장된 실제 분석 채보 '+notes.length+'개 사용 중 · 영상 '+record.videoId:'⚠ 저장 채보 없음 — '+notes.length+'개의 BPM 기반 임시 채보'):(sourceMode==='file'?'✓ 로컬 음원 분석 채보 '+notes.length+'개':'내장 데모 채보 '+notes.length+'개');
- $('pause').textContent='Ⅱ PAUSE (ESC)';$('trackname').textContent=record.title;$('round').textContent='1/'+Math.ceil(matchGroups/2);updateHUD();
+ $('pause').disabled=false;$('skipFinish').hidden=true;$('pause').textContent='Ⅱ PAUSE (ESC)';$('trackname').textContent=record.title;$('round').textContent='1/'+Math.ceil(matchGroups/2);updateHUD();
  $('youtubeOverlay').style.display=sourceMode==='youtube'?'block':'none';
  $('playHint').style.display=sourceMode==='youtube'?'block':'none';
  $('syncInfo').textContent=sourceMode==='youtube'?(cfg.chart?'저장 채보 적용 완료 · '+notes.length+'노트 · 공식 영상 ▶을 눌러주세요':'저장된 채보 없음 · 임시 BPM 채보 · 영상 ▶을 눌러주세요'):sourceMode==='file'?'음향 강세 분석 완료 · '+notes.length+'개 채보를 로딩했습니다':'자체 제작 배틀곡';
@@ -193,7 +193,7 @@ async function prepareRound(presetConfig){
   raf=requestAnimationFrame(safeLoop)
  }catch(e){alert('오디오 재생 실패: '+e.message);stop();show('menu')}
 }
-function stop(){session++;ending=null;cancelAnimationFrame(raf);if(fileSource){try{fileSource.stop()}catch(e){}fileSource.disconnect();fileSource=null}if(yt&&ytPlaying)try{yt.pauseVideo()}catch(e){}ytPlaying=false;stopSound();if(audio?.state==='suspended')audio.resume().catch(()=>{});paused=false;pressed.fill(false);document.querySelectorAll('[data-lane]').forEach(b=>b.classList.remove('held'))}
+function stop(){session++;ending=null;$('skipFinish').hidden=true;cancelAnimationFrame(raf);if(fileSource){try{fileSource.stop()}catch(e){}fileSource.disconnect();fileSource=null}if(yt&&ytPlaying)try{yt.pauseVideo()}catch(e){}ytPlaying=false;stopSound();if(audio?.state==='suspended')audio.resume().catch(()=>{});paused=false;pressed.fill(false);document.querySelectorAll('[data-lane]').forEach(b=>b.classList.remove('held'))}
 function time(){return sourceMode==='youtube'?(ytReady&&yt?Math.max(0,Number(yt.getCurrentTime())||0):0):(audio?audio.currentTime-startAt:0)}
 function modifyStrength(v){strength=clamp(strength+v,0,100)}
 function judge(kind,lane,noteId){const balance=BALANCE[record.diff];if(onlineMode&&net.isConnected())net.send({type:'judge',id:noteId,kind,seq:++localSeq});
@@ -372,8 +372,11 @@ function complete(fail=false){
   fail=true;
  }
  if(onlineMode&&net.role==='host'&&net.isConnected())net.send({type:'finish'});
- stop();const token=session;ending={start:performance.now(),fail};
- const animate=()=>{if(session!==token||st!=='game')return;render(lastShown);if(performance.now()-ending.start<1000)raf=requestAnimationFrame(animate);else{ending=null;finishMatch(fail)}};
+ const winner=fight.hp.player===fight.hp.bot?'draw':fight.hp.player>fight.hp.bot?'player':'bot';
+ const cinematic=!fail&&winner!=='draw'&&(!record.practice||record.practice==='off');
+ stop();const token=session;ending={start:performance.now(),fail,cinematic,winner,cueIndex:0};
+ if(cinematic){$('youtubeOverlay').style.display='none';$('pause').disabled=true;$('skipFinish').hidden=false;$('battleAnnounce').textContent='VICTORY FINISH · '+(winner==='player'?fighterP.name:fighterB.name);$('syncInfo').textContent='마무리 공격 · 상대를 장외로 날려보냅니다.'}
+ const animate=()=>{if(session!==token||st!=='game'||!ending)return;try{render(lastShown);if(performance.now()-ending.start<(cinematic?window.NeonFinisher.DURATION*1000:1000))raf=requestAnimationFrame(animate);else{ending=null;finishMatch(fail)}}catch(e){console.error('Victory animation failed',e);finishMatch(fail)}};
  raf=requestAnimationFrame(animate);
 }
 function finishMatch(fail=false){
@@ -391,7 +394,7 @@ function finishMatch(fail=false){
  if(!training&&!fail){try{window.NeonProfileStore.result({title:record.title,key:record.videoId||record.assetHash||record.mode,diff:record.diff,mode:onlineMode?'online':'solo',score,accuracy:acc,combo:maxCombo,outcome});renderHistory()}catch(e){$('resultdesc').textContent+=' · 전적 저장 실패: 브라우저 저장 공간을 확인하세요.'}}
  show('results');
 }
-function togglePause(remote=false){if(st!=='game')return;paused=!paused;if(sourceMode==='youtube'){if(paused)yt?.pauseVideo();else yt?.playVideo()}else if(audio){if(paused)audio.suspend();else audio.resume()}$('pause').textContent=paused?'▶ RESUME':'Ⅱ PAUSE (ESC)';if(!remote&&onlineMode)net.send({type:'pause',paused})}
+function togglePause(remote=false){if(st!=='game'||ending)return;paused=!paused;if(sourceMode==='youtube'){if(paused)yt?.pauseVideo();else yt?.playVideo()}else if(audio){if(paused)audio.suspend();else audio.resume()}$('pause').textContent=paused?'▶ RESUME':'Ⅱ PAUSE (ESC)';if(!remote&&onlineMode)net.send({type:'pause',paused})}
 function rect(x,y,w,h,c){g.fillStyle=c;g.fillRect(x,y,w,h)}
 function rounded(x,y,w,h,r,color){g.fillStyle=color;g.beginPath();g.roundRect(x,y,w,h,r);g.fill()}
 function line(x,y,x2,y2,color,width=2){g.strokeStyle=color;g.lineWidth=width;g.beginPath();g.moveTo(x,y);g.lineTo(x2,y2);g.stroke()}
@@ -470,7 +473,15 @@ function banner(t,p){
    g.restore();
  }
 }
-function render(t){g.save();const a=attackFx?t-attackFx.t:99;g.save();if(!options.reduced&&a>.34&&a<.5)g.translate(Math.sin(a*240)*4,Math.cos(a*210)*2);background(options.reduced?0:t);fighterStage(t);g.restore();healthHUD();let p=progress(t);lanes(t,p);banner(t,p);
+function render(t){
+ if(ending?.cinematic){
+  const age=(performance.now()-ending.start)/1000,winner=ending.winner==='player'?fighterP:fighterB,loser=ending.winner==='player'?fighterB:fighterP,weapon=winner.weapon||'blade';
+  feedbackG.clearRect(0,0,1200,700);
+  window.NeonFinisher.draw(g,age,winner,loser,{weapon,side:ending.winner,reduced:options.reduced},window.NeonStudio.draw);
+  while(ending.cueIndex<window.NeonFinisher.CUES.length&&age>=window.NeonFinisher.CUES[ending.cueIndex]){const cue=window.NeonFinisher.CUES[ending.cueIndex++];if(age-cue<.25)for(const voice of window.NeonFinisher.sound(audio,weapon,cue===14,options.sfx))trackVoice(voice)}
+  return;
+ }
+ g.save();const a=attackFx?t-attackFx.t:99;g.save();if(!options.reduced&&a>.34&&a<.5)g.translate(Math.sin(a*240)*4,Math.cos(a*210)*2);background(options.reduced?0:t);fighterStage(t);g.restore();healthHUD();let p=progress(t);lanes(t,p);banner(t,p);
 
 for(let e of options.reduced?[]:effects){e.x+=e.vx;e.y+=e.vy;e.vy+=.3;e.life-=.035;g.globalAlpha=Math.max(0,e.life);star(e.x,e.y,7,e.col)}g.globalAlpha=1;effects=effects.filter(e=>e.life>0);
 let elapsed=clamp(t,0,finishTime);text(Math.floor(elapsed/60)+':'+String(Math.floor(elapsed%60)).padStart(2,'0')+' / '+Math.floor(finishTime/60)+':'+String(Math.floor(finishTime%60)).padStart(2,'0'),600,655,'bold 17px system-ui','#e0d9f4');rect(360,670,480,5,'#77738f88');rect(360,670,480*elapsed/finishTime,5,'#7be9ff');
@@ -585,5 +596,6 @@ const canvasPointers=new Map();
 canvas.addEventListener('pointerdown',e=>{if(st!=='game'||paused||ending)return;const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*1200,y=(e.clientY-r.top)/r.height*700;if(x>=40&&x<312&&y>=145&&y<=620){const lane=clamp(Math.floor((x-40)/68),0,3);e.preventDefault();canvas.setPointerCapture(e.pointerId);canvasPointers.set(e.pointerId,lane);keyDown(lane)}});
 function endPointer(e){if(canvasPointers.has(e.pointerId)){const lane=canvasPointers.get(e.pointerId);canvasPointers.delete(e.pointerId);if(![...canvasPointers.values()].includes(lane))keyUp(lane)}}
 canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);
+$('skipFinish').onclick=()=>{if(ending&&st==='game')finishMatch(ending.fail)};
 $('start').onclick=async()=>{if(!onlineMode){await newRound();return}if(net.role!=='host'||!net.isConnected()||!net.readySelf||!net.readyPeer){roomStatus('방장과 친구 모두 P2P 접속 및 준비 완료가 필요합니다.');return}let cfg=selectedConfig();if(!cfg)return;if(cfg.mode==='file'){let asset;try{asset=await prepareLocalAudio()}catch(e){showPrepError(e);return}if(peerAudioHash!==asset.hash){roomStatus('상대방이 동일한 음원을 로딩했는지 확인하세요.');return}cfg.bpm=asset.chart.bpm;cfg.chart=asset.chart;cfg.assetHash=asset.hash;cfg.title=localFile.name.slice(0,36)}else if(cfg.mode==='youtube'&&youtubeAudioAttached&&localFile){try{const asset=await prepareLocalAudio();cfg.chart=asset.chart;rememberYouTubeChart(cfg.videoId,cfg.chart)}catch(e){showPrepError(e);return}}if(cfg.chart){try{window.RhythmChart.unpack(cfg.chart,'host')}catch(e){showPrepError(e);return}}pendingStart=cfg;roomStatus('채보 준비 완료 · 친구의 로딩 응답을 기다리는 중');if(!net.send({type:'prepare',cfg})){pendingStart=null;roomStatus('준비 패킷 전송 실패')}};$('retry').onclick=()=>{if(onlineMode){show('menu');net.ready(false);roomStatus('온라인 재대결은 양쪽에서 준비를 다시 해주세요.')}else newRound()};$('pause').onclick=()=>togglePause();$('quit').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};$('select').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};setupPreferences();renderHistory();modeUI();setupCharacterStudio();restoreSavedChartSelection();renderWardrobe();
 })();
