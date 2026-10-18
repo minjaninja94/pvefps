@@ -126,6 +126,58 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
 .styleBody{grid-template-columns:minmax(260px,.9fr) minmax(280px,1.1fr);gap:24px}.fighterPreview{max-height:630px;object-fit:contain;background:radial-gradient(ellipse at 50% 40%,#3c4968,#10182b 72%)}.styleInputs{grid-template-columns:1fr 1fr;gap:16px;align-content:start;padding:12px}.styleInputs label{font-size:13px;color:#d9e9f5;gap:8px}.styleInputs input[type=range]{accent-color:#8de7df;min-height:38px;width:100%}.styleInputs .categoryHidden{display:none!important}.swatchRow{display:flex;flex-wrap:wrap;gap:5px}.swatchRow button{width:24px;height:24px;border:2px solid #ffffff55;border-radius:50%;padding:0;cursor:pointer}.headChoices{max-width:500px}.outfitChoices{max-width:700px}.dollChoices{margin-top:14px}.choiceTitle{letter-spacing:.1em}.fighterWorkshop>p:not(#studioStatus):not(#dollLoadStatus){display:none}
 @media(max-width:700px){.styleBody{grid-template-columns:1fr}.fighterPreview{position:relative;top:auto;max-height:480px}.styleInputs{grid-template-columns:1fr 1fr;padding:4px;gap:12px}.studioCategoryTabs{gap:5px}.studioCategoryTabs button{padding:9px 12px}.styleCard{padding:10px}}
 .previewPanel{display:flex;flex-direction:column;gap:10px}.previewPanel .motionPreview,.previewPanel .styleActions{margin-top:0}.styleInputs .dollChoices{grid-column:1/-1;margin-top:0}.styleInputs .dollChoices[hidden],.dollChoices [hidden]{display:none}.previewPanel .fighterPreview{position:relative;top:auto}.headChoices,.outfitChoices{max-width:none}@media(max-width:700px){.previewPanel .fighterPreview{max-height:360px}}
+
+/* Compact single-screen arena: [PLAYER HP] [MUSIC TV] [RIVAL HP]. */
+#game{
+ max-width:none;
+ width:min(calc(100vw - 20px),1200px,max(420px,calc((100dvh - 300px)*12 / 7)));
+ margin:4px auto 16px;
+ padding:0 8px;
+}
+#game .matchHeader{margin-bottom:5px;font-size:10px}
+#game .fightHUD{
+ display:grid;grid-template-columns:minmax(0,1fr) clamp(166px,21vw,238px) minmax(0,1fr);
+ align-items:center;gap:clamp(5px,1vw,14px);padding:7px 12px;
+ border-radius:15px;margin-bottom:5px;
+}
+#game .fightCenter{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0}
+#game .centerRound strong{font-size:22px}
+#game .fightCenter .arenaTVRow{display:none;width:100%;height:auto;min-height:0;padding:0;border:0;background:transparent;align-items:center;justify-content:center}
+#game .fightHUD.hasTV .arenaTVRow{display:flex}
+#game .fightHUD.hasTV .centerRound small,
+#game .fightHUD.hasTV .centerRound strong{display:none}
+#game .fightHUD.hasTV .centerRound span{margin:0;color:#8ff1fa;font-size:10px;letter-spacing:.12em}
+#game #youtubeOverlay{width:100%;max-width:228px;margin:0;z-index:1;flex-shrink:0}
+#game .fightCard{align-self:center}
+#game .healthRail{height:20px;margin:6px 0 4px}
+#game .fightStats{flex-wrap:wrap;gap:3px}
+#game .turnScoreHUD{margin-bottom:5px;padding:5px 9px;min-height:28px}
+#game .gameboard{--stage-top:0px}
+#game .gameboard.hasTV{--stage-top:0px}
+#game #feedbackStage{top:0!important}
+#game #stage{display:block}
+#game .scoreline{margin-top:6px}
+#game .touch{margin-top:6px}
+#game .touch button{height:48px;font-size:25px}
+#game .touch [data-lane="4"]{height:34px;font-size:12px}
+@media(pointer:fine) and (min-width:800px){#game .touch{display:none}}
+@media(max-width:650px){
+ #game{width:calc(100vw - 10px);padding:0 3px;margin-top:3px}
+ #game .fightHUD{grid-template-columns:minmax(0,1fr) minmax(144px,40vw) minmax(0,1fr);gap:4px;padding:5px}
+ #game .fightName{flex-wrap:wrap;gap:0}
+ #game .fightName strong{font-size:11px;line-height:1.3}
+ #game .healthRail{height:15px;margin:4px 0}
+ #game .fightStats{font-size:9px}
+ #game .fightStats span{white-space:nowrap}
+ #game .fightCenter .centerRound span{font-size:9px}
+ #game .turnScoreHUD{font-size:9px}
+ #game .turnScoreHUD strong{font-size:10px}
+ #game .scoreline .stats{gap:8px;font-size:10px}
+ #game .scoreline .stats strong{font-size:13px}
+ #game .tools{flex-wrap:wrap;gap:4px}
+ #game .tools .small{padding:7px;font-size:10px}
+}
+
 </style>
 </head>
 <body>
@@ -185,11 +237,11 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:none}
  <div class="matchHeader"><span class="your">● PLAYER / LEFT</span><strong id="trackname">NEON SHOWDOWN</strong><span class="enemy">BOT / RIGHT ●</span></div>
  <div class="fightHUD">
  <div class="fightCard playerCard"><div class="fightName"><strong id="fighterPName">세레스티아</strong><small>1P · YOU</small></div><div class="healthRail"><div class="healthFill" id="pHPBar"></div></div><div class="fightStats"><span>HP <b id="pHP">100</b> / 100</span><span>SUPER <b id="pSuper">0</b>%</span></div></div>
- <div class="centerRound"><small>RHYTHM</small><strong>CLASH</strong><span id="matchRound">ROUND 01</span></div>
+ <div class="fightCenter"><div class="centerRound"><small>RHYTHM</small><strong>CLASH</strong><span id="matchRound">ROUND 01</span></div><div class="arenaTVRow"><div id="youtubeOverlay" aria-label="전투 화면 음악 TV"><div class="tvHeader"><span>MUSIC TV</span><button id="tvPlay" type="button">클릭해서 재생</button></div><div class="tvScreen"><div id="ytPlayer"></div></div></div></div></div>
  <div class="fightCard enemyCard"><div class="fightName"><strong id="fighterBName">루비나</strong><small id="rivalType">CPU · RIVAL</small></div><div class="healthRail"><div class="healthFill" id="bHPBar"></div></div><div class="fightStats"><span>HP <b id="bHP">100</b> / 100</span><span>SUPER <b id="bSuper">0</b>%</span></div></div>
  </div>
  <div class="turnScoreHUD"><span id="pTurnScore">1P SCORE —</span><strong id="battleAnnounce">턴 점수로 승리하면 상대를 공격!</strong><span id="bTurnScore">RIVAL SCORE —</span></div>
- <div class="gameboard"><div class="arenaTVRow"><div id="youtubeOverlay" aria-label="전투 화면 음악 TV"><div class="tvHeader"><span>MUSIC TV</span><button id="tvPlay" type="button">클릭해서 재생</button></div><div class="tvScreen"><div id="ytPlayer"></div></div></div></div><canvas id="stage" width="1200" height="700" tabindex="0" aria-label="리듬 배틀 게임 화면: 방향키 입력"></canvas><canvas id="feedbackStage" width="1200" height="700" aria-hidden="true"></canvas></div><div id="chartSource" aria-live="polite" style="margin:9px auto;text-align:center;color:#87efc6;font-weight:800;font-size:13px"></div><div id="syncInfo" aria-live="polite"></div><div id="playHint">유튜브의 자체 ▶ 버튼을 눌러 재생을 시작하세요. 임베드가 제한된 영상은 다른 링크를 사용하세요.</div>
+ <div class="gameboard"><canvas id="stage" width="1200" height="700" tabindex="0" aria-label="리듬 배틀 게임 화면: 방향키 입력"></canvas><canvas id="feedbackStage" width="1200" height="700" aria-hidden="true"></canvas></div><div id="chartSource" aria-live="polite" style="margin:9px auto;text-align:center;color:#87efc6;font-weight:800;font-size:13px"></div><div id="syncInfo" aria-live="polite"></div><div id="playHint">유튜브의 자체 ▶ 버튼을 눌러 재생을 시작하세요. 임베드가 제한된 영상은 다른 링크를 사용하세요.</div>
  <div class="scoreline"><div class="stats"><span>SCORE <strong id="score">0</strong></span><span>COMBO <strong id="combo">0</strong></span><span>ACCURACY <strong id="accuracy">100%</strong></span><span>ROUND <strong id="round">1/10</strong></span></div><div class="tools"><button class="small" id="focusControls" type="button">⌨ 방향키 입력 활성화</button><button class="small" id="pause">Ⅱ PAUSE (ESC)</button><button class="small" id="skipFinish" hidden>연출 건너뛰기</button><button class="small" id="quit">✕ QUIT</button></div></div>
  <div class="touch" aria-label="화면 방향키"><button data-lane="0" aria-label="왼쪽">←</button><button data-lane="1" aria-label="아래">↓</button><button data-lane="2" aria-label="위">↑</button><button data-lane="3" aria-label="오른쪽">→</button><button data-lane="4" aria-label="파워업 스페이스바">SPACE · POWER UP</button></div>
 </section>
