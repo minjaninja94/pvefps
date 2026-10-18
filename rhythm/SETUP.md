@@ -62,7 +62,7 @@ YouTube + 분석 채보 온라인 배틀도 가능합니다. 이 경우 호스�
 - https://developers.google.com/youtube/iframe_api_reference
 - https://developers.google.com/youtube/terms/developer-policies
 
-## NEON CLASH 2026-10-18 拡張
+## NEON CLASH 2026-10-18 확장
 
 - `CHARACTER STUDIO`: 파츠 꾸미기 / AI 일러스트 4종 / 개인 PNG·JPEG·WebP. AI 모드는 미리 제작한 완성 일러스트이며 실시간 AI 생성 API를 호출하지 않습니다. 헤어·의상·눈·색·종족·체형의 개별 조합은 파츠 모드에서 사용하세요.
 - 양쪽 이름·피부·무기 스타일, 최근 24개 보관함, JSON 내보내기/가져오기. 개인 이미지는 브라우저에서 압축해 저장하고 온라인 대결 시 상대에게 외형 데이터로 공유됩니다.
@@ -73,3 +73,16 @@ YouTube + 분석 채보 온라인 배틀도 가능합니다. 이 경우 호스�
 - 저장된 YouTube 채보 JSON 가져오기·내보내기·삭제. Beat Lab에서 내보낸 기존 형식과 호환됩니다.
 - 최근 100전 로컬 기록, 화면에는 최근 20전, 결과창에는 턴별 점수/공격/피해. 기존 FPS 네트워크와 랭킹은 수정하지 않습니다.
 - 코드 및 업로드 복구: `WORK_CHECKPOINT.md`, `COMMIT_LOG.md`부터 읽습니다.
+
+
+## 재현 가능한 검사
+
+```sh
+node tests/rhythm-clash.cjs
+cd rhythm
+npm install
+npx playwright install chromium
+npm run test:browser
+```
+
+이미 Playwright가 설치되어 있다면 `PLAYWRIGHT_PATH=/absolute/path/to/playwright node tests/rhythm-browser.cjs`로도 실행할 수 있습니다. 브라우저 검사는 테스트 라우트에서만 시간 검사 도구를 삽입하며 배포 코드에는 테스트용 전역 변수가 없습니다. 실제 Arrow/DFJK 키 이벤트와 파일 선택을 사용합니다. 빠른 종료 검사는 시간을 진행시키며 YouTube는 모의 플레이어를 사용합니다. 실제 공식 YouTube 영상/광고/탭 공유 및 Firebase 두 기기 대전은 사용자 환경에서 추가 확인해야 합니다.

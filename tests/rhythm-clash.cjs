@@ -65,3 +65,20 @@ for(const bad of [
  {...valid,entries:[[3,0,0,9]]}
 ])assert.throws(()=>chart.unpack(bad));
 console.log('Final-phrase fairness, malformed packets, chart clock/hold/group validation PASS');
+
+// Local/peer profiles must survive corrupted storage and reject executable URLs.
+const memory=new Map(),context={window:{NeonFighters:f},console,crypto:require('node:crypto').webcrypto,localStorage:{getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v)}};
+vm.createContext(context);for(const file of ['studio.js','profile-store.js','combat-fx.js'])vm.runInContext(fs.readFileSync(path.join(dir,file),'utf8'),context);
+const studio=context.window.NeonStudio,store=context.window.NeonProfileStore;
+assert.equal(studio.legal({id:'unknown'}),null);
+assert.equal(studio.legal({id:'ruby',name:'<img>\x00',art:'custom',image:'javascript:alert(1)'}).art,'vector');
+assert.equal(studio.legal({id:'ruby',skin:'url(x)'}).skin,f.PROFILES[1].skin);
+assert.equal(studio.legal({id:'ruby',name:'x'.repeat(200)}).name.length,24);
+studio.save({id:'ruby',name:'keep',art:'ruby'});assert.equal(studio.list().length,1);
+assert.throws(()=>studio.importWardrobe({format:'neon-clash-wardrobe',fighters:[{id:'oops'}]}));assert.equal(studio.list()[0].profile.name,'keep');
+for(let i=0;i<30;i++)studio.save({id:'jade',name:'slot'+i});assert.equal(studio.list().length,24);
+assert.equal(store.prefs({offset:999,music:-2,diff:'bad'}).offset,250);assert.equal(store.prefs({music:-2}).music,0);assert.equal(store.prefs({diff:'bad'}).diff,'normal');
+memory.set('neon-clash-settings-v1','broken');assert.equal(store.load().speed,1.25);
+for(let i=0;i<105;i++)store.result({title:'song',key:'song',score:i,accuracy:96,combo:2,outcome:'win'});assert.equal(store.history().length,100);
+for(const t of [0,.1,.3,.5,1,2])assert.ok(Number.isFinite(context.window.NeonCombatFX.motion(t).reach));
+console.log('Profile validation, corrupted storage, bounded wardrobe/history, invalid import atomicity and combat timeline PASS');

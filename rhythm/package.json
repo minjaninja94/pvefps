@@ -1,0 +1,9 @@
+{
+  "name": "neon-clash-rhythm",
+  "private": true,
+  "scripts": {
+    "test": "node ../tests/rhythm-clash.cjs",
+    "test:browser": "node ../tests/rhythm-browser.cjs"
+  },
+  "devDependencies": { "playwright": "1.55.0" }
+}

@@ -3,13 +3,13 @@
 (()=>{
 const $=id=>document.getElementById(id), canvas=$('stage'), g=canvas.getContext('2d'), ARROWS=['←','↓','↑','→'], COLORS=['#ff4b68','#35cafa','#39ed8a','#af70ff'], KEYMAP=['ArrowLeft','ArrowDown','ArrowUp','ArrowRight'];
 const intro=2.5, SEG=8, GROUPS=20, BALANCE={easy:{botHit:.61,botPush:.20,miss:0.85,perfect:3.20,great:2.45,good:1.40,window:.235,perfectWindow:.070,greatWindow:.150},normal:{botHit:.77,botPush:.41,miss:1.35,perfect:2.30,great:1.65,good:.95,window:.195,perfectWindow:.055,greatWindow:.125},hard:{botHit:.90,botPush:.65,miss:2.25,perfect:1.85,great:1.30,good:.65,window:.155,perfectWindow:.045,greatWindow:.098}}, SETTINGS={neon:{bpm:136,root:52,title:'NEON SHOWDOWN'},midnight:{bpm:158,root:48,title:'MIDNIGHT CLASH'}};
-let onlineMode=false, sourceMode="neon", yt=null, ytReady=false, ytPlaying=false, ytPromise=null, localFile=null, fileSource=null, remoteSeen=new Set(),localSeq=0,lastClockSent=0,preparedAudio=null,peerAudioHash="",matchGroups=GROUPS,ytValidated=false,pendingStart=null,requestedChartId='', net=window.RhythmOnline;let audio=null,master=null,noise=null,activeVoices=[],timer=null,raf=0,session=0,st='menu',paused=false,record=null,notes=[],beat=0,finishTime=0,startAt=0,stepCursor=0,noteCursor=0;
-let ending=null,remoteComplete=false,awaitingEnd=0;let fight=null,attackFx=null,fighterP='celeste',fighterB='ruby';
+let onlineMode=false, sourceMode="neon", yt=null, ytReady=false, ytPlaying=false, ytPromise=null, localFile=null, youtubeAudioAttached=false, fileSource=null, remoteSeen=new Set(),localSeq=0,lastClockSent=0,preparedAudio=null,peerAudioHash="",matchGroups=GROUPS,ytValidated=false,pendingStart=null,requestedChartId='', net=window.RhythmOnline;let audio=null,master=null,noise=null,activeVoices=[],timer=null,raf=0,session=0,st='menu',paused=false,record=null,notes=[],beat=0,finishTime=0,startAt=0,stepCursor=0,noteCursor=0;
+let preparing=false;let ending=null,remoteComplete=false,awaitingEnd=0;let fight=null,attackFx=null,fighterP='celeste',fighterB='ruby';
 let pressed=[false,false,false,false],strength=50,score=0,combo=0,maxCombo=0,accSum=0,counts={perfect:0,great:0,good:0,miss:0},botHits=0,botMissUntil=0,judgement='',judgeEnd=0,prevPhrase=-1,flashLanes=[0,0,0,0],playerSing=0,botSing=0,lastShown=0,effects=[],wasFinished=false;
 let options=window.NeonProfileStore.load();
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rand=(n)=>{let x=Math.sin(n*127.1+78.233)*43758.5453;return x-Math.floor(x)};
-function show(which){['menu','game','results'].forEach(id=>$(id).style.display=id===which?'block':'none');st=which}
+function show(which){['menu','game','results'].forEach(id=>$(id).style.display=id===which?'block':'none');st=which;window.scrollTo({top:0,behavior:'instant'})}
 function inputTime(){return time()-options.offset/1000}
 function initAudio(){if(!audio){audio=new (window.AudioContext||window.webkitAudioContext)();let sr=audio.sampleRate;noise=audio.createBuffer(1,Math.round(sr*.35),sr);let d=noise.getChannelData(0),seed=913;for(let i=0;i<d.length;i++){seed=(1664525*seed+1013904223)>>>0;d[i]=seed/2147483648-1}}return audio}
 function trackVoice(v){activeVoices.push(v);v.onended=()=>{activeVoices=activeVoices.filter(x=>x!==v);try{v.disconnect()}catch{}}}
@@ -129,10 +129,11 @@ function showPrepError(e){$('analysisStatus').textContent='준비 오류: '+(e?.
 function generateChart(){let diff=$('difficulty').value,denom=diff==='easy'?1:diff==='normal'?.5:.25,notesOut=[],duration=intro+GROUPS*SEG*beat+1.4;for(let phrase=0;phrase<GROUPS;phrase++){let side=(onlineMode&&net.role==='host')?(phrase%2===0?'player':'bot'):(phrase%2===0?'bot':'player'),base=intro+phrase*SEG*beat+(record.offset||0),steps=Math.round(SEG/denom);for(let i=0;i<steps;i++){let seed=phrase*233+i*41+record.root,lane=Math.floor(rand(seed+14)*4),pick=rand(seed+37),should=diff==='easy'?pick>.13:diff==='normal'?pick>.22:(i%2===0||pick>.44);if(!should)continue;
 let when=base+i*denom*beat;let sustain=diff==='easy'?0:(i%11===4&&i<steps-3?denom*beat*1.8:0);
 notesOut.push({id:notesOut.length,phrase,side,lane,t:when,duration:sustain,done:false,hold:false,missed:false,botDone:false})}}return {items:notesOut.sort((a,b)=>a.t-b.t),duration}}
-async function newRound(presetConfig){
+async function newRound(cfg){if(preparing)return;preparing=true;$('start').disabled=true;try{await prepareRound(cfg)}catch(e){stop();show('menu');showPrepError(e)}finally{preparing=false;$('start').disabled=false}}
+async function prepareRound(presetConfig){
  stop();wasFinished=false;ending=null;remoteComplete=false;awaitingEnd=0;initAudio();await audio.resume();
  let cfg=presetConfig||selectedConfig();if(!cfg)return;
- if(cfg.mode==='youtube'&&requestedChartId===cfg.videoId&&!cfg.chart&&!localFile){
+ if(cfg.mode==='youtube'&&requestedChartId===cfg.videoId&&!cfg.chart&&!(localFile&&youtubeAudioAttached)){
   $('analysisStatus').textContent='저장된 채보를 찾지 못했습니다. 제작기에서 저장한 브라우저·사이트 주소가 동일한지 확인하세요. BPM 임시 채보로 대체하지 않았습니다.';
   show('menu');refreshSavedCharts();return;
  }
@@ -143,7 +144,7 @@ async function newRound(presetConfig){
  sourceMode=cfg.mode;beat=60/record.bpm;
 
  let chart;
- if(sourceMode==='youtube'&&localFile&&(!onlineMode||net.role==='host')){try{const prep=await prepareLocalAudio();cfg.chart=prep.chart;rememberYouTubeChart(record.videoId,cfg.chart)}catch(e){showPrepError(e);return}}if(sourceMode==='youtube')record.chart=cfg.chart||null;
+ if(sourceMode==='youtube'&&youtubeAudioAttached&&localFile&&(!onlineMode||net.role==='host')){try{const prep=await prepareLocalAudio();cfg.chart=prep.chart;rememberYouTubeChart(record.videoId,cfg.chart)}catch(e){showPrepError(e);return}}if(sourceMode==='youtube')record.chart=cfg.chart||null;
  if(sourceMode==='file'){
   try{
    const prep=await prepareLocalAudio();
@@ -163,7 +164,7 @@ async function newRound(presetConfig){
  }else{
   chart=generateChart();notes=chart.items;matchGroups=GROUPS;finishTime=chart.duration+(record.offset||0);
  }
- fight=window.RhythmClash.make(notes);attackFx=null;
+ fight=window.RhythmClash.make(notes);attackFx=null;$('battleAnnounce').textContent='턴 점수가 높으면 상대를 공격합니다!';
  fighterP=fromForm('P');fighterB=onlineMode&&remoteAppearance?remoteAppearance:fromForm('B');
  $('fighterPName').textContent=window.NeonFighters.get(fighterP).name;
  $('fighterBName').textContent=window.NeonFighters.get(fighterB).name;
@@ -176,10 +177,11 @@ async function newRound(presetConfig){
  $('youtubeOverlay').style.display=sourceMode==='youtube'?'block':'none';
  $('playHint').style.display=sourceMode==='youtube'?'block':'none';
  $('syncInfo').textContent=sourceMode==='youtube'?(cfg.chart?'저장 채보 적용 완료 · '+notes.length+'노트 · 공식 영상 ▶을 눌러주세요':'저장된 채보 없음 · 임시 BPM 채보 · 영상 ▶을 눌러주세요'):sourceMode==='file'?'음향 강세 분석 완료 · '+notes.length+'개 채보를 로딩했습니다':'자체 제작 배틀곡';
- show('game');
+ show('game');render(0);const loadSession=session;
  if(sourceMode==='youtube'){
-  try{await prepareYouTube(record.videoId);yt.cueVideoById(record.videoId);yt.setVolume(options.music*100);raf=requestAnimationFrame(safeLoop)}
-  catch(e){alert('유튜브 임베드 실패: '+e.message);show('menu')}
+  $('syncInfo').textContent='채보 준비 완료 · 공식 YouTube 플레이어를 불러오는 중…';raf=requestAnimationFrame(safeLoop);
+  try{await prepareYouTube(record.videoId);if(session!==loadSession)return;yt.cueVideoById(record.videoId);yt.setVolume(options.music*100);$('syncInfo').textContent='채보 '+notes.length+'개 적용 완료 · 공식 영상 ▶을 눌러주세요'}
+  catch(e){stop();show('menu');showPrepError(Error('YouTube 플레이어 로딩 실패: '+e.message))}
   return
  }
  try{
@@ -299,7 +301,7 @@ function updateFightHUD(){
 }
 function onFightResult(result){
  attackFx={side:result.winner,winner:result.winner,t:time(),damage:result.damage,finisher:result.finisher};
- if(result.winner!=='draw')window.NeonCombatFX.sound(audio,result.finisher,typeof options!=='undefined'?options.sfx:.6);
+
  let names={player:window.NeonFighters.get(fighterP).name,bot:window.NeonFighters.get(fighterB).name};
  $('battleAnnounce').textContent=result.winner==='draw'
  ?'DRAW · 양쪽 방어 성공!'
@@ -374,6 +376,7 @@ function fighterStage(t){
  const pX=430+(active?(isP?m.reach:-m.hit*25):0),bX=770+(active?(!isP?-m.reach:m.hit*25):0);
  window.NeonStudio.draw(g,pX,538,fighterP,{facing:1,t,attack:active&&isP?m.strike:0,hit:active&&!isP?m.hit:0,scale:1.07,super:attackFx?.finisher,ko:pKO});
  window.NeonStudio.draw(g,bX,538,fighterB,{facing:-1,t,attack:active&&!isP?m.strike:0,hit:active&&isP?m.hit:0,scale:1.07,super:attackFx?.finisher,ko:bKO});
+ if(active&&age>=.34&&!attackFx.sounded){attackFx.sounded=true;window.NeonCombatFX.sound(audio,attackFx.finisher,options.sfx)}
  if(active)window.NeonCombatFX.draw(g,age,attackFx,(isP?fighterP:fighterB).weapon,reduced);
  if(ending){g.save();g.globalAlpha=Math.min(1,endAge*2);rounded(390,250,420,85,10,'#0a102dcc');text(fight.hp.player===fight.hp.bot?'DRAW':fight.hp.player<=0||fight.hp.bot<=0?'K.O.':'BATTLE OVER',600,310,'italic 1000 49px system-ui','#fff');g.restore()}
 }
@@ -433,7 +436,7 @@ function banner(t,p){
    g.restore();
  }
 }
-function render(t){g.save();background(options.reduced?0:t);fighterStage(t);healthHUD();let p=progress(t);lanes(t,p);banner(t,p);
+function render(t){g.save();const a=attackFx?t-attackFx.t:99;g.save();if(!options.reduced&&a>.34&&a<.5)g.translate(Math.sin(a*240)*4,Math.cos(a*210)*2);background(options.reduced?0:t);fighterStage(t);g.restore();healthHUD();let p=progress(t);lanes(t,p);banner(t,p);
 if(botMissUntil>t){text(onlineMode?'RIVAL MISS':'BOT MISS',770,277,'900 25px system-ui','#ffb4da')} if(judgeEnd>t){let col=judgement==='PERFECT'?'#67fdff':judgement==='GREAT'?'#fff08d':judgement==='GOOD'?'#b5a1ff':'#ff6489';text(judgement,440,277,'1000 29px system-ui',col);if(combo>1)text(combo+' COMBO',440,307,'bold 20px system-ui','#fff')}
 for(let e of options.reduced?[]:effects){e.x+=e.vx;e.y+=e.vy;e.vy+=.3;e.life-=.035;g.globalAlpha=Math.max(0,e.life);star(e.x,e.y,7,e.col)}g.globalAlpha=1;effects=effects.filter(e=>e.life>0);
 let elapsed=clamp(t,0,finishTime);text(Math.floor(elapsed/60)+':'+String(Math.floor(elapsed%60)).padStart(2,'0')+' / '+Math.floor(finishTime/60)+':'+String(Math.floor(finishTime%60)).padStart(2,'0'),600,655,'bold 17px system-ui','#e0d9f4');rect(360,670,480,5,'#77738f88');rect(360,670,480*elapsed/finishTime,5,'#7be9ff');
@@ -461,7 +464,7 @@ function saveOptions(persist=true){
 }
 $('exportChart').onclick=()=>{const id=parseYouTube($('youtubeUrl').value),chart=id&&cachedYouTubeChart(id);if(!chart){$('selectedChartStatus').textContent='먼저 저장된 채보를 선택하세요.';return}window.NeonStudio.download('chart-'+id+'.json',{generator:'NEON CLASH',videoId:id,chart})};
 $('deleteChart').onclick=()=>{const id=parseYouTube($('youtubeUrl').value);if(!id||!cachedYouTubeChart(id))return;try{localStorage.removeItem(chartCacheKey(id));requestedChartId='';refreshSavedCharts();$('selectedChartStatus').textContent='선택한 채보를 삭제했습니다.'}catch(e){$('selectedChartStatus').textContent='삭제 실패: '+e.message}};
-$('importChart').onchange=async e=>{try{const data=await window.NeonStudio.read(e.target.files[0]);if(!/^[A-Za-z0-9_-]{11}$/.test(data.videoId||''))throw Error('영상 ID가 올바르지 않습니다.');window.RhythmChart.unpack(data.chart);if(!rememberYouTubeChart(data.videoId,data.chart))throw Error('브라우저 저장 공간이 부족합니다.');$('track').value='youtube';$('youtubeUrl').value='https://youtu.be/'+data.videoId;requestedChartId=data.videoId;settingsUI();refreshSavedCharts();$('selectedChartStatus').textContent='채보 가져오기 완료 · '+data.chart.entries.length+'노트'}catch(e){$('selectedChartStatus').textContent='채보 가져오기 실패: '+e.message}finally{e.target.value=''}};
+$('importChart').onchange=async e=>{try{const data=await window.NeonStudio.read(e.target.files[0]);if(!/^[A-Za-z0-9_-]{11}$/.test(data.videoId||''))throw Error('영상 ID가 올바르지 않습니다.');window.RhythmChart.unpack(data.chart);if(!rememberYouTubeChart(data.videoId,data.chart))throw Error('브라우저 저장 공간이 부족합니다.');$('track').value='youtube';$('youtubeUrl').value='https://youtu.be/'+data.videoId;requestedChartId=data.videoId;youtubeAudioAttached=false;settingsUI();refreshSavedCharts();$('selectedChartStatus').textContent='채보 가져오기 완료 · '+data.chart.entries.length+'노트'}catch(e){$('selectedChartStatus').textContent='채보 가져오기 실패: '+e.message}finally{e.target.value=''}};
 window.addEventListener('pagehide',()=>{stop();net.leave().catch(()=>{})});
 
 let tapTimes=[];$('tapBpm').onclick=()=>{let now=performance.now();tapTimes.push(now);tapTimes=tapTimes.filter(t=>now-t<5500).slice(-12);if(tapTimes.length>=3){let gaps=tapTimes.slice(1).map((t,i)=>t-tapTimes[i]).filter(x=>x>=260&&x<=1000).sort((a,b)=>a-b);if(gaps.length){let median=gaps[Math.floor(gaps.length/2)];$('customBpm').value=Math.round(60000/median);$('tapBpm').textContent='♫ '+$('customBpm').value+' BPM'}}};
@@ -483,10 +486,10 @@ function modeUI(){
  $('start').textContent=onlineMode?'⚔ HOST START (BOTH READY)':'▶ START BATTLE';document.querySelector('.matchHeader .enemy').textContent=onlineMode?'RIVAL / RIGHT ●':'BOT / RIGHT ●';
  settingsUI()
 }
-$('track').onchange=()=>{preparedAudio=null;settingsUI();refreshSavedCharts()};
+$('track').onchange=()=>{youtubeAudioAttached=false;preparedAudio=null;settingsUI();refreshSavedCharts()};
 $('youtubeUrl').addEventListener('input',()=>{requestedChartId='';refreshSavedCharts()});
-$('savedCharts').addEventListener('click',e=>{const target=e.target.closest('button[data-chart]');if(!target)return;const id=target.dataset.chart;requestedChartId=id;$('track').value='youtube';$('youtubeUrl').value='https://www.youtube.com/watch?v='+id;settingsUI();refreshSavedCharts()});
-$('audioFile').onchange=e=>{localFile=e.target.files[0]||null;preparedAudio=null;peerAudioHash='';$('analysisStatus').textContent='';if(net.readySelf)net.ready(false)};
+$('savedCharts').addEventListener('click',e=>{const target=e.target.closest('button[data-chart]');if(!target)return;const id=target.dataset.chart;requestedChartId=id;youtubeAudioAttached=false;$('track').value='youtube';$('youtubeUrl').value='https://www.youtube.com/watch?v='+id;settingsUI();refreshSavedCharts()});
+$('audioFile').onchange=e=>{localFile=e.target.files[0]||null;youtubeAudioAttached=$('track').value==='youtube';preparedAudio=null;peerAudioHash='';$('analysisStatus').textContent='';if(net.readySelf)net.ready(false)};
 $('importAudioUrl').onclick=async()=>{
  const button=$('importAudioUrl'),url=$('directAudioUrl').value.trim();
  if(!url){$('analysisStatus').textContent='먼저 MP3·WAV·OGG 원본 파일 주소를 입력하세요.';return}
@@ -496,7 +499,7 @@ $('importAudioUrl').onclick=async()=>{
    const file=await window.RhythmAudioImport.load(url,(got,total)=>{
      $('analysisStatus').textContent='오디오 가져오는 중 · '+(got/1048576).toFixed(1)+' MB'+(total?' / '+(total/1048576).toFixed(1)+' MB':'');
    });
-   localFile=file;preparedAudio=null;peerAudioHash='';
+   localFile=file;youtubeAudioAttached=$('track').value==='youtube';preparedAudio=null;peerAudioHash='';
    $('audioFile').value='';
    if(net.readySelf)net.ready(false);
    const prep=await prepareLocalAudio();
@@ -548,5 +551,5 @@ const canvasPointers=new Map();
 canvas.addEventListener('pointerdown',e=>{if(st!=='game'||paused||ending)return;const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*1200,y=(e.clientY-r.top)/r.height*700;if(x>=40&&x<312&&y>=145&&y<=620){const lane=clamp(Math.floor((x-40)/68),0,3);e.preventDefault();canvas.setPointerCapture(e.pointerId);canvasPointers.set(e.pointerId,lane);keyDown(lane)}});
 function endPointer(e){if(canvasPointers.has(e.pointerId)){const lane=canvasPointers.get(e.pointerId);canvasPointers.delete(e.pointerId);if(![...canvasPointers.values()].includes(lane))keyUp(lane)}}
 canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);
-$('start').onclick=async()=>{if(!onlineMode){await newRound();return}if(net.role!=='host'||!net.isConnected()||!net.readySelf||!net.readyPeer){roomStatus('방장과 친구 모두 P2P 접속 및 준비 완료가 필요합니다.');return}let cfg=selectedConfig();if(!cfg)return;if(cfg.mode==='file'){let asset;try{asset=await prepareLocalAudio()}catch(e){showPrepError(e);return}if(peerAudioHash!==asset.hash){roomStatus('상대방이 동일한 음원을 로딩했는지 확인하세요.');return}cfg.bpm=asset.chart.bpm;cfg.chart=asset.chart;cfg.assetHash=asset.hash;cfg.title=localFile.name.slice(0,36)}else if(cfg.mode==='youtube'&&localFile){try{const asset=await prepareLocalAudio();cfg.chart=asset.chart;rememberYouTubeChart(cfg.videoId,cfg.chart)}catch(e){showPrepError(e);return}}if(cfg.chart){try{window.RhythmChart.unpack(cfg.chart,'host')}catch(e){showPrepError(e);return}}pendingStart=cfg;roomStatus('채보 준비 완료 · 친구의 로딩 응답을 기다리는 중');if(!net.send({type:'prepare',cfg})){pendingStart=null;roomStatus('준비 패킷 전송 실패')}};$('retry').onclick=()=>{if(onlineMode){show('menu');net.ready(false);roomStatus('온라인 재대결은 양쪽에서 준비를 다시 해주세요.')}else newRound()};$('pause').onclick=()=>togglePause();$('quit').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};$('select').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};setupPreferences();renderHistory();modeUI();setupCharacterStudio();restoreSavedChartSelection();renderWardrobe();
+$('start').onclick=async()=>{if(!onlineMode){await newRound();return}if(net.role!=='host'||!net.isConnected()||!net.readySelf||!net.readyPeer){roomStatus('방장과 친구 모두 P2P 접속 및 준비 완료가 필요합니다.');return}let cfg=selectedConfig();if(!cfg)return;if(cfg.mode==='file'){let asset;try{asset=await prepareLocalAudio()}catch(e){showPrepError(e);return}if(peerAudioHash!==asset.hash){roomStatus('상대방이 동일한 음원을 로딩했는지 확인하세요.');return}cfg.bpm=asset.chart.bpm;cfg.chart=asset.chart;cfg.assetHash=asset.hash;cfg.title=localFile.name.slice(0,36)}else if(cfg.mode==='youtube'&&youtubeAudioAttached&&localFile){try{const asset=await prepareLocalAudio();cfg.chart=asset.chart;rememberYouTubeChart(cfg.videoId,cfg.chart)}catch(e){showPrepError(e);return}}if(cfg.chart){try{window.RhythmChart.unpack(cfg.chart,'host')}catch(e){showPrepError(e);return}}pendingStart=cfg;roomStatus('채보 준비 완료 · 친구의 로딩 응답을 기다리는 중');if(!net.send({type:'prepare',cfg})){pendingStart=null;roomStatus('준비 패킷 전송 실패')}};$('retry').onclick=()=>{if(onlineMode){show('menu');net.ready(false);roomStatus('온라인 재대결은 양쪽에서 준비를 다시 해주세요.')}else newRound()};$('pause').onclick=()=>togglePause();$('quit').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};$('select').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};setupPreferences();renderHistory();modeUI();setupCharacterStudio();restoreSavedChartSelection();renderWardrobe();
 })();
