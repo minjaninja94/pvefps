@@ -27,7 +27,7 @@ const E=Object.freeze({
 });
 const actions=Object.freeze(Object.keys(E));
 function state(action='idle',age=0,clock=0,style='balanced',reduced=false){
- const key=E[action]?action:action==='idle'?'idleA':'idleA';
+ const key=Number.isFinite(age)&&age<0&&!String(action).startsWith('idle')?'idleA':E[action]?action:'idleA';
  const clip=E[key];const speed=style==='energetic'?1.12:style==='graceful'?.86:1;
  const elapsed=Math.max(0,Number(age)||0)*speed;
  const time=clip.loop?elapsed%clip.duration:Math.min(clip.duration,elapsed);
