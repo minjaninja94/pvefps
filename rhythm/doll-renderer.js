@@ -133,8 +133,18 @@ function draw(g,x,footY,p,o={}){
  if(state.mix<.5){drawBody(g,body,state.a,p,o,1);if(state.mix>.36)drawBody(g,body,state.b,p,o,(state.mix-.36)/.14)}else{drawBody(g,body,state.b,p,o,1);if(state.mix<.64)drawBody(g,body,state.a,p,o,(.64-state.mix)/.14)}
  const f=face.frames[state.head],b=f.b,hsc=79/Math.max(1,f.ny-b.t),source=tinted(face,p),headSway=Math.sin(t*1.55)*.014*physics;
  const ba=body.frames[state.a],bb=body.frames[state.b],mix=clamp(state.mix,0,1),facePX=((ba.faceX-ba.w*.5)*(1-mix)+(bb.faceX-bb.w*.5)*mix)*body.scale,facePY=((ba.faceY-ba.b.b)*(1-mix)+(bb.faceY-bb.b.b)*mix)*body.scale;
- const rig=window.NeonLiveRig?.pose(p,o)||{sway:0,breath:0,head:0};
- g.save();g.translate(facePX+rig.sway,facePY+rig.breath);g.rotate(rig.head+headSway+(state.state==='hit'?-.06:state.state==='attack'?.035:0));if(!window.NeonLiveRig?.paint(g,source,f,hsc,p,o,true)){g.save();g.translate((rig.lookX||0)*3,(rig.lookY||0)*2);g.drawImage(source,f.sx+b.l,f.sy+b.t,b.r-b.l,b.b-b.t,(b.l-f.faceX)*hsc*(p.headScale??1),(b.t-f.faceY)*hsc*(p.headScale??1),(b.r-b.l)*hsc*(p.headScale??1),(b.b-b.t)*hsc*(p.headScale??1));g.restore()}
+ const rig=window.NeonLiveRig?.pose(p,o)||{sway:0,breath:0,head:0,lookX:0,lookY:0};
+ // Keep the entire painted head (including both eyes) rigid. Since the source
+ // atlas has no isolated eyelid sprites, a blink cannot be synthesized by
+ // stretching the face without destroying the eye shapes.
+ g.save();
+ g.translate(facePX+rig.sway+(rig.lookX||0)*3.2,facePY+rig.breath+(rig.lookY||0)*2.2);
+ g.rotate(rig.head+headSway+(state.state==='hit'?-.06:state.state==='attack'?.035:0));
+ g.drawImage(source,f.sx+b.l,f.sy+b.t,b.r-b.l,b.b-b.t,
+   (b.l-f.faceX)*hsc*(p.headScale??1),
+   (b.t-f.faceY)*hsc*(p.headScale??1),
+   (b.r-b.l)*hsc*(p.headScale??1),
+   (b.b-b.t)*hsc*(p.headScale??1));
  if(p.accessory&&p.accessory!=='none'){g.save();g.fillStyle=p.accessory==='star'?'#ffe7a2':'#b9faff';g.shadowColor=g.fillStyle;g.shadowBlur=6;g.scale(p.headScale??1,p.headScale??1);if(p.accessory==='halo'){g.strokeStyle=g.fillStyle;g.lineWidth=2;g.beginPath();g.ellipse(0,-60,35,8,-.1,0,Math.PI*2);g.stroke()}else{g.translate(-26,-24);g.beginPath();if(p.accessory==='crystal'){g.moveTo(0,-10);g.lineTo(6,0);g.lineTo(0,11);g.lineTo(-6,0)}else for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,r=i%2?3:8;g.lineTo(Math.cos(a)*r,Math.sin(a)*r)}g.closePath();g.fill()}g.restore()}g.restore();g.restore();return true;
 }
 function headIcon(g,style,w,h){const sheet=sheets.get('head:'+(HEADS.includes(style)?style:'long'));if(!sheet)return;const f=sheet.frames[0],b=f.b,sc=Math.min(w/(b.r-b.l),h/(b.b-b.t))*.94;g.drawImage(sheet.im,f.sx+b.l,f.sy+b.t,b.r-b.l,b.b-b.t,(w-(b.r-b.l)*sc)/2,(h-(b.b-b.t)*sc)/2,(b.r-b.l)*sc,(b.b-b.t)*sc)}
