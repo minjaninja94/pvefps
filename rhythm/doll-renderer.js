@@ -132,7 +132,7 @@ function draw(g,x,footY,p,o={}){
  // Use opaque primary frames; short crossfades soften hand/cloth transitions.
  if(state.a===state.b){drawBody(g,body,state.a,p,o,1)}else if(state.mix<.5){drawBody(g,body,state.a,p,o,1);if(state.mix>.36)drawBody(g,body,state.b,p,o,(state.mix-.36)/.14)}else{drawBody(g,body,state.b,p,o,1);if(state.mix<.64)drawBody(g,body,state.a,p,o,(.64-state.mix)/.14)}
  const f=face.frames[state.head],b=f.b,hsc=79/Math.max(1,f.ny-b.t),source=tinted(face,p),headSway=Math.sin(t*1.55)*.014*physics;
- const ba=body.frames[state.a],bb=body.frames[state.b],mix=clamp(state.mix,0,1),facePX=((ba.faceX-ba.w*.5)*(1-mix)+(bb.faceX-bb.w*.5)*mix)*body.scale,facePY=((ba.faceY-ba.b.b)*(1-mix)+(bb.faceY-bb.b.b)*mix)*body.scale;
+ const ba=body.frames[state.anchorA??state.a],bb=body.frames[state.anchorB??state.b],mix=clamp(state.anchorMix??state.mix,0,1),facePX=((ba.faceX-ba.w*.5)*(1-mix)+(bb.faceX-bb.w*.5)*mix)*body.scale,facePY=((ba.faceY-ba.b.b)*(1-mix)+(bb.faceY-bb.b.b)*mix)*body.scale;
  const rig=window.NeonLiveRig?.pose(p,o)||{sway:0,breath:0,head:0,lookX:0,lookY:0};
  // Keep the entire painted head (including both eyes) rigid. Since the source
  // atlas has no isolated eyelid sprites, a blink cannot be synthesized by
