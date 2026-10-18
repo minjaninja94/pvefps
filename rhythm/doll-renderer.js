@@ -27,7 +27,7 @@ function analyze(im,f){
  const c=document.createElement('canvas');c.width=Math.floor(im.width/f.cols);c.height=Math.floor(im.height/f.rows);const ctx=c.getContext('2d',{willReadFrequently:true}),w=c.width,h=c.height,frames=[];
  for(let i=0;i<f.cols*f.rows;i++){
   const sx=(i%f.cols)*w,sy=Math.floor(i/f.cols)*h;ctx.clearRect(0,0,w,h);ctx.drawImage(im,sx,sy,w,h,0,0,w,h);const bytes=ctx.getImageData(0,0,w,h).data,b=bounds(bytes,w,h);
-  let nx=w*.5,ny=f.kind==='body'?h*.25:h*.88,faceX=w*.57,faceY=h*.12;
+  let nx=w*.5,ny=f.kind==='body'?h*.25:h*.88,faceX=w*.57,faceY=h*.12,headMask=null;
   if(f.kind==='head'){
    let last=-1,totalX=0,count=0;
    for(let y=Math.floor(h*.5);y<Math.min(h,b.b);y++)for(let x=Math.floor(w*.33);x<w*.72;x++){const n=(y*w+x)*4;if(bytes[n+3]>180&&warm(bytes[n],bytes[n+1],bytes[n+2])){if(y>last){last=y;totalX=0;count=0}if(y===last){totalX+=x;count++}}}
@@ -39,7 +39,7 @@ function analyze(im,f){
   if(f.kind==='body'){
    // Find the largest connected warm-skin region near the face. Gold costume trim
    // must not be mistaken for the neck; retain arms/shoulders above collar height.
-   const x0=Math.floor(w*.25),x1=Math.floor(w*.8),y0=Math.floor(h*.02),y1=Math.floor(h*.28),seen=new Uint8Array(w*h);let best=[];
+   const x0=Math.floor(w*.25),x1=Math.floor(w*.8),y0=Math.floor(h*.02),y1=Math.floor(h*.18),seen=new Uint8Array(w*h);let best=[];
    const skin=(x,y)=>{const n=(y*w+x)*4,[hue,sat]=hsv(bytes[n],bytes[n+1],bytes[n+2]);return bytes[n+3]>180&&warm(bytes[n],bytes[n+1],bytes[n+2])&&hue<.105&&sat>.12};
    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
     const start=y*w+x;if(seen[start])continue;seen[start]=1;if(!skin(x,y))continue;const queue=[start];
@@ -47,10 +47,10 @@ function analyze(im,f){
     if(queue.length>best.length&&Math.min(...queue.map(v=>Math.floor(v/w)))<h*.155)best=queue;
    }
    if(best.length>20){const bottom=Math.max(...best.map(v=>Math.floor(v/w))),band=best.filter(v=>Math.floor(v/w)>=bottom-2);ny=bottom+1;nx=band.reduce((sum,v)=>sum+v%w,0)/band.length;
-    const top=Math.min(...best.map(v=>Math.floor(v/w))),faceBand=best.filter(v=>Math.floor(v/w)<=top+h*.08);faceX=faceBand.reduce((sum,v)=>sum+v%w,0)/faceBand.length;faceY=faceBand.reduce((sum,v)=>sum+Math.floor(v/w),0)/faceBand.length;
+    const top=Math.min(...best.map(v=>Math.floor(v/w))),faceBand=best.filter(v=>Math.floor(v/w)<=top+h*.08);faceX=faceBand.reduce((sum,v)=>sum+v%w,0)/faceBand.length;faceY=faceBand.reduce((sum,v)=>sum+Math.floor(v/w),0)/faceBand.length;headMask={l:Math.max(0,Math.min(...best.map(v=>v%w))-w*.085),r:Math.min(w,Math.max(...best.map(v=>v%w))+w*.05),bottom:bottom+h*.018};
    }else{ny=h*.19;nx=w*.52;}
   }
-  frames.push({sx,sy,w,h,b,nx,ny,faceX,faceY});
+  frames.push({sx,sy,w,h,b,nx,ny,faceX,faceY,headMask});
  }
  return {im,frames,scale:350/Math.max(1,frames[0].b.b-frames[0].b.t),...f};
 }
@@ -81,7 +81,7 @@ function drawBody(g,sheet,index,p,o,alpha){
   const reaction=Number.isFinite(o.actionTime)&&o.actionTime>=0?Math.sin(o.actionTime*22)*Math.exp(-o.actionTime*6)*physics*.65:0;
   const yy=(y-b.b)*sc+breathe*(1-clamp(u*1.8,0,1))+reaction*chestWeight,xx=(b.l-f.w*.5)*sc*stretch+sway;
   const paint=(l,r)=>{if(r<=l)return;g.drawImage(source,f.sx+l,f.sy+y,r-l,h,xx+(l-b.l)*sc*stretch,yy,(r-l)*sc*stretch,h*sc+.45)};
-  paint(b.l,b.r);
+  if(f.headMask&&y<f.headMask.bottom){paint(b.l,Math.min(b.r,f.headMask.l));paint(Math.max(b.l,f.headMask.r),b.r)}else paint(b.l,b.r);
  }
  g.restore();
 }
