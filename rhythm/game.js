@@ -232,7 +232,7 @@ function shade(hex,mul=.57){
 function fromForm(side){
  const base=window.NeonFighters.get($('avatar'+side).value);
  const hair=$('color'+side).value,eye=$('eyeColor'+side).value,outfit=$('dressColor'+side).value;
- return {...base,...Object.fromEntries(['bustSize','waist','hips','height','headScale'].map(k=>[k,Number($(k+side).value)])),accessory:$('accessory'+side).value,palette:$('palette'+side).value,motion:Number($('motion'+side).value),bustMotion:Number($('bustMotion'+side).value),name:$('name'+side).value||base.name,skin:$('skin'+side).value,weapon:$('weapon'+side).value,art:$('art'+side).value,image:customImages[side],hair,hairDark:shade(hair),eye,outfit,style:$('hair'+side).value,
+ return {...base,...Object.fromEntries(['bustSize','waist','hips','height','headScale'].map(k=>[k,Number($(k+side).value)])),accessory:$('accessory'+side).value,palette:$('palette'+side).value,motion:Number($('motion'+side).value),bustMotion:Number($('bustMotion'+side).value),expression:$('expression'+side).value,lookStrength:Number($('lookStrength'+side).value),name:$('name'+side).value||base.name,skin:$('skin'+side).value,weapon:$('weapon'+side).value,art:$('art'+side).value,image:customImages[side],hair,hairDark:shade(hair),eye,outfit,style:$('hair'+side).value,
    species:$('species'+side).value,body:$('body'+side).value,
    bust:$('bust'+side).value,eyeShape:$('eyes'+side).value,costume:$('costume'+side).value};
 }
@@ -241,18 +241,22 @@ function applyProfile(side,profile){
  const p=legalAppearance(profile)||window.NeonFighters.PROFILES[side==='P'?0:1];
  for(const k of ['bustSize','waist','hips','height','headScale'])$(k+side).value=p[k]??(k==='bustSize'?.5:1);$('accessory'+side).value=p.accessory||'none';
  $('palette'+side).value=p.palette||'original';$('motion'+side).value=p.motion??.7;$('bustMotion'+side).value=p.bustMotion??.7;
+ $('expression'+side).value=p.expression||'calm';$('lookStrength'+side).value=p.lookStrength??.85;
  $('avatar'+side).value=p.id;customImages[side]=p.image||'';
  $('name'+side).value=p.name;$('skin'+side).value=p.skin;$('weapon'+side).value=p.weapon;$('art'+side).value=p.art||'vector';
  for(const [k,v] of [['hair',p.style||'long'],['species',p.species||'human'],['body',p.body||'balanced'],['bust',p.bust||'standard'],['costume',p.costume||'armor'],['eyes',p.eyeShape||'normal'],['color',p.hair],['eyeColor',p.eye],['dressColor',p.outfit]])$(k+side).value=v;
  syncStudioMode(side);previewProfile(side);
 }
 const previewActions={P:{action:'idle',start:0},B:{action:'idle',start:0}};
+const portraitPresence={P:window.NeonPresence.create(.25),B:window.NeonPresence.create(.91)};
 function previewProfile(side){
  const canvas=$('preview'+side),ctx=canvas.getContext('2d'),p=fromForm(side);
  ctx.clearRect(0,0,canvas.width,canvas.height);
  ctx.save();
  const now=performance.now()/1000,a=previewActions[side],age=now-a.start;
- window.NeonStudio.draw(ctx,210,canvas.height-25,p,{facing:side==='P'?1:-1,scale:1.33,t:now,action:a.action,actionTime:age});
+ const presence=portraitPresence[side].tick(now,{reduced:options.reduced,expression:p.expression});
+ presence.lookX*=p.lookStrength??.85;presence.lookY*=p.lookStrength??.85;presence.tilt*=p.lookStrength??.85;
+ window.NeonStudio.draw(ctx,210,canvas.height-25,p,{facing:side==='P'?1:-1,scale:1.33,t:now,action:a.action,actionTime:age,presence,reduced:options.reduced});
  $('motionLabel'+side).textContent=age<1.15?a.action.toUpperCase():'IDLE';
  document.querySelectorAll('[data-doll-side="'+side+'"]').forEach(el=>el.classList.toggle('selected',el.dataset.dollKind==='head'?el.dataset.dollValue===p.style:el.dataset.dollValue===p.costume));
  ctx.restore();
@@ -277,8 +281,17 @@ function setupCharacterStudio(){
  for(const side of ['P','B']){
   const choose=$('avatar'+side);
   choose.addEventListener('change',()=>{applyProfile(side,{...window.NeonFighters.get(choose.value),art:'doll'});sendAppearance()});
-  for(const k of ['bustSize','waist','hips','height','headScale','accessory','palette','motion','bustMotion','name','skin','weapon','art','hair','species','body','bust','eyes','costume','color','eyeColor','dressColor'])
+  for(const k of ['bustSize','waist','hips','height','headScale','accessory','palette','motion','bustMotion','expression','lookStrength','name','skin','weapon','art','hair','species','body','bust','eyes','costume','color','eyeColor','dressColor'])
    $(k+side).addEventListener('input',()=>{syncStudioMode(side);previewProfile(side);if(side==='P')sendAppearance()});
+  const portrait=$('preview'+side),controller=portraitPresence[side];
+  portrait.addEventListener('pointermove',ev=>{
+   const r=portrait.getBoundingClientRect();
+   if(!r.width||!r.height)return;
+   controller.aim(((ev.clientX-r.left)/r.width-.5)*2,((ev.clientY-r.top)/r.height-.48)*2);
+  });
+  portrait.addEventListener('pointerleave',()=>controller.release());
+  portrait.addEventListener('pointercancel',()=>controller.release());
+  portrait.addEventListener('pointerdown',()=>{controller.tap(performance.now()/1000);previewProfile(side)});
   $('random'+side).onclick=()=>randomStyle(side);
   $('save'+side).onclick=()=>{try{const p=fromForm(side);window.NeonStudio.save(p);localStorage.setItem('neon-duel-fighter-'+side,JSON.stringify(p));$('save'+side).textContent='✓ 저장됨';renderWardrobe();$('studioStatus').textContent='보관함 저장 완료 · 최근 24명까지 보관합니다.'}catch(e){$('save'+side).textContent='저장 실패'}};
   let saved;try{saved=JSON.parse(localStorage.getItem('neon-duel-fighter-'+side)||'null')}catch(e){}
@@ -305,7 +318,7 @@ function buildDollChoices(){
  }
 }
 for(const btn of document.querySelectorAll('[data-preview-action]'))btn.onclick=()=>{const side=btn.dataset.previewSide;previewActions[side]={action:btn.dataset.previewAction,start:performance.now()/1000};previewProfile(side)};
-let lastPreview=0;function animateStudio(now){if(st==='menu'&&document.querySelector('.fighterWorkshop').open&&now-lastPreview>40){lastPreview=now;previewProfile('P');previewProfile('B')}requestAnimationFrame(animateStudio)}
+let lastPreview=0;function animateStudio(now){if(st==='menu'&&document.querySelector('.fighterWorkshop').open&&now-lastPreview>33){lastPreview=now;const card=document.querySelector('.styleCard.studioActive');if(card)previewProfile(card.dataset.side||'P')}requestAnimationFrame(animateStudio)}
 window.NeonDoll.onRefresh(()=>{const status=window.NeonDoll.status();$('dollLoadStatus').textContent='AI 파츠 '+status.loaded+' / '+status.total+' 로딩 중…'});
 window.NeonDoll.ready().then(ok=>{$('dollLoadStatus').hidden=ok;$('dollLoadStatus').textContent=ok?'얼굴·헤어 4세트 × 의상 5종 · 대기/공격/피격 모션 준비 완료':'일부 파츠를 불러오지 못했습니다. 페이지를 새로고침해 주세요.';buildDollChoices();renderWardrobe();previewProfile('P');previewProfile('B')});
 requestAnimationFrame(animateStudio);
