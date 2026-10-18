@@ -14,6 +14,7 @@
   return Object.freeze({
    aim(x,y){s.targetX=clamp(Number(x)||0,-1,1);s.targetY=clamp(Number(y)||0,-1,1);s.active=true},
    release(){s.active=false;s.targetX=0;s.targetY=0},
+   tap(time){s.tapTime=Number(time)},
    tick(time,{reduced=false,expression='calm'}={}){
     const dt=s.lastTime===null?1/60:clamp(Number(time)-s.lastTime,0,.065);s.lastTime=Number(time);
     if(reduced){s.lookX=s.lookY=s.vx=s.vy=s.tilt=s.smile=s.blink=0;return {lookX:0,lookY:0,tilt:0,blink:0,smile:0,lookActive:false}}
@@ -29,7 +30,7 @@
     s.tilt=approach(s.tilt,-s.lookX*.072,5.3,dt);
     const targetSmile=expression==='smile'?1:expression==='serious'?-0.45:0.12;
     s.smile=approach(s.smile,targetSmile,3,dt);
-    s.blink=blinkAt(time,seed);
+    s.blink=Math.max(blinkAt(time,seed),Number.isFinite(s.tapTime)?Math.max(0,1-Math.abs(time-s.tapTime-.12)/.12):0);
     return {lookX:s.lookX,lookY:s.lookY,tilt:s.tilt,blink:s.blink,smile:s.smile,lookActive:s.active}
    },
    reset(){s.lookX=s.lookY=s.vx=s.vy=s.tilt=s.blink=0;s.lastTime=null;s.targetX=s.targetY=0;s.active=false}
