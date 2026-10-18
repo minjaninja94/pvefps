@@ -60,10 +60,10 @@ function draw(g,age,winner,loser,{weapon='blade',side='player',reduced=false}={}
  if(t>=15&&t<17.8){const q=clamp((t-15)/2.8);g.globalAlpha=1-q;g.lineWidth=5;g.strokeStyle=c;for(let i=0;i<14;i++){const a=i*Math.PI/7,r=40+q*230;g.beginPath();g.moveTo(1175,300);g.lineTo(1175+Math.cos(a)*r,300+Math.sin(a)*r);g.stroke()}}
  g.restore();g.restore();
  // Cinematic matte, attack name, and a final unmistakable ring-out card.
- g.fillStyle='#02040bef';g.fillRect(0,0,1200,64);g.fillRect(0,620,1200,80);g.textAlign='center';g.fillStyle=c;g.font='900 20px system-ui';g.fillText('VICTORY FINISH · '+TYPES[s.type].name,600,40);
- g.fillStyle='#fff';g.font='900 24px system-ui';g.fillText(s.phase,600,658);
+ g.fillStyle='#02040bef';g.fillRect(0,0,1200,64);g.fillRect(0,620,1200,80);g.textAlign='center';g.fillStyle=c;g.font='900 20px system-ui';
+ g.fillStyle='#fff';g.font='900 24px system-ui';
  if(t<2||t>=17.3){const final=t>=17.3,cx=final?(s.dir===1?900:300):600,w=final?500:780,cy=final?275:210;
-  g.fillStyle='#040915dc';g.fillRect(cx-w/2,cy-64,w,122);g.fillStyle=final?'#fff':c;g.font='italic 1000 '+(final?48:58)+'px system-ui';g.fillText(final?'RING OUT!':'FINAL ATTACK',cx,cy);g.fillStyle=c;g.font='800 21px system-ui';g.fillText((winner.name||'WINNER')+' · '+(final?'완전 승리':TYPES[s.type].name),cx,cy+35)}
+  g.fillStyle='#040915dc';g.fillRect(cx-w/2,cy-64,w,122);g.fillStyle=final?'#fff':c;g.font='italic 1000 '+(final?48:58)+'px system-ui';g.fillText(final?'RING OUT!':'FINISH',cx,cy);g.fillStyle=c;g.font='800 21px system-ui';g.fillText(winner.name||'WINNER',cx,cy+35)}
  g.fillStyle='#ffffff44';g.fillRect(390,683,420,3);g.fillStyle=c;g.fillRect(390,683,420*t/DURATION,3);g.restore();return s;
 }
 function sound(ctx,weapon,heavy,volume){

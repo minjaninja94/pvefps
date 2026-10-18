@@ -1,14 +1,15 @@
 /* Local wardrobe and illustration renderer. AI assets are pre-generated; no API keys. */
 (()=>{'use strict';
 const KEY='neon-clash-wardrobe-v1',ART=['doll','vector','celeste','ruby','violet','jade','custom'];
-const variants={style:['long','wave','short','twin'],species:['human','cat','fox','rabbit'],body:['slender','balanced','curvy','athletic','petite','giant'],bust:['small','standard','large','full'],eyeShape:['normal','sharp','soft'],costume:['armor','idol','street','mage','cyber'],weapon:['blade','claw','spell']};
+const variants={style:['long','wave','short','twin'],species:['human','cat','fox','rabbit'],body:['slender','balanced','curvy','athletic','petite','giant'],bust:['small','standard','large','full'],eyeShape:['normal','sharp','soft'],costume:['armor','idol','street','mage','cyber'],weapon:['blade','claw','spell'],accessory:['none','star','crystal','halo']};
 function legal(data){
  if(!data||typeof data!=='object')return null;
  const base=window.NeonFighters.PROFILES.find(p=>p.id===data.id);if(!base)return null;
  const p={...base};for(const [k,allowed]of Object.entries(variants))if(allowed.includes(data[k]))p[k]=data[k];
  for(const k of ['hair','hairDark','eye','outfit','skin'])if(/^#[a-f\d]{6}$/i.test(data[k]||''))p[k]=data[k];
  p.name=String(data.name||base.name).replace(/[<>\x00-\x1f]/g,'').trim().slice(0,24)||base.name;
- p.art=ART.includes(data.art)?data.art:'vector';p.palette=['original','rose','midnight','emerald'].includes(data.palette)?data.palette:'original';p.motion=Number.isFinite(data.motion)?Math.max(0,Math.min(1,data.motion)):.7;p.bustMotion=Number.isFinite(data.bustMotion)?Math.max(0,Math.min(1,data.bustMotion)):.7;
+ p.art=ART.includes(data.art)?data.art:'vector';p.palette=['original','rose','midnight','emerald','custom'].includes(data.palette)?data.palette:'original';p.motion=Number.isFinite(data.motion)?Math.max(0,Math.min(1,data.motion)):.7;p.bustMotion=Number.isFinite(data.bustMotion)?Math.max(0,Math.min(1,data.bustMotion)):.7;
+ for(const [k,min,max,fallback]of [['bustSize',0,1,.5],['waist',.8,1.15,1],['hips',.85,1.2,1],['height',.9,1.1,1],['headScale',.85,1.15,1]])p[k]=Number.isFinite(data[k])?Math.max(min,Math.min(max,data[k])):fallback;
  if(p.art==='custom'&&typeof data.image==='string'&&data.image.length<=48000&&/^data:image\/(?:webp|png|jpeg);base64,[A-Za-z\d+/=]+$/.test(data.image))p.image=data.image;
  else if(p.art==='custom')p.art='vector';
  return p;

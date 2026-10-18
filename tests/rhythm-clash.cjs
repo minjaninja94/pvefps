@@ -154,3 +154,14 @@ const charge=b.make(powered),target=power[0];assert.equal(b.register(charge,targ
 const missed=b.make(powered);b.register(missed,target.side,target.id,'miss');assert.equal(missed.super[target.side],0);
 for(let t=0;t<12;t+=.01){const idle=doll.frameAt('idle',0,t);assert.equal(idle.a,0);assert.equal(idle.b,0);assert.equal(idle.head,0)}
 console.log('Random lanes preserve rhythm/holds, seeded reproducibility, sparse onset safety, power timing/charge once, stable idle pose PASS');
+
+const {NeonLiveRig:liveRig}=load('live-rig.js');
+const liveP={costume:'street',bust:'full',bustMotion:1,motion:1};
+const rest0=liveRig.pose(liveP,{t:0}),rest1=liveRig.pose(liveP,{t:.5});
+assert.ok(Math.abs(rest0.left-rest1.left)>3);assert.ok(Math.abs(rest0.sway-rest1.sway)>1);assert.ok(Math.abs(rest0.left-rest0.right)>.1);
+assert.ok(Object.values(liveRig.pose(liveP,{t:3,reduced:true})).every(v=>v===0));
+for(const [k,v]of Object.entries({bustSize:.76,waist:.86,hips:1.12,height:1.04,headScale:.94}))assert.equal(studio.legal({id:'ruby',[k]:v})[k],v);
+assert.equal(studio.legal({id:'ruby',waist:100}).waist,1.15);assert.equal(studio.legal({id:'ruby',accessory:'star'}).accessory,'star');
+console.log('Visible independent rig parameters, reduced motion, shape/accessory profile persistence bounds PASS');
+
+assert.equal(studio.legal({id:'ruby',palette:'custom',outfit:'#f02e55'}).palette,'custom');

@@ -2,7 +2,7 @@
  * No AI service runs in the browser. Source sprites remain unmodified in the repository. */
 (()=>{'use strict';
 const COSTUMES=['armor','idol','street','mage','cyber'],HEADS=['long','twin','wave','short'];
-const palettes=['original','rose','midnight','emerald'];
+const palettes=['original','rose','midnight','emerald','custom'];
 const files=[...COSTUMES.map(id=>({key:'body:'+id,url:'./assets/doll/body-'+id+'.webp',cols:3,rows:3,kind:'body'})),...HEADS.map(id=>({key:'head:'+id,url:'./assets/doll/head-'+id+'.webp',cols:2,rows:2,kind:'head'}))];
 const sheets=new Map(),dyed=new Map();let readyTask=null,refresh=()=>{};
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -62,13 +62,13 @@ function fromHSV(h,s,v){const i=Math.floor(h*6),f=h*6-i,p=v*(1-s),q=v*(1-f*s),t=
 function tinted(sheet,p){
  const palette=palettes.includes(p.palette)?p.palette:'original',skin=/^#[a-f\d]{6}$/i.test(p.skin||'')?p.skin:'#ffe4d4',hair=/^#[a-f\d]{6}$/i.test(p.hair||'')?p.hair:'#84ebff';
  if(sheet.kind==='body'&&palette==='original'&&skin.toLowerCase()==='#ffe4d4')return sheet.im;
- const key=sheet.key+'|'+palette+'|'+skin+(sheet.kind==='head'?'|'+hair:'');if(dyed.has(key))return dyed.get(key);
+ const key=sheet.key+'|'+palette+'|'+skin+'|'+(p.outfit||'')+(sheet.kind==='head'?'|'+hair:'');if(dyed.has(key))return dyed.get(key);
  const c=document.createElement('canvas');c.width=sheet.im.width;c.height=sheet.im.height;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(sheet.im,0,0);const data=ctx.getImageData(0,0,c.width,c.height),a=data.data,targetSkin=rgb(skin),hairHSV=hsv(...rgb(hair));
  const baseHue={long:.58,twin:.94,wave:.58,short:.43}[sheet.key.split(':')[1]]??.58;
  for(let i=0;i<a.length;i+=4){if(a[i+3]<24)continue;let r=a[i],g=a[i+1],b=a[i+2];const [h,s,v]=hsv(r,g,b),isSkin=warm(r,g,b);
   if(isSkin){const light=(r+g+b)/(255+210+185);a[i]=clamp(targetSkin[0]*light,0,255);a[i+1]=clamp(targetSkin[1]*light,0,255);a[i+2]=clamp(targetSkin[2]*light,0,255)}
   else if(sheet.kind==='head'&&Math.min(Math.abs(h-baseHue),1-Math.abs(h-baseHue))<.17&&s>.08){const col=fromHSV(hairHSV[0],clamp(s*.6+hairHSV[1]*.35,.05,.9),v);a[i]=col[0];a[i+1]=col[1];a[i+2]=col[2]}
-  else if(sheet.kind==='body'&&palette!=='original'&&s>.14){const target={rose:.94,midnight:.64,emerald:.44}[palette],col=fromHSV(target,s,palette==='midnight'?v*.72:v);a[i]=col[0];a[i+1]=col[1];a[i+2]=col[2]}
+  else if(sheet.kind==='body'&&palette!=='original'&&s>.14){const custom=hsv(...rgb(/^#[a-f\d]{6}$/i.test(p.outfit||'')?p.outfit:'#84ebff')),target=palette==='custom'?custom[0]:{rose:.94,midnight:.64,emerald:.44}[palette],col=fromHSV(target,palette==='custom'?Math.max(.2,custom[1]):s,palette==='midnight'?v*.72:v);a[i]=col[0];a[i+1]=col[1];a[i+2]=col[2]}
  }
  ctx.putImageData(data,0,0);dyed.set(key,c);while(dyed.size>10){const old=dyed.keys().next().value;dyed.delete(old)}return c;
 }
@@ -77,7 +77,7 @@ function tinted(sheet,p){
 function chestMotion(p={},o={}){
  const strength=o.reduced||o.ko?0:clamp(Number.isFinite(p.bustMotion)?p.bustMotion:.7,0,1);
  if(!strength)return {x:0,y:0,breath:0};
- const support={armor:.3,idol:.85,street:1,mage:.8,cyber:.55}[p.costume]??.3;
+ const support={armor:.65,idol:1,street:1,mage:.95,cyber:.85}[p.costume]??.3;
  const mass={small:.75,standard:1,large:1.14,full:1.25}[p.bust]||1;
  const t=Number.isFinite(o.t)?o.t:0,age=Number.isFinite(o.actionTime)?o.actionTime:-1;
  const spring=(start,amplitude)=>{const a=age-start;return a<0?0:amplitude*Math.sin(a*17/Math.sqrt(mass))*Math.exp(-a*(support<.5?7:4.8))};
@@ -85,7 +85,7 @@ function chestMotion(p={},o={}){
  if(o.action==='attack'&&age>=0)impulse=spring(.05,-2.6)+spring(.27,o.super?7:5);
  if(o.action==='hit'&&age>=0)impulse=spring(0,o.super?8:6);
  const gain=strength*support*mass;
- return {y:clamp((Math.sin(t*2.25-.45)*.65+impulse)*gain,-7,7),x:clamp(impulse*gain*.22,-1.5,1.5),breath:Math.sin(t*2.25)*.32*gain};
+ return {y:clamp((Math.sin(t*3.9-.7)*4.6+Math.sin(t*2.1)*1.1+impulse)*gain,-7,7),x:clamp(impulse*gain*.22,-1.5,1.5),breath:Math.sin(t*2.25)*.32*gain};
 }
 let blendLayer=null;
 function drawBody(g,sheet,index,p,o,alpha){
@@ -98,10 +98,11 @@ function drawBody(g,sheet,index,p,o,alpha){
  }
  const f=sheet.frames[index],b=f.b,source=tinted(sheet,p),height=272,sc=sheet.scale,width={slender:.93,balanced:1,curvy:1.05,athletic:1.04,petite:.97,giant:1.04}[p.body]||1;
  const chest={small:.93,standard:1,large:1.04,full:1.07}[p.bust]||1,physics=o.reduced?0:clamp(Number.isFinite(p.motion)?p.motion:.7,0,1),t=o.t||0;
- const breathe=0,secondary=chestMotion(p,o);
+ if(window.NeonLiveRig?.paint(g,source,f,sc,p,o))return;
+ const breathe=-Math.sin(t*2.1)*2.4*physics,secondary=chestMotion(p,o);
  g.save();g.globalAlpha*=alpha;
  for(let y=b.t;y<b.b;y+=5){const h=Math.min(5,b.b-y),u=(y-f.ny)/(b.b-f.ny),chestWeight=Math.exp(-Math.pow((u-.18)/.115,2)),hipWeight=Math.exp(-Math.pow((u-.45)/.14,2));
-  const stretch=width*(1+(chest-1)*chestWeight+(p.body==='curvy'?.035:0)*hipWeight),sway=0;
+  const stretch=width*(1+(chest-1+((p.bustSize??.5)-.5)*.24)*chestWeight+((p.waist??1)-1)*Math.exp(-Math.pow((u-.35)/.12,2))+((p.hips??1)-1+(p.body==='curvy'?.035:0))*hipWeight),sway=Math.sin(t*1.25)*3.6*physics*(1-clamp(u,0,1));
   const yy=(y-b.b)*sc+breathe*(1-clamp(u*1.8,0,1)),xx=(b.l-f.w*.5)*sc*stretch+sway;
   // A local torso mesh leaves neck, shoulders, arms and hem anchored. Adjacent
   // strips share the same displacement function, including their bottom edge.
@@ -123,7 +124,7 @@ function drawBody(g,sheet,index,p,o,alpha){
 }
 function draw(g,x,footY,p,o={}){
  const costume=COSTUMES.includes(p.costume)?p.costume:'armor',head=HEADS.includes(p.style)?p.style:'long',body=sheets.get('body:'+costume),face=sheets.get('head:'+head);if(!body||!face){ready();return false}
- const state=o.ko?{a:7,b:8,mix:.3,head:3,state:'ko'}:frameAt(o.action,o.actionTime,o.t),scale=(o.scale||1)*(p.body==='giant'?1.1:p.body==='petite'?.95:1),physics=o.reduced?0:clamp(Number.isFinite(p.motion)?p.motion:.7,0,1),t=o.t||0;
+ const state=o.ko?{a:7,b:8,mix:.3,head:3,state:'ko'}:frameAt(o.action,o.actionTime,o.t),scale=(o.scale||1)*(p.body==='giant'?1.1:p.body==='petite'?.95:1)*(p.height??1),physics=o.reduced?0:clamp(Number.isFinite(p.motion)?p.motion:.7,0,1),t=o.t||0;
  g.save();g.translate(x,footY);g.scale((o.facing===-1?-1:1)*scale,scale);
  if(o.ko){g.rotate(-.8*o.ko);g.translate(-25*o.ko,35*o.ko)}
  if(o.hit>.1)g.filter='brightness(1.13)';
@@ -132,7 +133,9 @@ function draw(g,x,footY,p,o={}){
  if(state.mix<.5){drawBody(g,body,state.a,p,o,1);if(state.mix>.36)drawBody(g,body,state.b,p,o,(state.mix-.36)/.14)}else{drawBody(g,body,state.b,p,o,1);if(state.mix<.64)drawBody(g,body,state.a,p,o,(.64-state.mix)/.14)}
  const f=face.frames[state.head],b=f.b,hsc=79/Math.max(1,f.ny-b.t),source=tinted(face,p),headSway=Math.sin(t*1.55)*.014*physics;
  const ba=body.frames[state.a],bb=body.frames[state.b],mix=clamp(state.mix,0,1),facePX=((ba.faceX-ba.w*.5)*(1-mix)+(bb.faceX-bb.w*.5)*mix)*body.scale,facePY=((ba.faceY-ba.b.b)*(1-mix)+(bb.faceY-bb.b.b)*mix)*body.scale;
- g.save();g.translate(facePX,facePY+Math.sin(t*2.25)*1.1*physics);g.rotate(headSway+(state.state==='hit'?-.06:state.state==='attack'?.035:0));g.drawImage(source,f.sx+b.l,f.sy+b.t,b.r-b.l,b.b-b.t,(b.l-f.faceX)*hsc,(b.t-f.faceY)*hsc,(b.r-b.l)*hsc,(b.b-b.t)*hsc);g.restore();g.restore();return true;
+ const rig=window.NeonLiveRig?.pose(p,o)||{sway:0,breath:0,head:0};
+ g.save();g.translate(facePX+rig.sway,facePY+rig.breath);g.rotate(rig.head+headSway+(state.state==='hit'?-.06:state.state==='attack'?.035:0));if(!window.NeonLiveRig?.paint(g,source,f,hsc,p,o,true))g.drawImage(source,f.sx+b.l,f.sy+b.t,b.r-b.l,b.b-b.t,(b.l-f.faceX)*hsc*(p.headScale??1),(b.t-f.faceY)*hsc*(p.headScale??1),(b.r-b.l)*hsc*(p.headScale??1),(b.b-b.t)*hsc*(p.headScale??1));
+ if(p.accessory&&p.accessory!=='none'){g.save();g.fillStyle=p.accessory==='star'?'#ffe7a2':'#b9faff';g.shadowColor=g.fillStyle;g.shadowBlur=6;g.scale(p.headScale??1,p.headScale??1);if(p.accessory==='halo'){g.strokeStyle=g.fillStyle;g.lineWidth=2;g.beginPath();g.ellipse(0,-60,35,8,-.1,0,Math.PI*2);g.stroke()}else{g.translate(-26,-24);g.beginPath();if(p.accessory==='crystal'){g.moveTo(0,-10);g.lineTo(6,0);g.lineTo(0,11);g.lineTo(-6,0)}else for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,r=i%2?3:8;g.lineTo(Math.cos(a)*r,Math.sin(a)*r)}g.closePath();g.fill()}g.restore()}g.restore();g.restore();return true;
 }
 function headIcon(g,style,w,h){const sheet=sheets.get('head:'+(HEADS.includes(style)?style:'long'));if(!sheet)return;const f=sheet.frames[0],b=f.b,sc=Math.min(w/(b.r-b.l),h/(b.b-b.t))*.94;g.drawImage(sheet.im,f.sx+b.l,f.sy+b.t,b.r-b.l,b.b-b.t,(w-(b.r-b.l)*sc)/2,(h-(b.b-b.t)*sc)/2,(b.r-b.l)*sc,(b.b-b.t)*sc)}
 function status(){return {loaded:sheets.size,total:files.length,ready:sheets.size===files.length}}
