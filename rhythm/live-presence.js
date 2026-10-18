@@ -30,8 +30,10 @@
     s.tilt=approach(s.tilt,-s.lookX*.072,5.3,dt);
     const targetSmile=expression==='smile'?1:expression==='serious'?-0.45:0.12;
     s.smile=approach(s.smile,targetSmile,3,dt);
-    s.blink=Math.max(blinkAt(time,seed),Number.isFinite(s.tapTime)?Math.max(0,1-Math.abs(time-s.tapTime-.12)/.12):0);
-    return {lookX:s.lookX,lookY:s.lookY,tilt:s.tilt,blink:s.blink,smile:s.smile,lookActive:s.active}
+    const sinceTap=Number.isFinite(s.tapTime)?time-s.tapTime:-1;
+    const nod=sinceTap>=0&&sinceTap<.48?Math.sin(sinceTap/.48*Math.PI)*.065:0;
+    s.blink=blinkAt(time,seed); // Kept as metadata for future separate eyelid art; do not warp face.
+    return {lookX:s.lookX,lookY:s.lookY,tilt:s.tilt+nod,blink:s.blink,smile:s.smile,lookActive:s.active}
    },
    reset(){s.lookX=s.lookY=s.vx=s.vy=s.tilt=s.blink=0;s.lastTime=null;s.targetX=s.targetY=0;s.active=false}
   })
