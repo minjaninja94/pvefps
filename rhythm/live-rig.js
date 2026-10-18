@@ -40,19 +40,12 @@ function paint(g,source,f,sc,p,o={},head=false){
  let i=0;for(let y=0;y<=e.rows;y++)for(let x=0;x<=e.cols;x++){
   const px=x/e.cols*f.w,py=y/e.rows*f.h;let dx,dy;
   if(head){
-   dx=(px-f.faceX)*sc;dy=(py-f.faceY)*sc;
-   const tail=clamp((dy+5)/65,0,1),edge=clamp((Math.abs(dx)-18)/25,0,1);
-   // Parallax face movement: features follow the pointer, outer hair reacts later.
-   const faceWeight=Math.exp(-Math.pow(dx/64,4))*Math.exp(-Math.pow((dy+4)/88,4));
-   dx+=rig.lookX*(3.1*faceWeight+1.2)+rig.hair*tail*edge;
-   dy+=rig.lookY*2.6*faceWeight+rig.hair*edge*tail*.25;
-   // Eye-band deformation compresses the painted eye details during a blink.
-   // Continuous Gaussian weighting avoids visible rectangular texture seams.
-   const eyeCenter=-16,eyeRegion=Math.exp(-Math.pow((dy-eyeCenter)/12,4))*Math.exp(-Math.pow(dx/67,4));
-   dy+=(eyeCenter-dy)*rig.blink*.76*eyeRegion;
-   const mouthRegion=Math.exp(-Math.pow((dy-23)/9,4))*Math.exp(-Math.pow(dx/38,4));
-   dy-=rig.smile*1.2*mouthRegion;
-   dx*=p.headScale??1;dy*=p.headScale??1;
+   // Head/eyes are a SINGLE painted sprite, not separated eye/eyelid layers.
+   // Never locally bend the face mesh: even smooth vertex weighting warps eye
+   // anatomy into a melted shape as it moves across the texture.
+   // Rigid gaze translation / head rotation are applied by doll-renderer.js.
+   dx=(px-f.faceX)*sc*(p.headScale??1);
+   dy=(py-f.faceY)*sc*(p.headScale??1);
   }
   else{const u=(py-f.ny)/(f.b.b-f.ny),upper=1-clamp(u,0,1),chest=u>0&&u<.38?Math.pow(Math.sin(Math.PI*u/.38),2):0,waist=Math.exp(-Math.pow((u-.35)/.12,2)),hips=Math.exp(-Math.pow((u-.52)/.14,2));
    dx=(px-f.w*.5)*sc*bodyWidth*(1+(bust-1+shape*.24)*chest+((p.waist??1)-1)*waist+((p.hips??1)-1)*hips);dy=(py-f.b.b)*sc;
