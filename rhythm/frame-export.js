@@ -24,10 +24,10 @@ async function render(profile,action='idleA',opts={}){
  const blob=await new Promise((ok,fail)=>sheet.toBlob(b=>b?ok(b):fail(Error('이미지 내보내기 실패')),'image/png'));
  return {blob,count,width:sheet.width,height:sheet.height,frames:cells,duration:clip.duration,action};
 }
-async function download(profile,action='idleA'){
- const result=await render(profile,action);
+async function download(profile,action='idleA',count=24){
+ const result=await render(profile,action,{count});
  const safeName=(profile?.name||'fighter').replace(/[^\w가-힣-]/g,'_').slice(0,28)||'fighter';
- const file='neon-clash-'+safeName+'-'+action+'-24frames.png';
+ const file='neon-clash-'+safeName+'-'+action+'-'+result.count+'frames.png';
  const uri=URL.createObjectURL(result.blob);
  try{const a=document.createElement('a');a.href=uri;a.download=file;document.body.append(a);a.click();a.remove();}
  finally{setTimeout(()=>URL.revokeObjectURL(uri),5000)}
