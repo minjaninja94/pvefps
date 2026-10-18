@@ -254,11 +254,12 @@ function previewProfile(side){
  ctx.clearRect(0,0,canvas.width,canvas.height);
  ctx.save();
  const now=performance.now()/1000,a=previewActions[side],age=now-a.start;
+ const clip=window.NeonMotion?.clips[a.action],current=clip&&age>clip.duration&&!clip.loop?'idleA':a.action;
  const presence=portraitPresence[side].tick(now,{reduced:options.reduced,expression:p.expression});
  const facing=side==='P'?1:-1,strength=p.lookStrength??.85;
  presence.lookX*=strength*facing;presence.lookY*=strength;presence.tilt*=strength*facing;
- window.NeonStudio.draw(ctx,210,canvas.height-25,p,{facing:side==='P'?1:-1,scale:1.33,t:now,action:a.action,actionTime:age,presence,reduced:options.reduced});
- $('motionLabel'+side).textContent=age<1.15?a.action.toUpperCase():'IDLE';
+ window.NeonStudio.draw(ctx,210,canvas.height-25,p,{facing:side==='P'?1:-1,scale:1.33,t:now,action:current,actionTime:current==='idleA'?now:age,presence,reduced:options.reduced});
+ $('motionLabel'+side).textContent=current.toUpperCase();
  document.querySelectorAll('[data-doll-side="'+side+'"]').forEach(el=>el.classList.toggle('selected',el.dataset.dollKind==='head'?el.dataset.dollValue===p.style:el.dataset.dollValue===p.costume));
  ctx.restore();
 }
@@ -365,7 +366,7 @@ function updateFightHUD(){
  $('bTurnScore').textContent=(onlineMode?'2P ':'CPU ')+b.score+' / 1000';
 }
 function onFightResult(result){
- attackFx={side:result.winner,winner:result.winner,t:time(),damage:result.damage,finisher:result.finisher};
+ attackFx={side:result.winner,winner:result.winner,t:time(),round:result.round,damage:result.damage,finisher:result.finisher};
 
  let names={player:window.NeonFighters.get(fighterP).name,bot:window.NeonFighters.get(fighterB).name};
  $('battleAnnounce').textContent=result.winner==='draw'
@@ -451,8 +452,9 @@ function fighterStage(t){
  const bX=770+(clashing?-clash.advance-clash.shove:active?(!isP?-m.reach:m.hit*25):0);
  // Both fighters lunge, brace against each other's weapon, struggle, then recoil.
  // Their atlas poses are held at the weapon-contact frame during the lock.
- const pAction=clashing?'attack':active?(isP?'attack':'hit'):'idle';
- const bAction=clashing?'attack':active?(!isP?'attack':'hit'):'idle';
+ const strike=['attack','attack2','attack3'][Math.abs(attackFx?.round||0)%3];
+ const pAction=clashing?'drawClash':active?(isP?strike:'hit'):'idleA';
+ const bAction=clashing?'drawClash':active?(!isP?strike:'hit'):'idleA';
  const pActionTime=clashing?clash.poseTime:isP?age:age-.34;
  const bActionTime=clashing?clash.poseTime:!isP?age:age-.34;
  window.NeonStudio.draw(g,pX,538,fighterP,{facing:1,t:rigClock,attack:clashing?clash.lock:active&&isP?m.strike:0,hit:active&&!isP?m.hit:0,scale:1.07,super:attackFx?.finisher,ko:pKO,action:pAction,actionTime:pActionTime,reduced});
@@ -649,5 +651,14 @@ $('tvPlay').onclick=()=>{if(st==='game'&&ytReady){initAudio().resume();yt.playVi
 $('skipFinish').onclick=()=>{if(ending&&st==='game')finishMatch(ending.fail)};
 $('start').onclick=async()=>{if(!onlineMode){await newRound();return}if(net.role!=='host'||!net.isConnected()||!net.readySelf||!net.readyPeer){roomStatus('방장과 친구 모두 P2P 접속 및 준비 완료가 필요합니다.');return}let cfg=selectedConfig();if(!cfg)return;if(cfg.mode==='file'){let asset;try{asset=await prepareLocalAudio()}catch(e){showPrepError(e);return}if(peerAudioHash!==asset.hash){roomStatus('상대방이 동일한 음원을 로딩했는지 확인하세요.');return}cfg.bpm=asset.chart.bpm;cfg.chart=asset.chart;cfg.assetHash=asset.hash;cfg.title=localFile.name.slice(0,36)}else if(cfg.mode==='youtube'&&youtubeAudioAttached&&localFile){try{const asset=await prepareLocalAudio();cfg.chart=asset.chart;rememberYouTubeChart(cfg.videoId,cfg.chart)}catch(e){showPrepError(e);return}}if(cfg.chart){try{window.RhythmChart.unpack(cfg.chart,'host')}catch(e){showPrepError(e);return}}pendingStart=cfg;roomStatus('채보 준비 완료 · 친구의 로딩 응답을 기다리는 중');if(!net.send({type:'prepare',cfg})){pendingStart=null;roomStatus('준비 패킷 전송 실패')}};$('retry').onclick=()=>{if(onlineMode){show('menu');net.ready(false);roomStatus('온라인 재대결은 양쪽에서 준비를 다시 해주세요.')}else newRound()};$('pause').onclick=()=>togglePause();$('quit').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};$('select').onclick=()=>{stop();show('menu');if(onlineMode)net.ready(false)};setupPreferences();renderHistory();modeUI();setupCharacterStudio();window.NeonStudioUI.mount();
 window.NeonStudioUI.bindGenerator(generateStyle);window.NeonStudioUI.bindPreset(applyLook);
+window.NeonStudioUI.bindMotion((side,action)=>{
+ previewActions[side]={action,start:performance.now()/1000};
+ previewProfile(side);
+});
+window.NeonStudioUI.bindExport(async(side,action)=>{
+ const p=fromForm(side);if(p.art!=='doll')throw Error('프레임 생성은 일러스트 파츠 모드에서 지원합니다.');
+ const result=await window.NeonFrameExport.download(p,action);
+ $('studioStatus').textContent=p.name+' · '+action+' · '+result.count+'프레임 PNG 저장 완료 ('+result.width+'×'+result.height+')';
+});
 restoreSavedChartSelection();renderWardrobe();
 })();
