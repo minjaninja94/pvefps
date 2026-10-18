@@ -124,13 +124,13 @@ function drawBody(g,sheet,index,p,o,alpha){
 }
 function draw(g,x,footY,p,o={}){
  const costume=COSTUMES.includes(p.costume)?p.costume:'armor',head=HEADS.includes(p.style)?p.style:'long',body=sheets.get('body:'+costume),face=sheets.get('head:'+head);if(!body||!face){ready();return false}
- const state=o.ko?{a:7,b:8,mix:.3,head:3,state:'ko'}:frameAt(o.action,o.actionTime,o.t),scale=(o.scale||1)*(p.body==='giant'?1.1:p.body==='petite'?.95:1)*(p.height??1),physics=o.reduced?0:clamp(Number.isFinite(p.motion)?p.motion:.7,0,1),t=o.t||0;
- g.save();g.translate(x,footY);g.scale((o.facing===-1?-1:1)*scale,scale);
+ const state=o.ko?{a:8,b:8,mix:0,head:3,state:'ko'}:(window.NeonMotion?.state(o.action||'idleA',o.actionTime??0,o.t||0,p.animationStyle||'balanced',o.reduced)||frameAt(o.action,o.actionTime,o.t)),scale=(o.scale||1)*(p.body==='giant'?1.1:p.body==='petite'?.95:1)*(p.height??1),physics=o.reduced?0:clamp(Number.isFinite(p.motion)?p.motion:.7,0,1),t=o.t||0;
+ g.save();g.translate(x,footY);g.scale((o.facing===-1?-1:1)*scale,scale);g.translate(state.shiftX||0,state.shiftY||0);g.rotate(state.angle||0);
  if(o.ko){g.rotate(-.8*o.ko);g.translate(-25*o.ko,35*o.ko)}
  if(o.hit>.1)g.filter='brightness(1.13)';
  g.save();g.scale(1,.17);g.beginPath();g.ellipse(0,12,55,14,0,0,Math.PI*2);g.fillStyle='#02071166';g.fill();g.restore();
  // Use opaque primary frames; short crossfades soften hand/cloth transitions.
- if(state.mix<.5){drawBody(g,body,state.a,p,o,1);if(state.mix>.36)drawBody(g,body,state.b,p,o,(state.mix-.36)/.14)}else{drawBody(g,body,state.b,p,o,1);if(state.mix<.64)drawBody(g,body,state.a,p,o,(.64-state.mix)/.14)}
+ if(state.a===state.b){drawBody(g,body,state.a,p,o,1)}else if(state.mix<.5){drawBody(g,body,state.a,p,o,1);if(state.mix>.36)drawBody(g,body,state.b,p,o,(state.mix-.36)/.14)}else{drawBody(g,body,state.b,p,o,1);if(state.mix<.64)drawBody(g,body,state.a,p,o,(.64-state.mix)/.14)}
  const f=face.frames[state.head],b=f.b,hsc=79/Math.max(1,f.ny-b.t),source=tinted(face,p),headSway=Math.sin(t*1.55)*.014*physics;
  const ba=body.frames[state.a],bb=body.frames[state.b],mix=clamp(state.mix,0,1),facePX=((ba.faceX-ba.w*.5)*(1-mix)+(bb.faceX-bb.w*.5)*mix)*body.scale,facePY=((ba.faceY-ba.b.b)*(1-mix)+(bb.faceY-bb.b.b)*mix)*body.scale;
  const rig=window.NeonLiveRig?.pose(p,o)||{sway:0,breath:0,head:0,lookX:0,lookY:0};
