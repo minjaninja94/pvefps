@@ -56,7 +56,7 @@
   g.restore();
  }
  function drawHairAccents(g,frame,style,p,rig,scale,t){
-  if(!enabled.hair)return;
+  if(!enabled.hair||p.hairAccent===false)return;
   const s=(p.headScale??1)*scale,move=(rig.hair||0)*.37;
   const x=(-frame.w*.11)*s,y=(-frame.h*.26)*s;
   g.save();g.lineCap='round';g.lineJoin='round';
@@ -78,7 +78,7 @@
   if(!source||!sheet?.frames?.length||!frame)return;
   const p=partsFor(source,sheet,style),sc=scale*(profile.headScale??1);
   const anim=Number(time)||0;
-  const blink=reduced?0:clamp(rig.blink||0);
+  const blink=reduced||profile.blinkMode==='off'?0:clamp(rig.blink||0);
   const blinkStrength=Math.pow(blink,1.8); // Quickly replace eye artwork, no stretching.
   if(enabled.eyes){
    const focused=action==='guard'||action==='ready'||action==='superCharge'||profile.expression==='serious';
@@ -94,5 +94,5 @@
   drawHairAccents(g,frame,style,profile,rig,scale,anim);
  }
  function settings(flags){if(flags&&typeof flags==='object')for(const key of Object.keys(available))if(typeof flags[key]==='boolean')enabled[key]=flags[key];return {...enabled}}
- window.NeonFaceParts=Object.freeze({draw,settings,landmarks:coord,patchCount:8});
+ window.NeonFaceParts=Object.freeze({draw,settings,landmarks:coord,patchCount:6});
 })();
