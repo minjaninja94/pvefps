@@ -92,3 +92,22 @@ assert.equal(studio.legal({id:'ruby',art:'doll',palette:'rose',motion:.4}).art,'
 assert.equal(studio.legal({id:'ruby',art:'doll',palette:'bad',motion:99}).palette,'original');
 assert.equal(studio.legal({id:'ruby',motion:99}).motion,1);
 console.log('Painted wardrobe profile/motion bounds and action/expression timeline PASS');
+
+// Secondary physics is deterministic, bounded and independent of hair sway.
+const cp={costume:'street',bust:'full',motion:0,bustMotion:1};
+assert.equal(studio.legal({id:'ruby',bustMotion:99}).bustMotion,1);
+assert.equal(studio.legal({id:'ruby',bustMotion:-2}).bustMotion,0);
+assert.equal(studio.legal({id:'ruby'}).bustMotion,.7);
+for(const action of ['idle','attack','hit'])for(let age=0;age<3;age+=.017){
+ const o={action,actionTime:age,t:0},m=doll.chestMotion(cp,o);
+ assert.ok(Number.isFinite(m.y)&&Math.abs(m.y)<=7&&Math.abs(m.x)<=1.5);
+ assert.deepEqual(m,doll.chestMotion(cp,o));
+ assert.ok(Object.values(doll.chestMotion(cp,{...o,reduced:true})).every(v=>v===0));
+ assert.ok(Object.values(doll.chestMotion({...cp,bustMotion:0},o)).every(v=>v===0));
+}
+const response=(p,age)=>Math.abs(doll.chestMotion(p,{action:'hit',actionTime:age,t:0}).y-doll.chestMotion(p,{t:0}).y);
+assert.ok(response(cp,.1)>response(cp,2));
+assert.ok(response(cp,.1)>response({...cp,costume:'armor'},.1));
+assert.ok(response(cp,0)<response(cp,.1));
+assert.ok(Number.isFinite(doll.chestMotion(cp,{t:NaN,actionTime:NaN}).y));
+console.log('Localized chest spring: strength, support, delay, decay, bounds, pause determinism and reduced motion PASS');

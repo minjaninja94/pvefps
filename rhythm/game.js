@@ -224,14 +224,14 @@ function shade(hex,mul=.57){
 function fromForm(side){
  const base=window.NeonFighters.get($('avatar'+side).value);
  const hair=$('color'+side).value,eye=$('eyeColor'+side).value,outfit=$('dressColor'+side).value;
- return {...base,palette:$('palette'+side).value,motion:Number($('motion'+side).value),name:$('name'+side).value||base.name,skin:$('skin'+side).value,weapon:$('weapon'+side).value,art:$('art'+side).value,image:customImages[side],hair,hairDark:shade(hair),eye,outfit,style:$('hair'+side).value,
+ return {...base,palette:$('palette'+side).value,motion:Number($('motion'+side).value),bustMotion:Number($('bustMotion'+side).value),name:$('name'+side).value||base.name,skin:$('skin'+side).value,weapon:$('weapon'+side).value,art:$('art'+side).value,image:customImages[side],hair,hairDark:shade(hair),eye,outfit,style:$('hair'+side).value,
    species:$('species'+side).value,body:$('body'+side).value,
    bust:$('bust'+side).value,eyeShape:$('eyes'+side).value,costume:$('costume'+side).value};
 }
 function legalAppearance(data){return window.NeonStudio.legal(data)}
 function applyProfile(side,profile){
  const p=legalAppearance(profile)||window.NeonFighters.PROFILES[side==='P'?0:1];
- $('palette'+side).value=p.palette||'original';$('motion'+side).value=p.motion??.7;
+ $('palette'+side).value=p.palette||'original';$('motion'+side).value=p.motion??.7;$('bustMotion'+side).value=p.bustMotion??.7;
  $('avatar'+side).value=p.id;customImages[side]=p.image||'';
  $('name'+side).value=p.name;$('skin'+side).value=p.skin;$('weapon'+side).value=p.weapon;$('art'+side).value=p.art||'vector';
  for(const [k,v] of [['hair',p.style||'long'],['species',p.species||'human'],['body',p.body||'balanced'],['bust',p.bust||'standard'],['costume',p.costume||'armor'],['eyes',p.eyeShape||'normal'],['color',p.hair],['eyeColor',p.eye],['dressColor',p.outfit]])$(k+side).value=v;
@@ -268,7 +268,7 @@ function setupCharacterStudio(){
  for(const side of ['P','B']){
   const choose=$('avatar'+side);
   choose.addEventListener('change',()=>{applyProfile(side,{...window.NeonFighters.get(choose.value),art:'doll'});sendAppearance()});
-  for(const k of ['palette','motion','name','skin','weapon','art','hair','species','body','bust','eyes','costume','color','eyeColor','dressColor'])
+  for(const k of ['palette','motion','bustMotion','name','skin','weapon','art','hair','species','body','bust','eyes','costume','color','eyeColor','dressColor'])
    $(k+side).addEventListener('input',()=>{syncStudioMode(side);previewProfile(side);if(side==='P')sendAppearance()});
   $('random'+side).onclick=()=>randomStyle(side);
   $('save'+side).onclick=()=>{try{const p=fromForm(side);window.NeonStudio.save(p);localStorage.setItem('neon-duel-fighter-'+side,JSON.stringify(p));$('save'+side).textContent='✓ 저장됨';renderWardrobe();$('studioStatus').textContent='보관함 저장 완료 · 최근 24명까지 보관합니다.'}catch(e){$('save'+side).textContent='저장 실패'}};
@@ -281,7 +281,7 @@ function setupCharacterStudio(){
 function syncStudioMode(side){
  const mode=$('art'+side).value,isDoll=mode==='doll';$('dollChoices'+side).hidden=!isDoll;
  for(const key of ['species','eyes','eyeColor','dressColor'])$(key+side).closest('label').hidden=isDoll;
- for(const key of ['palette','motion'])$(key+side).closest('label').hidden=!isDoll;
+ for(const key of ['palette','motion','bustMotion'])$(key+side).closest('label').hidden=!isDoll;
 }
 function buildDollChoices(){
  for(const side of ['P','B']){

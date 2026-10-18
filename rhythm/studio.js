@@ -8,7 +8,7 @@ function legal(data){
  const p={...base};for(const [k,allowed]of Object.entries(variants))if(allowed.includes(data[k]))p[k]=data[k];
  for(const k of ['hair','hairDark','eye','outfit','skin'])if(/^#[a-f\d]{6}$/i.test(data[k]||''))p[k]=data[k];
  p.name=String(data.name||base.name).replace(/[<>\x00-\x1f]/g,'').trim().slice(0,24)||base.name;
- p.art=ART.includes(data.art)?data.art:'vector';p.palette=['original','rose','midnight','emerald'].includes(data.palette)?data.palette:'original';p.motion=Number.isFinite(data.motion)?Math.max(0,Math.min(1,data.motion)):.7;
+ p.art=ART.includes(data.art)?data.art:'vector';p.palette=['original','rose','midnight','emerald'].includes(data.palette)?data.palette:'original';p.motion=Number.isFinite(data.motion)?Math.max(0,Math.min(1,data.motion)):.7;p.bustMotion=Number.isFinite(data.bustMotion)?Math.max(0,Math.min(1,data.bustMotion)):.7;
  if(p.art==='custom'&&typeof data.image==='string'&&data.image.length<=48000&&/^data:image\/(?:webp|png|jpeg);base64,[A-Za-z\d+/=]+$/.test(data.image))p.image=data.image;
  else if(p.art==='custom')p.art='vector';
  return p;

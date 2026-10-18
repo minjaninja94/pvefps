@@ -71,16 +71,51 @@ function tinted(sheet,p){
  }
  ctx.putImageData(data,0,0);dyed.set(key,c);while(dyed.size>10){const old=dyed.keys().next().value;dyed.delete(old)}return c;
 }
+// Analytic damped springs use the game clock, so pause/replay and frame mixing
+// cannot advance physics twice. Strength is independent of hair/cloth sway.
+function chestMotion(p={},o={}){
+ const strength=o.reduced||o.ko?0:clamp(Number.isFinite(p.bustMotion)?p.bustMotion:.7,0,1);
+ if(!strength)return {x:0,y:0,breath:0};
+ const support={armor:.3,idol:.85,street:1,mage:.8,cyber:.55}[p.costume]??.3;
+ const mass={small:.75,standard:1,large:1.14,full:1.25}[p.bust]||1;
+ const t=Number.isFinite(o.t)?o.t:0,age=Number.isFinite(o.actionTime)?o.actionTime:-1;
+ const spring=(start,amplitude)=>{const a=age-start;return a<0?0:amplitude*Math.sin(a*17/Math.sqrt(mass))*Math.exp(-a*(support<.5?7:4.8))};
+ let impulse=0;
+ if(o.action==='attack'&&age>=0)impulse=spring(.05,-2.6)+spring(.27,o.super?7:5);
+ if(o.action==='hit'&&age>=0)impulse=spring(0,o.super?8:6);
+ const gain=strength*support*mass;
+ return {y:clamp((Math.sin(t*2.25-.45)*.65+impulse)*gain,-7,7),x:clamp(impulse*gain*.22,-1.5,1.5),breath:Math.sin(t*2.25)*.32*gain};
+}
+let blendLayer=null;
 function drawBody(g,sheet,index,p,o,alpha){
+ // Apply crossfade opacity once to the completed mesh, not to every overlapping
+ // strip; otherwise strip edges become visible during attack/hit transitions.
+ if(alpha<1){
+  if(!blendLayer){blendLayer=document.createElement('canvas');blendLayer.width=720;blendLayer.height=640}
+  const layer=blendLayer.getContext('2d');layer.clearRect(0,0,720,640);layer.save();layer.translate(360,600);drawBody(layer,sheet,index,p,o,1);layer.restore();
+  g.save();g.globalAlpha*=alpha;g.drawImage(blendLayer,-360,-600);g.restore();return;
+ }
  const f=sheet.frames[index],b=f.b,source=tinted(sheet,p),height=272,sc=sheet.scale,width={slender:.93,balanced:1,curvy:1.05,athletic:1.04,petite:.97,giant:1.04}[p.body]||1;
  const chest={small:.93,standard:1,large:1.04,full:1.07}[p.bust]||1,physics=o.reduced?0:clamp(Number.isFinite(p.motion)?p.motion:.7,0,1),t=o.t||0;
- const breathe=Math.sin(t*2.25)*1.1*physics;
+ const breathe=Math.sin(t*2.25)*1.1*physics,secondary=chestMotion(p,o);
  g.save();g.globalAlpha*=alpha;
  for(let y=b.t;y<b.b;y+=5){const h=Math.min(5,b.b-y),u=(y-f.ny)/(b.b-f.ny),chestWeight=Math.exp(-Math.pow((u-.18)/.115,2)),hipWeight=Math.exp(-Math.pow((u-.45)/.14,2));
   const stretch=width*(1+(chest-1)*chestWeight+(p.body==='curvy'?.035:0)*hipWeight),sway=Math.sin(t*1.55+.5)*Math.sin(Math.PI*clamp(u,0,1))*.7*physics;
-  const reaction=Number.isFinite(o.actionTime)&&o.actionTime>=0?Math.sin(o.actionTime*22)*Math.exp(-o.actionTime*6)*physics*.65:0;
-  const yy=(y-b.b)*sc+breathe*(1-clamp(u*1.8,0,1))+reaction*chestWeight,xx=(b.l-f.w*.5)*sc*stretch+sway;
-  const paint=(l,r)=>{if(r<=l)return;g.drawImage(source,f.sx+l,f.sy+y,r-l,h,xx+(l-b.l)*sc*stretch,yy,(r-l)*sc*stretch,h*sc+.45)};
+  const yy=(y-b.b)*sc+breathe*(1-clamp(u*1.8,0,1)),xx=(b.l-f.w*.5)*sc*stretch+sway;
+  // A local torso mesh leaves neck, shoulders, arms and hem anchored. Adjacent
+  // strips share the same displacement function, including their bottom edge.
+  const chestAt=py=>{const v=(py-f.ny)/(b.b-f.ny);return v<=0||v>=.36?0:Math.pow(Math.sin(Math.PI*v/.36),3)};
+  const paint=(l,r)=>{if(r<=l)return;
+   if(u<=0||u>=.36||(!secondary.x&&!secondary.y&&!secondary.breath)){g.drawImage(source,f.sx+l,f.sy+y,r-l,h,xx+(l-b.l)*sc*stretch,yy,(r-l)*sc*stretch,h*sc+.45);return}
+   const step=(r-l)/8;
+   for(let i=0;i<8;i++){
+    const left=l+i*step,mid=left+step*.5,dx=(mid-f.nx)*sc;
+    const local=Math.exp(-Math.pow(dx/29,4));
+    const offset=py=>chestAt(py)*local*(secondary.y+secondary.breath*(dx<0?.9:1.1));
+    const top=offset(y),bottom=offset(y+h);
+    g.drawImage(source,f.sx+left,f.sy+y,step,h,xx+(left-b.l)*sc*stretch+secondary.x*chestAt(y)*local,yy+top,step*sc*stretch+.4,h*sc+bottom-top+.45);
+   }
+  };
   if(f.headMask&&y<f.headMask.bottom){paint(b.l,Math.min(b.r,f.headMask.l));paint(Math.max(b.l,f.headMask.r),b.r)}else paint(b.l,b.r);
  }
  g.restore();
@@ -100,5 +135,5 @@ function draw(g,x,footY,p,o={}){
 }
 function headIcon(g,style,w,h){const sheet=sheets.get('head:'+(HEADS.includes(style)?style:'long'));if(!sheet)return;const f=sheet.frames[0],b=f.b,sc=Math.min(w/(b.r-b.l),h/(b.b-b.t))*.94;g.drawImage(sheet.im,f.sx+b.l,f.sy+b.t,b.r-b.l,b.b-b.t,(w-(b.r-b.l)*sc)/2,(h-(b.b-b.t)*sc)/2,(b.r-b.l)*sc,(b.b-b.t)*sc)}
 function status(){return {loaded:sheets.size,total:files.length,ready:sheets.size===files.length}}
-window.NeonDoll=Object.freeze({COSTUMES,HEADS,palettes,frameAt,ready,draw,headIcon,status,onRefresh(fn){refresh=fn}});
+window.NeonDoll=Object.freeze({COSTUMES,HEADS,palettes,frameAt,chestMotion,ready,draw,headIcon,status,onRefresh(fn){refresh=fn}});
 })();
