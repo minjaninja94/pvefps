@@ -489,7 +489,7 @@ function render(t){const rigNow=performance.now()/1000;if(!paused)rigClock+=Math
 for(let e of options.reduced?[]:effects){e.x+=e.vx;e.y+=e.vy;e.vy+=.3;e.life-=.035;g.globalAlpha=Math.max(0,e.life);star(e.x,e.y,7,e.col)}g.globalAlpha=1;effects=effects.filter(e=>e.life>0);
 let elapsed=clamp(t,0,finishTime);text(Math.floor(elapsed/60)+':'+String(Math.floor(elapsed%60)).padStart(2,'0')+' / '+Math.floor(finishTime/60)+':'+String(Math.floor(finishTime%60)).padStart(2,'0'),600,655,'bold 17px system-ui','#e0d9f4');rect(360,670,480,5,'#77738f88');rect(360,670,480*elapsed/finishTime,5,'#7be9ff');
 if(paused){rect(0,0,1200,700,'#050619df');text('PAUSED',600,321,'900 83px system-ui','#fff');text('ESC / RESUME 버튼으로 계속',600,366,'bold 21px system-ui','#ddd1ee')}
-g.restore();feedback.draw(feedbackG,t,{reduced:options.reduced,paused,rival:onlineMode});if(!paused)window.NeonPowerNotes.draw(feedbackG,notes,t,t-options.offset/1000,powerPulse,options.reduced)}
+g.restore();feedback.draw(feedbackG,t,{reduced:options.reduced,paused,rival:onlineMode});if(!paused)window.NeonPowerNotes.draw(feedbackG,notes,t,t-options.offset/1000,powerPulse,options.reduced,onlineMode,LANE_LAYOUT)}
 
 function renderHistory(){
  const root=$('historyList'),items=window.NeonProfileStore.history();root.replaceChildren();
