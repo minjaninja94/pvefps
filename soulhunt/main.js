@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { useNeedleProgressive } from '@needle-tools/gltf-progressive';
 
 const BOSS_QUERY=Number(new URLSearchParams(location.search).get('boss'));
 const BOSS_VARIANT=[1,2,3,4,5,6].includes(BOSS_QUERY)?BOSS_QUERY:1;
@@ -37,6 +38,7 @@ scene.fog=new THREE.FogExp2(0x111a28,.021);
 const camera=new THREE.PerspectiveCamera(52,1,.1,260);
 const clock=new THREE.Clock();
 const assetLoader=new GLTFLoader();
+useNeedleProgressive(assetLoader,renderer);
 
 scene.add(new THREE.HemisphereLight(0x8aa8c9,0x121722,1.32));
 const moon=new THREE.DirectionalLight(0xbfd8ff,4.15);
@@ -648,7 +650,11 @@ function loadPlayerFullplateKnight(){
    source:'dark_igorek / CC BY 4.0'
   });
  },undefined,err=>{
-  console.warn('Forgotten Knight GLB unavailable; hidden VRM driver remains.',err);
+  console.warn('Forgotten Knight GLB unavailable; restoring VRM fallback.',err);
+  // Never leave the player invisible on mobile/network/plugin failure.
+  showOriginalPlayerMeshes(playerVrmRoot);
+  knightVisual=playerVrmRoot;
+  playerKnightReady=false;
  });
 }
 function updatePlayerFullplateKnight(dt){
@@ -770,6 +776,13 @@ function hideOriginalPlayerMeshes(root){
   if(!o.isMesh)return;
   o.visible=false;
   o.castShadow=false;o.receiveShadow=false;
+ });
+}
+function showOriginalPlayerMeshes(root){
+ root?.traverse?.(o=>{
+  if(!o.isMesh)return;
+  o.visible=true;
+  o.castShadow=true;o.receiveShadow=true;
  });
 }
 function updateCorruptedKnightArmor(dt){
