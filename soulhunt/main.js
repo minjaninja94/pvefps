@@ -172,6 +172,9 @@ const PLAYER_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${P
 // The hidden VRM remains only as the procedural motion / melee-IK driver.
 const PLAYER_KNIGHT_GLB_URL='https://cloud.needle.tools/-/assets/Z23hmXBZ21QnG-Z21QnG-product/file';
 const PLAYER_VISUAL_HEIGHT=2.65;
+const PLAYER_KNIGHT_PROPORTIONS={
+ bodyWidth:.91,bodyDepth:.94,headScale:.86,shoulderSpread:1.10,hipTuck:.96
+};
 let knightVisual=null,playerVrm=null,playerVrmRoot=null;
 let playerKnightRoot=null,playerKnightMixer=null,playerKnightReady=false;
 const playerKnightBones={},playerKnightBoneRest={},playerVrmDriveRest={};
@@ -559,6 +562,39 @@ function cacheKnightRigRest(){
   playerVrmDriveRest[vrmName]=vb.quaternion.clone();
  }
 }
+function applyKnightHeroProportions(){
+ if(!playerKnightRoot)return;
+ const p=PLAYER_KNIGHT_PROPORTIONS;
+ // Reduce the bulky/"onion" silhouette without changing gameplay capsule sizes.
+ playerKnightRoot.scale.x*=p.bodyWidth;
+ playerKnightRoot.scale.z*=p.bodyDepth;
+
+ const head=playerKnightBones.head;
+ if(head){
+  head.scale.multiplyScalar(p.headScale);
+ }
+
+ // Widen the shoulder line slightly while keeping the waist/hips compact.
+ for(const key of ['leftUpperArm','rightUpperArm']){
+  const b=playerKnightBones[key];
+  if(!b)continue;
+  b.position.x*=p.shoulderSpread;
+  b.position.z*=1.015;
+ }
+ for(const key of ['leftUpperLeg','rightUpperLeg']){
+  const b=playerKnightBones[key];
+  if(!b)continue;
+  b.position.x*=p.hipTuck;
+ }
+
+ // Longer-leg read: lift the hip line a little relative to the boots. This is
+ // deliberately subtle so retargeted knees/feet do not explode during rolls.
+ const lThigh=playerKnightBones.leftUpperLeg,rThigh=playerKnightBones.rightUpperLeg;
+ if(lThigh)lThigh.position.y*=1.035;
+ if(rThigh)rThigh.position.y*=1.035;
+
+ playerKnightRoot.updateMatrixWorld(true);
+}
 function darkenKnightMaterials(root){
  root.traverse(o=>{
   if(!o.isMesh)return;
@@ -593,6 +629,11 @@ function loadPlayerFullplateKnight(){
   knightVisual=root;
   playerVrmMotion.add(root);
   cacheKnightRigRest();
+  applyKnightHeroProportions();
+  // Re-floor after proportion edits.
+  root.updateMatrixWorld(true);
+  const proportionBox=new THREE.Box3().setFromObject(root,true);
+  root.position.y-=proportionBox.min.y;
   if(gltf.animations?.length){
    playerKnightMixer=new THREE.AnimationMixer(root);
    // Embedded idle/walk remain available as a fallback, but the retargeted VRM
@@ -603,6 +644,7 @@ function loadPlayerFullplateKnight(){
   console.info('Forgotten Knight visual loaded',{
    height:PLAYER_VISUAL_HEIGHT,
    mappedBones:Object.keys(playerKnightBones).length,
+   proportions:PLAYER_KNIGHT_PROPORTIONS,
    source:'dark_igorek / CC BY 4.0'
   });
  },undefined,err=>{
