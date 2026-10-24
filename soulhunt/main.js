@@ -506,6 +506,137 @@ function updatePlayerShieldRig(dt){
 // Do not show the squat primitive/KayKit body while the real player asset streams in.
 player.children.filter(o=>o.isMesh).forEach(m=>m.visible=false);
 
+// ---------------------------------------------------------------------------
+// Player visual overhaul: Corrupted Knight overlay.
+// The VRM remains as an invisible animation skeleton; every visible body piece
+// below follows the animated humanoid bones in world space.
+// ---------------------------------------------------------------------------
+const corruptedKnightRoot=new THREE.Group();corruptedKnightRoot.name='PlayerCorruptedKnightVisual';scene.add(corruptedKnightRoot);
+const ckIron=new THREE.MeshStandardMaterial({color:0x202126,roughness:.46,metalness:.82});
+const ckIronDark=new THREE.MeshStandardMaterial({color:0x0d0e11,roughness:.55,metalness:.72});
+const ckIronEdge=new THREE.MeshStandardMaterial({color:0x55545a,roughness:.34,metalness:.9});
+const ckLeather=new THREE.MeshStandardMaterial({color:0x2c1e18,roughness:.86,metalness:.04});
+const ckCloth=new THREE.MeshStandardMaterial({color:0x3d090b,roughness:.9,metalness:.01,side:THREE.DoubleSide});
+const ckGlow=new THREE.MeshBasicMaterial({color:0x9f0d0b,transparent:true,opacity:.78,depthWrite:false,toneMapped:false});
+const ckGlowAura=new THREE.MeshBasicMaterial({color:0x6d0504,transparent:true,opacity:.22,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false});
+
+const corruptedKnightParts={segments:[],static:[],ready:false};
+function ckMesh(geo,mat,parent=corruptedKnightRoot){
+ const m=new THREE.Mesh(geo,mat);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
+}
+function ckSegment(aName,bName,radius,mat=ckIron,scaleY=1){
+ const m=ckMesh(new THREE.CylinderGeometry(radius*.86,radius,1,10),mat);
+ corruptedKnightParts.segments.push({mesh:m,aName,bName,scaleY});return m;
+}
+function ckPlate(anchorName,geo,mat=ckIron,offset=[0,0,0],rot=[0,0,0],scale=[1,1,1]){
+ const m=ckMesh(geo,mat);m.userData.ck={anchorName,offset:new THREE.Vector3(...offset),rot:new THREE.Euler(...rot),scale:new THREE.Vector3(...scale)};
+ corruptedKnightParts.static.push(m);return m;
+}
+function ckWorldBone(name){
+ const b=playerVrmBones[name];if(!b)return null;
+ const p=new THREE.Vector3();b.getWorldPosition(p);return p;
+}
+function ckWorldQuat(name){
+ const b=playerVrmBones[name];if(!b)return null;
+ const q=new THREE.Quaternion();b.getWorldQuaternion(q);return q;
+}
+function ckAlignBetween(mesh,a,b,radiusMul=1){
+ if(!mesh||!a||!b)return;
+ const d=b.clone().sub(a),len=d.length();if(len<1e-5)return;
+ mesh.position.copy(a).lerp(b,.5);
+ mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());
+ mesh.scale.set(radiusMul,len, radiusMul);
+}
+function buildCorruptedKnightArmor(){
+ if(corruptedKnightParts.ready)return;
+ corruptedKnightParts.ready=true;
+
+ // Black under-suit fills gaps under the plate armor.
+ ckSegment('leftShoulder','leftUpperArm',.17,ckIronDark);
+ ckSegment('leftUpperArm','leftLowerArm',.19,ckIronDark);
+ ckSegment('leftLowerArm','leftHand',.15,ckIronDark);
+ ckSegment('rightShoulder','rightUpperArm',.17,ckIronDark);
+ ckSegment('rightUpperArm','rightLowerArm',.19,ckIronDark);
+ ckSegment('rightLowerArm','rightHand',.15,ckIronDark);
+ ckSegment('leftUpperLeg','leftLowerLeg',.23,ckIronDark);
+ ckSegment('leftLowerLeg','leftFoot',.19,ckIronDark);
+ ckSegment('rightUpperLeg','rightLowerLeg',.23,ckIronDark);
+ ckSegment('rightLowerLeg','rightFoot',.19,ckIronDark);
+
+ // Plate armor: broad silhouette, dark iron with worn silver edges.
+ ckPlate('chest',new THREE.BoxGeometry(.82,.68,.38),ckIron,[0,-.02,-.02],[0,0,0],[1.08,1.05,1.0]).name='CorruptedKnightBreastplate';
+ ckPlate('upperChest',new THREE.BoxGeometry(.94,.26,.42),ckIronEdge,[0,.02,-.005],[0,0,0],[1.04,.9,1]);
+ ckPlate('hips',new THREE.BoxGeometry(.72,.24,.38),ckIronDark,[0,.02,0],[0,0,0],[1.0,1,1]);
+
+ for(const side of ['left','right']){
+  const sx=side==='left'?-1:1;
+  ckPlate(side+'Shoulder',new THREE.SphereGeometry(.28,12,8),ckIron,[sx*.02,0,0],[0,0,0],[1.45,.72,1.08]);
+  ckPlate(side+'LowerArm',new THREE.CylinderGeometry(.18,.15,.46,9),ckIronEdge,[0,-.18,0],[0,0,0],[1,1,1]);
+  ckPlate(side+'Hand',new THREE.BoxGeometry(.28,.22,.3),ckIronDark,[0,-.05,0],[0,0,0],[1,1,1]);
+  ckPlate(side+'LowerLeg',new THREE.CylinderGeometry(.205,.175,.55,9),ckIron,[0,-.24,0],[0,0,0],[1,1,1]);
+  ckPlate(side+'Foot',new THREE.BoxGeometry(.34,.22,.58),ckIronDark,[0,-.04,-.12],[0,0,0],[1,1,1]);
+ }
+
+ // Half-mask helmet: no anime face remains visible.
+ const helmet=new THREE.Group();helmet.name='CorruptedKnightHelmet';corruptedKnightRoot.add(helmet);
+ helmet.userData.ck={anchorName:'head',offset:new THREE.Vector3(0,.05,0),rot:new THREE.Euler(),scale:new THREE.Vector3(1,1,1)};
+ corruptedKnightParts.static.push(helmet);
+ ckMesh(new THREE.CylinderGeometry(.31,.34,.43,8),ckIron,helmet).position.y=.04;
+ const facePlate=ckMesh(new THREE.BoxGeometry(.57,.38,.24),ckIronDark,helmet);facePlate.position.set(0,-.035,-.16);facePlate.rotation.x=-.05;
+ const brow=ckMesh(new THREE.BoxGeometry(.64,.09,.27),ckIronEdge,helmet);brow.position.set(0,.11,-.15);
+ const crest=ckMesh(new THREE.BoxGeometry(.08,.34,.12),ckIronEdge,helmet);crest.position.set(0,.29,.02);crest.rotation.z=.08;
+ const visor=ckMesh(new THREE.BoxGeometry(.43,.055,.025),ckGlow,helmet);visor.position.set(0,.04,-.292);visor.renderOrder=40;
+ const visorAura=ckMesh(new THREE.BoxGeometry(.54,.11,.02),ckGlowAura,helmet);visorAura.position.set(0,.04,-.305);visorAura.renderOrder=39;
+
+ // Torn crimson tabard and short half-cape.
+ const waistCloth=ckPlate('hips',new THREE.PlaneGeometry(.62,.86,1,3),ckCloth,[0,-.37,-.12],[.08,0,0],[1,1,1]);waistCloth.name='CorruptedKnightTabard';
+ const capePiece=ckPlate('upperChest',new THREE.PlaneGeometry(.72,.82,1,3),ckCloth,[.12,-.25,.21],[-.1,.05,.12],[1,1,1]);capePiece.name='CorruptedKnightHalfCape';
+
+ // Corruption cracks across chest: deliberately subtle, not a boss-sized aura.
+ const crackRoot=new THREE.Group();crackRoot.name='CorruptedKnightChestCracks';corruptedKnightRoot.add(crackRoot);
+ crackRoot.userData.ck={anchorName:'chest',offset:new THREE.Vector3(0,.03,-.225),rot:new THREE.Euler(),scale:new THREE.Vector3(1,1,1)};
+ corruptedKnightParts.static.push(crackRoot);
+ for(const [x,y,rz,h] of [[-.13,.12,-.45,.24],[.07,.03,.38,.2],[.18,-.13,-.3,.18],[-.02,-.18,.12,.17]]){
+  const c=ckMesh(new THREE.BoxGeometry(.018,h,.018),ckGlow,crackRoot);c.position.set(x,y,0);c.rotation.z=rz;
+ }
+ const chestAura=ckMesh(new THREE.SphereGeometry(.22,10,7),ckGlowAura,crackRoot);chestAura.scale.set(1.35,.8,.18);chestAura.position.z=-.015;
+
+ // Leather belt with iron buckle.
+ const belt=ckPlate('hips',new THREE.BoxGeometry(.78,.1,.42),ckLeather,[0,.08,0],[0,0,0],[1,1,1]);belt.name='CorruptedKnightBelt';
+ const buckle=ckPlate('hips',new THREE.BoxGeometry(.14,.13,.055),ckIronEdge,[0,.08,-.225],[0,0,0],[1,1,1]);buckle.name='CorruptedKnightBuckle';
+}
+function hideOriginalPlayerMeshes(root){
+ root?.traverse?.(o=>{
+  if(!o.isMesh)return;
+  o.visible=false;
+  o.castShadow=false;o.receiveShadow=false;
+ });
+}
+function updateCorruptedKnightArmor(dt){
+ if(!corruptedKnightParts.ready)return;
+ corruptedKnightRoot.visible=!state.dead||true;
+ for(const seg of corruptedKnightParts.segments){
+  const a=ckWorldBone(seg.aName),b=ckWorldBone(seg.bName);
+  if(a&&b)ckAlignBetween(seg.mesh,a,b,seg.scaleY||1);
+ }
+ for(const obj of corruptedKnightParts.static){
+  const meta=obj.userData.ck;if(!meta)continue;
+  const bone=playerVrmBones[meta.anchorName];if(!bone)continue;
+  const pos=new THREE.Vector3(),q=new THREE.Quaternion();bone.getWorldPosition(pos);bone.getWorldQuaternion(q);
+  obj.position.copy(pos).add(meta.offset.clone().applyQuaternion(q));
+  const localQ=new THREE.Quaternion().setFromEuler(meta.rot);
+  obj.quaternion.copy(q).multiply(localQ);
+  obj.scale.copy(meta.scale);
+ }
+ const pulse=.9+.1*Math.sin(state.time*4.2);
+ ckGlow.opacity=.68+.1*pulse;ckGlowAura.opacity=.15+.08*pulse;
+ // Cloth motion: light, delayed sway; enough to read as fabric without exploding the rig.
+ const tabard=corruptedKnightRoot.getObjectByName('CorruptedKnightTabard');
+ const cape=corruptedKnightRoot.getObjectByName('CorruptedKnightHalfCape');
+ if(tabard)tabard.rotation.x+=Math.sin(state.time*5.2)*(state.rolling>0?.02:.004);
+ if(cape)cape.rotation.z+=Math.sin(state.time*3.1)*.0025;
+}
+
 (async()=>{
  try{
    const {VRMLoaderPlugin,VRMUtils}=await import('@pixiv/three-vrm');
@@ -538,11 +669,13 @@ player.children.filter(o=>o.isMesh).forEach(m=>m.visible=false);
        if(node)cachePlayerVrmBone(name,node);
      }
 
+     hideOriginalPlayerMeshes(root);
+     buildCorruptedKnightArmor();
      const rightHand=playerVrmBones.rightHand,leftHand=playerVrmBones.leftHand;
      if(rightHand)rightHand.add(weaponHandAnchor);
      applyWeaponGrip();
      shieldHandAnchor.visible=!!leftHand&&!twoHanded;
-     console.info('Sakurada Fumiriya player loaded', {height:targetHeight,weaponHand:!!rightHand,shieldHand:!!leftHand,bones:Object.keys(playerVrmBones).length});
+     console.info('Corrupted Knight player loaded', {height:targetHeight,weaponHand:!!rightHand,shieldHand:!!leftHand,bones:Object.keys(playerVrmBones).length});
    },undefined,err=>console.warn('Tall VRoid player unavailable.',err));
  }catch(err){console.warn('three-vrm unavailable for player.',err)}
 })();
@@ -734,6 +867,7 @@ function animateVroidPlayer(dt){
  }
  playerVrm?.update?.(dt);
  player.updateMatrixWorld(true);playerVrmRoot?.updateMatrixWorld(true);
+ updateCorruptedKnightArmor(dt);
  updatePlayerShieldRig(dt);
 }
 
