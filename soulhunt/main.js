@@ -4134,23 +4134,38 @@ let boss6MaleVoice=null;
 function selectBoss6MaleVoice(){
  const synth=window.speechSynthesis,voices=synth?.getVoices?.()||[];
  if(!voices.length)return null;
- const ko=voices.filter(v=>/^ko/i.test(v.lang));
- const preferred=[
-  /InJoon/i,/Hyunsu/i,/Hyun[- ]?su/i,/Joon/i,/Male/i,/남성/i,/남/i
- ];
- for(const re of preferred){const v=ko.find(x=>re.test(x.name));if(v)return v}
- return ko[0]||voices.find(v=>/Male/i.test(v.name))||voices[0]||null;
+ const female=/female|woman|여성|여자|yuna|yuri|heami|sunhi|sora|soyeon|seoyeon|ji[- ]?min|jimin|nara|kyuri|한국의/i;
+ const male=/male|man|남성|남자|injoon|in[- ]?joon|hyunsu|hyun[- ]?su|joon|junwoo|jun[- ]?woo|minjun|min[- ]?jun|siwoo|si[- ]?woo/i;
+ const korean=voices.filter(v=>/^ko(?:-|_)?/i.test(v.lang||'')&&!female.test(v.name||''));
+ // Boss 6 may ONLY use a voice that is positively identifiable as male.
+ // Never fall back to the first Korean/default voice: on many phones that voice is female.
+ for(const v of korean){if(male.test(v.name||''))return v}
+ for(const v of voices){if(male.test(v.name||'')&&!female.test(v.name||''))return v}
+ return null;
+}
+function boss6MaleVoiceUnavailableCue(){
+ // No male TTS installed: keep the visual line and add a low non-verbal impact cue
+ // instead of ever falling back to a female system voice.
+ try{
+  const ctx=ensureImpactAudio();if(!ctx)return;
+  const now=ctx.currentTime,osc=ctx.createOscillator(),gain=ctx.createGain(),filter=ctx.createBiquadFilter();
+  osc.type='sawtooth';osc.frequency.setValueAtTime(92,now);osc.frequency.exponentialRampToValueAtTime(58,now+.16);
+  filter.type='lowpass';filter.frequency.setValueAtTime(420,now);
+  gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.07,now+.012);gain.gain.exponentialRampToValueAtTime(.0001,now+.19);
+  osc.connect(filter).connect(gain).connect(ctx.destination);osc.start(now);osc.stop(now+.2);
+ }catch{}
 }
 function playBoss6Voice(line,key=''){
  if(!line||typeof window==='undefined')return;
  const now=performance.now();if(now-boss6VoiceLast<180)return;boss6VoiceLast=now;
  try{
   const synth=window.speechSynthesis;if(!synth)return;
-  boss6MaleVoice=boss6MaleVoice||selectBoss6MaleVoice();
+  boss6MaleVoice=selectBoss6MaleVoice();
   synth.cancel();
-  const u=new SpeechSynthesisUtterance(line);u.lang='ko-KR';
-  u.rate=key==='execute'?.78:.94;u.pitch=key==='execute'?.28:.38;u.volume=1;
-  if(boss6MaleVoice)u.voice=boss6MaleVoice;
+  if(!boss6MaleVoice){boss6MaleVoiceUnavailableCue();return}
+  const u=new SpeechSynthesisUtterance(line);u.lang=boss6MaleVoice.lang||'ko-KR';
+  u.rate=key==='execute'?.76:.9;u.pitch=key==='execute'?.18:.26;u.volume=1;
+  u.voice=boss6MaleVoice;
   synth.speak(u);
  }catch{}
 }
