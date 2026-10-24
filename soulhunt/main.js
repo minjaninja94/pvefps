@@ -167,9 +167,10 @@ player.position.set(0,0,8);
 
 const PLAYER_MODEL_REV='e16eb187100149a315ad92c3c9968f1d5baa6c7d';
 const PLAYER_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${PLAYER_MODEL_REV}/vroid/beta/Sakurada_Fumiriya.vrm`;
-// CC0: Luana Coppio "Fullplate Armor Knight", repaired mirrored GLB from Ashen Courtyard.
-// The visible knight is the real skinned GLB; the VRM below remains hidden and only drives motion/IK.
-const PLAYER_KNIGHT_GLB_URL='https://media.githubusercontent.com/media/JoaquimJunes/Ashen-Courtyard/e1ca385a067643250b25c32077912705e7a03a27/assets/third_party/fullplate_knight/knight_complete.glb';
+// Visible player: "The Forgotten Knight" by dark_igorek, CC BY 4.0.
+// Needle's progressive distribution is used instead of the 88 MB source GLB.
+// The hidden VRM remains only as the procedural motion / melee-IK driver.
+const PLAYER_KNIGHT_GLB_URL='https://cloud.needle.tools/-/assets/Z23hmXBZ21QnG-Z21QnG-product/file';
 const PLAYER_VISUAL_HEIGHT=2.65;
 let knightVisual=null,playerVrm=null,playerVrmRoot=null;
 let playerKnightRoot=null,playerKnightMixer=null,playerKnightReady=false;
@@ -517,29 +518,44 @@ player.children.filter(o=>o.isMesh).forEach(m=>m.visible=false);
 // never made visible when this GLB loads successfully.
 // ---------------------------------------------------------------------------
 const PLAYER_KNIGHT_BONE_MAP={
- Head:'head',
- 'UpperArm.l':'leftUpperArm','LowerArm.l':'leftLowerArm','Hand.l':'leftHand',
- 'UpperLeg.l':'leftUpperLeg','LowerLeg.l':'leftLowerLeg','Foot.l':'leftFoot',
- 'UpperArm.r':'rightUpperArm','LowerArm.r':'rightLowerArm','Hand.r':'rightHand',
- 'UpperLeg.r':'rightUpperLeg','LowerLeg.r':'rightLowerLeg','Foot.r':'rightFoot'
+ head:'head',
+ leftUpperArm:'leftUpperArm',leftLowerArm:'leftLowerArm',leftHand:'leftHand',
+ leftUpperLeg:'leftUpperLeg',leftLowerLeg:'leftLowerLeg',leftFoot:'leftFoot',
+ rightUpperArm:'rightUpperArm',rightLowerArm:'rightLowerArm',rightHand:'rightHand',
+ rightUpperLeg:'rightUpperLeg',rightLowerLeg:'rightLowerLeg',rightFoot:'rightFoot'
 };
-function findKnightBone(root,name){
- let hit=null;
- root?.traverse?.(o=>{
-  if(hit)return;
-  const n=(o.name||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-  const t=name.toLowerCase().replace(/[^a-z0-9]/g,'');
-  if(n===t)hit=o;
- });
- return hit;
+function knightBoneNorm(name){return (name||'').toLowerCase().replace(/mixamorig|armature|rig|bone/g,'').replace(/[^a-z0-9]/g,'')}
+function collectKnightBones(root){
+ const out=[];
+ root?.traverse?.(o=>{if(o.isBone)out.push(o)});
+ root?.traverse?.(o=>{if(!o.isSkinnedMesh||!o.skeleton?.bones)return;for(const b of o.skeleton.bones)if(b&&!out.includes(b))out.push(b)});
+ return out;
+}
+function scoreKnightBone(norm,semantic){
+ const side=semantic.startsWith('left')?'left':semantic.startsWith('right')?'right':'';
+ if(side==='left'&&(norm.includes('right')||norm.startsWith('r')))return -50;
+ if(side==='right'&&(norm.includes('left')||norm.startsWith('l')))return -50;
+ let score=0;
+ if(side==='left'&&(norm.includes('left')||norm.startsWith('l')))score+=9;
+ if(side==='right'&&(norm.includes('right')||norm.startsWith('r')))score+=9;
+ const type=semantic.replace(/^(left|right)/,'').toLowerCase();
+ const tests={head:['head'],upperarm:['upperarm','uparm','armupper','shoulder'],lowerarm:['lowerarm','forearm','loarm','armlower'],hand:['hand','wrist'],upperleg:['upperleg','thigh','upleg','legupper'],lowerleg:['lowerleg','calf','shin','loleg','leglower'],foot:['foot','ankle']};
+ for(const key of tests[type]||[])if(norm.includes(key))score+=key===type?12:8;
+ if(norm.endsWith(type))score+=4;
+ return score;
+}
+function findKnightBoneBySemantic(root,semantic){
+ const bones=collectKnightBones(root);let best=null,bestScore=0;
+ for(const b of bones){const score=scoreKnightBone(knightBoneNorm(b.name),semantic);if(score>bestScore){best=b;bestScore=score}}
+ return bestScore>=8?best:null;
 }
 function cacheKnightRigRest(){
  if(!playerKnightRoot)return;
- for(const [knightName,vrmName] of Object.entries(PLAYER_KNIGHT_BONE_MAP)){
-  const kb=findKnightBone(playerKnightRoot,knightName),vb=playerVrmBones[vrmName];
+ for(const [semantic,vrmName] of Object.entries(PLAYER_KNIGHT_BONE_MAP)){
+  const kb=findKnightBoneBySemantic(playerKnightRoot,semantic),vb=playerVrmBones[vrmName];
   if(!kb||!vb)continue;
-  playerKnightBones[knightName]=kb;
-  playerKnightBoneRest[knightName]=kb.quaternion.clone();
+  playerKnightBones[semantic]=kb;
+  playerKnightBoneRest[semantic]=kb.quaternion.clone();
   playerVrmDriveRest[vrmName]=vb.quaternion.clone();
  }
 }
@@ -548,15 +564,13 @@ function darkenKnightMaterials(root){
   if(!o.isMesh)return;
   o.castShadow=true;o.receiveShadow=true;
   const mats=Array.isArray(o.material)?o.material:[o.material];
+  const names=mats.map(m=>(m?.name||'').toLowerCase()).join(' ');
+  if(/roses?/.test(names)||/sword/.test(names)){o.visible=false;return}
   for(const m of mats){
    if(!m)continue;
-   m=m;
-   if(m.color){
-    // Corrupted knight A-2: blackened steel with a muted blood-red cast.
-    m.color.multiply(new THREE.Color(.32,.27,.28));
-   }
-   if('roughness' in m)m.roughness=Math.max(.38,Math.min(.78,m.roughness??.55));
-   if('metalness' in m)m.metalness=Math.max(.35,m.metalness??.5);
+   if(m.color)m.color.multiply(new THREE.Color(.58,.5,.52));
+   if('roughness' in m)m.roughness=Math.max(.32,Math.min(.72,m.roughness??.5));
+   if('metalness' in m&&/armor|metal|plate|detail/.test((m.name||'').toLowerCase()))m.metalness=Math.max(.52,m.metalness??.5);
   }
  });
 }
@@ -573,7 +587,7 @@ function loadPlayerFullplateKnight(){
   root.position.y-=box.min.y;
   // Source faces the opposite way in its Godot wrapper.
   root.rotation.y=Math.PI;
-  root.name='PlayerFullplateKnightCC0';
+  root.name='PlayerForgottenKnight';
   darkenKnightMaterials(root);
   playerKnightRoot=root;
   knightVisual=root;
@@ -586,20 +600,21 @@ function loadPlayerFullplateKnight(){
   }
   playerKnightReady=true;
   corruptedKnightRoot.visible=false;
-  console.info('CC0 Fullplate Knight visual loaded',{
+  console.info('Forgotten Knight visual loaded',{
    height:PLAYER_VISUAL_HEIGHT,
-   mappedBones:Object.keys(playerKnightBones).length
+   mappedBones:Object.keys(playerKnightBones).length,
+   source:'dark_igorek / CC BY 4.0'
   });
  },undefined,err=>{
-  console.warn('CC0 Fullplate Knight GLB unavailable; hidden VRM driver remains.',err);
+  console.warn('Forgotten Knight GLB unavailable; hidden VRM driver remains.',err);
  });
 }
 function updatePlayerFullplateKnight(dt){
  if(!playerKnightReady||!playerKnightRoot)return;
  if(!Object.keys(playerKnightBones).length)cacheKnightRigRest();
- for(const [knightName,vrmName] of Object.entries(PLAYER_KNIGHT_BONE_MAP)){
-  const kb=playerKnightBones[knightName],vb=playerVrmBones[vrmName];
-  const kr=playerKnightBoneRest[knightName],vr=playerVrmDriveRest[vrmName];
+ for(const [semantic,vrmName] of Object.entries(PLAYER_KNIGHT_BONE_MAP)){
+  const kb=playerKnightBones[semantic],vb=playerVrmBones[vrmName];
+  const kr=playerKnightBoneRest[semantic],vr=playerVrmDriveRest[vrmName];
   if(!kb||!vb||!kr||!vr)continue;
   // Apply only the animated delta, preserving the knight's authored bind pose.
   const delta=vr.clone().invert().multiply(vb.quaternion);
