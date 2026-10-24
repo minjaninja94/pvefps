@@ -172,6 +172,10 @@ let knightVisual=null,playerVrm=null,playerVrmRoot=null;
 const playerVrmMotion=new THREE.Group();playerVrmMotion.position.y=.98;player.add(playerVrmMotion);
 const playerVrmMotionRest={y:.98};
 const playerVrmRootRest={y:0,rotation:new THREE.Euler()};
+const playerNaturalMotion={
+ gaitPhase:0,prevPos:new THREE.Vector3(),ready:false,speed:0,moveBlend:0,
+ turnLean:0,lastYaw:0,weaponQ:new THREE.Quaternion()
+};
 function motionSmooth(a,b,x){const t=clamp((x-a)/Math.max(.0001,b-a),0,1);return t*t*(3-2*t)}
 const playerVrmBones={},playerVrmRest={};
 function cachePlayerVrmBone(name,node){
@@ -316,16 +320,30 @@ const PLAYER_STRONG_HAND_PATHS={
  katana:[[0,-.32,-.66,-.1],[.28,-.56,-.62,-.26],[.44,-.64,-.54,-.12],[.56,.7,-.18,1.16],[.7,.5,-.36,.94],[1,.04,-.54,.2]],
  axe:[[0,.14,-.58,.12],[.2,.12,.02,-.24],[.48,.18,.58,-.14],[.66,-.08,-.92,1.02],[.82,-.04,-.72,.7],[1,.08,-.58,.2]]
 };
+function playerHandFrameVec(frame){
+ return new THREE.Vector3(frame[1],frame[2],frame[3]);
+}
+function catmullPlayerHand(a,b,c,d,t){
+ const t2=t*t,t3=t2*t;
+ return new THREE.Vector3(
+  .5*((2*b.x)+(-a.x+c.x)*t+(2*a.x-5*b.x+4*c.x-d.x)*t2+(-a.x+3*b.x-3*c.x+d.x)*t3),
+  .5*((2*b.y)+(-a.y+c.y)*t+(2*a.y-5*b.y+4*c.y-d.y)*t2+(-a.y+3*b.y-3*c.y+d.y)*t3),
+  .5*((2*b.z)+(-a.z+c.z)*t+(2*a.z-5*b.z+4*c.z-d.z)*t2+(-a.z+3*b.z-3*c.z+d.z)*t3)
+ );
+}
 function samplePlayerHandPath(id,step,p){
  const frames=state.attackStrong?(PLAYER_STRONG_HAND_PATHS[id]||PLAYER_STRONG_HAND_PATHS.straight):(PLAYER_HAND_PATHS[id]?.[step]||PLAYER_HAND_PATHS.straight[Math.max(1,Math.min(3,step))]);
- let a=frames[0],b=frames[frames.length-1];
- for(let i=0;i<frames.length-1;i++){if(p>=frames[i][0]&&p<=frames[i+1][0]){a=frames[i];b=frames[i+1];break}}
- const t=motionSmooth(a[0],b[0],p);
- return new THREE.Vector3(
-  THREE.MathUtils.lerp(a[1],b[1],t),
-  THREE.MathUtils.lerp(a[2],b[2],t),
-  THREE.MathUtils.lerp(a[3],b[3],t)
- );
+ let idx=0;
+ for(let i=0;i<frames.length-1;i++){if(p>=frames[i][0]&&p<=frames[i+1][0]){idx=i;break}if(p>frames[i+1][0])idx=i+1}
+ idx=Math.min(idx,frames.length-2);
+ const f1=frames[idx],f2=frames[idx+1],f0=frames[Math.max(0,idx-1)],f3=frames[Math.min(frames.length-1,idx+2)];
+ const t=motionSmooth(f1[0],f2[0],p);
+ const v=catmullPlayerHand(playerHandFrameVec(f0),playerHandFrameVec(f1),playerHandFrameVec(f2),playerHandFrameVec(f3),t);
+ // Prevent spline overshoot from pulling the wrist through the torso on extreme key poses.
+ const mins=new THREE.Vector3(Math.min(f1[1],f2[1])-.18,Math.min(f1[2],f2[2])-.18,Math.min(f1[3],f2[3])-.2);
+ const maxs=new THREE.Vector3(Math.max(f1[1],f2[1])+.18,Math.max(f1[2],f2[2])+.18,Math.max(f1[3],f2[3])+.2);
+ v.x=clamp(v.x,mins.x,maxs.x);v.y=clamp(v.y,mins.y,maxs.y);v.z=clamp(v.z,mins.z,maxs.z);
+ return v;
 }
 const PLAYER_READY_HANDS={
  straight:[.24,-.56,.22],
@@ -429,9 +447,12 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
      }
    }
    const handTarget=shoulder.clone().add(playerLocalVector(delta));
-   const elbowDelta=new THREE.Vector3(sx*reach*.28,-reach*.4,delta.z*.42);
+   const elbowSide=attack?(side==='right'?.22:.26):.28;
+   const elbowDrop=attack?-.34:-.4;
+   const elbowDelta=new THREE.Vector3(sx*reach*elbowSide,reach*elbowDrop,delta.z*(attack?.34:.42));
    const elbowTarget=shoulder.clone().add(playerLocalVector(elbowDelta));
-   solveArmCCD(playerVrmBones,side,handTarget,elbowTarget,1-Math.exp(-dt*32));
+   const ikSpeed=attack?(state.attackStrong?24:27):(sprint?21:18);
+   solveArmCCD(playerVrmBones,side,handTarget,elbowTarget,1-Math.exp(-dt*ikSpeed));
  }
  // Two-handed weapons use the actual weapon handle as the left-hand IK target.
  // This keeps both palms on the same weapon and lets the elbow fold naturally instead of posing independently.
@@ -444,7 +465,7 @@ function applyPlayerArmIK(dt,phase,moving,sprint){
    const shoulder=new THREE.Vector3();playerVrmBones.leftUpperArm.getWorldPosition(shoulder);
    const reach=getArmReach(playerVrmBones,'left');
    const elbowHint=shoulder.clone().add(playerLocalVector(new THREE.Vector3(-reach*.3,-reach*.34,reach*.16)));
-   solveArmCCD(playerVrmBones,'left',gripTarget,elbowHint,1-Math.exp(-dt*38));
+   solveArmCCD(playerVrmBones,'left',gripTarget,elbowHint,1-Math.exp(-dt*(state.attack>0?29:24)));
    playerVrmBones.leftHand.updateWorldMatrix?.(false,true);
  }
  if(state.rolling<=0){applyPlayerWristGrip(dt);if(currentWeapon().id==='spear')alignPlayerSpearToForward(dt)}
@@ -528,9 +549,26 @@ player.children.filter(o=>o.isMesh).forEach(m=>m.visible=false);
 
 function animateVroidPlayer(dt){
  if(!playerVrmRoot)return;
- const {x,z}=getMoveAxes(),moving=!!(x||z);
- const sprint=(input.keys.has('ShiftLeft')||input.keys.has('ShiftRight'))&&moving&&state.stamina>0&&state.exhausted<=0;
- const speed=sprint?12.6:9.0,phase=state.time*speed;
+ const {x,z}=getMoveAxes(),inputMoving=!!(x||z);
+ const sprint=(input.keys.has('ShiftLeft')||input.keys.has('ShiftRight'))&&inputMoving&&state.stamina>0&&state.exhausted<=0;
+ if(!playerNaturalMotion.ready){
+  playerNaturalMotion.prevPos.copy(player.position);playerNaturalMotion.lastYaw=player.rotation.y;playerNaturalMotion.ready=true;
+ }
+ const travel=player.position.clone().sub(playerNaturalMotion.prevPos);travel.y=0;
+ const realSpeed=travel.length()/Math.max(dt,.001);playerNaturalMotion.prevPos.copy(player.position);
+ playerNaturalMotion.speed=THREE.MathUtils.lerp(playerNaturalMotion.speed,realSpeed,1-Math.exp(-dt*10));
+ const moving=inputMoving&&playerNaturalMotion.speed>.06;
+ const targetMove=moving?clamp(playerNaturalMotion.speed/(sprint?5.8:3.55),.18,1):0;
+ playerNaturalMotion.moveBlend=THREE.MathUtils.lerp(playerNaturalMotion.moveBlend,targetMove,1-Math.exp(-dt*(moving?10:14)));
+ // Phase follows meters travelled, so feet stop when the character stops and no longer skate.
+ if(moving){
+  const radiansPerMeter=sprint?4.0:4.7;
+  playerNaturalMotion.gaitPhase+=travel.length()*radiansPerMeter;
+ }
+ const phase=playerNaturalMotion.gaitPhase;
+ const yawDelta=Math.atan2(Math.sin(player.rotation.y-playerNaturalMotion.lastYaw),Math.cos(player.rotation.y-playerNaturalMotion.lastYaw));
+ playerNaturalMotion.lastYaw=player.rotation.y;
+ playerNaturalMotion.turnLean=THREE.MathUtils.lerp(playerNaturalMotion.turnLean,clamp(yawDelta/Math.max(dt,.001),-4,4),1-Math.exp(-dt*9));
  let hipsX=0,hipsY=0,hipsZ=0,spineX=0,spineY=0,spineZ=0;
  let lsz=-.18,rsz=.18,luz=-1.62,ruz=1.62,lux=.12,rux=.12,luy=.04,ruy=-.04,llx=.42,rlx=.42;
  let lulx=0,rulx=0,lllx=0,rllx=0,lfx=0,rfx=0,headX=0,headY=0,headZ=0,neckX=0,neckY=0,neckZ=0;
@@ -627,23 +665,26 @@ function animateVroidPlayer(dt){
      lux=-.5;luy=.18;luz=-.32;llx=-.7;
      rux=-.46;ruy=-.16;ruz=.34;rlx=-.72;
    }
- }else if(moving){
-   const w=currentWeapon(),amp=sprint?.56:.38,stride=Math.sin(phase),swing=stride*amp;
-   const leftSwing=Math.max(0,Math.cos(phase)),rightSwing=Math.max(0,-Math.cos(phase));
+ }else if(moving||playerNaturalMotion.moveBlend>.025){
+   const w=currentWeapon(),blend=playerNaturalMotion.moveBlend,amp=(sprint?.54:.36)*blend,stride=Math.sin(phase),swing=stride*amp;
+   const leftSwing=Math.max(0,Math.cos(phase))*blend,rightSwing=Math.max(0,-Math.cos(phase))*blend;
    lulx=swing;rulx=-swing;
-   lllx=leftSwing*(sprint?.68:.43);
-   rllx=rightSwing*(sprint?.68:.43);
-   lfx=-stride*(sprint?.16:.11)-leftSwing*(sprint?.11:.075);
-   rfx=stride*(sprint?.16:.11)-rightSwing*(sprint?.11:.075);
-   headZ=stride*.009;headX=-Math.sin(phase*2)*.006;
-   // Base arm swing is subtle; hand IK below keeps the actual weapon grip stable.
-   lux=-swing*.34;rux=swing*.28;
+   lllx=leftSwing*(sprint?.64:.4);
+   rllx=rightSwing*(sprint?.64:.4);
+   lfx=-stride*(sprint?.145:.1)*blend-leftSwing*(sprint?.095:.065);
+   rfx=stride*(sprint?.145:.1)*blend-rightSwing*(sprint?.095:.065);
+   headZ=stride*.007*blend;headX=-Math.sin(phase*2)*.005*blend;
+   // Weapon arm is deliberately quieter than the free arm; the hand IK owns the grip.
+   lux=-swing*.28;rux=swing*.2;
    luz=-1.62;ruz=1.62;llx=.42;rlx=.42;
-   hipsY=Math.sin(phase*2)*.018;hipsZ=stride*.014;spineY=-stride*(sprint?.045:.03);spineZ=-stride*.018;
-   if(w.id==='greatsword'||w.id==='hammer'){spineX=-.075;hipsX=.04;lllx+=.055;rllx+=.055}
-   else if(w.id==='spear'){spineX=-.03;spineY+=.03}
-   else if(w.id==='katana'){spineX=-.05;hipsX=.03;spineZ*=1.18}
-   else if(w.id==='axe'){spineX=-.045;spineY+=.025}
+   const turn=clamp(playerNaturalMotion.turnLean*.018,-.07,.07);
+   hipsY=Math.sin(phase*2)*.014*blend+turn;hipsZ=stride*.011*blend;
+   spineY=-stride*(sprint?.035:.024)*blend-turn*.72;spineZ=-stride*.014*blend;
+   spineX=-(sprint?.075:.025)*blend;
+   if(w.id==='greatsword'||w.id==='hammer'){spineX-=.045*blend;hipsX=.035*blend;lllx+=.045*blend;rllx+=.045*blend}
+   else if(w.id==='spear'){spineX-=.015*blend;spineY+=.022*blend}
+   else if(w.id==='katana'){spineX-=.025*blend;hipsX=.024*blend;spineZ*=1.12}
+   else if(w.id==='axe'){spineX-=.02*blend;spineY+=.018*blend}
  }else{
    const breathe=Math.sin(state.time*1.6);
    spineX=breathe*.012;spineY=Math.sin(state.time*.45)*.01;
@@ -687,7 +728,7 @@ function animateVroidPlayer(dt){
    playerVrmMotion.rotation.x=lerpAngle(playerVrmMotion.rotation.x,0,1-Math.exp(-dt*24));
    playerVrmMotion.rotation.y=lerpAngle(playerVrmMotion.rotation.y,0,1-Math.exp(-dt*24));
    playerVrmMotion.rotation.z=lerpAngle(playerVrmMotion.rotation.z,0,1-Math.exp(-dt*24));
-   const walkBob=moving&&state.attack<=0&&!input.guard&&state.stagger<=0&&!state.dead?Math.abs(Math.sin(phase))*(sprint?.035:.022):0;
+   const walkBob=(moving||playerNaturalMotion.moveBlend>.02)&&state.attack<=0&&!input.guard&&state.stagger<=0&&!state.dead?Math.abs(Math.sin(phase))*playerNaturalMotion.moveBlend*(sprint?.026:.016):0;
    playerVrmMotion.position.y=THREE.MathUtils.lerp(playerVrmMotion.position.y,playerVrmMotionRest.y+walkBob,1-Math.exp(-dt*22));
    playerVrmMotion.position.z=THREE.MathUtils.lerp(playerVrmMotion.position.z,0,1-Math.exp(-dt*22));
  }
@@ -6266,26 +6307,34 @@ function updateBoss(dt){
  }
 }
 
-function applyWeaponAttackPose(w,step,p){
- const t=clamp(p,0,1),s=Math.sin(t*Math.PI),profile=playerAttackProfile(w.id,step),impact=Math.sin(clamp((t-profile.active[0])/(profile.active[1]-profile.active[0]),0,1)*Math.PI);
- const side=step===2?-1:1;weaponPivot.position.set(0,0,0);
+function applyWeaponAttackPose(w,step,p,dt=.016){
+ const t=clamp(p,0,1),profile=playerAttackProfile(w.id,step);
+ const wind=motionSmooth(0,Math.max(.14,profile.active[0]-.055),t)*(1-motionSmooth(profile.active[0],profile.active[1],t));
+ const cut=motionSmooth(profile.active[0]-.045,profile.active[1]-.04,t)*(1-motionSmooth(profile.active[1],.96,t));
+ const recover=motionSmooth(profile.active[1]-.02,1,t);
+ const side=step===2?-1:1;
+ let rx=0,ry=0,rz=0;
  if(state.attackStrong){
-   if(w.id==='straight')weaponPivot.rotation.set(-.1+.12*s,.14*impact,-.22*impact);
-   else if(w.id==='greatsword')weaponPivot.rotation.set(-.26+.18*s,.02*impact,-.06*impact);
-   else if(w.id==='hammer')weaponPivot.rotation.set(-.3+.12*s,-.08*impact,.08*impact);
-   else if(w.id==='spear')weaponPivot.rotation.set(-.015,0,0);
-   else if(w.id==='katana')weaponPivot.rotation.set(-.16+.06*s,.16*impact,-.28*impact);
-   else weaponPivot.rotation.set(-.22+.12*s,.05*impact,-.16*impact);
+   if(w.id==='straight'){rx=-.055+.055*wind;ry=side*(.035*wind-.075*cut);rz=side*(.06*wind-.12*cut)}
+   else if(w.id==='greatsword'){rx=-.11+.07*wind;ry=side*(.02*wind-.04*cut);rz=side*(.035*wind-.065*cut)}
+   else if(w.id==='hammer'){rx=-.14+.055*wind;ry=side*(.018*wind-.03*cut);rz=side*(.025*wind-.05*cut)}
+   else if(w.id==='spear'){rx=-.012;ry=side*.012*cut;rz=side*.01*cut}
+   else if(w.id==='katana'){rx=-.075+.04*wind;ry=side*(.05*wind-.095*cut);rz=side*(.08*wind-.15*cut)}
+   else{rx=-.09+.05*wind;ry=side*(.03*wind-.06*cut);rz=side*(.045*wind-.09*cut)}
  }else{
-   // Small wrist/edge-alignment offsets. The arm IK supplies the main path, so the weapon never disconnects from the palm.
-   if(w.id==='straight')weaponPivot.rotation.set(-.08+.1*s,side*.08*impact,-side*.16*impact);
-   else if(w.id==='greatsword')weaponPivot.rotation.set(-.18+.14*s,side*.05*impact,-side*.1*impact);
-   else if(w.id==='hammer')weaponPivot.rotation.set(-.24+.08*s,side*.025*impact,-side*.045*impact);
-   else if(w.id==='spear')weaponPivot.rotation.set(-.025,side*.015*impact,side*.018*impact);
-   else if(w.id==='katana')weaponPivot.rotation.set(-.14+.08*s,side*.11*impact,-side*.22*impact);
-   else weaponPivot.rotation.set(-.17+.1*s,side*.06*impact,-side*.13*impact);
+   if(w.id==='straight'){rx=-.035+.035*wind;ry=side*(.025*wind-.055*cut);rz=side*(.045*wind-.09*cut)}
+   else if(w.id==='greatsword'){rx=-.075+.045*wind;ry=side*(.018*wind-.035*cut);rz=side*(.028*wind-.055*cut)}
+   else if(w.id==='hammer'){rx=-.1+.04*wind;ry=side*(.012*wind-.024*cut);rz=side*(.02*wind-.04*cut)}
+   else if(w.id==='spear'){rx=-.01;ry=side*.008*cut;rz=side*.008*cut}
+   else if(w.id==='katana'){rx=-.06+.035*wind;ry=side*(.04*wind-.08*cut);rz=side*(.07*wind-.13*cut)}
+   else{rx=-.07+.04*wind;ry=side*(.022*wind-.045*cut);rz=side*(.035*wind-.075*cut)}
  }
- weaponPivot.scale.setScalar(twoHanded?1.06:1);
+ // Return toward neutral during recovery without a one-frame snap.
+ rx*=1-.72*recover;ry*=1-.78*recover;rz*=1-.78*recover;
+ const targetQ=new THREE.Quaternion().setFromEuler(new THREE.Euler(rx,ry,rz));
+ weaponPivot.quaternion.slerp(targetQ,1-Math.exp(-dt*(state.attackStrong?19:24)));
+ weaponPivot.position.lerp(new THREE.Vector3(0,0,0),1-Math.exp(-dt*25));
+ weaponPivot.scale.setScalar(THREE.MathUtils.lerp(weaponPivot.scale.x||1,twoHanded?1.06:1,1-Math.exp(-dt*20)));
 }
 function updatePlayer(dt){
  if(state.potionTimer>0){
@@ -6322,7 +6371,7 @@ function updatePlayer(dt){
    const w=currentWeapon(),gripDamage=twoHanded?1.16:1,gripPosture=twoHanded?1.2:1;
    const profile=playerAttackProfile(w.id,state.attackStep),step=state.attackStep;
    state.attack-=dt;const p=playerAttackProgress();
-   applyWeaponAttackPose(w,step,p);
+   applyWeaponAttackPose(w,step,p,dt);
    const driveStart=Math.min(profile.active[1],profile.active[0]+.065);
    const driveEnd=Math.max(driveStart,profile.active[1]-.065);
    if(p>=driveStart&&p<=driveEnd){
@@ -6331,14 +6380,29 @@ function updatePlayer(dt){
    }
    // Physical damage is resolved after the animated weapon transform updates.
    if(state.attack<=0){
-     weaponPivot.rotation.set(0,0,0);weaponPivot.position.set(0,0,0);applyWeaponGrip();player.rotation.x=0;player.rotation.z=0;playerBody.rotation.set(0,0,0);
+     // Keep the last attack transform for a few rendered frames; neutral pose code eases it home.
+     player.rotation.x=0;player.rotation.z=0;playerBody.rotation.set(0,0,0);
      if(state.attackStrong){state.attackStrong=false;state.attackStep=0;state.attackQueued=false;state.comboGrace=0}
      else if(state.attackQueued&&step<3)startAttack(step+1,false);else if(!state.attackQueued&&state.comboGrace<=0)state.attackStep=0;
    }
  }
  const toBoss=flatDir(player.position,boss.position);
+ const moveAxes=getMoveAxes();
+ let desiredMove=null;
+ if(moveAxes.x||moveAxes.z){
+   if(input.lock){
+     const right=new THREE.Vector3(-toBoss.z,0,toBoss.x);
+     desiredMove=new THREE.Vector3().addScaledVector(toBoss,moveAxes.z).addScaledVector(right,moveAxes.x).normalize();
+   }else{
+     const camForward=new THREE.Vector3(Math.sin(input.camYaw),0,Math.cos(input.camYaw)).normalize();
+     const camRight=new THREE.Vector3(-camForward.z,0,camForward.x);
+     desiredMove=new THREE.Vector3().addScaledVector(camForward,moveAxes.z).addScaledVector(camRight,moveAxes.x).normalize();
+   }
+ }
  if(input.lock&&!state.rolling)player.rotation.y=lerpAngle(player.rotation.y,Math.atan2(toBoss.x,toBoss.z),1-Math.exp(-dt*12));
- else if(!input.lock&&!state.rolling)player.rotation.y=lerpAngle(player.rotation.y,input.camYaw,1-Math.exp(-dt*13));
+ else if(!input.lock&&!state.rolling&&desiredMove&&state.attack<=0){
+   player.rotation.y=lerpAngle(player.rotation.y,Math.atan2(desiredMove.x,desiredMove.z),1-Math.exp(-dt*10.5));
+ }
  if(state.rolling>0){
    state.rollElapsed=Math.min(ROLL_DURATION,state.rollElapsed+dt);
    const p=clamp(state.rollElapsed/ROLL_DURATION,0,1);
@@ -6356,17 +6420,12 @@ function updatePlayer(dt){
  }
  if(state.stagger>0||state.attack>.18||state.potionTimer>0)return;
  const {x,z}=getMoveAxes();
- if(x||z){
-   const right=new THREE.Vector3(-toBoss.z,0,toBoss.x),move=new THREE.Vector3();
-   if(input.lock){
-     move.addScaledVector(toBoss,z).addScaledVector(right,x).normalize();
-   }else{
-     const forward=new THREE.Vector3(Math.sin(player.rotation.y),0,Math.cos(player.rotation.y));
-     const strafe=new THREE.Vector3(-forward.z,0,forward.x);
-     move.addScaledVector(forward,z).addScaledVector(strafe,x).normalize();
-   }
+ if((x||z)&&desiredMove){
    const sprint=(input.keys.has('ShiftLeft')||input.keys.has('ShiftRight'))&&state.stamina>0&&state.exhausted<=0;
-   player.position.addScaledVector(move,dt*(sprint?6.15:3.8));
+   const targetSpeed=sprint?6.15:3.8;
+   const accel=1-Math.exp(-dt*(sprint?8.5:11));
+   const moveSpeed=THREE.MathUtils.lerp(playerNaturalMotion.speed,targetSpeed,accel);
+   player.position.addScaledVector(desiredMove,dt*moveSpeed);
  }
  if(player.position.length()>18.8)player.position.setLength(18.8);
 
@@ -6391,9 +6450,9 @@ function updatePlayer(dt){
      playerBody.rotation.x=THREE.MathUtils.lerp(playerBody.rotation.x,-.09*state.guardBlend,1-Math.exp(-dt*18));
      playerBody.rotation.z=THREE.MathUtils.lerp(playerBody.rotation.z,-.06*state.guardBlend,1-Math.exp(-dt*18));
    }else{
-     swordPivot.rotation.x=THREE.MathUtils.lerp(swordPivot.rotation.x,0,1-Math.exp(-dt*16));
-     swordPivot.rotation.y=THREE.MathUtils.lerp(swordPivot.rotation.y,0,1-Math.exp(-dt*16));
-     swordPivot.rotation.z=THREE.MathUtils.lerp(swordPivot.rotation.z,0,1-Math.exp(-dt*16));
+     const neutralQ=new THREE.Quaternion();
+     weaponPivot.quaternion.slerp(neutralQ,1-Math.exp(-dt*13));
+     weaponPivot.position.lerp(new THREE.Vector3(0,0,0),1-Math.exp(-dt*15));
      playerBody.rotation.x=THREE.MathUtils.lerp(playerBody.rotation.x,0,1-Math.exp(-dt*16));
      playerBody.rotation.z=THREE.MathUtils.lerp(playerBody.rotation.z,0,1-Math.exp(-dt*16));
    }
