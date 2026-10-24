@@ -167,8 +167,13 @@ player.position.set(0,0,8);
 
 const PLAYER_MODEL_REV='e16eb187100149a315ad92c3c9968f1d5baa6c7d';
 const PLAYER_MODEL_URL=`https://raw.githubusercontent.com/madjin/vrm-samples/${PLAYER_MODEL_REV}/vroid/beta/Sakurada_Fumiriya.vrm`;
+// CC0: Luana Coppio "Fullplate Armor Knight", repaired mirrored GLB from Ashen Courtyard.
+// The visible knight is the real skinned GLB; the VRM below remains hidden and only drives motion/IK.
+const PLAYER_KNIGHT_GLB_URL='https://media.githubusercontent.com/media/JoaquimJunes/Ashen-Courtyard/e1ca385a067643250b25c32077912705e7a03a27/assets/third_party/fullplate_knight/knight_complete.glb';
 const PLAYER_VISUAL_HEIGHT=2.65;
 let knightVisual=null,playerVrm=null,playerVrmRoot=null;
+let playerKnightRoot=null,playerKnightMixer=null,playerKnightReady=false;
+const playerKnightBones={},playerKnightBoneRest={},playerVrmDriveRest={};
 const playerVrmMotion=new THREE.Group();playerVrmMotion.position.y=.98;player.add(playerVrmMotion);
 const playerVrmMotionRest={y:.98};
 const playerVrmRootRest={y:0,rotation:new THREE.Euler()};
@@ -507,11 +512,109 @@ function updatePlayerShieldRig(dt){
 player.children.filter(o=>o.isMesh).forEach(m=>m.visible=false);
 
 // ---------------------------------------------------------------------------
+// Player visual overhaul: real CC0 Fullplate Armor Knight GLB.
+// The old primitive overlay below is retained only as dead fallback code and is
+// never made visible when this GLB loads successfully.
+// ---------------------------------------------------------------------------
+const PLAYER_KNIGHT_BONE_MAP={
+ Head:'head',
+ 'UpperArm.l':'leftUpperArm','LowerArm.l':'leftLowerArm','Hand.l':'leftHand',
+ 'UpperLeg.l':'leftUpperLeg','LowerLeg.l':'leftLowerLeg','Foot.l':'leftFoot',
+ 'UpperArm.r':'rightUpperArm','LowerArm.r':'rightLowerArm','Hand.r':'rightHand',
+ 'UpperLeg.r':'rightUpperLeg','LowerLeg.r':'rightLowerLeg','Foot.r':'rightFoot'
+};
+function findKnightBone(root,name){
+ let hit=null;
+ root?.traverse?.(o=>{
+  if(hit)return;
+  const n=(o.name||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const t=name.toLowerCase().replace(/[^a-z0-9]/g,'');
+  if(n===t)hit=o;
+ });
+ return hit;
+}
+function cacheKnightRigRest(){
+ if(!playerKnightRoot)return;
+ for(const [knightName,vrmName] of Object.entries(PLAYER_KNIGHT_BONE_MAP)){
+  const kb=findKnightBone(playerKnightRoot,knightName),vb=playerVrmBones[vrmName];
+  if(!kb||!vb)continue;
+  playerKnightBones[knightName]=kb;
+  playerKnightBoneRest[knightName]=kb.quaternion.clone();
+  playerVrmDriveRest[vrmName]=vb.quaternion.clone();
+ }
+}
+function darkenKnightMaterials(root){
+ root.traverse(o=>{
+  if(!o.isMesh)return;
+  o.castShadow=true;o.receiveShadow=true;
+  const mats=Array.isArray(o.material)?o.material:[o.material];
+  for(const m of mats){
+   if(!m)continue;
+   m=m;
+   if(m.color){
+    // Corrupted knight A-2: blackened steel with a muted blood-red cast.
+    m.color.multiply(new THREE.Color(.32,.27,.28));
+   }
+   if('roughness' in m)m.roughness=Math.max(.38,Math.min(.78,m.roughness??.55));
+   if('metalness' in m)m.metalness=Math.max(.35,m.metalness??.5);
+  }
+ });
+}
+function loadPlayerFullplateKnight(){
+ if(playerKnightRoot||playerKnightReady)return;
+ assetLoader.load(PLAYER_KNIGHT_GLB_URL,gltf=>{
+  const root=gltf.scene;
+  root.updateMatrixWorld(true);
+  let box=new THREE.Box3().setFromObject(root,true),size=new THREE.Vector3();box.getSize(size);
+  const scale=PLAYER_VISUAL_HEIGHT/Math.max(.001,size.y);
+  root.scale.setScalar(scale);
+  root.updateMatrixWorld(true);
+  box=new THREE.Box3().setFromObject(root,true);
+  root.position.y-=box.min.y;
+  // Source faces the opposite way in its Godot wrapper.
+  root.rotation.y=Math.PI;
+  root.name='PlayerFullplateKnightCC0';
+  darkenKnightMaterials(root);
+  playerKnightRoot=root;
+  knightVisual=root;
+  playerVrmMotion.add(root);
+  cacheKnightRigRest();
+  if(gltf.animations?.length){
+   playerKnightMixer=new THREE.AnimationMixer(root);
+   // Embedded idle/walk remain available as a fallback, but the retargeted VRM
+   // bones below drive combat so the existing weapon IK stays authoritative.
+  }
+  playerKnightReady=true;
+  corruptedKnightRoot.visible=false;
+  console.info('CC0 Fullplate Knight visual loaded',{
+   height:PLAYER_VISUAL_HEIGHT,
+   mappedBones:Object.keys(playerKnightBones).length
+  });
+ },undefined,err=>{
+  console.warn('CC0 Fullplate Knight GLB unavailable; hidden VRM driver remains.',err);
+ });
+}
+function updatePlayerFullplateKnight(dt){
+ if(!playerKnightReady||!playerKnightRoot)return;
+ if(!Object.keys(playerKnightBones).length)cacheKnightRigRest();
+ for(const [knightName,vrmName] of Object.entries(PLAYER_KNIGHT_BONE_MAP)){
+  const kb=playerKnightBones[knightName],vb=playerVrmBones[vrmName];
+  const kr=playerKnightBoneRest[knightName],vr=playerVrmDriveRest[vrmName];
+  if(!kb||!vb||!kr||!vr)continue;
+  // Apply only the animated delta, preserving the knight's authored bind pose.
+  const delta=vr.clone().invert().multiply(vb.quaternion);
+  kb.quaternion.copy(kr).multiply(delta);
+ }
+ playerKnightMixer?.update?.(dt);
+ playerKnightRoot.updateMatrixWorld(true);
+}
+
+// ---------------------------------------------------------------------------
 // Player visual overhaul: Corrupted Knight overlay.
 // The VRM remains as an invisible animation skeleton; every visible body piece
 // below follows the animated humanoid bones in world space.
 // ---------------------------------------------------------------------------
-const corruptedKnightRoot=new THREE.Group();corruptedKnightRoot.name='PlayerCorruptedKnightVisual';scene.add(corruptedKnightRoot);
+const corruptedKnightRoot=new THREE.Group();corruptedKnightRoot.name='PlayerCorruptedKnightVisual';corruptedKnightRoot.visible=false;scene.add(corruptedKnightRoot);
 const ckIron=new THREE.MeshStandardMaterial({color:0x202126,roughness:.46,metalness:.82});
 const ckIronDark=new THREE.MeshStandardMaterial({color:0x0d0e11,roughness:.55,metalness:.72});
 const ckIronEdge=new THREE.MeshStandardMaterial({color:0x55545a,roughness:.34,metalness:.9});
@@ -670,7 +773,7 @@ function updateCorruptedKnightArmor(dt){
      }
 
      hideOriginalPlayerMeshes(root);
-     buildCorruptedKnightArmor();
+     loadPlayerFullplateKnight();
      const rightHand=playerVrmBones.rightHand,leftHand=playerVrmBones.leftHand;
      if(rightHand)rightHand.add(weaponHandAnchor);
      applyWeaponGrip();
@@ -867,7 +970,7 @@ function animateVroidPlayer(dt){
  }
  playerVrm?.update?.(dt);
  player.updateMatrixWorld(true);playerVrmRoot?.updateMatrixWorld(true);
- updateCorruptedKnightArmor(dt);
+ updatePlayerFullplateKnight(dt);
  updatePlayerShieldRig(dt);
 }
 
@@ -4134,14 +4237,16 @@ let boss6MaleVoice=null;
 function selectBoss6MaleVoice(){
  const synth=window.speechSynthesis,voices=synth?.getVoices?.()||[];
  if(!voices.length)return null;
- const female=/female|woman|여성|여자|yuna|yuri|heami|sunhi|sora|soyeon|seoyeon|ji[- ]?min|jimin|nara|kyuri|한국의/i;
- const male=/male|man|남성|남자|injoon|in[- ]?joon|hyunsu|hyun[- ]?su|joon|junwoo|jun[- ]?woo|minjun|min[- ]?jun|siwoo|si[- ]?woo/i;
+ // Strict whitelist. We would rather play no speech than ever fall back to a
+ // feminine/default Korean voice for Hwang Geunchul.
+ const female=/female|woman|여성|여자|yuna|yuri|heami|sunhi|sora|soyeon|seoyeon|ji[- ]?min|jimin|nara|kyuri|sera|seohyun|sumi|sujin/i;
+ const explicitMale=/\bmale\b|\bman\b|남성|남자|injoon|in[- ]?joon|bongjin|bong[- ]?jin|hyunsu|hyun[- ]?su|youngmin|young[- ]?min|minjun|min[- ]?jun|junwoo|jun[- ]?woo|siwoo|si[- ]?woo|woong|sunoh|sun[- ]?oh|gookmin|gook[- ]?min|dae[- ]?hyun/i;
  const korean=voices.filter(v=>/^ko(?:-|_)?/i.test(v.lang||'')&&!female.test(v.name||''));
- // Boss 6 may ONLY use a voice that is positively identifiable as male.
- // Never fall back to the first Korean/default voice: on many phones that voice is female.
- for(const v of korean){if(male.test(v.name||''))return v}
- for(const v of voices){if(male.test(v.name||'')&&!female.test(v.name||''))return v}
- return null;
+ const ranked=[
+  ...korean.filter(v=>explicitMale.test(v.name||'')),
+  ...voices.filter(v=>explicitMale.test(v.name||'')&&!female.test(v.name||''))
+ ];
+ return ranked[0]||null;
 }
 function boss6MaleVoiceUnavailableCue(){
  // No male TTS installed: keep the visual line and add a low non-verbal impact cue
@@ -4164,7 +4269,9 @@ function playBoss6Voice(line,key=''){
   synth.cancel();
   if(!boss6MaleVoice){boss6MaleVoiceUnavailableCue();return}
   const u=new SpeechSynthesisUtterance(line);u.lang=boss6MaleVoice.lang||'ko-KR';
-  u.rate=key==='execute'?.76:.9;u.pitch=key==='execute'?.18:.26;u.volume=1;
+  // Extremely low, older-male delivery. Browser engines clamp differently,
+  // but explicit male voice + minimum pitch prevents the old female result.
+  u.rate=key==='execute'?.66:.76;u.pitch=.01;u.volume=1;
   u.voice=boss6MaleVoice;
   synth.speak(u);
  }catch{}
