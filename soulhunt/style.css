@@ -206,3 +206,12 @@ body.pointer-free #game{cursor:none}
   .boss-card small{font-size:10px;line-height:1.45}
   .boss-card:hover{transform:none}
 }
+
+
+/* Boss picker must own touch input on mobile. */
+body.boss-select-open{touch-action:pan-y}
+body.boss-select-open #mobileControls{display:none!important}
+body.boss-select-open #game{pointer-events:none}
+body.boss-select-open #bossSwitch{display:none}
+body.boss-select-open #bossSelect{pointer-events:auto;touch-action:pan-y;overscroll-behavior:contain}
+body.boss-select-open .boss-card{pointer-events:auto;touch-action:manipulation}
