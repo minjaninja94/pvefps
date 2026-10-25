@@ -549,13 +549,44 @@ function scoreKnightBone(norm,semantic){
  if(norm.endsWith(type))score+=4;
  return score;
 }
+function knightBoneWorldData(root){
+ const bones=collectKnightBones(root),box=new THREE.Box3();
+ const rows=bones.map(b=>{const p=new THREE.Vector3();b.getWorldPosition(p);box.expandByPoint(p);return {b,p}});
+ const size=new THREE.Vector3();box.getSize(size);
+ return {rows,box,size};
+}
+function inferKnightBoneByPose(root,semantic){
+ const {rows,box,size}=knightBoneWorldData(root);
+ if(!rows.length)return null;
+ const h=Math.max(.001,size.y),w=Math.max(.001,size.x);
+ const side=semantic.startsWith('left')?-1:semantic.startsWith('right')?1:0;
+ const kind=semantic.replace(/^(left|right)/,'').toLowerCase();
+ let best=null,bestScore=-1e9;
+ for(const row of rows){
+  const p=row.p,nx=(p.x-(box.min.x+size.x*.5))/w,ny=(p.y-box.min.y)/h;
+  let score=-999;
+  if(kind==='head')score=ny*10-Math.abs(nx)*4;
+  else if(kind==='upperarm')score=-Math.abs(ny-.72)*9-Math.abs(Math.abs(nx)-.18)*6;
+  else if(kind==='lowerarm')score=-Math.abs(ny-.66)*9-Math.abs(Math.abs(nx)-.30)*6;
+  else if(kind==='hand')score=-Math.abs(ny-.61)*7+Math.abs(nx)*6;
+  else if(kind==='upperleg')score=-Math.abs(ny-.42)*10-Math.abs(Math.abs(nx)-.08)*5;
+  else if(kind==='lowerleg')score=-Math.abs(ny-.23)*11-Math.abs(Math.abs(nx)-.07)*5;
+  else if(kind==='foot')score=-Math.abs(ny-.055)*14-Math.abs(Math.abs(nx)-.08)*4;
+  if(side&&Math.sign(nx)!==side)score-=8;
+  if(score>bestScore){best=row.b;bestScore=score}
+ }
+ return best;
+}
 function findKnightBoneBySemantic(root,semantic){
  const bones=collectKnightBones(root);let best=null,bestScore=0;
  for(const b of bones){const score=scoreKnightBone(knightBoneNorm(b.name),semantic);if(score>bestScore){best=b;bestScore=score}}
- return bestScore>=8?best:null;
+ return bestScore>=8?best:inferKnightBoneByPose(root,semantic);
 }
 function cacheKnightRigRest(){
  if(!playerKnightRoot)return;
+ for(const k of Object.keys(playerKnightBones))delete playerKnightBones[k];
+ for(const k of Object.keys(playerKnightBoneRest))delete playerKnightBoneRest[k];
+ for(const k of Object.keys(playerVrmDriveRest))delete playerVrmDriveRest[k];
  for(const [semantic,vrmName] of Object.entries(PLAYER_KNIGHT_BONE_MAP)){
   const kb=findKnightBoneBySemantic(playerKnightRoot,semantic),vb=playerVrmBones[vrmName];
   if(!kb||!vb)continue;
@@ -563,6 +594,7 @@ function cacheKnightRigRest(){
   playerKnightBoneRest[semantic]=kb.quaternion.clone();
   playerVrmDriveRest[vrmName]=vb.quaternion.clone();
  }
+ console.info('Forgotten Knight rig map',Object.fromEntries(Object.entries(playerKnightBones).map(([k,b])=>[k,b?.name||'?'])));
 }
 function applyKnightHeroProportions(){
  if(!playerKnightRoot)return;
@@ -623,8 +655,9 @@ function loadPlayerFullplateKnight(){
   root.updateMatrixWorld(true);
   box=new THREE.Box3().setFromObject(root,true);
   root.position.y-=box.min.y;
-  // Source faces the opposite way in its Godot wrapper.
-  root.rotation.y=Math.PI;
+  // The asset already faces the player's local forward. The old PI flip made
+  // the visible knight look away from the locked boss.
+  root.rotation.y=0;
   root.name='PlayerForgottenKnight';
   darkenKnightMaterials(root);
   playerKnightRoot=root;
