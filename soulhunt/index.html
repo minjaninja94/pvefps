@@ -39,9 +39,14 @@
           <small>춘자 · 큰 도끼 / 어깨빵 / 발차기 / 팔꿈치 / 2페이즈 개빡침</small>
         </button>
         <button class="boss-card boss-card-new" data-boss="6">
-          <span class="boss-no">FINAL BOSS · NEW</span>
+          <span class="boss-no">FINAL BOSS</span>
           <strong>황근출</strong>
           <small>기합포 · 해병수류탄 · 해병짜장 · 오도봉고 · 역돌격 · 지원사격 · 악으로 깡으로</small>
+        </button>
+        <button class="boss-card boss-card-new" data-boss="7">
+          <span class="boss-no">BOSS 07 · NEW</span>
+          <strong>무톤 쌍왕자 · 무모칠 & 톤톤정</strong>
+          <small>순간이동 대검 · 낙하공격 · 광선 · 유도광탄 · 광창 · 부활 광역폭발</small>
         </button>
       </div>
     </div>
@@ -72,7 +77,7 @@
   (() => {
     const selected = new URLSearchParams(location.search).get('boss');
     const select = document.querySelector('#bossSelect');
-    if (selected === '1' || selected === '2' || selected === '3' || selected === '4' || selected === '5' || selected === '6') select.hidden = true;
+    if (['1','2','3','4','5','6','7'].includes(selected)) select.hidden = true;
     document.querySelectorAll('[data-boss]').forEach(btn => {
       btn.addEventListener('click', () => {
         const url = new URL(location.href);
@@ -103,6 +108,6 @@
     window.addEventListener('unhandledrejection', e => showBootError(e.reason?.message || String(e.reason || 'Promise 오류')));
   })();
   </script>
-  <script type="module" src="./main.js?v=20261026-knight-retarget1"></script>
+  <script type="module" src="./main.js?v=20261026-boss7-twins1"></script>
 </body>
 </html>
