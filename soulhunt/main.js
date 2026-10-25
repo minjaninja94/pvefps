@@ -6408,6 +6408,10 @@ function tryStrongAttack(){
 function tryDeflect(){if(!state.dead&&state.stagger<=0&&state.exhausted<=0&&spendStamina(5,.32)){state.deflect=.17;state.parryAnim=.22}}
 
 function hurtPlayer(dmg,posture=20,unblockable=false){
+ if(window.SOULHUNT_GOD_MODE){
+  state.hp=state.hpMax;state.posture=0;state.stamina=state.staminaMax;state.exhausted=0;state.stagger=0;state.dead=false;state.damageGrace=.08;
+  return;
+ }
  if(state.invuln>0||state.damageGrace>0||state.dead)return;
  dmg*=BOSS_DAMAGE_SCALE;
  if(!unblockable&&input.guard){
@@ -7041,6 +7045,9 @@ function applyWeaponAttackPose(w,step,p,dt=.016){
  weaponPivot.scale.setScalar(THREE.MathUtils.lerp(weaponPivot.scale.x||1,twoHanded?1.06:1,1-Math.exp(-dt*20)));
 }
 function updatePlayer(dt){
+ if(window.SOULHUNT_GOD_MODE){
+  state.hp=state.hpMax;state.posture=0;state.stamina=state.staminaMax;state.exhausted=0;state.stagger=0;state.dead=false;
+ }
  if(state.potionTimer>0){
    state.potionTimer=Math.max(0,state.potionTimer-dt);
    if(!state.potionHealDone&&state.potionTimer<=.42){
