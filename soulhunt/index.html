@@ -52,6 +52,10 @@
     </div>
   </div>
   <button id="bossSwitch" type="button">보스 선택</button>
+  <label id="godModeToggle" class="test-toggle">
+    <input id="godModeCheck" type="checkbox" />
+    <span>테스트 무적</span>
+  </label>
   <div id="hud">
     <div id="brand">덕후 소울 <small>COMBAT PROTOTYPE</small></div>
     <div class="bar"><span>HP</span><i id="hp"></i></div>
@@ -94,6 +98,19 @@
   <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/","three/examples/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/","@pixiv/three-vrm":"https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.5.5/lib/three-vrm.module.min.js","@needle-tools/gltf-progressive":"https://cdn.jsdelivr.net/npm/@needle-tools/gltf-progressive/gltf-progressive.min.js"}}
 </script>
+  <script>
+  (() => {
+    const god = document.querySelector('#godModeCheck');
+    if (god) {
+      god.checked = localStorage.getItem('soulhunt_god_mode') === '1';
+      window.SOULHUNT_GOD_MODE = god.checked;
+      god.addEventListener('change', () => {
+        window.SOULHUNT_GOD_MODE = god.checked;
+        localStorage.setItem('soulhunt_god_mode', god.checked ? '1' : '0');
+      });
+    }
+  })();
+  </script>
   <script>
   (() => {
     const selected = new URLSearchParams(location.search).get('boss');
@@ -155,6 +172,6 @@
     window.addEventListener('unhandledrejection', e => showBootError(e.reason?.message || String(e.reason || 'Promise 오류')));
   })();
   </script>
-  <script type="module" src="./main.js?v=20261026-mobile-selectfix1"></script>
+  <script type="module" src="./main.js?v=20261026-godmode1"></script>
 </body>
 </html>
