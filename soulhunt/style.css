@@ -113,3 +113,96 @@ body.pointer-free #game{cursor:none}
   .boss-no{margin-bottom:42px}
   #bossSwitch{right:10px;top:10px}
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* Mobile combat controls                                                     */
+/* -------------------------------------------------------------------------- */
+#mobileControls{display:none}
+@media (pointer:coarse),(max-width:900px){
+  html,body{overscroll-behavior:none;touch-action:none}
+  #game{touch-action:none}
+  #mobileControls{
+    display:block;position:fixed;inset:0;z-index:20;pointer-events:none;
+    user-select:none;-webkit-user-select:none;-webkit-touch-callout:none
+  }
+  .mobile-left,.mobile-right{position:absolute;bottom:max(18px,env(safe-area-inset-bottom));pointer-events:none}
+  .mobile-left{left:max(14px,env(safe-area-inset-left));width:170px;height:180px}
+  .mobile-right{right:max(12px,env(safe-area-inset-right));width:245px;height:205px}
+  .move-stick{
+    position:absolute;left:0;bottom:0;width:132px;height:132px;border-radius:50%;
+    border:1px solid #bca47b88;background:radial-gradient(circle,#2b2a2d77 0 34%,#0b0c0faa 36% 100%);
+    box-shadow:inset 0 0 22px #000b,0 3px 18px #000a;pointer-events:auto;touch-action:none
+  }
+  .move-stick::before,.move-stick::after{content:"";position:absolute;background:#d9c9ab22;left:50%;top:50%;transform:translate(-50%,-50%)}
+  .move-stick::before{width:1px;height:82%}.move-stick::after{height:1px;width:82%}
+  .move-knob{
+    position:absolute;left:50%;top:50%;width:58px;height:58px;border-radius:50%;
+    transform:translate(-50%,-50%);background:radial-gradient(circle at 40% 32%,#d5c19a,#716147);
+    border:1px solid #f0ddb4aa;box-shadow:0 4px 12px #000b;pointer-events:none
+  }
+  .m-btn,.m-mini{
+    pointer-events:auto;touch-action:none;border:1px solid #b9a17b99;color:#f4ead8;
+    background:#0b0d12dd;box-shadow:inset 0 1px 1px #ffffff18,0 4px 14px #000b;
+    font-weight:800;text-shadow:0 2px 3px #000;border-radius:50%;-webkit-tap-highlight-color:transparent
+  }
+  .m-btn:active,.m-btn.held,.m-mini:active{transform:scale(.93);background:#4a241bdd;border-color:#f0c989}
+  .m-sprint{position:absolute;left:110px;top:8px;width:58px;height:58px;font-size:10px}
+  .mobile-utility{
+    position:absolute;right:0;top:0;display:flex;gap:7px;pointer-events:none
+  }
+  .m-mini{width:48px;height:36px;border-radius:10px;font-size:9px;letter-spacing:.02em}
+  .m-potion{border-color:#d2ad57aa;color:#f0cd73}
+  .mobile-actions{position:absolute;right:0;bottom:0;width:220px;height:158px;pointer-events:none}
+  .m-attack{position:absolute;right:0;bottom:43px;width:76px;height:76px;font-size:15px;border-color:#d7b578cc}
+  .m-roll{position:absolute;right:72px;bottom:0;width:66px;height:66px;font-size:13px}
+  .m-strong{position:absolute;right:78px;bottom:83px;width:58px;height:58px;font-size:11px}
+  .m-guard{position:absolute;right:148px;bottom:54px;width:64px;height:64px;font-size:12px}
+  #hud{padding:10px 12px}
+  #brand{display:none}
+  .bar{width:min(60vw,330px);height:14px;margin:7px 0}
+  .bar span{top:-14px;font-size:8px}
+  .bar.posture{height:9px}
+  #boss{width:94vw;bottom:210px}
+  #boss b{font-size:12px;margin-bottom:5px;letter-spacing:.05em}
+  .bossbar{height:16px}
+  .bossbar.posture{height:5px;margin-top:4px}
+  #parts{font-size:8px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #weaponHud{left:12px;bottom:204px;font-size:9px;padding:6px 8px;max-width:44vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #hint{display:none}
+  #message{font-size:28px;top:34%;width:90%;text-align:center}
+  #danger{top:24%;font-size:52px}
+  #bossSwitch{right:8px;top:max(8px,env(safe-area-inset-top));padding:8px 10px;font-size:9px}
+  #lockDot{width:10px;height:10px}
+}
+
+@media (pointer:coarse) and (orientation:landscape){
+  .mobile-left{bottom:max(8px,env(safe-area-inset-bottom));height:148px}
+  .mobile-right{bottom:max(6px,env(safe-area-inset-bottom));height:158px}
+  .move-stick{width:116px;height:116px}
+  .move-knob{width:50px;height:50px}
+  .m-sprint{left:98px;top:0;width:52px;height:52px}
+  .mobile-actions{height:125px;width:205px}
+  .m-attack{width:68px;height:68px;bottom:26px}
+  .m-roll{width:58px;height:58px;right:65px}
+  .m-strong{width:52px;height:52px;right:70px;bottom:68px}
+  .m-guard{width:58px;height:58px;right:138px;bottom:38px}
+  #boss{bottom:142px;width:76vw}
+  #weaponHud{bottom:142px}
+  #message{top:29%}
+}
+
+/* Mobile boss picker: scrollable, compact, thumb-friendly. */
+@media(max-width:760px){
+  #bossSelect{display:block;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(16px + env(safe-area-inset-top)) 12px calc(26px + env(safe-area-inset-bottom));touch-action:pan-y}
+  .boss-select-panel{width:100%;text-align:left}
+  .boss-select-kicker{font-size:9px;margin:4px 4px 8px}
+  .boss-select-panel h1{font-size:28px;margin:0 4px 8px}
+  .boss-select-panel>p{font-size:11px;line-height:1.45;margin:0 4px 14px}
+  .boss-select-grid{grid-template-columns:1fr;gap:9px}
+  .boss-card{min-height:0;padding:15px 16px;border-radius:8px}
+  .boss-no{margin-bottom:13px;font-size:8px}
+  .boss-card strong{font-size:19px;margin-bottom:5px}
+  .boss-card small{font-size:10px;line-height:1.45}
+  .boss-card:hover{transform:none}
+}
