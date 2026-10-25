@@ -98,18 +98,44 @@
   (() => {
     const selected = new URLSearchParams(location.search).get('boss');
     const select = document.querySelector('#bossSelect');
-    if (['1','2','3','4','5','6','7'].includes(selected)) select.hidden = true;
+    const hasBoss = ['1','2','3','4','5','6','7'].includes(selected);
+    if (hasBoss) select.hidden = true;
+    document.body.classList.toggle('boss-select-open', !hasBoss);
+
+    const goBoss = (id) => {
+      if (!id) return;
+      const url = new URL(location.href);
+      url.searchParams.set('boss', id);
+      location.assign(url.toString());
+    };
+
     document.querySelectorAll('[data-boss]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const url = new URL(location.href);
-        url.searchParams.set('boss', btn.dataset.boss);
-        location.href = url.toString();
+      let moved = false;
+      btn.addEventListener('pointerdown', e => {
+        moved = false;
+        btn.dataset.sx = e.clientX;
+        btn.dataset.sy = e.clientY;
+      }, {passive:true});
+      btn.addEventListener('pointermove', e => {
+        const sx = Number(btn.dataset.sx || e.clientX), sy = Number(btn.dataset.sy || e.clientY);
+        if (Math.hypot(e.clientX - sx, e.clientY - sy) > 12) moved = true;
+      }, {passive:true});
+      btn.addEventListener('pointerup', e => {
+        if (moved) return;
+        e.preventDefault();
+        e.stopPropagation();
+        goBoss(btn.dataset.boss);
+      });
+      btn.addEventListener('click', e => {
+        e.preventDefault();
+        if (!moved) goBoss(btn.dataset.boss);
       });
     });
+
     document.querySelector('#bossSwitch').addEventListener('click', () => {
       const url = new URL(location.href);
       url.searchParams.delete('boss');
-      location.href = url.toString();
+      location.assign(url.toString());
     });
   })();
   </script>
@@ -129,6 +155,6 @@
     window.addEventListener('unhandledrejection', e => showBootError(e.reason?.message || String(e.reason || 'Promise 오류')));
   })();
   </script>
-  <script type="module" src="./main.js?v=20261026-mobile-controls2"></script>
+  <script type="module" src="./main.js?v=20261026-mobile-selectfix1"></script>
 </body>
 </html>
