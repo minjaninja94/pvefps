@@ -801,14 +801,21 @@ function drawBattle(){
 function drawBase(){
  const g=$('baseCanvas').getContext('2d');if(!g)return;
  g.clearRect(0,0,CW,HOME_H);ground(g,CW,HOME_H,true);
- g.fillStyle='#20383e77';g.fillRect(0,215,CW,125);
- g.strokeStyle='#eac79a51';g.setLineDash([12,15]);g.lineWidth=3;
- g.beginPath();g.moveTo(220,282);g.lineTo(1060,282);g.stroke();g.setLineDash([]);
+ if(window.IsoWorld){
+  g.fillStyle='#071215aa';g.beginPath();
+  g.moveTo(265,266);g.lineTo(1082,256);g.lineTo(1096,310);g.lineTo(270,330);g.closePath();g.fill();
+  g.strokeStyle='#baac8066';g.setLineDash([15,13]);g.lineWidth=2;
+  g.beginPath();g.moveTo(266,280);g.lineTo(1068,269);g.stroke();g.setLineDash([]);
+ }else{
+  g.fillStyle='#20383e77';g.fillRect(0,215,CW,125);
+  g.strokeStyle='#eac79a51';g.setLineDash([12,15]);g.lineWidth=3;
+  g.beginPath();g.moveTo(220,282);g.lineTo(1060,282);g.stroke();g.setLineDash([]);
+ }
  g.fillStyle='#f0dbbc';g.font='900 12px monospace';g.textAlign='left';g.fillText('PROTECTED PRODUCTION ZONE',365,21);
  // 15 protected production structures are displayed as three rows of five.
  for(let i=0;i<SLOTS;i++){
   const role=state.built[i],row=Math.floor(i/COLS),col=i%COLS;
-  const x=330+col*50,y=43+row*35;
+  const x=315+col*48+row*14,y=53+row*39;
   if(window.IsoWorld){window.IsoWorld.factory(g,x,y,state.faction,role,role!==null);continue;}
   g.fillStyle='#0b222bb5';g.fillRect(x-23,y-15,47,28);
   g.strokeStyle=role!==null?FACTIONS[state.faction].color:'#54707c';
