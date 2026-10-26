@@ -567,7 +567,8 @@ function tick(dt){
   }
   const target=nearestUnit(u,def);
   if(target){
-   if(distance(u,target)>def.range*(def.range>65?.88:1))move(u,target.x,target.y,ds);
+   const reach=def.range<48?Math.max(def.range,unitRadius(u)+unitRadius(target)+7):def.range*(def.range>65?.88:1);
+   if(distance(u,target)>reach)move(u,target.x,target.y,ds);
    else if(u.cooldown<=0)beginStrike(u,target);
   }else{
    const side=1-u.side,tx=side===0?(state.turretHP[0]>0?190:90):(state.turretHP[1]>0?WORLD_W-190:WORLD_W-90);
