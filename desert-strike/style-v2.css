@@ -10,3 +10,7 @@
 .unit-card .good-counter{display:block;margin-top:4px;color:#a3ebc5;font-size:10px;font-weight:700;line-height:1.2}
 .unit-card .bad-counter{line-height:1.2}
 @media(max-width:620px){.unit-card .good-counter{font-size:9px}.unit-card{min-height:122px}}
+
+.sprite-gallery-link{display:inline-block;color:#f7d29b;border:1px solid #8e7755;background:#3d362c;border-radius:5px;padding:6px 9px;font-size:11px;font-weight:850;text-decoration:none;white-space:nowrap}
+.sprite-gallery-link:hover{background:#594934}
+@media(max-width:620px){.sprite-gallery-link{font-size:9px;padding:5px 6px}.cards-panel .panel-heading{flex-wrap:wrap}}
