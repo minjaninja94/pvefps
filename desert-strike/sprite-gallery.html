@@ -57,6 +57,7 @@ function loop(t){
  if(t-last>75){last=t;if(auto){index=(index+1)%16;showFrame();}}
  requestAnimationFrame(loop);
 }
+window.addEventListener('marine-art-ready',render);
 render();requestAnimationFrame(loop);
 })();
 </script>
