@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | Tactical Auto Battle</title><meta name="description" content="3진영 24병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css"></head>
+<title>DESERT FRONT | Tactical Auto Battle</title><meta name="description" content="4진영 32병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css"></head>
 <body>
 <div class="app">
 <header class="top">
@@ -13,7 +13,7 @@
  <button class="tab" data-view="battle"><span class="tab-no">02</span><span>전장<small>LIVE BATTLE</small></span></button>
  <button class="tab" data-view="special"><span class="tab-no">03</span><span>특수 기능<small>ABILITY & UPGRADE</small></span></button>
 </nav>
-<div class="base-health"><div class="health-entry"><div><span class="color-point blue">●</span> 아군 핵심 기지 <b id="myHealth">2000 / 2000</b></div><div class="healthbar"><i id="myHealthFill"></i></div></div><div class="health-entry"><div><span class="color-point red">●</span> 적 핵심 기지 <b id="enemyHealth">2000 / 2000</b></div><div class="healthbar redbar"><i id="enemyHealthFill"></i></div></div></div>
+<div class="base-health"><div class="health-entry"><div><span class="color-point blue">●</span> 아군 핵심 기지 <b id="myHealth">7200 / 7200</b></div><div class="healthbar"><i id="myHealthFill"></i></div></div><div class="health-entry"><div><span class="color-point red">●</span> 적 핵심 기지 <b id="enemyHealth">7200 / 7200</b></div><div class="healthbar redbar"><i id="enemyHealthFill"></i></div></div></div>
 <div class="screen active" id="view-base">
  <div class="section-head"><div><span class="eyebrow">BASE DEVELOPMENT / PRODUCTION ZONE</span><h1>생산 기지</h1><p>진영을 선택하고 유닛 생산 시설을 건설하세요. 적이 방어선을 뚫으면 이곳에 침공 병력이 표시됩니다.</p></div><span id="baseAlert" class="alert-chip">기지 안전</span></div>
  <div class="canvas-wrap base-canvas"><canvas id="baseCanvas" width="1100" height="340" aria-label="아군 기지, 방어 포탑과 침공 병력"></canvas><div class="canvas-note">● CORE & DEFENSE — 생산 시설은 보호 구역에 있습니다.</div></div>
@@ -32,7 +32,7 @@
  <div class="special-grid">
  <section class="feature-card orange"><span class="eyebrow">SPECIAL / ONE USE</span><span class="feat-symbol">☢</span><h2>비상 핵폭탄</h2><p>아군 진영(x ≤ 중앙선)으로 넘어온 적 병력을 전멸시킵니다. 한 게임에 단 한 번, 아군 기지 HP가 70% 이하이거나 적이 침공 중일 때 사용 가능합니다.</p><div class="feature-status" id="nukeInfo">준비 완료 · 위기 시 활성화</div><button id="nukeButton" class="btn accent">☢ 핵폭탄 발동</button></section>
  <section class="feature-card cyan"><span class="eyebrow">SPECIAL / RECHARGE</span><span class="feat-symbol">✷</span><h2>궤도 폭격</h2><p>적군이 가장 많이 모인 지역에 범위 피해를 줍니다. 기갑이나 포병 덩어리를 무너뜨리는 반격 기술입니다.</p><div class="feature-status" id="barrageInfo">비용 260 CR · 재사용 32초</div><button id="barrageButton" class="btn blueaccent">✷ 폭격 요청 · 260 CR</button></section>
- <section class="feature-card green"><span class="eyebrow">ECONOMY</span><span class="feat-symbol">⬡</span><h2>자원 채굴망</h2><p>초기 자원 수입은 0.5초당 1 CR입니다. 업그레이드마다 0.5초당 수입이 +1 CR씩 증가합니다. 장기전에서는 경제 강화가 필수입니다.</p><div class="feature-status" id="econInfo">레벨 0 / 7</div><button id="econButton" class="btn greenaccent">경제 업그레이드</button></section>
+ <section class="feature-card green"><span class="eyebrow">ECONOMY</span><span class="feat-symbol">⬡</span><h2>자원 채굴망</h2><p>양측 모두 0.5초마다 기본 1 CR을 받습니다. 업그레이드 시 주기당 +1 CR씩 늘어나며 첫 단계는 70 CR(회수 35초)입니다. 초반 병력과 장기 수입 사이에서 선택하세요.</p><div class="feature-status" id="econInfo">레벨 0 / 7</div><button id="econButton" class="btn greenaccent">경제 업그레이드</button></section>
  <section class="feature-card purple"><span class="eyebrow">UPGRADE / PERMANENT</span><span class="feat-symbol">✦</span><h2>무기 강화</h2><p>모든 아군 유닛의 공격력과 회복량이 단계당 8% 증가합니다. 기존 전투 중 유닛에도 적용됩니다.</p><div class="feature-status" id="weaponInfo">레벨 0 / 5</div><button id="weaponButton" class="btn purpleaccent">무기 강화</button></section>
  <section class="feature-card steel"><span class="eyebrow">UPGRADE / PERMANENT</span><span class="feat-symbol">⬟</span><h2>장갑 강화</h2><p>아군 유닛 HP가 단계당 9% 증가합니다. 방어 시설과 핵심 기지 체력에는 적용되지 않습니다.</p><div class="feature-status" id="armorInfo">레벨 0 / 5</div><button id="armorButton" class="btn outline">장갑 강화</button></section>
  <section class="feature-card steel"><span class="eyebrow">HEADQUARTERS</span><span class="feat-symbol">▥</span><h2>기지 방어 보수</h2><p>방어 포탑을 수리하고 공격력을 강화합니다. 포탑이 무너져도 복구할 수 있어 역전을 노릴 수 있습니다.</p><div class="feature-status" id="repairInfo">방어 포탑 수리</div><button id="repairButton" class="btn outline">포탑 수리 · 180 CR</button></section>
