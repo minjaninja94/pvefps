@@ -45,7 +45,8 @@ const doc={
 const sandbox={document:doc,window:{addEventListener(){}},requestAnimationFrame(fn){queue.push(fn);},console,Math,Number,String,Object,Array,Map,Set,Date};
 vm.runInNewContext(code,sandbox,{timeout:3500,filename:'game-v2.js'});
 assert.equal(el('cash').textContent,'600');
-assert.match(el('unitCards').innerHTML,/취약:/);
+assert.match(el('unitCards').innerHTML,/강점:/);
+assert.match(el('unitCards').innerHTML,/약점:/);
 assert.match(el('counterMatrix').innerHTML,/강점:/);
 function click(id,data,key='click'){
  const fn=el(id).handlers[key];assert.equal(typeof fn,'function','Missing event '+id+':'+key);
