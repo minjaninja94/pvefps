@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
-const CW=1100,CH=520,WORLD_W=3300,HOME_H=340,MAX_BASE=7200,MAX_TURRET=1700,INTERVAL=24,COLS=15,ROWS=5,SLOTS=COLS*ROWS,INCOME_PERIOD=.5;
+const CW=1100,CH=520,WORLD_W=3300,HOME_H=340,MAX_BASE=7200,MAX_TURRET=1700,INTERVAL=24,COLS=15,ROWS=5,SLOTS=COLS*ROWS,INCOME_PERIOD=.5,SIDE_SUPPLY=220;
 const COLORS=['#79dfee','#ff9a79'],LANES=[110,180,260,340,410];
 const initialIncome=1;
 const ROLE=[
@@ -203,9 +203,10 @@ function wave(){
  state.wave++;state.cash+=22+state.eco*4;
  state.enemyCash+=72+state.wave*7+state.enemyEco*10;
  aiInvest();
+ const headcount=[state.units.filter(u=>u.side===0).length,state.units.filter(u=>u.side===1).length];
  for(let i=0;i<SLOTS;i++){
-  if(state.built[i]!==null)createUnit(0,i,state.built[i]);
-  if(state.enemyBuilt[i]!==null)createUnit(1,i,state.enemyBuilt[i]);
+  if(state.built[i]!==null&&headcount[0]<SIDE_SUPPLY){createUnit(0,i,state.built[i]);headcount[0]++;}
+  if(state.enemyBuilt[i]!==null&&headcount[1]<SIDE_SUPPLY){createUnit(1,i,state.enemyBuilt[i]);headcount[1]++;}
  }
  banner('WAVE '+String(state.wave).padStart(2,'0')+' · DEPLOYED');
  setMessage('웨이브 '+state.wave+' 출격 · 아군 '+state.built.filter(v=>v!==null).length+'기 / 적군 '+state.enemyBuilt.filter(v=>v!==null).length+'기');
@@ -274,10 +275,21 @@ function structureHit(side,amount){
  }
 }
 function nearestUnit(u,def){
- let candidate=null,score=1e7;
- for(const v of state.units){
-  if(v.hp<=0||v.side===u.side||(!def.airTarget&&ROLE[v.role].kind==='air'))continue;
-  const d=distance(u,v);
+ const targets=state.sortedTeams?.[1-u.side]||state.units.filter(v=>v.side!==u.side).sort((a,b)=>a.x-b.x);
+ if(!targets.length)return null;
+ let lo=0,hi=targets.length;
+ while(lo<hi){const mid=(lo+hi)>>>1;if(targets[mid].x<u.x)lo=mid+1;else hi=mid;}
+ let a=lo-1,b=lo,candidate=null,score=Infinity;
+ // Sorted world-space positions reduce target search from full army scan to adjacent combatants.
+ while(a>=0||b<targets.length){
+  const dxA=a>=0?Math.abs(targets[a].x-u.x):Infinity;
+  const dxB=b<targets.length?Math.abs(targets[b].x-u.x):Infinity;
+  const next=Math.min(dxA,dxB);
+  if(candidate&&next>(score+175))break;
+  const v=dxA<=dxB?targets[a--]:targets[b++];
+  if(v.hp<=0||(!def.airTarget&&ROLE[v.role].kind==='air'))continue;
+  const dy=Math.abs(u.y-v.y);
+  const d=Math.hypot(next,dy);
   const bonus=u.role===4&&ROLE[v.role].kind==='air'?175:0;
   if(d-bonus<score){score=d-bonus;candidate=v;}
  }
@@ -342,6 +354,7 @@ function tick(dt){
  while(state.incomeClock>=INCOME_PERIOD){state.incomeClock-=INCOME_PERIOD;state.cash+=initialIncome+state.eco;state.enemyCash+=1.15+state.enemyEco+Math.min(1.7,state.wave*.16);}
  state.barrageCd=Math.max(0,state.barrageCd-ds);
  while(state.next<=0){state.next+=INTERVAL;wave();}
+ state.sortedTeams=[state.units.filter(u=>u.side===0).sort((a,b)=>a.x-b.x),state.units.filter(u=>u.side===1).sort((a,b)=>a.x-b.x)];
  for(const u of state.units){
   if(u.hp<=0)continue;
   const def=getDef(u.role,u.faction);
@@ -691,7 +704,7 @@ function drawBattle(){
  ground(g,WORLD_W,CH);
  structure(g,90,260,0,false,state.baseHP[0]);structure(g,WORLD_W-90,260,1,false,state.baseHP[1]);
  structure(g,190,260,0,true,state.turretHP[0]);structure(g,WORLD_W-190,260,1,true,state.turretHP[1]);
- for(const u of [...state.units,...state.deadUnits].sort((a,b)=>a.y-b.y))drawUnit(g,u,1);
+ for(const u of [...state.units,...state.deadUnits].filter(u=>u.x>=state.cameraX-85&&u.x<=state.cameraX+CW+85).sort((a,b)=>a.y-b.y))drawUnit(g,u,1);
  if(window.DesertSprites){
   for(const impact of state.structureFX){
    const x=impact.side===0?(impact.part==='turret'?190:90):(impact.part==='turret'?WORLD_W-190:WORLD_W-90);
