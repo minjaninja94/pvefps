@@ -268,7 +268,7 @@ function move(u,x,y,dt){
  u.facing=dx>=0?1:-1;u.x=clamp(u.x,30,1070);u.y=clamp(u.y,72,448);
 }
 function fire(u,t=null,baseSide=null){
- const def=getDef(u.role,u.faction),x=t?t.x:baseSide===0?190:910,y=t?t.y:260;
+ const def=getDef(u.role,u.faction),x=t?t.x:baseSide===0?(state.turretHP[0]>0?190:90):(state.turretHP[1]>0?910:1010),y=t?t.y:260;
  if(def.range<48){
   if(t)damage(t,def.damage*(u.side===0?1+.08*state.weapon:1),u.role);
   else structureHit(baseSide,def.damage*(u.side===0?1+.08*state.weapon:1));
@@ -365,7 +365,7 @@ function endMatch(win){
 }
 function roleMatchupHtml(role){
  const r=ROLE[role];
- return '<span class="tag strong">강점 '+r.good.map(i=>ROLE[i].mark+ROLE[i].name).join(' · ')+'</span>'+
+ return '<span class="tag strong">'+(role===7?'시너지 ':'강점 ')+r.good.map(i=>ROLE[i].mark+ROLE[i].name).join(' · ')+'</span>'+
  '<span class="tag weak">약점 '+r.bad.map(i=>ROLE[i].mark+ROLE[i].name).join(' · ')+'</span>';
 }
 function updateUI(full=false){
@@ -414,7 +414,7 @@ function updateUI(full=false){
    return '<button class="unit-card'+(selectedRole===i?' selected':'')+'" data-role="'+i+'" title="'+r.tips+
     '"><span class="uc-top">'+r.mark+' '+r.name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
     '</span><span class="uc-name">'+f.units[i]+'</span><span class="uc-role">'+r.name+' · '+(r.kind==='air'?'공중':'지상')+'</span>'+
-    '<span class="uc-cost">'+r.cost+' CR</span><span class="bad-counter">취약: '+r.bad.map(x=>ROLE[x].mark).join(' ')+'</span></button>';
+    '<span class="uc-cost">'+r.cost+' CR</span><span class="good-counter">'+(i===7?'지원':'강점')+': '+r.good.map(x=>ROLE[x].mark).join(' ')+'</span><span class="bad-counter">약점: '+r.bad.map(x=>ROLE[x].mark).join(' ')+'</span></button>';
   }).join('');
   $('buildGrid').innerHTML=state.built.map((id,i)=>
    '<button class="build-cell'+(id!==null?' occupied':'')+(demolition&&id!==null?' demolition':'')+'" data-cell="'+i+'" aria-label="'+(id!==null?f.units[id]:'빈 슬롯')+'">'+
@@ -434,7 +434,7 @@ function initFactions(){
  '<button class="faction-card'+(i===selectedFaction?' selected':'')+'" data-faction="'+i+'"><span class="faction-icon" style="color:'+f.color+'">'+f.logo+
  '</span><strong>'+f.name+'</strong><span class="eyebrow">'+f.tag+'</span><small>'+f.slogan+'</small><span class="bonus">'+f.bonus+'</span></button>').join('');
  $('counterMatrix').innerHTML=ROLE.map((r,i)=>'<div class="matrix-item"><b>'+r.mark+' '+r.name+'</b>'+
- '<div class="good">강점: '+r.good.map(x=>ROLE[x].mark+ROLE[x].name).join(' / ')+'</div>'+
+ '<div class="good">'+(i===7?'조합 시너지: ':'강점: ')+r.good.map(x=>ROLE[x].mark+ROLE[x].name).join(' / ')+'</div>'+
  '<div class="bad">약점: '+r.bad.map(x=>ROLE[x].mark+ROLE[x].name).join(' / ')+'</div></div>').join('');
 }
 function px(ctx,x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h);}
