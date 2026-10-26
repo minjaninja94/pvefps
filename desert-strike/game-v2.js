@@ -28,7 +28,7 @@ function random(a,b){return a+Math.random()*(b-a);}
 function money(n){return Math.floor(n).toLocaleString('ko-KR');}
 function getDef(role,faction){
  const r=ROLE[role],f=FACTIONS[faction];
- return {...r,unitName:f.units[role],factionName:f.name,hp:r.hp*f.mut.hp*2.25,damage:r.damage*f.mut.dmg*.94,heal:(r.heal||0)*f.mut.dmg*1.5,speed:r.speed*f.mut.speed*.84};
+ return {...r,unitName:f.units[role],factionName:f.name,hp:r.hp*f.mut.hp*2.25,damage:r.damage*f.mut.dmg*.94,heal:(r.heal||0)*f.mut.dmg*1.5,speed:r.speed*f.mut.speed*.84,tips:faction===3&&role===7?'해병수육: 부상 아군을 발견하면 본인이 전투에서 사라지며 주변 아군 다수를 크게 회복합니다. 1회성 소모 지원병.':r.tips};
 }
 function ecoCost(){return Math.round(120*Math.pow(1.55,state.eco));}
 function weaponCost(){return Math.round(200*Math.pow(1.65,state.weapon));}
@@ -497,7 +497,7 @@ function updateUI(full=false){
   $('unitCards').innerHTML=ROLE.map((r,i)=>{
    const portrait=window.DesertSprites?.portrait(state.faction,i)||sprite(state.faction,i,0);
    const icon=typeof portrait.toDataURL==='function'?'<img class="pixel-preview" src="'+portrait.toDataURL('image/png')+'" alt="" aria-hidden="true">':r.token;
-   return '<button class="unit-card'+(selectedRole===i?' selected':'')+'" data-role="'+i+'" title="'+r.tips+
+   return '<button class="unit-card'+(selectedRole===i?' selected':'')+'" data-role="'+i+'" title="'+getDef(i,state.faction).tips+
     '"><span class="uc-top">'+r.mark+' '+r.name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
     '</span><span class="uc-name">'+f.units[i]+'</span><span class="uc-role">'+r.name+' · '+(r.kind==='air'?'공중':'지상')+'</span>'+
     '<span class="uc-cost">'+r.cost+' CR</span><span class="good-counter">'+(i===7?'지원':'강점')+': '+r.good.map(x=>ROLE[x].mark).join(' ')+'</span><span class="bad-counter">약점: '+r.bad.map(x=>ROLE[x].mark).join(' ')+'</span></button>';
@@ -508,7 +508,7 @@ function updateUI(full=false){
     '<span class="cell-icon">+</span><span class="cell-position">'+(Math.floor(i/COLS)+1)+'-'+(i%COLS+1)+'</span>')+'</button>').join('');
   $('demolishButton').classList.toggle('selected',demolition);
   $('unitDetails').innerHTML=selectedRole!==null?'<b>'+f.units[selectedRole]+'</b> · '+ROLE[selectedRole].name+
-    ' / '+ROLE[selectedRole].cost+' CR<br>'+ROLE[selectedRole].tips+'<div class="matchups">'+roleMatchupHtml(selectedRole)+
+    ' / '+ROLE[selectedRole].cost+' CR<br>'+getDef(selectedRole,state.faction).tips+'<div class="matchups">'+roleMatchupHtml(selectedRole)+
     '</div><span>HP '+Math.round(getDef(selectedRole,state.faction).hp)+' · 피해 '+Math.round(getDef(selectedRole,state.faction).damage)+
     ' · 사거리 '+ROLE[selectedRole].range+' · '+(ROLE[selectedRole].airTarget?'대공 가능':'지상 공격')+'</span>':
     '<b>전술 안내</b> — 역할 마크와 상성표는 진영이 달라도 동일합니다. 유닛을 선택하세요.';
@@ -916,5 +916,7 @@ function wire(){
    $('pauseButton').textContent=state.paused?'▶ 계속하기':'Ⅱ 일시정지';updateUI(true);}}
  });
 }
-initFactions();wire();reset();requestAnimationFrame(frame);
+initFactions();wire();reset();
+if(typeof window.addEventListener==='function')window.addEventListener('marine-art-ready',()=>updateUI(true));
+requestAnimationFrame(frame);
 })();
