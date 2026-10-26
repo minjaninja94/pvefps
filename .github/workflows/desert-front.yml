@@ -16,7 +16,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: JavaScript syntax
-        run: node --check desert-strike/game.js
-      - name: Gameplay smoke
+      - name: JavaScript syntax V1 + V2
+        run: |
+          node --check desert-strike/game.js
+          node --check desert-strike/game-v2.js
+      - name: Gameplay regression V1
         run: node desert-strike/smoke.test.cjs
+      - name: Gameplay V2
+        run: node desert-strike/smoke-v2.test.cjs
