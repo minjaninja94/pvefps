@@ -5,6 +5,20 @@
 (function(global){
 'use strict';
 const SIZE=72,FRAMES=16, cache=new Map(), terrainCache=new Map();
+let realAtlas=null,marineAtlas=null;
+function imageAtlas(data,group){
+ if(typeof global.Image!=='function'||typeof data!=='string')return null;
+ const img=new global.Image();
+ img.onload=()=>{
+  for(const key of [...cache.keys()])if(Number(key.split('-')[0])===group||group===-1&&Number(key.split('-')[0])<3)cache.delete(key);
+  if(typeof global.dispatchEvent==='function'&&typeof global.Event==='function')
+   global.dispatchEvent(new global.Event('isometric-art-ready'));
+ };
+ img.onerror=()=>{};
+ img.src=data;return img;
+}
+realAtlas=imageAtlas(global.IsoRealAtlasData,-1);
+marineAtlas=imageAtlas(global.MarineArtAtlas,3);
 const PAL=[
  {outline:'#0d171b',shadow:'#192b33',low:'#315264',base:'#53788a',high:'#9ac0bb',trim:'#b9a376',glow:'#8ccfea',dark:'#101d27',skin:'#c09b7d'},
  {outline:'#1a1719',shadow:'#302026',low:'#60373a',base:'#8a4a4b',high:'#bc7e60',trim:'#cf9d52',glow:'#d2ac55',dark:'#291a20',skin:'#8b6550'},
@@ -185,6 +199,41 @@ function renderFactionSprite(f,role,mode,frame){
  const cv=document.createElement('canvas');cv.width=SIZE;cv.height=SIZE;
  const g=cv.getContext('2d');if(!g)return cv;
  const a=PAL[f]||PAL[0],t=frame/16,cyc=t*Math.PI*2,walk=mode==='move',hit=mode==='attack'||mode==='siege';
+ const atlas=f===3?marineAtlas:realAtlas;
+ if(atlas&&atlas.complete&&atlas.naturalWidth>0){
+  const cols=f===3?4:8,rows=f===3?2:3;
+  const sw=atlas.naturalWidth/cols,sh=atlas.naturalHeight/rows;
+  const col=f===3?role%4:role,row=f===3?Math.floor(role/4):f;
+  const dying=mode==='death',impact=(mode==='attack'||mode==='siege')&&frame>=6&&frame<=10;
+  const stride=mode==='move'?Math.sin(cyc)*3.3:0;
+  const bounce=mode==='move'?Math.abs(Math.sin(cyc))*3:mode==='idle'?Math.sin(cyc)*.7:0;
+  g.save();g.imageSmoothingEnabled=false;
+  g.translate(36+stride,56-bounce);
+  if(dying){
+   const fall=frame/15;
+   g.translate(fall*10,fall*7);g.rotate(fall*1.12);g.globalAlpha=fall>.88?(1-fall)*8:1;
+  }else if(impact)g.rotate(-.11+.20*(frame-6)/5);
+  else if(mode==='attack'||mode==='siege')g.rotate(-.055*Math.sin(cyc));
+  // Icon rows at the foot of the three-faction concept sheet are intentionally excluded.
+  const cropH=f===3?sh*.94:sh*.74,sy=f===3?0:sh*.035;
+  const dw=role===3?67:role===6?67:61,dh=role===3?70:role===6?66:64;
+  g.drawImage(atlas,col*sw,row*sh+sy,sw,cropH,-dw*.5,-dh*.93,dw,dh);
+  if(impact){
+   g.globalAlpha=1;
+   for(let i=0;i<5;i++){
+    g.fillStyle=i%2?'#ffedb5':'#f09942';
+    g.fillRect(27+i*3,-36-i%3*4,4+i%2,2+(i+frame)%3);
+   }
+  }
+  if(dying){
+   g.globalAlpha=Math.max(.15,1-frame/16);
+   for(let i=0;i<6;i++){
+    g.fillStyle=i%2?a.trim:a.low;
+    g.fillRect(-19+i*8,7-frame%5+i%3,2+i%2,2);
+   }
+  }
+  g.restore();cache.set(key,cv);return cv;
+ }
  const swing=walk?Math.sin(cyc)*6:hit?Math.sin(t*Math.PI)*-9:Math.sin(cyc)*1.2;
  const br=hit?(frame>=6&&frame<=9):false,dead=mode==='death',fall=dead?frame/15:0;
  function part(q,col){p(g,q,col||a.base);}
