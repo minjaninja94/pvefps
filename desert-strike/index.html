@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111820">
+<title>DESERT FRONT — 자동 전투 전략</title>
+<meta name="description" content="건물을 배치하면 병력이 자동 소환되는 실시간 전략 웹게임. 모바일과 PC 지원.">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<div class="shell">
+<header class="mast">
+  <a href="../" class="brand"><span class="brand-mark">DF<span>///</span></span><span>DESERT <b>FRONT</b><small>AUTO-BATTLE STRATEGY</small></span></a>
+  <div class="top-actions">
+    <span class="mode-label"><i></i> SOLO · VS AI</span>
+    <button id="helpBtn" title="규칙" class="iconbtn">? 도움말</button>
+    <button id="soundBtn" title="효과음 켜기 / 끄기" class="iconbtn">♪ ON</button>
+  </div>
+</header>
+<section class="metrics" aria-label="전황">
+  <div class="metric cash"><small>보유 자금</small><strong id="gold">600</strong><span>CR</span></div>
+  <div class="metric"><small>경제 Lv.<b id="economyLevel">0</b></small><strong id="income">+4</strong><span>/ 초</span></div>
+  <div class="metric"><small>현재 웨이브</small><strong id="wave">00</strong><span>WAVE</span></div>
+  <div class="metric"><small>다음 병력 출격</small><strong id="countdown">16.0</strong><span>SEC</span></div>
+  <div class="controlgroup"><button id="pauseBtn" class="secondary">Ⅱ 일시정지</button><button id="speedBtn" class="secondary">▶ 1×</button><button id="resetBtn" class="secondary">↻ 재시작</button></div>
+</section>
+<section class="bases" aria-label="기지 체력">
+  <div class="base-health ally"><div class="base-label"><span>● 연합 전진기지</span><b id="playerHp">1800 / 1800</b></div><div class="bar"><div id="playerHpBar"></div></div></div>
+  <div class="sector-label">AUTONOMOUS WARFARE <span id="battleStatus">전투 준비</span></div>
+  <div class="base-health hostile"><div class="base-label"><span>● 적 요새</span><b id="enemyHp">1800 / 1800</b></div><div class="bar"><div id="enemyHpBar"></div></div></div>
+</section>
+<section class="arena" aria-label="자동 전투 전장">
+  <canvas id="battle" width="1100" height="560" aria-label="자동 전투 게임 화면"></canvas>
+  <div class="arena-top"><span>01 / NO-MAN'S LAND</span><span id="battleCount">아군 0 · 적군 0</span></div>
+  <div class="wave-flash" id="waveFlash" aria-live="polite"></div>
+  <div id="battleOverlay" class="battle-overlay">
+    <div class="welcome" id="welcome">
+      <span class="eyebrow">THE FRONTIER IS YOURS</span>
+      <h1>BUILD.<br><em>DEPLOY.</em><br>DOMINATE.</h1>
+      <p>생산 시설을 배치해 군대를 설계하십시오.<br>병력은 16초 후부터 자동으로 소환되어 싸웁니다.</p>
+      <button class="primary big" id="startBtn">작전 개시 <span>↗</span></button>
+      <small>설치 없이 브라우저에서 실행 · 1인 vs AI</small>
+    </div>
+    <div class="finish hidden" id="finish"><span class="eyebrow" id="finishEyebrow">OPERATION COMPLETE</span><h2 id="finishTitle">승리</h2><p id="finishDetail"></p><button class="primary" id="retryBtn">다시 전투하기 ↗</button></div>
+  </div>
+</section>
+<main class="lower">
+  <section class="panel armory">
+    <div class="panel-head"><div><span class="eyebrow">01 — BLUEPRINTS</span><h2>유닛 생산 시설</h2></div><span class="keyboard">1–8 단축키</span></div>
+    <p class="hint">유닛을 선택한 뒤 생산 구역의 빈 칸을 누르세요. 설치한 시설은 <b>매 웨이브에 유닛 1기</b>를 생산합니다.</p>
+    <div id="unitCards" class="unit-cards"></div>
+    <div id="unitDetail" class="unit-detail">유닛 카드를 눌러 능력치와 상성을 확인하세요.</div>
+  </section>
+  <section class="panel industry">
+    <div class="panel-head"><div><span class="eyebrow">02 — DEPLOYMENT GRID</span><h2>생산 구역 · 5 × 3</h2></div><span id="slots" class="slots">0 / 15</span></div>
+    <div class="gridline">FRONT LINE → <span>같은 줄의 유닛은 비슷한 위치에 소환됩니다.</span></div>
+    <div class="build-grid" id="buildGrid" aria-label="생산 건물 배치 구역"></div>
+    <div class="grid-actions"><button id="demolishBtn" class="secondary">▤ 철거 모드</button><button id="cancelBtn" class="secondary">선택 해제 (ESC)</button></div>
+    <div class="economy-card"><div><span class="eyebrow">03 — ECONOMY</span><h3>보급망 확장</h3><p>초당 자금 +2 증가 · 경제 투자 후 후반 성장</p></div><button id="upgradeBtn" class="upgrade"><b>경제 업그레이드</b><span id="upgradeCost">150 CR</span></button></div>
+    <div class="guide"><b>전술 메모</b><span>중장갑은 로켓이, 드론은 대공포가 효과적입니다. 의무병은 인접 아군을 회복하며, 포병은 광역 피해를 입힙니다.</span></div>
+  </section>
+</main>
+<footer><span>DESERT FRONT · ORIGINAL TACTICAL PROTOTYPE</span><span id="feed" role="status">전투를 시작하고 생산 시설을 설치하세요.</span></footer>
+</div>
+<dialog id="helpDialog"><div class="dialog-body"><span class="eyebrow">COMMANDER BRIEFING</span><h2>게임 규칙</h2><p>이 게임은 자동 전투형 전략 게임의 핵심인 생산 건물 배치, 웨이브 출격, 상성 대응, 경제 운영을 구현한 독립 프로토타입입니다.</p>
+<ol><li>작전 시작 후 생산 카드를 선택하고 5×3 격자에 배치합니다.</li><li>16초마다 설치된 시설 각각에서 병력 1기를 소환합니다. 전투는 자동으로 진행됩니다.</li><li>적 부대에 맞춰 로켓·대공·장갑·치유 등 조합을 조정하고 자금을 운영합니다.</li><li>상대 기지를 먼저 0 HP로 만들면 승리합니다.</li></ol><p>PC: 숫자키 1–8로 유닛 선택, ESC로 선택 해제, 스페이스로 일시정지. 모바일: 유닛 카드 터치 → 격자 터치. 격자 오른쪽 클릭 또는 철거 모드로 시설을 철거할 수 있습니다.</p><button class="primary" id="closeHelp">확인</button></div></dialog>
+<script src="./game.js" defer></script>
+</body>
+</html>
