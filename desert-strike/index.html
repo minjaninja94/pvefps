@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | Tactical Auto Battle</title><meta name="description" content="4진영 32병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css"></head>
+<title>DESERT FRONT | Isometric 2.5D Isometric Auto Battle</title><meta name="description" content="4진영 32병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css"></head>
 <body>
 <div class="app">
 <header class="top">
- <a class="logo" href="../"><span class="logo-badge">D<span>///</span>F</span><span>DESERT <strong>FRONT</strong><small>TACTICAL AUTO-BATTLE / V2</small></span></a>
+ <a class="logo" href="../"><span class="logo-badge">D<span>///</span>F</span><span>DESERT <strong>FRONT</strong><small>ISOMETRIC PIXEL BATTLE / V3</small></span></a>
  <div class="top-side"><span id="factionLabel" class="faction-pill">진영 미선택</span><button id="helpButton" class="btn outline">? 도움말</button></div>
 </header>
 <div class="stats"><div><small>자원</small><strong id="cash">360</strong><em>CR</em></div><div><small>자원 수입</small><strong id="income">+1</strong><em>/ 0.5초</em></div><div><small>웨이브</small><strong id="wave">00</strong></div><div><small>다음 출격</small><strong id="timer">24.0</strong><em>초</em></div><div class="compact-status"><span id="battleStatus">작전 대기</span><span id="enemyFactionLabel"></span></div></div>
@@ -18,12 +18,12 @@
  <div class="section-head"><div><span class="eyebrow">BASE DEVELOPMENT / PRODUCTION ZONE</span><h1>생산 기지</h1><p>진영을 선택하고 유닛 생산 시설을 건설하세요. 적이 방어선을 뚫으면 이곳에 침공 병력이 표시됩니다.</p></div><span id="baseAlert" class="alert-chip">기지 안전</span></div>
  <div class="canvas-wrap base-canvas"><canvas id="baseCanvas" width="1100" height="340" aria-label="아군 기지, 방어 포탑과 침공 병력"></canvas><div class="canvas-note">● CORE & DEFENSE — 생산 시설은 보호 구역에 있습니다.</div></div>
  <div class="base-content">
- <section class="panel cards-panel"><div class="panel-heading"><div><span class="eyebrow">RECRUIT UNITS</span><h2>병력 편성</h2></div><span class="shortcut">1–8 단축키</span><a class="sprite-gallery-link" href="./sprite-gallery.html" target="_blank" rel="noopener">도트 모션 도감 ↗</a></div><p class="subtext">유닛을 고르면 <b>강점·약점·공격 대상</b>이 보입니다. 선택한 유닛을 아래 빈 슬롯에 설치하세요.</p><div id="unitCards" class="unit-cards"></div><div id="unitDetails" class="unit-details">유닛을 선택하면 여기에서 상성 정보를 볼 수 있습니다.</div></section>
+ <section class="panel cards-panel"><div class="panel-heading"><div><span class="eyebrow">RECRUIT UNITS</span><h2>병력 편성</h2></div><span class="shortcut">1–8 단축키</span><a class="sprite-gallery-link" href="./sprite-gallery.html" target="_blank" rel="noopener">2.5D 도트 모션 도감 ↗</a></div><p class="subtext">유닛을 고르면 <b>강점·약점·공격 대상</b>이 보입니다. 선택한 유닛을 아래 빈 슬롯에 설치하세요.</p><div id="unitCards" class="unit-cards"></div><div id="unitDetails" class="unit-details">유닛을 선택하면 여기에서 상성 정보를 볼 수 있습니다.</div></section>
  <section class="panel build-panel"><div class="panel-heading"><div><span class="eyebrow">UNIT FORMATION</span><h2>생산 건물 · 15 × 5</h2></div><span id="builtCount" class="shortcut">0 / 75</span></div><p class="subtext">앞쪽 배치일수록 먼저 교전합니다. <b>웨이브마다 각 건물에서 1기씩 소환</b>됩니다.</p><div class="build-grid-viewport" aria-label="75개 생산 슬롯 가로 스크롤"><div id="buildGrid" class="build-grid" aria-label="기지 건설 슬롯"></div></div><div class="actions"><button id="demolishButton" class="btn outline">▤ 철거 모드</button><button id="clearButton" class="btn outline">✕ 선택 해제</button></div><div class="protection-note"><b>기지 방어 규칙</b><p>원작의 후대형 방식처럼 생산 시설은 직접 파괴되지 않습니다. 적이 밀고 들어오면 방어 포탑을 먼저 공격하고, 이후 핵심 기지를 파괴합니다.</p></div></section>
  </div>
 </div>
 <div class="screen" id="view-battle">
- <div class="section-head"><div><span class="eyebrow">NO-MAN'S LAND / ACTIVE FRONT</span><h1>실시간 전장</h1><p>유닛들이 자동으로 이동하고 전투합니다. 각 유닛 머리 위에는 역할 아이콘이 표시됩니다.</p></div><div class="controls"><button class="btn outline" id="pauseButton">Ⅱ 일시정지</button><button class="btn outline" id="speedButton">▶ 1×</button></div></div>
+ <div class="section-head"><div><span class="eyebrow">NO-MAN'S LAND / ACTIVE FRONT</span><h1>실시간 전장</h1><p>비스듬히 내려다보는 2.5D 전장에서 유닛들이 교전합니다. 실시간 전투 판정과 역할 상성은 유지됩니다.</p></div><div class="controls"><button class="btn outline" id="pauseButton">Ⅱ 일시정지</button><button class="btn outline" id="speedButton">▶ 1×</button></div></div>
  <div class="battle-nav"><button id="panLeft" class="btn outline" type="button">◀ 내 기지</button><span id="cameraStatus">전선 자동 추적</span><button id="followFront" class="btn outline" type="button">◎ 전선 추적</button><button id="panRight" class="btn outline" type="button">적 기지 ▶</button></div><div class="canvas-wrap battlefield"><canvas id="battleCanvas" width="1100" height="520" aria-label="확장된 자동 전투 전장. 드래그로 이동할 수 있습니다."></canvas><div class="battle-top"><span>ALLIED FORCE <b id="friendlyCount">0</b></span><span id="frontStatus">전선 중앙</span><span>ENEMY FORCE <b id="hostileCount">0</b></span></div><div id="waveBanner" class="wave-banner"></div></div>
  <div class="mini-wrap"><div class="mini-heading"><b>WORLD MAP · EXTENDED FRONT</b><span>미니맵을 누르면 해당 위치로 이동합니다</span></div><canvas id="battleMinimap" width="1100" height="82" aria-label="전장 미니맵, 클릭해서 시야 이동"></canvas></div><div class="battle-bottom"><div class="legend"><span>위 아이콘: ⚔ 돌격</span><span>⌖ 사격</span><span>◆ 대장갑</span><span>▣ 장갑</span><span>✣ 대공</span><span>✹ 포격</span><span>◇ 비행</span><span>✚ 지원</span></div><div id="inspect" class="inspect">전장 유닛을 클릭하면 능력과 상성을 볼 수 있습니다.</div></div>
 </div>
@@ -46,5 +46,6 @@
 <dialog id="helpDialog"><div class="help-inner"><h2>데저트 프런트 조작법</h2><p>① 내 기지: 유닛 카드를 선택하고 15×5 생산 슬롯을 눌러 생산 시설 설치 / 철거는 비용의 55% 환급</p><p>② 전장: 확장 전장 · 미니맵/전선 추적 · 자동 전투 관전 / 역할 마크로 상성 파악 / 유닛을 눌러 능력 확인 / 배속과 일시정지</p><p>③ 특수 기능: 1회 핵폭탄 / 유료 궤도 폭격 / 채굴망·무기·장갑 강화 / 방어 포탑 보수</p><p>생산 건물은 보호되고 방어 포탑이 적을 막습니다. 기지 본체가 파괴되면 패배합니다. 초반 360 CR로 시작하고, 기본 수입 0.5초당 1 CR에서 경제 강화 시 주기당 +1 CR씩 증가합니다. 24초마다 출격합니다.</p><p>키보드: 1–8 유닛 선택, 1·2·3 화면 전환은 Alt+숫자, Space 일시정지, Esc 선택 해제.</p><button class="btn start-cta" id="helpClose">확인</button></div></dialog>
 <script src="./marine-art-data.js" defer></script>
 <script src="./sprite-animations.js" defer></script>
+<script src="./isometric-world.js" defer></script>
 <script src="./game-v2.js" defer></script>
 </body></html>
