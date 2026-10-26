@@ -98,6 +98,8 @@ for(let faction=0;faction<4;faction++)for(let role=0;role<8;role++){
   assert.equal(frame.width,72,'painted sprite frame width');
  }
 }
-assert.equal(artRenders.slices,4*8*5,'all 32 unique raster characters render in every animation action');
+// 31 raster character illustrations + 1 deliberately hand-coded isometric truck.
+assert.equal(artRenders.slices,31*5,'31 characters use raster illustrations while Odo Bongo is custom isometric truck geometry');
+for(const mode of ['idle','move','attack','siege','death'])assert.ok(painted.frame(3,6,mode,8),'truck has animation '+mode);
 
 console.log('Isometric visual smoke passed: 2,560 animation frames, 32 loaded raster characters, quarter-view terrain and destructible structures.');
