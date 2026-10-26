@@ -5,7 +5,7 @@ const CW=1100,CH=520,WORLD_W=3300,HOME_H=340,MAX_BASE=7200,MAX_TURRET=1700,INTER
 const COLORS=['#79dfee','#ff9a79'],LANES=[110,180,260,340,410];
 const initialIncome=1,WAVE_STIPEND=24,MAX_ECONOMY=7;
 const ROLE=[
- {key:'charge',name:'돌격',mark:'⚔',token:'⚔',cost:65,hp:115,damage:21,armor:1,range:29,rate:.77,speed:82,airTarget:false,kind:'ground',tips:'적 포병·지원병 후방을 빠르게 찌릅니다.',good:[5,7],bad:[3,1]},
+ {key:'charge',name:'돌격',mark:'⚔',token:'⚔',cost:65,hp:115,damage:21,armor:1,range:29,rate:.77,speed:82,airTarget:false,kind:'ground',tips:'적 포병·지원병 후방을 빠르게 찌릅니다. 장갑 기지 공격력은 낮습니다.',good:[5,7],bad:[3,1]},
  {key:'rifle',name:'사격',mark:'⌖',token:'⌖',cost:95,hp:108,damage:17,armor:1,range:164,rate:.8,speed:60,airTarget:true,kind:'ground',tips:'저렴한 범용 원거리 병력. 공중도 공격합니다.',good:[0,7],bad:[3,5]},
  {key:'breaker',name:'대장갑',mark:'◆',token:'◆',cost:150,hp:94,damage:47,armor:0,range:208,rate:1.76,speed:49,airTarget:true,kind:'ground',tips:'전차·중장갑을 파괴하지만 근접 압박에 취약합니다.',good:[3,4],bad:[0,1]},
  {key:'armor',name:'장갑',mark:'▣',token:'▣',cost:205,hp:390,damage:32,armor:9,range:120,rate:1.27,speed:35,airTarget:false,kind:'ground',tips:'앞줄에서 버티며 일반 총격을 흡수합니다.',good:[1,4],bad:[2,6]},
@@ -174,60 +174,114 @@ function createUnit(side,slot,role){
   cooldown:random(.1,.7),anim:random(0,16),facing:side===0?1:-1,blink:0,moving:false,strike:null});
  pulse(x,y,COLORS[side],12);
 }
+// AI spends the same credits as the player, but actually studies the player's build.
+// Low-cost single-role rushes must trigger counter-production, not extra/free AI income.
+const AI_COUNTER_ROLES=[
+ [1,6,3], // charge -> ranged, air (untargetable by melee), heavy armor
+ [3,5],   // rifle -> armor, siege
+ [0,1],   // armor breaker -> charge/rifle
+ [2,6],   // tank -> armor breaker/air
+ [2,3],   // anti-air -> armor breaker/armor
+ [0,6],   // artillery -> charge/air
+ [4,1],   // flier -> anti-air/rifle
+ [0,5]    // medic -> charge/siege
+];
+function aiReadOpponent(){
+ const counts=Array(ROLE.length).fill(0);
+ for(const role of state.built)if(role!==null)counts[role]++;
+ const sum=counts.reduce((a,b)=>a+b,0);
+ let major=0;
+ for(let i=1;i<counts.length;i++)if(counts[i]>counts[major])major=i;
+ const dominant=sum>=3&&counts[major]/sum>=.63?major:null;
+ return {counts,total:sum,dominant,major};
+}
 function aiChoose(budget=state.enemyCash){
- const counts=Array(8).fill(0);
- for(const r of state.built)if(r!==null)counts[r]++;
- const weights=[3,3.1,2.4,2.1,1.7,1.6,1.7,.6];
- weights[4]+=counts[6]*5;
- weights[2]+=counts[3]*4;
- weights[0]+=counts[5]*3+counts[7]*2;
- weights[3]+=counts[1]*1.7;
- weights[6]+=counts[3]*1.3;
- weights[5]+=counts[4]*1.2;
- if(state.wave<3){weights[5]*=.25;weights[7]*=.45;}
- let opts=ROLE.map((r,i)=>({i,w:weights[i]})).filter(z=>ROLE[z.i].cost<=budget);
- if(!opts.length)return null;
- let roll=Math.random()*opts.reduce((a,b)=>a+b.w,0);
- for(const item of opts){roll-=item.w;if(roll<=0)return item.i;}
- return opts[opts.length-1].i;
-}
-function aiInitialBuild(){
- // AI plays the same economy: identical starting money, identical building costs.
- // It opens cautiously with two inexpensive production structures, no gifted army.
- for(const [slot,role] of [[1,0],[17,1]]){
-  if(state.enemyBuilt[slot]!==null||state.enemyCash<ROLE[role].cost)continue;
-  state.enemyBuilt[slot]=role;
-  state.enemyCash-=ROLE[role].cost;
- }
-}
-function aiInvest(){
- const builtCount=state.enemyBuilt.filter(role=>role!==null).length;
- const nearbyHostiles=state.units.some(u=>u.side===0&&u.x>WORLD_W-580&&u.hp>0);
- // Slower strategic opponent. From 2 producers, add one every 2 waves,
- // with a two-per-wave ceiling later; never create free buildings.
- const softLimit=Math.min(SLOTS,2+Math.floor(state.wave/2));
- const ecoLevelCap=Math.min(MAX_ECONOMY,Math.floor(state.wave/2));
- if(!nearbyHostiles && state.enemyEco<ecoLevelCap && state.wave%2===0){
-  const price=ecoCostFor(state.enemyEco);
-  if(state.enemyCash>=price+100){
-   state.enemyCash-=price;
-   state.enemyEco++;
+ const intel=aiReadOpponent();
+ const affordable=ROLE.map((role,id)=>id).filter(id=>ROLE[id].cost<=budget);
+ if(!affordable.length)return null;
+ const myCounts=Array(ROLE.length).fill(0);
+ for(const role of state.enemyBuilt)if(role!==null)myCounts[role]++;
+ if(intel.dominant!==null){
+  const primary=AI_COUNTER_ROLES[intel.dominant];
+  const matching=primary.filter(id=>affordable.includes(id));
+  if(matching.length){
+   // Melee-only armies cannot attack aircraft. Buy one air unit once affordable,
+   // then mix rifle + armor rather than exploit an unlimited flier swarm.
+   if(intel.dominant===0 && state.wave>=2 && affordable.includes(6) && myCounts[6]<Math.max(1,Math.floor(intel.counts[0]/6)))return 6;
+   matching.sort((a,b)=>{
+    const ac=myCounts[a]/Math.max(1,Math.ceil(intel.counts[intel.dominant]*.55));
+    const bc=myCounts[b]/Math.max(1,Math.ceil(intel.counts[intel.dominant]*.55));
+    return ac-bc || ROLE[a].cost-ROLE[b].cost;
+   });
+   return matching[0];
   }
  }
- let slotsToBuy=Math.min(state.wave<9?1:2,Math.max(0,softLimit-builtCount));
- if(nearbyHostiles)slotsToBuy=Math.min(2,Math.max(0,softLimit+1-builtCount));
- // Keep a small cash reserve so AI cannot spend every resource on one build.
- const reserve=nearbyHostiles?0:state.wave<6?35:70;
- const open=state.enemyBuilt.map((role,i)=>role===null?i:-1).filter(i=>i>=0);
- while(open.length && slotsToBuy-->0){
-  const affordable=ROLE.filter(r=>r.cost<=state.enemyCash-reserve);
-  if(!affordable.length)break;
+ // A mixed army is answered with a diverse mixture weighted by real enemy roles.
+ const scores=affordable.map(id=>{
+  const role=ROLE[id];
+  const matchup=intel.counts.reduce((score,n,enemyRole)=>
+   score+n*(role.good.includes(enemyRole)?3.5:role.bad.includes(enemyRole)?-2.5:0),0);
+  const antiSpam=myCounts[id]*2.5;
+  const utility=id===7&&myCounts.reduce((a,b)=>a+b,0)<4?-8:0;
+  return {id,score:matchup-antiSpam+utility-(role.cost-90)/100};
+ });
+ scores.sort((a,b)=>b.score-a.score);
+ const top=scores.slice(0,Math.min(3,scores.length));
+ const random=Math.random()*top.reduce((a,b)=>a+Math.max(1,8+b.score-scores[0].score),0);
+ let left=random;
+ for(const entry of top){left-=Math.max(1,8+entry.score-scores[0].score);if(left<=0)return entry.id;}
+ return top[0].id;
+}
+function aiInitialBuild(){
+ // Equal starting resources. Both buildings are paid for out of the AI's 360 CR.
+ for(const [slot,role] of [[1,0],[17,1]]){
+  if(state.enemyBuilt[slot]!==null||state.enemyCash<ROLE[role].cost)continue;
+  state.enemyBuilt[slot]=role;state.enemyCash-=ROLE[role].cost;
+ }
+}
+function aiAdaptFacilities(intel){
+ // The opponent uses building replacement under the exact same 55% refund as the player.
+ // At most one conversion per 2 waves. React only to clear, repeated single-role spam.
+ if(intel.dominant===null||intel.total<4||state.wave<2||state.wave%2!==0)return false;
+ const counters=AI_COUNTER_ROLES[intel.dominant];
+ const aiCount=state.enemyBuilt.filter(r=>r!==null).length;
+ const counterCount=state.enemyBuilt.filter(r=>counters.includes(r)).length;
+ if(counterCount>=Math.ceil(aiCount*.55))return false;
+ const badIndex=state.enemyBuilt.findIndex(role=>role!==null&&!counters.includes(role));
+ if(badIndex<0)return false;
+ const oldRole=state.enemyBuilt[badIndex],refund=Math.floor(ROLE[oldRole].cost*.55);
+ const options=counters.filter(role=>ROLE[role].cost-refund<=state.enemyCash);
+ if(!options.length)return false;
+ const target=options.sort((a,b)=>ROLE[a].cost-ROLE[b].cost)[0];
+ state.enemyCash-=ROLE[target].cost-refund;
+ state.enemyBuilt[badIndex]=target;
+ return true;
+}
+function aiInvest(){
+ const intel=aiReadOpponent();
+ const enemyCount=state.enemyBuilt.filter(role=>role!==null).length;
+ const invaded=state.units.some(u=>u.side===0&&u.x>WORLD_W-580&&u.hp>0);
+ const heavyRush=intel.total>=4&&intel.dominant!==null;
+ // Keep pace with a committed enemy production build, but not by spawning free units.
+ const desired=Math.min(SLOTS,Math.max(2+Math.floor(state.wave/3),
+  Math.ceil(intel.total*(heavyRush?1:.85)),invaded?intel.total+1:0));
+ // One reasonable purchasing opportunity per wave, up to three early in a rush.
+ let purchases=Math.min(invaded?3:heavyRush?3:state.wave<=5?2:3,Math.max(0,desired-enemyCount));
+ const reserve=invaded||heavyRush?0:state.wave<=3?25:50;
+ if(state.wave>=4&&state.wave%3===0&&!invaded&&state.enemyEco<MAX_ECONOMY){
+  const wantLevel=Math.min(MAX_ECONOMY,Math.max(state.eco,Math.floor(state.wave/5)));
+  const ecoPrice=ecoCostFor(state.enemyEco);
+  if(state.enemyEco<wantLevel&&state.enemyCash>=ecoPrice+150){
+   state.enemyCash-=ecoPrice;state.enemyEco++;
+  }
+ }
+ aiAdaptFacilities(intel);
+ const slots=state.enemyBuilt.map((v,i)=>v===null?i:-1).filter(i=>i>=0);
+ while(slots.length&&purchases-->0){
   const role=aiChoose(state.enemyCash-reserve);
   if(role===null)break;
-  const slotIndex=Math.floor(Math.random()*open.length);
-  const slot=open.splice(slotIndex,1)[0];
-  state.enemyBuilt[slot]=role;
-  state.enemyCash-=ROLE[role].cost;
+  const slot=slots.splice(Math.floor(Math.random()*slots.length),1)[0];
+  state.enemyBuilt[slot]=role;state.enemyCash-=ROLE[role].cost;
  }
 }
 function wave(){
@@ -244,6 +298,12 @@ function wave(){
  chirp(430,.17);updateUI(true);
 }
 function distance(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+function structureDamage(role,amount){
+ // Buildings are armored structures: light melee cannot be the strongest base breaker.
+ // Exactly the same modifiers apply to player and AI troops.
+ const factor=[.52,.88,1.12,1.08,.82,1.55,.87,.4][role]??1;
+ return amount*factor;
+}
 function calcDamage(attacker,target,amount){
  let out=amount;
  if(attacker!==null){
@@ -340,7 +400,7 @@ function nearestUnit(u,def){
   if(v.hp<=0||(!def.airTarget&&ROLE[v.role].kind==='air'))continue;
   const dy=Math.abs(u.y-v.y);
   const d=Math.hypot(next,dy);
-  const bonus=u.role===4&&ROLE[v.role].kind==='air'?175:0;
+  const bonus=(u.role===4&&ROLE[v.role].kind==='air'?175:0)+(def.good.includes(v.role)?Math.min(35,def.range*.2):0);
   if(d-bonus<score){score=d-bonus;candidate=v;}
  }
  return candidate;
@@ -363,7 +423,7 @@ function fire(u,t=null,baseSide=null){
  const def=getDef(u.role,u.faction),x=t?t.x:baseSide===0?(state.turretHP[0]>0?190:90):(state.turretHP[1]>0?WORLD_W-190:WORLD_W-90),y=t?t.y:260;
  if(def.range<48){
   if(t)damage(t,def.damage*(u.side===0?1+.08*state.weapon:1),u.role);
-  else structureHit(baseSide,def.damage*(u.side===0?1+.08*state.weapon:1));
+  else structureHit(baseSide,structureDamage(u.role,def.damage*(u.side===0?1+.08*state.weapon:1)));
   pulse(x,y,'#ffdbae',6);
  }else{
   state.shots.push({side:u.side,source:u.role,x:u.x,y:u.y,tx:x,ty:y,
@@ -375,7 +435,7 @@ function fire(u,t=null,baseSide=null){
 function projectileImpact(p){
  const x=p.tx,y=p.ty;
  pulse(x,y,p.source===4?'#8cebf4':'#ffc88d',p.blast?45:12);
- if(p.baseSide!==null){structureHit(p.baseSide,p.damage);return;}
+ if(p.baseSide!==null){structureHit(p.baseSide,structureDamage(p.source,p.damage));return;}
  if(p.blast){
   for(const v of state.units)if(v.hp>0&&v.side!==p.side){
    if(ROLE[v.role].kind==='air'&&!ROLE[p.source].airTarget)continue;
