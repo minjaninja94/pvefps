@@ -1,70 +1,48 @@
 <!doctype html>
-<html lang="ko">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#111820">
-<title>DESERT FRONT — 자동 전투 전략</title>
-<meta name="description" content="건물을 배치하면 병력이 자동 소환되는 실시간 전략 웹게임. 모바일과 PC 지원.">
-<link rel="stylesheet" href="./style.css">
-</head>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
+<title>DESERT FRONT | Tactical Auto Battle</title><meta name="description" content="3진영 24병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css"></head>
 <body>
-<div class="shell">
-<header class="mast">
-  <a href="../" class="brand"><span class="brand-mark">DF<span>///</span></span><span>DESERT <b>FRONT</b><small>AUTO-BATTLE STRATEGY</small></span></a>
-  <div class="top-actions">
-    <span class="mode-label"><i></i> SOLO · VS AI</span>
-    <button id="helpBtn" title="규칙" class="iconbtn">? 도움말</button>
-    <button id="soundBtn" title="효과음 켜기 / 끄기" class="iconbtn">♪ ON</button>
-  </div>
+<div class="app">
+<header class="top">
+ <a class="logo" href="../"><span class="logo-badge">D<span>///</span>F</span><span>DESERT <strong>FRONT</strong><small>TACTICAL AUTO-BATTLE / V2</small></span></a>
+ <div class="top-side"><span id="factionLabel" class="faction-pill">진영 미선택</span><button id="helpButton" class="btn outline">? 도움말</button></div>
 </header>
-<section class="metrics" aria-label="전황">
-  <div class="metric cash"><small>보유 자금</small><strong id="gold">600</strong><span>CR</span></div>
-  <div class="metric"><small>경제 Lv.<b id="economyLevel">0</b></small><strong id="income">+4</strong><span>/ 초</span></div>
-  <div class="metric"><small>현재 웨이브</small><strong id="wave">00</strong><span>WAVE</span></div>
-  <div class="metric"><small>다음 병력 출격</small><strong id="countdown">16.0</strong><span>SEC</span></div>
-  <div class="controlgroup"><button id="pauseBtn" class="secondary">Ⅱ 일시정지</button><button id="speedBtn" class="secondary">▶ 1×</button><button id="resetBtn" class="secondary">↻ 재시작</button></div>
-</section>
-<section class="bases" aria-label="기지 체력">
-  <div class="base-health ally"><div class="base-label"><span>● 연합 전진기지</span><b id="playerHp">1800 / 1800</b></div><div class="bar"><div id="playerHpBar"></div></div></div>
-  <div class="sector-label">AUTONOMOUS WARFARE <span id="battleStatus">전투 준비</span></div>
-  <div class="base-health hostile"><div class="base-label"><span>● 적 요새</span><b id="enemyHp">1800 / 1800</b></div><div class="bar"><div id="enemyHpBar"></div></div></div>
-</section>
-<section class="arena" aria-label="자동 전투 전장">
-  <canvas id="battle" width="1100" height="560" aria-label="자동 전투 게임 화면"></canvas>
-  <div class="arena-top"><span>01 / NO-MAN'S LAND</span><span id="battleCount">아군 0 · 적군 0</span></div>
-  <div class="wave-flash" id="waveFlash" aria-live="polite"></div>
-  <div id="battleOverlay" class="battle-overlay">
-    <div class="welcome" id="welcome">
-      <span class="eyebrow">THE FRONTIER IS YOURS</span>
-      <h1>BUILD.<br><em>DEPLOY.</em><br>DOMINATE.</h1>
-      <p>생산 시설을 배치해 군대를 설계하십시오.<br>병력은 16초 후부터 자동으로 소환되어 싸웁니다.</p>
-      <button class="primary big" id="startBtn">작전 개시 <span>↗</span></button>
-      <small>설치 없이 브라우저에서 실행 · 1인 vs AI</small>
-    </div>
-    <div class="finish hidden" id="finish"><span class="eyebrow" id="finishEyebrow">OPERATION COMPLETE</span><h2 id="finishTitle">승리</h2><p id="finishDetail"></p><button class="primary" id="retryBtn">다시 전투하기 ↗</button></div>
-  </div>
-</section>
-<main class="lower">
-  <section class="panel armory">
-    <div class="panel-head"><div><span class="eyebrow">01 — BLUEPRINTS</span><h2>유닛 생산 시설</h2></div><span class="keyboard">1–8 단축키</span></div>
-    <p class="hint">유닛을 선택한 뒤 생산 구역의 빈 칸을 누르세요. 설치한 시설은 <b>매 웨이브에 유닛 1기</b>를 생산합니다.</p>
-    <div id="unitCards" class="unit-cards"></div>
-    <div id="unitDetail" class="unit-detail">유닛 카드를 눌러 능력치와 상성을 확인하세요.</div>
-  </section>
-  <section class="panel industry">
-    <div class="panel-head"><div><span class="eyebrow">02 — DEPLOYMENT GRID</span><h2>생산 구역 · 5 × 3</h2></div><span id="slots" class="slots">0 / 15</span></div>
-    <div class="gridline">FRONT LINE → <span>같은 줄의 유닛은 비슷한 위치에 소환됩니다.</span></div>
-    <div class="build-grid" id="buildGrid" aria-label="생산 건물 배치 구역"></div>
-    <div class="grid-actions"><button id="demolishBtn" class="secondary">▤ 철거 모드</button><button id="cancelBtn" class="secondary">선택 해제 (ESC)</button></div>
-    <div class="economy-card"><div><span class="eyebrow">03 — ECONOMY</span><h3>보급망 확장</h3><p>초당 자금 +2 증가 · 경제 투자 후 후반 성장</p></div><button id="upgradeBtn" class="upgrade"><b>경제 업그레이드</b><span id="upgradeCost">150 CR</span></button></div>
-    <div class="guide"><b>전술 메모</b><span>중장갑은 로켓이, 드론은 대공포가 효과적입니다. 의무병은 인접 아군을 회복하며, 포병은 광역 피해를 입힙니다.</span></div>
-  </section>
-</main>
-<footer><span>DESERT FRONT · ORIGINAL TACTICAL PROTOTYPE</span><span id="feed" role="status">전투를 시작하고 생산 시설을 설치하세요.</span></footer>
+<div class="stats"><div><small>자원</small><strong id="cash">600</strong><em>CR</em></div><div><small>자원 수입</small><strong id="income">+4</strong><em>/ 초</em></div><div><small>웨이브</small><strong id="wave">00</strong></div><div><small>다음 출격</small><strong id="timer">20.0</strong><em>초</em></div><div class="compact-status"><span id="battleStatus">작전 대기</span><span id="enemyFactionLabel"></span></div></div>
+<nav class="tabs" aria-label="게임 화면 전환">
+ <button class="tab active" data-view="base" aria-current="page"><span class="tab-no">01</span><span>내 기지 · 건설<small>BASE & PRODUCTION</small></span><span id="warningDot" class="danger-dot" hidden>!</span></button>
+ <button class="tab" data-view="battle"><span class="tab-no">02</span><span>전장<small>LIVE BATTLE</small></span></button>
+ <button class="tab" data-view="special"><span class="tab-no">03</span><span>특수 기능<small>ABILITY & UPGRADE</small></span></button>
+</nav>
+<div class="base-health"><div class="health-entry"><div><span class="color-point blue">●</span> 아군 핵심 기지 <b id="myHealth">2000 / 2000</b></div><div class="healthbar"><i id="myHealthFill"></i></div></div><div class="health-entry"><div><span class="color-point red">●</span> 적 핵심 기지 <b id="enemyHealth">2000 / 2000</b></div><div class="healthbar redbar"><i id="enemyHealthFill"></i></div></div></div>
+<div class="screen active" id="view-base">
+ <div class="section-head"><div><span class="eyebrow">BASE DEVELOPMENT / PRODUCTION ZONE</span><h1>생산 기지</h1><p>진영을 선택하고 유닛 생산 시설을 건설하세요. 적이 방어선을 뚫으면 이곳에 침공 병력이 표시됩니다.</p></div><span id="baseAlert" class="alert-chip">기지 안전</span></div>
+ <div class="canvas-wrap base-canvas"><canvas id="baseCanvas" width="1100" height="340" aria-label="아군 기지, 방어 포탑과 침공 병력"></canvas><div class="canvas-note">● CORE & DEFENSE — 생산 시설은 보호 구역에 있습니다.</div></div>
+ <div class="base-content">
+ <section class="panel cards-panel"><div class="panel-heading"><div><span class="eyebrow">RECRUIT UNITS</span><h2>병력 편성</h2></div><span class="shortcut">1–8 단축키</span></div><p class="subtext">유닛을 고르면 <b>강점·약점·공격 대상</b>이 보입니다. 선택한 유닛을 아래 빈 슬롯에 설치하세요.</p><div id="unitCards" class="unit-cards"></div><div id="unitDetails" class="unit-details">유닛을 선택하면 여기에서 상성 정보를 볼 수 있습니다.</div></section>
+ <section class="panel build-panel"><div class="panel-heading"><div><span class="eyebrow">UNIT FORMATION</span><h2>생산 건물 · 5 × 3</h2></div><span id="builtCount" class="shortcut">0 / 15</span></div><p class="subtext">앞쪽 배치일수록 먼저 교전합니다. <b>웨이브마다 각 건물에서 1기씩 소환</b>됩니다.</p><div id="buildGrid" class="build-grid" aria-label="기지 건설 슬롯"></div><div class="actions"><button id="demolishButton" class="btn outline">▤ 철거 모드</button><button id="clearButton" class="btn outline">✕ 선택 해제</button></div><div class="protection-note"><b>기지 방어 규칙</b><p>원작의 후대형 방식처럼 생산 시설은 직접 파괴되지 않습니다. 적이 밀고 들어오면 방어 포탑을 먼저 공격하고, 이후 핵심 기지를 파괴합니다.</p></div></section>
+ </div>
 </div>
-<dialog id="helpDialog"><div class="dialog-body"><span class="eyebrow">COMMANDER BRIEFING</span><h2>게임 규칙</h2><p>이 게임은 자동 전투형 전략 게임의 핵심인 생산 건물 배치, 웨이브 출격, 상성 대응, 경제 운영을 구현한 독립 프로토타입입니다.</p>
-<ol><li>작전 시작 후 생산 카드를 선택하고 5×3 격자에 배치합니다.</li><li>16초마다 설치된 시설 각각에서 병력 1기를 소환합니다. 전투는 자동으로 진행됩니다.</li><li>적 부대에 맞춰 로켓·대공·장갑·치유 등 조합을 조정하고 자금을 운영합니다.</li><li>상대 기지를 먼저 0 HP로 만들면 승리합니다.</li></ol><p>PC: 숫자키 1–8로 유닛 선택, ESC로 선택 해제, 스페이스로 일시정지. 모바일: 유닛 카드 터치 → 격자 터치. 격자 오른쪽 클릭 또는 철거 모드로 시설을 철거할 수 있습니다.</p><button class="primary" id="closeHelp">확인</button></div></dialog>
-<script src="./game.js" defer></script>
-</body>
-</html>
+<div class="screen" id="view-battle">
+ <div class="section-head"><div><span class="eyebrow">NO-MAN'S LAND / ACTIVE FRONT</span><h1>실시간 전장</h1><p>유닛들이 자동으로 이동하고 전투합니다. 각 유닛 머리 위에는 역할 아이콘이 표시됩니다.</p></div><div class="controls"><button class="btn outline" id="pauseButton">Ⅱ 일시정지</button><button class="btn outline" id="speedButton">▶ 1×</button></div></div>
+ <div class="canvas-wrap battlefield"><canvas id="battleCanvas" width="1100" height="520" aria-label="아군과 적군의 자동 전투"></canvas><div class="battle-top"><span>ALLIED FORCE <b id="friendlyCount">0</b></span><span id="frontStatus">전선 중앙</span><span>ENEMY FORCE <b id="hostileCount">0</b></span></div><div id="waveBanner" class="wave-banner"></div></div>
+ <div class="battle-bottom"><div class="legend"><span>위 아이콘: ⚔ 돌격</span><span>⌖ 사격</span><span>◆ 대장갑</span><span>▣ 장갑</span><span>✣ 대공</span><span>✹ 포격</span><span>◇ 비행</span><span>✚ 지원</span></div><div id="inspect" class="inspect">전장 유닛을 클릭하면 능력과 상성을 볼 수 있습니다.</div></div>
+</div>
+<div class="screen" id="view-special">
+ <div class="section-head"><div><span class="eyebrow">HIGH COMMAND / TACTICAL SYSTEMS</span><h1>특수 기능 및 업그레이드</h1><p>긴급 방어와 영구 강화는 이곳에서 관리합니다. 생산 화면으로 돌아가도 전투는 계속됩니다.</p></div></div>
+ <div class="special-grid">
+ <section class="feature-card orange"><span class="eyebrow">SPECIAL / ONE USE</span><span class="feat-symbol">☢</span><h2>비상 핵폭탄</h2><p>아군 진영(x ≤ 중앙선)으로 넘어온 적 병력을 전멸시킵니다. 한 게임에 단 한 번, 아군 기지 HP가 70% 이하이거나 적이 침공 중일 때 사용 가능합니다.</p><div class="feature-status" id="nukeInfo">준비 완료 · 위기 시 활성화</div><button id="nukeButton" class="btn accent">☢ 핵폭탄 발동</button></section>
+ <section class="feature-card cyan"><span class="eyebrow">SPECIAL / RECHARGE</span><span class="feat-symbol">✷</span><h2>궤도 폭격</h2><p>적군이 가장 많이 모인 지역에 범위 피해를 줍니다. 기갑이나 포병 덩어리를 무너뜨리는 반격 기술입니다.</p><div class="feature-status" id="barrageInfo">비용 260 CR · 재사용 32초</div><button id="barrageButton" class="btn blueaccent">✷ 폭격 요청 · 260 CR</button></section>
+ <section class="feature-card green"><span class="eyebrow">ECONOMY</span><span class="feat-symbol">⬡</span><h2>자원 채굴망</h2><p>초당 자원 수입을 +2 CR씩 늘립니다. 성장 위주 운영은 초반 병력 공백을 초래합니다.</p><div class="feature-status" id="econInfo">레벨 0 / 7</div><button id="econButton" class="btn greenaccent">경제 업그레이드</button></section>
+ <section class="feature-card purple"><span class="eyebrow">UPGRADE / PERMANENT</span><span class="feat-symbol">✦</span><h2>무기 강화</h2><p>모든 아군 유닛의 공격력과 회복량이 단계당 8% 증가합니다. 기존 전투 중 유닛에도 적용됩니다.</p><div class="feature-status" id="weaponInfo">레벨 0 / 5</div><button id="weaponButton" class="btn purpleaccent">무기 강화</button></section>
+ <section class="feature-card steel"><span class="eyebrow">UPGRADE / PERMANENT</span><span class="feat-symbol">⬟</span><h2>장갑 강화</h2><p>아군 유닛 HP가 단계당 9% 증가합니다. 방어 시설과 핵심 기지 체력에는 적용되지 않습니다.</p><div class="feature-status" id="armorInfo">레벨 0 / 5</div><button id="armorButton" class="btn outline">장갑 강화</button></section>
+ <section class="feature-card steel"><span class="eyebrow">HEADQUARTERS</span><span class="feat-symbol">▥</span><h2>기지 방어 보수</h2><p>방어 포탑을 수리하고 공격력을 강화합니다. 포탑이 무너져도 복구할 수 있어 역전을 노릴 수 있습니다.</p><div class="feature-status" id="repairInfo">방어 포탑 수리</div><button id="repairButton" class="btn outline">포탑 수리 · 180 CR</button></section>
+ </div>
+ <section class="panel matrix"><div class="panel-heading"><div><span class="eyebrow">COUNTER MATRIX</span><h2>유닛 역할 상성표</h2></div></div><p class="subtext">진영마다 외형은 다르지만 <b>공통 역할 마크</b>로 상대 병종의 장단점을 즉시 알아볼 수 있습니다.</p><div id="counterMatrix" class="matrix-grid"></div></section>
+</div>
+<footer><span id="notification" role="status">진영을 선택하고 전투를 시작하세요.</span><span class="footer-tag">DESERT FRONT · ORIGINAL PROTOTYPE</span></footer>
+</div>
+<div id="startOverlay" class="modal-backdrop"><div class="modal-panel start-panel"><span class="eyebrow">DEPLOYMENT / CHOOSE YOUR FACTION</span><h2>전투 진영 선택</h2><p>세 진영은 동일한 역할 상성을 공유하지만 체력·화력·기동성에 작은 차이가 있습니다. 상대 AI는 다른 진영으로 시작합니다.</p><div id="factionCards" class="faction-cards"></div><button id="startButton" class="btn start-cta">선택한 진영으로 출격 ↗</button><small class="modal-note">개별 유닛은 자체 제작 픽셀 그래픽이며 스타크래프트 원본 자산을 사용하지 않습니다.</small></div></div>
+<div id="endOverlay" class="modal-backdrop hidden"><div class="modal-panel end-panel"><span class="eyebrow">BATTLE REPORT</span><h2 id="endTitle">승리</h2><p id="endSummary"></p><button id="restartButton" class="btn start-cta">다시 시작 · 진영 선택</button></div></div>
+<dialog id="helpDialog"><div class="help-inner"><h2>데저트 프런트 조작법</h2><p>① 내 기지: 유닛 카드를 선택하고 5×3 슬롯을 눌러 생산 시설 설치 / 철거는 비용의 55% 환급</p><p>② 전장: 자동 전투 관전 / 역할 마크로 상성 파악 / 유닛을 눌러 능력 확인 / 배속과 일시정지</p><p>③ 특수 기능: 1회 핵폭탄 / 유료 궤도 폭격 / 채굴망·무기·장갑 강화 / 방어 포탑 보수</p><p>생산 건물은 보호되고 방어 포탑이 적을 막습니다. 기지 본체가 파괴되면 패배합니다. 초반 600 CR로 군대를 준비하고 20초마다 출격합니다.</p><p>키보드: 1–8 유닛 선택, 1·2·3 화면 전환은 Alt+숫자, Space 일시정지, Esc 선택 해제.</p><button class="btn start-cta" id="helpClose">확인</button></div></dialog>
+<script src="./game-v2.js" defer></script>
+</body></html>
