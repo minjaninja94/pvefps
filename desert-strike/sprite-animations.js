@@ -224,6 +224,35 @@ function paint(g,p,f,role,mode,frame){
  }
  if(mode==='idle'){if((frame+role)%8<2)r(24,11,2,2,p.glow);}
  g.restore();
+ // Material pass: isometric top-left lighting and hand-painted pixel clusters.
+ // METAL: weathered iron/rivets; BIO: wet chitin/granular skin; ARCANE: refractive faceted light.
+ // Guard allows no-pixel-buffer test contexts to use the geometry pass unchanged.
+ if(typeof g.getImageData==='function'&&typeof g.putImageData==='function'){
+  const image=g.getImageData(0,0,SIZE,SIZE);
+  if(image&&image.data){
+   const pixels=image.data;
+   for(let y=0;y<SIZE;y++)for(let x=0;x<SIZE;x++){
+    const index=(y*SIZE+x)*4,alpha=pixels[index+3];
+    if(alpha<80)continue;
+    // Pixel-bound deterministic texture. Coarse dither blocks emulate baked 90s RTS sprites.
+    let h=Math.imul(x+1,374761393)^Math.imul(y+1,668265263)^Math.imul(role+1,1442695041)^Math.imul(f+1,2246822519);
+    h^=h>>>13;h=Math.imul(h,1274126177);h^=h>>>16;
+    const grain=((h>>>0)%29)-14;
+    const light=clamp(1.04+(20-y)*.012+(24-x)*.005+grain*.014,.61,1.37);
+    const blueShift=f===2?Math.max(0,grain*.32):0;
+    const warmth=f===1?grain*.29:grain*.10;
+    pixels[index]=clamp(Math.round(pixels[index]*light+warmth),0,255);
+    pixels[index+1]=clamp(Math.round(pixels[index+1]*light+grain*(f===1?.42:.19)),0,255);
+    pixels[index+2]=clamp(Math.round(pixels[index+2]*light+blueShift-grain*.09),0,255);
+    // Restrained specular flecks follow armor plate and scaled-shell patterns.
+    const glint=((x*11+y*17+role*7+f*23)%47===0)&&y<30;
+    if(glint){const v=f===1?[182,208,145]:f===2?[213,196,246]:[192,217,222];
+     pixels[index]=v[0];pixels[index+1]=v[1];pixels[index+2]=v[2];}
+   }
+   g.putImageData(image,0,0);
+  }
+ }
+
 }
 function frame(faction,role,mode='idle',index=0){
  faction=clamp(Math.floor(faction),0,2);role=clamp(Math.floor(role),0,7);
