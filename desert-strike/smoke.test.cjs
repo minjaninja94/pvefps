@@ -7,8 +7,8 @@ const path = require('node:path');
 const js = fs.readFileSync(path.join(__dirname,'game.js'),'utf8');
 const html = fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
 const css = fs.readFileSync(path.join(__dirname,'style.css'),'utf8');
-assert.match(html,/id="battle"/);
-assert.match(html,/game\.js/);
+assert.match(js,/function tickUnits/);
+assert.match(js,/function draw/);
 assert.match(css,/@media\(max-width:560px\)/);
 const dummies = new Map();
 const ctx = new Proxy({
