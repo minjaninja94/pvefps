@@ -524,7 +524,7 @@ function updateUI(full=false){
  if(full||state.lastCards===undefined||Math.floor(state.cash/30)!==state.lastCards){
   const f=FACTIONS[state.faction];
   $('unitCards').innerHTML=ROLE.map((r,i)=>{
-   const portrait=window.DesertSprites?.portrait(state.faction,i)||sprite(state.faction,i,0);
+   const portrait=window.IsoWorld?.portrait(state.faction,i)||window.DesertSprites?.portrait(state.faction,i)||sprite(state.faction,i,0);
    const icon=typeof portrait.toDataURL==='function'?'<img class="pixel-preview" src="'+portrait.toDataURL('image/png')+'" alt="" aria-hidden="true">':r.token;
    return '<button class="unit-card'+(selectedRole===i?' selected':'')+'" data-role="'+i+'" title="'+getDef(i,state.faction).tips+
     '"><span class="uc-top">'+r.mark+' '+r.name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
