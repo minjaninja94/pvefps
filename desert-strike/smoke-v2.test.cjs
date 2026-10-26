@@ -43,6 +43,7 @@ const doc={
  addEventListener(type,fn){doc[type]=fn;}
 };
 const sandbox={document:doc,window:{addEventListener(){}},requestAnimationFrame(fn){queue.push(fn);},console,Math,Number,String,Object,Array,Map,Set,Date};
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'sprite-animations.js'),'utf8'),sandbox,{timeout:4000,filename:'sprite-animations.js'});
 vm.runInNewContext(code,sandbox,{timeout:3500,filename:'game-v2.js'});
 assert.equal(el('cash').textContent,'600');
 assert.match(el('unitCards').innerHTML,/강점:/);
@@ -65,6 +66,7 @@ click('buildGrid',{cell:'0'});
 assert.equal(el('cash').textContent,'535','construction spends resources');
 assert.match(el('builtCount').textContent,/1 \/ 15/);
 steps(510);
+assert.ok(sandbox.window.DesertSprites.cacheSize>16,'combat must use procedural animation frames');
 assert.equal(el('wave').textContent,'01','wave 1 should trigger');
 assert.ok(Number(el('friendlyCount').textContent)>=1,'wave spawned allied units');
 click('pauseButton');
