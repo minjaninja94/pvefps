@@ -21,9 +21,12 @@ jobs:
           node --check desert-strike/game.js
           node --check desert-strike/game-v2.js
           node --check desert-strike/sprite-animations.js
+          node --check desert-strike/isometric-world.js
       - name: Gameplay regression V1
         run: node desert-strike/smoke.test.cjs
       - name: Gameplay V2
         run: node desert-strike/smoke-v2.test.cjs
       - name: 16-frame sprite engine (24 units x 5 actions)
         run: node desert-strike/smoke-animations.test.cjs
+      - name: 2.5D isometric rendering and 32-unit animation atlas
+        run: node desert-strike/smoke-isometric.test.cjs
