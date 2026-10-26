@@ -193,12 +193,57 @@ function factory(g,x,y,faction,role,active){
  }
  g.restore();
 }
+// The Odo Bongo is a physical troop transporter, never a flying marine.
+function drawOdoBongo(g,mode,frame){
+ const a=PAL[3],t=frame/16;
+ const rolling=mode==='move'?Math.sin(t*Math.PI*2)*1.8:0;
+ const impact=(mode==='attack'||mode==='siege')&&frame>=6&&frame<=10;
+ const dead=mode==='death',fall=dead?frame/15:0;
+ g.save();g.imageSmoothingEnabled=false;g.translate(0,rolling);
+ if(dead){g.translate(fall*8,fall*6);g.rotate(fall*.28);g.globalAlpha=1-fall*.72;}
+ // Shadows and angled tire positions show chassis contact with the ground.
+ g.fillStyle='#091313ad';g.beginPath();g.ellipse(34,57,30,8,-.07,0,7);g.fill();
+ const wheel=(x,y)=>{
+  g.fillStyle=a.outline;g.fillRect(x-7,y-3,14,14);
+  g.fillStyle='#171b1c';g.fillRect(x-5,y-1,11,11);
+  g.fillStyle='#626359';g.fillRect(x-2,y+2,5,5);
+ };
+ wheel(18,46);wheel(51,50);
+ // Heavy body in 3/4 perspective: dark front, ochre roof and red marine panels.
+ p(g,[[9,28],[22,18],[60,23],[66,39],[56,49],[17,46]],a.outline);
+ p(g,[[13,28],[24,20],[56,24],[60,35],[17,36]],'#756b4d');
+ p(g,[[17,36],[60,35],[58,47],[17,46]],'#4b4c41');
+ p(g,[[60,35],[65,38],[61,44],[58,47]],'#262d2c');
+ p(g,[[23,20],[34,11],[58,17],[56,24]],'#ada07a');
+ p(g,[[34,11],[58,17],[60,26],[29,21]],'#544c42');
+ p(g,[[27,23],[35,15],[45,18],[44,27]],'#202c30');
+ p(g,[[46,18],[55,20],[56,27],[45,27]],'#2b3d42');
+ // Window bolts, blood-red warning stripe, spiked bumper.
+ g.fillStyle=a.trim;g.fillRect(16,35,43,4);
+ g.fillStyle='#b7342b';g.fillRect(16,40,35,4);
+ g.fillStyle='#d2c293';g.fillRect(18,29,6,2);
+ g.fillStyle='#d2a66a';g.fillRect(54,31,7,3);
+ for(let i=0;i<4;i++)p(g,[[56+i*2,42],[59+i*2,42],[60+i*2,49]],'#b6b8a7');
+ if(impact){
+  for(let i=0;i<4;i++){g.fillStyle=i%2?'#f6e4a4':'#e58542';g.fillRect(62+i*2,31+i%2*4,5,2);}
+ }
+ if(mode==='move'){
+  // Dust puff and wheel rattle in all sixteen steps.
+  for(let i=0;i<3;i++){g.fillStyle='#9e926457';g.fillRect(12-i*5,48+((frame+i)%3),4+i,2);}
+ }
+ if(dead){
+  g.fillStyle='#242321';g.fillRect(24,19,19,15);
+  for(let i=0;i<5;i++){g.fillStyle=i%2?'#b48352':'#bf4332';g.fillRect(17+i*10,36-i%2*6,3,3);}
+ }
+ g.restore();
+}
 function renderFactionSprite(f,role,mode,frame){
  const key=[f,role,mode,frame].join('-');
  const old=cache.get(key);if(old)return old;
  const cv=document.createElement('canvas');cv.width=SIZE;cv.height=SIZE;
  const g=cv.getContext('2d');if(!g)return cv;
  const a=PAL[f]||PAL[0],t=frame/16,cyc=t*Math.PI*2,walk=mode==='move',hit=mode==='attack'||mode==='siege';
+ if(f===3&&role===6){drawOdoBongo(g,mode,frame);cache.set(key,cv);return cv;}
  const atlas=f===3?marineAtlas:realAtlas;
  if(atlas&&atlas.complete&&atlas.naturalWidth>0){
   const cols=f===3?4:8,rows=f===3?2:3;
