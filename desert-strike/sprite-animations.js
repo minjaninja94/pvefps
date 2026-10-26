@@ -10,7 +10,8 @@ const MODES=['idle','move','attack','siege','death'];
 const PAL=[
  {line:'#0d1b26',body:'#6fadb9',lit:'#b5e7e6',dark:'#315362',trim:'#efc778',weapon:'#a1c4d1',glow:'#8deeff',ground:'#556b72',flash:'#ffe2a3'},
  {line:'#17221b',body:'#7fa753',lit:'#c1e38a',dark:'#405c35',trim:'#d0a16a',weapon:'#e0b881',glow:'#c9f279',ground:'#576148',flash:'#f4edac'},
- {line:'#16152b',body:'#987cce',lit:'#e3cbfc',dark:'#493e82',trim:'#dbaafa',weapon:'#b9defb',glow:'#b6fcff',ground:'#6b6688',flash:'#f8c8ff'}
+ {line:'#16152b',body:'#987cce',lit:'#e3cbfc',dark:'#493e82',trim:'#dbaafa',weapon:'#b9defb',glow:'#b6fcff',ground:'#6b6688',flash:'#f8c8ff'},
+ {line:'#1b1716',body:'#705c43',lit:'#bd9575',dark:'#3c342c',trim:'#a32721',weapon:'#7e8585',glow:'#e53727',ground:'#393630',flash:'#ffde98'}
 ];
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const rnd=(v)=>Math.round(v);
@@ -40,7 +41,101 @@ function pose(mode,frame,role=0){
 function makeCanvas(){
  const c=document.createElement('canvas');c.width=SIZE;c.height=SIZE;return c;
 }
+
+function paintMarine(g,p,role,mode,frame){
+ // Fictional Marine Fortress: unique eight character silhouettes, volumetric grime and texture.
+ const q=pose(mode,frame,role),sin=Math.sin(frame*Math.PI/8),down=q.die,bob=q.bob;
+ g.clearRect(0,0,48,48);
+ const face=role===3?'#111315':role===4?'#302925':'#ac7758';
+ const metal='#42403b',edge='#161816',red=role===3?'#ae1c17':'#852924';
+ const rect=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));};
+ const poly=(points,c)=>{g.fillStyle=c;g.beginPath();g.moveTo(Math.round(points[0][0]),Math.round(points[0][1]));for(let i=1;i<points.length;i++)g.lineTo(Math.round(points[i][0]),Math.round(points[i][1]));g.closePath();g.fill();};
+ const gradient=(x,y,w,h,stops)=>{const gr=g.createLinearGradient(x,y,x+w,y+h);for(const [t,v] of stops)gr.addColorStop(t,v);return gr;};
+ const armour=gradient(12,15,26,19,[[0,'#a77e59'],[.3,'#504838'],[.73,'#3a332a'],[1,'#191f21']]);
+ const skin=gradient(14,5,18,15,[[0,'#efc198'],[.46,face],[1,'#352c28']]);
+ const isDead=mode==='death';
+ if(isDead&&down>.85){
+  for(let i=0;i<8;i++){rect(6+i*5,42-Math.round(i%3*down*3),3,2,i%2?'#3d322a':'#752d28');}
+  return;
+ }
+ // Actual keyframes control hand recoil, stride, falling, jet flutter, and muzzle flashes.
+ g.save();
+ if(isDead){g.translate(24,40);g.rotate(down*1.4);g.scale(1,1-down*.7);g.translate(-24,-40);}
+ else g.translate(q.tilt,bob);
+ rect(9,41,28,2,'#1718167a');
+ const walking=mode==='move';
+ const stride=walking?Math.round(sin*3):0;
+ if(role===6){ // 쾌흥태 — modified jetpack
+  poly([[6,23-q.wing/2],[14,13],[20,25],[24,33],[10,31]],'#454c45');
+  poly([[42,23+q.wing/2],[34,13],[28,25],[24,33],[38,31]],'#4f534d');
+  rect(6,19,9,8,'#8b382d');rect(34,19,9,8,'#8b382d');
+  rect(10,27,6,10,'#b78540');rect(32,27,6,10,'#b78540');
+ }
+ if(role===4){ // 톤톤정 — heavy black AA exosuit
+  poly([[7,19],[4,36],[17,39],[22,27]],'#232528');
+  poly([[41,19],[44,36],[31,39],[27,27]],'#232528');
+  rect(4,19,8,17,'#515351');rect(36,19,8,17,'#505050');
+ }
+ if(role===3){ // 황근출 — massive charcoal body, eyes red
+  poly([[8,13],[3,28],[13,34],[21,17]],'#322723');
+  poly([[40,13],[45,28],[35,34],[27,17]],'#2e231f');
+ }
+ // Deep shadow against bright rim, wider shoulders for main frontliner.
+ const height=role===3?21:18;
+ rect(16+stride,31,7,12,'#242c29');rect(26-stride,31,7,12,'#29302d');
+ rect(14+stride,40,10,3,'#101817');rect(25-stride,40,10,3,'#101817');
+ poly([[10,14],[18,12],[31,13],[39,19],[36,35],[12,35],[8,22]],armour);
+ poly([[10,15],[4,19],[7,31],[14,29]],'#4c4339');
+ poly([[36,14],[44,19],[40,33],[34,29]],'#514237');
+ poly([[13,15],[19,12],[30,14],[34,19],[32,28],[17,28]],'#6d5b46');
+ rect(18,23,13,4,'#302c25');rect(21,23,7,3,'#ac3326');
+ if(role===4||role===3){rect(7,15,6,13,'#23211e');rect(35,15,6,13,'#2c2520');}
+ // Face, camo cap, black occult visor and scarred skin.
+ poly([[17,8],[28,7],[33,10],[33,19],[29,24],[18,21],[15,15]],skin);
+ rect(14,8,20,5,role===3?'#53534e':'#4b5547');
+ rect(12,11,23,4,'#323b35');
+ rect(18,7,14,2,'#727965');
+ rect(24,10,6,3,'#a12627');
+ if(role===3){rect(19,15,5,2,'#f24329');rect(27,15,5,2,'#e73123');}
+ else{rect(20,15,4,2,'#342b23');rect(27,15,3,2,'#342720');rect(23,20,6,2,'#4a302b');}
+ if(role===0){ // 무모칠: red spike and long knife
+  for(let k=0;k<5;k++)poly([[16+k*3,9],[18+k*3,1-k%2*2],[21+k*3,10]],'#a92921');
+  poly([[37-q.recoil,17+q.arm],[46,5+q.arm],[43,25+q.arm]],'#afb4ad');
+  rect(36,24+q.arm,7,4,'#872f2b');
+ }else if(role===1){ // 박철곤: bright long-range automatic rifle
+  rect(29+q.recoil,21,18,5,'#232929');rect(27,20,17,3,'#717978');
+  rect(40+q.recoil,18,4,3,'#b3a68a');
+ }else if(role===2){ // 조조팔: enormous warhead launcher
+  rect(27+q.recoil,11,20,12,'#212727');rect(29,10,16,5,'#8a8b79');
+  rect(42+q.recoil,15,5,5,'#b13e2d');rect(33,22,4,9,'#544d3c');
+ }else if(role===3){ // 황근출: large crimson double-edged axe
+  rect(37+q.recoil,6,3,30,'#514e49');
+  poly([[34,5+q.arm],[47,2+q.arm],[43,17+q.arm],[34,15+q.arm]],'#ab3228');
+  rect(37,9+q.arm,7,3,'#e0a69c');
+ }else if(role===4){ // 톤톤정: twin rotary anti-air cannons
+  rect(30+q.recoil,17,15,6,'#151c22');rect(30+q.recoil,25,15,6,'#151c22');
+  for(let i=0;i<3;i++){rect(38+q.recoil,18+i*2,10,1,'#8c9389');rect(38+q.recoil,26+i*2,10,1,'#a5a091');}
+ }else if(role===5){ // 마철두: industrial mortar
+  rect(28+q.recoil,9,16,18,'#292f31');rect(32+q.recoil,10,13,13,'#77776b');
+  rect(43+q.recoil,11,5,11,'#15191b');
+ }else if(role===6){rect(29+q.recoil,20,17,5,'#626963');rect(39,22,7,3,'#272d2c');}
+ else if(role===7){ // 황룡: camouflage cook with bronze steaming pot
+  rect(25,25,19,10,'#7b5530');rect(23,24,23,4,'#d3a260');
+  rect(27,21,15,4,'#f4cb75');rect(27,29,15,4,'#f5b759');
+  for(let i=0;i<3;i++)rect(27+i*5,16-Math.round(Math.sin(frame*.6+i)*4),2,7,'#b6d3b0');
+  rect(18,10,17,4,'#879273');rect(20,14,10,3,'#e6c693');
+ }
+ // Chipped edges, muted specular lighting and anisotropic wear.
+ if(role!==7){rect(13,18,4,2,'#c8a578');rect(18,30,13,1,'#131b1b');}
+ for(let k=0;k<6;k++){const x=11+((role*9+k*7)%24),y=18+((k*11+role*3)%13);rect(x,y,1,1,k%2?'#20251e':'#9c8470');}
+ if(q.muzzle){rect(43,17,5,4,'#fff1bc');rect(46,13,2,10,'#dfaa56');}
+ if(q.shock){rect(39,31,7,3,'#ca8350');rect(35,35,9,2,'#dfaa60');}
+ if(isDead&&down>.4){rect(13,34,19,4,'#632f2b');}
+ g.restore();
+}
+
 function paint(g,p,f,role,mode,frame){
+ if(f===3){paintMarine(g,p,role,mode,frame);return;}
  const q=pose(mode,frame,role),D=q.die,bob=q.bob,col=f===0?'#fff2d3':p.lit;
  g.clearRect(0,0,SIZE,SIZE);
  // Deliberately avoid anti-aliased shapes. Every part is on a whole-pixel grid.
@@ -255,7 +350,7 @@ function paint(g,p,f,role,mode,frame){
 
 }
 function frame(faction,role,mode='idle',index=0){
- faction=clamp(Math.floor(faction),0,2);role=clamp(Math.floor(role),0,7);
+ faction=clamp(Math.floor(faction),0,3);role=clamp(Math.floor(role),0,7);
  if(!MODES.includes(mode))mode='idle';
  const n=clamp(Math.floor(index),0,FRAMES-1);
  const key=faction+'|'+role+'|'+mode+'|'+n;
@@ -274,7 +369,7 @@ function portrait(faction,role){
 }
 // Destruction animation: each of 16 stages emits expanding debris and damage flashes.
 function structureImpact(g,x,y,faction,mode,progress){
- const p=PAL[clamp(faction,0,2)],idx=clamp(Math.floor(progress*16),0,15);
+ const p=PAL[clamp(faction,0,3)],idx=clamp(Math.floor(progress*16),0,15);
  const t=idx/15,amount=mode==='ruin'?1:0.55;
  g.save();g.translate(x,y);
  g.globalAlpha=(1-t)*.85;
