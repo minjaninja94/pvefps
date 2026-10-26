@@ -65,7 +65,7 @@ assert.equal(el('cash').textContent,'535','construction spends resources');
 assert.match(el('builtCount').textContent,/1 \/ 15/);
 steps(510);
 assert.equal(el('wave').textContent,'01','wave 1 should trigger');
-assert.match(el('friendlyCount').textContent,/\d+/);
+assert.ok(Number(el('friendlyCount').textContent)>=1,'wave spawned allied units');
 click('pauseButton');
 const stopped=el('timer').textContent;
 steps(50);
