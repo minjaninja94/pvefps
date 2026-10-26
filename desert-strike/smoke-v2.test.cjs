@@ -44,7 +44,7 @@ const doc={
 };
 const sandbox={document:doc,window:{addEventListener(){}},requestAnimationFrame(fn){queue.push(fn);},console,Math,Number,String,Object,Array,Map,Set,Date};
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'sprite-animations.js'),'utf8'),sandbox,{timeout:4000,filename:'sprite-animations.js'});
-vm.runInNewContext(code.replace('initFactions();wire();reset();','window.__gameTest={state:()=>state,createUnit,resolveStrike,ecoCostFor,aiInvest,wave,tick,upgrade,aiReadOpponent,aiChoose,structureDamage,aiAdaptFacilities,separateUnits,unitRadius,bongoImpact,getDef,damage,nearestUnit};initFactions();wire();reset();'),sandbox,{timeout:3500,filename:'game-v2.js'});
+vm.runInNewContext(code.replace('initFactions();wire();reset();','window.__gameTest={state:()=>state,createUnit,resolveStrike,ecoCostFor,aiInvest,wave,tick,upgrade,aiReadOpponent,aiChoose,aiCountersFor,structureDamage,aiAdaptFacilities,separateUnits,unitRadius,bongoImpact,getDef,damage,nearestUnit};initFactions();wire();reset();'),sandbox,{timeout:3500,filename:'game-v2.js'});
 assert.equal(el('cash').textContent,'360');
 assert.match(el('unitCards').innerHTML,/강점:/);
 assert.match(el('unitCards').innerHTML,/약점:/);
@@ -224,4 +224,48 @@ aiTruck.faction=3;aiTruck.built.fill(null);for(let i=0;i<5;i++)aiTruck.built[i]=
 aiTruck.enemyFaction=0;aiTruck.enemyCash=300;
 assert.equal(g.aiChoose(300),2,'opponent recognizes Odo Bongo as armor, not aircraft');
 console.log('V2 smoke passed: collision spacing, Odo Bongo ram cooldown, Marine ground armor and strategic anti-rush AI.');
+
+// Verify all-spam strategies for air and armor against normal and Marine AI.
+// Every extra production structure is purchased from earned credits, never spawned free.
+const spamCases=[
+ {name:'air spam vs Forge',player:1,enemy:0,role:6,counter:4},
+ {name:'air spam vs Marines',player:2,enemy:3,role:6,counter:4},
+ {name:'armor spam vs Forge',player:1,enemy:0,role:3,counter:2},
+ {name:'armor spam vs Marines',player:2,enemy:3,role:3,counter:2}
+];
+for(const scenario of spamCases){
+ click('restartButton');
+ click('factionCards',{faction:String(scenario.player)});
+ click('startButton');
+ const game=g.state();game.enemyFaction=scenario.enemy;
+ game.built.fill(null);
+ game.units.length=0;game.deadUnits.length=0;game.shots.length=0;
+ // Entire opening bankroll goes toward only the tested troop type.
+ while(game.cash>=205 && game.built.some(v=>v===null)){
+  const i=game.built.findIndex(v=>v===null);
+  game.built[i]=scenario.role;game.cash-=205;
+ }
+ game.enemyBuilt.fill(null);game.enemyCash=360;
+ game.enemyEco=0;game.enemyBuilt[1]=0;game.enemyCash-=65;
+ game.enemyBuilt[17]=1;game.enemyCash-=95;
+ game.wave=0;game.next=24;
+ for(let i=0;i<2200&&!game.ended;i++){
+  if(game.cash>=205){
+   const free=game.built.findIndex(v=>v===null);
+   if(free>=0){game.built[free]=scenario.role;game.cash-=205;}
+  }
+  g.tick(.12);
+ }
+ assert.ok(game.wave>=7 || game.baseHP[0]===0,scenario.name+' should simulate multiple waves');
+ assert.ok(game.enemyBuilt.includes(scenario.counter),scenario.name+' AI should buy appropriate counter');
+ assert.ok(game.baseHP[1]>0,scenario.name+' should not win merely through single-type spam');
+ console.log('Spam balance case passed:',scenario.name,'wave',game.wave,'enemy HP',Math.floor(game.baseHP[1]));
+}
+const marineAgainstTank=g.state();
+marineAgainstTank.faction=1;marineAgainstTank.enemyFaction=3;
+marineAgainstTank.built.fill(null);for(let i=0;i<5;i++)marineAgainstTank.built[i]=3;
+marineAgainstTank.enemyBuilt.fill(null);marineAgainstTank.wave=3;
+assert.equal(g.aiChoose(205),2,'Marine AI must use armor breakers, never Odo Bongo, versus tank spam');
+console.log('All anti-spam regressions passed: aircraft and heavy armor against Forge and Marine counters.');
+
 
