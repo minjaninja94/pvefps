@@ -29,7 +29,7 @@ function money(n){return Math.floor(n).toLocaleString('ko-KR');}
 function getDef(role,faction){
  const r=ROLE[role],f=FACTIONS[faction];
  const isBongo=faction===3&&role===6;
- return {...r,unitName:f.units[role],factionName:f.name,
+ return {...r,unitName:f.units[role],factionName:f.name,name:isBongo?'차량':r.name,mark:isBongo?'▰':r.mark,
   hp:isBongo?490:r.hp*f.mut.hp*2.25,
   damage:isBongo?34:r.damage*f.mut.dmg*.94,
   heal:(r.heal||0)*f.mut.dmg*1.5,speed:isBongo?77:r.speed*f.mut.speed*.84,
@@ -213,7 +213,7 @@ function aiChoose(budget=state.enemyCash){
  const myCounts=Array(ROLE.length).fill(0);
  for(const role of state.enemyBuilt)if(role!==null)myCounts[role]++;
  if(intel.dominant!==null){
-  const primary=intel.dominant===0&&state.enemyFaction===3?[1,6,3]:AI_COUNTER_ROLES[intel.dominant];
+  const primary=intel.dominant===6&&state.faction===3?[2,3]:intel.dominant===0&&state.enemyFaction===3?[1,6,3]:AI_COUNTER_ROLES[intel.dominant];
   const matching=primary.filter(id=>affordable.includes(id));
   if(matching.length){
    // Melee-only armies cannot attack aircraft. Buy one air unit once affordable,
@@ -254,7 +254,7 @@ function aiAdaptFacilities(intel){
  // The opponent uses building replacement under the exact same 55% refund as the player.
  // At most one conversion per 2 waves. React only to clear, repeated single-role spam.
  if(intel.dominant===null||intel.total<4||state.wave<2||state.wave%2!==0)return false;
- const counters=intel.dominant===0&&state.enemyFaction===3?[1,6,3]:AI_COUNTER_ROLES[intel.dominant];
+ const counters=intel.dominant===6&&state.faction===3?[2,3]:intel.dominant===0&&state.enemyFaction===3?[1,6,3]:AI_COUNTER_ROLES[intel.dominant];
  const aiCount=state.enemyBuilt.filter(r=>r!==null).length;
  const counterCount=state.enemyBuilt.filter(r=>counters.includes(r)).length;
  if(counterCount>=Math.ceil(aiCount*.55))return false;
@@ -319,8 +319,8 @@ function calcDamage(attacker,target,amount){
  let out=amount;
  if(attacker!==null){
   const role=ROLE[attacker];
-  if(role.good.includes(target.role))out*=1.55;
-  if(role.bad.includes(target.role))out*=.7;
+  if(target.faction===3&&target.role===6){if(attacker===2)out*=1.65;else if(attacker===0)out*=.68;else if(attacker===4)out*=.78;}
+  else{if(role.good.includes(target.role))out*=1.55;if(role.bad.includes(target.role))out*=.7;}
  }
  const armor=getDef(target.role,target.faction).armor;
  return Math.max(3,out-armor*.66);
@@ -617,8 +617,8 @@ function endMatch(win){
  $('endOverlay').classList.remove('hidden');
  setMessage(win?'적군 핵심 기지 파괴 · 승리':'아군 핵심 기지 파괴 · 패배');
 }
-function roleMatchupHtml(role){
- const r=ROLE[role];
+function roleMatchupHtml(role,faction=state?.faction??0){
+ const r=getDef(role,faction);
  return '<span class="tag strong">'+(role===7?'시너지 ':'강점 ')+r.good.map(i=>ROLE[i].mark+ROLE[i].name).join(' · ')+'</span>'+
  '<span class="tag weak">약점 '+r.bad.map(i=>ROLE[i].mark+ROLE[i].name).join(' · ')+'</span>';
 }
@@ -667,19 +667,19 @@ function updateUI(full=false){
    const portrait=window.IsoWorld?.portrait(state.faction,i)||window.DesertSprites?.portrait(state.faction,i)||sprite(state.faction,i,0);
    const icon=typeof portrait.toDataURL==='function'?'<img class="pixel-preview" src="'+portrait.toDataURL('image/png')+'" alt="" aria-hidden="true">':r.token;
    return '<button class="unit-card'+(selectedRole===i?' selected':'')+'" data-role="'+i+'" title="'+getDef(i,state.faction).tips+
-    '"><span class="uc-top">'+r.mark+' '+r.name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
-    '</span><span class="uc-name">'+f.units[i]+'</span><span class="uc-role">'+r.name+' · '+(getDef(i,state.faction).kind==='air'?'공중':'지상')+'</span>'+
-    '<span class="uc-cost">'+r.cost+' CR</span><span class="good-counter">'+(i===7?'지원':'강점')+': '+r.good.map(x=>ROLE[x].mark).join(' ')+'</span><span class="bad-counter">약점: '+r.bad.map(x=>ROLE[x].mark).join(' ')+'</span></button>';
+    '"><span class="uc-top">'+getDef(i,state.faction).mark+' '+getDef(i,state.faction).name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
+    '</span><span class="uc-name">'+f.units[i]+'</span><span class="uc-role">'+getDef(i,state.faction).name+' · '+(getDef(i,state.faction).kind==='air'?'공중':'지상')+'</span>'+
+    '<span class="uc-cost">'+r.cost+' CR</span><span class="good-counter">'+(i===7?'지원':'강점')+': '+getDef(i,state.faction).good.map(x=>ROLE[x].mark).join(' ')+'</span><span class="bad-counter">약점: '+getDef(i,state.faction).bad.map(x=>ROLE[x].mark).join(' ')+'</span></button>';
   }).join('');
   $('buildGrid').innerHTML=state.built.map((id,i)=>
    '<button class="build-cell'+(id!==null?' occupied':'')+(demolition&&id!==null?' demolition':'')+'" data-cell="'+i+'" aria-label="'+(id!==null?f.units[id]:'빈 슬롯')+'">'+
-   (id!==null?'<span class="cell-icon">'+ROLE[id].mark+'</span><span class="cell-name">'+f.units[id]+'</span>':
+   (id!==null?'<span class="cell-icon">'+getDef(id,state.faction).mark+'</span><span class="cell-name">'+f.units[id]+'</span>':
     '<span class="cell-icon">+</span><span class="cell-position">'+(Math.floor(i/COLS)+1)+'-'+(i%COLS+1)+'</span>')+'</button>').join('');
   $('demolishButton').classList.toggle('selected',demolition);
-  $('unitDetails').innerHTML=selectedRole!==null?'<b>'+f.units[selectedRole]+'</b> · '+ROLE[selectedRole].name+
-    ' / '+ROLE[selectedRole].cost+' CR<br>'+getDef(selectedRole,state.faction).tips+'<div class="matchups">'+roleMatchupHtml(selectedRole)+
+  $('unitDetails').innerHTML=selectedRole!==null?'<b>'+f.units[selectedRole]+'</b> · '+getDef(selectedRole,state.faction).name+
+    ' / '+ROLE[selectedRole].cost+' CR<br>'+getDef(selectedRole,state.faction).tips+'<div class="matchups">'+roleMatchupHtml(selectedRole,state.faction)+
     '</div><span>HP '+Math.round(getDef(selectedRole,state.faction).hp)+' · 피해 '+Math.round(getDef(selectedRole,state.faction).damage)+
-    ' · 사거리 '+ROLE[selectedRole].range+' · '+(ROLE[selectedRole].airTarget?'대공 가능':'지상 공격')+'</span>':
+    ' · 사거리 '+getDef(selectedRole,state.faction).range+' · '+(getDef(selectedRole,state.faction).airTarget?'대공 가능':'지상 공격')+'</span>':
     '<b>전술 안내</b> — 역할 마크와 상성표는 진영이 달라도 동일합니다. 유닛을 선택하세요.';
   state.lastCards=Math.floor(state.cash/30);
  }
@@ -787,7 +787,7 @@ function drawUnit(g,u,scale=1){
  g.fillStyle='#07161cd8';g.fillRect(at.x-10*scale,y-8*scale,20*scale,16*scale);
  g.strokeStyle=u.side===0?'#85e9fa':'#fdad92';g.lineWidth=1;g.strokeRect(at.x-10*scale,y-8*scale,20*scale,16*scale);
  g.fillStyle=u.side===0?'#d0f9ff':'#ffe4d0';g.textAlign='center';g.font='900 '+Math.round(13*scale)+'px monospace';
- g.fillText(role.mark,at.x,y+4*scale);
+ g.fillText(getDef(u.role,u.faction).mark,at.x,y+4*scale);
  if(u.hp<u.maxHP){
   g.fillStyle='#06171c';g.fillRect(at.x-16*scale,y-12*scale,32*scale,4*scale);
   g.fillStyle=COLORS[u.side];g.fillRect(at.x-16*scale,y-12*scale,32*scale*Math.max(0,u.hp/u.maxHP),4*scale);
@@ -1027,13 +1027,13 @@ function inspectBattle(event){
  const c=$('battleCanvas'),bounds=c.getBoundingClientRect();
  const sx=(event.clientX-bounds.left)/bounds.width*CW+state.cameraX,sy=(event.clientY-bounds.top)/bounds.height*CH;
  const world=window.IsoWorld?window.IsoWorld.unproject(sx,sy):{x:sx,y:sy},x=world.x,y=world.y;
- let picked=null,best=48;
+ let picked=null,best=60;
  for(const u of state.units){const d=Math.hypot(u.x-x,u.y-y);if(d<best){best=d;picked=u;}}
  if(!picked)return;
  const def=getDef(picked.role,picked.faction);
- $('inspect').innerHTML='<b>'+FACTIONS[picked.faction].name+' · '+def.unitName+' '+ROLE[picked.role].mark+'</b> | HP '+
+ $('inspect').innerHTML='<b>'+FACTIONS[picked.faction].name+' · '+def.unitName+' '+def.mark+'</b> | HP '+
  Math.ceil(picked.hp)+' / '+Math.ceil(picked.maxHP)+' · '+(picked.side===0?'아군':'적군')+
- '<br><span class="matchups">'+roleMatchupHtml(picked.role)+'</span>';
+ '<br><span class="matchups">'+roleMatchupHtml(picked.role,picked.faction)+'</span>';
 }
 function wire(){
  document.querySelectorAll('[data-view]').forEach(btn=>btn.addEventListener('click',()=>changeView(btn.dataset.view)));
