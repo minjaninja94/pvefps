@@ -206,6 +206,12 @@ function aiReadOpponent(){
  const dominant=sum>=3&&counts[major]/sum>=.63?major:null;
  return {counts,total:sum,dominant,major};
 }
+function aiCountersFor(role){
+ if(role===6&&state.faction===3)return [2,3]; // Player Marine truck is ground armor, not aircraft.
+ if(role===0&&state.enemyFaction===3)return [1,6,3]; // Marines field an Odo Bongo rather than a flier.
+ if(role===3&&state.enemyFaction===3)return [2]; // Odo Bongo cannot counter heavy tanks; use actual armor breakers.
+ return AI_COUNTER_ROLES[role];
+}
 function aiChoose(budget=state.enemyCash){
  const intel=aiReadOpponent();
  const affordable=ROLE.map((role,id)=>id).filter(id=>ROLE[id].cost<=budget);
@@ -213,7 +219,7 @@ function aiChoose(budget=state.enemyCash){
  const myCounts=Array(ROLE.length).fill(0);
  for(const role of state.enemyBuilt)if(role!==null)myCounts[role]++;
  if(intel.dominant!==null){
-  const primary=intel.dominant===6&&state.faction===3?[2,3]:intel.dominant===0&&state.enemyFaction===3?[1,6,3]:AI_COUNTER_ROLES[intel.dominant];
+  const primary=aiCountersFor(intel.dominant);
   const matching=primary.filter(id=>affordable.includes(id));
   if(matching.length){
    // Melee-only armies cannot attack aircraft. Buy one air unit once affordable,
@@ -254,7 +260,7 @@ function aiAdaptFacilities(intel){
  // The opponent uses building replacement under the exact same 55% refund as the player.
  // At most one conversion per 2 waves. React only to clear, repeated single-role spam.
  if(intel.dominant===null||intel.total<4||state.wave<2||state.wave%2!==0)return false;
- const counters=intel.dominant===6&&state.faction===3?[2,3]:intel.dominant===0&&state.enemyFaction===3?[1,6,3]:AI_COUNTER_ROLES[intel.dominant];
+ const counters=aiCountersFor(intel.dominant);
  const aiCount=state.enemyBuilt.filter(r=>r!==null).length;
  const counterCount=state.enemyBuilt.filter(r=>counters.includes(r)).length;
  if(counterCount>=Math.ceil(aiCount*.55))return false;
