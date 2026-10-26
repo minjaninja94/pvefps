@@ -955,5 +955,6 @@ function wire(){
 }
 initFactions();wire();reset();
 if(typeof window.addEventListener==='function')window.addEventListener('marine-art-ready',()=>updateUI(true));
+if(typeof window.addEventListener==='function')window.addEventListener('isometric-art-ready',()=>updateUI(true));
 requestAnimationFrame(frame);
 })();
