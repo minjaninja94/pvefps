@@ -3,7 +3,7 @@
 const $=id=>document.getElementById(id);
 const CW=1100,CH=520,WORLD_W=3300,HOME_H=340,MAX_BASE=7200,MAX_TURRET=1700,INTERVAL=24,COLS=15,ROWS=5,SLOTS=COLS*ROWS,INCOME_PERIOD=.5,SIDE_SUPPLY=220;
 const COLORS=['#79dfee','#ff9a79'],LANES=[110,180,260,340,410];
-const initialIncome=1;
+const initialIncome=1,WAVE_STIPEND=24,MAX_ECONOMY=7;
 const ROLE=[
  {key:'charge',name:'돌격',mark:'⚔',token:'⚔',cost:65,hp:115,damage:21,armor:1,range:29,rate:.77,speed:82,airTarget:false,kind:'ground',tips:'적 포병·지원병 후방을 빠르게 찌릅니다.',good:[5,7],bad:[3,1]},
  {key:'rifle',name:'사격',mark:'⌖',token:'⌖',cost:95,hp:108,damage:17,armor:1,range:164,rate:.8,speed:60,airTarget:true,kind:'ground',tips:'저렴한 범용 원거리 병력. 공중도 공격합니다.',good:[0,7],bad:[3,5]},
@@ -30,7 +30,8 @@ function getDef(role,faction){
  const r=ROLE[role],f=FACTIONS[faction];
  return {...r,unitName:f.units[role],factionName:f.name,hp:r.hp*f.mut.hp*2.25,damage:r.damage*f.mut.dmg*.94,heal:(r.heal||0)*f.mut.dmg*1.5,speed:r.speed*f.mut.speed*.84,tips:faction===3&&role===7?'해병수육: 부상 아군을 발견하면 본인이 전투에서 사라지며 주변 아군 다수를 크게 회복합니다. 1회성 소모 지원병.':r.tips};
 }
-function ecoCost(){return Math.round(120*Math.pow(1.55,state.eco));}
+function ecoCostFor(level){return Math.round(70*Math.pow(1.36,level));}
+function ecoCost(){return ecoCostFor(state.eco);}
 function weaponCost(){return Math.round(200*Math.pow(1.65,state.weapon));}
 function armorCost(){return Math.round(190*Math.pow(1.63,state.armor));}
 function setMessage(t){$('notification').textContent=t;}
@@ -50,12 +51,11 @@ function chirp(hz=420,length=.08){
  }catch(_){}
 }
 function reset(){
- state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:400,eco:0,enemyEco:0,weapon:0,armor:0,incomeClock:0,cameraX:1100,followFront:true,
+ state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:360,eco:0,enemyEco:0,weapon:0,armor:0,incomeClock:0,cameraX:1100,followFront:true,
  wave:0,next:INTERVAL,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],
  built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  nukes:1,barrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
  nextUnitId:1,attackCount:0};
- state.enemyBuilt[1]=0;state.enemyBuilt[17]=1;state.enemyBuilt[51]=1;
  selectedRole=null;demolition=false;bannerSeconds=0;barrageSeconds=0;
  $('startOverlay').classList.remove('hidden');$('endOverlay').classList.add('hidden');
  $('pauseButton').textContent='Ⅱ 일시정지';$('speedButton').textContent='▶ 1×';
@@ -67,6 +67,7 @@ function start(){
  state.faction=selectedFaction;
  state.enemyFaction=(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length;
  state.live=true;
+ aiInitialBuild();
  $('startOverlay').classList.add('hidden');
  changeView('base');
  setMessage('전투 시작! 24초 이내에 생산 시설을 배치하세요.');
@@ -111,9 +112,9 @@ function place(index){
 }
 function upgrade(kind){
  if(!state.live||state.paused||state.ended)return;
- if(kind==='econ'&&state.eco<7&&state.cash>=ecoCost()){
+ if(kind==='econ'&&state.eco<MAX_ECONOMY&&state.cash>=ecoCost()){
   state.cash-=ecoCost();state.eco++;
-  setMessage('채굴망 Lv.'+state.eco+' · 0.5초마다 +'+(1+state.eco)+' CR');chirp(650,.14);
+  setMessage('채굴망 Lv.'+state.eco+' · 0.5초마다 +'+(1+state.eco)+' CR · 원금 회수 약 '+Math.ceil(ecoCostFor(state.eco-1)/2)+'초');chirp(650,.14);
  }
  if(kind==='weapon'&&state.weapon<5&&state.cash>=weaponCost()){
   state.cash-=weaponCost();state.weapon++;setMessage('무기 강화 Lv.'+state.weapon+' · 모든 아군 공격력 증가');chirp(650,.14);
@@ -190,19 +191,48 @@ function aiChoose(){
  for(const item of opts){roll-=item.w;if(roll<=0)return item.i;}
  return opts[opts.length-1].i;
 }
-function aiInvest(){
- const open=state.enemyBuilt.map((v,i)=>v===null?i:null).filter(v=>v!==null);
- let count=state.wave<2?1:state.wave<5?2:state.wave<10?3:5;
- while(open.length&&count--){
-  const role=aiChoose();if(role===null)break;
-  const ix=Math.floor(Math.random()*open.length),slot=open.splice(ix,1)[0];
-  state.enemyBuilt[slot]=role;state.enemyCash-=ROLE[role].cost;
+function aiInitialBuild(){
+ // AI plays the same economy: identical starting money, identical building costs.
+ // It opens cautiously with two inexpensive production structures, no gifted army.
+ for(const [slot,role] of [[1,0],[17,1]]){
+  if(state.enemyBuilt[slot]!==null||state.enemyCash<ROLE[role].cost)continue;
+  state.enemyBuilt[slot]=role;
+  state.enemyCash-=ROLE[role].cost;
  }
- if(state.wave>4&&state.wave%5===0&&state.enemyEco<4&&state.enemyCash>=155){state.enemyCash-=155;state.enemyEco++;}
+}
+function aiInvest(){
+ const builtCount=state.enemyBuilt.filter(role=>role!==null).length;
+ const nearbyHostiles=state.units.some(u=>u.side===0&&u.x>WORLD_W-580&&u.hp>0);
+ // Slower strategic opponent. From 2 producers, add one every 2 waves,
+ // with a two-per-wave ceiling later; never create free buildings.
+ const softLimit=Math.min(SLOTS,2+Math.floor(state.wave/2));
+ const ecoLevelCap=Math.min(MAX_ECONOMY,Math.floor(state.wave/2));
+ if(!nearbyHostiles && state.enemyEco<ecoLevelCap && state.wave%2===0){
+  const price=ecoCostFor(state.enemyEco);
+  if(state.enemyCash>=price+100){
+   state.enemyCash-=price;
+   state.enemyEco++;
+  }
+ }
+ let slotsToBuy=Math.min(state.wave<9?1:2,Math.max(0,softLimit-builtCount));
+ if(nearbyHostiles)slotsToBuy=Math.min(2,Math.max(0,softLimit+1-builtCount));
+ // Keep a small cash reserve so AI cannot spend every resource on one build.
+ const reserve=nearbyHostiles?0:state.wave<6?35:70;
+ const open=state.enemyBuilt.map((role,i)=>role===null?i:-1).filter(i=>i>=0);
+ while(open.length && slotsToBuy-->0){
+  const affordable=ROLE.filter(r=>r.cost<=state.enemyCash-reserve);
+  if(!affordable.length)break;
+  const role=aiChoose();
+  if(role===null||ROLE[role].cost>state.enemyCash-reserve)break;
+  const slotIndex=Math.floor(Math.random()*open.length);
+  const slot=open.splice(slotIndex,1)[0];
+  state.enemyBuilt[slot]=role;
+  state.enemyCash-=ROLE[role].cost;
+ }
 }
 function wave(){
- state.wave++;state.cash+=22+state.eco*4;
- state.enemyCash+=72+state.wave*7+state.enemyEco*10;
+ state.wave++;state.cash+=WAVE_STIPEND;
+ state.enemyCash+=WAVE_STIPEND;
  aiInvest();
  const headcount=[state.units.filter(u=>u.side===0).length,state.units.filter(u=>u.side===1).length];
  for(let i=0;i<SLOTS;i++){
@@ -230,7 +260,6 @@ function killUnit(u){
  u.deathAge=0;state.deadUnits.push(u);
  if(state.deadUnits.length>120)state.deadUnits.shift();
  pulse(u.x,u.y,COLORS[u.side],24);
- if(u.side===1)state.cash+=5;
 }
 function beginStrike(u,target=null,baseSide=null,healing=false){
  if(u.strike)return;
@@ -372,7 +401,7 @@ function tick(dt){
  }
  const ds=dt*state.rate;
  state.elapsed+=ds;state.next-=ds;state.incomeClock+=ds;
- while(state.incomeClock>=INCOME_PERIOD){state.incomeClock-=INCOME_PERIOD;state.cash+=initialIncome+state.eco;state.enemyCash+=1.15+state.enemyEco+Math.min(1.7,state.wave*.16);}
+ while(state.incomeClock>=INCOME_PERIOD){state.incomeClock-=INCOME_PERIOD;state.cash+=initialIncome+state.eco;state.enemyCash+=initialIncome+state.enemyEco;}
  state.barrageCd=Math.max(0,state.barrageCd-ds);
  while(state.next<=0){state.next+=INTERVAL;wave();}
  state.sortedTeams=[state.units.filter(u=>u.side===0).sort((a,b)=>a.x-b.x),state.units.filter(u=>u.side===1).sort((a,b)=>a.x-b.x)];
@@ -482,7 +511,7 @@ function updateUI(full=false){
  $('barrageInfo').textContent=state.barrageCd>0?'재충전 '+Math.ceil(state.barrageCd)+'초':'비용 260 CR · 적 병력 필수';
  $('barrageButton').disabled=!(state.live&&!state.ended&&!state.paused&&state.barrageCd<=0&&state.cash>=260&&state.units.some(u=>u.side===1));
  const econ=ecoCost(),weapon=weaponCost(),armor=armorCost();
- $('econInfo').textContent='레벨 '+state.eco+' / 7 · 0.5초마다 +'+(1+state.eco)+' CR';
+ $('econInfo').textContent='레벨 '+state.eco+' / 7 · 0.5초마다 +'+(1+state.eco)+' CR'+(state.eco<MAX_ECONOMY?' · 다음 투자금 회수 '+Math.ceil(ecoCostFor(state.eco)/2)+'초':' · 최대 강화');
  $('weaponInfo').textContent='레벨 '+state.weapon+' / 5 · 공격력 +'+state.weapon*8+'%';
  $('armorInfo').textContent='레벨 '+state.armor+' / 5 · HP +'+state.armor*9+'%';
  $('repairInfo').textContent='방어 포탑 '+Math.ceil(state.turretHP[0])+' / '+MAX_TURRET;
