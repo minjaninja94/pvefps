@@ -409,8 +409,10 @@ function updateUI(full=false){
  if(full||state.lastCards===undefined||Math.floor(state.cash/30)!==state.lastCards){
   const f=FACTIONS[state.faction];
   $('unitCards').innerHTML=ROLE.map((r,i)=>{
+   const portrait=sprite(state.faction,i,0);
+   const icon=typeof portrait.toDataURL==='function'?'<img class="pixel-preview" src="'+portrait.toDataURL('image/png')+'" alt="" aria-hidden="true">':r.token;
    return '<button class="unit-card'+(selectedRole===i?' selected':'')+'" data-role="'+i+'" title="'+r.tips+
-    '"><span class="uc-top">'+r.mark+' '+r.name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+r.token+
+    '"><span class="uc-top">'+r.mark+' '+r.name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
     '</span><span class="uc-name">'+f.units[i]+'</span><span class="uc-role">'+r.name+' · '+(r.kind==='air'?'공중':'지상')+'</span>'+
     '<span class="uc-cost">'+r.cost+' CR</span><span class="bad-counter">취약: '+r.bad.map(x=>ROLE[x].mark).join(' ')+'</span></button>';
   }).join('');
