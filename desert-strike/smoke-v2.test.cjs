@@ -165,4 +165,20 @@ g.aiInvest();
 assert.ok(rush.enemyBuilt.includes(6),'AI adds anti-melee air option by second wave');
 assert.equal(g.structureDamage(0,100),52,'cheap melee damage is reduced against fortified bases');
 assert.equal(g.structureDamage(5,100),155,'dedicated siege damage still excels against bases');
-console.log('V2 smoke passed: symmetric economy, paid AI start, equal wave stipends, shared income upgrade costs, sticky top HUD and existing game mechanics.');
+// Full-match reproduction: Brood player buys five cheap claws and does nothing else.
+// In eight waves the enemy must have paid counters and survive the initial spam.
+click('restartButton');
+click('factionCards',{faction:'1'});
+click('startButton');
+click('unitCards',{role:'0'});
+for(let i=0;i<5;i++)click('buildGrid',{cell:String(i)});
+const spam=g.state();
+assert.equal(spam.faction,1);
+assert.equal(spam.built.filter(r=>r===0).length,5);
+assert.equal(Math.floor(spam.cash),35);
+for(let i=0;i<1700&&!spam.ended;i++)g.tick(.12);
+assert.ok(spam.wave>=8,'rush simulation played at least eight waves');
+assert.ok(spam.baseHP[1]>0,'cheap charge-only rush did not defeat the opponent HQ by wave eight');
+assert.ok(spam.enemyBuilt.some(r=>r===1),'opponent countered the rush with rifles');
+assert.ok(spam.enemyBuilt.some(r=>r===6),'opponent added a flier that melee claws cannot target');
+console.log('V2 smoke passed: 8-wave cheap-charge spam, adaptive paid counter-buildings, identical incomes and protected HQ.');
