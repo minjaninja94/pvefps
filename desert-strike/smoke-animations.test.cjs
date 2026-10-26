@@ -28,7 +28,7 @@ assert.equal(S.FRAMES,16);
 assert.equal(S.MODES.length,5);
 assert.equal(S.SIZE,48);
 assert.equal(new Set(S.MODES).size,5);
-for(let f=0;f<3;f++)for(let role=0;role<8;role++)for(const mode of S.MODES){
+for(let f=0;f<4;f++)for(let role=0;role<8;role++)for(const mode of S.MODES){
  const frames=[];
  for(let i=0;i<16;i++){
   const canvas=S.frame(f,role,mode,i);
@@ -38,7 +38,7 @@ for(let f=0;f<3;f++)for(let role=0;role<8;role++)for(const mode of S.MODES){
  assert.equal(new Set(frames).size,16,'distinct animation frame canvases: '+f+'/'+role+'/'+mode);
  assert.equal(S.frame(f,role,mode,3),frames[3],'cache must return same image');
 }
-assert.equal(S.cacheSize,3*8*5*16);
+assert.equal(S.cacheSize,4*8*5*16);
 for(const mode of S.MODES){
  const poses=Array.from({length:16},(_,i)=>S.pose(mode,i,0));
  assert.equal(poses.length,16);
@@ -46,6 +46,6 @@ for(const mode of S.MODES){
 }
 const sheet=S.renderSheet(2,6,'siege');
 assert.equal(sheet.width,768);assert.equal(sheet.height,48);
-S.structureImpact(context,100,100,1,'ruin',.75);
+S.structureImpact(context,100,100,3,'ruin',.75);
 assert.ok(paintCalls>15000,'all procedural frames should render actual pixel geometry');
-console.log('16-frame animation atlas smoke passed: 24 unit silhouettes, 5 actions, 1,920 cached sprites, impact FX and gallery.');
+console.log('16-frame animation atlas smoke passed: 32 unit silhouettes, 5 actions, 2,560 cached sprites, impact FX and gallery.');
