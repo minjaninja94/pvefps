@@ -256,6 +256,7 @@ function fireShot(attacker,target,baseSide=null){
 }
 function explode(shot,x,y){
  spark(x,y,shot.source==='flak'?'#b5f7f5':'#f6c58c',shot.splash?shot.splash*.5:10);
+ if(shot.base!==null){hitBase(shot.base,shot.dmg);return;}
  if(shot.splash){
   for(const unit of s.units){
    if(unit.hp<=0||unit.side===shot.side)continue;
