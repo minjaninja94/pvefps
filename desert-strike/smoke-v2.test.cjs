@@ -30,7 +30,7 @@ function el(id){
  };
  ids.set(id,item);return item;
 }
-const facItems=[0,1,2].map(i=>{const classes=new Set(i===0?['selected']:[]);return {
+const facItems=[0,1,2,3].map(i=>{const classes=new Set(i===0?['selected']:[]);return {
  dataset:{faction:String(i)},classList:{
  toggle(key,on){if(on)classes.add(key);else classes.delete(key);},
  contains(key){return classes.has(key);}
@@ -44,7 +44,7 @@ const doc={
 };
 const sandbox={document:doc,window:{addEventListener(){}},requestAnimationFrame(fn){queue.push(fn);},console,Math,Number,String,Object,Array,Map,Set,Date};
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'sprite-animations.js'),'utf8'),sandbox,{timeout:4000,filename:'sprite-animations.js'});
-vm.runInNewContext(code,sandbox,{timeout:3500,filename:'game-v2.js'});
+vm.runInNewContext(code.replace('initFactions();wire();reset();','window.__gameTest={state:()=>state,createUnit,resolveStrike};initFactions();wire();reset();'),sandbox,{timeout:3500,filename:'game-v2.js'});
 assert.equal(el('cash').textContent,'360');
 assert.match(el('unitCards').innerHTML,/강점:/);
 assert.match(el('unitCards').innerHTML,/약점:/);
@@ -90,4 +90,24 @@ click('restartButton');
 assert.equal(el('cash').textContent,'360','reset restores cash');
 assert.equal(el('wave').textContent,'00','reset restores wave');
 assert.equal(el('startOverlay').classList.contains('hidden'),false,'reset requires faction selection');
+// Marine Fortress faction and Huanglong su-yuk expendable ally healing.
+click('factionCards',{faction:'3'});
+click('startButton');
+assert.equal(el('factionLabel').textContent,'해병성채');
+assert.match(el('unitCards').innerHTML,/황룡/);
+assert.match(el('unitCards').innerHTML,/해병수육/);
+const game=sandbox.window.__gameTest,st=game.state();
+assert.notEqual(st.faction,st.enemyFaction,'AI must pick a different faction');
+game.createUnit(0,0,3);game.createUnit(0,1,7);
+const heavy=st.units.find(u=>u.role===3);
+const huang=st.units.find(u=>u.role===7);
+assert.ok(heavy&&huang);
+heavy.hp=heavy.maxHP*.35;
+huang.x=heavy.x+12;huang.y=heavy.y+9;
+const before=heavy.hp;
+game.resolveStrike(huang,{healing:true,target:heavy,baseSide:null});
+assert.ok(heavy.hp>before,'Huanglong restores ally HP');
+assert.equal(huang.killed,true,'Huanglong must be consumed to heal');
+assert.ok(st.deadUnits.includes(huang),'sacrifice must play death animation');
+assert.equal(huang.hp,0);
 console.log('V2 smoke passed: 75 slots, 3x world camera, minimap, low starting income, construction, 24s waves, pause, speed, economy and reset.');
