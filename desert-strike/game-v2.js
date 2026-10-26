@@ -600,24 +600,74 @@ function ground(g,w,h,base=false){
 }
 function structure(g,x,y,side,turret=true,health=1){
  g.save();g.translate(x,y);
- const col=COLORS[side];
+ g.imageSmoothingEnabled=false;
+ const faction=side===0?state.faction:state.enemyFaction;
+ const palette=[
+  {metal:'#608994',dark:'#203741',trim:'#f1bb7c',glow:'#93ebec'},
+  {metal:'#72924b',dark:'#334628',trim:'#d3a46b',glow:'#d3f192'},
+  {metal:'#947cc6',dark:'#322b62',trim:'#e7c3ff',glow:'#a5eeff'}
+ ][faction];
+ const cx=palette.glow;
  g.fillStyle='#07161988';g.beginPath();g.ellipse(0,27,turret?31:49,turret?20:37,0,0,7);g.fill();
- g.fillStyle=side===0?'#315665':'#74493b';
- if(turret){
-  g.fillRect(-23,-23,46,48);g.strokeStyle=col;g.lineWidth=2;g.strokeRect(-23,-23,46,48);
-  g.fillStyle='#172a32';g.fillRect(-18,-31,36,20);
-  g.fillStyle=col;g.fillRect(-5,-18,10,23);
-  g.fillStyle='#f5d9ae';g.fillRect(side===0?0:-33,-15,33,6);
- }else{
-  g.fillRect(-37,-48,74,96);g.strokeStyle=col;g.lineWidth=3;g.strokeRect(-37,-48,74,96);
-  g.fillStyle='#172d36';g.fillRect(-25,-27,50,58);
-  g.fillStyle=col;g.fillRect(-10,-16,20,26);
-  g.fillStyle='#f9dbad';g.fillRect(-6,-8,12,12);
-  for(const v of [-24,24]){g.fillStyle=col;g.fillRect(v-6,-40,12,15);}
+ function block(px,py,w,h,color=palette.metal){g.fillStyle=color;g.fillRect(px,py,w,h);}
+ function diamond(px,py,r,color){
+  g.fillStyle=color;g.beginPath();g.moveTo(px,py-r);g.lineTo(px+r,py);g.lineTo(px,py+r);g.lineTo(px-r,py);g.closePath();g.fill();
+ }
+ if(faction===0){ // Forge Union: stacked steel plates, tracked armored defenses.
+  if(turret){
+   block(-28,-20,56,45,palette.dark);block(-24,-17,48,35,palette.metal);
+   block(-18,-27,36,15,palette.dark);block(-14,-24,28,11,palette.metal);
+   for(let i=-1;i<=1;i++){block(-20+i*16,10,11,5,palette.trim);block(-20+i*16,-11,10,3,palette.dark);}
+   block(side===0?7:-45,-22,40,7,'#1b2f39');
+   block(side===0?12:-45,-20,31,3,palette.trim);
+   block(-5,-17,10,14,cx);
+  }else{
+   block(-42,-45,84,94,palette.dark);block(-36,-37,72,80,palette.metal);
+   block(-42,-19,84,13,palette.dark);
+   block(-28,-52,19,24,palette.metal);block(12,-52,19,24,palette.metal);
+   for(let i=-2;i<=2;i++)block(i*12-5,21,9,8,palette.dark);
+   block(-17,-26,34,42,palette.dark);block(-11,-20,22,29,palette.glow);
+   block(-4,-14,8,16,palette.dark);
+   block(-24,-37,11,5,palette.trim);block(14,-37,11,5,palette.trim);
+  }
+ }else if(faction===1){ // Brood: asymmetrical carapace and living hives.
+  if(turret){
+   diamond(0,-9,27,palette.dark);diamond(0,-9,21,palette.metal);
+   for(let i=-1;i<=1;i++){const xx=i*18;diamond(xx,-17-Math.abs(i)*3,8,palette.trim);}
+   block(-16,3,32,24,palette.dark);
+   diamond(0,-14,7,cx);
+   block(side===0?13:-39,-18,28,6,palette.trim);
+   block(-23,15,46,4,palette.metal);
+  }else{
+   diamond(0,-11,55,palette.dark);diamond(0,-15,44,palette.metal);
+   diamond(0,-14,24,palette.dark);diamond(0,-14,12,cx);
+   for(const xx of [-30,-16,16,30]){
+    diamond(xx,-44+Math.abs(xx)/3,12,palette.trim);
+    block(xx-4,19,9,24,palette.dark);
+   }
+   block(-38,34,76,10,palette.metal);
+  }
+ }else{ // Astral: levitating crystal conduits, sharply opposed to steel/hive.
+  if(turret){
+   diamond(0,-14,30,palette.dark);diamond(0,-14,20,palette.metal);
+   diamond(0,-14,10,cx);
+   diamond(-26,-24,10,palette.trim);diamond(26,-24,10,palette.trim);
+   block(-18,12,36,22,palette.dark);
+   block(-12,20,24,6,palette.glow);
+  }else{
+   diamond(0,-26,51,palette.dark);diamond(0,-30,40,palette.metal);
+   diamond(0,-26,28,palette.dark);diamond(0,-26,13,palette.glow);
+   for(const xx of [-36,36]){
+    diamond(xx,-40,15,palette.trim);
+    block(xx-5,4,10,40,palette.dark);
+   }
+   block(-27,14,54,28,palette.dark);
+   for(let i=-1;i<=1;i++)block(i*15-4,20,8,13,palette.trim);
+  }
  }
  if(health<=0){
-  g.globalAlpha=.8;g.fillStyle='#1c2225';g.fillRect(-26,-29,52,45);
-  g.fillStyle='#da775b';g.fillRect(-8,-23,16,5);
+  g.globalAlpha=.93;block(-26,-29,52,45,'#1b2225');block(-8,-24,16,8,'#d77557');
+  for(let i=0;i<5;i++)block(-22+i*11,-18+i%3*10,5,5,palette.dark);
  }
  g.restore();
 }
