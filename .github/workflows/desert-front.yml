@@ -1,0 +1,22 @@
+name: Desert Front smoke test
+on:
+  push:
+    paths:
+      - "desert-strike/**"
+      - ".github/workflows/desert-front.yml"
+  pull_request:
+    paths:
+      - "desert-strike/**"
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: JavaScript syntax
+        run: node --check desert-strike/game.js
+      - name: Gameplay smoke
+        run: node desert-strike/smoke.test.cjs
