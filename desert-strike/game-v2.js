@@ -174,7 +174,7 @@ function createUnit(side,slot,role){
   cooldown:random(.1,.7),anim:random(0,16),facing:side===0?1:-1,blink:0,moving:false,strike:null});
  pulse(x,y,COLORS[side],12);
 }
-function aiChoose(){
+function aiChoose(budget=state.enemyCash){
  const counts=Array(8).fill(0);
  for(const r of state.built)if(r!==null)counts[r]++;
  const weights=[3,3.1,2.4,2.1,1.7,1.6,1.7,.6];
@@ -185,7 +185,7 @@ function aiChoose(){
  weights[6]+=counts[3]*1.3;
  weights[5]+=counts[4]*1.2;
  if(state.wave<3){weights[5]*=.25;weights[7]*=.45;}
- let opts=ROLE.map((r,i)=>({i,w:weights[i]})).filter(z=>ROLE[z.i].cost<=state.enemyCash);
+ let opts=ROLE.map((r,i)=>({i,w:weights[i]})).filter(z=>ROLE[z.i].cost<=budget);
  if(!opts.length)return null;
  let roll=Math.random()*opts.reduce((a,b)=>a+b.w,0);
  for(const item of opts){roll-=item.w;if(roll<=0)return item.i;}
@@ -222,8 +222,8 @@ function aiInvest(){
  while(open.length && slotsToBuy-->0){
   const affordable=ROLE.filter(r=>r.cost<=state.enemyCash-reserve);
   if(!affordable.length)break;
-  const role=aiChoose();
-  if(role===null||ROLE[role].cost>state.enemyCash-reserve)break;
+  const role=aiChoose(state.enemyCash-reserve);
+  if(role===null)break;
   const slotIndex=Math.floor(Math.random()*open.length);
   const slot=open.splice(slotIndex,1)[0];
   state.enemyBuilt[slot]=role;
