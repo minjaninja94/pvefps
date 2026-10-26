@@ -50,7 +50,7 @@ function chirp(hz=420,length=.08){
 function reset(){
  state={live:false,ended:false,paused:false,rate:1,cash:600,enemyCash:230,eco:0,enemyEco:0,weapon:0,armor:0,
  wave:0,next:INTERVAL,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],
- built:Array(15).fill(null),enemyBuilt:Array(15).fill(null),units:[],shots:[],effects:[],floaters:[],
+ built:Array(15).fill(null),enemyBuilt:Array(15).fill(null),units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  nukes:1,barrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*2))%3,
  nextUnitId:1,attackCount:0};
  state.enemyBuilt[1]=0;state.enemyBuilt[7]=1;state.enemyBuilt[13]=1;
@@ -136,7 +136,7 @@ function emergency(){
  const eligible=state.baseHP[0]<=MAX_BASE*.7||invaders.some(u=>u.x<370);
  if(!eligible||!invaders.length){setMessage('핵폭탄은 기지가 위기일 때 침공한 적에게 사용할 수 있습니다.');return;}
  state.nukes=0;
- for(const u of invaders){u.hp=0;pulse(u.x,u.y,'#f2d489',40);}
+ for(const u of invaders){killUnit(u);pulse(u.x,u.y,'#f2d489',40);}
  state.units=state.units.filter(u=>u.hp>0);
  state.shots=state.shots.filter(p=>p.side===0);
  setMessage('긴급 핵폭탄 발동! 아군 영토로 침입한 적 '+invaders.length+'기를 제거했습니다.');
@@ -168,7 +168,7 @@ function createUnit(side,slot,role){
  const y=LANES[row]+(col-2)*9+random(-5,5);
  const bonus=side===0?1+.09*state.armor:1;
  state.units.push({uid:state.nextUnitId++,side,role,faction,x,y,hp:def.hp*bonus,maxHP:def.hp*bonus,
-  cooldown:random(.1,.7),anim:random(0,6),facing:side===0?1:-1,blink:0});
+  cooldown:random(.1,.7),anim:random(0,16),facing:side===0?1:-1,blink:0,moving:false,strike:null});
  pulse(x,y,COLORS[side],12);
 }
 function aiChoose(){
@@ -221,17 +221,45 @@ function calcDamage(attacker,target,amount){
  const armor=getDef(target.role,target.faction).armor;
  return Math.max(3,out-armor*.66);
 }
+function killUnit(u){
+ if(u.hp<=0 && u.killed)return;
+ u.hp=0;u.killed=true;u.strike=null;
+ u.deathAge=0;state.deadUnits.push(u);
+ if(state.deadUnits.length>120)state.deadUnits.shift();
+ pulse(u.x,u.y,COLORS[u.side],24);
+ if(u.side===1)state.cash+=5;
+}
+function beginStrike(u,target=null,baseSide=null,healing=false){
+ if(u.strike)return;
+ const def=getDef(u.role,u.faction);
+ const duration=clamp(def.rate*.75,.5,.83);
+ u.strike={mode:baseSide!==null?'siege':'attack',target,baseSide,healing,age:0,duration,hit:false};
+ u.cooldown=def.rate*random(.92,1.07);
+}
+function resolveStrike(u,hit){
+ if(hit.healing){
+  if(hit.target&&hit.target.hp>0&&hit.target.hp<hit.target.maxHP)
+   heal(hit.target,getDef(u.role,u.faction).heal*(u.side===0?1+.08*state.weapon:1));
+ }else if(hit.baseSide!==null){
+  fire(u,null,hit.baseSide);
+ }else if(hit.target&&hit.target.hp>0){
+  fire(u,hit.target);
+ }else {
+  pulse(u.x+u.facing*27,u.y,'#b4af91',9);
+ }
+}
 function damage(u,amount,source){
  if(u.hp<=0)return;
  const hit=calcDamage(typeof source==='number'?source:null,u,amount);
  u.hp-=hit;u.blink=.12;
  if(Math.random()<.15)floatText(u.x,u.y-25,Math.round(hit),COLORS[u.side===0?1:0]);
- if(u.hp<=0){u.hp=0;pulse(u.x,u.y,COLORS[u.side],22);if(u.side===1)state.cash+=5;}
+ if(u.hp<=0)killUnit(u);
 }
 function heal(u,amount){u.hp=Math.min(u.maxHP,u.hp+amount);pulse(u.x,u.y,'#94f7a9',11);}
 function structureHit(side,amount){
  if(state.turretHP[side]>0){
   state.turretHP[side]=Math.max(0,state.turretHP[side]-amount);
+  state.structureFX.push({side,part:'turret',mode:state.turretHP[side]<=0?'ruin':'hit',age:0,duration:state.turretHP[side]<=0?1:.5});
   pulse(side===0?188:912,260,'#fcb78b',23);
   if(state.turretHP[side]===0){
    floatText(side===0?188:912,190,'DEFENSE DOWN','#ffad82');
@@ -239,6 +267,7 @@ function structureHit(side,amount){
   }
  }else{
   state.baseHP[side]=Math.max(0,state.baseHP[side]-amount);
+  state.structureFX.push({side,part:'core',mode:state.baseHP[side]<=0?'ruin':'hit',age:0,duration:state.baseHP[side]<=0?1:.5});
   pulse(side===0?89:1011,260,'#f8aa8a',32);
   if(state.baseHP[side]<=0)endMatch(side===1);
  }
@@ -265,7 +294,7 @@ function move(u,x,y,dt){
  const dx=x-u.x,dy=y-u.y,d=Math.hypot(dx,dy)||1,def=getDef(u.role,u.faction);
  const step=def.speed*dt;
  u.x+=dx/d*Math.min(step,d);u.y+=dy/d*Math.min(step,d);
- u.facing=dx>=0?1:-1;u.x=clamp(u.x,30,1070);u.y=clamp(u.y,72,448);
+ u.facing=dx>=0?1:-1;u.moving=d>1;u.x=clamp(u.x,30,1070);u.y=clamp(u.y,72,448);
 }
 function fire(u,t=null,baseSide=null){
  const def=getDef(u.role,u.faction),x=t?t.x:baseSide===0?(state.turretHP[0]>0?190:90):(state.turretHP[1]>0?910:1010),y=t?t.y:260;
@@ -304,12 +333,18 @@ function tick(dt){
  for(const u of state.units){
   if(u.hp<=0)continue;
   const def=getDef(u.role,u.faction);
-  u.cooldown-=ds;u.anim+=ds*9;u.blink=Math.max(0,u.blink-ds);
+  u.cooldown-=ds;u.anim+=ds*14;u.blink=Math.max(0,u.blink-ds);u.moving=false;
+  if(u.strike){
+   const hit=u.strike;hit.age+=ds;
+   if(!hit.hit && hit.age>=hit.duration*.47){hit.hit=true;resolveStrike(u,hit);}
+   if(hit.age>=hit.duration)u.strike=null;
+   continue;
+  }
   if(u.role===7){
    const mate=nearInjured(u);
    if(mate){
     if(distance(u,mate)>def.range*.72)move(u,mate.x,mate.y,ds);
-    else if(u.cooldown<=0){heal(mate,def.heal*(u.side===0?1+.08*state.weapon:1));u.cooldown=def.rate;}
+    else if(u.cooldown<=0)beginStrike(u,mate,null,true);
    }else{
     const mate2=state.units.find(v=>v.side===u.side&&v.role!==7&&v.hp>0);
     if(mate2&&distance(u,mate2)>94)move(u,mate2.x,mate2.y,ds);
@@ -320,12 +355,12 @@ function tick(dt){
   const target=nearestUnit(u,def);
   if(target){
    if(distance(u,target)>def.range*(def.range>65?.88:1))move(u,target.x,target.y,ds);
-   else if(u.cooldown<=0){fire(u,target);u.cooldown=def.rate*random(.9,1.09);}
+   else if(u.cooldown<=0)beginStrike(u,target);
   }else{
    const side=1-u.side,tx=side===0?(state.turretHP[0]>0?190:90):(state.turretHP[1]>0?910:1010);
    const d=Math.hypot(u.x-tx,u.y-260);
    if(d>def.range+15)move(u,tx,260,ds);
-   else if(u.cooldown<=0){fire(u,null,side);u.cooldown=def.rate;}
+   else if(u.cooldown<=0)beginStrike(u,null,side);
   }
  }
  for(let i=state.shots.length-1;i>=0;i--){
@@ -347,6 +382,10 @@ function tick(dt){
   }
  }
  state.units=state.units.filter(v=>v.hp>0);
+ for(const u of state.deadUnits)u.deathAge+=ds;
+ state.deadUnits=state.deadUnits.filter(u=>u.deathAge<1.08);
+ for(const impact of state.structureFX)impact.age+=ds;
+ state.structureFX=state.structureFX.filter(impact=>impact.age<impact.duration);
  for(const e of state.effects)e.time-=ds;
  state.effects=state.effects.filter(v=>v.time>0);
  for(const v of state.floaters){v.time-=ds;v.y-=ds*20;}
@@ -409,7 +448,7 @@ function updateUI(full=false){
  if(full||state.lastCards===undefined||Math.floor(state.cash/30)!==state.lastCards){
   const f=FACTIONS[state.faction];
   $('unitCards').innerHTML=ROLE.map((r,i)=>{
-   const portrait=sprite(state.faction,i,0);
+   const portrait=window.DesertSprites?.portrait(state.faction,i)||sprite(state.faction,i,0);
    const icon=typeof portrait.toDataURL==='function'?'<img class="pixel-preview" src="'+portrait.toDataURL('image/png')+'" alt="" aria-hidden="true">':r.token;
    return '<button class="unit-card'+(selectedRole===i?' selected':'')+'" data-role="'+i+'" title="'+r.tips+
     '"><span class="uc-top">'+r.mark+' '+r.name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
@@ -511,22 +550,31 @@ function sprite(f,r,phase){
  return SPRITES.get(key);
 }
 function drawUnit(g,u,scale=1){
- const flying=u.role===6,phase=Math.floor(u.anim)%2;
- const width=(u.role===3?40:u.role===6?40:35)*scale;
- const height=(u.role===3?40:u.role===6?40:35)*scale;
- g.fillStyle='#05141c77';g.beginPath();g.ellipse(u.x,u.y+12*scale,18*scale,5*scale,0,0,Math.PI*2);g.fill();
- g.save();g.imageSmoothingEnabled=false;
- g.drawImage(sprite(u.faction,u.role,phase),u.x-width/2,u.y-height/2-(flying?10+Math.sin(u.anim)*3:0),width,height);
+ const dead=u.killed===true;
+ const flying=u.role===6;
+ const mode=dead?'death':u.strike?.mode||(u.moving?'move':'idle');
+ const frame=dead?Math.min(15,Math.floor((u.deathAge||0)/1.08*16))
+  :u.strike?Math.min(15,Math.floor(u.strike.age/u.strike.duration*16))
+  :Math.floor(u.anim)%16;
+ const w=(u.role===3?55:u.role===6?52:47)*scale;
+ const h=(u.role===3?55:u.role===6?52:47)*scale;
+ const artwork=window.DesertSprites?.frame(u.faction,u.role,mode,frame)
+  ||sprite(u.faction,u.role,frame%2);
+ g.fillStyle='#05141c88';g.beginPath();g.ellipse(u.x,u.y+16*scale,19*scale,5*scale,0,0,Math.PI*2);g.fill();
+ g.save();g.translate(u.x,u.y);
+ if(u.facing<0)g.scale(-1,1);
+ g.imageSmoothingEnabled=false;
+ g.drawImage(artwork,-w/2,-h/2-(flying?9+Math.sin(u.anim)*2:0),w,h);
  g.restore();
- if(u.blink>0){g.fillStyle='#ffe6a4';g.globalAlpha=u.blink*3;g.fillRect(u.x-8*scale,u.y-7*scale,16*scale,15*scale);g.globalAlpha=1;}
- const role=ROLE[u.role],y=u.y-31*scale-(flying?8:0);
- g.fillStyle='#07161cd9';g.fillRect(u.x-11*scale,y-8*scale,22*scale,16*scale);
+ if(dead)return;
+ const role=ROLE[u.role],y=u.y-39*scale-(flying?9:0);
+ g.fillStyle='#07161ced';g.fillRect(u.x-11*scale,y-8*scale,22*scale,16*scale);
  g.strokeStyle=u.side===0?'#85e9fa':'#fdad92';g.lineWidth=1.4;g.strokeRect(u.x-11*scale,y-8*scale,22*scale,16*scale);
  g.fillStyle=u.side===0?'#d0f9ff':'#ffe4d0';g.textAlign='center';g.font='900 '+Math.round(13*scale)+'px monospace';
  g.fillText(role.mark,u.x,y+4*scale);
  if(u.hp<u.maxHP){
-  g.fillStyle='#06171c';g.fillRect(u.x-16*scale,u.y-24*scale,32*scale,4*scale);
-  g.fillStyle=COLORS[u.side];g.fillRect(u.x-16*scale,u.y-24*scale,32*scale*(u.hp/u.maxHP),4*scale);
+  g.fillStyle='#06171c';g.fillRect(u.x-16*scale,y-12*scale,32*scale,4*scale);
+  g.fillStyle=COLORS[u.side];g.fillRect(u.x-16*scale,y-12*scale,32*scale*Math.max(0,u.hp/u.maxHP),4*scale);
  }
 }
 function ground(g,w,h,base=false){
@@ -578,7 +626,13 @@ function drawBattle(){
  g.clearRect(0,0,CW,CH);ground(g,CW,CH);
  structure(g,90,260,0,false,state.baseHP[0]);structure(g,1010,260,1,false,state.baseHP[1]);
  structure(g,190,260,0,true,state.turretHP[0]);structure(g,910,260,1,true,state.turretHP[1]);
- for(const u of state.units.slice().sort((a,b)=>a.y-b.y))drawUnit(g,u,1);
+ for(const u of [...state.units,...state.deadUnits].sort((a,b)=>a.y-b.y))drawUnit(g,u,1);
+ if(window.DesertSprites){
+  for(const impact of state.structureFX){
+   const x=impact.side===0?(impact.part==='turret'?190:90):(impact.part==='turret'?910:1010);
+   window.DesertSprites.structureImpact(g,x,260,impact.side===0?state.faction:state.enemyFaction,impact.mode,impact.age/impact.duration);
+  }
+ }
  for(const p of state.shots){
   g.strokeStyle=p.side===0?'#a7eaff':'#ffbaa4';g.lineWidth=p.blast?4:2.5;
   g.beginPath();g.moveTo(p.x,p.y);g.lineTo(p.x+(p.tx-p.x)*.17,p.y+(p.ty-p.y)*.17);g.stroke();
@@ -612,8 +666,9 @@ function drawBase(){
   g.fillStyle='#2d4851';g.fillRect(x-34,y-12,68,26);
   if(role!==null){
    g.fillStyle=FACTIONS[state.faction].color;g.fillRect(x-29,y-7,22,17);
-   g.font='900 19px monospace';g.fillStyle='#fff1cc';g.textAlign='center';
-   g.fillText(ROLE[role].mark,x+10,y+8);
+   const art=window.DesertSprites?.portrait(state.faction,role);
+   if(art){g.imageSmoothingEnabled=false;g.drawImage(art,x-24,y-19,44,39);}
+   else{g.font='900 19px monospace';g.fillStyle='#fff1cc';g.textAlign='center';g.fillText(ROLE[role].mark,x+10,y+8);}
   }else{g.textAlign='center';g.font='900 14px monospace';g.fillStyle='#506a72';g.fillText('+',x,y+5);}
  }
  // Defensive turret is destructible. Production zone itself stays protected.
@@ -627,7 +682,7 @@ function drawBase(){
  g.fillStyle='#c2dbac';g.fillRect(224,315,72*state.turretHP[0]/MAX_TURRET,8);
  const raiders=state.units.filter(u=>u.side===1&&u.x<550);
  const friends=state.units.filter(u=>u.side===0&&u.x<550);
- for(const u of [...friends,...raiders]){
+ for(const u of [...friends,...raiders,...state.deadUnits.filter(u=>u.x<550)]){
   const mappedX=clamp(260+(u.x-190)*1.9,220,1064),mappedY=260+(u.y-260)*.18;
   drawUnit(g,{...u,x:mappedX,y:mappedY},.80);
  }
@@ -637,6 +692,10 @@ function drawBase(){
   g.fillText('⚠ BREACH · '+raiders.length+' HOSTILES',942,242);
  }
  // Turret destruction is shown as damage, production buildings aren't falsely destructible.
+ if(window.DesertSprites){
+  for(const impact of state.structureFX)if(impact.side===0)
+   window.DesertSprites.structureImpact(g,impact.part==='turret'?260:138,impact.part==='turret'?270:196,state.faction,impact.mode,impact.age/impact.duration);
+ }
  if(state.turretHP[0]<=0){
   g.fillStyle='#ffba90';g.font='900 17px monospace';g.textAlign='center';g.fillText('DEFENSE DESTROYED',250,198);
  }
