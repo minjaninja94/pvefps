@@ -11,7 +11,7 @@ assert.ok(html.indexOf('sprite-animations.js')<html.indexOf('game-v2.js'),'sprit
 assert.match(html,/sprite-gallery\.html/);
 assert.match(gallery,/sprite-animations\.js/);
 let paintCalls=0,canvases=0;
-const context=new Proxy({fillRect(x,y,w,h){paintCalls++;assert.ok(Number.isFinite(x+y+w+h));},drawImage(){paintCalls++;}},{
+const context=new Proxy({fillRect(x,y,w,h){paintCalls++;assert.ok(Number.isFinite(x+y+w+h));},drawImage(){paintCalls++;},createLinearGradient(){return {addColorStop(){}};}},{
  get(o,p){return p in o?o[p]:()=>{};},
  set(o,p,v){o[p]=v;return true;}
 });
