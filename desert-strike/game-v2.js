@@ -18,7 +18,7 @@ const FACTIONS=[
  {id:'forge',name:'철갑연합',tag:'FORGE UNION',logo:'▦',color:'#79ddea',bonus:'최대 HP +9% · 이동 속도 −4%',mut:{hp:1.09,dmg:1,speed:.96},units:['진격 보병','기관총병','관통 로켓','철갑 전차','복합 대공포','궤도 자주포','추적 비행기','전장 구호병'],slogan:'공학·화력·단단한 전열',secondary:'#224956'},
  {id:'brood',name:'심연군체',tag:'DUSK BROOD',logo:'♜',color:'#b9df8d',bonus:'이동 속도 +12% · 최대 HP −8%',mut:{hp:.92,dmg:1,speed:1.12},units:['송곳 발톱','산성 침벌','부식 포자충','거대 갑각수','가시 포자탑','폭식 투석충','비행 포식자','치유 공생충'],slogan:'생체 돌파·기동·포식',secondary:'#344d2b'},
  {id:'astral',name:'성운결사',tag:'ASTRAL ORDER',logo:'✧',color:'#d6b8ff',bonus:'공격/치유 +8% · 최대 HP −5%',mut:{hp:.95,dmg:1.08,speed:1},units:['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],slogan:'에너지·보호막·정밀 타격',secondary:'#443257'},
- {id:'marine',name:'해병성채',tag:'MARINE FORTRESS',logo:'★',color:'#dba77c',bonus:'돌격 특화 · 황룡 1회성 수육 회복',mut:{hp:1.04,dmg:1.02,speed:1.01},units:['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','쾌흥태 · 항공강습','황룡 · 해병수육'],slogan:'모히칸·붉은 군모·검은 얼굴·해병수육',secondary:'#58412f'}
+ {id:'marine',name:'해병성채',tag:'MARINE FORTRESS',logo:'★',color:'#dba77c',bonus:'돌격 특화 · 황룡 1회성 수육 회복',mut:{hp:1.04,dmg:1.02,speed:1.01},units:['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],slogan:'모히칸·붉은 군모·검은 얼굴·해병수육',secondary:'#58412f'}
 ];
 const RNAME=ROLE.map(r=>r.name),SPRITES=new Map();
 let selectedFaction=0,state=null,selectedRole=null,demolition=false,activeView='base',lastFrame=0,uiElapsed=0;
@@ -28,7 +28,16 @@ function random(a,b){return a+Math.random()*(b-a);}
 function money(n){return Math.floor(n).toLocaleString('ko-KR');}
 function getDef(role,faction){
  const r=ROLE[role],f=FACTIONS[faction];
- return {...r,unitName:f.units[role],factionName:f.name,hp:r.hp*f.mut.hp*2.25,damage:r.damage*f.mut.dmg*.94,heal:(r.heal||0)*f.mut.dmg*1.5,speed:r.speed*f.mut.speed*.84,tips:faction===3&&role===7?'해병수육: 부상 아군을 발견하면 본인이 전투에서 사라지며 주변 아군 다수를 크게 회복합니다. 1회성 소모 지원병.':r.tips};
+ const isBongo=faction===3&&role===6;
+ return {...r,unitName:f.units[role],factionName:f.name,
+  hp:isBongo?490:r.hp*f.mut.hp*2.25,
+  damage:isBongo?34:r.damage*f.mut.dmg*.94,
+  heal:(r.heal||0)*f.mut.dmg*1.5,speed:isBongo?77:r.speed*f.mut.speed*.84,
+  kind:isBongo?'ground':r.kind,armor:isBongo?7:r.armor,
+  range:isBongo?43:r.range,rate:isBongo?1.45:r.rate,
+  airTarget:isBongo?false:r.airTarget,
+  good:isBongo?[0,7]:r.good,bad:isBongo?[2,3]:r.bad,
+  tips:isBongo?'오도봉고: 공군 대신 출격하는 지상 돌파 차량. 돌격병 밀집 부대를 들이받아 최대 3명까지 범위 피해. 대장갑에 취약하고 기지 피해는 약합니다.':faction===3&&role===7?'해병수육: 부상 아군을 발견하면 본인이 전투에서 사라지며 주변 아군 다수를 크게 회복합니다. 1회성 소모 지원병.':r.tips};
 }
 function ecoCostFor(level){return Math.round(70*Math.pow(1.36,level));}
 function ecoCost(){return ecoCostFor(state.eco);}
@@ -170,8 +179,10 @@ function createUnit(side,slot,role){
  const x=side===0?240+col*7:WORLD_W-240-col*7;
  const y=LANES[row]+(col-7)*3+random(-7,7);
  const bonus=side===0?1+.09*state.armor:1;
+ const isBongo=faction===3&&role===6;
  state.units.push({uid:state.nextUnitId++,side,role,faction,x,y,hp:def.hp*bonus,maxHP:def.hp*bonus,
-  cooldown:random(.1,.7),anim:random(0,16),facing:side===0?1:-1,blink:0,moving:false,strike:null});
+  cooldown:random(.1,.7),anim:random(0,16),facing:side===0?1:-1,blink:0,moving:false,strike:null,
+  hitRadius:isBongo?30:role===3?26:role===6?14:role===5?17:role===0?17:15,ramCooldown:0});
  pulse(x,y,COLORS[side],12);
 }
 // AI spends the same credits as the player, but actually studies the player's build.
@@ -202,7 +213,7 @@ function aiChoose(budget=state.enemyCash){
  const myCounts=Array(ROLE.length).fill(0);
  for(const role of state.enemyBuilt)if(role!==null)myCounts[role]++;
  if(intel.dominant!==null){
-  const primary=AI_COUNTER_ROLES[intel.dominant];
+  const primary=intel.dominant===0&&state.enemyFaction===3?[1,6,3]:AI_COUNTER_ROLES[intel.dominant];
   const matching=primary.filter(id=>affordable.includes(id));
   if(matching.length){
    // Melee-only armies cannot attack aircraft. Buy one air unit once affordable,
@@ -243,7 +254,7 @@ function aiAdaptFacilities(intel){
  // The opponent uses building replacement under the exact same 55% refund as the player.
  // At most one conversion per 2 waves. React only to clear, repeated single-role spam.
  if(intel.dominant===null||intel.total<4||state.wave<2||state.wave%2!==0)return false;
- const counters=AI_COUNTER_ROLES[intel.dominant];
+ const counters=intel.dominant===0&&state.enemyFaction===3?[1,6,3]:AI_COUNTER_ROLES[intel.dominant];
  const aiCount=state.enemyBuilt.filter(r=>r!==null).length;
  const counterCount=state.enemyBuilt.filter(r=>counters.includes(r)).length;
  if(counterCount>=Math.ceil(aiCount*.55))return false;
@@ -397,10 +408,10 @@ function nearestUnit(u,def){
   const next=Math.min(dxA,dxB);
   if(candidate&&next>(score+175))break;
   const v=dxA<=dxB?targets[a--]:targets[b++];
-  if(v.hp<=0||(!def.airTarget&&ROLE[v.role].kind==='air'))continue;
+  if(v.hp<=0||(!def.airTarget&&getDef(v.role,v.faction).kind==='air'))continue;
   const dy=Math.abs(u.y-v.y);
   const d=Math.hypot(next,dy);
-  const bonus=(u.role===4&&ROLE[v.role].kind==='air'?175:0)+(def.good.includes(v.role)?Math.min(35,def.range*.2):0);
+  const bonus=(u.role===4&&getDef(v.role,v.faction).kind==='air'?175:0)+(def.good.includes(v.role)?Math.min(35,def.range*.2):0);
   if(d-bonus<score){score=d-bonus;candidate=v;}
  }
  return candidate;
@@ -413,6 +424,62 @@ function nearInjured(u){
  }
  return candidate;
 }
+// Local spatial-hash collision prevents 200+ units piling on a single pixel.
+// Ground units of either side have physical footprints. Aircraft float over ground
+// but still avoid other aircraft. Rebuild hash per pass so resolution stays stable.
+function unitRadius(u){return u.hitRadius||(u.faction===3&&u.role===6?30:u.role===3?26:u.role===6?14:u.role===5?17:u.role===0?17:15);}
+function physicalLayer(u){return getDef(u.role,u.faction).kind==='air'?'air':'ground';}
+function separateUnits(){
+ const CELL=76;
+ for(let pass=0;pass<2;pass++){
+  const grid=new Map();
+  for(const u of state.units){
+   if(u.hp<=0)continue;
+   const key=Math.floor(u.x/CELL)+','+Math.floor(u.y/CELL);
+   if(!grid.has(key))grid.set(key,[]);
+   grid.get(key).push(u);
+  }
+  for(const u of state.units){
+   if(u.hp<=0)continue;
+   const gx=Math.floor(u.x/CELL),gy=Math.floor(u.y/CELL),layer=physicalLayer(u);
+   for(let iy=gy-1;iy<=gy+1;iy++)for(let ix=gx-1;ix<=gx+1;ix++){
+    const neighbours=grid.get(ix+','+iy);if(!neighbours)continue;
+    for(const v of neighbours){
+     if(v===u||v.uid<=u.uid||v.hp<=0||physicalLayer(v)!==layer)continue;
+     let dx=v.x-u.x,dy=v.y-u.y,d=Math.hypot(dx,dy);
+     const min=unitRadius(u)+unitRadius(v);
+     if(d>=min)continue;
+     if(d<.00001){const angle=((u.uid*19+v.uid*13)%13)*Math.PI*2/13;dx=Math.cos(angle);dy=Math.sin(angle);d=1;}
+     const overlap=Math.min(min-d,24)*.53,nx=dx/d,ny=dy/d;
+     const ru=unitRadius(u),rv=unitRadius(v),shareU=rv/(ru+rv),shareV=ru/(ru+rv);
+     u.x=clamp(u.x-nx*overlap*shareU*2,30,WORLD_W-30);
+     u.y=clamp(u.y-ny*overlap*shareU*2,68,452);
+     v.x=clamp(v.x+nx*overlap*shareV*2,30,WORLD_W-30);
+     v.y=clamp(v.y+ny*overlap*shareV*2,68,452);
+    }
+   }
+  }
+ }
+}
+function bongoImpact(u,dt){
+ if(u.faction!==3||u.role!==6||u.hp<=0)return;
+ u.ramCooldown=Math.max(0,(u.ramCooldown||0)-dt);
+ if(u.ramCooldown>0)return;
+ const candidates=state.units.filter(v=>v.side!==u.side&&v.hp>0&&getDef(v.role,v.faction).kind==='ground'&&Math.hypot(v.x-u.x,v.y-u.y)<unitRadius(u)+unitRadius(v)+9)
+  .sort((a,b)=>Math.hypot(a.x-u.x,a.y-u.y)-Math.hypot(b.x-u.x,b.y-u.y));
+ if(!candidates.length)return;
+ u.ramCooldown=1.85;
+ const mods=u.side===0?1+state.weapon*.08:1;
+ for(const v of candidates.slice(0,3)){
+  // Drive-by anti-melee, reduced against true heavy armor; no building bonus.
+  const antiMelee=v.role===0?1.45:v.role===3?.38:1;
+  damage(v,42*mods*antiMelee,null);
+  v.x=clamp(v.x+u.facing*13,30,WORLD_W-30);
+  pulse(v.x,v.y,'#edb46c',14);
+ }
+ floatText(u.x,u.y-25,'오도봉고!', '#f4ce8e');
+ pulse(u.x,u.y,'#bd734e',31);
+}
 function move(u,x,y,dt){
  const dx=x-u.x,dy=y-u.y,d=Math.hypot(dx,dy)||1,def=getDef(u.role,u.faction);
  const step=def.speed*dt;
@@ -422,7 +489,18 @@ function move(u,x,y,dt){
 function fire(u,t=null,baseSide=null){
  const def=getDef(u.role,u.faction),x=t?t.x:baseSide===0?(state.turretHP[0]>0?190:90):(state.turretHP[1]>0?WORLD_W-190:WORLD_W-90),y=t?t.y:260;
  if(def.range<48){
-  if(t)damage(t,def.damage*(u.side===0?1+.08*state.weapon:1),u.role);
+  if(t && u.faction===3&&u.role===6){
+   // Armored bumper: splash up to three clustered ground enemies, not flying units.
+   let hits=0;
+   for(const v of state.units){
+    if(v.side===u.side||v.hp<=0||getDef(v.role,v.faction).kind==='air')continue;
+    if(Math.hypot(t.x-v.x,t.y-v.y)>48)continue;
+    damage(v,def.damage*(u.side===0?1+.08*state.weapon:1)*(v.role===0?1.3:v.role===3?.55:1),null);
+    if(++hits>=3)break;
+   }
+   pulse(t.x,t.y,'#f1af72',23);
+  }
+  else if(t)damage(t,def.damage*(u.side===0?1+.08*state.weapon:1),u.role);
   else structureHit(baseSide,structureDamage(u.role,def.damage*(u.side===0?1+.08*state.weapon:1)));
   pulse(x,y,'#ffdbae',6);
  }else{
@@ -438,7 +516,7 @@ function projectileImpact(p){
  if(p.baseSide!==null){structureHit(p.baseSide,structureDamage(p.source,p.damage));return;}
  if(p.blast){
   for(const v of state.units)if(v.hp>0&&v.side!==p.side){
-   if(ROLE[v.role].kind==='air'&&!ROLE[p.source].airTarget)continue;
+   if(getDef(v.role,v.faction).kind==='air'&&!ROLE[p.source].airTarget)continue;
    const d=Math.hypot(v.x-x,v.y-y);
    if(d<=p.blast+10)damage(v,p.damage*(1-.48*d/(p.blast+10)),p.source);
   }
@@ -498,6 +576,8 @@ function tick(dt){
    else if(u.cooldown<=0)beginStrike(u,null,side);
   }
  }
+ separateUnits();
+ for(const u of state.units)if(u.faction===3&&u.role===6&&u.hp>0)bongoImpact(u,ds);
  for(let i=state.shots.length-1;i>=0;i--){
   const p=state.shots[i];p.ttl-=ds;
   if(p.target&&p.target.hp>0){p.tx=p.target.x;p.ty=p.target.y;}
@@ -588,7 +668,7 @@ function updateUI(full=false){
    const icon=typeof portrait.toDataURL==='function'?'<img class="pixel-preview" src="'+portrait.toDataURL('image/png')+'" alt="" aria-hidden="true">':r.token;
    return '<button class="unit-card'+(selectedRole===i?' selected':'')+'" data-role="'+i+'" title="'+getDef(i,state.faction).tips+
     '"><span class="uc-top">'+r.mark+' '+r.name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
-    '</span><span class="uc-name">'+f.units[i]+'</span><span class="uc-role">'+r.name+' · '+(r.kind==='air'?'공중':'지상')+'</span>'+
+    '</span><span class="uc-name">'+f.units[i]+'</span><span class="uc-role">'+r.name+' · '+(getDef(i,state.faction).kind==='air'?'공중':'지상')+'</span>'+
     '<span class="uc-cost">'+r.cost+' CR</span><span class="good-counter">'+(i===7?'지원':'강점')+': '+r.good.map(x=>ROLE[x].mark).join(' ')+'</span><span class="bad-counter">약점: '+r.bad.map(x=>ROLE[x].mark).join(' ')+'</span></button>';
   }).join('');
   $('buildGrid').innerHTML=state.built.map((id,i)=>
@@ -687,7 +767,7 @@ function sprite(f,r,phase){
 }
 function drawUnit(g,u,scale=1){
  const dead=u.killed===true;
- const flying=u.role===6;
+ const flying=getDef(u.role,u.faction).kind==='air';
  const mode=dead?'death':u.strike?.mode||(u.moving?'move':'idle');
  const frame=dead?Math.min(15,Math.floor((u.deathAge||0)/1.08*16))
   :u.strike?Math.min(15,Math.floor(u.strike.age/u.strike.duration*16))
