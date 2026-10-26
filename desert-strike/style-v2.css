@@ -33,3 +33,34 @@
 @media(max-width:620px){.build-grid{min-width:970px;grid-template-columns:repeat(15,minmax(57px,1fr))}
  .build-cell{min-height:55px}.battle-nav{gap:4px}.battle-nav .btn{font-size:10px;padding:8px 7px;min-width:60px}
  #cameraStatus{flex-basis:100%;order:5;font-size:10px}.mini-heading{font-size:9px}.mini-heading span{font-size:9px}}
+
+/* Persistent battle economy HUD: visible during scrolling in all three tabs. */
+.stats{
+ position:sticky;top:0;z-index:35;
+ margin:0 -12px 0;padding:10px 12px 11px;
+ background:rgba(10,22,30,.965);
+ border-bottom:1px solid #60808b;
+ box-shadow:0 8px 24px #03080c99;
+ backdrop-filter:blur(12px);
+ -webkit-backdrop-filter:blur(12px);
+}
+.stats>div:not(.compact-status){
+ background:linear-gradient(125deg,#283e47,#15262f);
+ border-color:#5c7680;
+}
+.stats>div:nth-child(1) strong,.stats>div:nth-child(3) strong,
+.stats>div:nth-child(4) strong{font-variant-numeric:tabular-nums}
+.stats>div:nth-child(4) strong{color:#f6ce8e}
+.stats>div:nth-child(3) strong{color:#b5e8ee}
+.modal-backdrop{z-index:110}
+@media(max-width:620px){
+ .stats{margin:0 -8px;padding:7px 8px;gap:4px;min-height:60px}
+ .stats>div:not(.compact-status){padding:6px 7px}
+ .stats strong{font-size:clamp(16px,4.6vw,23px)}
+ .stats small{font-size:9px}
+ .stats em{font-size:8px}
+}
+@media(max-width:355px){
+ .stats>div:not(.compact-status){padding:5px 4px}
+ .stats strong{font-size:17px}
+}
