@@ -442,7 +442,7 @@ function updateUI(full=false){
  $('frontStatus').textContent=inv?'⚠ 아군 기지 침공':state.units.some(x=>x.side===0&&x.x>WORLD_W-490)?'적 기지 압박':'중앙 전선';
  $('battleStatus').textContent=state.ended?'전투 종료':!state.live?'작전 대기':state.paused?'일시정지':inv?'⚠ 본진 침공':'전투 진행 중';
  const nukeTargets=state.units.filter(u=>u.side===1&&u.x<=550);
- const nukeAllowed=(state.baseHP[0]<=1400||nukeTargets.some(u=>u.x<370))&&nukeTargets.length>0;
+ const nukeAllowed=(state.baseHP[0]<=MAX_BASE*.7||nukeTargets.some(u=>u.x<370))&&nukeTargets.length>0;
  $('nukeInfo').textContent=state.nukes?'1회 남음 · '+(nukeAllowed?'발동 가능':'침공/위기 시 사용 가능'):'사용 완료';
  $('nukeButton').disabled=!(state.nukes&&nukeAllowed&&state.live&&!state.paused&&!state.ended);
  $('barrageInfo').textContent=state.barrageCd>0?'재충전 '+Math.ceil(state.barrageCd)+'초':'비용 260 CR · 적 병력 필수';
