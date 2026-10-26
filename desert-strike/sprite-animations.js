@@ -1,11 +1,23 @@
 /*
  * Desert Front animation engine.
- * ORIGINAL procedural pixel art: 24 faction/role silhouettes, five 16-frame actions.
- * Each animation is a distinct cached 48x48 transparent canvas, no external assets.
+ * Original faction pixel art + generated raster Marine Fortress atlas, five 16-frame actions.
+ * Each animation is a cached 48x48 frame. Marine artwork loads from marine-art-data.js.
  */
 (function(global) {
 'use strict';
 const SIZE=48, FRAMES=16, PI=Math.PI, cache=new Map();
+let marineAtlas=null;
+if(typeof global.Image==='function'&&typeof global.MarineArtAtlas==='string'){
+ marineAtlas=new global.Image();
+ marineAtlas.onload=()=>{
+  // Clear fallback frames so every in-game instance and portrait receives generated art.
+  for(const key of [...cache.keys()])if(key.startsWith('3|'))cache.delete(key);
+  if(typeof global.dispatchEvent==='function'&&typeof global.Event==='function')
+   global.dispatchEvent(new global.Event('marine-art-ready'));
+ };
+ marineAtlas.onerror=()=>{marineAtlas=null;};
+ marineAtlas.src=global.MarineArtAtlas;
+}
 const MODES=['idle','move','attack','siege','death'];
 const PAL=[
  {line:'#0d1b26',body:'#6fadb9',lit:'#b5e7e6',dark:'#315362',trim:'#efc778',weapon:'#a1c4d1',glow:'#8deeff',ground:'#556b72',flash:'#ffe2a3'},
@@ -42,7 +54,52 @@ function makeCanvas(){
  const c=document.createElement('canvas');c.width=SIZE;c.height=SIZE;return c;
 }
 
+function paintMarineAtlas(g,p,role,mode,frame){
+ const atlas=marineAtlas;
+ if(!atlas||!atlas.complete||!atlas.naturalWidth)return false;
+ const q=pose(mode,frame,role),death=q.die,phase=frame/15;
+ g.clearRect(0,0,48,48);
+ g.save();
+ g.translate(24,26);
+ if(mode==='move'){
+  g.translate(Math.round(Math.sin(phase*2*Math.PI)*2),-Math.round(Math.abs(Math.sin(phase*2*Math.PI))*2));
+  g.rotate(Math.sin(phase*2*Math.PI)*.038);
+ }else if(mode==='attack'){
+  g.translate(q.recoil,-Math.max(0,q.arm)*.55);
+  g.rotate(phase<.32?-.08:phase<.68?.105:-.03);
+ }else if(mode==='siege'){
+  g.translate(q.recoil*1.35,q.shock?-3:0);
+  g.rotate(phase<.35?-.12:phase<.75?.15:0);
+ }else if(mode==='death'){
+  g.translate(death*7,death*12);g.rotate(death*1.2);g.scale(1,1-death*.86);
+ }else{
+  g.translate(0,Math.sin(frame*Math.PI/8)*.7);
+ }
+ g.imageSmoothingEnabled=false;
+ // Generated sheet consists of four columns and two rows, each 112x112.
+ g.drawImage(atlas,(role%4)*112,Math.floor(role/4)*112,112,112,-24,-24,48,48);
+ g.restore();
+ if(q.muzzle&&role!==7){
+  g.fillStyle='#ffe7a1';g.fillRect(44,19,4,4);
+  g.fillStyle='#e4a85a';g.fillRect(46,13,2,13);
+ }
+ if(role===7&&(mode==='attack'||mode==='siege')){
+  g.fillStyle='#f8e09b';
+  for(let i=0;i<4;i++){
+   const yy=9-((frame*2+i*5)%16);
+   g.globalAlpha=.35+(i%2)*.2;
+   g.fillRect(17+i*5,yy,3,5);
+  }
+  g.globalAlpha=1;
+ }
+ if(mode==='death'&&death>.4){
+  g.fillStyle='#c08d63';
+  for(let i=0;i<5;i++)g.fillRect(7+i*7,37-i%3*4,2+Math.ceil(death*2),3);
+ }
+ return true;
+}
 function paintMarine(g,p,role,mode,frame){
+ if(paintMarineAtlas(g,p,role,mode,frame))return;
  // Fictional Marine Fortress: unique eight character silhouettes, volumetric grime and texture.
  const q=pose(mode,frame,role),sin=Math.sin(frame*Math.PI/8),down=q.die,bob=q.bob;
  g.clearRect(0,0,48,48);
