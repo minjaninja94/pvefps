@@ -326,6 +326,17 @@ function projectileImpact(p){
 }
 function tick(dt){
  if(!state.live||state.paused||state.ended)return;
+ if(state.followFront){
+  const left=state.units.filter(u=>u.side===0),right=state.units.filter(u=>u.side===1);
+  let center=WORLD_W/2;
+  if(left.length&&right.length){
+   const lead=Math.max(...left.map(u=>u.x)),near=Math.min(...right.map(u=>u.x));
+   center=(lead+near)/2;
+  }else if(left.length)center=Math.max(...left.map(u=>u.x))+100;
+  else if(right.length)center=Math.min(...right.map(u=>u.x))-100;
+  const target=clamp(center-CW/2,0,WORLD_W-CW);
+  state.cameraX+=clamp(target-state.cameraX,-750*dt,750*dt);
+ }
  const ds=dt*state.rate;
  state.elapsed+=ds;state.next-=ds;state.incomeClock+=ds;
  while(state.incomeClock>=INCOME_PERIOD){state.incomeClock-=INCOME_PERIOD;state.cash+=initialIncome+state.eco;state.enemyCash+=1.15+state.enemyEco+Math.min(1.7,state.wave*.16);}
@@ -410,6 +421,7 @@ function roleMatchupHtml(role){
 }
 function updateUI(full=false){
  if(!state)return;
+ const cameraStatus=$('cameraStatus');if(cameraStatus)cameraStatus.textContent=state.followFront?'전선 자동 추적':'수동 이동 · '+Math.round((state.cameraX+CW/2)/WORLD_W*100)+'%';
  $('cash').textContent=money(state.cash);
  $('income').textContent='+'+(1+state.eco);
  $('wave').textContent=String(state.wave).padStart(2,'0');
@@ -674,13 +686,15 @@ function structure(g,x,y,side,turret=true,health=1){
 }
 function drawBattle(){
  const c=$('battleCanvas'),g=c.getContext('2d');if(!g)return;
- g.clearRect(0,0,CW,CH);ground(g,CW,CH);
- structure(g,90,260,0,false,state.baseHP[0]);structure(g,1010,260,1,false,state.baseHP[1]);
- structure(g,190,260,0,true,state.turretHP[0]);structure(g,910,260,1,true,state.turretHP[1]);
+ g.clearRect(0,0,CW,CH);
+ g.save();g.beginPath();g.rect(0,0,CW,CH);g.clip();g.translate(-state.cameraX,0);
+ ground(g,WORLD_W,CH);
+ structure(g,90,260,0,false,state.baseHP[0]);structure(g,WORLD_W-90,260,1,false,state.baseHP[1]);
+ structure(g,190,260,0,true,state.turretHP[0]);structure(g,WORLD_W-190,260,1,true,state.turretHP[1]);
  for(const u of [...state.units,...state.deadUnits].sort((a,b)=>a.y-b.y))drawUnit(g,u,1);
  if(window.DesertSprites){
   for(const impact of state.structureFX){
-   const x=impact.side===0?(impact.part==='turret'?190:90):(impact.part==='turret'?910:1010);
+   const x=impact.side===0?(impact.part==='turret'?190:90):(impact.part==='turret'?WORLD_W-190:WORLD_W-90);
    window.DesertSprites.structureImpact(g,x,260,impact.side===0?state.faction:state.enemyFaction,impact.mode,impact.age/impact.duration);
   }
  }
@@ -697,6 +711,7 @@ function drawBattle(){
   g.fillStyle=o.color;g.globalAlpha=clamp(o.time/.85,0,1);
   g.font='900 13px monospace';g.textAlign='center';g.fillText(o.t,o.x,o.y);
  }g.globalAlpha=1;
+ g.restore();
  if(state.paused){g.fillStyle='#0c1d27b0';g.fillRect(0,0,CW,CH);
   g.fillStyle='#ffdfac';g.font='900 56px monospace';g.textAlign='center';g.fillText('PAUSED',550,260);}
 }
@@ -751,14 +766,35 @@ function drawBase(){
   g.fillStyle='#ffba90';g.font='900 17px monospace';g.textAlign='center';g.fillText('DEFENSE DESTROYED',250,198);
  }
 }
+function drawMinimap(){
+ const c=$('battleMinimap');if(!c)return;
+ const g=c.getContext('2d');if(!g)return;
+ g.clearRect(0,0,1100,82);
+ g.fillStyle='#101b23';g.fillRect(0,0,1100,82);
+ for(let i=0;i<5;i++){
+  const y=LANES[i]/CH*82;
+  g.fillStyle=i%2?'#6b635123':'#84977d19';g.fillRect(0,y-5,1100,10);
+ }
+ for(const u of state.units){
+  g.fillStyle=u.side===0?'#78dde8':'#ff896b';
+  g.fillRect(Math.floor(u.x/WORLD_W*1100),Math.floor(u.y/CH*82),u.role===3?4:3,u.role===3?4:3);
+ }
+ for(const side of [0,1]){
+  g.fillStyle=side===0?'#72ddea':'#f18c72';
+  g.fillRect(side===0?2:1087,30,10,22);
+ }
+ const left=state.cameraX/WORLD_W*1100;
+ g.fillStyle='#fff3bb14';g.fillRect(left,0,CW/WORLD_W*1100,82);
+ g.strokeStyle='#fce0a7';g.lineWidth=3;g.strokeRect(left+1,2,CW/WORLD_W*1100-2,78);
+}
 function frame(now){
  const delta=Math.min((now-lastFrame)/1000||0,.045);lastFrame=now;
- if(state){tick(delta);drawBattle();drawBase();}
+ if(state){tick(delta);drawBattle();drawBase();drawMinimap();}
  requestAnimationFrame(frame);
 }
 function inspectBattle(event){
  const c=$('battleCanvas'),bounds=c.getBoundingClientRect();
- const x=(event.clientX-bounds.left)/bounds.width*CW,y=(event.clientY-bounds.top)/bounds.height*CH;
+ const x=(event.clientX-bounds.left)/bounds.width*CW+state.cameraX,y=(event.clientY-bounds.top)/bounds.height*CH;
  let picked=null,best=48;
  for(const u of state.units){const d=Math.hypot(u.x-x,u.y-y);if(d<best){best=d;picked=u;}}
  if(!picked)return;
@@ -801,6 +837,25 @@ function wire(){
  $('armorButton').addEventListener('click',()=>upgrade('armor'));
  $('repairButton').addEventListener('click',()=>upgrade('repair'));
  $('battleCanvas').addEventListener('click',inspectBattle);
+ const pan=direction=>{state.followFront=false;state.cameraX=clamp(state.cameraX+direction*CW*.65,0,WORLD_W-CW);updateUI(false);};
+ $('panLeft').addEventListener('click',()=>pan(-1));
+ $('panRight').addEventListener('click',()=>pan(1));
+ $('followFront').addEventListener('click',()=>{state.followFront=true;updateUI(false);});
+ $('battleMinimap').addEventListener('click',e=>{
+  const rect=e.currentTarget.getBoundingClientRect();
+  state.cameraX=clamp(((e.clientX-rect.left)/rect.width)*WORLD_W-CW/2,0,WORLD_W-CW);
+  state.followFront=false;updateUI(false);
+ });
+ let dragX=null;
+ $('battleCanvas').addEventListener('pointerdown',e=>{dragX=e.clientX;});
+ $('battleCanvas').addEventListener('pointerup',e=>{
+  if(dragX===null)return;
+  if(Math.abs(e.clientX-dragX)>18){
+   state.cameraX=clamp(state.cameraX+(dragX-e.clientX)/e.currentTarget.getBoundingClientRect().width*CW,0,WORLD_W-CW);
+   state.followFront=false;
+  }
+  dragX=null;
+ });
  $('helpButton').addEventListener('click',()=>$('helpDialog').showModal());
  $('helpClose').addEventListener('click',()=>$('helpDialog').close());
  document.addEventListener('keydown',e=>{
