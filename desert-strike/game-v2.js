@@ -261,15 +261,15 @@ function structureHit(side,amount){
  if(state.turretHP[side]>0){
   state.turretHP[side]=Math.max(0,state.turretHP[side]-amount);
   state.structureFX.push({side,part:'turret',mode:state.turretHP[side]<=0?'ruin':'hit',age:0,duration:state.turretHP[side]<=0?1:.5});
-  pulse(side===0?188:912,260,'#fcb78b',23);
+  pulse(side===0?188:WORLD_W-188,260,'#fcb78b',23);
   if(state.turretHP[side]===0){
-   floatText(side===0?188:912,190,'DEFENSE DOWN','#ffad82');
+   floatText(side===0?188:WORLD_W-188,190,'DEFENSE DOWN','#ffad82');
    setMessage(side===0?'아군 방어 포탑 파괴! 핵심 기지를 방어하세요.':'적군 방어 포탑 파괴! 핵심 기지를 공격합니다.');
   }
  }else{
   state.baseHP[side]=Math.max(0,state.baseHP[side]-amount);
   state.structureFX.push({side,part:'core',mode:state.baseHP[side]<=0?'ruin':'hit',age:0,duration:state.baseHP[side]<=0?1:.5});
-  pulse(side===0?89:1011,260,'#f8aa8a',32);
+  pulse(side===0?89:WORLD_W-89,260,'#f8aa8a',32);
   if(state.baseHP[side]<=0)endMatch(side===1);
  }
 }
@@ -436,7 +436,7 @@ function updateUI(full=false){
  $('baseAlert').textContent=inv>0?'침공 경보 · '+inv+'기':state.turretHP[0]===0?'방어 포탑 파괴':'기지 안전';
  $('baseAlert').classList.toggle('danger',inv>0||state.turretHP[0]===0);
  $('warningDot').hidden=!(inv>0||state.turretHP[0]===0);
- $('builtCount').textContent=state.built.filter(x=>x!==null).length+' / 15';
+ $('builtCount').textContent=state.built.filter(x=>x!==null).length+' / '+SLOTS;
  $('friendlyCount').textContent=state.units.filter(x=>x.side===0).length;
  $('hostileCount').textContent=state.units.filter(x=>x.side===1).length;
  $('frontStatus').textContent=inv?'⚠ 아군 기지 침공':state.units.some(x=>x.side===0&&x.x>WORLD_W-490)?'적 기지 압박':'중앙 전선';
