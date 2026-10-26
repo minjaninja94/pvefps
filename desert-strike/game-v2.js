@@ -1,8 +1,9 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
-const CW=1100,CH=520,HOME_H=340,MAX_BASE=2000,MAX_TURRET=520,INTERVAL=20;
-const COLORS=['#79dfee','#ff9a79'],LANES=[148,260,372];
+const CW=1100,CH=520,WORLD_W=3300,HOME_H=340,MAX_BASE=7200,MAX_TURRET=1700,INTERVAL=24,COLS=15,ROWS=5,SLOTS=COLS*ROWS,INCOME_PERIOD=.5;
+const COLORS=['#79dfee','#ff9a79'],LANES=[110,180,260,340,410];
+const initialIncome=1;
 const ROLE=[
  {key:'charge',name:'돌격',mark:'⚔',token:'⚔',cost:65,hp:115,damage:21,armor:1,range:29,rate:.77,speed:82,airTarget:false,kind:'ground',tips:'적 포병·지원병 후방을 빠르게 찌릅니다.',good:[5,7],bad:[3,1]},
  {key:'rifle',name:'사격',mark:'⌖',token:'⌖',cost:95,hp:108,damage:17,armor:1,range:164,rate:.8,speed:60,airTarget:true,kind:'ground',tips:'저렴한 범용 원거리 병력. 공중도 공격합니다.',good:[0,7],bad:[3,5]},
@@ -26,9 +27,9 @@ function random(a,b){return a+Math.random()*(b-a);}
 function money(n){return Math.floor(n).toLocaleString('ko-KR');}
 function getDef(role,faction){
  const r=ROLE[role],f=FACTIONS[faction];
- return {...r,unitName:f.units[role],factionName:f.name,hp:r.hp*f.mut.hp,damage:r.damage*f.mut.dmg,heal:(r.heal||0)*f.mut.dmg,speed:r.speed*f.mut.speed};
+ return {...r,unitName:f.units[role],factionName:f.name,hp:r.hp*f.mut.hp*2.25,damage:r.damage*f.mut.dmg*.94,heal:(r.heal||0)*f.mut.dmg*1.5,speed:r.speed*f.mut.speed*.84};
 }
-function ecoCost(){return Math.round(155*Math.pow(1.6,state.eco));}
+function ecoCost(){return Math.round(120*Math.pow(1.55,state.eco));}
 function weaponCost(){return Math.round(200*Math.pow(1.65,state.weapon));}
 function armorCost(){return Math.round(190*Math.pow(1.63,state.armor));}
 function setMessage(t){$('notification').textContent=t;}
@@ -48,12 +49,12 @@ function chirp(hz=420,length=.08){
  }catch(_){}
 }
 function reset(){
- state={live:false,ended:false,paused:false,rate:1,cash:600,enemyCash:230,eco:0,enemyEco:0,weapon:0,armor:0,
+ state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:400,eco:0,enemyEco:0,weapon:0,armor:0,incomeClock:0,cameraX:1100,followFront:true,
  wave:0,next:INTERVAL,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],
- built:Array(15).fill(null),enemyBuilt:Array(15).fill(null),units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
+ built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  nukes:1,barrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*2))%3,
  nextUnitId:1,attackCount:0};
- state.enemyBuilt[1]=0;state.enemyBuilt[7]=1;state.enemyBuilt[13]=1;
+ state.enemyBuilt[1]=0;state.enemyBuilt[17]=1;state.enemyBuilt[51]=1;
  selectedRole=null;demolition=false;bannerSeconds=0;barrageSeconds=0;
  $('startOverlay').classList.remove('hidden');$('endOverlay').classList.add('hidden');
  $('pauseButton').textContent='Ⅱ 일시정지';$('speedButton').textContent='▶ 1×';
@@ -111,7 +112,7 @@ function upgrade(kind){
  if(!state.live||state.paused||state.ended)return;
  if(kind==='econ'&&state.eco<7&&state.cash>=ecoCost()){
   state.cash-=ecoCost();state.eco++;
-  setMessage('채굴망 Lv.'+state.eco+' · 초당 +'+(4+state.eco*2)+' CR');chirp(650,.14);
+  setMessage('채굴망 Lv.'+state.eco+' · 0.5초마다 +'+(1+state.eco)+' CR');chirp(650,.14);
  }
  if(kind==='weapon'&&state.weapon<5&&state.cash>=weaponCost()){
   state.cash-=weaponCost();state.weapon++;setMessage('무기 강화 Lv.'+state.weapon+' · 모든 아군 공격력 증가');chirp(650,.14);
@@ -163,9 +164,9 @@ function barrage(){
 function banner(t){$('waveBanner').textContent=t;$('waveBanner').classList.add('show');bannerSeconds=2;}
 function createUnit(side,slot,role){
  const faction=side===0?state.faction:state.enemyFaction,def=getDef(role,faction);
- const row=Math.floor(slot/5),col=slot%5;
- const x=side===0?226+col*9:874-col*9;
- const y=LANES[row]+(col-2)*9+random(-5,5);
+ const row=Math.floor(slot/COLS),col=slot%COLS;
+ const x=side===0?240+col*7:WORLD_W-240-col*7;
+ const y=LANES[row]+(col-7)*3+random(-7,7);
  const bonus=side===0?1+.09*state.armor:1;
  state.units.push({uid:state.nextUnitId++,side,role,faction,x,y,hp:def.hp*bonus,maxHP:def.hp*bonus,
   cooldown:random(.1,.7),anim:random(0,16),facing:side===0?1:-1,blink:0,moving:false,strike:null});
@@ -190,7 +191,7 @@ function aiChoose(){
 }
 function aiInvest(){
  const open=state.enemyBuilt.map((v,i)=>v===null?i:null).filter(v=>v!==null);
- let count=state.wave<2?1:state.wave<5?2:3;
+ let count=state.wave<2?1:state.wave<5?2:state.wave<10?3:5;
  while(open.length&&count--){
   const role=aiChoose();if(role===null)break;
   const ix=Math.floor(Math.random()*open.length),slot=open.splice(ix,1)[0];
@@ -199,10 +200,10 @@ function aiInvest(){
  if(state.wave>4&&state.wave%5===0&&state.enemyEco<4&&state.enemyCash>=155){state.enemyCash-=155;state.enemyEco++;}
 }
 function wave(){
- state.wave++;state.cash+=65+10*state.eco;
- state.enemyCash+=90+state.wave*5+state.enemyEco*10;
+ state.wave++;state.cash+=22+state.eco*4;
+ state.enemyCash+=72+state.wave*7+state.enemyEco*10;
  aiInvest();
- for(let i=0;i<15;i++){
+ for(let i=0;i<SLOTS;i++){
   if(state.built[i]!==null)createUnit(0,i,state.built[i]);
   if(state.enemyBuilt[i]!==null)createUnit(1,i,state.enemyBuilt[i]);
  }
@@ -294,7 +295,7 @@ function move(u,x,y,dt){
  const dx=x-u.x,dy=y-u.y,d=Math.hypot(dx,dy)||1,def=getDef(u.role,u.faction);
  const step=def.speed*dt;
  u.x+=dx/d*Math.min(step,d);u.y+=dy/d*Math.min(step,d);
- u.facing=dx>=0?1:-1;u.moving=d>1;u.x=clamp(u.x,30,1070);u.y=clamp(u.y,72,448);
+ u.facing=dx>=0?1:-1;u.moving=d>1;u.x=clamp(u.x,30,WORLD_W-30);u.y=clamp(u.y,68,452);
 }
 function fire(u,t=null,baseSide=null){
  const def=getDef(u.role,u.faction),x=t?t.x:baseSide===0?(state.turretHP[0]>0?190:90):(state.turretHP[1]>0?910:1010),y=t?t.y:260;
@@ -326,14 +327,14 @@ function projectileImpact(p){
 function tick(dt){
  if(!state.live||state.paused||state.ended)return;
  const ds=dt*state.rate;
- state.elapsed+=ds;state.next-=ds;state.cash+=(4+2*state.eco)*ds;
- state.enemyCash+=(4+2*state.enemyEco)*ds;
+ state.elapsed+=ds;state.next-=ds;state.incomeClock+=ds;
+ while(state.incomeClock>=INCOME_PERIOD){state.incomeClock-=INCOME_PERIOD;state.cash+=initialIncome+state.eco;state.enemyCash+=1.15+state.enemyEco+Math.min(1.7,state.wave*.16);}
  state.barrageCd=Math.max(0,state.barrageCd-ds);
  while(state.next<=0){state.next+=INTERVAL;wave();}
  for(const u of state.units){
   if(u.hp<=0)continue;
   const def=getDef(u.role,u.faction);
-  u.cooldown-=ds;u.anim+=ds*14;u.blink=Math.max(0,u.blink-ds);u.moving=false;
+  u.cooldown-=ds;u.anim+=ds*12;u.blink=Math.max(0,u.blink-ds);u.moving=false;
   if(u.strike){
    const hit=u.strike;hit.age+=ds;
    if(!hit.hit && hit.age>=hit.duration*.47){hit.hit=true;resolveStrike(u,hit);}
@@ -348,7 +349,7 @@ function tick(dt){
    }else{
     const mate2=state.units.find(v=>v.side===u.side&&v.role!==7&&v.hp>0);
     if(mate2&&distance(u,mate2)>94)move(u,mate2.x,mate2.y,ds);
-    else if(!mate2)move(u,u.side===0?850:250,260,ds);
+    else if(!mate2)move(u,u.side===0?WORLD_W-350:350,260,ds);
    }
    continue;
   }
@@ -357,7 +358,7 @@ function tick(dt){
    if(distance(u,target)>def.range*(def.range>65?.88:1))move(u,target.x,target.y,ds);
    else if(u.cooldown<=0)beginStrike(u,target);
   }else{
-   const side=1-u.side,tx=side===0?(state.turretHP[0]>0?190:90):(state.turretHP[1]>0?910:1010);
+   const side=1-u.side,tx=side===0?(state.turretHP[0]>0?190:90):(state.turretHP[1]>0?WORLD_W-190:WORLD_W-90);
    const d=Math.hypot(u.x-tx,u.y-260);
    if(d>def.range+15)move(u,tx,260,ds);
    else if(u.cooldown<=0)beginStrike(u,null,side);
@@ -371,13 +372,13 @@ function tick(dt){
   else{p.x+=dx/d*step;p.y+=dy/d*step;}
  }
  for(let side=0;side<=1;side++){
-  const near=state.units.filter(u=>u.side!==side&&u.hp>0&&Math.hypot(u.x-(side===0?190:910),u.y-260)<190);
+  const near=state.units.filter(u=>u.side!==side&&u.hp>0&&Math.hypot(u.x-(side===0?190:WORLD_W-190),u.y-260)<220);
   if(near.length&&state.turretHP[side]>0){
    state['cool'+side]=(state['cool'+side]||0)-ds;
    if(state['cool'+side]<=0){
-    state['cool'+side]=.48;
-    const target=near.reduce((a,b)=>distance(a,{x:side===0?190:910,y:260})<distance(b,{x:side===0?190:910,y:260})?a:b);
-    damage(target,23,'turret');pulse(target.x,target.y,COLORS[side],9);
+    state['cool'+side]=.62;
+    const target=near.reduce((a,b)=>distance(a,{x:side===0?190:WORLD_W-190,y:260})<distance(b,{x:side===0?190:WORLD_W-190,y:260})?a:b);
+    damage(target,18,'turret');pulse(target.x,target.y,COLORS[side],9);
    }
   }
  }
@@ -410,7 +411,7 @@ function roleMatchupHtml(role){
 function updateUI(full=false){
  if(!state)return;
  $('cash').textContent=money(state.cash);
- $('income').textContent='+'+(4+2*state.eco);
+ $('income').textContent='+'+(1+state.eco);
  $('wave').textContent=String(state.wave).padStart(2,'0');
  $('timer').textContent=Math.max(0,state.next).toFixed(1);
  $('myHealth').textContent=Math.ceil(state.baseHP[0])+' / '+MAX_BASE;
@@ -419,14 +420,14 @@ function updateUI(full=false){
  $('enemyHealthFill').style.width=100*state.baseHP[1]/MAX_BASE+'%';
  $('factionLabel').textContent=FACTIONS[state.faction].name;
  $('enemyFactionLabel').textContent='VS '+FACTIONS[state.enemyFaction].name;
- const inv=state.units.filter(u=>u.side===1&&u.x<410).length;
+ const inv=state.units.filter(u=>u.side===1&&u.x<490).length;
  $('baseAlert').textContent=inv>0?'침공 경보 · '+inv+'기':state.turretHP[0]===0?'방어 포탑 파괴':'기지 안전';
  $('baseAlert').classList.toggle('danger',inv>0||state.turretHP[0]===0);
  $('warningDot').hidden=!(inv>0||state.turretHP[0]===0);
  $('builtCount').textContent=state.built.filter(x=>x!==null).length+' / 15';
  $('friendlyCount').textContent=state.units.filter(x=>x.side===0).length;
  $('hostileCount').textContent=state.units.filter(x=>x.side===1).length;
- $('frontStatus').textContent=inv?'⚠ 아군 기지 침공':state.units.some(x=>x.side===0&&x.x>690)?'적 기지 압박':'중앙 전선';
+ $('frontStatus').textContent=inv?'⚠ 아군 기지 침공':state.units.some(x=>x.side===0&&x.x>WORLD_W-490)?'적 기지 압박':'중앙 전선';
  $('battleStatus').textContent=state.ended?'전투 종료':!state.live?'작전 대기':state.paused?'일시정지':inv?'⚠ 본진 침공':'전투 진행 중';
  const nukeTargets=state.units.filter(u=>u.side===1&&u.x<=550);
  const nukeAllowed=(state.baseHP[0]<=1400||nukeTargets.some(u=>u.x<370))&&nukeTargets.length>0;
@@ -435,7 +436,7 @@ function updateUI(full=false){
  $('barrageInfo').textContent=state.barrageCd>0?'재충전 '+Math.ceil(state.barrageCd)+'초':'비용 260 CR · 적 병력 필수';
  $('barrageButton').disabled=!(state.live&&!state.ended&&!state.paused&&state.barrageCd<=0&&state.cash>=260&&state.units.some(u=>u.side===1));
  const econ=ecoCost(),weapon=weaponCost(),armor=armorCost();
- $('econInfo').textContent='레벨 '+state.eco+' / 7 · 수입 +'+(4+state.eco*2)+'/초';
+ $('econInfo').textContent='레벨 '+state.eco+' / 7 · 0.5초마다 +'+(1+state.eco)+' CR';
  $('weaponInfo').textContent='레벨 '+state.weapon+' / 5 · 공격력 +'+state.weapon*8+'%';
  $('armorInfo').textContent='레벨 '+state.armor+' / 5 · HP +'+state.armor*9+'%';
  $('repairInfo').textContent='방어 포탑 '+Math.ceil(state.turretHP[0])+' / '+MAX_TURRET;
@@ -458,7 +459,7 @@ function updateUI(full=false){
   $('buildGrid').innerHTML=state.built.map((id,i)=>
    '<button class="build-cell'+(id!==null?' occupied':'')+(demolition&&id!==null?' demolition':'')+'" data-cell="'+i+'" aria-label="'+(id!==null?f.units[id]:'빈 슬롯')+'">'+
    (id!==null?'<span class="cell-icon">'+ROLE[id].mark+'</span><span class="cell-name">'+f.units[id]+'</span>':
-    '<span class="cell-icon">+</span><span class="cell-position">'+(Math.floor(i/5)+1)+'-'+(i%5+1)+'</span>')+'</button>').join('');
+    '<span class="cell-icon">+</span><span class="cell-position">'+(Math.floor(i/COLS)+1)+'-'+(i%COLS+1)+'</span>')+'</button>').join('');
   $('demolishButton').classList.toggle('selected',demolition);
   $('unitDetails').innerHTML=selectedRole!==null?'<b>'+f.units[selectedRole]+'</b> · '+ROLE[selectedRole].name+
     ' / '+ROLE[selectedRole].cost+' CR<br>'+ROLE[selectedRole].tips+'<div class="matchups">'+roleMatchupHtml(selectedRole)+
@@ -707,18 +708,18 @@ function drawBase(){
  g.beginPath();g.moveTo(220,282);g.lineTo(1060,282);g.stroke();g.setLineDash([]);
  g.fillStyle='#f0dbbc';g.font='900 12px monospace';g.textAlign='left';g.fillText('PROTECTED PRODUCTION ZONE',365,21);
  // 15 protected production structures are displayed as three rows of five.
- for(let i=0;i<15;i++){
-  const role=state.built[i],row=Math.floor(i/5),col=i%5;
-  const x=390+col*133,y=48+row*53;
-  g.fillStyle='#0b222bb5';g.fillRect(x-40,y-19,80,40);
+ for(let i=0;i<SLOTS;i++){
+  const role=state.built[i],row=Math.floor(i/COLS),col=i%COLS;
+  const x=330+col*50,y=43+row*35;
+  g.fillStyle='#0b222bb5';g.fillRect(x-23,y-15,47,28);
   g.strokeStyle=role!==null?FACTIONS[state.faction].color:'#54707c';
-  g.lineWidth=1.7;g.strokeRect(x-40,y-19,80,40);
-  g.fillStyle='#2d4851';g.fillRect(x-34,y-12,68,26);
+  g.lineWidth=1.7;g.strokeRect(x-23,y-15,47,28);
+  g.fillStyle='#2d4851';g.fillRect(x-20,y-12,41,23);
   if(role!==null){
-   g.fillStyle=FACTIONS[state.faction].color;g.fillRect(x-29,y-7,22,17);
+   g.fillStyle=FACTIONS[state.faction].color;g.fillRect(x-20,y-11,16,15);
    const art=window.DesertSprites?.portrait(state.faction,role);
-   if(art){g.imageSmoothingEnabled=false;g.drawImage(art,x-24,y-19,44,39);}
-   else{g.font='900 19px monospace';g.fillStyle='#fff1cc';g.textAlign='center';g.fillText(ROLE[role].mark,x+10,y+8);}
+   if(art){g.imageSmoothingEnabled=false;g.drawImage(art,x-11,y-12,25,24);}
+   else{g.font='900 19px monospace';g.fillStyle='#fff1cc';g.textAlign='center';g.fillText(ROLE[role].mark,x+7,y+6);}
   }else{g.textAlign='center';g.font='900 14px monospace';g.fillStyle='#506a72';g.fillText('+',x,y+5);}
  }
  // Defensive turret is destructible. Production zone itself stays protected.
@@ -730,9 +731,9 @@ function drawBase(){
  g.fillStyle='#74dbdf';g.fillRect(91,264,97*state.baseHP[0]/MAX_BASE,10);
  g.fillStyle='#11252d';g.fillRect(224,315,72,8);
  g.fillStyle='#c2dbac';g.fillRect(224,315,72*state.turretHP[0]/MAX_TURRET,8);
- const raiders=state.units.filter(u=>u.side===1&&u.x<550);
- const friends=state.units.filter(u=>u.side===0&&u.x<550);
- for(const u of [...friends,...raiders,...state.deadUnits.filter(u=>u.x<550)]){
+ const raiders=state.units.filter(u=>u.side===1&&u.x<600);
+ const friends=state.units.filter(u=>u.side===0&&u.x<600);
+ for(const u of [...friends,...raiders,...state.deadUnits.filter(u=>u.x<600)]){
   const mappedX=clamp(260+(u.x-190)*1.9,220,1064),mappedY=260+(u.y-260)*.18;
   drawUnit(g,{...u,x:mappedX,y:mappedY},.80);
  }
