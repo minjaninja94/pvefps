@@ -17,7 +17,8 @@ const ROLE=[
 const FACTIONS=[
  {id:'forge',name:'철갑연합',tag:'FORGE UNION',logo:'▦',color:'#79ddea',bonus:'최대 HP +9% · 이동 속도 −4%',mut:{hp:1.09,dmg:1,speed:.96},units:['진격 보병','기관총병','관통 로켓','철갑 전차','복합 대공포','궤도 자주포','추적 비행기','전장 구호병'],slogan:'공학·화력·단단한 전열',secondary:'#224956'},
  {id:'brood',name:'심연군체',tag:'DUSK BROOD',logo:'♜',color:'#b9df8d',bonus:'이동 속도 +12% · 최대 HP −8%',mut:{hp:.92,dmg:1,speed:1.12},units:['송곳 발톱','산성 침벌','부식 포자충','거대 갑각수','가시 포자탑','폭식 투석충','비행 포식자','치유 공생충'],slogan:'생체 돌파·기동·포식',secondary:'#344d2b'},
- {id:'astral',name:'성운결사',tag:'ASTRAL ORDER',logo:'✧',color:'#d6b8ff',bonus:'공격/치유 +8% · 최대 HP −5%',mut:{hp:.95,dmg:1.08,speed:1},units:['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],slogan:'에너지·보호막·정밀 타격',secondary:'#443257'}
+ {id:'astral',name:'성운결사',tag:'ASTRAL ORDER',logo:'✧',color:'#d6b8ff',bonus:'공격/치유 +8% · 최대 HP −5%',mut:{hp:.95,dmg:1.08,speed:1},units:['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],slogan:'에너지·보호막·정밀 타격',secondary:'#443257'},
+ {id:'marine',name:'해병성채',tag:'MARINE FORTRESS',logo:'★',color:'#dba77c',bonus:'돌격 특화 · 황룡 1회성 수육 회복',mut:{hp:1.04,dmg:1.02,speed:1.01},units:['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','쾌흥태 · 항공강습','황룡 · 해병수육'],slogan:'모히칸·붉은 군모·검은 얼굴·해병수육',secondary:'#58412f'}
 ];
 const RNAME=ROLE.map(r=>r.name),SPRITES=new Map();
 let selectedFaction=0,state=null,selectedRole=null,demolition=false,activeView='base',lastFrame=0,uiElapsed=0;
@@ -52,7 +53,7 @@ function reset(){
  state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:400,eco:0,enemyEco:0,weapon:0,armor:0,incomeClock:0,cameraX:1100,followFront:true,
  wave:0,next:INTERVAL,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],
  built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
- nukes:1,barrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*2))%3,
+ nukes:1,barrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
  nextUnitId:1,attackCount:0};
  state.enemyBuilt[1]=0;state.enemyBuilt[17]=1;state.enemyBuilt[51]=1;
  selectedRole=null;demolition=false;bannerSeconds=0;barrageSeconds=0;
@@ -64,11 +65,11 @@ function start(){
  selectedFaction=Number(document.querySelector('[data-faction].selected')?.dataset.faction||selectedFaction);
  reset();
  state.faction=selectedFaction;
- state.enemyFaction=(selectedFaction+1+Math.floor(Math.random()*2))%3;
+ state.enemyFaction=(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length;
  state.live=true;
  $('startOverlay').classList.add('hidden');
  changeView('base');
- setMessage('전투 시작! 20초 이내에 생산 시설을 배치하세요.');
+ setMessage('전투 시작! 24초 이내에 생산 시설을 배치하세요.');
  updateUI(true);chirp(530,.16);
 }
 function changeView(id){
@@ -240,7 +241,27 @@ function beginStrike(u,target=null,baseSide=null,healing=false){
 }
 function resolveStrike(u,hit){
  if(hit.healing){
-  if(hit.target&&hit.target.hp>0&&hit.target.hp<hit.target.maxHP)
+  if(u.faction===3&&u.role===7){
+   // 황룡의 해병수육: one summoned support unit is consumed to heal all injured allies nearby.
+   // This is a special skill, not a normal renewable healing attack.
+   const radius=175;
+   let healed=0;
+   for(const mate of state.units){
+    if(mate.side!==u.side||mate===u||mate.hp<=0||mate.hp>=mate.maxHP)continue;
+    const d=Math.hypot(mate.x-u.x,mate.y-u.y);
+    if(d<=radius){
+     const before=mate.hp;
+     const amount=Math.min(mate.maxHP-mate.hp,Math.max(115,mate.maxHP*.28)*(u.side===0?1+.08*state.weapon:1));
+     heal(mate,amount);healed+=mate.hp-before;
+    }
+   }
+   if(healed>0){
+    floatText(u.x,u.y-30,'해병수육!', '#ffe3a0');
+    pulse(u.x,u.y,'#f3bd75',68);
+    for(let i=0;i<5;i++)pulse(u.x+Math.sin(i*1.5)*28,u.y+Math.cos(i*1.2)*25,'#f6dc9a',13);
+    killUnit(u);
+   }
+  }else if(hit.target&&hit.target.hp>0&&hit.target.hp<hit.target.maxHP)
    heal(hit.target,getDef(u.role,u.faction).heal*(u.side===0?1+.08*state.weapon:1));
  }else if(hit.baseSide!==null){
   fire(u,null,hit.baseSide);
@@ -631,7 +652,8 @@ function structure(g,x,y,side,turret=true,health=1){
  const palette=[
   {metal:'#608994',dark:'#203741',trim:'#f1bb7c',glow:'#93ebec'},
   {metal:'#72924b',dark:'#334628',trim:'#d3a46b',glow:'#d3f192'},
-  {metal:'#947cc6',dark:'#322b62',trim:'#e7c3ff',glow:'#a5eeff'}
+  {metal:'#947cc6',dark:'#322b62',trim:'#e7c3ff',glow:'#a5eeff'},
+  {metal:'#78634b',dark:'#231c1a',trim:'#bd322c',glow:'#e6d9a2'}
  ][faction];
  const cx=palette.glow;
  g.fillStyle='#07161988';g.beginPath();g.ellipse(0,27,turret?31:49,turret?20:37,0,0,7);g.fill();
@@ -672,6 +694,19 @@ function structure(g,x,y,side,turret=true,health=1){
     block(xx-4,19,9,24,palette.dark);
    }
    block(-38,34,76,10,palette.metal);
+  }
+ }else if(faction===3){ // Marine Fortress: armoured bunker, red banner and dark observation slit.
+  if(turret){
+   block(-30,-17,60,43,palette.dark);block(-25,-26,50,24,palette.metal);
+   block(-21,-14,42,12,'#32302b');block(-14,-8,28,7,'#a32828');
+   block(side===0?10:-44,-15,34,8,'#242326');block(side===0?10:-43,-14,31,4,palette.trim);
+   block(-10,6,20,16,palette.dark);block(-8,9,16,7,palette.trim);
+  }else{
+   block(-48,-47,96,94,palette.dark);block(-40,-36,80,72,palette.metal);
+   block(-30,-38,60,14,'#7d2728');block(-34,-15,68,13,palette.dark);
+   block(-27,-4,54,29,'#272521');block(-12,2,24,16,'#a12d26');
+   block(-41,-58,17,22,palette.dark);block(24,-58,17,22,palette.dark);
+   block(-33,-55,11,7,palette.trim);block(26,-55,11,7,palette.trim);
   }
  }else{ // Astral: levitating crystal conduits, sharply opposed to steel/hive.
   if(turret){
