@@ -46,8 +46,13 @@ $('roster').addEventListener('click',e=>{const b=e.target.closest('[data-r]');if
 $('modes').addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(!b)return;mode=b.dataset.m;index=0;render();});
 $('range').addEventListener('input',e=>{index=Number(e.target.value);auto=false;$('autoplay').textContent='▶ 재생';showFrame();});
 $('autoplay').addEventListener('click',()=>{auto=!auto;$('autoplay').textContent=auto?'Ⅱ 정지':'▶ 재생';});
+$('exportPNG').addEventListener('click',()=>{
+ const png=S.renderSheet(faction,role,mode);
+ const a=document.createElement('a');a.download='desert-front-'+['forge','brood','astral'][faction]+'-'+role+'-'+mode+'-16f.png';
+ a.href=png.toDataURL('image/png');document.body.appendChild(a);a.click();a.remove();
+});
 function loop(t){
- if(t-last>75){last=t;if(auto){index=(index+1)%16; if(mode==='death'&&index===0)index=0;showFrame();}}
+ if(t-last>75){last=t;if(auto){index=(index+1)%16;showFrame();}}
  requestAnimationFrame(loop);
 }
 render();requestAnimationFrame(loop);
@@ -61,7 +66,7 @@ render();requestAnimationFrame(loop);
 <section class="roster"><h2>병종 선택</h2><div id="roster" class="roster-grid"></div></section>
 <section class="stage"><h2 id="detailTitle">모션 확인</h2><p id="detailInfo"></p><div id="modes" class="modes"></div>
 <div class="showcase"><span class="label">SPRITE PREVIEW · 48×48</span><span class="frameLabel" id="frameValue">FRAME 01 / 16</span><canvas id="mainSprite" width="48" height="48"></canvas></div>
-<div class="player"><button id="autoplay">Ⅱ 정지</button><label>프레임 확인 <input type="range" id="range" min="0" max="15" step="1" value="0"></label><span class="pill">16 단계 키프레임</span></div>
+<div class="player"><button id="autoplay">Ⅱ 정지</button><button id="exportPNG">16프레임 PNG 저장 ↓</button><label>프레임 확인 <input type="range" id="range" min="0" max="15" step="1" value="0"></label><span class="pill">16 단계 키프레임</span></div>
 <div class="strip"><canvas id="sheet" width="768" height="48"></canvas></div>
 <div class="info"><span class="pill">MOVE · 16F</span><span class="pill">ATTACK · 16F</span><span class="pill">SIEGE · 16F</span><span class="pill">DEATH · 16F</span><span class="pill">IDLE · 16F</span></div>
 <p class="note">원본 게임 이미지를 사용하지 않은 자체 제작 절차적 픽셀 아트입니다. 현재 브라우저 캔버스에서 프레임을 생성하고 게임에서 공유하며, 별도 수작업 도트 시트나 PNG 파일로 내보내지는 않습니다.</p>
