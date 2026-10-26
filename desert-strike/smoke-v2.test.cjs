@@ -44,7 +44,7 @@ const doc={
 };
 const sandbox={document:doc,window:{addEventListener(){}},requestAnimationFrame(fn){queue.push(fn);},console,Math,Number,String,Object,Array,Map,Set,Date};
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'sprite-animations.js'),'utf8'),sandbox,{timeout:4000,filename:'sprite-animations.js'});
-vm.runInNewContext(code.replace('initFactions();wire();reset();','window.__gameTest={state:()=>state,createUnit,resolveStrike,ecoCostFor,aiInvest,wave,tick,upgrade,aiReadOpponent,aiChoose,structureDamage,aiAdaptFacilities};initFactions();wire();reset();'),sandbox,{timeout:3500,filename:'game-v2.js'});
+vm.runInNewContext(code.replace('initFactions();wire();reset();','window.__gameTest={state:()=>state,createUnit,resolveStrike,ecoCostFor,aiInvest,wave,tick,upgrade,aiReadOpponent,aiChoose,structureDamage,aiAdaptFacilities,separateUnits,unitRadius,bongoImpact,getDef,damage,nearestUnit};initFactions();wire();reset();'),sandbox,{timeout:3500,filename:'game-v2.js'});
 assert.equal(el('cash').textContent,'360');
 assert.match(el('unitCards').innerHTML,/강점:/);
 assert.match(el('unitCards').innerHTML,/약점:/);
@@ -189,4 +189,39 @@ assert.ok(spam.wave>=8||spam.baseHP[0]===0,'long rush simulated through wave eig
 assert.ok(spam.baseHP[1]>0,'reinvested charge-only rush must not defeat the countering HQ in 20 waves');
 assert.ok(spam.enemyBuilt.some(r=>r===1),'opponent countered the rush with rifles');
 assert.ok(spam.enemyBuilt.some(r=>r===6),'opponent added a flier that melee claws cannot target');
-console.log('V2 smoke passed: reinvested charge-only long-match spam, countering AI, identical income, 2.5D and 16-frame sprites.');
+
+// Physical collision: units on both sides must resolve shared spawn coordinates.
+click('restartButton');click('startButton');
+const physics=g.state();physics.units=[];physics.enemyBuilt.fill(null);physics.built.fill(null);
+g.createUnit(0,0,0);g.createUnit(0,0,0);g.createUnit(1,0,0);
+const pair=[...physics.units];for(const u of pair){u.x=1000;u.y=250;}
+g.separateUnits();
+for(let i=0;i<pair.length;i++)for(let j=i+1;j<pair.length;j++){
+ const a=pair[i],b=pair[j],d=Math.hypot(a.x-b.x,a.y-b.y);
+ assert.ok(d>10,'ground units must not occupy identical footprints');
+}
+const def0=g.getDef(0,0);assert.equal(def0.kind,'ground');
+const truck=g.getDef(6,3);assert.equal(truck.kind,'ground','marine role 6 is NOT a flier');
+assert.equal(truck.name,'차량');
+assert.equal(truck.mark,'▰');
+assert.equal(g.getDef(6,2).kind,'air','other factions retain flyers');
+const truckSpawn=g.state();truckSpawn.units=[];truckSpawn.faction=3;truckSpawn.enemyFaction=1;
+g.createUnit(0,0,6);g.createUnit(1,0,0);g.createUnit(1,1,0);g.createUnit(1,2,0);
+const truckUnit=truckSpawn.units[0],victims=truckSpawn.units.slice(1);
+truckUnit.x=1500;truckUnit.y=260;
+for(let i=0;i<victims.length;i++){victims[i].x=1525+i*7;victims[i].y=260+i*3;}
+const health=victims.map(u=>u.hp);
+g.bongoImpact(truckUnit,.12);
+assert.ok(victims.some((u,i)=>u.hp<health[i]),'Odo Bongo must ram clustered enemy ground infantry');
+const hpAfter=victims[0].hp;
+g.bongoImpact(truckUnit,.12);
+assert.equal(victims[0].hp,hpAfter,'truck ram must respect cooldown');
+const aiTruck=g.state();aiTruck.built.fill(null);for(let i=0;i<5;i++)aiTruck.built[i]=0;
+aiTruck.enemyBuilt.fill(null);aiTruck.enemyFaction=3;aiTruck.wave=2;
+aiTruck.enemyCash=300;
+assert.equal(g.aiChoose(300),6,'marine AI selects Odo Bongo to counter mass infantry on wave 2');
+aiTruck.faction=3;aiTruck.built.fill(null);for(let i=0;i<5;i++)aiTruck.built[i]=6;
+aiTruck.enemyFaction=0;aiTruck.enemyCash=300;
+assert.equal(g.aiChoose(300),2,'opponent recognizes Odo Bongo as armor, not aircraft');
+console.log('V2 smoke passed: collision spacing, Odo Bongo ram cooldown, Marine ground armor and strategic anti-rush AI.');
+
