@@ -44,7 +44,7 @@ const doc={
 };
 const sandbox={document:doc,window:{addEventListener(){}},requestAnimationFrame(fn){queue.push(fn);},console,Math,Number,String,Object,Array,Map,Set,Date};
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'sprite-animations.js'),'utf8'),sandbox,{timeout:4000,filename:'sprite-animations.js'});
-vm.runInNewContext(code.replace('initFactions();wire();reset();','window.__gameTest={state:()=>state,createUnit,resolveStrike,ecoCostFor,aiInvest,wave};initFactions();wire();reset();'),sandbox,{timeout:3500,filename:'game-v2.js'});
+vm.runInNewContext(code.replace('initFactions();wire();reset();','window.__gameTest={state:()=>state,createUnit,resolveStrike,ecoCostFor,aiInvest,wave,tick,upgrade};initFactions();wire();reset();'),sandbox,{timeout:3500,filename:'game-v2.js'});
 assert.equal(el('cash').textContent,'360');
 assert.match(el('unitCards').innerHTML,/강점:/);
 assert.match(el('unitCards').innerHTML,/약점:/);
@@ -122,6 +122,18 @@ assert.equal(huang.hp,0);
 click('restartButton');
 click('startButton');
 const econGame=sandbox.window.__gameTest,eq=econGame.state();
+// Identical 0.5-second income tick at equal economy levels.
+eq.cash=360;eq.enemyCash=360;
+econGame.tick(.5);
+assert.equal(eq.cash,361,'player receives +1 per half second');
+assert.equal(eq.enemyCash,361,'AI receives precisely the same +1 per half second');
+econGame.upgrade('econ');
+assert.equal(eq.eco,1,'player first income upgrade works');
+assert.equal(eq.cash,291,'player paid exactly 70 CR for the first upgrade');
+eq.enemyEco=1;eq.enemyCash=291;
+econGame.tick(.5);
+assert.equal(eq.cash,293,'player level 1 adds +2 per half second');
+assert.equal(eq.enemyCash,293,'AI at the same level adds the same +2 per half second');
 eq.cash=0;eq.enemyCash=0;eq.wave=0;eq.built.fill(null);eq.enemyBuilt.fill(null);
 econGame.wave();
 assert.equal(eq.cash,24,'player wave payout');
