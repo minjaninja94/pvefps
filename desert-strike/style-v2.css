@@ -6,3 +6,7 @@
 .unit-card .uc-sprite{display:flex;align-items:center;justify-content:flex-start;height:39px;}
 .unit-card .pixel-preview{width:40px;height:40px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 2px 2px #0009)}
 @media(max-width:620px){.unit-card .uc-sprite{height:32px}.unit-card .pixel-preview{width:32px;height:32px}}
+
+.unit-card .good-counter{display:block;margin-top:4px;color:#a3ebc5;font-size:10px;font-weight:700;line-height:1.2}
+.unit-card .bad-counter{line-height:1.2}
+@media(max-width:620px){.unit-card .good-counter{font-size:9px}.unit-card{min-height:122px}}
