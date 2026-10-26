@@ -249,14 +249,14 @@ for(const scenario of spamCases){
  game.enemyEco=0;game.enemyBuilt[1]=0;game.enemyCash-=65;
  game.enemyBuilt[17]=1;game.enemyCash-=95;
  game.wave=0;game.next=24;
- for(let i=0;i<2200&&!game.ended;i++){
+ for(let i=0;i<4000&&!game.ended;i++){
   if(game.cash>=205){
    const free=game.built.findIndex(v=>v===null);
    if(free>=0){game.built[free]=scenario.role;game.cash-=205;}
   }
   g.tick(.12);
  }
- assert.ok(game.wave>=7 || game.baseHP[0]===0,scenario.name+' should simulate multiple waves');
+ assert.ok(game.wave>=12 || game.baseHP[0]===0,scenario.name+' should run a prolonged campaign');
  assert.ok(game.enemyBuilt.includes(scenario.counter),scenario.name+' AI should buy appropriate counter');
  assert.ok(game.baseHP[1]>0,scenario.name+' should not win merely through single-type spam');
  console.log('Spam balance case passed:',scenario.name,'wave',game.wave,'enemy HP',Math.floor(game.baseHP[1]));
