@@ -165,7 +165,7 @@ function order(cmd){
  }
  const r=practice?practice.order(myId,cmd):NET.sendOrder(cmd);
  if(!r?.ok)message(r?.reason||'명령 실패');
- else if(practice)onSnapshot(practice.snapshot());
+ else if(practice)onSnapshot(practice.snapshot('local'));
  else message('명령 전달 완료 · 호스트 판정 대기');
 }
 function practiceStart(){
@@ -176,8 +176,8 @@ function practiceStart(){
  practice.state.players[1].cash-=160;
  $('mpStateTag').textContent='오프라인 연습';message('3라인 오프라인 연습 · Firebase 연결 없이 작동합니다.');
  let last=performance.now();
- practiceTimer=setInterval(()=>{const now=performance.now();practice.tick(Math.min(.16,(now-last)/1000));last=now;onSnapshot(practice.snapshot());},100);
- onSnapshot(practice.snapshot());uiButtons();
+ practiceTimer=setInterval(()=>{const now=performance.now();practice.tick(Math.min(.16,(now-last)/1000));last=now;onSnapshot(practice.snapshot('local'));},100);
+ onSnapshot(practice.snapshot('local'));uiButtons();
 }
 async function leave(){
  if(practice){clearInterval(practiceTimer);practiceTimer=null;practice=null;myId='';snap=null;$('mpCommand').hidden=true;$('mpStateTag').textContent='연결 전';message('연습 종료');}

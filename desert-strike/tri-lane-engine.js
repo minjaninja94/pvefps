@@ -6,7 +6,7 @@
 'use strict';
 const LANES=3,WIDTH=3300,HEIGHT=1560,LANE_H=520,COLS=15,ROWS=5,SLOTS=COLS*ROWS;
 const TOWER_HP=1250,TOWER_RANGE=285,TOWER_PERIOD=.34,TOWER_DAMAGE=27,FOG_END_WAVE=6,FOG_WIDTH=770;
-const AGGRO_RADIUS=390,AGGRO_LEASH=535,SUPPORT_RADIUS=460,CONTACT_CELL=64;
+const AGGRO_RADIUS=590,AGGRO_LEASH=740,SUPPORT_RADIUS=615,CONTACT_CELL=64;
 const COST=[65,95,150,205,165,245,205,145], NAMES=['돌격','사격','대장갑','장갑','대공','포격','특수','지원'];
 const BASE=[
  [115,21,1,29,.77,82,false,'ground'],
@@ -215,7 +215,7 @@ function create({mode='pvp',size=1,members=[]}={}){
  function stepUnits(dt){
   // Three production bands feed one continuous world. Units can seek across both old borders.
   const alive=state.units.filter(u=>u.hp>0),byId=new Map(alive.map(u=>[u.id,u]));
-  const grid=new Map(),cell=200;
+  const grid=new Map(),cell=270;
   for(const v of alive){
    const k=v.team+','+Math.floor(v.x/cell)+','+Math.floor(v.y/cell);
    if(!grid.has(k))grid.set(k,[]);grid.get(k).push(v);
