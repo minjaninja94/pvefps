@@ -24,7 +24,7 @@ let rngState=1;
 const randomMath=Object.create(Math);
 randomMath.random=()=>((rngState=(Math.imul(rngState,1664525)+1013904223)>>>0)/4294967296);
 const ctx={document,window:{addEventListener(){}},requestAnimationFrame(){},console,Math:randomMath,Date,Number,String,Object,Array,Map,Set};
-const simHooks=String.raw\`
+const simHooks=String.raw`
 function simulateAI(){
  // Run the exact same in-game AI brain, build prices, wave stipend and income for both sides.
  // Temporarily mirror all the data fields the stock AI expects for the human player.
@@ -51,9 +51,9 @@ window.__balance={
  }
 };
 reset();
-\`;
+`;
 if(!game.includes('initFactions();wire();reset();'))throw Error('Game bootstrap changed');
-let source=game.replace('initFactions();wire();reset();',simHooks.replaceAll('\\\`','\`'));
+let source=game.replace('initFactions();wire();reset();',simHooks);
 source=source.replace(' aiInvest();\n const headcount=', ' simulateAI();\n const headcount=');
 vm.runInNewContext(source,ctx,{filename:'game-v2.js',timeout:10000});
 const core=ctx.window.__balance;
