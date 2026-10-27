@@ -23,6 +23,9 @@ jobs:
           node --check desert-strike/sprite-animations.js
           node --check desert-strike/isometric-world.js
           node --check desert-strike/heroine-factions.js
+          node --check desert-strike/tri-lane-engine.js
+          node --check desert-strike/tri-lane-network.js
+          node --check desert-strike/tri-lane-ui.js
           node --check desert-strike/balance-sim.cjs
       - name: Gameplay regression V1
         run: node desert-strike/smoke.test.cjs
@@ -34,6 +37,8 @@ jobs:
         run: node desert-strike/smoke-isometric.test.cjs
       - name: Six-faction seeded 150-match balance simulation
         run: node desert-strike/smoke-balance.test.cjs > /tmp/desert-balance.json
+      - name: Three-line PvP and cooperative host-authoritative combat
+        run: node desert-strike/smoke-trilane.test.cjs
       - name: Beastgirls and elven mages full sprite coverage
         run: node desert-strike/smoke-heroine.test.cjs
 
