@@ -23,6 +23,8 @@ jobs:
           node --check desert-strike/sprite-animations.js
           node --check desert-strike/isometric-world.js
           node --check desert-strike/heroine-factions.js
+          node --check desert-strike/expansion-art.js
+          node --check desert-strike/front-lobby.js
           node --check desert-strike/tri-lane-engine.js
           node --check desert-strike/tri-lane-network.js
           node --check desert-strike/tri-lane-ui.js
@@ -39,16 +41,18 @@ jobs:
         run: node desert-strike/smoke-trilane.test.cjs
       - name: WebRTC and Firebase mocked 1v1 handshake and real-time orders
         run: node desert-strike/smoke-trilane-network.test.cjs
-      - name: Six-faction seeded 150-match balance simulation
+      - name: Nine-faction 72-unit art and commander lobby progression
+        run: node desert-strike/smoke-nine.test.cjs
+      - name: Nine-faction seeded 150-match balance simulation
         run: node desert-strike/smoke-balance.test.cjs > /tmp/desert-balance.json
       - name: Beastgirls and elven mages full sprite coverage
         run: node desert-strike/smoke-heroine.test.cjs
 
-      - name: Six-faction mirrored skirmish win rates
+      - name: Nine-faction mirrored skirmish win rates
         run: node desert-strike/balance-sim.cjs skirmish 2 | tee /tmp/desert-skirmish.log
-      - name: Six-faction mirrored long-wave campaigns
+      - name: Nine-faction mirrored long-wave campaigns
         run: node desert-strike/balance-sim.cjs campaign 2 | tee /tmp/desert-campaign.log
-      - name: Save six-faction benchmark evidence
+      - name: Save nine-faction benchmark evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:

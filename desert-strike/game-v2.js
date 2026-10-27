@@ -767,11 +767,15 @@ function initFactions(){
  $('factionCards').innerHTML=FACTIONS.map((f,i)=>{
   const art=(i===4||i===5)
    ?'<span class="faction-hero faction-hero-'+(i===4?'beast':'elf')+'" role="img" aria-label="'+f.name+' 대표 캐릭터 일러스트"></span>'
-   :'';
+   :i>=6?'<canvas class="faction-hero-new" width="72" height="72" data-art-faction="'+i+'" aria-label="'+f.name+' 대표 유닛 스프라이트"></canvas>':'';
   return '<button class="faction-card'+(i===selectedFaction?' selected':'')+(i>=4?' faction-maiden':'')+'" data-faction="'+i+'">'+
    '<span class="faction-icon" style="color:'+f.color+'">'+f.logo+'</span>'+art+
    '<strong>'+f.name+'</strong><span class="eyebrow">'+f.tag+'</span><small>'+f.slogan+'</small><span class="bonus">'+f.bonus+'</span></button>';
  }).join('');
+ $('factionCards').querySelectorAll('[data-art-faction]').forEach(c=>{
+  const f=Number(c.dataset.artFaction),portrait=window.IsoWorld?.portrait(f,f===8?5:f===7?1:0);
+  if(portrait)c.getContext('2d')?.drawImage(portrait,0,0,72,72);
+ });
  $('counterMatrix').innerHTML=ROLE.map((r,i)=>'<div class="matrix-item"><b>'+r.mark+' '+r.name+'</b>'+
  '<div class="good">'+(i===7?'조합 시너지: ':'강점: ')+r.good.map(x=>ROLE[x].mark+ROLE[x].name).join(' / ')+'</div>'+
  '<div class="bad">약점: '+r.bad.map(x=>ROLE[x].mark+ROLE[x].name).join(' / ')+'</div></div>').join('');
