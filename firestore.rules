@@ -147,14 +147,29 @@ service cloud.firestore {
     }
 
 
+    // Cloud-synced cosmetics ONLY. No client-writeable rank, XP, match victories or credits.
+    match /desertProfiles/{profileId} {
+      function own(){return request.auth != null && request.auth.uid == profileId;}
+      function valid(d){return d.keys().hasOnly(['name','faction','skin'])
+        && d.keys().hasAll(['name','faction','skin'])
+        && d.name is string && d.name.size() >= 1 && d.name.size() <= 16
+        && d.faction is int && d.faction >= 0 && d.faction <= 8
+        && d.skin in ['default','twilight','aurora','gold'];}
+      allow get: if own();
+      allow list: if false;
+      allow create, update: if own() && valid(request.resource.data);
+      allow delete: if own();
+    }
+
     // Desert Front: invite-code Firestore lobby + SDP only. Never store unit/combat packets.
     match /desertRooms/{roomId} {
       function member(r) { return request.auth != null && request.auth.uid in r.players; }
       function nowMs() { return request.time.toMillis(); }
       function player(p) {
-        return p is map && p.keys().hasOnly(['name','faction','team','ready'])
+        return p is map && p.keys().hasOnly(['name','faction','team','ready','skin'])
           && p.name is string && p.name.size() >= 1 && p.name.size() <= 16
           && p.faction is int && p.faction >= 0 && p.faction <= 8
+          && (!('skin' in p) || p.skin in ['default','twilight','aurora','gold'])
           && p.team in [0,1] && p.ready is bool;
       }
       function shape(r) {
@@ -186,7 +201,8 @@ service cloud.firestore {
               && player(b.players[request.auth.uid])
               && b.players[request.auth.uid].name == a.players[request.auth.uid].name
               && b.players[request.auth.uid].team == a.players[request.auth.uid].team
-              && b.players[request.auth.uid].faction == a.players[request.auth.uid].faction)
+              && b.players[request.auth.uid].faction == a.players[request.auth.uid].faction
+              && b.players[request.auth.uid].skin == a.players[request.auth.uid].skin)
             || (b.players.size() == a.players.size()-1
               && request.auth.uid in a.players
               && !(request.auth.uid in b.players)

@@ -40,7 +40,7 @@ function definition(faction,role){
   good:bongo||prowler?[0,7]:GOODS[role],bad:bongo||prowler?[2,3]:BADS[role]
  };
 }
-function roomPlayers(input){const x=Array.isArray(input)?input:Object.values(input||{});return x.map(p=>({uid:String(p.uid||p.id||''),name:String(p.name||'지휘관').slice(0,16),team:Number(p.team),faction:Number(p.faction),bot:!!p.bot}));}
+function roomPlayers(input){const x=Array.isArray(input)?input:Object.values(input||{});return x.map(p=>({uid:String(p.uid||p.id||''),name:String(p.name||'지휘관').slice(0,16),team:Number(p.team),faction:Number(p.faction),skin:['default','twilight','aurora','gold'].includes(p.skin)?p.skin:'default',bot:!!p.bot}));}
 function create({mode='pvp',size=1,members=[]}={}){
  if(!['pvp','coop'].includes(mode)||!Number.isInteger(size)||size<1||size>3||(mode==='coop'&&size<2))throw Error('경기 모드/인원 오류');
  const humans=roomPlayers(members);
@@ -78,7 +78,7 @@ function create({mode='pvp',size=1,members=[]}={}){
   const y=lane*LANE_H+265+((Math.floor(slot/15)*11+(slot%15)*21)%196)-98;
   const radius=role===3?23:((p.faction===3||p.faction===4)&&role===6)?27:role===6?15:15;
   if(p.faction===3&&role===7)state.marineStats.huangSpawns++;
-  state.units.push({id:state.nextUnit++,uid:p.uid,team:p.team,faction:p.faction,role,lane,x,y,hp:d.hp,maxHP:d.hp,cool:Math.random()*.6,
+  state.units.push({id:state.nextUnit++,uid:p.uid,team:p.team,faction:p.faction,role,lane,x,y,hp:d.hp,maxHP:d.hp,skin:p.skin,cool:Math.random()*.6,
     radius,frame:Math.floor(Math.random()*16),act:'move',attackAge:0});
  }
  function selectCounter(lane,bot){
@@ -279,9 +279,9 @@ function create({mode='pvp',size=1,members=[]}={}){
   // One compact, sanitized authoritative packet per 200–350ms. Never trusts client state.
   return {mode:state.mode,size:state.size,width:WIDTH,height:HEIGHT,seconds:Math.round(state.seconds*10)/10,wave:state.wave,next:Math.ceil(state.next*10)/10,
    ended:state.ended,winner:state.winner,cores:state.cores,lanePressure:state.lanePressure.map(x=>Math.round(x*100)/100),
-   players:state.players.map(p=>({uid:p.uid,name:p.name,faction:p.faction,team:p.team,bot:p.bot,cash:Math.floor(p.cash),eco:p.eco,
+   players:state.players.map(p=>({uid:p.uid,name:p.name,faction:p.faction,skin:p.skin,team:p.team,bot:p.bot,cash:Math.floor(p.cash),eco:p.eco,
     buildings:p.buildings})),
-   units:state.units.map(u=>({id:u.id,uid:u.uid,team:u.team,faction:u.faction,role:u.role,lane:u.lane,x:Math.round(u.x),y:Math.round(u.y),hp:Math.ceil(u.hp),maxHP:Math.ceil(u.maxHP),conscripted:!!u.conscripted,frame:Math.floor(u.frame),act:u.attackAge>0?'attack':u.act})),
+   units:state.units.map(u=>({id:u.id,uid:u.uid,team:u.team,faction:u.faction,skin:u.skin||'default',role:u.role,lane:u.lane,x:Math.round(u.x),y:Math.round(u.y),hp:Math.ceil(u.hp),maxHP:Math.ceil(u.maxHP),conscripted:!!u.conscripted,frame:Math.floor(u.frame),act:u.attackAge>0?'attack':u.act})),
    effects:state.effects.map(e=>({...e,x:Math.round(e.x),y:Math.round(e.y)}))};
  }
  return {state,order,tick,wave,snapshot,definition};

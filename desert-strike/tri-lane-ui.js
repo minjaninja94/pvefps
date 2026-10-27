@@ -9,6 +9,7 @@ let myId='',lobby=null,host=false,gridKey='',lastSnapshotAt=0,lastDrawAt=0;
 const LANES=['상단','중앙','하단'],ICONS=['⚔','⌖','◆','▣','✣','✹','♞','✚'];
 function message(msg){$('mpStatus').textContent=msg;}
 function faction(){return Number($('mpFaction').value)||0;}
+function skin(){return global.DesertLobby?.selectedSkin?.()||'default';}
 function my(){return snap?.players?.find(p=>p.uid===myId);}
 function countNeeded(r){return r.size*(r.mode==='coop'?1:2);}
 function fullReady(r){const p=Object.values(r.players||{});return p.length===countNeeded(r)&&p.every(x=>x.ready)&& (r.mode==='coop'?p.every(x=>x.team===0):[0,1].every(t=>p.filter(x=>x.team===t).length===r.size));}
@@ -81,7 +82,7 @@ function draw(){
    const animatedFrame=((u.frame||0)+Math.floor((performance.now()-lastSnapshotAt)/84))%16;
    const sprite=iso?.frame(u.faction,u.role,u.act||'move',animatedFrame);
    const d=u.role===3||u.role===6?68:60;
-   if(sprite){ctx.imageSmoothingEnabled=false;ctx.drawImage(sprite,x-d/2,y-d*.85,d,d);}
+   if(sprite){ctx.imageSmoothingEnabled=false;ctx.save();ctx.filter=global.DesertLobby?.filterForSkin?.(u.skin)||'none';ctx.drawImage(sprite,x-d/2,y-d*.85,d,d);ctx.restore();}
    else{ctx.fillStyle=u.team===0?'#a5ece7':'#ef9e8a';ctx.fillRect(x-5,y-8,10,12);}
    ctx.fillStyle='#081c25';ctx.fillRect(x-8,y-d*.91,16,3);
    ctx.fillStyle=u.team===0?'#75ddd6':'#f59479';ctx.fillRect(x-8,y-d*.91,16*Math.max(0,u.hp/u.maxHP),3);
@@ -135,7 +136,7 @@ function onSnapshot(v){
   f.append(el);
  }
  $('mpLaneSummary').replaceChildren(f);
- if(v.ended){$('mpStateTag').textContent=v.winner===null?'무승부':v.winner===side?'승리':'패배';}
+ if(v.ended){$('mpStateTag').textContent=v.winner===null?'무승부':v.winner===side?'승리':'패배';if(!practice)global.DesertLobby?.completeMultiplayer?.({winner:v.winner,side,matchId:lobby?.id||'unknown'});}
  buildGrid();drawOverview();
 }
 function order(cmd){
@@ -148,7 +149,7 @@ function order(cmd){
 function practiceStart(){
  if(lobby)return message('온라인 방에서 나간 뒤 연습할 수 있습니다.');
  myId='local';
- practice=E.create({mode:'pvp',size:1,members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%9,bot:true}]});
+ practice=E.create({mode:'pvp',size:1,members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%9,bot:true}]});
  practice.state.players[1].buildings[1][1]=0;practice.state.players[1].buildings[1][17]=1;
  practice.state.players[1].cash-=160;
  $('mpStateTag').textContent='오프라인 연습';message('3라인 오프라인 연습 · Firebase 연결 없이 작동합니다.');
@@ -187,7 +188,7 @@ function init(){
  $('mpPractice').addEventListener('click',practiceStart);
  $('mpCreate').addEventListener('click',runClick(async()=>{
   message('Firebase 방을 생성합니다…');
-  await NET.create({mode:$('mpMode').value,size:Number($('mpSize').value),name:$('mpName').value,faction:faction()});
+  await NET.create({mode:$('mpMode').value,size:Number($('mpSize').value),name:$('mpName').value,faction:faction(),skin:skin()});
  }));
  $('mpJoin').addEventListener('click',runClick(async()=>{
   message('방에 참가하는 중입니다…');

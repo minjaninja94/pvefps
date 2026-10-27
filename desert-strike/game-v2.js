@@ -687,6 +687,7 @@ function tick(dt){
 function endMatch(win){
  if(state.ended)return;
  state.ended=true;
+ window.DesertLobby?.completeSolo?.({win,matchedFaction:state.faction,wave:state.wave});
  $('endTitle').textContent=win?'작전 승리':'기지 함락';
  $('endTitle').style.color=win?'#fbd89b':'#f69a8e';
  $('endSummary').textContent=state.wave+'웨이브 · '+state.built.filter(v=>v!==null).length+'개 생산 시설 · 무기 Lv.'+state.weapon+' / 장갑 Lv.'+state.armor;
@@ -863,7 +864,9 @@ function drawUnit(g,u,scale=1){
  g.save();g.translate(at.x,at.y);
  if(u.facing<0)g.scale(-1,1);
  g.imageSmoothingEnabled=false;
+ if(u.side===0)g.filter=window.DesertLobby?.skinFilter?.(u.faction)||'none';
  g.drawImage(artwork,-w/2,-h/2-(flying?9+Math.sin(u.anim)*2:0),w,h);
+ g.filter='none';
  g.restore();
  if(dead)return;
  if(u.conscripted){g.strokeStyle='#f7d277';g.lineWidth=2*scale;g.beginPath();g.ellipse(at.x,at.y+10*scale,17*scale,5*scale,0,0,Math.PI*2);g.stroke();}

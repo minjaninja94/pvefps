@@ -234,3 +234,58 @@ body{background:
   .unit-card:has(.maiden-unit-portrait){min-height:172px;padding:6px}
   .faction-card.faction-maiden .faction-hero{aspect-ratio:4/3}
 }
+
+
+/* Nine-faction account/lobby: compact desktop + touch-first mobile. */
+.front-lobby[hidden]{display:none!important}
+.front-lobby{position:fixed;inset:0;z-index:1000;overflow-y:auto;overscroll-behavior:contain;background:radial-gradient(ellipse at 25% 15%,#224451 0%,#0b1b2a 43%,#090f1b 100%);color:#f4f7f4;font-family:system-ui,"Pretendard",sans-serif}
+.front-lobby:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.12;background-image:linear-gradient(90deg,transparent 95%,#a3c4d1 96%),linear-gradient(transparent 95%,#a3c4d1 96%);background-size:48px 48px}
+.lobby-shell{max-width:1320px;margin:auto;padding:22px clamp(12px,3vw,44px) 48px;position:relative}
+.lobby-header{display:flex;align-items:center;gap:14px;margin-bottom:24px;border-bottom:1px solid #486075;padding-bottom:15px}
+.lobby-header strong{font-size:22px;letter-spacing:.12em}.lobby-header small{display:block;color:#91b5c1;font-size:10px;letter-spacing:.19em;margin-top:3px}
+.lobby-mark{font-weight:900;color:#0f1827;background:linear-gradient(135deg,#fff5bd,#c7e7fc);padding:12px;border-radius:10px;font-size:19px}.lobby-mark span{color:#e37e83}
+.lobby-account-status{margin-left:auto;border:1px solid #718b9f;background:#18313c;border-radius:30px;padding:8px 13px;font-size:12px}
+.lobby-hero-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(275px,.85fr);gap:18px}
+.lobby-panel{background:linear-gradient(155deg,#192e3bd9,#131d31ed);border:1px solid #567183;border-radius:18px;box-shadow:0 15px 35px #0005;padding:clamp(15px,2vw,27px)}
+.lobby-eyebrow{font-weight:800;letter-spacing:.2em;color:#98d8e3;font-size:10px}
+.lobby-main h1{font-size:clamp(28px,4vw,43px);line-height:1.2;margin:10px 0}
+.lobby-subtitle{color:#afc4d2;font-size:13px;margin:0 0 14px}
+.lobby-stage{min-height:220px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 72%,#46717a,#19283d 62%,#0b1727);border:1px solid #55788a;border-radius:13px}
+.lobby-stage-glow{position:absolute;width:250px;height:100px;bottom:-24px;border-radius:50%;background:#77d6e544;filter:blur(35px)}
+#lobbyHero{z-index:1;width:220px;height:220px;image-rendering:pixelated;object-fit:contain;filter:drop-shadow(0 20px 13px #0009)}
+.lobby-stage-label{position:absolute;z-index:2;left:13px;bottom:10px;display:grid;background:#0b172acc;border:1px solid #638496;border-radius:8px;padding:8px 12px;max-width:75%}
+.lobby-stage-label span{font-size:19px;font-weight:900}.lobby-stage-label small{color:#b1d2d6;font-size:10px;white-space:normal}
+.lobby-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:13px}
+.lobby-actions button,.lobby-auth button,.lobby-profile-options button{display:grid;gap:5px;align-content:center;cursor:pointer;min-height:64px;text-align:left;background:#263e51;border:1px solid #5b7e94;border-radius:10px;color:#f4f6f6;padding:12px}
+.lobby-actions button:hover,.lobby-auth button:hover{border-color:#a9edeb;background:#315468}
+.lobby-actions button.lobby-primary{background:linear-gradient(135deg,#b6dbd6,#86b0cb);border-color:#ecfcef;color:#102537}
+.lobby-actions button strong{font-size:15px}.lobby-actions button span{font-size:11px;line-height:1.4;opacity:.85}
+.lobby-rank{font-size:24px;font-weight:900;color:#f4d09a;margin:14px 0}
+.lobby-level{display:flex;justify-content:space-between;gap:8px;margin:12px 0 5px;font-size:12px}
+.lobby-xp-track{height:9px;border-radius:9px;background:#152332;overflow:hidden}.lobby-xp-track i{display:block;height:100%;width:0;background:linear-gradient(90deg,#59c9c1,#f1d8ad);border-radius:9px}
+.lobby-profile p{font-size:12px;line-height:1.55;color:#b4c4d2}
+.lobby-profile-options{display:grid;gap:10px;border-top:1px solid #436078;margin-top:17px;padding-top:17px}
+.lobby-profile-options label{font-size:12px;color:#d8e8eb;display:grid;gap:5px}
+.lobby-profile-options input{width:100%;padding:11px;border:1px solid #678295;background:#0c2031;border-radius:7px;color:#fff}
+.lobby-profile-options button{min-height:40px;display:block;text-align:center}
+.lobby-auth{display:grid;gap:8px;margin-top:16px}.lobby-auth button{min-height:43px;display:block;text-align:center;font-weight:700}.lobby-auth #lobbyGoogle{border-color:#a8d5ee;background:#29495b}
+.lobby-auth p{margin:4px 0;font-size:11px}.lobby-auth small{color:#a9c6bd;font-size:11px;line-height:1.5}
+.lobby-loadout{margin-top:17px}.lobby-section-title{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:6px 0 12px}.lobby-section-title h2{margin:4px 0 0;font-size:18px}.lobby-section-title>span{color:#b5cad5;font-size:11px;text-align:right}
+.lobby-factions{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:8px}
+.lobby-faction{display:grid;justify-items:center;gap:5px;min-width:0;cursor:pointer;border:1px solid #3e6077;border-radius:10px;padding:7px 3px;background:linear-gradient(160deg,#294252,#152538);color:#f0f4f2;position:relative}
+.lobby-faction:hover{border-color:var(--fac)}.lobby-faction.selected{border:2px solid var(--fac);background:linear-gradient(150deg,#3c5565,#263343);box-shadow:inset 0 -3px 0 var(--fac)}
+.lobby-faction .lobby-icon{position:absolute;top:5px;left:7px;color:var(--fac);font-size:11px}
+.lobby-faction canvas{width:min(100%,76px);aspect-ratio:1/1;image-rendering:pixelated}
+.lobby-faction strong{font-size:11px;line-height:1.2;word-break:keep-all;text-align:center}.lobby-faction small{font-size:8px;color:#aac8d7;letter-spacing:.04em;text-align:center;overflow-wrap:anywhere}
+.lobby-skins{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:10px}
+.lobby-skin{min-height:87px;padding:12px;display:grid;gap:5px;justify-items:start;cursor:pointer;background:#19293a;border:1px solid #4b697c;color:#f4f3ee;border-radius:10px}
+.lobby-skin .skin-swatch{display:grid;place-items:center;background:var(--skin);width:28px;height:28px;border-radius:6px;color:#122434}
+.lobby-skin strong{font-size:12px}.lobby-skin small{font-size:11px;color:#b8c5d2}
+.lobby-skin.selected{border-color:var(--skin);box-shadow:inset 0 0 0 1px var(--skin)}.lobby-skin:disabled{opacity:.42;filter:grayscale(.7);cursor:not-allowed}
+.lobby-footer{text-align:center;padding:20px 5px;color:#8eaabb;font-size:11px}
+.faction-card.faction-maiden[data-faction="6"]{background:linear-gradient(145deg,#433b30,#252b36)}
+.faction-card.faction-maiden[data-faction="7"]{background:linear-gradient(145deg,#1e4d62,#172a3b)}
+.faction-card.faction-maiden[data-faction="8"]{background:linear-gradient(145deg,#342558,#203541)}
+.faction-hero-new{display:block;width:100%;height:100px!important;image-rendering:pixelated;object-fit:contain;background:radial-gradient(ellipse at 50% 75%,#64839c55,#0a1726);border-radius:7px}
+@media(max-width:1060px){.lobby-factions{grid-template-columns:repeat(5,minmax(0,1fr))}.lobby-hero-grid{grid-template-columns:1.5fr 1fr}}
+@media(max-width:720px){.lobby-shell{padding:12px 12px 30px}.lobby-header strong{font-size:16px}.lobby-header small{font-size:8px}.lobby-hero-grid{grid-template-columns:1fr}.lobby-factions{grid-template-columns:repeat(3,minmax(0,1fr))}.lobby-actions{grid-template-columns:1fr}.lobby-actions button{min-height:55px}.lobby-skins{grid-template-columns:repeat(2,minmax(0,1fr))}.lobby-stage{min-height:180px}#lobbyHero{width:186px;height:186px}.lobby-account-status{font-size:10px}}
