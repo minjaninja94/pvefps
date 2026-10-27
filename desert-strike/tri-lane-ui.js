@@ -4,7 +4,7 @@
 const $=id=>document.getElementById(id);
 const NET=global.DesertTriNetwork,E=global.DesertTriEngine;
 if(!NET||!E)return;
-let snap=null,lane=1,role=0,demolish=false,practice=null,practiceTimer=null;
+let snap=null,lane=0,role=0,demolish=false,practice=null,practiceTimer=null;
 let myId='',lobby=null,host=false,gridKey='',cardsKey='',lastSnapshotAt=0,lastDrawAt=0;
 const LANES=['상단','중앙','하단'],ICONS=['⚔','⌖','◆','▣','✣','✹','♞','✚'];
 function message(msg){$('mpStatus').textContent=msg;}

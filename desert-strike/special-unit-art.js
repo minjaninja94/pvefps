@@ -6,7 +6,7 @@ function frame(f,r,action,n){
  const row=ROWS[f+'-'+r];if(row===undefined||!image)return null;
  const phase=Math.max(0,Math.min(15,Math.floor(n)||0));
  const poses=action==='death'?[6,7]:action==='move'?[1,2]:action==='attack'?[3,4]:action==='skill'||action==='siege'?[3,4,5]:action==='hit'?[6]:[0];
- const pose=poses[Math.min(poses.length-1,Math.floor(phase/16*poses.length))],key=row+'-'+pose;
+ const pose=action==='move'?poses[Math.floor(phase/2)%poses.length]:poses[Math.min(poses.length-1,Math.floor(phase/16*poses.length))],key=row+'-'+pose;
  if(cache.has(key))return cache.get(key);
  const cv=document.createElement('canvas');cv.width=cv.height=72;const g=cv.getContext('2d');if(!g)return null;
  g.imageSmoothingEnabled=false;g.drawImage(image,pose*96,row*96,96,96,0,0,72,72);cache.set(key,cv);return cv;
