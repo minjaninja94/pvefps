@@ -910,8 +910,11 @@ function structure(g,x,y,side,turret=true,health=1){
   {metal:'#947cc6',dark:'#322b62',trim:'#e7c3ff',glow:'#a5eeff'},
   {metal:'#78634b',dark:'#231c1a',trim:'#bd322c',glow:'#e6d9a2'},
   {metal:'#9b7987',dark:'#3d3041',trim:'#ebbbcd',glow:'#ffe3e8'},
-  {metal:'#7bada5',dark:'#2e5a52',trim:'#def6d2',glow:'#b2ffe2'}
- ][faction];
+  {metal:'#7bada5',dark:'#2e5a52',trim:'#def6d2',glow:'#b2ffe2'},
+  {metal:'#886b50',dark:'#403026',trim:'#ecc893',glow:'#ffd5a2'},
+  {metal:'#638ba8',dark:'#162d47',trim:'#b6dff5',glow:'#77e4ff'},
+  {metal:'#8066b0',dark:'#2b1949',trim:'#ccb8f8',glow:'#c1f7fe'}
+ ][faction]||{metal:'#648b91',dark:'#203b44',trim:'#ffe3b2',glow:'#9cf4df'};
  const cx=palette.glow;
  g.fillStyle='#07161988';g.beginPath();g.ellipse(0,27,turret?31:49,turret?20:37,0,0,7);g.fill();
  function block(px,py,w,h,color=palette.metal){g.fillStyle=color;g.fillRect(px,py,w,h);}
