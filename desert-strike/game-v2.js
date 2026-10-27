@@ -18,7 +18,9 @@ const FACTIONS=[
  {id:'forge',name:'철갑연합',tag:'FORGE UNION',logo:'▦',color:'#79ddea',bonus:'최대 HP +9% · 이동 속도 −4%',mut:{hp:1.09,dmg:1,speed:.96},units:['진격 보병','기관총병','관통 로켓','철갑 전차','복합 대공포','궤도 자주포','추적 비행기','전장 구호병'],slogan:'공학·화력·단단한 전열',secondary:'#224956'},
  {id:'brood',name:'심연군체',tag:'DUSK BROOD',logo:'♜',color:'#b9df8d',bonus:'이동 속도 +12% · 최대 HP −8%',mut:{hp:.92,dmg:1,speed:1.12},units:['송곳 발톱','산성 침벌','부식 포자충','거대 갑각수','가시 포자탑','폭식 투석충','비행 포식자','치유 공생충'],slogan:'생체 돌파·기동·포식',secondary:'#344d2b'},
  {id:'astral',name:'성운결사',tag:'ASTRAL ORDER',logo:'✧',color:'#d6b8ff',bonus:'공격/치유 +8% · 최대 HP −5%',mut:{hp:.95,dmg:1.08,speed:1},units:['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],slogan:'에너지·보호막·정밀 타격',secondary:'#443257'},
- {id:'marine',name:'해병성채',tag:'MARINE FORTRESS',logo:'★',color:'#dba77c',bonus:'돌격 특화 · 황룡 1회성 수육 회복',mut:{hp:1.04,dmg:1.02,speed:1.01},units:['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],slogan:'모히칸·붉은 군모·검은 얼굴·해병수육',secondary:'#58412f'}
+ {id:'marine',name:'해병성채',tag:'MARINE FORTRESS',logo:'★',color:'#dba77c',bonus:'돌격 특화 · 황룡 1회성 수육 회복',mut:{hp:1.04,dmg:1.02,speed:1.01},units:['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],	slogan:'모히칸·붉은 군모·검은 얼굴·해병수육',secondary:'#58412f'},
+ {id:'beastkin',name:'월영 수인족',tag:'MOONFANG CLAN',logo:'♞',color:'#f0b4a6',bonus:'근접 피해 +16% · 기동 +14% / 원거리 피해 −13%',mut:{hp:1.04,dmg:1,speed:1.06},units:['백랑 검사','여우불 투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],slogan:'늑대귀·여우꼬리·야수 기병·근접 난전',secondary:'#603d46'},
+ {id:'elf',name:'은월 엘프족',tag:'SILVERWOOD ELVES',logo:'✦',color:'#b2e6cf',bonus:'원거리 사거리 +18% · 화력 +10% / 근접 피해 −16%',mut:{hp:.94,dmg:1,speed:.99},units:['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사'],slogan:'긴 귀·은발·장궁·마법 결정·후방 화력',secondary:'#375c52'}
 ];
 const RNAME=ROLE.map(r=>r.name),SPRITES=new Map();
 let selectedFaction=0,state=null,selectedRole=null,demolition=false,activeView='base',lastFrame=0,uiElapsed=0;
@@ -29,15 +31,23 @@ function money(n){return Math.floor(n).toLocaleString('ko-KR');}
 function getDef(role,faction){
  const r=ROLE[role],f=FACTIONS[faction];
  const isBongo=faction===3&&role===6;
- return {...r,unitName:f.units[role],factionName:f.name,name:isBongo?'차량':r.name,mark:isBongo?'▰':r.mark,
-  hp:isBongo?490:r.hp*f.mut.hp*2.25,
-  damage:isBongo?34:r.damage*f.mut.dmg*.94,
-  heal:(r.heal||0)*f.mut.dmg*1.5,speed:isBongo?77:r.speed*f.mut.speed*.84,
-  kind:isBongo?'ground':r.kind,armor:isBongo?7:r.armor,
-  range:isBongo?43:r.range,rate:isBongo?1.45:r.rate,
-  airTarget:isBongo?false:r.airTarget,
-  good:isBongo?[0,7]:r.good,bad:isBongo?[2,3]:r.bad,
-  tips:isBongo?'오도봉고: 공군 대신 출격하는 지상 돌파 차량. 돌격병 밀집 부대를 들이받아 최대 3명까지 범위 피해. 대장갑에 취약하고 기지 피해는 약합니다.':faction===3&&role===7?'해병수육: 부상 아군을 발견하면 본인이 전투에서 사라지며 주변 아군 다수를 크게 회복합니다. 1회성 소모 지원병.':r.tips};
+ const isBeast=faction===4,isElf=faction===5,isProwler=isBeast&&role===6;
+ const melee=isBeast&&(role===0||role===3||role===6);
+ const rangeBoost=isElf&&[1,2,4,5,6].includes(role);
+ return {...r,unitName:f.units[role],factionName:f.name,name:isBongo?'차량':isProwler?'기병':r.name,mark:isBongo?'▰':isProwler?'♞':r.mark,
+  hp:isBongo?490:r.hp*f.mut.hp*2.25*(isElf&&role===0?.88:isBeast&&role===3?1.13:1),
+  damage:isBongo?34:isProwler?33:r.damage*f.mut.dmg*.94*(isBeast?(melee?1.16:.87):isElf?(rangeBoost?1.1:role===0?.84:1):1),
+  heal:(r.heal||0)*f.mut.dmg*1.5,speed:isBongo?77:isProwler?90:r.speed*f.mut.speed*.84*(melee?1.14:1),
+  kind:isBongo||isProwler?'ground':r.kind,armor:isBongo?7:isProwler?3:r.armor,
+  range:isBongo?43:isProwler?40:r.range*(rangeBoost?1.18:1),
+  rate:isBongo?1.45:isProwler?.95:r.rate,
+  airTarget:isBongo||isProwler?false:r.airTarget,
+  good:isBongo||isProwler?[0,7]:r.good,bad:isBongo||isProwler?[2,3]:r.bad,
+  tips:isBongo?'오도봉고: 공군 대신 출격하는 지상 돌파 차량. 돌격병 밀집 부대를 들이받아 최대 3명까지 범위 피해. 대장갑에 취약하고 기지 피해는 약합니다.':
+  isProwler?'흑표 돌격기수: 공중이 아닌 지상 기병으로 적 전열에 급습합니다. 근접 돌진에 강하지만 대장갑·중장갑에 취약합니다.':
+  isBeast?'수인족: 근접 전투·기동력이 강하지만 후방 사격 화력은 낮습니다. '+r.tips:
+  isElf?'엘프족: 후방 장궁·마법에 강하지만 전위 난전이 취약합니다. '+r.tips:
+  faction===3&&role===7?'해병수육: 부상 아군을 발견하면 본인이 전투에서 사라지며 주변 아군 다수를 크게 회복합니다. 1회성 소모 지원병.':r.tips};
 }
 function ecoCostFor(level){return Math.round(70*Math.pow(1.36,level));}
 function ecoCost(){return ecoCostFor(state.eco);}
@@ -182,7 +192,7 @@ function createUnit(side,slot,role){
  const isBongo=faction===3&&role===6;
  state.units.push({uid:state.nextUnitId++,side,role,faction,x,y,hp:def.hp*bonus,maxHP:def.hp*bonus,
   cooldown:random(.1,.7),anim:random(0,16),facing:side===0?1:-1,blink:0,moving:false,strike:null,
-  hitRadius:isBongo?30:role===3?26:role===6?14:role===5?17:role===0?17:15,ramCooldown:0});
+  hitRadius:isBongo?30:faction===4&&role===6?22:role===3?26:role===6?14:role===5?17:role===0?17:15,ramCooldown:0});
  pulse(x,y,COLORS[side],12);
 }
 // AI spends the same credits as the player, but actually studies the player's build.
@@ -207,9 +217,9 @@ function aiReadOpponent(){
  return {counts,total:sum,dominant,major};
 }
 function aiCountersFor(role){
- if(role===6&&state.faction===3)return [2,3]; // Player Marine truck is ground armor, not aircraft.
- if(role===0&&state.enemyFaction===3)return [1,6,3]; // Marines field an Odo Bongo rather than a flier.
- if(role===3&&state.enemyFaction===3)return [2]; // Odo Bongo cannot counter heavy tanks; use actual armor breakers.
+ if(role===6&&(state.faction===3||state.faction===4))return [2,3]; // Player Marine truck is ground armor, not aircraft.
+ if(role===0&&(state.enemyFaction===3||state.enemyFaction===4))return [1,3,6]; // Marines field an Odo Bongo rather than a flier.
+ if(role===3&&(state.enemyFaction===3||state.enemyFaction===4))return [2]; // Odo Bongo cannot counter heavy tanks; use actual armor breakers.
  return AI_COUNTER_ROLES[role];
 }
 function aiChoose(budget=state.enemyCash){
@@ -224,7 +234,7 @@ function aiChoose(budget=state.enemyCash){
   if(matching.length){
    // Melee-only armies cannot attack aircraft. Buy one air unit once affordable,
    // then mix rifle + armor rather than exploit an unlimited flier swarm.
-   if(intel.dominant===0 && state.wave>=2 && affordable.includes(6) && myCounts[6]<Math.max(1,Math.floor(intel.counts[0]/6)))return 6;
+   if(intel.dominant===0 && state.enemyFaction!==4 && state.wave>=2 && affordable.includes(6) && myCounts[6]<Math.max(1,Math.floor(intel.counts[0]/6)))return 6;
    // Dedicated anti-air is essential against air-only forces; rifles alone are insufficient.
    if(intel.dominant===6&&state.faction!==3&&affordable.includes(4)&&myCounts[4]<Math.ceil(intel.counts[6]*.85))return 4;
    // Against tank spam, prioritize armor breakers. Marines must never answer tanks with trucks.
@@ -284,9 +294,9 @@ function aiInvest(){
  const invaded=state.units.some(u=>u.side===0&&u.x>WORLD_W-580&&u.hp>0);
  const heavyRush=intel.total>=4&&intel.dominant!==null;
  // Keep pace with a committed enemy production build, but not by spawning free units.
- const isAirRush=heavyRush&&intel.dominant===6&&state.faction!==3;
+ const isAirRush=heavyRush&&intel.dominant===6&&state.faction!==3&&state.faction!==4;
  const isTankRush=heavyRush&&intel.dominant===3;
- const isTruckRush=heavyRush&&intel.dominant===6&&state.faction===3;
+ const isTruckRush=heavyRush&&intel.dominant===6&&(state.faction===3||state.faction===4);
  // Single-unit spam has little tactical flexibility. Counter it by investing earned credits
  // in a stronger specialist army rather than hoarding cash at a same-size facility cap.
  const focusMultiplier=isAirRush?1.6:isTankRush?1.45:isTruckRush?1.4:heavyRush?1.05:.85;
@@ -335,7 +345,7 @@ function calcDamage(attacker,target,amount){
  let out=amount;
  if(attacker!==null){
   const role=ROLE[attacker];
-  if(target.faction===3&&target.role===6){if(attacker===2)out*=1.65;else if(attacker===0)out*=.68;else if(attacker===4)out*=.78;}
+  if(target.role===6&&(target.faction===3||target.faction===4)){if(attacker===2)out*=1.65;else if(attacker===0)out*=.68;else if(attacker===4)out*=.78;}
   else{if(role.good.includes(target.role))out*=1.55;if(role.bad.includes(target.role))out*=.7;}
  }
  const armor=getDef(target.role,target.faction).armor;
@@ -443,7 +453,7 @@ function nearInjured(u){
 // Local spatial-hash collision prevents 200+ units piling on a single pixel.
 // Ground units of either side have physical footprints. Aircraft float over ground
 // but still avoid other aircraft. Rebuild hash per pass so resolution stays stable.
-function unitRadius(u){return u.hitRadius||(u.faction===3&&u.role===6?30:u.role===3?26:u.role===6?14:u.role===5?17:u.role===0?17:15);}
+function unitRadius(u){return u.hitRadius||(u.faction===3&&u.role===6?30:u.faction===4&&u.role===6?22:u.role===3?26:u.role===6?14:u.role===5?17:u.role===0?17:15);}
 function physicalLayer(u){return getDef(u.role,u.faction).kind==='air'?'air':'ground';}
 function separateUnits(){
  const CELL=76;
@@ -478,23 +488,23 @@ function separateUnits(){
  }
 }
 function bongoImpact(u,dt){
- if(u.faction!==3||u.role!==6||u.hp<=0)return;
+ if(!((u.faction===3||u.faction===4)&&u.role===6)||u.hp<=0)return;
  u.ramCooldown=Math.max(0,(u.ramCooldown||0)-dt);
  if(u.ramCooldown>0)return;
  const candidates=state.units.filter(v=>v.side!==u.side&&v.hp>0&&getDef(v.role,v.faction).kind==='ground'&&Math.hypot(v.x-u.x,v.y-u.y)<unitRadius(u)+unitRadius(v)+9)
   .sort((a,b)=>Math.hypot(a.x-u.x,a.y-u.y)-Math.hypot(b.x-u.x,b.y-u.y));
  if(!candidates.length)return;
- u.ramCooldown=1.85;
+ u.ramCooldown=u.faction===4?2.2:1.85;
  const mods=u.side===0?1+state.weapon*.08:1;
  for(const v of candidates.slice(0,3)){
   // Drive-by anti-melee, reduced against true heavy armor; no building bonus.
   const antiMelee=v.role===0?1.45:v.role===3?.38:1;
-  damage(v,42*mods*antiMelee,null);
+  damage(v,(u.faction===4?30:42)*mods*antiMelee,null);
   v.x=clamp(v.x+u.facing*13,30,WORLD_W-30);
   pulse(v.x,v.y,'#edb46c',14);
  }
- floatText(u.x,u.y-25,'오도봉고!', '#f4ce8e');
- pulse(u.x,u.y,'#bd734e',31);
+ floatText(u.x,u.y-25,u.faction===4?'흑표 돌진!':'오도봉고!',u.faction===4?'#ffcae9':'#f4ce8e');
+ pulse(u.x,u.y,u.faction===4?'#e68db6':'#bd734e',31);
 }
 function move(u,x,y,dt){
  const dx=x-u.x,dy=y-u.y,d=Math.hypot(dx,dy)||1,def=getDef(u.role,u.faction);
@@ -594,7 +604,7 @@ function tick(dt){
   }
  }
  separateUnits();
- for(const u of state.units)if(u.faction===3&&u.role===6&&u.hp>0)bongoImpact(u,ds);
+ for(const u of state.units)if((u.faction===3||u.faction===4)&&u.role===6&&u.hp>0)bongoImpact(u,ds);
  for(let i=state.shots.length-1;i>=0;i--){
   const p=state.shots[i];p.ttl-=ds;
   if(p.target&&p.target.hp>0){p.tx=p.target.x;p.ty=p.target.y;}
