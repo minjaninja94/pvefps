@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=motion1"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=cover1"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -9,7 +9,7 @@
    <main class="lobby-panel lobby-main">
     <div class="lobby-eyebrow">OPERATION CONTROL • SEASON 00</div>
     <h1>지휘관 사령부</h1><p class="lobby-subtitle">종족을 고르고 부대를 편성하세요. 영웅의 외형은 전투 성능에 영향을 주지 않습니다.</p>
-    <div class="lobby-stage"><div class="lobby-stage-glow"></div><img id="lobbyHeroArt" class="lobby-stage-portrait" alt="선택한 종족 대표 일러스트" hidden><canvas id="lobbyHero" width="72" height="72" aria-label="현재 선택된 지휘 종족의 대표 유닛"></canvas><div class="lobby-stage-label"><span id="lobbyFactionName">철갑연합</span><small id="lobbyFactionTrait">다목적 장갑·전열</small></div></div>
+    <div class="lobby-stage"><div class="lobby-stage-glow"></div><canvas id="lobbyHero" width="320" height="210" aria-label="선택한 종족 사령부와 대표 유닛"></canvas><div class="lobby-stage-label"><span id="lobbyFactionName">철갑연합</span><small id="lobbyFactionTrait">다목적 장갑·전열</small></div></div>
     <div class="lobby-actions"><button id="lobbySolo" class="lobby-primary" type="button"><strong>싱글 출격</strong><span>22웨이브 AI 전투 · 성장 경험치</span></button><button id="lobbyMulti" type="button"><strong>멀티플레이</strong><span>1:1~3:3 경쟁 · 2~3인 협동</span></button><button id="lobbyPractice" type="button"><strong>3라인 연습</strong><span>온라인 연결 없이 전장 연습</span></button></div>
    </main>
    <aside class="lobby-panel lobby-profile">
@@ -132,5 +132,6 @@
 <script src="./tri-lane-network.js?v=tenfog2" defer></script>
 <script src="./tri-lane-ui.js?v=tenfog2" defer></script>
 <script src="./game-v2.js?v=tenfog2" defer></script>
-<script src="./front-lobby.js?v=moe1" defer></script>
+<script src="./commander-covers.js?v=cover1" defer></script>
+<script src="./front-lobby.js?v=cover1" defer></script>
 </body></html>

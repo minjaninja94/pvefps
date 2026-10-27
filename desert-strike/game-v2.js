@@ -851,9 +851,9 @@ function updateUI(full=false){
   const f=FACTIONS[state.faction];
   $('unitCards').innerHTML=ROLE.map((r,i)=>{
    const portrait=window.IsoWorld?.portrait(state.faction,i)||window.DesertSprites?.portrait(state.faction,i)||sprite(state.faction,i,0);
-   const icon=(state.faction===4||state.faction===5)
-     ?'<span class="maiden-unit-portrait" aria-hidden="true" style="background-position:-'+(i*64)+'px -'+(192+(state.faction-4)*80)+'px"></span>'
-     :typeof portrait.toDataURL==='function'?'<img class="pixel-preview" src="'+portrait.toDataURL('image/png')+'" alt="" aria-hidden="true">':r.token;
+   const skin=window.DesertLobby?.selectedSkin?.()||'default';
+   const actual=skin==='moe'?window.DesertMoeArt?.frame(state.faction,i,'idle',4)||portrait:portrait;
+   const icon=typeof actual?.toDataURL==='function'?'<img class="pixel-preview" src="'+actual.toDataURL('image/png')+'" alt="" aria-hidden="true">':r.token;
    return '<button class="unit-card'+(selectedRole===i?' selected':'')+'" data-role="'+i+'" title="'+getDef(i,state.faction).tips+
     '"><span class="uc-top">'+getDef(i,state.faction).mark+' '+getDef(i,state.faction).name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
     '</span><span class="uc-name">'+f.units[i]+'</span><span class="uc-role">'+getDef(i,state.faction).name+' · '+(getDef(i,state.faction).kind==='air'?'공중':'지상')+'</span>'+

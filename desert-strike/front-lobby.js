@@ -56,8 +56,7 @@ function drawUnitAnimations(ts){
  });
  const large=$('lobbyUnitPreview'),ctx=large?.getContext('2d');
  if(ctx){ctx.clearRect(0,0,192,192);m.draw(ctx,{faction:f,role:selectedUnit,action:selectedAction,frame:m.frameAt(selectedAction,elapsed),size:178,x:7,y:7,filter,skin});}
- const small=$('lobbyHero'),smallCtx=small?.getContext('2d');
- if(smallCtx){smallCtx.clearRect(0,0,72,72);m.draw(smallCtx,{faction:f,role:selectedUnit,action:selectedAction,frame:m.frameAt(selectedAction,elapsed),size:72,filter});}
+ // Headquarters canvas is a static cover, not the animated unit preview.
 }
 function chooseUnit(i){
  if(!Number.isInteger(i)||i<0||i>=8)return;
@@ -68,6 +67,10 @@ function chooseAction(action){
  if(!global.DesertUnitMotion?.ACTIONS.some(a=>a.id===action))return;
  selectedAction=action;animationStart=performance.now();updateUnitInfo();
 }
+function renderCovers(){const art=global.DesertCommanderCovers;if(!art)return;const skin=currentSkin().id;
+ $('lobbyFactions')?.querySelectorAll('canvas[data-cover]')?.forEach(c=>art.draw(c,Number(c.dataset.cover),skin));
+ art.draw($('lobbyHero'),progress.selectedFaction,skin);
+}
 function render(){
  if(!FACTIONS.length)return;
  const fac=FACTIONS[progress.selectedFaction]||FACTIONS[0],l=levelFromXP(progress.xp),s=currentSkin();
@@ -76,17 +79,13 @@ function render(){
  $('lobbyRank').textContent=rank();$('lobbyRecord').textContent='싱글 '+progress.wins+'승 '+progress.losses+'패 · 온라인 '+progress.mpWins+'승 '+progress.mpLosses+'패 · 비공식 훈련 랭크';
  $('lobbyNickname').value=progress.nickname;
  $('lobbyFactionName').textContent=fac.name;$('lobbyFactionTrait').textContent=fac.bonus+' · '+fac.slogan;
- const img=$('lobbyHeroArt');if(img){img.hidden=progress.selectedFaction<4;img.src=progress.selectedFaction<4?'':'./assets/portraits/'+fac.id+'.svg';}
- $('lobbyHero').classList.toggle('faction-portrait-active',progress.selectedFaction>=4);
- $('lobbyFactions').innerHTML=FACTIONS.map((f,i)=>'<button class="lobby-faction'+(i===progress.selectedFaction?' selected':'')+'" data-faction="'+i+'" style="--fac:'+f.color+'"><span class="lobby-icon">'+f.logo+'</span>'+(i>=4?'<img class="lobby-faction-art" src="./assets/portraits/'+f.id+'.svg" alt="">':'<canvas width="72" height="72" data-portrait="'+i+'"></canvas>')+'<strong>'+f.name+'</strong><small>'+f.tag+'</small></button>').join('');
- $('lobbyFactions').querySelectorAll('canvas').forEach(c=>{const f=Number(c.dataset.portrait);try{let p=global.IsoWorld?.portrait(f,f===8?5:f===7?1:0);if(p)c.getContext('2d').drawImage(p,0,0,72,72);}catch(_){}});
+
+ $('lobbyFactions').innerHTML=FACTIONS.map((f,i)=>'<button class="lobby-faction'+(i===progress.selectedFaction?' selected':'')+'" data-faction="'+i+'" style="--fac:'+f.color+'"><span class="lobby-icon">'+f.logo+'</span><canvas width="160" height="114" data-cover="'+i+'" aria-label="'+f.name+' 사령부와 대표 병력"></canvas><strong>'+f.name+'</strong><small>'+f.tag+'</small></button>').join('');
+ renderCovers();
  $('lobbySkins').innerHTML=SKINS.map(x=>'<button class="lobby-skin'+(s.id===x.id?' selected':'')+'" data-skin="'+x.id+'" style="--skin:'+x.tone+'" '+(l.level<x.level?'disabled':'')+'><span class="skin-swatch">✦</span><strong>'+x.name+'</strong><small>'+(l.level<x.level?'LV.'+x.level+' 해금':x.desc)+'</small></button>').join('');
  $('lobbySkinMessage').textContent=s.name+' 선택 · 게임 능력치는 변경되지 않습니다.';
  renderUnitGallery();
- const cv=$('lobbyHero'),ctx=cv.getContext('2d');if(ctx){
-  ctx.clearRect(0,0,72,72);let art=global.IsoWorld?.frame(progress.selectedFaction,progress.selectedFaction===8?5:0,'idle',5);
-  if(art){ctx.filter=s.filter;ctx.drawImage(art,0,0,72,72);ctx.filter='none';}
- }
+ renderCovers();
  $('mpFaction').value=String(progress.selectedFaction);$('mpName').value=progress.nickname;
 }
 function show(){active=true;$('frontLobby').hidden=false;document.body.classList.add('lobby-active');render();}
@@ -217,7 +216,7 @@ function initialize(){
  $('backToLobby').addEventListener('click',()=>{void returnToLobby();});
  $('lobbySaveName').addEventListener('click',()=>{progress.nickname=safeName($('lobbyNickname').value);stateChange();});
  $('lobbyGoogle').addEventListener('click',google);$('lobbyGuest').addEventListener('click',()=>{void guest();});
- global.addEventListener?.('maiden-art-ready',render);global.addEventListener?.('isometric-art-ready',render);
+ global.addEventListener?.('maiden-art-ready',renderCovers);global.addEventListener?.('isometric-art-ready',renderCovers);global.addEventListener?.('desert-real-sprites-ready',renderCovers);
  show();void restoreAccount();
 }
 global.DesertLobby=Object.freeze({levelFromXP,filterForSkin,skinFilter:()=>currentSkin().filter,selectedSkin:()=>currentSkin().id,selectedFaction:()=>progress.selectedFaction,selectedUnit:()=>selectedUnit,chooseFaction,chooseSkin,chooseUnit,chooseAction,completeSolo,completeMultiplayer,grantXP,show,hide,enterMatch,openMultiplayer,returnToLobby});
