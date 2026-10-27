@@ -23,7 +23,9 @@ const PAL=[
  {outline:'#0d171b',shadow:'#192b33',low:'#315264',base:'#53788a',high:'#9ac0bb',trim:'#b9a376',glow:'#8ccfea',dark:'#101d27',skin:'#c09b7d'},
  {outline:'#1a1719',shadow:'#302026',low:'#60373a',base:'#8a4a4b',high:'#bc7e60',trim:'#cf9d52',glow:'#d2ac55',dark:'#291a20',skin:'#8b6550'},
  {outline:'#12151f',shadow:'#292f4e',low:'#5c668d',base:'#888db5',high:'#d0bdad',trim:'#daa84f',glow:'#86d9ef',dark:'#161b36',skin:'#c1a29c'},
- {outline:'#171512',shadow:'#272625',low:'#585846',base:'#77775d',high:'#b9ad80',trim:'#ae352b',glow:'#edbc6f',dark:'#201f1d',skin:'#a8755e'}
+ {outline:'#171512',shadow:'#272625',low:'#585846',base:'#77775d',high:'#b9ad80',trim:'#ae352b',glow:'#edbc6f',dark:'#201f1d',skin:'#a8755e'},
+ {outline:'#251e2e',shadow:'#49323a',low:'#71505d',base:'#9f7a83',high:'#ead7cf',trim:'#ecafbd',glow:'#f4d2dc',dark:'#221d29',skin:'#f1d1bf'},
+ {outline:'#1a2931',shadow:'#294b49',low:'#476c68',base:'#739e90',high:'#c9e6d4',trim:'#b7dac8',glow:'#c6f7e1',dark:'#1b3034',skin:'#f3dacc'}
 ];
 const rnd=Math.round,clamp=(a,b,c)=>Math.min(c,Math.max(b,a));
 const hash=(a,b=0)=>{let x=(a*374761393+b*668265263)|0;x=(x^(x>>13))*1274126177;return ((x^(x>>16))>>>0)/4294967295;};
@@ -146,6 +148,31 @@ function structure(g,x,y,faction,turret,hpRatio=1){
   }
   p(g,[[-21,-10],[2,-35],[26,-12],[12,8]],a.low);
   g.fillStyle=a.glow;g.fillRect(-3,-19,13,9);
+  }else if(faction===4){
+  // Moonfang warrior lodge: layered timber, clawed totems and moonstone gate.
+  const w=turret?44:81,h=turret?37:68;
+  box(g,-w*.5,-h*.7,w,h,24,'#c7aeb0','#715563','#342a39');
+  p(g,[[-w*.6,-h*.72],[0,-h-26],[w*.63,-h*.72],[13,-h*.47],[-11,-h*.47]],'#55414d');
+  p(g,[[-w*.5,-h*.74],[0,-h-22],[0,-h*.45]],'#a87c89');
+  p(g,[[0,-h-22],[w*.55,-h*.74],[0,-h*.45]],'#d6adb4');
+  for(const xx of [-(w*.42),w*.35]){
+   p(g,[[xx-4,12],[xx-8,-21],[xx, -40],[xx+8,-22],[xx+5,15]],'#83656d');
+   p(g,[[xx,-43],[xx-8,-62],[xx+9,-52]],'#f4c3d1');
+  }
+  g.fillStyle=a.glow;g.fillRect(-11,-h*.38,22,14);
+  g.fillStyle=a.dark;g.fillRect(-6,-h*.3,12,21);
+ }else if(faction===5){
+  // Silverwood elf spire: a living tree-arc and crystalline floating arrow towers.
+  const w=turret?38:66,top=turret?-68:-105;
+  box(g,-w*.5,-25,w,55,24,'#afdfc9','#477a6b','#244b47');
+  p(g,[[-24,10],[-35,-23],[-14,top+20],[0,top],[14,top+20],[35,-23],[24,10]],'#355c50');
+  p(g,[[-18,-7],[-26,-25],[-7,top+19],[0,top],[7,top+19],[26,-25],[18,-7]],'#9ac8b4');
+  p(g,[[0,top],[16,top+30],[0,top+49],[-14,top+30]],'#daf6dd');
+  p(g,[[0,top],[16,top+30],[0,top+49]],'#75b9ae');
+  g.fillStyle='#b6f8e1';g.fillRect(-4,top+23,8,12);
+  for(const xx of [-26,25]){
+   p(g,[[xx-4,4],[xx-11,-23],[xx,-41],[xx+10,-22],[xx+5,7]],'#4b7768');
+  }
  }else if(faction===2){
   // Crystal order: floating prismatic tower with a real left/right face.
   box(g,-34,-37,turret?51:78,turret?40:82,28,a.high,a.low,a.shadow);
@@ -185,6 +212,14 @@ function factory(g,x,y,faction,role,active){
  if(active){
   box(g,-12,-12,22,17,9,a.high,a.base,a.shadow);
   g.fillStyle=a.glow;g.fillRect(-5,-8,10,4);
+  if(faction===4){
+   p(g,[[-16,-12],[-9,-26],[1,-17],[14,-25],[20,-13]],'#e2b1bd');
+   g.fillStyle='#412c41';g.fillRect(-2,-12,5,6);
+  }else if(faction===5){
+   p(g,[[-15,-15],[0,-34],[15,-15],[0,-9]],'#97d9b8');
+   p(g,[[0,-34],[15,-15],[0,-9]],'#497d78');
+   g.fillStyle='#defbe2';g.fillRect(-2,-20,5,6);
+  }
   if(role===5||role===3){g.fillStyle=a.trim;g.fillRect(-3,-19,7,9);}
   if(role===6){p(g,[[-12,-10],[2,-23],[15,-12]],a.trim);}
   g.fillStyle='#0d1419';g.fillRect(-10,-3,3,4);
@@ -244,7 +279,11 @@ function renderFactionSprite(f,role,mode,frame){
  const g=cv.getContext('2d');if(!g)return cv;
  const a=PAL[f]||PAL[0],t=frame/16,cyc=t*Math.PI*2,walk=mode==='move',hit=mode==='attack'||mode==='siege';
  if(f===3&&role===6){drawOdoBongo(g,mode,frame);cache.set(key,cv);return cv;}
- const atlas=f===3?marineAtlas:realAtlas;
+ if((f===4||f===5)&&global.HeroineFactions){
+  global.HeroineFactions.draw(g,f,role,mode,frame);
+  cache.set(key,cv);return cv;
+ }
+ const atlas=f===3?marineAtlas:f>=4?null:realAtlas;
  if(atlas&&atlas.complete&&atlas.naturalWidth>0){
   const cols=f===3?4:8,rows=f===3?2:3;
   const sw=atlas.naturalWidth/cols,sh=atlas.naturalHeight/rows;
