@@ -52,7 +52,7 @@
   g.restore();return true;
  }
  atlas.overlay=overlay;atlas.spriteTile=spriteTile;
- global.MaidenArt=Object.freeze(atlas);
+ global.MaidenArt=atlas;
  if(typeof Image==='undefined'||!global.document){return;}
  image=new Image();image.decoding='async';
  image.onload=()=>{
