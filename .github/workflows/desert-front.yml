@@ -22,11 +22,14 @@ jobs:
           node --check desert-strike/game-v2.js
           node --check desert-strike/sprite-animations.js
           node --check desert-strike/isometric-world.js
+          node --check desert-strike/heroine-factions.js
       - name: Gameplay regression V1
         run: node desert-strike/smoke.test.cjs
       - name: Gameplay V2
         run: node desert-strike/smoke-v2.test.cjs
-      - name: 16-frame sprite engine (24 units x 5 actions)
+      - name: Legacy 16-frame sprite regression (24 original units)
         run: node desert-strike/smoke-animations.test.cjs
-      - name: 2.5D isometric rendering and 32-unit animation atlas
+      - name: 2.5D original 32-unit isometric rendering
         run: node desert-strike/smoke-isometric.test.cjs
+      - name: Beastgirls and elven mages full sprite coverage
+        run: node desert-strike/smoke-heroine.test.cjs
