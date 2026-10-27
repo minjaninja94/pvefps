@@ -87,7 +87,7 @@ function render(){
  renderCovers();
  $('mpFaction').value=String(progress.selectedFaction);$('mpName').value=progress.nickname;
 }
-function show(){active=true;$('frontLobby').hidden=false;document.body.classList.add('lobby-active');render();}
+function show(){global.DesertCommandHud?.closeUpgrades?.();delete document.body.dataset.playMode;active=true;$('frontLobby').hidden=false;document.body.classList.add('lobby-active');render();}
 function hide(){active=false;$('frontLobby').hidden=true;document.body.classList.remove('lobby-active');}
 function chooseFaction(i){
  if(!Number.isInteger(i)||i<0||i>=FACTIONS.length)return;
@@ -162,7 +162,7 @@ function single(){
   $('mpStatus').textContent='먼저 참여 중인 방에서 나가야 싱글플레이를 시작할 수 있습니다.';
   return;
  }
- prepare();onlineOpen=false;$('lobbyMultiplayerConfig').hidden=true;
+ document.body.dataset.playMode='solo';prepare();onlineOpen=false;$('lobbyMultiplayerConfig').hidden=true;
  hide();$('startButton').click();
  $('startOverlay').classList.add('hidden');
 }
@@ -171,7 +171,7 @@ function openMultiplayer(){
  $('lobbyMultiplayerConfig').scrollIntoView?.({behavior:'smooth',block:'start'});
 }
 function enterMatch(){
- if($('frontLobby').hidden)return;
+ global.DesertCommandHud?.closeUpgrades?.();document.body.dataset.playMode='multi';
  prepare();onlineOpen=false;
  $('lobbyMultiplayerConfig').hidden=true;
  $('startOverlay').classList.add('hidden');

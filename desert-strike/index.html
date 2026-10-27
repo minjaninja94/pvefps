@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=cover1"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=economy4"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -38,6 +38,7 @@
  </div>
 </section>
 <div class="app">
+<div id="commandHud" class="command-hud">
 <header class="top">
  <a class="logo" href="../"><span class="logo-badge">D<span>///</span>F</span><span>DESERT <strong>FRONT</strong><small>ISOMETRIC PIXEL BATTLE / V3</small></span></a>
  <div class="top-side"><button id="backToLobby" class="btn outline" type="button">⌂ 로비</button><span id="factionLabel" class="faction-pill">진영 미선택</span><button id="helpButton" class="btn outline">? 도움말</button></div>
@@ -49,19 +50,23 @@
  <button class="tab active" data-view="base" aria-current="page"><span class="tab-no">01</span><span>내 기지 · 건설<small>BASE & PRODUCTION</small></span><span id="warningDot" class="danger-dot" hidden>!</span></button>
  <button class="tab" data-view="battle"><span class="tab-no">02</span><span>전장<small>LIVE BATTLE</small></span></button>
  <button class="tab" data-view="multiplayer"><span class="tab-no">04</span><span>멀티플레이<small>1:1 – 3:3 · CO-OP</small></span></button>
- <button class="tab" data-view="special"><span class="tab-no">03</span><span>특수 기능<small>ABILITY & UPGRADE</small></span></button>
+ <button class="tab" type="button" data-open-upgrades><span class="tab-no">↗</span><span>업그레이드<small>UPGRADE & ABILITY</small></span></button>
 </nav>
-<div class="base-health"><div class="health-entry"><div><span class="color-point blue">●</span> 아군 핵심 기지 <b id="myHealth">7200 / 7200</b></div><div class="healthbar"><i id="myHealthFill"></i></div></div><div class="health-entry"><div><span class="color-point red">●</span> 적 핵심 기지 <b id="enemyHealth">7200 / 7200</b></div><div class="healthbar redbar"><i id="enemyHealthFill"></i></div></div></div>
-<div class="screen active" id="view-base">
- <div class="section-head"><div><span class="eyebrow">BASE DEVELOPMENT / PRODUCTION ZONE</span><h1>생산 기지</h1><p>진영을 선택하고 유닛 생산 시설을 건설하세요. 적이 방어선을 뚫으면 이곳에 침공 병력이 표시됩니다.</p></div><span id="baseAlert" class="alert-chip">기지 안전</span></div>
  <section class="production-intel panel" aria-label="생산 중 전장 상황">
   <div class="intel-top"><strong>전장 전황 · 생산 중 실시간 미니맵</strong><span id="productionFrontStatus" data-tendency="even">전선 분석 대기</span></div>
   <canvas id="productionMinimap" width="1100" height="88" aria-label="아군과 적군의 현재 전선. 누르면 전장으로 이동합니다." role="button" tabindex="0"></canvas>
   <small>청록색 아군 · 주황색 적군 · 하단 전선 비율 / 미니맵을 누르면 해당 전장으로 이동</small>
  </section>
+  <div class="mp-overview"><canvas id="mpOverviewCanvas" width="1100" height="96" aria-label="3라인 전황 미니맵. 원하는 라인을 눌러 이동합니다."></canvas></div>
+  <div class="mp-command-bar"><div><span class="eyebrow">PERSONAL COMMAND</span><strong id="mpMyResources">360 CR</strong> <span id="mpMyIncome">+1 / 0.5초</span></div><div><b id="mpWave">웨이브 0</b> · <span id="mpCountdown">24초</span></div><button id="mpEco" class="btn outline">경제 강화</button></div>
+</div>
+<div class="base-health"><div class="health-entry"><div><span class="color-point blue">●</span> 아군 핵심 기지 <b id="myHealth">7200 / 7200</b></div><div class="healthbar"><i id="myHealthFill"></i></div></div><div class="health-entry"><div><span class="color-point red">●</span> 적 핵심 기지 <b id="enemyHealth">7200 / 7200</b></div><div class="healthbar redbar"><i id="enemyHealthFill"></i></div></div></div>
+<div class="screen active" id="view-base">
+ <div class="section-head"><div><span class="eyebrow">BASE DEVELOPMENT / PRODUCTION ZONE</span><h1>생산 기지</h1><p>진영을 선택하고 유닛 생산 시설을 건설하세요. 적이 방어선을 뚫으면 이곳에 침공 병력이 표시됩니다.</p></div><span id="baseAlert" class="alert-chip">기지 안전</span></div>
+
  <div class="canvas-wrap base-canvas"><canvas id="baseCanvas" width="1100" height="340" aria-label="아군 기지, 방어 포탑과 침공 병력"></canvas><div class="canvas-note">● CORE & DEFENSE — 생산 시설은 보호 구역에 있습니다.</div></div>
  <div class="base-content">
- <section class="panel cards-panel"><div class="panel-heading"><div><span class="eyebrow">RECRUIT UNITS</span><h2>병력 편성</h2></div><span class="shortcut">1–8 단축키</span><a class="sprite-gallery-link" href="./sprite-gallery.html" target="_blank" rel="noopener">2.5D 도트 모션 도감 ↗</a></div><p class="subtext">유닛을 고르면 <b>강점·약점·공격 대상</b>이 보입니다. 선택한 유닛을 아래 빈 슬롯에 설치하세요.</p><div id="unitCards" class="unit-cards"></div><div id="unitDetails" class="unit-details">유닛을 선택하면 여기에서 상성 정보를 볼 수 있습니다.</div></section>
+ <section class="panel cards-panel"><div class="panel-heading"><div><span class="eyebrow">RECRUIT UNITS</span><h2>병력 편성</h2></div><button type="button" class="btn accent" data-open-upgrades>✦ 업그레이드</button><span class="shortcut">1–8 단축키</span><a class="sprite-gallery-link" href="./sprite-gallery.html" target="_blank" rel="noopener">2.5D 도트 모션 도감 ↗</a></div><p class="subtext">유닛을 고르면 <b>강점·약점·공격 대상</b>이 보입니다. 선택한 유닛을 아래 빈 슬롯에 설치하세요.</p><div id="econInfo" class="economy-status" role="status" aria-live="off"></div><div id="unitCards" class="unit-cards"></div><div id="unitDetails" class="unit-details">유닛을 선택하면 여기에서 상성 정보를 볼 수 있습니다.</div></section>
  <section class="panel build-panel"><div class="panel-heading"><div><span class="eyebrow">UNIT FORMATION</span><h2>생산 건물 · 15 × 5</h2></div><span id="builtCount" class="shortcut">0 / 75</span></div><p class="subtext">앞쪽 배치일수록 먼저 교전합니다. <b>웨이브마다 각 건물에서 1기씩 소환</b>됩니다.</p><div class="build-grid-viewport" aria-label="75개 생산 슬롯 가로 스크롤"><div id="buildGrid" class="build-grid" aria-label="기지 건설 슬롯"></div></div><div class="actions"><button id="demolishButton" class="btn outline">▤ 철거 모드</button><button id="clearButton" class="btn outline">✕ 선택 해제</button></div><div class="protection-note"><b>기지 방어 규칙</b><p>원작의 후대형 방식처럼 생산 시설은 직접 파괴되지 않습니다. 적이 밀고 들어오면 방어 포탑을 먼저 공격하고, 이후 핵심 기지를 파괴합니다.</p></div></section>
  </div>
 </div>
@@ -72,7 +77,7 @@
 </div>
 
 <div class="screen" id="view-multiplayer">
- <div class="section-head"><div><span class="eyebrow">TRI-FRONT / MULTIPLAYER OPERATIONS</span><h1>3라인 멀티플레이</h1><p>전장 면적 3배 · 팀당 1~3명 경쟁 또는 2~3명 협동 대 동수 AI. 참가자마다 자원·병력 생산 시설을 소유합니다.</p></div><span id="mpStateTag" class="alert-chip">연결 전</span></div>
+ <div class="section-head"><div><span class="eyebrow">TRI-FRONT / MULTIPLAYER OPERATIONS</span><h1>3라인 멀티플레이</h1><p>전장 면적 3배 · 팀당 1~3명 경쟁 또는 2~3명 협동 대 동수 AI. 참가자마다 자원·병력 생산 시설을 소유합니다.</p></div><button id="mpExitBattle" class="btn outline" type="button">경기 종료 · 로비</button><span id="mpStateTag" class="alert-chip">연결 전</span></div>
  <section class="panel mp-lobby" id="mpLobby">
   <div class="mp-lobby-grid">
    <label>지휘관 이름<input id="mpName" maxlength="16" placeholder="지휘관" value="지휘관"></label>
@@ -87,51 +92,54 @@
   <div id="mpMembers" class="mp-members">아직 참가한 방이 없습니다.</div>
  </section>
  <section class="panel mp-command" id="mpCommand" hidden>
-  <div class="mp-command-bar"><div><span class="eyebrow">PERSONAL COMMAND</span><strong id="mpMyResources">360 CR</strong> <span id="mpMyIncome">+1 / 0.5초</span></div><div><b id="mpWave">웨이브 0</b> · <span id="mpCountdown">24초</span></div><button id="mpEco" class="btn outline">경제 강화</button></div>
+
   <div class="mp-lane-tabs" id="mpLaneTabs"><button class="active" data-lane="0">상단 라인</button><button data-lane="1">중앙 라인</button><button data-lane="2">하단 라인</button></div>
-  <div class="mp-overview"><canvas id="mpOverviewCanvas" width="1100" height="96" aria-label="3라인 전황 미니맵. 원하는 라인을 눌러 이동합니다."></canvas></div><div class="mp-battle-wrap"><canvas id="mpBattleCanvas" width="1100" height="660" aria-label="하나로 연결된 3300×1560 전장. 생산 위치만 3개 구역으로 구분됩니다."></canvas><div class="mp-help">통합 전장 · 라인 경계에서도 자동 어그로·추격·교전 · 좌측 아군 / 우측 적군</div></div>
+<div class="mp-battle-wrap"><canvas id="mpBattleCanvas" width="1100" height="660" aria-label="하나로 연결된 3300×1560 전장. 생산 위치만 3개 구역으로 구분됩니다."></canvas><div class="mp-help">통합 전장 · 라인 경계에서도 자동 어그로·추격·교전 · 좌측 아군 / 우측 적군</div></div>
   <div id="mpFactionTraits" class="marine-ops faction-trait-banner" hidden role="status" aria-live="off"></div>
   <div id="mpMarineAbilities" class="marine-ops" hidden role="status" aria-live="off"></div>
   <div class="mp-lane-summary" id="mpLaneSummary"></div>
-  <div class="mp-build-controls"><strong>내 생산 건물 배치 <span id="mpSelectedLane">상단 라인</span></strong><span id="mpBuiltCount">0개 건설</span><label>유닛 종류<select id="mpUnitType"></select></label><button id="mpDemolish" class="btn outline">철거 선택</button></div>
-  <div id="mpBuildGrid" class="mp-build-grid" aria-label="선택한 라인의 생산 시설 75칸"></div>
+  <div class="mp-build-controls"><strong>내 생산 건물 배치 <span id="mpSelectedLane">상단 라인</span></strong><span id="mpBuiltCount">0개 건설</span><button id="mpDemolish" class="btn outline">철거 선택</button></div>
+  <div id="mpUnitCards" class="unit-cards" role="group" aria-label="생산할 유닛 선택"></div><div id="mpUnitDetails" class="unit-details" aria-live="polite"></div>
+  <div class="build-grid-viewport"><div id="mpBuildGrid" class="mp-build-grid" aria-label="선택한 라인의 생산 시설 75칸"></div></div>
   <p class="subtext">라인은 출격 위치만 결정합니다. 전투 병력은 하나의 전장을 자유롭게 이동하고 인접 지역의 적을 추격합니다. 참가자별 자원은 독립적입니다. 24초마다 생산. 같은 팀이 만든 건물은 소유자만 변경할 수 있습니다.</p>
  </section>
 </div>
-<div class="screen" id="view-special">
- <div class="section-head"><div><span class="eyebrow">HIGH COMMAND / TACTICAL SYSTEMS</span><h1>특수 기능 및 업그레이드</h1><p>긴급 방어와 영구 강화는 이곳에서 관리합니다. 생산 화면으로 돌아가도 전투는 계속됩니다.</p></div></div>
+<section id="upgradePanel" class="upgrade-layer" hidden role="dialog" aria-modal="false" aria-labelledby="upgradeTitle"><div id="view-special" class="upgrade-content">
+ <div class="upgrade-toolbar"><div><span class="eyebrow">HIGH COMMAND</span><h2 id="upgradeTitle">업그레이드 · 전술 지원</h2><small>전투는 계속 진행됩니다. 전황과 자원은 상단에서 확인하세요.</small></div><button id="closeUpgrades" type="button" class="btn outline" aria-label="업그레이드 닫기">닫기 ✕</button></div>
  <div class="special-grid">
  <section class="feature-card orange"><span class="eyebrow">SPECIAL / ONE USE</span><span class="feat-symbol">☢</span><h2>비상 핵폭탄</h2><p>아군 진영(x ≤ 중앙선)으로 넘어온 적 병력을 전멸시킵니다. 한 게임에 단 한 번, 아군 기지 HP가 70% 이하이거나 적이 침공 중일 때 사용 가능합니다.</p><div class="feature-status" id="nukeInfo">준비 완료 · 위기 시 활성화</div><button id="nukeButton" class="btn accent">☢ 핵폭탄 발동</button></section>
  <section class="feature-card cyan"><span class="eyebrow">SPECIAL / RECHARGE</span><span class="feat-symbol">✷</span><h2>궤도 폭격</h2><p>적군이 가장 많이 모인 지역에 범위 피해를 줍니다. 기갑이나 포병 덩어리를 무너뜨리는 반격 기술입니다.</p><div class="feature-status" id="barrageInfo">비용 260 CR · 재사용 32초</div><button id="barrageButton" class="btn blueaccent">✷ 폭격 요청 · 260 CR</button></section>
- <section class="feature-card green"><span class="eyebrow">ECONOMY</span><span class="feat-symbol">⬡</span><h2>자원 채굴망</h2><p>양측 모두 0.5초마다 기본 1 CR을 받습니다. 업그레이드 시 주기당 +1 CR씩 늘어나며 첫 단계는 70 CR(회수 35초)입니다. 초반 병력과 장기 수입 사이에서 선택하세요.</p><div class="feature-status" id="econInfo">레벨 0 / 7</div><button id="econButton" class="btn greenaccent">경제 업그레이드</button></section>
+
  <section class="feature-card purple"><span class="eyebrow">UPGRADE / PERMANENT</span><span class="feat-symbol">✦</span><h2>무기 강화</h2><p>모든 아군 유닛의 공격력과 회복량이 단계당 8% 증가합니다. 기존 전투 중 유닛에도 적용됩니다.</p><div class="feature-status" id="weaponInfo">레벨 0 / 5</div><button id="weaponButton" class="btn purpleaccent">무기 강화</button></section>
  <section class="feature-card steel"><span class="eyebrow">UPGRADE / PERMANENT</span><span class="feat-symbol">⬟</span><h2>장갑 강화</h2><p>아군 유닛 HP가 단계당 9% 증가합니다. 방어 시설과 핵심 기지 체력에는 적용되지 않습니다.</p><div class="feature-status" id="armorInfo">레벨 0 / 5</div><button id="armorButton" class="btn outline">장갑 강화</button></section>
  <section class="feature-card steel"><span class="eyebrow">HEADQUARTERS</span><span class="feat-symbol">▥</span><h2>기지 방어 보수</h2><p>방어 포탑을 수리하고 공격력을 강화합니다. 포탑이 무너져도 복구할 수 있어 역전을 노릴 수 있습니다.</p><div class="feature-status" id="repairInfo">방어 포탑 수리</div><button id="repairButton" class="btn outline">포탑 수리 · 180 CR</button></section>
  </div>
  <section class="panel matrix"><div class="panel-heading"><div><span class="eyebrow">COUNTER MATRIX</span><h2>유닛 역할 상성표</h2></div></div><p class="subtext">진영마다 외형은 다르지만 <b>공통 역할 마크</b>로 상대 병종의 장단점을 즉시 알아볼 수 있습니다.</p><div id="counterMatrix" class="matrix-grid"></div></section>
-</div>
+</div></section>
 <footer><span id="notification" role="status">진영을 선택하고 전투를 시작하세요.</span><span class="footer-tag">DESERT FRONT · ORIGINAL PROTOTYPE</span></footer>
 </div>
 <div id="startOverlay" class="modal-backdrop"><div class="modal-panel start-panel"><span class="eyebrow">DEPLOYMENT / CHOOSE YOUR FACTION</span><h2>전투 진영 선택</h2><p>열 종족이 역할 상성을 공유하지만 특성은 다릅니다. 월영 수인족은 근접, 은월 엘프족은 원거리 전투에 특화되어 있습니다. 상대 AI는 다른 진영으로 시작합니다.</p><div id="factionCards" class="faction-cards"></div><button id="startButton" class="btn start-cta">선택한 진영으로 출격 ↗</button></div></div>
 <div id="endOverlay" class="modal-backdrop hidden"><div class="modal-panel end-panel"><span class="eyebrow">BATTLE REPORT</span><h2 id="endTitle">승리</h2><p id="endSummary"></p><button id="restartButton" class="btn start-cta">메인 로비로 돌아가기</button></div></div>
-<dialog id="helpDialog"><div class="help-inner"><h2>데저트 프런트 조작법</h2><p>① 내 기지: 유닛 카드를 선택하고 15×5 생산 슬롯을 눌러 생산 시설 설치 / 철거는 비용의 55% 환급</p><p>② 전장: 확장 전장 · 미니맵/전선 추적 · 자동 전투 관전 / 역할 마크로 상성 파악 / 유닛을 눌러 능력 확인 / 배속과 일시정지</p><p>③ 특수 기능: 1회 핵폭탄 / 유료 궤도 폭격 / 채굴망·무기·장갑 강화 / 방어 포탑 보수</p><p>생산 건물은 보호되고 방어 포탑이 적을 막습니다. 기지 본체가 파괴되면 패배합니다. 초반 360 CR로 시작하고, 기본 수입 0.5초당 1 CR에서 경제 강화 시 주기당 +1 CR씩 증가합니다. 24초마다 출격합니다.</p><p>키보드: 1–8 유닛 선택, 1·2·3 화면 전환은 Alt+숫자, Space 일시정지, Esc 선택 해제.</p><button class="btn start-cta" id="helpClose">확인</button></div></dialog>
+<dialog id="helpDialog"><div class="help-inner"><h2>데저트 프런트 조작법</h2><p>① 내 기지: 유닛 카드를 선택하고 15×5 생산 슬롯을 눌러 생산 시설 설치 / 철거는 비용의 55% 환급</p><p>② 전장: 확장 전장 · 미니맵/전선 추적 · 자동 전투 관전 / 역할 마크로 상성 파악 / 유닛을 눌러 능력 확인 / 배속과 일시정지</p><p>③ 병력 편성 위 업그레이드: 핵폭탄 / 궤도 폭격 / 무기·장갑 강화 / 포탑 보수. 자원채취 건물은 생산 슬롯에 설치하며, 안정화 중에는 인컴이 중단됩니다.</p><p>생산 건물은 보호되고 방어 포탑이 적을 막습니다. 기지 본체가 파괴되면 패배합니다. 초반 360 CR로 시작하고, 기본 수입 0.5초당 1 CR에서 경제 강화 시 주기당 +1 CR씩 증가합니다. 24초마다 출격합니다.</p><p>키보드: 1–8 유닛 선택, 1·2·3 화면 전환은 Alt+숫자, Space 일시정지, Esc 선택 해제.</p><button class="btn start-cta" id="helpClose">확인</button></div></dialog>
 <script src="./marine-art-data.js" defer></script>
 <script src="./sprite-animations.js" defer></script>
 <script src="./iso-real-atlas-data.js?v=iso3" defer></script>
 <script src="./heroine-factions.js?v=tenfog2" defer></script>
 <script src="./expansion-art.js?v=tenfog2" defer></script>
 <script src="./maiden-illustrations.js?v=tenfog2" defer></script>
-<script src="./sprite-atlas.js?v=real-atlas-2" defer></script>
-<script src="./special-unit-art.js?v=custom1" defer></script>
-<script src="./isometric-world.js?v=custom2" defer></script>
+<script src="./sprite-atlas.js?v=economy4" defer></script>
+<script src="./special-unit-art.js?v=economy4" defer></script>
+<script src="./resource-art.js?v=economy4" defer></script>
+<script src="./isometric-world.js?v=economy4" defer></script>
 <script src="../firebase-config.js" defer></script>
 <script src="../firebase-network.js" defer></script>
 <script src="./moe-unit-art.js?v=moe1" defer></script>
 <script src="./unit-motion.js?v=moe2" defer></script>
 <script src="./tri-lane-engine.js?v=ground2" defer></script>
-<script src="./tri-lane-network.js?v=ground2" defer></script>
-<script src="./tri-lane-ui.js?v=ground2" defer></script>
-<script src="./game-v2.js?v=ground2" defer></script>
-<script src="./commander-covers.js?v=cover1" defer></script>
-<script src="./front-lobby.js?v=ground2" defer></script>
+<script src="./tri-lane-network.js?v=economy4" defer></script>
+<script src="./tri-lane-ui.js?v=economy4" defer></script>
+<script src="./game-v2.js?v=economy4" defer></script>
+<script src="./commander-covers.js?v=economy4" defer></script>
+<script src="./command-hud.js?v=economy4" defer></script>
+<script src="./front-lobby.js?v=economy4" defer></script>
 </body></html>

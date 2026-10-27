@@ -1,0 +1,33 @@
+name: Desert Front HUD and economy regression
+on:
+  push:
+    paths:
+      - 'desert-strike/**'
+      - '.github/workflows/desert-economy.yml'
+  pull_request:
+    paths:
+      - 'desert-strike/**'
+      - '.github/workflows/desert-economy.yml'
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax
+        run: |
+          node --check desert-strike/game-v2.js
+          node --check desert-strike/tri-lane-engine.js
+          node --check desert-strike/tri-lane-ui.js
+          node --check desert-strike/command-hud.js
+          node --check desert-strike/resource-art.js
+      - name: Economy and occupied production slots
+        run: node desert-strike/smoke-economy.test.cjs
+      - name: Cooperative combat
+        run: node desert-strike/smoke-trilane.test.cjs
+      - name: Authoritative networking
+        run: node desert-strike/smoke-trilane-network.test.cjs
+      - name: Faction action atlas cells
+        run: node desert-strike/smoke-reference.test.cjs

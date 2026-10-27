@@ -331,3 +331,58 @@ body{background:
 .lobby-factions{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media(max-width:760px){.lobby-factions{grid-template-columns:repeat(3,minmax(0,1fr))}#lobbyHero{width:min(100%,340px)}}
 @media(max-width:420px){.lobby-factions{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Gameplay context stays within the selected mode. */
+body[data-play-mode="solo"] [data-view="multiplayer"],body[data-play-mode="multi"] .tabs,
+body[data-play-mode="multi"] .app>.stats,body[data-play-mode="multi"] .app>.base-health,
+body[data-play-mode="multi"] #factionTraitStatus,body[data-play-mode="multi"] #marineAbilityStatus{display:none!important}
+body[data-play-mode="solo"] #view-multiplayer,body[data-play-mode="multi"] #view-base,
+body[data-play-mode="multi"] #view-battle,body[data-play-mode="multi"] #view-special{display:none!important}
+#mpUnitCards{display:grid;grid-template-columns:repeat(8,minmax(85px,1fr));gap:8px;margin:12px 0}
+.mp-unit-card{min-height:114px;border:1px solid #466471;border-radius:10px;background:#152c36;color:#e8eee7;cursor:pointer;padding:7px;touch-action:manipulation}
+.mp-unit-card canvas{display:block;width:72px;height:72px;image-rendering:pixelated;margin:auto}
+.mp-unit-card strong,.mp-unit-card small{display:block;font-size:12px}
+.mp-unit-card.active{border:2px solid #efd09a;background:#35484a;box-shadow:0 0 0 2px #efd09a33}
+.mp-unit-card.unaffordable{opacity:.6}
+#mpBuildGrid button{min-width:44px;min-height:44px;position:relative;touch-action:manipulation}
+#mpBuildGrid canvas{width:40px;height:40px;image-rendering:pixelated;pointer-events:none}
+#mpBuildGrid button[aria-pressed="true"]{outline:2px solid #efb388}
+.mp-command{border-radius:14px}.mp-command-bar{position:sticky;top:0;z-index:4;background:#102731ee;padding:12px;backdrop-filter:blur(6px)}
+.mp-lane-tabs button,.mp-build-controls button{min-height:44px;touch-action:manipulation}
+@media(max-width:760px){#mpUnitCards{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.mp-unit-card{padding:3px;min-height:104px}.mp-unit-card canvas{width:60px;height:60px}.mp-unit-card strong{font-size:10px}.mp-command{padding:8px!important}.mp-build-controls{flex-wrap:wrap}.mp-command-bar{top:0;gap:6px;font-size:12px}.mp-battle-wrap{overflow:hidden}#mpBattleCanvas{width:100%;height:auto;max-height:52vh;object-fit:contain}.mp-build-grid{min-width:680px}.mp-overview{margin:8px 0}.mp-help{font-size:10px}.lobby-factions{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+
+/* A single sticky ancestor prevents stats, navigation and maps from overlapping. */
+:root{--command-hud-height:230px}
+html{scroll-padding-top:calc(var(--command-hud-height) + 12px)}
+.command-hud{position:sticky;top:0;z-index:70;background:#101c20f5;box-shadow:0 7px 18px #0007;border-bottom:1px solid #657165;isolation:isolate}
+.command-hud .top{height:54px;margin:0;padding:6px 0}
+.command-hud .stats{position:static;min-height:0;margin:0;padding:5px 0;box-shadow:none;border-bottom:0}
+.command-hud .tabs{margin:0;padding:4px 0;gap:6px}
+.command-hud .tab{min-height:42px;padding:6px 10px;flex:1}
+.command-hud .tab-no{font-size:21px}
+.command-hud .production-intel{margin:0;padding:6px 10px;border-radius:0;background:#13272b;border:0}
+.command-hud .production-intel small{display:none}
+.command-hud .intel-top{font-size:10px;margin:0 0 4px;gap:7px}
+.command-hud #productionMinimap{width:100%;height:42px;min-height:0;margin:0;display:block;cursor:crosshair}
+.command-hud .mp-overview{margin:0;border:0;padding:4px 0}
+.command-hud #mpOverviewCanvas{width:100%;height:55px;display:block;cursor:crosshair}
+.command-hud .mp-command-bar{position:static;margin:0;border:0;border-radius:0}
+body[data-play-mode="solo"] .command-hud .mp-overview,body[data-play-mode="solo"] .command-hud .mp-command-bar,
+body:not([data-play-mode="multi"]) .command-hud .mp-overview,body:not([data-play-mode="multi"]) .command-hud .mp-command-bar,
+body[data-play-mode="multi"] .command-hud .stats,body[data-play-mode="multi"] .command-hud .production-intel{display:none!important}
+.upgrade-layer{position:fixed;inset:calc(var(--command-hud-height) + 8px) max(12px,calc((100vw - 1160px)/2)) 12px;z-index:65;overflow:auto;overscroll-behavior:contain;padding:16px;background:#13252af7;border:1px solid #c4aa78;border-radius:12px;box-shadow:0 22px 70px #000c}
+.upgrade-layer[hidden]{display:none!important}.upgrade-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;position:sticky;top:-16px;background:#13252afa;padding:12px 0;z-index:2}
+.upgrade-toolbar h2{font-size:22px;margin:4px 0}.upgrade-toolbar small{color:#c1cec5;font-size:11px}.upgrade-toolbar button{min-height:44px;flex-shrink:0}
+.economy-status{font-size:12px;line-height:1.6;border:1px solid #756742;border-radius:7px;background:#2a3025;color:#eed99d;padding:9px;margin:9px 0}
+.resource-card{border-color:#998658;background:#333a2b}.resource-card .uc-sprite{color:#f1d790;font-size:34px}.resource-card:disabled{opacity:.55;cursor:not-allowed}
+@media(max-width:620px){
+ .command-hud .top{height:43px}.command-hud .top .logo small{display:none}.command-hud .logo-badge{padding:5px}
+ .command-hud .stats{padding:3px 0}.command-hud .stats>div:not(.compact-status){padding:4px}.command-hud .stats strong{font-size:16px}
+ .command-hud .tab{min-height:37px;padding:4px;font-size:10px}.command-hud .tab small{display:none}.command-hud .tab-no{font-size:17px}
+ .command-hud .production-intel{padding:4px 5px}.command-hud .intel-top{font-size:9px}.command-hud #productionMinimap{height:32px}
+ .upgrade-layer{left:6px;right:6px;bottom:6px;padding:10px}.upgrade-toolbar{top:-10px}.upgrade-toolbar h2{font-size:17px}.upgrade-toolbar small{font-size:10px}
+ .cards-panel .panel-heading{align-items:center}.cards-panel [data-open-upgrades]{min-height:44px;font-size:12px}.economy-status{font-size:11px}
+}
+.command-hud .tabs{grid-template-columns:repeat(3,minmax(0,1fr))}
+.extractor-slot{width:34px;height:34px;object-fit:contain;image-rendering:pixelated}
+.resource-card .pixel-preview{width:50px;height:50px}.resource-card .uc-sprite{height:50px}

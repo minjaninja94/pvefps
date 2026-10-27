@@ -37,6 +37,7 @@ function base(g,f,p){
 function draw(canvas,f,skin='default'){
  const g=canvas?.getContext?.('2d');if(!g)return;
  const w=canvas.width,h=canvas.height,p=PAL[f]||PAL[0],old=g.imageSmoothingEnabled;
+ if(global.DesertRealSprites?.cover?.(g,f,0,0,w,h,false)){global.DesertRealSprites.cover(g,f,w*.60,0,w*.40,h,true);return;}
  g.save();g.clearRect(0,0,w,h);g.scale(w/320,h/210);g.imageSmoothingEnabled=false;
  const bg=g.createLinearGradient(0,0,0,210);bg.addColorStop(0,'#122337');bg.addColorStop(.75,p[1]);bg.addColorStop(1,'#0d2535');g.fillStyle=bg;g.fillRect(0,0,320,210);
  for(let i=0;i<29;i++)box(g,(i*61+f*13)%313,(i*41+f*7)%87,2+(i%2),2,i%3?p[2]:p[0]);

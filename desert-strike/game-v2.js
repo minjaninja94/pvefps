@@ -3,6 +3,7 @@
 const $=id=>document.getElementById(id);
 const CW=1100,CH=520,WORLD_W=3300,HOME_H=340,MAX_BASE=7200,MAX_TURRET=1700,INTERVAL=24,COLS=15,ROWS=5,SLOTS=COLS*ROWS,INCOME_PERIOD=.5,SIDE_SUPPLY=220;
 const COLORS=['#79dfee','#ff9a79'],LANES=[110,180,260,340,410];
+const EXTRACTOR=8;
 const initialIncome=1,WAVE_STIPEND=24,MAX_ECONOMY=7;
 const TOWER_RANGE=285,TOWER_PERIOD=.31,TOWER_DAMAGE=28,FOG_END_WAVE=6,ENEMY_FOG_X=WORLD_W-770;
 const HEAL_WINDOW=1,HEAL_BUDGET=80;
@@ -101,6 +102,16 @@ function broodLay(parent,target,roll=Math.random){
 }
 function ecoCostFor(level){return Math.round(70*Math.pow(1.36,level));}
 function ecoCost(){return ecoCostFor(state.eco);}
+function ecoStabilize(level,elapsed){return 4+2*level+Math.min(6,Math.floor(Math.max(0,elapsed)/120));}
+function ecoRemaining(side=0){return Math.max(0,(side===0?state.ecoReadyAt:state.enemyEcoReadyAt)-state.elapsed);}
+function constructExtractor(side,index){
+ const mine=side===0?'eco':'enemyEco',cash=side===0?'cash':'enemyCash',ready=side===0?'ecoReadyAt':'enemyEcoReadyAt';
+ const slots=side===0?state.built:state.enemyBuilt,costs=side===0?state.mineCosts:state.enemyMineCosts;
+ const price=ecoCostFor(state[mine]);
+ if(slots[index]!==null||state[mine]>=MAX_ECONOMY||ecoRemaining(side)>0||state[cash]<price)return false;
+ slots[index]=EXTRACTOR;costs[index]=price;state[cash]-=price;state[mine]++;
+ state[ready]=state.elapsed+ecoStabilize(state[mine],state.elapsed);return true;
+}
 function weaponCost(){return Math.round(200*Math.pow(1.65,state.weapon));}
 function armorCost(){return Math.round(190*Math.pow(1.63,state.armor));}
 function setMessage(t){$('notification').textContent=t;}
@@ -120,7 +131,7 @@ function chirp(hz=420,length=.08){
  }catch(_){}
 }
 function reset(){
- state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:360,eco:0,enemyEco:0,weapon:0,armor:0,incomeClock:0,cameraX:1100,followFront:true,
+ state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:360,eco:0,enemyEco:0,ecoReadyAt:0,enemyEcoReadyAt:0,mineCosts:{},enemyMineCosts:{},weapon:0,armor:0,incomeClock:0,cameraX:1100,followFront:true,
  wave:0,next:INTERVAL,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],
  built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},
@@ -145,6 +156,10 @@ function start(){
  updateUI(true);chirp(530,.16);
 }
 function changeView(id){
+ const mode=document.body?.dataset?.playMode;
+ if(id==='special'){window.DesertCommandHud?.openUpgrades?.();return;}
+ if(mode==='solo'&&id==='multiplayer'||mode==='multi'&&id!=='multiplayer')return;
+ window.DesertCommandHud?.closeUpgrades?.();
  activeView=id;
  document.querySelectorAll('.screen').forEach(a=>a.classList.toggle('active',a.id==='view-'+id));
  document.querySelectorAll('.tab').forEach(a=>{
@@ -156,10 +171,10 @@ function getSelectedRoleButton(){
  return selectedRole!==null?ROLE[selectedRole]:null;
 }
 function selectRole(i){
- if(i<0||i>=ROLE.length)return;
+ if(i<0||i>EXTRACTOR)return;
  selectedRole=(selectedRole===i?null:i);demolition=false;
  updateUI(true);
- if(selectedRole!==null)setMessage(FACTIONS[state.faction].units[selectedRole]+' 선택 · 빈 생산 슬롯을 클릭하세요.');
+ if(selectedRole!==null)setMessage((selectedRole===EXTRACTOR?'자원채취 건물':FACTIONS[state.faction].units[selectedRole])+' 선택 · 빈 생산 슬롯을 클릭하세요.');
 }
 function place(index){
  if(!state.live||state.ended){setMessage('전투를 먼저 시작하세요.');return;}
@@ -167,15 +182,18 @@ function place(index){
  const old=state.built[index];
  if(demolition){
   if(old!==null){
-   const refund=Math.floor(ROLE[old].cost*.55);
-   state.cash+=refund;state.built[index]=null;
-   setMessage(FACTIONS[state.faction].units[old]+' 생산 시설 철거 · '+refund+' CR 반환');chirp(210,.11);
+   const refund=Math.floor((old===EXTRACTOR?state.mineCosts[index]:ROLE[old].cost)*.55);
+   state.cash+=refund;state.built[index]=null;if(old===EXTRACTOR){state.eco--;delete state.mineCosts[index];}
+   setMessage((old===EXTRACTOR?'자원채취 건물':FACTIONS[state.faction].units[old])+' 생산 시설 철거 · '+refund+' CR 반환');chirp(210,.11);
   }
   updateUI(true);return;
  }
  if(selectedRole===null){setMessage('먼저 생산할 유닛을 선택하세요.');return;}
  if(old!==null){
   setMessage('이미 생산시설이 설치된 자리입니다. 다른 시설을 건설하려면 철거 버튼이나 우클릭으로 먼저 철거하세요.');return;
+ }
+ if(selectedRole===EXTRACTOR){
+  const ok=constructExtractor(0,index);setMessage(ok?'자원채취 건물 설치 · '+ecoStabilize(state.eco,state.elapsed)+'초간 인컴 중단':ecoRemaining()>0?'채굴망 안정화가 끝난 뒤 추가 건설할 수 있습니다.':state.eco>=MAX_ECONOMY?'자원채취 건물은 최대 7개입니다.':'자원 부족');updateUI(true);return;
  }
  const price=ROLE[selectedRole].cost;
  if(price>state.cash){setMessage('자원 부족 · '+Math.ceil(price-state.cash)+' CR이 더 필요합니다.');return;}
@@ -185,10 +203,7 @@ function place(index){
 }
 function upgrade(kind){
  if(!state.live||state.paused||state.ended)return;
- if(kind==='econ'&&state.eco<MAX_ECONOMY&&state.cash>=ecoCost()){
-  state.cash-=ecoCost();state.eco++;
-  setMessage('채굴망 Lv.'+state.eco+' · 0.5초마다 +'+(1+state.eco)+' CR · 원금 회수 약 '+Math.ceil(ecoCostFor(state.eco-1)/2)+'초');chirp(650,.14);
- }
+ if(kind==='econ'){selectRole(EXTRACTOR);return;}
  if(kind==='weapon'&&state.weapon<5&&state.cash>=weaponCost()){
   state.cash-=weaponCost();state.weapon++;setMessage('무기 강화 Lv.'+state.weapon+' · 모든 아군 공격력 증가');chirp(650,.14);
  }
@@ -288,7 +303,7 @@ function aiChoose(budget=state.enemyCash){
  const affordable=ROLE.map((role,id)=>id).filter(id=>ROLE[id].cost<=budget);
  if(!affordable.length)return null;
  const myCounts=Array(ROLE.length).fill(0);
- for(const role of state.enemyBuilt)if(role!==null)myCounts[role]++;
+ for(const role of state.enemyBuilt)if(role!==null&&role!==EXTRACTOR)myCounts[role]++;
  // Mixed heavy/air/healer compositions require two real counter types, not a random counter.
  const groundVehicle=[3,4,6,7].includes(state.faction);
  const tanks=intel.counts[3]+(groundVehicle?intel.counts[6]:0),air=groundVehicle?0:intel.counts[6],medics=intel.counts[7];
@@ -346,10 +361,10 @@ function aiAdaptFacilities(intel){
  // At most one conversion per 2 waves. React only to clear, repeated single-role spam.
  if(intel.dominant===null||intel.total<4||state.wave<2||state.wave%2!==0)return false;
  const counters=aiCountersFor(intel.dominant);
- const aiCount=state.enemyBuilt.filter(r=>r!==null).length;
+ const aiCount=state.enemyBuilt.filter(r=>r!==null&&r!==EXTRACTOR).length;
  const counterCount=state.enemyBuilt.filter(r=>counters.includes(r)).length;
  if(counterCount>=Math.ceil(aiCount*.55))return false;
- const badIndex=state.enemyBuilt.findIndex(role=>role!==null&&!counters.includes(role));
+ const badIndex=state.enemyBuilt.findIndex(role=>role!==null&&role!==EXTRACTOR&&!counters.includes(role));
  if(badIndex<0)return false;
  const oldRole=state.enemyBuilt[badIndex],refund=Math.floor(ROLE[oldRole].cost*.55);
  const options=counters.filter(role=>ROLE[role].cost-refund<=state.enemyCash);
@@ -361,7 +376,7 @@ function aiAdaptFacilities(intel){
 }
 function aiInvest(){
  const intel=aiReadOpponent();
- const enemyCount=state.enemyBuilt.filter(role=>role!==null).length;
+ const enemyCount=state.enemyBuilt.filter(role=>role!==null&&role!==EXTRACTOR).length;
  const invaded=state.units.some(u=>u.side===0&&u.x>WORLD_W-580&&u.hp>0);
  const heavyRush=intel.total>=4&&intel.dominant!==null;
  // Spend normal starting income on a genuine early offensive army to punish pure eco greed.
@@ -382,7 +397,7 @@ function aiInvest(){
   const wantLevel=Math.min(MAX_ECONOMY,Math.floor(state.wave/4));
   const ecoPrice=ecoCostFor(state.enemyEco);
   if(state.enemyEco<wantLevel&&state.enemyCash>=ecoPrice+150){
-   state.enemyCash-=ecoPrice;state.enemyEco++;
+   const slot=state.enemyBuilt.findIndex(v=>v===null);if(slot>=0)constructExtractor(1,slot);
   }
  }
  aiAdaptFacilities(intel);
@@ -395,18 +410,18 @@ function aiInvest(){
  }
 }
 function wave(){
- state.wave++;state.cash+=WAVE_STIPEND;
+ state.wave++;if(ecoRemaining()<=0)state.cash+=WAVE_STIPEND;
  state.marineSupports=[];state.marineRecruitCount=[0,0];state.broodBirths=[0,0];
- state.enemyCash+=WAVE_STIPEND;
+ if(ecoRemaining(1)<=0)state.enemyCash+=WAVE_STIPEND;
  aiInvest();
  const headcount=[state.units.filter(u=>u.side===0).length,state.units.filter(u=>u.side===1).length];
  for(let i=0;i<SLOTS;i++){
-  if(state.built[i]!==null){
+  if(state.built[i]!==null&&state.built[i]!==EXTRACTOR){
    const role=state.built[i];
    if(headcount[0]<SIDE_SUPPLY){createUnit(0,i,role);headcount[0]++;}
    if(state.faction===3&&role===7)for(const interval of [1,2])state.marineSupports.push({side:0,slot:i,role,wave:state.wave,due:state.elapsed+HUANGLONG_INTERVAL*interval});
   }
-  if(state.enemyBuilt[i]!==null){
+  if(state.enemyBuilt[i]!==null&&state.enemyBuilt[i]!==EXTRACTOR){
    const role=state.enemyBuilt[i];
    if(headcount[1]<SIDE_SUPPLY){createUnit(1,i,role);headcount[1]++;}
    if(state.enemyFaction===3&&role===7)for(const interval of [1,2])state.marineSupports.push({side:1,slot:i,role,wave:state.wave,due:state.elapsed+HUANGLONG_INTERVAL*interval});
@@ -708,7 +723,7 @@ function tick(dt){
  }
  const ds=dt*state.rate;
  state.elapsed+=ds;state.next-=ds;state.incomeClock+=ds;
- while(state.incomeClock>=INCOME_PERIOD){state.incomeClock-=INCOME_PERIOD;state.cash+=initialIncome+state.eco;state.enemyCash+=initialIncome+state.enemyEco;}
+ while(state.incomeClock>=INCOME_PERIOD){const at=state.elapsed-state.incomeClock+INCOME_PERIOD;state.incomeClock-=INCOME_PERIOD;if(at+1e-6>=state.ecoReadyAt)state.cash+=initialIncome+state.eco;if(at+1e-6>=state.enemyEcoReadyAt)state.enemyCash+=initialIncome+state.enemyEco;}
  state.barrageCd=Math.max(0,state.barrageCd-ds);
  while(state.next<=0){state.next+=INTERVAL;wave();}
  deployMarineSupports();
@@ -809,7 +824,7 @@ function updateUI(full=false){
  if(!state)return;
  const cameraStatus=$('cameraStatus');if(cameraStatus)cameraStatus.textContent=state.followFront?'전선 자동 추적':'수동 이동 · '+Math.round((state.cameraX+CW/2)/WORLD_W*100)+'%';
  $('cash').textContent=money(state.cash);
- $('income').textContent='+'+(1+state.eco);
+ $('income').textContent=ecoRemaining()>0?'중단 '+Math.ceil(ecoRemaining())+'초':'+'+(1+state.eco);
  $('wave').textContent=String(state.wave).padStart(2,'0');
  $('timer').textContent=Math.max(0,state.next).toFixed(1);
  $('myHealth').textContent=Math.ceil(state.baseHP[0])+' / '+MAX_BASE;
@@ -837,17 +852,18 @@ function updateUI(full=false){
  $('barrageInfo').textContent=state.barrageCd>0?'재충전 '+Math.ceil(state.barrageCd)+'초':'비용 260 CR · 적 병력 필수';
  $('barrageButton').disabled=!(state.live&&!state.ended&&!state.paused&&state.barrageCd<=0&&state.cash>=260&&state.units.some(u=>u.side===1));
  const econ=ecoCost(),weapon=weaponCost(),armor=armorCost();
- $('econInfo').textContent='레벨 '+state.eco+' / 7 · 0.5초마다 +'+(1+state.eco)+' CR'+(state.eco<MAX_ECONOMY?' · 다음 투자금 회수 '+Math.ceil(ecoCostFor(state.eco)/2)+'초':' · 최대 강화');
+ $('econInfo').textContent='자원채취 '+state.eco+' / 7 · '+(ecoRemaining()>0?'인컴 중단 '+Math.ceil(ecoRemaining())+'초 남음':'0.5초마다 +'+(1+state.eco)+' CR')+(state.eco<MAX_ECONOMY?' · 다음 '+ecoCost()+' CR / 안정화 '+ecoStabilize(state.eco+1,state.elapsed)+'초':' · 최대 건설');
  $('weaponInfo').textContent='레벨 '+state.weapon+' / 5 · 공격력 +'+state.weapon*8+'%';
  $('armorInfo').textContent='레벨 '+state.armor+' / 5 · HP +'+state.armor*9+'%';
  $('repairInfo').textContent='방어 포탑 '+Math.ceil(state.turretHP[0])+' / '+MAX_TURRET;
- const upgradeButtons=[['econButton',state.eco,7,econ,'경제'],['weaponButton',state.weapon,5,weapon,'무기'],['armorButton',state.armor,5,armor,'장갑']];
+ const upgradeButtons=[['weaponButton',state.weapon,5,weapon,'무기'],['armorButton',state.armor,5,armor,'장갑']];
  for(const [id,lv,max,price,label] of upgradeButtons){
   $(id).textContent=lv>=max?'최대 강화 완료':label+' 강화 · '+price+' CR';
   $(id).disabled=!(state.live&&!state.paused&&!state.ended&&lv<max&&state.cash>=price);
  }
  $('repairButton').disabled=!(state.live&&!state.paused&&!state.ended&&state.cash>=180&&state.turretHP[0]<MAX_TURRET);
- if(full||state.lastCards===undefined||Math.floor(state.cash/30)!==state.lastCards){
+ const ecoKey=[state.eco,ecoRemaining()>0,Math.floor(state.elapsed/120)].join(":");
+ if(full||state.lastEcoKey!==ecoKey||state.lastCards===undefined||Math.floor(state.cash/30)!==state.lastCards){state.lastEcoKey=ecoKey;
   const f=FACTIONS[state.faction];
   $('unitCards').innerHTML=ROLE.map((r,i)=>{
    const portrait=window.IsoWorld?.portrait(state.faction,i)||window.DesertSprites?.portrait(state.faction,i)||sprite(state.faction,i,0);
@@ -858,13 +874,13 @@ function updateUI(full=false){
     '"><span class="uc-top">'+getDef(i,state.faction).mark+' '+getDef(i,state.faction).name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
     '</span><span class="uc-name">'+f.units[i]+'</span><span class="uc-role">'+getDef(i,state.faction).name+' · '+(getDef(i,state.faction).kind==='air'?'공중':'지상')+'</span>'+
     '<span class="uc-cost">'+r.cost+' CR</span><span class="good-counter">'+(i===7?'지원':'강점')+': '+getDef(i,state.faction).good.map(x=>ROLE[x].mark).join(' ')+'</span><span class="bad-counter">약점: '+getDef(i,state.faction).bad.map(x=>ROLE[x].mark).join(' ')+'</span></button>';
-  }).join('');
+  }).join('')+'<button class="unit-card resource-card'+(selectedRole===EXTRACTOR?' selected':'')+'" data-role="8" '+(state.eco>=7||ecoRemaining()>0?'disabled':'')+'><span class="uc-top">경제 · 슬롯 1칸</span><span class="uc-sprite"><img class="pixel-preview" src="./assets/resource-extractor.webp" alt=""></span><span class="uc-name">자원채취 건물</span><span class="uc-role">인컴 +1 / 0.5초 · '+state.eco+'/7</span><span class="uc-cost">'+ecoCost()+' CR</span><span class="bad-counter">안정화 '+ecoStabilize(state.eco+1,state.elapsed)+'초 · 전체 인컴 중단</span></button>';
   $('buildGrid').innerHTML=state.built.map((id,i)=>
-   '<button class="build-cell'+(id!==null?' occupied':'')+(demolition&&id!==null?' demolition':'')+'" data-cell="'+i+'" aria-label="'+(id!==null?f.units[id]:'빈 슬롯')+'">'+
-   (id!==null?'<span class="cell-icon">'+getDef(id,state.faction).mark+'</span><span class="cell-name">'+f.units[id]+'</span>':
+   '<button class="build-cell'+(id!==null?' occupied':'')+(demolition&&id!==null?' demolition':'')+'" data-cell="'+i+'" aria-label="'+(id===EXTRACTOR?'자원채취 건물':id!==null?f.units[id]:'빈 슬롯')+'">'+
+   (id===EXTRACTOR?'<span class="cell-icon"><img class="extractor-slot" src="./assets/resource-extractor.webp" alt=""></span><span class="cell-name">자원채취</span>':id!==null?'<span class="cell-icon">'+getDef(id,state.faction).mark+'</span><span class="cell-name">'+f.units[id]+'</span>':
     '<span class="cell-icon">+</span><span class="cell-position">'+(Math.floor(i/COLS)+1)+'-'+(i%COLS+1)+'</span>')+'</button>').join('');
   $('demolishButton').classList.toggle('selected',demolition);
-  $('unitDetails').innerHTML=selectedRole!==null?'<b>'+f.units[selectedRole]+'</b> · '+getDef(selectedRole,state.faction).name+
+  $('unitDetails').innerHTML=selectedRole===EXTRACTOR?'<b>자원채취 건물</b> · 생산 슬롯 1칸 / 최대 7개<br>건설 1개당 인컴 +1 CR / 0.5초. 건설 직후 '+ecoStabilize(state.eco+1,state.elapsed)+'초간 기본·채굴 인컴과 웨이브 지원금이 중단됩니다. 단계와 경기 시간이 늘수록 안정화가 길어집니다.':selectedRole!==null?'<b>'+f.units[selectedRole]+'</b> · '+getDef(selectedRole,state.faction).name+
     ' / '+ROLE[selectedRole].cost+' CR<br>'+getDef(selectedRole,state.faction).tips+'<div class="matchups">'+roleMatchupHtml(selectedRole,state.faction)+
     '</div><span>HP '+Math.round(getDef(selectedRole,state.faction).hp)+' · 피해 '+Math.round(getDef(selectedRole,state.faction).damage)+
     ' · 사거리 '+getDef(selectedRole,state.faction).range+' · '+(getDef(selectedRole,state.faction).airTarget?'대공 가능':'지상 공격')+'</span>':
@@ -952,7 +968,6 @@ function buildSprite(faction,role,phase){
   b(12,11,8,12,'#7ad5a6');b(14,9,4,16,light);b(9,15,14,5,light);
   b(3,11,5,8,shade);b(24,11,5,8,shade);
  }
- // Role and species distinct pixel silhouettes, not ripped game assets.
  return c;
 }
 function sprite(f,r,phase){
@@ -1191,9 +1206,9 @@ function drawBase(){
   g.fillStyle='#2d4851';g.fillRect(x-20,y-12,41,23);
   if(role!==null){
    g.fillStyle=FACTIONS[state.faction].color;g.fillRect(x-20,y-11,16,15);
-   const art=window.IsoWorld?.portrait(state.faction,role)||window.DesertSprites?.portrait(state.faction,role);
+   const art=role===EXTRACTOR?null:window.IsoWorld?.portrait(state.faction,role)||window.DesertSprites?.portrait(state.faction,role);
    if(art){g.imageSmoothingEnabled=false;g.drawImage(art,x-11,y-12,25,24);}
-   else{g.font='900 19px monospace';g.fillStyle='#fff1cc';g.textAlign='center';g.fillText(ROLE[role].mark,x+7,y+6);}
+   else{g.font='900 19px monospace';g.fillStyle='#fff1cc';g.textAlign='center';g.fillText(role===EXTRACTOR?'⬡':ROLE[role].mark,x+7,y+6);}
   }else{g.textAlign='center';g.font='900 14px monospace';g.fillStyle='#506a72';g.fillText('+',x,y+5);}
  }
  // Defensive turret is destructible. Production zone itself stays protected.
@@ -1279,7 +1294,7 @@ function drawProductionMinimap(){
 }
 function frame(now){
  const delta=Math.min((now-lastFrame)/1000||0,.045);lastFrame=now;
- if(state&&activeView!=='multiplayer'){tick(delta);drawBattle();drawBase();drawMinimap();drawProductionMinimap();}
+ if(state&&activeView!=='multiplayer'&&!document.body?.classList?.contains('lobby-active')&&!document.hidden){tick(delta);if(activeView==='battle'){drawBattle();drawMinimap();}else if(activeView==='base'){drawBase();}drawProductionMinimap();}
  requestAnimationFrame(frame);
 }
 function inspectBattle(event){
@@ -1323,7 +1338,7 @@ function wire(){
  });
  $('nukeButton').addEventListener('click',emergency);
  $('barrageButton').addEventListener('click',barrage);
- $('econButton').addEventListener('click',()=>upgrade('econ'));
+
  $('weaponButton').addEventListener('click',()=>upgrade('weapon'));
  $('armorButton').addEventListener('click',()=>upgrade('armor'));
  $('repairButton').addEventListener('click',()=>upgrade('repair'));
