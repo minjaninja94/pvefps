@@ -311,7 +311,7 @@ function drawOdoBongo(g,mode,frame){
 // Dedicated Marine mechanics must have their own silhouettes, not generic
 // atlas frames. A single frame function is used by solo, PvP and lobby.
 function drawHuanglongMarine(g,mode,frame){
- const p=frame/16,a=PAL[3],moving=mode==='move',dy=moving?Math.sin(p*Math.PI*2)*2:0;
+ const phase=frame/16,moving=mode==='move',dy=moving?Math.sin(phase*Math.PI*2)*2:0;
  const heal=(mode==='attack'||mode==='siege')&&frame>=4&&frame<=12;
  g.save();g.translate(0,dy);
  if(mode==='death'){g.translate(35,50);g.rotate(frame/15*.9);g.translate(-35,-50);g.globalAlpha=Math.max(.08,1-frame/17);}
