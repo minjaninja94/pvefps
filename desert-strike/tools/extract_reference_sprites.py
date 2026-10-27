@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw
 import numpy as np, json
-from scipy.ndimage import binary_dilation
+from scipy.ndimage import binary_dilation, label
 from pathlib import Path
 import argparse
 parser=argparse.ArgumentParser(description='Extract the ten uploaded faction sheets into production action atlases.')
@@ -30,7 +30,8 @@ for idx,(name,file) in enumerate(zip(names,files)):
    rgb=a.astype('int16'); chrom=rgb.max(2)-rgb.min(2)
    # Checkerboard is neutral grey. Keep dark outlines and colored pixels.
    color=chrom>45
-   mask=(chrom>24)|(rgb.max(2)<64)
+   color=chrom>32
+   mask=color|((rgb.max(2)<80)&binary_dilation(color,iterations=4))
    mask[:2]=False;mask[-2:]=False;mask[:,:2]=False;mask[:,-2:]=False
    mask[:,mask.sum(0)>mask.shape[0]*.82]=False
    signal=color.astype(float);width=a.shape[1]
@@ -48,6 +49,13 @@ for idx,(name,file) in enumerate(zip(names,files)):
    for frame in range(8):
     lo,hi=merged[min(len(merged)-1,frame*len(merged)//8)]
     patch=Image.fromarray(np.dstack([a,mask.astype('uint8')*255])).crop((max(0,lo-1),0,min(a.shape[1],hi+1),a.shape[0]))
+    pa=np.array(patch)
+    labs,num=label(pa[:,:,3]>0)
+    if num:
+     areas=np.bincount(labs.ravel());areas[0]=0;largest=areas.argmax()
+     keep=areas>=max(8,areas[largest]*.12);keep[0]=False
+     pa[:,:,3]=np.where(keep[labs],pa[:,:,3],0)
+     patch=Image.fromarray(pa)
     bbox=patch.getbbox()
     if bbox:patch=patch.crop(bbox)
     scale=86/max(patch.width,patch.height)

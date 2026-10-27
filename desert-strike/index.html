@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=cover1"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=reference3"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -72,7 +72,7 @@
 </div>
 
 <div class="screen" id="view-multiplayer">
- <div class="section-head"><div><span class="eyebrow">TRI-FRONT / MULTIPLAYER OPERATIONS</span><h1>3라인 멀티플레이</h1><p>전장 면적 3배 · 팀당 1~3명 경쟁 또는 2~3명 협동 대 동수 AI. 참가자마다 자원·병력 생산 시설을 소유합니다.</p></div><span id="mpStateTag" class="alert-chip">연결 전</span></div>
+ <div class="section-head"><div><span class="eyebrow">TRI-FRONT / MULTIPLAYER OPERATIONS</span><h1>3라인 멀티플레이</h1><p>전장 면적 3배 · 팀당 1~3명 경쟁 또는 2~3명 협동 대 동수 AI. 참가자마다 자원·병력 생산 시설을 소유합니다.</p></div><button id="mpExitBattle" class="btn outline" type="button">경기 종료 · 로비</button><span id="mpStateTag" class="alert-chip">연결 전</span></div>
  <section class="panel mp-lobby" id="mpLobby">
   <div class="mp-lobby-grid">
    <label>지휘관 이름<input id="mpName" maxlength="16" placeholder="지휘관" value="지휘관"></label>
@@ -93,8 +93,9 @@
   <div id="mpFactionTraits" class="marine-ops faction-trait-banner" hidden role="status" aria-live="off"></div>
   <div id="mpMarineAbilities" class="marine-ops" hidden role="status" aria-live="off"></div>
   <div class="mp-lane-summary" id="mpLaneSummary"></div>
-  <div class="mp-build-controls"><strong>내 생산 건물 배치 <span id="mpSelectedLane">상단 라인</span></strong><span id="mpBuiltCount">0개 건설</span><label>유닛 종류<select id="mpUnitType"></select></label><button id="mpDemolish" class="btn outline">철거 선택</button></div>
-  <div id="mpBuildGrid" class="mp-build-grid" aria-label="선택한 라인의 생산 시설 75칸"></div>
+  <div class="mp-build-controls"><strong>내 생산 건물 배치 <span id="mpSelectedLane">상단 라인</span></strong><span id="mpBuiltCount">0개 건설</span><button id="mpDemolish" class="btn outline">철거 선택</button></div>
+  <div id="mpUnitCards" class="unit-cards" role="group" aria-label="생산할 유닛 선택"></div><div id="mpUnitDetails" class="unit-details" aria-live="polite"></div>
+  <div class="build-grid-viewport"><div id="mpBuildGrid" class="mp-build-grid" aria-label="선택한 라인의 생산 시설 75칸"></div></div>
   <p class="subtext">라인은 출격 위치만 결정합니다. 전투 병력은 하나의 전장을 자유롭게 이동하고 인접 지역의 적을 추격합니다. 참가자별 자원은 독립적입니다. 24초마다 생산. 같은 팀이 만든 건물은 소유자만 변경할 수 있습니다.</p>
  </section>
 </div>
@@ -121,17 +122,17 @@
 <script src="./heroine-factions.js?v=tenfog2" defer></script>
 <script src="./expansion-art.js?v=tenfog2" defer></script>
 <script src="./maiden-illustrations.js?v=tenfog2" defer></script>
-<script src="./sprite-atlas.js?v=real-atlas-2" defer></script>
-<script src="./special-unit-art.js?v=custom1" defer></script>
-<script src="./isometric-world.js?v=custom2" defer></script>
+<script src="./sprite-atlas.js?v=reference3" defer></script>
+<script src="./special-unit-art.js?v=reference3" defer></script>
+<script src="./isometric-world.js?v=reference3" defer></script>
 <script src="../firebase-config.js" defer></script>
 <script src="../firebase-network.js" defer></script>
 <script src="./moe-unit-art.js?v=moe1" defer></script>
 <script src="./unit-motion.js?v=moe2" defer></script>
 <script src="./tri-lane-engine.js?v=ground2" defer></script>
-<script src="./tri-lane-network.js?v=ground2" defer></script>
-<script src="./tri-lane-ui.js?v=ground2" defer></script>
-<script src="./game-v2.js?v=ground2" defer></script>
-<script src="./commander-covers.js?v=cover1" defer></script>
-<script src="./front-lobby.js?v=ground2" defer></script>
+<script src="./tri-lane-network.js?v=reference3" defer></script>
+<script src="./tri-lane-ui.js?v=reference3" defer></script>
+<script src="./game-v2.js?v=reference3" defer></script>
+<script src="./commander-covers.js?v=reference3" defer></script>
+<script src="./front-lobby.js?v=reference3" defer></script>
 </body></html>

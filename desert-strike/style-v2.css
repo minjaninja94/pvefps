@@ -331,3 +331,22 @@ body{background:
 .lobby-factions{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media(max-width:760px){.lobby-factions{grid-template-columns:repeat(3,minmax(0,1fr))}#lobbyHero{width:min(100%,340px)}}
 @media(max-width:420px){.lobby-factions{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Gameplay context stays within the selected mode. */
+body[data-play-mode="solo"] [data-view="multiplayer"],body[data-play-mode="multi"] .tabs,
+body[data-play-mode="multi"] .app>.stats,body[data-play-mode="multi"] .app>.base-health,
+body[data-play-mode="multi"] #factionTraitStatus,body[data-play-mode="multi"] #marineAbilityStatus{display:none!important}
+body[data-play-mode="solo"] #view-multiplayer,body[data-play-mode="multi"] #view-base,
+body[data-play-mode="multi"] #view-battle,body[data-play-mode="multi"] #view-special{display:none!important}
+#mpUnitCards{display:grid;grid-template-columns:repeat(8,minmax(85px,1fr));gap:8px;margin:12px 0}
+.mp-unit-card{min-height:114px;border:1px solid #466471;border-radius:10px;background:#152c36;color:#e8eee7;cursor:pointer;padding:7px;touch-action:manipulation}
+.mp-unit-card canvas{display:block;width:72px;height:72px;image-rendering:pixelated;margin:auto}
+.mp-unit-card strong,.mp-unit-card small{display:block;font-size:12px}
+.mp-unit-card.active{border:2px solid #efd09a;background:#35484a;box-shadow:0 0 0 2px #efd09a33}
+.mp-unit-card.unaffordable{opacity:.6}
+#mpBuildGrid button{min-width:44px;min-height:44px;position:relative;touch-action:manipulation}
+#mpBuildGrid canvas{width:40px;height:40px;image-rendering:pixelated;pointer-events:none}
+#mpBuildGrid button[aria-pressed="true"]{outline:2px solid #efb388}
+.mp-command{border-radius:14px}.mp-command-bar{position:sticky;top:0;z-index:4;background:#102731ee;padding:12px;backdrop-filter:blur(6px)}
+.mp-lane-tabs button,.mp-build-controls button{min-height:44px;touch-action:manipulation}
+@media(max-width:760px){#mpUnitCards{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.mp-unit-card{padding:3px;min-height:104px}.mp-unit-card canvas{width:60px;height:60px}.mp-unit-card strong{font-size:10px}.mp-command{padding:8px!important}.mp-build-controls{flex-wrap:wrap}.mp-command-bar{top:0;gap:6px;font-size:12px}.mp-battle-wrap{overflow:hidden}#mpBattleCanvas{width:100%;height:auto;max-height:52vh;object-fit:contain}.mp-build-grid{min-width:680px}.mp-overview{margin:8px 0}.mp-help{font-size:10px}.lobby-factions{grid-template-columns:repeat(2,minmax(0,1fr))!important}}

@@ -7,7 +7,7 @@
 const ICE=[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}];
 let events={},scope=null,db=null,fs=null,uid=null,roomId=null,room=null,host=false,localPeer=null;
 let roomUnsub=null,peerSubs=new Map(),channels=new Map(),pcs=new Map(),clock=null,engine=null,seq=0,lastFrame=0;
-let active=false,answering=false,hostPeerOpen=new Set();
+let active=false,answering=false,hostPeerOpen=new Set(),snapshotSeq=0;
 const msg=e=>global.IronFirebase?.message?.(e)||e?.message||String(e);
 function notify(key,data){try{events[key]?.(data);}catch(e){console.error('멀티 UI 갱신 오류',e);}}
 function status(s){notify('status',s);}
@@ -148,12 +148,13 @@ function handleChannel(guest,ch){
    send(ch,{type:'ack',seq:data.seq,result});
    if(result.ok)broadcast(true);
   }else if(data?.type==='snapshot'){
+   if(typeof data.seq==='number'&&data.seq<=(ch._snapshotSeq||0))return;ch._snapshotSeq=data.seq||0;
    if(data.state?.lanes!==3&&data.state?.width!==3300)return;
    notify('snapshot',data.state);
   }else if(data?.type==='ack'&&!data.result.ok){status(data.result.reason);}
  };
 }
-function send(ch,obj){if(ch?.readyState==='open')try{ch.send(JSON.stringify(obj));}catch(e){status('동기화 데이터 전송 실패');}}
+function send(ch,obj){if(ch?.readyState==='open')try{if(obj.type==='snapshot'&&ch.bufferedAmount>65536)return;ch.send(JSON.stringify(obj));}catch(e){status('동기화 데이터 전송 실패');}}
 async function makeOffer(guest){
  if(pcs.has(guest)||!room?.players?.[guest])return;
  const pc=new RTCPeerConnection({iceServers:ICE});pcs.set(guest,pc);
@@ -183,7 +184,7 @@ function broadcast(force=false){
  const now=performance.now();
  if(!force&&now-lastFrame<200)return;
  lastFrame=now;
- for(const [guest,ch] of channels)send(ch,{type:'snapshot',state:engine.snapshot(guest)});
+ snapshotSeq++;for(const [guest,ch] of channels)send(ch,{type:'snapshot',seq:snapshotSeq,state:engine.snapshot(guest)});
  notify('snapshot',engine.snapshot(uid));
 }
 async function start(){
