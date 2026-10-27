@@ -30,7 +30,7 @@ function el(id){
  };
  ids.set(id,item);return item;
 }
-const facItems=[0,1,2,3].map(i=>{const classes=new Set(i===0?['selected']:[]);return {
+const facItems=[0,1,2,3,4,5].map(i=>{const classes=new Set(i===0?['selected']:[]);return {
  dataset:{faction:String(i)},classList:{
  toggle(key,on){if(on)classes.add(key);else classes.delete(key);},
  contains(key){return classes.has(key);}
@@ -274,3 +274,40 @@ assert.equal(g.aiChoose(205),2,'Marine AI must use armor breakers, never Odo Bon
 console.log('All eight seeded endurance matches passed: air and armor spam versus Forge and Marines.');
 
 
+
+
+// New races: faction selection, combat traits and AI counter awareness.
+assert.match(el('factionCards').innerHTML,/월영 수인족/);
+assert.match(el('factionCards').innerHTML,/은월 엘프족/);
+click('restartButton');click('factionCards',{faction:'4'});click('startButton');
+let newRace=g.state();
+assert.equal(newRace.faction,4,'Moonfang beastgirls selectable');
+assert.equal(g.getDef(6,4).kind,'ground','panther cavalry must not fly');
+assert.equal(g.getDef(6,4).mark,'♞','beast cavalry uses dedicated symbol');
+assert.ok(g.getDef(0,4).damage>g.getDef(0,0).damage,'beastgirls specialize in melee strikes');
+assert.ok(g.getDef(0,4).speed>g.getDef(0,0).speed,'beastgirls move fast in melee');
+assert.ok(g.getDef(1,4).damage<g.getDef(1,0).damage,'beastgirls sacrifice shooting DPS');
+newRace.enemyFaction=5;
+newRace.built[0]=0;newRace.built[1]=3;newRace.built[2]=6;
+g.wave();
+assert.ok(newRace.units.some(u=>u.side===0&&u.role===6),'beast cavalry spawns');
+newRace.units.length=0;g.createUnit(0,0,6);g.createUnit(1,0,0);
+newRace.units[0].x=1500;newRace.units[0].y=260;
+newRace.units[1].x=1520;newRace.units[1].y=260;
+const beforeBeast=newRace.units[1].hp;g.bongoImpact(newRace.units[0],.1);
+assert.ok(newRace.units[1].hp<beforeBeast,'beast cavalry pounces in melee');
+newRace.built.fill(null);for(let i=0;i<5;i++)newRace.built[i]=6;
+newRace.enemyFaction=0;newRace.wave=4;
+assert.equal(g.aiCountersFor(6)[0],2,'enemy counters panther cavalry as ground armor');
+click('restartButton');click('factionCards',{faction:'5'});click('startButton');
+newRace=g.state();
+assert.equal(newRace.faction,5,'Silverwood elven maidens selectable');
+assert.equal(g.getDef(6,5).kind,'air','elf moonwitch remains a flier');
+assert.ok(g.getDef(1,5).range>g.getDef(1,0).range,'elven longbows outrange rifles');
+assert.ok(g.getDef(2,5).range>g.getDef(2,0).range,'elven armor-piercing bows outrange standard');
+assert.ok(g.getDef(1,5).damage>g.getDef(1,0).damage,'elven ranged damage is higher');
+assert.ok(g.getDef(0,5).damage<g.getDef(0,0).damage,'elven melee is weaker');
+newRace.built[0]=1;newRace.built[1]=2;newRace.built[2]=5;newRace.built[3]=7;
+g.wave();for(let i=0;i<450;i++)g.tick(.12);
+assert.ok(newRace.wave>=3 && newRace.units.every(u=>Number.isFinite(u.hp)&&Number.isFinite(u.x)&&Number.isFinite(u.y)),'elf battle and AI run without invalid coordinates');
+console.log('Six playable factions, 48 named units, Beastgirl melee and Elf ranged trait tests passed.');
