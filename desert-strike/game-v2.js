@@ -851,7 +851,9 @@ function structure(g,x,y,side,turret=true,health=1){
   {metal:'#608994',dark:'#203741',trim:'#f1bb7c',glow:'#93ebec'},
   {metal:'#72924b',dark:'#334628',trim:'#d3a46b',glow:'#d3f192'},
   {metal:'#947cc6',dark:'#322b62',trim:'#e7c3ff',glow:'#a5eeff'},
-  {metal:'#78634b',dark:'#231c1a',trim:'#bd322c',glow:'#e6d9a2'}
+  {metal:'#78634b',dark:'#231c1a',trim:'#bd322c',glow:'#e6d9a2'},
+  {metal:'#9b7987',dark:'#3d3041',trim:'#ebbbcd',glow:'#ffe3e8'},
+  {metal:'#7bada5',dark:'#2e5a52',trim:'#def6d2',glow:'#b2ffe2'}
  ][faction];
  const cx=palette.glow;
  g.fillStyle='#07161988';g.beginPath();g.ellipse(0,27,turret?31:49,turret?20:37,0,0,7);g.fill();
