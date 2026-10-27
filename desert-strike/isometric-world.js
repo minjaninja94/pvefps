@@ -308,16 +308,58 @@ function drawOdoBongo(g,mode,frame){
  }
  g.restore();
 }
+// Dedicated Marine mechanics must have their own silhouettes, not generic
+// atlas frames. A single frame function is used by solo, PvP and lobby.
+function drawHuanglongMarine(g,mode,frame){
+ const p=frame/16,a=PAL[3],moving=mode==='move',dy=moving?Math.sin(p*Math.PI*2)*2:0;
+ const heal=(mode==='attack'||mode==='siege')&&frame>=4&&frame<=12;
+ g.save();g.translate(0,dy);
+ if(mode==='death'){g.translate(35,50);g.rotate(frame/15*.9);g.translate(-35,-50);g.globalAlpha=Math.max(.08,1-frame/17);}
+ // Black marine boots and steel-plated legs.
+ g.fillStyle='#121719';g.fillRect(23,52,11,10);g.fillRect(43,52,12,10);
+ g.fillStyle='#69513a';g.fillRect(25,47,10,12);g.fillRect(45,47,9,12);
+ // Massive muscular marine with scorched face and scarlet insignia.
+ p(g,[[16,25],[28,17],[48,19],[60,28],[57,49],[18,49]],'#211d1b');
+ p(g,[[21,26],[33,20],[48,24],[54,42],[47,50],[25,46]],'#513b30');
+ p(g,[[25,29],[43,29],[48,41],[26,40]],'#9b4f31');
+ g.fillStyle='#a72028';g.fillRect(20,30,8,7);g.fillRect(50,30,6,7);
+ // Armor and iconic bowl: three steam wisps and golden healing halo.
+ p(g,[[30,13],[33,6],[42,6],[48,14],[47,26],[30,26]],'#0f1114');
+ g.fillStyle='#b72a21';g.fillRect(31,13,16,5);
+ g.fillStyle='#fb4433';g.fillRect(34,20,5,3);g.fillRect(43,20,4,3);
+ p(g,[[13,36],[15,28],[24,26],[28,36],[26,48],[15,47]],'#765342');
+ p(g,[[52,28],[59,29],[63,43],[56,50],[50,44]],'#765342');
+ g.fillStyle='#d8ad65';g.fillRect(9,41,22,3);
+ g.fillStyle='#ad6238';g.fillRect(9,36,22,6);
+ g.fillStyle='#e9c589';g.fillRect(11,33,18,5);
+ for(let j=0;j<3;j++){
+  const lift=((frame+j*4)%16)*.55;
+  g.fillStyle=j===1?'#ffeabc':'#eab26b';
+  g.fillRect(14+j*6,25-lift,2,6);
+ }
+ if(heal){
+  g.strokeStyle='#ffe094';g.lineWidth=3;g.beginPath();
+  g.ellipse(36,34,28,Math.max(6,12+(frame-4)),0,0,Math.PI*2);g.stroke();
+  for(let i=0;i<5;i++){g.fillStyle='#fbefb0';g.fillRect(9+i*13,13+(i%2)*4,3,6);}
+ }
+ g.restore();
+}
 function renderFactionSprite(f,role,mode,frame){
  const key=[f,role,mode,frame].join('-');
  const old=cache.get(key);if(old)return old;
- // User-generated, transparent sprite atlases take priority over earlier icon art.
+ // Marine special forces (Odo Bongo and Huanglong) NEVER use the generic
+ // 8-role atlas: it erased their distinctive appearance after the sprite update.
+ if(f===3&&(role===6||role===7)){
+  const cv=document.createElement('canvas');cv.width=SIZE;cv.height=SIZE;
+  const g=cv.getContext('2d');if(!g)return cv;
+  if(role===6)drawOdoBongo(g,mode,frame);else drawHuanglongMarine(g,mode,frame);
+  cache.set(key,cv);return cv;
+ }
  const illustrated=global.DesertRealSprites?.frame(f,role,mode,frame);
  if(illustrated){cache.set(key,illustrated);return illustrated;}
  const cv=document.createElement('canvas');cv.width=SIZE;cv.height=SIZE;
  const g=cv.getContext('2d');if(!g)return cv;
  const a=PAL[f]||PAL[0],t=frame/16,cyc=t*Math.PI*2,walk=mode==='move',hit=mode==='attack'||mode==='siege';
- if(f===3&&role===6){drawOdoBongo(g,mode,frame);cache.set(key,cv);return cv;}
  if(f>=6&&f<=9&&global.ExpansionArt){global.ExpansionArt.draw(g,f,role,mode,frame);cache.set(key,cv);return cv;}
  if((f===4||f===5)&&(global.MaidenArt||global.HeroineFactions)){
   // Exactly ONE model per frame. Generated cutout replaces the old 3D-ish rig,
