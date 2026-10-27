@@ -439,12 +439,12 @@ function marineSpoils(v,attacker,roll=Math.random){
   cooldown:1.5,blink:.4,ramCooldown:1.8,moving:false,facing:attacker.side===0?1:-1});
  floatText(v.x,v.y-43,'자진입대!','#f7e0ac');
 }
-function damage(u,amount,source,attacker=null){
+function damage(u,amount,source,attacker=null,roll=Math.random){
  if(u.hp<=0)return;
  const hit=calcDamage(typeof source==='number'?source:null,u,amount);
  u.hp-=hit;u.blink=.12;
  if(Math.random()<.15)floatText(u.x,u.y-25,Math.round(hit),COLORS[u.side===0?1:0]);
- if(u.hp<=0){killUnit(u);marineSpoils(u,attacker);}
+ if(u.hp<=0){killUnit(u);marineSpoils(u,attacker,roll);}
 }
 function heal(u,amount){u.hp=Math.min(u.maxHP,u.hp+amount);pulse(u.x,u.y,'#94f7a9',11);}
 function structureHit(side,amount){
