@@ -77,6 +77,7 @@ function draw(){
    const x=u.x/3,y=top+28+(u.y-l*520)/520*446;
    if(x<-20||x>1120)continue;
    ctx.fillStyle=u.team===0?'#4aa5b066':'#da826b66';ctx.beginPath();ctx.ellipse(x,y+3,8,3,0,0,7);ctx.fill();
+   if(u.conscripted){ctx.strokeStyle='#ffd675';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(x,y+5,11,4,0,0,Math.PI*2);ctx.stroke();}
    const animatedFrame=((u.frame||0)+Math.floor((performance.now()-lastSnapshotAt)/84))%16;
    const sprite=iso?.frame(u.faction,u.role,u.act||'move',animatedFrame);
    const d=u.role===3||u.role===6?68:60;
@@ -86,7 +87,7 @@ function draw(){
    ctx.fillStyle=u.team===0?'#75ddd6':'#f59479';ctx.fillRect(x-8,y-d*.91,16*Math.max(0,u.hp/u.maxHP),3);
   }
   for(const e of snap.effects||[])if(e.lane===l){
-   ctx.strokeStyle='#ffdf9b';ctx.lineWidth=2;
+   ctx.strokeStyle=e.kind==='conscript'?'#ffcf55':e.kind==='ginppai'?'#91e2b6':'#ffdf9b';ctx.lineWidth=e.kind==='conscript'?3:2;
    ctx.beginPath();ctx.ellipse(e.x/3,top+28+(e.y-l*520)/520*446,11,4,0,0,7);ctx.stroke();
   }
   const p=snap.lanePressure[l]??.5;

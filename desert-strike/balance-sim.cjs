@@ -104,11 +104,11 @@ function runMatch(f0,f1,seedIndex,pairIndex,mode){
  const winner=mode==='skirmish'
    ?points[0]>points[1]*1.03?0:points[1]>points[0]*1.03?1:-1
    :s.ended?(s.baseHP[1]<=0?0:1):-1;
- return {winner,points,wave:s.wave,timeout:!s.ended,cash:[s.cash,s.enemyCash],eco:[s.eco,s.enemyEco],buildings:[s.built.filter(x=>x!==null).length,s.enemyBuilt.filter(x=>x!==null).length],baseHP:[...s.baseHP],trace:core.trace};
+ return {winner,points,wave:s.wave,timeout:!s.ended,marineStats:{...s.marineStats},cash:[s.cash,s.enemyCash],eco:[s.eco,s.enemyEco],buildings:[s.built.filter(x=>x!==null).length,s.enemyBuilt.filter(x=>x!==null).length],baseHP:[...s.baseHP],trace:core.trace};
 }
 const selected=which==='all'?['skirmish','campaign']:[which];
 for(const mode of selected){
- const out=Array.from({length:N},()=>({w:0,l:0,d:0,n:0,cash:0,eco:0,buildings:0,baseHP:0,wave:0,timeouts:0,phases:Array.from({length:4},()=>({n:0,cash:0,eco:0,buildings:0,units:0}))}));
+ const out=Array.from({length:N},()=>({w:0,l:0,d:0,n:0,cash:0,eco:0,buildings:0,baseHP:0,wave:0,timeouts:0,marineLoot:0,marineCR:0,marineRecruits:0,marineHuanglong:0,phases:Array.from({length:4},()=>({n:0,cash:0,eco:0,buildings:0,units:0}))}));
  const pairResults=[];
  const start=Date.now();
  for(let idx=0;idx<combinations.length;idx++){
@@ -121,6 +121,7 @@ for(const mode of selected){
    for(const f of [i,j]){
     const entry=out[f],pos=f===f0?0:1;
     entry.n++;entry.cash+=res.cash[pos];entry.eco+=res.eco[pos];
+    if(f===3){entry.marineLoot+=res.marineStats.loot;entry.marineCR+=res.marineStats.lootedCR;entry.marineRecruits+=res.marineStats.recruits;entry.marineHuanglong+=res.marineStats.huangSpawns;}
     entry.buildings+=res.buildings[pos];entry.baseHP+=res.baseHP[pos];entry.wave+=res.wave;
     if(mode==='campaign'&&res.timeout)entry.timeouts++;
     for(const row of res.trace){
@@ -141,7 +142,7 @@ for(const mode of selected){
 }
 function textSummary(mode,results,pairs,ms){
  const avg=(num,den)=>Math.round(num/Math.max(1,den)*10)/10;
- console.log('BALANCE_JSON '+JSON.stringify({mode,samples,ms,factions:core.FACTIONS.map((f,i)=>{const r=results[i];return {id:f.id,name:f.name,w:r.w,l:r.l,d:r.d,n:r.n,winRate:avg(r.w*100,r.n),avgCash:avg(r.cash,r.n),avgEco:avg(r.eco,r.n),avgBuildings:avg(r.buildings,r.n),avgBaseHP:avg(r.baseHP,r.n),avgWave:avg(r.wave,r.n),timeouts:r.timeouts,phases:r.phases.map(p=>({n:p.n,avgCash:avg(p.cash,p.n),avgEco:avg(p.eco,p.n),avgBuildings:avg(p.buildings,p.n),avgUnits:avg(p.units,p.n)}))};}),pairs}));
+ console.log('BALANCE_JSON '+JSON.stringify({mode,samples,ms,factions:core.FACTIONS.map((f,i)=>{const r=results[i];return {id:f.id,name:f.name,w:r.w,l:r.l,d:r.d,n:r.n,winRate:avg(r.w*100,r.n),avgCash:avg(r.cash,r.n),avgEco:avg(r.eco,r.n),avgBuildings:avg(r.buildings,r.n),avgBaseHP:avg(r.baseHP,r.n),avgWave:avg(r.wave,r.n),timeouts:r.timeouts,marineLoot:r.marineLoot,marineCR:r.marineCR,marineRecruits:r.marineRecruits,marineHuanglong:r.marineHuanglong,phases:r.phases.map(p=>({n:p.n,avgCash:avg(p.cash,p.n),avgEco:avg(p.eco,p.n),avgBuildings:avg(p.buildings,p.n),avgUnits:avg(p.units,p.n)}))};}),pairs}));
  console.log('BALANCE_TABLE '+mode+' '+ms+'ms');
  for(const x of core.FACTIONS.map((f,i)=>({race:f.name,...results[i]})))console.log('RACE',x.race,JSON.stringify({wins:x.w,losses:x.l,draws:x.d,rate:(100*x.w/x.n).toFixed(1)+'%'}));
  for(const p of pairs)console.log('PAIR',core.FACTIONS[p.a].id,'vs',core.FACTIONS[p.b].id,':',p.iwins,'-',p.jwins,'draw',p.draws);

@@ -5,7 +5,7 @@ const CW=1100,CH=520,WORLD_W=3300,HOME_H=340,MAX_BASE=7200,MAX_TURRET=1700,INTER
 const COLORS=['#79dfee','#ff9a79'],LANES=[110,180,260,340,410];
 const initialIncome=1,WAVE_STIPEND=24,MAX_ECONOMY=7;
 // Marine-only logistics. Low-probability transfer + fragile capture, max two recruits each wave.
-const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=2,HUANGLONG_INTERVAL=8;
+const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=1,HUANGLONG_INTERVAL=8;
 const ROLE=[
  {key:'charge',name:'돌격',mark:'⚔',token:'⚔',cost:65,hp:115,damage:21,armor:1,range:29,rate:.77,speed:82,airTarget:false,kind:'ground',tips:'적 포병·지원병 후방을 빠르게 찌릅니다. 장갑 기지 공격력은 낮습니다.',good:[5,7],bad:[3,1]},
  {key:'rifle',name:'사격',mark:'⌖',token:'⌖',cost:95,hp:108,damage:17,armor:1,range:164,rate:.8,speed:60,airTarget:true,kind:'ground',tips:'저렴한 범용 원거리 병력. 공중도 공격합니다.',good:[0,7],bad:[3,5]},
@@ -858,6 +858,7 @@ function drawUnit(g,u,scale=1){
  g.drawImage(artwork,-w/2,-h/2-(flying?9+Math.sin(u.anim)*2:0),w,h);
  g.restore();
  if(dead)return;
+ if(u.conscripted){g.strokeStyle='#f7d277';g.lineWidth=2*scale;g.beginPath();g.ellipse(at.x,at.y+10*scale,17*scale,5*scale,0,0,Math.PI*2);g.stroke();}
  const role=ROLE[u.role],y=at.y-47*scale-(flying?9:0);
  g.fillStyle='#07161cd8';g.fillRect(at.x-10*scale,y-8*scale,20*scale,16*scale);
  g.strokeStyle=u.side===0?'#85e9fa':'#fdad92';g.lineWidth=1;g.strokeRect(at.x-10*scale,y-8*scale,20*scale,16*scale);
