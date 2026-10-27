@@ -31,7 +31,8 @@ function compact(units,{now=0,multiplayer=false,radius=180}={}){
 function aura(g,x,y,size,time=0){
  g.save();g.strokeStyle='#ff4055';g.fillStyle='#e8243940';g.lineWidth=Math.max(1,size*.025);g.globalAlpha=.68+.18*Math.sin(time*4);
  g.beginPath();g.ellipse(x,y,size*.46,size*.15,0,0,Math.PI*2);g.fill();g.stroke();
- g.beginPath();g.ellipse(x,y-size*.24,size*.43,size*.43,0,Math.PI*1.12,Math.PI*1.88);g.stroke();g.restore();
+ for(let i=0;i<6;i++){const phase=(time*.55+i/6)%1,px=x+Math.sin(time*2+i)*size*.39,py=y-phase*size*.9;g.globalAlpha=(1-phase)*.7;g.fillRect(px,py,Math.max(1,size*.025),size*.075);}
+ g.globalAlpha=.65;g.beginPath();g.ellipse(x,y-size*.24,size*.43,size*.43,0,Math.PI*1.12,Math.PI*1.88);g.stroke();g.restore();
 }
 const api=Object.freeze({COUNT,definition,population,compact,aura});
 global.DesertConsolidation=api;if(typeof module!=='undefined')module.exports=api;

@@ -1,0 +1,272 @@
+{
+  "forge": {
+    "columns": 8,
+    "roles": 8,
+    "cell": 96,
+    "rowBounds": [
+      0,
+      148,
+      273,
+      402,
+      536,
+      662,
+      787,
+      887,
+      1024
+    ],
+    "sourceSha256": "d2ec2b7dc557a03a3adb595d54e8a9302d6862dd3dc0581fe423abc68461310a",
+    "poses": [
+      "idle-a",
+      "idle-b",
+      "move-a",
+      "move-b",
+      "windup",
+      "impact",
+      "skill",
+      "death"
+    ]
+  },
+  "brood": {
+    "columns": 8,
+    "roles": 8,
+    "cell": 96,
+    "rowBounds": [
+      0,
+      136,
+      257,
+      378,
+      517,
+      638,
+      766,
+      892,
+      1055
+    ],
+    "sourceSha256": "637f0f698d8f8a49409f29d97242dcbd25f38b402f94ce76d83506f5cffa47e1",
+    "poses": [
+      "idle-a",
+      "idle-b",
+      "move-a",
+      "move-b",
+      "windup",
+      "impact",
+      "skill",
+      "death"
+    ]
+  },
+  "astral": {
+    "columns": 8,
+    "roles": 8,
+    "cell": 96,
+    "rowBounds": [
+      0,
+      148,
+      298,
+      443,
+      591,
+      739,
+      895,
+      1018,
+      1149
+    ],
+    "sourceSha256": "a4a5db43eb4fe3f39a3ab3ec8475e179c8de3cffe1858d6ca262b2752eff7999",
+    "poses": [
+      "idle-a",
+      "idle-b",
+      "move-a",
+      "move-b",
+      "windup",
+      "impact",
+      "skill",
+      "death"
+    ]
+  },
+  "marine": {
+    "columns": 8,
+    "roles": 8,
+    "cell": 96,
+    "rowBounds": [
+      0,
+      142,
+      276,
+      411,
+      579,
+      734,
+      879,
+      1036,
+      1190
+    ],
+    "sourceSha256": "dbc02d0198914cd3df3ee15637f20a9c16e49dee0e9981d26aa97ce535e2e4b5",
+    "poses": [
+      "idle-a",
+      "idle-b",
+      "move-a",
+      "move-b",
+      "windup",
+      "impact",
+      "skill",
+      "death"
+    ]
+  },
+  "beastkin": {
+    "columns": 8,
+    "roles": 8,
+    "cell": 96,
+    "rowBounds": [
+      0,
+      147,
+      282,
+      416,
+      596,
+      737,
+      904,
+      1053,
+      1244
+    ],
+    "sourceSha256": "c78c43968afc98b7d76d79f1283c3d7bb4e65fc4745b39ef12f748716c092871",
+    "poses": [
+      "idle-a",
+      "idle-b",
+      "move-a",
+      "move-b",
+      "windup",
+      "impact",
+      "skill",
+      "death"
+    ]
+  },
+  "elf": {
+    "columns": 8,
+    "roles": 8,
+    "cell": 96,
+    "rowBounds": [
+      0,
+      146,
+      278,
+      409,
+      555,
+      696,
+      832,
+      972,
+      1122
+    ],
+    "sourceSha256": "cc97ea99487347ef9339731967521cc7ec8f39d0f20aed4b90c7fe1a1834c469",
+    "poses": [
+      "idle-a",
+      "idle-b",
+      "move-a",
+      "move-b",
+      "windup",
+      "impact",
+      "skill",
+      "death"
+    ]
+  },
+  "furry": {
+    "columns": 8,
+    "roles": 8,
+    "cell": 96,
+    "rowBounds": [
+      0,
+      139,
+      268,
+      394,
+      530,
+      653,
+      776,
+      888,
+      1024
+    ],
+    "sourceSha256": "8f169088e8d14cb716000373135e9f6533cb5ff08a183c1fd6c08ef342ca6362",
+    "poses": [
+      "idle-a",
+      "idle-b",
+      "move-a",
+      "move-b",
+      "windup",
+      "impact",
+      "skill",
+      "death"
+    ]
+  },
+  "robot": {
+    "columns": 8,
+    "roles": 8,
+    "cell": 96,
+    "rowBounds": [
+      0,
+      135,
+      261,
+      388,
+      523,
+      666,
+      791,
+      905,
+      1024
+    ],
+    "sourceSha256": "645c7fb7989cc32d63dd5640c87e3e4874eb2b2b706d2e06ec71488845271187",
+    "poses": [
+      "idle-a",
+      "idle-b",
+      "move-a",
+      "move-b",
+      "windup",
+      "impact",
+      "skill",
+      "death"
+    ]
+  },
+  "octoper": {
+    "columns": 8,
+    "roles": 8,
+    "cell": 96,
+    "rowBounds": [
+      0,
+      144,
+      276,
+      404,
+      550,
+      687,
+      830,
+      975,
+      1145
+    ],
+    "sourceSha256": "a4aef347407f5c57cdf2ebf5ac1635feac7978aeafb69cef42ecf6179ea3552d",
+    "poses": [
+      "idle-a",
+      "idle-b",
+      "move-a",
+      "move-b",
+      "windup",
+      "impact",
+      "skill",
+      "death"
+    ]
+  },
+  "fairy": {
+    "columns": 8,
+    "roles": 8,
+    "cell": 96,
+    "rowBounds": [
+      0,
+      152,
+      284,
+      413,
+      561,
+      687,
+      808,
+      931,
+      1055
+    ],
+    "sourceSha256": "19f5b9de031a3276b9b5e29b820f40f3e87ce77203d25c6a7720d7aa7ccba808",
+    "poses": [
+      "idle-a",
+      "idle-b",
+      "move-a",
+      "move-b",
+      "windup",
+      "impact",
+      "skill",
+      "death"
+    ]
+  }
+}

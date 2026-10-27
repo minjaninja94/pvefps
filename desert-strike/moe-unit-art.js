@@ -1,87 +1,26 @@
-/* Alternate chibi costume art for all eighty units; separate from the default atlas. */
+/* Independent illustrated skin animation atlases: 8 roles × 8 painted poses each. */
 (function(global){'use strict';
-const SIZE=72,cache=new Map(),TAU=Math.PI*2;
-const PALETTES=[
- ['#8dbfdd','#314c60','#e6c99f','#8de5ef'],
- ['#ba97d8','#48345b','#e1b2b0','#d7ff9e'],
- ['#e1dcff','#5f5395','#eacfc4','#aaf5ff'],
- ['#ed8585','#4a3537','#e7bd9e','#fa5454'],
- ['#e9ac9d','#70515b','#ffd6b4','#ffe6a6'],
- ['#e0e7b9','#457e71','#f3dec1','#96ffdc'],
- ['#c8b29a','#676256','#eecaa7','#aef2eb'],
- ['#cee3fc','#466681','#d6e8fa','#72fbff'],
- ['#d0b9ed','#59447b','#e1c5de','#a5f7e0'],
- ['#f4bedf','#bb83a8','#fce2d6','#d6fff0']
-];
-function rect(g,x,y,w,h,c){g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));}
-function poly(g,p,c){g.fillStyle=c;g.beginPath();g.moveTo(p[0][0],p[0][1]);for(let i=1;i<p.length;i++)g.lineTo(p[i][0],p[i][1]);g.closePath();g.fill();}
-function frame(f,r,mode='idle',phase=0){
- const n=((Math.floor(phase)||0)%16+16)%16,key=[f,r,mode,n].join(':');
- if(cache.has(key))return cache.get(key);
- const cv=document.createElement('canvas');cv.width=SIZE;cv.height=SIZE;
- const g=cv.getContext('2d');if(!g)return null;
- g.imageSmoothingEnabled=false;
- const pal=PALETTES[f]||PALETTES[0],t=n*TAU/16,step=mode==='move'?Math.sin(t)*2:0,active=['attack','siege','skill'].includes(mode);
- // Preserve the special vehicles and mounts, replacing their pilots/riders only.
- if(r===6&&[3,4,6,7].includes(f)){
-  const chassis=global.IsoWorld?.frame(f,r,mode,n);
-  if(chassis)g.drawImage(chassis,0,0,SIZE,SIZE);
-  const hx=f===3?38:f===7?36:38,hy=f===3?20:f===7?23:13;
-  rect(g,hx-7,hy-8,14,12,pal[1]);rect(g,hx-5,hy-6,10,11,pal[2]);
-  rect(g,hx-7,hy-10,15,5,pal[0]);rect(g,hx-4,hy,3,2,'#18232e');rect(g,hx+2,hy,3,2,'#18232e');
-  rect(g,hx-2,hy+4,5,2,'#e8abb0');
- }else{
-  g.fillStyle='#11212a7b';g.beginPath();g.ellipse(36,62,16,4,0,0,TAU);g.fill();
-  g.save();g.translate(step,-Math.abs(step));
-  if(mode==='death'){g.translate(36,51);g.rotate(n/15*.9);g.translate(-36,-51);g.globalAlpha=Math.max(.1,1-n/16);}
-  if(r===6&&[0,1,2,5,8,9].includes(f)){
-   for(let side of [-1,1]){
-    const wing=f===9?'#f7bcdc':f===1?'#946d96':f===8?'#a78dd0':f===5?'#acd8bc':pal[0];
-    poly(g,[[36,36],[36+side*23,17],[36+side*28,40],[36+side*19,49]],wing);
-    poly(g,[[36,37],[36+side*18,30],[36+side*24,53]],pal[3]);
-   }
-  }
-  // Distinct body and civilian-safe full costume for each faction and role.
-  rect(g,26,43,8,15,'#1e2b35');rect(g,39,43,8,15,'#1e2b35');
-  rect(g,25,55,11,4,pal[1]);rect(g,38,55,11,4,pal[1]);
-  poly(g,[[26,34],[33,30],[42,30],[50,36],[48,50],[25,50]],pal[1]);
-  rect(g,31,35,12,10,pal[0]);rect(g,34,36,4,10,pal[3]);
-  rect(g,20,34,7,14,pal[0]);rect(g,48,34,7,14,pal[0]);
-  // Hair has a complete silhouette inside the atlas cell, even with wings/ears.
-  rect(g,21,9,30,27,pal[1]);rect(g,24,11,24,23,pal[0]);rect(g,26,19,20,18,pal[2]);
-  rect(g,21,25,6,15,pal[0]);rect(g,47,24,6,14,pal[0]);
-  rect(g,27,11,19,6,pal[0]);rect(g,24,17,11,5,pal[0]);
-  rect(g,29,27,4,3,'#1e2e3d');rect(g,41,27,4,3,'#1e2e3d');
-  rect(g,30,27,2,2,pal[3]);rect(g,42,27,2,2,pal[3]);
-  rect(g,34,34,6,2,'#d492a2');
-  if(f===3){rect(g,24,12,25,7,'#992f32');rect(g,32,9,7,5,'#e3bd8a');}
-  if(f===4||f===6){
-   poly(g,[[25,15],[26,2],[36,13]],pal[0]);poly(g,[[41,13],[48,2],[49,16]],pal[0]);
-   rect(g,23,31,4,5,pal[1]);rect(g,48,32,4,5,pal[1]);
-  }
-  if(f===5){poly(g,[[24,25],[16,28],[24,32]],pal[2]);poly(g,[[49,25],[58,28],[48,32]],pal[2]);}
-  if(f===8){for(let i=0;i<4;i++)rect(g,19+i*11,7+(i%2)*3,4,8,pal[1]);}
-  if(f===7){rect(g,23,13,26,8,'#375470');rect(g,27,22,20,12,'#b7dcf2');rect(g,29,27,4,2,'#28608a');}
-  if(f===9){rect(g,24,10,25,6,'#fbd7ed');rect(g,34,7,6,6,'#c9f49d');}
-  // Equipment changes per role: no identical-looking 80-unit sprite grid.
-  if(r===0||r===3){
-   rect(g,54,23+(active?7:0),3,29,'#cfd5d5');rect(g,53,24+(active?7:0),7,4,pal[3]);
-   if(r===3)rect(g,18,33,8,20,pal[3]);
-  }else if([1,2,4].includes(r)){
-   rect(g,49,34,19,5,pal[1]);rect(g,55,35,11,2,pal[3]);
-   if(r===2)rect(g,49,32,14,3,'#dfc793');
-  }else if(r===5){
-   rect(g,54,13,3,32,pal[3]);rect(g,50,10,12,8,pal[0]);
-   if(active){rect(g,60,9,5,5,'#ffe1a1');}
-  }else if(r===7){
-   rect(g,55,18,3,30,pal[0]);rect(g,49,15,14,6,pal[3]);
-   if(active){for(let i=0;i<3;i++)rect(g,16+i*20,11+(i%2)*4,4,4,pal[3]);}
-  }else if(r===6){rect(g,53,28,16,4,pal[3]);}
-  g.restore();
- }
- cache.set(key,cv);
- if(cache.size>6500){for(const k of cache.keys()){cache.delete(k);if(cache.size<5200)break;}}
- return cv;
+const NAMES=['forge','brood','astral','marine','beastkin','elf','furry','robot','octoper','fairy'],assets=NAMES.map(()=>null),portraits=[],loading=new Set(),cache=new Map();
+const poses={idle:[0,1],move:[2,3],attack:[4,5],siege:[4,6],skill:[4,6],hit:[5],spawn:[0],death:[7]};
+function frame(f,r,action='idle',phase=0){
+ if(!Number.isInteger(f)||f<0||f>9||!Number.isInteger(r)||r<0||r>7)return null;
+ load(f);const image=assets[f];if(!image)return global.IsoWorld?.frame(f,r,action,phase)||null;
+ const n=((Math.floor(phase)||0)%16+16)%16,list=poses[action]||poses.idle;
+ const index=action==='move'||action==='idle'?Math.floor(n/2)%list.length:Math.min(list.length-1,Math.floor(n/16*list.length));
+ const pose=list[index],fade=action==='death'?Math.floor(n/2):0,key=[f,r,pose,fade].join(':');if(cache.has(key))return cache.get(key);
+ const cv=document.createElement('canvas');cv.width=cv.height=72;const g=cv.getContext('2d');if(!g)return null;
+ g.imageSmoothingEnabled=false;if(action==='death')g.globalAlpha=1-n/20;
+ g.drawImage(image,pose*96,r*96,96,96,0,0,72,72);if(cache.size>=1200)cache.delete(cache.keys().next().value);cache.set(key,cv);return cv;
 }
-global.DesertMoeArt=Object.freeze({frame});
+function cover(g,f,w,h){
+ loadPortrait(f);const image=portraits[f];if(!image?.complete||!image.naturalWidth)return false;
+ g.save();g.fillStyle='#211c36';g.fillRect(0,0,w,h);const sourceHeight=Math.min(image.naturalHeight,image.naturalWidth*h/(w*.56));g.drawImage(image,0,0,image.naturalWidth,sourceHeight,w*.44,0,w*.56,h);
+ const cv=assets[f]?frame(f,0,'idle',0):null;if(cv){g.imageSmoothingEnabled=false;g.drawImage(cv,-h*.06,h*.14,h*.9,h*.9);}
+ g.fillStyle='#ef9bcc';g.fillRect(0,h-3,w,3);g.restore();return true;
+}
+function ready(){global.dispatchEvent?.(new Event('desert-moe-ready'));}
+function loadPortrait(f){if(portraits[f]||typeof Image==='undefined')return;const im=new Image();im.decoding='async';im.onload=ready;im.src='./assets/sprites/moe-'+NAMES[f]+'-portrait.webp?v=moe6';portraits[f]=im;}
+function load(f){if(loading.has(f)||typeof Image==='undefined')return;loading.add(f);loadPortrait(f);const im=new Image();im.decoding='async';im.onerror=()=>loading.delete(f);im.onload=()=>{assets[f]=im;cache.clear();ready();};im.src='./assets/sprites/moe-'+NAMES[f]+'-actions.webp?v=moe6';}
+function preload(){NAMES.forEach((_,f)=>load(f));}
+global.DesertMoeArt=Object.freeze({frame,cover,load,preload,names:NAMES,loadedCount:()=>assets.filter(Boolean).length});
 })(window);

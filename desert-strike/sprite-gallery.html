@@ -17,7 +17,7 @@
 <script src="./sprite-atlas.js?v=reference3" defer></script>
 <script src="./special-unit-art.js?v=reference3" defer></script>
 <script src="./isometric-world.js?v=reference3" defer></script>
-<script src="./moe-unit-art.js?v=moe1" defer></script>
+<script src="./moe-unit-art.js?v=moe6" defer></script>
 <script defer>
 (() => {
 'use strict';
@@ -78,7 +78,7 @@ function loop(t){
 window.addEventListener('marine-art-ready',render);
 window.addEventListener('isometric-art-ready',render);
 window.addEventListener('maiden-art-ready',()=>{S.invalidateMaiden?.();render();});
-window.addEventListener('desert-real-sprites-ready',render);
+window.addEventListener('desert-real-sprites-ready',render);window.addEventListener('desert-moe-ready',render);
 render();requestAnimationFrame(loop);
 })();
 </script>

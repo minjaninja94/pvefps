@@ -386,3 +386,6 @@ body[data-play-mode="multi"] .command-hud .stats,body[data-play-mode="multi"] .c
 .command-hud .tabs{grid-template-columns:repeat(3,minmax(0,1fr))}
 .extractor-slot{width:34px;height:34px;object-fit:contain;image-rendering:pixelated}
 .resource-card .pixel-preview{width:50px;height:50px}.resource-card .uc-sprite{height:50px}
+
+.lobby-auth label{display:block;margin:10px 0 4px;font-size:11px;color:#b7cbd0}
+.lobby-auth input[readonly]{display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:9px 10px;border:1px solid #456774;border-radius:6px;background:#102631;color:#c5e8e7;font:12px ui-monospace,monospace;user-select:all}

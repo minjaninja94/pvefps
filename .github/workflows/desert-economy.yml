@@ -23,11 +23,17 @@ jobs:
           node --check desert-strike/tri-lane-ui.js
           node --check desert-strike/command-hud.js
           node --check desert-strike/resource-art.js
+      - name: Device account authentication boundaries
+        run: node desert-strike/smoke-device-account.test.cjs
+      - name: Hero consolidation and exact aggregate stats
+        run: node desert-strike/smoke-consolidation.test.cjs
       - name: Economy and occupied production slots
         run: node desert-strike/smoke-economy.test.cjs
       - name: Cooperative combat
         run: node desert-strike/smoke-trilane.test.cjs
       - name: Authoritative networking
         run: node desert-strike/smoke-trilane-network.test.cjs
+      - name: Alternate skin animation and portrait assets
+        run: node desert-strike/smoke-moe.test.cjs
       - name: Faction action atlas cells
         run: node desert-strike/smoke-reference.test.cjs

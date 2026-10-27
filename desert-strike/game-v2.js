@@ -35,7 +35,7 @@ const FACTIONS=[
  {id:'fairy',name:'농농 페어리족',tag:'PETAL FAIRIES',logo:'❀',color:'#ffadd4',bonus:'꽃가루 연쇄치유: 5초마다 다른 아군 1기 3% 추가 회복 · 치료 효율 −10% · 체력 −16%',mut:{hp:.84,dmg:1,speed:1.01},units:['꽃잎 소검사','이슬 마도사','씨앗 관통술사','버섯껍질 방패수','반딧불 대공술사','꽃가루 폭격사','별빛 나비정령','꽃샘 치유사'],slogan:'작고 귀여운 요정·꽃잎날개·치유·요정 마법',secondary:'#84577c'}
 ];
 const RNAME=ROLE.map(r=>r.name),SPRITES=new Map();
-let selectedFaction=0,state=null,selectedRole=null,demolition=false,activeView='base',lastFrame=0,uiElapsed=0;
+let selectedFaction=0,state=null,selectedRole=null,demolition=false,activeView='base',lastFrame=0,lastRenderAt=0,uiElapsed=0;
 let audio=null,bannerSeconds=0,barrageSeconds=0,stamp=0;
 function clamp(n,a,b){return Math.min(b,Math.max(a,n));}
 function random(a,b){return a+Math.random()*(b-a);}
@@ -1304,7 +1304,7 @@ function drawProductionMinimap(){
 }
 function frame(now){
  const delta=Math.min((now-lastFrame)/1000||0,.045);lastFrame=now;
- if(state&&activeView!=='multiplayer'&&!document.body?.classList?.contains('lobby-active')&&!document.hidden){tick(delta);if(activeView==='battle'){drawBattle();drawMinimap();}else if(activeView==='base'){drawBase();}drawProductionMinimap();}
+ if(state&&activeView!=='multiplayer'&&!document.body?.classList?.contains('lobby-active')&&!document.hidden){tick(delta);if(now-lastRenderAt>=40){lastRenderAt=now;if(activeView==='battle'){drawBattle();drawMinimap();}else if(activeView==='base'){drawBase();}drawProductionMinimap();}}
  requestAnimationFrame(frame);
 }
 function inspectBattle(event){
