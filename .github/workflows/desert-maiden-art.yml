@@ -1,0 +1,28 @@
+name: Desert Front illustrated art regression
+on:
+  push:
+    paths:
+      - "desert-strike/assets/**"
+      - "desert-strike/maiden-illustrations.js"
+      - "desert-strike/heroine-factions.js"
+      - "desert-strike/isometric-world.js"
+      - "desert-strike/game-v2.js"
+      - "desert-strike/sprite-gallery.html"
+      - "desert-strike/index.html"
+      - "desert-strike/style-v2.css"
+      - "desert-strike/smoke-maiden-asset.test.cjs"
+      - ".github/workflows/desert-maiden-art.yml"
+  workflow_dispatch:
+jobs:
+  artwork:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          node --check desert-strike/maiden-illustrations.js
+          node --check desert-strike/isometric-world.js
+          node --check desert-strike/game-v2.js
+          node desert-strike/smoke-maiden-asset.test.cjs
