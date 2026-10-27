@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "cell": 96,
+  "cols": 5,
+  "rows": 8,
+  "actions": [
+    "idle",
+    "move",
+    "attack",
+    "skill",
+    "death"
+  ],
+  "factions": [
+    "forge",
+    "brood",
+    "astral",
+    "marine",
+    "beastkin",
+    "elf",
+    "furry",
+    "robot",
+    "octoper",
+    "fairy"
+  ],
+  "roleCount": 8,
+  "source": "Original image-generated Desert Front faction-unit roster art, segmented and alpha-masked."
+}

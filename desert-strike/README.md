@@ -290,3 +290,5 @@ node desert-strike/smoke-v2.test.cjs
 - 파일 경로: `desert-strike/assets/sprites/{forge,brood,astral,marine,beastkin,elf,furry,robot,octoper,fairy}.webp`. 10개 모두 480×768 WebP, 96×96 프레임 그리드(열 idle/move/attack/skill/death × 행 8병종). 5개 원화 포즈를 이용해 런타임에 16단계 모션을 생성합니다.
 - 페이지 로드시 별도 이미지 로딩 후 해당 종족 캐시를 무효화합니다. 아틀라스 누락/실패 시 게임은 기존 픽셀 렌더러로 복귀합니다. 이미지 데이터 자체는 binary WebP이며 JavaScript 문자열 대체물이 아닙니다.
 - 모든 바이너리 WEBP 파일은 함께 제공된 `desert-front-real-sprites.zip` 패키지를 `desert-strike/` 디렉터리에 그대로 풀면 연결됩니다.
+
+**Deployment status:** The ten binary WebP atlas files are committed in this GitHub repository and load automatically. The downloadable ZIP is a backup only; no manual file upload is needed.

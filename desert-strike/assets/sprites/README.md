@@ -1,8 +1,8 @@
 # Original Desert Front raster sprite atlas
 
-This directory is the mount point for the 10 image-generated, transparent WebP atlases.
+This directory contains the ten image-generated, transparent WebP atlases (all committed to GitHub).
 
-Pack: **desert-front-real-sprites.zip** provided alongside the implementation.
+All WebP files are ready for the game to load; the separately provided ZIP is an optional backup.
 
 Extract the ZIP inside `desert-strike/`; it creates:
 
