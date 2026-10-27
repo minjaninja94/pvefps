@@ -135,8 +135,10 @@ function place(index){
   updateUI(true);return;
  }
  if(selectedRole===null){setMessage('먼저 생산할 유닛을 선택하세요.');return;}
- if(old===selectedRole){setMessage('이미 같은 시설이 설치되어 있습니다.');return;}
- const refund=old===null?0:Math.floor(ROLE[old].cost*.55),price=ROLE[selectedRole].cost-refund;
+ if(old!==null){
+  setMessage('이미 생산시설이 설치된 자리입니다. 다른 시설을 건설하려면 철거 버튼이나 우클릭으로 먼저 철거하세요.');return;
+ }
+ const price=ROLE[selectedRole].cost;
  if(price>state.cash){setMessage('자원 부족 · '+Math.ceil(price-state.cash)+' CR이 더 필요합니다.');return;}
  state.cash-=price;state.built[index]=selectedRole;
  setMessage(FACTIONS[state.faction].units[selectedRole]+' 생산 시설 설치 완료');

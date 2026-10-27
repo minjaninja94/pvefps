@@ -80,7 +80,7 @@ function draw(g,f,role,mode,frame){
   poly(g,[[46,33],[55+robeFlow,50],[50+robeFlow,58]],C.trim);
   if(!beast){poly(g,[[20,38],[15-robeFlow,63],[29,57]],'#83b2a3');}
  }
- // Clothing drape / split legs. Character has prominent leg movement on all 16 walking frames.
+ // Beastkin are compact adult shortstacks; elf units retain long-legged proportions.
  poly(g,[[20,35],[31,36],[30+step*.5,57],[21+step*.5,62],[16,60]],'#181e28');
  poly(g,[[36,34],[46,36],[49-step*.6,57],[44-step*.6,63],[35,59]],'#1b2430');
  poly(g,[[20,50],[30,51],[29+step*.5,61],[17+step*.5,63]],C.armor);
@@ -106,10 +106,19 @@ function draw(g,f,role,mode,frame){
  poly(g,[[28,26],[36,25],[34,50],[25,49]],C.armor);
  poly(g,[[38,27],[44,29],[46,49],[35,50]],C.trim);
  poly(g,[[31,29],[37,29],[40,46],[29,44]],C.cloth);
- // Tailored fantasy bodice: shaped breastplate, narrow belted waist and
- // ornamental seams, all non-explicit; softer than bulky sci-fi silhouettes.
+ // Shaped fantasy plate over a midriff cuirass; beastkin use a two-piece
+ // bikini-armor motif, while elves wear a fitted ornate elven breastplate.
  poly(g,[[28,28],[34,26],[39,32],[36,38],[28,36]],C.armor);
  poly(g,[[36,28],[42,27],[45,35],[38,39],[35,33]],C.high||C.trim);
+ if(beast){
+  // Armor cups and exposed midriff, retaining full coverage at sprite scale.
+  el(g,31,32,7,5,C.armor);el(g,42,32,7,5,C.armor);
+  line(g,26,30,34,28,C.trim,2);line(g,39,28,47,30,C.trim,2);
+  rect(g,30,39,12,5,'#ebc5af');rect(g,34,40,3,2,C.trim);
+ }else{
+  el(g,32,32,6,5,C.armor);el(g,41,32,6,5,C.trim);
+  line(g,28,30,44,30,'#e4f8e1',1);
+ }
  poly(g,[[30,30],[34,30],[33,33],[29,33]],C.trim);
  rect(g,33,35,9,2,'#e8c9a0');
  poly(g,[[29,37],[40,39],[36,42],[29,40]],C.cloth);

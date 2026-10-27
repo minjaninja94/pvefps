@@ -187,7 +187,7 @@ body{background:
 /* One consistent fantasy-pixel visual family for both mature heroine factions. */
 .faction-card.faction-maiden{position:relative;min-height:208px;background:linear-gradient(160deg,#24333e 0%,#372c43 100%);text-align:center}
 .faction-card.faction-maiden[data-faction="5"]{background:linear-gradient(155deg,#183c3f 0%,#24354d 100%)}
-.faction-card.faction-maiden .faction-hero{display:block;width:min(112px,70%);height:112px;margin:1px auto 5px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 5px 1px #061520) drop-shadow(0 0 9px #d5acc65e)}
+ .faction-card.faction-maiden .faction-hero{display:block;width:min(112px,70%);height:112px;margin:1px auto 5px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 5px 1px #061520) drop-shadow(0 0 9px #d5acc65e)}
 .faction-card.faction-maiden[data-faction="5"] .faction-hero{filter:drop-shadow(0 5px 1px #061d1a) drop-shadow(0 0 9px #b6ead153)}
 .faction-card.faction-maiden .faction-icon{position:absolute;top:8px;left:10px;font-size:22px}
 .faction-card.faction-maiden strong{color:#f2e8e7}
@@ -252,7 +252,7 @@ body{background:
 .lobby-subtitle{color:#afc4d2;font-size:13px;margin:0 0 14px}
 .lobby-stage{min-height:220px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 72%,#46717a,#19283d 62%,#0b1727);border:1px solid #55788a;border-radius:13px}
 .lobby-stage-glow{position:absolute;width:250px;height:100px;bottom:-24px;border-radius:50%;background:#77d6e544;filter:blur(35px)}
-#lobbyHero{z-index:1;width:220px;height:220px;image-rendering:pixelated;object-fit:contain;filter:drop-shadow(0 20px 13px #0009)}
+ #lobbyHero{z-index:2;width:190px;height:190px;image-rendering:pixelated;object-fit:contain;filter:drop-shadow(0 20px 13px #0009)}
 .lobby-stage-label{position:absolute;z-index:2;left:13px;bottom:10px;display:grid;background:#0b172acc;border:1px solid #638496;border-radius:8px;padding:8px 12px;max-width:75%}
 .lobby-stage-label span{font-size:19px;font-weight:900}.lobby-stage-label small{color:#b1d2d6;font-size:10px;white-space:normal}
 .lobby-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:13px}
@@ -289,3 +289,9 @@ body{background:
 .faction-hero-new{display:block;width:100%;height:100px!important;image-rendering:pixelated;object-fit:contain;background:radial-gradient(ellipse at 50% 75%,#64839c55,#0a1726);border-radius:7px}
 @media(max-width:1060px){.lobby-factions{grid-template-columns:repeat(5,minmax(0,1fr))}.lobby-hero-grid{grid-template-columns:1.5fr 1fr}}
 @media(max-width:720px){.lobby-shell{padding:12px 12px 30px}.lobby-header strong{font-size:16px}.lobby-header small{font-size:8px}.lobby-hero-grid{grid-template-columns:1fr}.lobby-factions{grid-template-columns:repeat(3,minmax(0,1fr))}.lobby-actions{grid-template-columns:1fr}.lobby-actions button{min-height:55px}.lobby-skins{grid-template-columns:repeat(2,minmax(0,1fr))}.lobby-stage{min-height:180px}#lobbyHero{width:186px;height:186px}.lobby-account-status{font-size:10px}}
+
+/* Unified character cutouts / portrait framing. Never crop hair, ears, body or tentacles. */
+.faction-card.faction-maiden .faction-hero-new{display:block;width:100%;max-width:122px;height:142px!important;object-fit:contain;image-rendering:auto;background:linear-gradient(140deg,#131d31,#294152);border-radius:9px;align-self:center}
+.lobby-stage-portrait{position:absolute;z-index:1;height:100%;max-width:65%;top:0;left:15%;object-fit:contain;object-position:top center;filter:drop-shadow(0 0 28px #7bb9be44);pointer-events:none}
+#lobbyHero.faction-portrait-active{position:absolute;right:8%;bottom:5%;width:100px;height:100px;opacity:.9;filter:drop-shadow(0 8px 4px #000c)}
+@media(max-width:700px){.lobby-stage-portrait{left:10%;max-width:70%}#lobbyHero.faction-portrait-active{width:75px;height:75px}}

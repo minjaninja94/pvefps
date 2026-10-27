@@ -26,9 +26,9 @@
    for(let y=0;y<80;y++)for(let x=0;x<64;x++){
     const i=(y*64+x)*4,r0=p[i],g0=p[i+1],b0=p[i+2];
     const lum=Math.max(r0,g0,b0),saturation=Math.max(r0,g0,b0)-Math.min(r0,g0,b0);
-    const edge=Math.min(1,x/7,(63-x)/7,y/6,(79-y)/12);
-    let alpha=Math.max(0,Math.min(255,(lum-29)*4.3+saturation*.8))*edge;
-    if(lum<33)alpha=0;
+    const edge=Math.min(1,(x+2)/5,(65-x)/5,(y+3)/5,(81-y)/9);
+    let alpha=Math.max(0,Math.min(255,(lum-21)*4.4+saturation*.65))*edge;
+    if(lum<24)alpha=0;
     p[i+3]=Math.round(alpha);
    }
    c.putImageData(pixels,0,0);
@@ -65,7 +65,26 @@
   }
   g.restore();return true;
  }
- atlas.overlay=overlay;atlas.spriteTile=spriteTile;
+ function drawStandalone(g,f,role,mode,frame){
+  const tile=spriteTile(f,role);if(!tile)return false;
+  const t=frame/16,theta=t*Math.PI*2,walk=mode==='move',strike=mode==='attack'||mode==='siege',dy=walk?Math.abs(Math.sin(theta))*2.5:Math.sin(theta)*.8;
+  const dead=mode==='death',fall=dead?t:0;
+  g.save();g.imageSmoothingEnabled=false;g.translate(0,-dy);
+  if(dead){g.translate(35,55);g.rotate(fall*.93);g.translate(-35,-55);g.globalAlpha=Math.max(.08,1-fall);}
+  // Preserve every pixel within canvas: animal girls are compact shortstacks,
+  // elves taller/long-legged. Full cutouts, never a second hidden humanoid model.
+  const size=f===4?{x:12,y:7,w:48,h:59}:{x:9,y:2,w:55,h:66};
+  if(walk)g.translate(Math.sin(theta)*1.4,0);
+  g.drawImage(tile,0,0,64,80,size.x,size.y,size.w,size.h);
+  // Independent foreground weapon motion and highlight for existing 16-frame actions.
+  const weapon=f===4?'#f2b2c2':'#a9fce5',swing=strike?Math.sin(Math.PI*t)*12:0;
+  g.strokeStyle=weapon;g.lineWidth=f===4?3:2;g.lineCap='round';
+  g.beginPath();g.moveTo(53,48);g.lineTo(60,21-swing);g.lineTo(64,10-swing);g.stroke();
+  g.fillStyle=weapon;g.fillRect(62,6-swing,3,7);
+  if(strike&&frame>=6&&frame<=11){g.globalAlpha=.7;g.fillRect(66,18-swing,3,18);g.fillRect(59,12-swing,2,7);}
+  g.restore();return true;
+ }
+ atlas.drawStandalone=drawStandalone;atlas.overlay=overlay;atlas.spriteTile=spriteTile;
  global.MaidenArt=atlas;
  if(typeof Image==='undefined'||!global.document){return;}
  image=new Image();image.decoding='async';

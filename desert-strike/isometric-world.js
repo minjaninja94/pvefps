@@ -316,10 +316,11 @@ function renderFactionSprite(f,role,mode,frame){
  const a=PAL[f]||PAL[0],t=frame/16,cyc=t*Math.PI*2,walk=mode==='move',hit=mode==='attack'||mode==='siege';
  if(f===3&&role===6){drawOdoBongo(g,mode,frame);cache.set(key,cv);return cv;}
  if(f>=6&&f<=9&&global.ExpansionArt){global.ExpansionArt.draw(g,f,role,mode,frame);cache.set(key,cv);return cv;}
- if((f===4||f===5)&&global.HeroineFactions){
-  global.HeroineFactions.draw(g,f,role,mode,frame);
-  // Overlay authentic generated maiden portraits, maintaining the 16-frame rig underneath.
-  global.MaidenArt?.overlay(g,f,role,mode,frame);
+ if((f===4||f===5)&&(global.MaidenArt||global.HeroineFactions)){
+  // Exactly ONE model per frame. Generated cutout replaces the old 3D-ish rig,
+  // rather than being painted over it (the source of double bodies and clipping).
+  const illustrated=global.MaidenArt?.drawStandalone?.(g,f,role,mode,frame);
+  if(!illustrated)global.HeroineFactions?.draw(g,f,role,mode,frame);
   cache.set(key,cv);return cv;
  }
  const atlas=f===3?marineAtlas:f>=4?null:realAtlas;
