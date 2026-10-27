@@ -37,3 +37,5 @@ jobs:
 
       - name: Six-faction mirrored skirmish win rates
         run: node desert-strike/balance-sim.cjs skirmish 2
+      - name: Six-faction mirrored long-wave campaigns
+        run: node desert-strike/balance-sim.cjs campaign 2
