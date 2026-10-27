@@ -735,7 +735,9 @@ function updateUI(full=false){
   const f=FACTIONS[state.faction];
   $('unitCards').innerHTML=ROLE.map((r,i)=>{
    const portrait=window.IsoWorld?.portrait(state.faction,i)||window.DesertSprites?.portrait(state.faction,i)||sprite(state.faction,i,0);
-   const icon=typeof portrait.toDataURL==='function'?'<img class="pixel-preview" src="'+portrait.toDataURL('image/png')+'" alt="" aria-hidden="true">':r.token;
+   const icon=(state.faction===4||state.faction===5)
+     ?'<span class="maiden-unit-portrait" aria-hidden="true" style="background-position:-'+(i*64)+'px -'+(192+(state.faction-4)*80)+'px"></span>'
+     :typeof portrait.toDataURL==='function'?'<img class="pixel-preview" src="'+portrait.toDataURL('image/png')+'" alt="" aria-hidden="true">':r.token;
    return '<button class="unit-card'+(selectedRole===i?' selected':'')+'" data-role="'+i+'" title="'+getDef(i,state.faction).tips+
     '"><span class="uc-top">'+getDef(i,state.faction).mark+' '+getDef(i,state.faction).name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
     '</span><span class="uc-name">'+f.units[i]+'</span><span class="uc-role">'+getDef(i,state.faction).name+' · '+(getDef(i,state.faction).kind==='air'?'공중':'지상')+'</span>'+
@@ -756,9 +758,9 @@ function updateUI(full=false){
 }
 function initFactions(){
  $('factionCards').innerHTML=FACTIONS.map((f,i)=>{
-  const portrait=(i===4||i===5)?window.IsoWorld?.portrait(i,i===4?0:1):null;
-  const art=portrait&&typeof portrait.toDataURL==='function'?
-   '<img class="faction-hero" alt="" aria-hidden="true" src="'+portrait.toDataURL('image/png')+'">':'';
+  const art=(i===4||i===5)
+   ?'<span class="faction-hero faction-hero-'+(i===4?'beast':'elf')+'" role="img" aria-label="'+f.name+' 대표 캐릭터 일러스트"></span>'
+   :'';
   return '<button class="faction-card'+(i===selectedFaction?' selected':'')+(i>=4?' faction-maiden':'')+'" data-faction="'+i+'">'+
    '<span class="faction-icon" style="color:'+f.color+'">'+f.logo+'</span>'+art+
    '<strong>'+f.name+'</strong><span class="eyebrow">'+f.tag+'</span><small>'+f.slogan+'</small><span class="bonus">'+f.bonus+'</span></button>';
@@ -1214,5 +1216,6 @@ window.DesertRoster=Object.freeze({FACTIONS,ROLE,getDef,cost:(role)=>ROLE[role]?
 initFactions();wire();reset();
 if(typeof window.addEventListener==='function')window.addEventListener('marine-art-ready',()=>updateUI(true));
 if(typeof window.addEventListener==='function')window.addEventListener('isometric-art-ready',()=>updateUI(true));
+if(typeof window.addEventListener==='function')window.addEventListener('maiden-art-ready',()=>{window.IsoWorld?.invalidateMaiden?.();initFactions();updateUI(true);});
 requestAnimationFrame(frame);
 })();
