@@ -233,7 +233,11 @@ const spamCases=[
  {name:'armor spam vs Forge',player:1,enemy:0,role:3,counter:2},
  {name:'armor spam vs Marines',player:2,enemy:3,role:3,counter:2}
 ];
-for(const scenario of spamCases){
+for(const scenario of spamCases)for(const rngSeed of [17,61]){
+ let sampleSeed=rngSeed;
+ const stableMath=Object.create(Math);
+ stableMath.random=()=>((sampleSeed=(Math.imul(sampleSeed,1664525)+1013904223)>>>0)/4294967296);
+ sandbox.Math=stableMath;
  click('restartButton');
  click('factionCards',{faction:String(scenario.player)});
  click('startButton');
@@ -258,15 +262,15 @@ for(const scenario of spamCases){
  }
  assert.ok(game.wave>=12 || game.baseHP[0]===0,scenario.name+' should run a prolonged campaign');
  assert.ok(game.enemyBuilt.includes(scenario.counter),scenario.name+' AI should buy appropriate counter');
- console.log('DEBUG SPAM',scenario.name,JSON.stringify({wave:game.wave,ended:game.ended,ourHP:game.baseHP[0],enemyHP:game.baseHP[1],turrets:game.turretHP,enemyBuilt:game.enemyBuilt.filter(x=>x!==null).reduce((o,id)=>(o[id]=(o[id]||0)+1,o),{}),playerBuilt:game.built.filter(x=>x!==null).length,enemyEco:game.enemyEco,enemyCash:Math.floor(game.enemyCash),players:game.units.filter(x=>x.side===0).length,enemies:game.units.filter(x=>x.side===1).length}));
+ console.log('DEBUG SPAM',scenario.name,'seed',rngSeed,JSON.stringify({wave:game.wave,ended:game.ended,ourHP:game.baseHP[0],enemyHP:game.baseHP[1],turrets:game.turretHP,enemyBuilt:game.enemyBuilt.filter(x=>x!==null).reduce((o,id)=>(o[id]=(o[id]||0)+1,o),{}),playerBuilt:game.built.filter(x=>x!==null).length,enemyEco:game.enemyEco,enemyCash:Math.floor(game.enemyCash),players:game.units.filter(x=>x.side===0).length,enemies:game.units.filter(x=>x.side===1).length}));
  assert.ok(game.baseHP[1]>0,scenario.name+' should not win merely through single-type spam');
- console.log('Spam balance case passed:',scenario.name,'wave',game.wave,'enemy HP',Math.floor(game.baseHP[1]));
+ console.log('Spam balance case passed:',scenario.name,'seed',rngSeed,'wave',game.wave,'enemy HP',Math.floor(game.baseHP[1]));
 }
 const marineAgainstTank=g.state();
 marineAgainstTank.faction=1;marineAgainstTank.enemyFaction=3;
 marineAgainstTank.built.fill(null);for(let i=0;i<5;i++)marineAgainstTank.built[i]=3;
 marineAgainstTank.enemyBuilt.fill(null);marineAgainstTank.wave=3;
 assert.equal(g.aiChoose(205),2,'Marine AI must use armor breakers, never Odo Bongo, versus tank spam');
-console.log('All anti-spam regressions passed: aircraft and heavy armor against Forge and Marine counters.');
+console.log('All eight seeded endurance matches passed: air and armor spam versus Forge and Marines.');
 
 
