@@ -34,7 +34,7 @@ const labels=[
  ['꽃잎 소검사','이슬 마도사','씨앗 관통술사','버섯껍질 방패수','반딧불 대공술사','꽃가루 폭격사','별빛 나비정령','꽃샘 치유사']
 ];
 const names=['철갑연합','심연군체','성운결사','해병성채','월영 수인족','은월 엘프족','야월 퍼리족','크롬 로보족','옥토퍼 군체','농농 페어리족'],roles=['돌격','사격','대장갑','장갑','대공','포격','비행','지원'];
-const roleName=(f,r)=>r===6&&[3,4,6,7].includes(f)?{3:'지상 차량',4:'지상 기병',6:'지상 기병',7:'지상 메카'}[f]:roleName(f,r);
+const roleName=(f,r)=>r===6&&[3,4,6,7].includes(f)?{3:'지상 차량',4:'지상 기병',6:'지상 기병',7:'지상 메카'}[f]:roles[r];
 const actions=[['idle','대기'],['move','이동'],['attack','공격'],['siege','건물 타격'],['death','사망']];
 let faction=0,role=0,mode='move',index=0,auto=true,last=0,skin='default';
 const $=id=>document.getElementById(id),S=window.IsoWorld||window.DesertSprites;
