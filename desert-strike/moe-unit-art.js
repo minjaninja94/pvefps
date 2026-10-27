@@ -2,6 +2,9 @@
 (function(global){'use strict';
 const NAMES=['forge','brood','astral','marine','beastkin','elf','furry','robot','octoper','fairy'],assets=NAMES.map(()=>null),portraits=[],loading=new Set(),cache=new Map();
 const poses={idle:[0,1],move:[2,3],attack:[4,5],siege:[4,6],skill:[4,6],hit:[5],spawn:[0],death:[7]};
+// Several supplied columns contain two or three portraits stacked vertically.
+// Select one complete face instead of fitting the entire reference column.
+const portraitRows=[[0,235],[0,260],[300,512],[155,400],[42,512],[30,512],[0,285],[0,260],[280,512],[0,280]];
 function frame(f,r,action='idle',phase=0){
  if(!Number.isInteger(f)||f<0||f>9||!Number.isInteger(r)||r<0||r>7)return null;
  load(f);const image=assets[f];if(!image)return global.IsoWorld?.frame(f,r,action,phase)||null;
@@ -14,8 +17,10 @@ function frame(f,r,action='idle',phase=0){
 }
 function cover(g,f,w,h){
  loadPortrait(f);const image=portraits[f];if(!image?.complete||!image.naturalWidth)return false;
- g.save();g.fillStyle='#211c36';g.fillRect(0,0,w,h);const sourceHeight=Math.min(image.naturalHeight,image.naturalWidth*h/(w*.56));g.drawImage(image,0,0,image.naturalWidth,sourceHeight,w*.44,0,w*.56,h);
- const cv=assets[f]?frame(f,0,'idle',0):null;if(cv){g.imageSmoothingEnabled=false;g.drawImage(cv,-h*.06,h*.14,h*.9,h*.9);}
+ g.save();g.clearRect(0,0,w,h);g.fillStyle='#211c36';g.fillRect(0,0,w,h);
+ const [top,bottom]=portraitRows[f],sy=top/512*image.naturalHeight,sh=(bottom-top)/512*image.naturalHeight;
+ const scale=Math.min(w/image.naturalWidth,h/sh),dw=image.naturalWidth*scale,dh=sh*scale;
+ g.drawImage(image,0,sy,image.naturalWidth,sh,(w-dw)/2,(h-dh)/2,dw,dh);
  g.fillStyle='#ef9bcc';g.fillRect(0,h-3,w,3);g.restore();return true;
 }
 function ready(){global.dispatchEvent?.(new Event('desert-moe-ready'));}

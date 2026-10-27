@@ -62,7 +62,8 @@ for idx,(name,file) in enumerate(zip(names,files)):
     patch=patch.resize((max(1,round(patch.width*scale)),max(1,round(patch.height*scale))),Image.Resampling.NEAREST)
     atlas.alpha_composite(patch,(frame*96+(96-patch.width)//2,(role*5+act)*96+91-patch.height))
  atlas.save(dest/(name+'-actions.webp'),lossless=True,method=6)
- portrait=im.crop((round(w*.845),round(h*.047),w-18,round(h*.271)))
+ portrait_boxes={'brood':(1204,196,1434,390),'robot':(1225,78,1432,285),'fairy':(1205,158,1434,350)}
+ portrait=im.crop(portrait_boxes.get(name,(round(w*.845),round(h*.047),w-18,round(h*.271))))
  portrait.resize((384,384),Image.Resampling.LANCZOS).save(dest/(name+'-portrait.webp'),quality=88)
  banner=im.crop((round(w*.47),0,round(w*.835),round(h*.129)))
  banner.resize((720,210),Image.Resampling.LANCZOS).save(dest/(name+'-banner.webp'),quality=88)

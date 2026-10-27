@@ -352,6 +352,12 @@ function renderFactionSprite(f,role,mode,frame){
  if(special){cache.set(key,special);return special;}
  const reference=global.DesertRealSprites?.frame(f,role,mode,frame);
  if(reference){cache.set(key,reference);return reference;}
+ // Wait for the isolated unit strip; never flash a damaged legacy atlas cell
+ // while the first image request is still decoding.
+ if(global.DesertRealSprites){
+  const loading=document.createElement('canvas');loading.width=SIZE;loading.height=SIZE;
+  cache.set(key,loading);return loading;
+ }
  const cv=document.createElement('canvas');cv.width=SIZE;cv.height=SIZE;
  const g=cv.getContext('2d');if(!g)return cv;
  const a=PAL[f]||PAL[0],t=frame/16,cyc=t*Math.PI*2,walk=mode==='move',hit=mode==='attack'||mode==='siege';

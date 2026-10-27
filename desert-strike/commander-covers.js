@@ -38,7 +38,7 @@ function draw(canvas,f,skin='default'){
  const g=canvas?.getContext?.('2d');if(!g)return;
  const w=canvas.width,h=canvas.height,p=PAL[f]||PAL[0],old=g.imageSmoothingEnabled;
  if(skin==='moe'&&global.DesertMoeArt?.cover?.(g,f,w,h))return;
- if(global.DesertRealSprites?.cover?.(g,f,0,0,w,h,false)){global.DesertRealSprites.cover(g,f,w*.60,0,w*.40,h,true);return;}
+ if(global.DesertRealSprites?.cover?.(g,f,0,0,w,h,true))return;
  if(global.DesertRealSprites){g.fillStyle=p[1];g.fillRect(0,0,w,h);return;}
  g.save();g.clearRect(0,0,w,h);g.scale(w/320,h/210);g.imageSmoothingEnabled=false;
  const bg=g.createLinearGradient(0,0,0,210);bg.addColorStop(0,'#122337');bg.addColorStop(.75,p[1]);bg.addColorStop(1,'#0d2535');g.fillStyle=bg;g.fillRect(0,0,320,210);
@@ -52,7 +52,7 @@ function draw(canvas,f,skin='default'){
   if(model){g.fillStyle='#08141c99';g.beginPath();g.ellipse(x,y-13,size*.24,size*.06,0,0,Math.PI*2);g.fill();
    g.drawImage(model,0,0,72,72,x-size/2,y-size,size,size);}
  };
- unit(0,69,206,76);unit(3,251,206,76);unit(6,160,204,102);
+ unit(0,160,206,102);
  box(g,0,206,320,4,p[0]);g.restore();g.imageSmoothingEnabled=old;
 }
 global.DesertCommanderCovers=Object.freeze({draw});
