@@ -114,8 +114,23 @@ function create({mode='pvp',size=1,members=[]}={}){
   const d=definition(a.faction,a.role);
   a.cool=Math.max(.3,d.rate);a.act='attack';a.attackAge=.33;
   const dmg=d.damage;
-  if(a.role===7){v.hp=Math.min(v.maxHP,v.hp+(d.heal||36));return;}
-  if(a.role===5){
+  if(a.role===7){
+   if(a.faction===3){
+    // Huanglong's existing one-use Marine banquet heals the entire injured squad.
+    let healed=0;
+    for(const x of state.units)if(x.id!==a.id&&x.hp>0&&x.team===a.team&&x.lane===a.lane&&x.hp<x.maxHP&&Math.hypot(a.x-x.x,a.y-x.y)<175){
+     const before=x.hp;x.hp=Math.min(x.maxHP,x.hp+Math.max(115,x.maxHP*.28));healed+=x.hp-before;
+    }
+    if(healed>0)a.hp=0;
+   }else v.hp=Math.min(v.maxHP,v.hp+(d.heal||36));
+   return;
+  }
+  if(a.role===6&&(a.faction===3||a.faction===4)){
+   // Ground truck/panther charges punish a melee clump without hitting aircraft.
+   const nearby=state.units.filter(x=>x.lane===a.lane&&x.team!==a.team&&x.hp>0&&definition(x.faction,x.role).kind==='ground'&&Math.hypot(x.x-v.x,x.y-v.y)<58)
+    .sort((x,y)=>Math.hypot(x.x-v.x,x.y-v.y)-Math.hypot(y.x-v.x,y.y-v.y)).slice(0,3);
+   for(const x of nearby)applyHit(a,x,dmg*(x.role===0?1.35:x.role===3?.55:1));
+  }else if(a.role===5){
    for(const x of state.units)if(x.lane===a.lane&&x.team!==a.team&&x.hp>0&&definition(x.faction,x.role).kind!=='air'&&Math.hypot(x.x-v.x,x.y-v.y)<66)applyHit(a,x,dmg*.8);
   }else applyHit(a,v,dmg);
   if(state.effects.length>100)state.effects.shift();
@@ -153,7 +168,7 @@ function create({mode='pvp',size=1,members=[]}={}){
     const dist=Math.hypot(tx-u.x,ty-u.y);
     if(dist>Math.max(48,d.range*.85)){
      const sp=Math.min(d.speed*dt,dist);u.x+=(tx-u.x)/dist*sp;u.y+=(ty-u.y)/dist*sp;u.act='move';
-    }else if(u.cool<=0){state.cores[u.lane][1-u.team]=Math.max(0,state.cores[u.lane][1-u.team]-d.damage*(u.role===5?1.45:u.role===0?.52:1));u.cool=d.rate;u.act='attack';u.attackAge=.28;}
+    }else if(u.cool<=0){state.cores[u.lane][1-u.team]=Math.max(0,state.cores[u.lane][1-u.team]-d.damage*([.52,.88,1.12,1.08,.82,1.55,.87,.4][u.role]||1));u.cool=d.rate;u.act='attack';u.attackAge=.28;}
    }
    u.x=clamp(u.x,35,WIDTH-35);
    u.y=clamp(u.y,u.lane*LANE_H+80,(u.lane+1)*LANE_H-80);
