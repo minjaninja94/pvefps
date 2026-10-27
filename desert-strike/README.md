@@ -282,3 +282,11 @@ node desert-strike/smoke-v2.test.cjs
 - 멀티: 기존 `#mpLobby` DOM(방 생성·코드 참가·팀·인원·준비·시작·나가기)을 `#lobbyMultiMount`로 이동합니다. 이벤트 핸들러와 네트워크 권한은 그대로 보존합니다. 전투는 호스트가 시작한 뒤 `onSnapshot`에서 자동 입장하며 `#view-multiplayer`에는 전장·생산 UI만 표시됩니다.
 - 오프라인 연습은 메인 로비의 연습 버튼으로 곧바로 통합 전장에 입장합니다. 게임 화면의 로비 버튼으로 방 나가기 및 연습 종료 후 메인 로비에 복귀합니다.
 - Google 인증, 방 코드, 기존 전투 엔진, 10종족 및 로컬 훈련 레벨은 유지합니다.
+
+
+## 생성 이미지 기반 80병종 × 5모션 아틀라스 (2026-10-27)
+
+- 신규 렌더러: `desert-strike/sprite-atlas.js`가 원본 생성 이미지에서 추출한 10종족별 투명 아틀라스를 불러옵니다. `IsoWorld.frame`의 캐시 앞에서 아틀라스를 우선 적용하므로 싱글·3라인 멀티·80병종 로비·도감에 동일한 리소스가 표시됩니다.
+- 파일 경로: `desert-strike/assets/sprites/{forge,brood,astral,marine,beastkin,elf,furry,robot,octoper,fairy}.webp`. 10개 모두 480×768 WebP, 96×96 프레임 그리드(열 idle/move/attack/skill/death × 행 8병종). 5개 원화 포즈를 이용해 런타임에 16단계 모션을 생성합니다.
+- 페이지 로드시 별도 이미지 로딩 후 해당 종족 캐시를 무효화합니다. 아틀라스 누락/실패 시 게임은 기존 픽셀 렌더러로 복귀합니다. 이미지 데이터 자체는 binary WebP이며 JavaScript 문자열 대체물이 아닙니다.
+- 모든 바이너리 WEBP 파일은 함께 제공된 `desert-front-real-sprites.zip` 패키지를 `desert-strike/` 디렉터리에 그대로 풀면 연결됩니다.

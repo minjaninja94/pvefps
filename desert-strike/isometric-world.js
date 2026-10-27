@@ -311,6 +311,9 @@ function drawOdoBongo(g,mode,frame){
 function renderFactionSprite(f,role,mode,frame){
  const key=[f,role,mode,frame].join('-');
  const old=cache.get(key);if(old)return old;
+ // User-generated, transparent sprite atlases take priority over earlier icon art.
+ const illustrated=global.DesertRealSprites?.frame(f,role,mode,frame);
+ if(illustrated){cache.set(key,illustrated);return illustrated;}
  const cv=document.createElement('canvas');cv.width=SIZE;cv.height=SIZE;
  const g=cv.getContext('2d');if(!g)return cv;
  const a=PAL[f]||PAL[0],t=frame/16,cyc=t*Math.PI*2,walk=mode==='move',hit=mode==='attack'||mode==='siege';
@@ -498,6 +501,7 @@ global.IsoWorld=Object.freeze({
  terrain,structure,factory,frame:renderFactionSprite,effect,
  portrait(f,role){return renderFactionSprite(f,role,'idle',4);},
  invalidateMaiden(){for(const k of [...cache.keys()])if(k.startsWith('4-')||k.startsWith('5-'))cache.delete(k);},
+ invalidateSpriteFaction(f){for(const k of [...cache.keys()])if(k.startsWith(f+'-'))cache.delete(k);},
  get cachedFrames(){return cache.size;}
 });
 })(window);
