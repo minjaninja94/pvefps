@@ -183,3 +183,14 @@ body{background:
  #productionMinimap{height:72px}
 }
 @media(max-width:440px){.mp-lobby-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mp-lane-tabs button{font-size:12px}.mp-build-controls{align-items:stretch}.mp-build-controls label{width:100%}}
+
+/* One consistent fantasy-pixel visual family for both mature heroine factions. */
+.faction-card.faction-maiden{position:relative;min-height:208px;background:linear-gradient(160deg,#24333e 0%,#372c43 100%);text-align:center}
+.faction-card.faction-maiden[data-faction="5"]{background:linear-gradient(155deg,#183c3f 0%,#24354d 100%)}
+.faction-card.faction-maiden .faction-hero{display:block;width:min(112px,70%);height:112px;margin:1px auto 5px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 5px 1px #061520) drop-shadow(0 0 9px #d5acc65e)}
+.faction-card.faction-maiden[data-faction="5"] .faction-hero{filter:drop-shadow(0 5px 1px #061d1a) drop-shadow(0 0 9px #b6ead153)}
+.faction-card.faction-maiden .faction-icon{position:absolute;top:8px;left:10px;font-size:22px}
+.faction-card.faction-maiden strong{color:#f2e8e7}
+.faction-card.faction-maiden .bonus{color:#e6cfbf;font-weight:700}
+.faction-card.faction-maiden:hover,.faction-card.faction-maiden.selected{border-color:#f1c89f;box-shadow:inset 0 0 0 1px #f2d5aa50,0 0 18px #edc7a62c}
+@media(max-width:620px){.faction-card.faction-maiden{min-height:194px}.faction-card.faction-maiden .faction-hero{height:94px;width:94px}}
