@@ -143,7 +143,7 @@ function reset(){
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},
  broodBirths:[0,0],broodBirthsTotal:[0,0],
  towerShots:[],aiSight:new Set(),nukes:1,barrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
- nextUnitId:1,attackCount:0,nextConsolidation:1};
+ nextUnitId:1,attackCount:0,nextConsolidation:1,aiDifficulty:window.DesertLobby?.aiDifficulty?.()||'normal',hardBrain:null};
  selectedRole=null;demolition=false;bannerSeconds=0;barrageSeconds=0;
  $('startOverlay').classList.remove('hidden');$('endOverlay').classList.add('hidden');
  $('pauseButton').textContent='Ⅱ 일시정지';$('speedButton').textContent='▶ 1×';
@@ -158,7 +158,7 @@ function start(){
  aiInitialBuild();
  $('startOverlay').classList.add('hidden');
  changeView('base');
- setMessage('전투 시작! 24초 이내에 생산 시설을 배치하세요.');
+ setMessage((state.aiDifficulty==='hard'?'하드 AI · 추가 자원 보너스 없음. ':'')+'전투 시작! 24초 이내에 생산 시설을 배치하세요.');
  updateUI(true);chirp(530,.16);
 }
 function changeView(id){
@@ -355,7 +355,29 @@ function aiChoose(budget=state.enemyCash){
  for(const entry of top){left-=Math.max(1,8+entry.score-scores[0].score);if(left<=0)return entry.id;}
  return top[0].id;
 }
+function hardInvest(){
+ const ai=window.DesertHardAI;if(!ai)return;
+ const brain=state.hardBrain||(state.hardBrain=ai.create(state.enemyFaction));
+ const scouts=state.units.filter(u=>u.side===1&&u.hp>0);
+ const seen=state.units.filter(u=>u.side===0&&u.hp>0&&(u.x>=WORLD_W*.57||scouts.some(v=>Math.hypot(v.x-u.x,v.y-u.y)<=340)));
+ const amount=u=>u.heroCount===20?20:1;
+ const air=seen.filter(u=>getDef(u.role,u.faction).kind==='air').reduce((n,u)=>n+amount(u),0);
+ const armor=seen.filter(u=>u.role===3||(u.role===6&&getDef(u.role,u.faction).kind!=='air')).reduce((n,u)=>n+amount(u),0);
+ const invaded=seen.some(u=>u.x>WORLD_W-580);
+ for(let purchase=0;purchase<12;purchase++){
+  const counts=Array(8).fill(0);for(const role of state.enemyBuilt)if(role!==null&&role!==EXTRACTOR)counts[role]++;
+  const slot=state.enemyBuilt.findIndex(v=>v===null);if(slot<0)break;
+  const action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,costs:ROLE.map(x=>x.cost),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded}});
+  if(!action)break;
+  const cost=action.kind==='econ'?ecoCostFor(state.enemyEco):ROLE[action.role].cost;
+  if(action.kind==='econ'){if(!constructExtractor(1,slot))break;}
+  else {if(state.enemyCash<cost)break;state.enemyBuilt[slot]=action.role;state.enemyCash-=cost;}
+  ai.bought(brain,action,cost);
+ }
+}
 function aiInitialBuild(){
+ if(state.aiDifficulty==='hard'){hardInvest();return;}
+
  // Equal starting resources. Both buildings are paid for out of the AI's 360 CR.
  for(const [slot,role] of [[1,0],[17,1]]){
   if(state.enemyBuilt[slot]!==null||state.enemyCash<ROLE[role].cost)continue;
@@ -381,6 +403,7 @@ function aiAdaptFacilities(intel){
  return true;
 }
 function aiInvest(){
+ if(state.aiDifficulty==='hard'){hardInvest();return;}
  const intel=aiReadOpponent();
  const enemyCount=state.enemyBuilt.filter(role=>role!==null&&role!==EXTRACTOR).length;
  const invaded=state.units.some(u=>u.side===0&&u.x>WORLD_W-580&&u.hp>0);
@@ -731,6 +754,7 @@ function tick(dt){
  state.elapsed+=ds;state.next-=ds;state.incomeClock+=ds;
  if(state.elapsed>=state.nextConsolidation){state.nextConsolidation=state.elapsed+1;compactArmy();}
  while(state.incomeClock>=INCOME_PERIOD){const at=state.elapsed-state.incomeClock+INCOME_PERIOD;state.incomeClock-=INCOME_PERIOD;if(at+1e-6>=state.ecoReadyAt)state.cash+=initialIncome+state.eco;if(at+1e-6>=state.enemyEcoReadyAt)state.enemyCash+=initialIncome+state.enemyEco;}
+ if(state.aiDifficulty==='hard'&&state.elapsed>=(state.hardBrain?.nextThink||0)){hardInvest();if(state.hardBrain)state.hardBrain.nextThink=state.elapsed+1;}
  state.barrageCd=Math.max(0,state.barrageCd-ds);
  while(state.next<=0){state.next+=INTERVAL;wave();}
  deployMarineSupports();
@@ -842,7 +866,7 @@ function updateUI(full=false){
  const traitStatus=$('factionTraitStatus');if(traitStatus){traitStatus.hidden=false;traitStatus.textContent='◆ '+FACTIONS[state.faction].name+' · '+FACTIONS[state.faction].bonus+(state.faction===1?' · 공생충 '+state.broodBirths[0]+'/'+BROOD_BIRTH_CAP+' (전체 '+state.broodBirthsTotal[0]+'기)':'');}
  const marineOps=$('marineAbilityStatus');
  if(marineOps){marineOps.hidden=state.faction!==3; if(state.faction===3)marineOps.textContent='★ 해병성채 | 긴빠이 '+state.marineStats.loot+'회 (+'+state.marineStats.lootedCR+' CR) | 자진입대 '+state.marineStats.recruits+'회 · 이번 웨이브 '+state.marineRecruitCount[0]+'/'+MARINE_RECRUIT_CAP+' | 황룡 '+state.marineStats.huangSpawns+'기 소환 | 오도봉고 '+(state.marineStats.bongoCharges||0)+'회 돌진';}
- $('enemyFactionLabel').textContent='VS '+FACTIONS[state.enemyFaction].name;
+ $('enemyFactionLabel').textContent=(state.aiDifficulty==='hard'?'하드 AI · VS ':'VS ')+FACTIONS[state.enemyFaction].name;
  const inv=state.units.filter(u=>u.side===1&&u.x<490).length;
  $('baseAlert').textContent=inv>0?'침공 경보 · '+inv+'기':state.turretHP[0]===0?'방어 포탑 파괴':'기지 안전';
  $('baseAlert').classList.toggle('danger',inv>0||state.turretHP[0]===0);

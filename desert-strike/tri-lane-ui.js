@@ -212,10 +212,10 @@ function order(cmd){
 function practiceStart(){
  if(lobby)return message('온라인 방에서 나간 뒤 연습할 수 있습니다.');
  myId='local';
- practice=E.create({mode:'pvp',size:1,members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%10,bot:true}]});
- practice.state.players[1].buildings[1][1]=0;practice.state.players[1].buildings[1][17]=1;
- practice.state.players[1].cash-=160;
- $('mpStateTag').textContent='오프라인 연습';message('3라인 오프라인 연습 · Firebase 연결 없이 작동합니다.');
+ const hard=global.DesertLobby?.aiDifficulty?.()==='hard';
+ practice=E.create({mode:'pvp',size:1,aiDifficulty:hard?'hard':'normal',members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%10,bot:true}]});
+ if(!hard){practice.state.players[1].buildings[1][1]=0;practice.state.players[1].buildings[1][17]=1;practice.state.players[1].cash-=160;}
+ $('mpStateTag').textContent=hard?'하드 AI 연습':'오프라인 연습';message('3라인 오프라인 연습 · Firebase 연결 없이 작동합니다.');
  let last=performance.now();
  practiceTimer=setInterval(()=>{const now=performance.now();practice.tick(Math.min(.16,(now-last)/1000));last=now;onSnapshot(practice.snapshot('local'));},100);
  onSnapshot(practice.snapshot('local'));uiButtons();

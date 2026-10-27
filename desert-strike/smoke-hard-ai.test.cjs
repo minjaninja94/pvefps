@@ -1,0 +1,53 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const read=f=>fs.readFileSync(path.join(__dirname,f),'utf8');
+const cost=[65,95,150,205,165,245,205,145];
+function environment(roll){const w={},math=Object.create(Math);math.random=()=>roll;const ctx={window:w,Math:math,console,Map,Set,Array,Number,Object,String};vm.runInNewContext(read('hard-ai.js'),ctx);vm.runInNewContext(read('tri-lane-engine.js'),ctx);return {w,ctx};}
+const results=[];
+for(const roll of [.01,.26,.51,.76])for(const faction of [0,3,4,7,9]){
+ const {w}=environment(roll),E=w.DesertTriEngine;
+ const e=E.create({aiDifficulty:'hard',members:[{uid:'human',team:0,faction:0},{uid:'bot',team:1,faction,bot:true}]}),s=e.state,p=s.players[1];
+ s.next=1000000;let earned=360;
+ assert.equal(p.cash+p.hardBrain.spent,360,'all initial units and extractors are paid from equal starting cash');
+ const opening=p.buildings.flat().filter(x=>x!==null&&x!==8);
+ assert.ok(opening.includes(roll<.25||roll>.75?3:roll<.5?6:0),'proactive opening is independent of opponent composition');
+ for(let step=1;step<=1200;step++){
+  const old=s.seconds,level=p.eco,ready=p.ecoReadyAt;
+  const next=old+.2;
+  for(let slice=Math.floor(old*2)+1;slice<=Math.floor(next*2);slice++)if(slice*.5+1e-6>=ready)earned+=1+level;
+  s.units.length=0;e.tick(.2);
+  if(step%120===0){if(s.seconds>=p.ecoReadyAt)earned+=24;e.wave();}
+  assert.ok(p.cash>=0,'no borrowing');
+  assert.equal(p.cash+p.hardBrain.spent,earned,'no bonus income, free purchases or stabilization catch-up');
+  assert.equal(p.buildings.flat().filter(r=>r===8).length,p.eco,'every income upgrade consumes a real slot');
+ }
+ assert.ok(p.eco>=3,'regular paid economy development');
+ assert.ok(p.cash<Math.max(E.ecoPrice(p.eco),245),'bank only the next actual construction cost');
+ assert.ok(new Set(p.buildings.flat().filter(r=>r!==null&&r!==8)).size>=4,'develop a planned combined army instead of only cheap units');
+ results.push({plan:w.DesertHardAI.plans[p.hardBrain.plan].id,faction,eco:p.eco,cash:p.cash,army:p.buildings.flat().filter(r=>r!==null&&r!==8).length});
+ assert.equal(e.snapshot('human').aiDifficulty,'hard');assert.equal(e.snapshot('human').players[1].cash,null,'hard mode does not reveal enemy resources');
+}
+// Verify threat handling only consumes the explicitly supplied scouted intel.
+const {w}=environment(.01),ai=w.DesertHardAI,brain=ai.create(0,()=>.01);brain.opening=2;
+const counts=[2,2,1,1,0,1,0,0],base={cash:500,counts,eco:7,readyAt:0,seconds:200,costs:cost,ecoCost:600};
+const normal=ai.choose({...brain},base),air=ai.choose({...brain},{...base,intel:{air:9}});
+assert.notEqual(normal.role,air.role);assert.equal(air.role,4,'observed aircraft receive genuine anti-air support');
+const queued={...brain,nextRole:3,lastThreat:''};assert.equal(ai.choose(queued,{...base,intel:{air:9}}).role,4,'new scouting revises a queued purchase');
+assert.equal(ai.choose({...brain},{...base,eco:0,ecoCost:70}).kind,'econ');assert.equal(ai.choose({...brain},{...base,eco:0,ecoCost:70,intel:{air:9}}).kind,'unit','delay greed when air defense is missing');
+// Real solo integration: paid opening, blackout, one-second think cadence and HUD.
+const elements=new Map(),noop=()=>{},g=new Proxy({createLinearGradient:()=>({addColorStop:noop})},{get:(o,k)=>o[k]||noop});
+const el=id=>{if(!elements.has(id))elements.set(id,{style:{},dataset:{},classList:{add:noop,remove:noop,toggle:noop},getContext:()=>g,querySelectorAll:()=>[],addEventListener:noop});return elements.get(id);};
+const env=environment(.01),sw=env.w;Object.assign(env.ctx,{document:{getElementById:el,querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>({getContext:()=>g})},requestAnimationFrame:noop,Date});sw.DesertLobby={aiDifficulty:()=> 'hard'};
+vm.runInNewContext(read('game-v2.js').replace('initFactions();wire();reset();','window.testHard={state:()=>state,reset,aiInitialBuild,hardInvest,tick};reset();'),env.ctx);
+const api=sw.testHard;api.aiInitialBuild();
+const first=Array.from(api.state().enemyBuilt),cashOpening=api.state().enemyCash;api.reset();api.state().built.fill(6);api.aiInitialBuild();assert.deepEqual(Array.from(api.state().enemyBuilt),first,'hidden aircraft factories cannot alter the proactive opening');assert.equal(api.state().enemyCash,cashOpening);
+const s=api.state();s.live=true;s.next=100000;
+assert.equal(s.aiDifficulty,'hard');assert.equal(s.enemyCash+s.hardBrain.spent,360);assert.ok(s.enemyBuilt.includes(3));
+// At 5s the first paid extractor is affordable; all its income stops for 6s.
+for(let n=0;n<150;n++)api.tick(.04);
+assert.equal(s.enemyEco,1);assert.ok(s.enemyEcoReadyAt>s.elapsed);const before=s.enemyCash,spent=s.hardBrain.spent;
+for(let n=0;n<75;n++)api.tick(.04);
+assert.equal(s.enemyCash+s.hardBrain.spent,before+spent,'solo hard AI pays the same stabilization penalty');
+assert.ok(elements.get('enemyFactionLabel').textContent.includes('하드 AI'));
+console.log('Hard AI passed: 20 four-minute ledgers, four proactive openings, ground special factions, regular paid economy, zero resource bonuses, actual slot/blackout costs, bounded next-purchase reserves, scouted support, solo and three-line integration.');
+console.log(JSON.stringify(results.filter(x=>x.faction===0)));

@@ -9,7 +9,7 @@ const SKINS=[
  {id:'aurora',name:'오로라 특무',level:6,desc:'청록 발광형 전투복',filter:'hue-rotate(145deg) saturate(1.15)',tone:'#8bdff6'},
  {id:'gold',name:'황금 근위',level:10,desc:'시즌 훈련 보상',filter:'sepia(.62) saturate(1.35) contrast(1.05)',tone:'#e9c47f'}
 ];
-const KEY='desert-front-training-v2',empty=()=>({xp:0,wins:0,losses:0,mpWins:0,mpLosses:0,selectedFaction:0,selectedSkin:'default',nickname:'지휘관'});
+const KEY='desert-front-training-v2',empty=()=>({xp:0,wins:0,losses:0,mpWins:0,mpLosses:0,selectedFaction:0,selectedSkin:'default',aiDifficulty:'normal',nickname:'지휘관'});
 let progress=empty(),uid=null,active=false,lastMultiplayer='',authBusy=false;
 let selectedUnit=0,selectedAction='idle',animationStart=0,animationTick=0,onlineOpen=false;
 function safeName(v){return String(v||'지휘관').trim().replace(/[<>\u0000-\u001f]/g,'').slice(0,16)||'지휘관';}
@@ -17,6 +17,7 @@ function load(){
  try{const v=JSON.parse(localStorage.getItem(KEY)||'{}');const p=empty();
   p.xp=Math.max(0,Math.min(10000000,Number(v.xp)||0));for(const k of ['wins','losses','mpWins','mpLosses'])p[k]=Math.max(0,Math.min(999999,Math.floor(Number(v[k])||0)));
   p.selectedFaction=Number.isInteger(v.selectedFaction)&&v.selectedFaction>=0&&v.selectedFaction<FACTIONS.length?v.selectedFaction:0;
+  p.aiDifficulty=v.aiDifficulty==='hard'?'hard':'normal';
   p.nickname=safeName(v.nickname);p.selectedSkin=SKINS.some(x=>x.id===v.selectedSkin)?v.selectedSkin:'default';return p;
  }catch(_){return empty();}
 }
@@ -71,9 +72,12 @@ function renderCovers(){const art=global.DesertCommanderCovers;if(!art)return;co
  $('lobbyFactions')?.querySelectorAll('canvas[data-cover]')?.forEach(c=>art.draw(c,Number(c.dataset.cover),skin));
  art.draw($('lobbyHero'),progress.selectedFaction,skin);
 }
+function chooseDifficulty(value){if(!['normal','hard'].includes(value))return;progress.aiDifficulty=value;save();render();}
 function render(){
  if(!FACTIONS.length)return;
  const fac=FACTIONS[progress.selectedFaction]||FACTIONS[0],l=levelFromXP(progress.xp),s=currentSkin();
+ $('lobbyDifficulty')?.querySelectorAll('[data-difficulty]').forEach(b=>{const chosen=b.dataset.difficulty===progress.aiDifficulty;b.classList.toggle('selected',chosen);b.setAttribute('aria-pressed',String(chosen));});
+ $('lobbySolo').querySelector('span').textContent=(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 22웨이브 전투';
  const account=global.DesertDeviceAccount?.status?.();
  $('lobbyAccountStatus').textContent=account?(uid?'기기 인증 연결':'기기 계정 · 오프라인'):'게스트 · 이 기기';
  if(account){$('lobbyUserId').value=account.accountId;$('lobbyDeviceId').value=account.deviceId;}
@@ -192,12 +196,13 @@ function initialize(){
  $('lobbySolo').addEventListener('click',single);
  $('lobbyMulti').addEventListener('click',openMultiplayer);
  $('lobbyPractice').addEventListener('click',practiceBattle);
+ $('lobbyDifficulty').addEventListener('click',e=>{const b=e.target.closest('[data-difficulty]');if(b)chooseDifficulty(b.dataset.difficulty);});
  $('backToLobby').addEventListener('click',()=>{void returnToLobby();});
  $('lobbySaveName').addEventListener('click',()=>{progress.nickname=safeName($('lobbyNickname').value);stateChange();});
  $('lobbyDeviceLogin').addEventListener('click',()=>{void deviceLogin();});$('lobbyCopyIds').addEventListener('click',()=>{void copyIds();});
  global.addEventListener?.('maiden-art-ready',renderCovers);global.addEventListener?.('isometric-art-ready',renderCovers);global.addEventListener?.('desert-real-sprites-ready',renderCovers);global.addEventListener?.('desert-moe-ready',renderCovers);
  show();void restoreAccount();
 }
-global.DesertLobby=Object.freeze({levelFromXP,filterForSkin,skinFilter:()=>currentSkin().filter,selectedSkin:()=>currentSkin().id,selectedFaction:()=>progress.selectedFaction,selectedUnit:()=>selectedUnit,chooseFaction,chooseSkin,chooseUnit,chooseAction,completeSolo,completeMultiplayer,grantXP,show,hide,enterMatch,openMultiplayer,returnToLobby});
+global.DesertLobby=Object.freeze({levelFromXP,filterForSkin,skinFilter:()=>currentSkin().filter,selectedSkin:()=>currentSkin().id,selectedFaction:()=>progress.selectedFaction,selectedUnit:()=>selectedUnit,aiDifficulty:()=>progress.aiDifficulty,chooseDifficulty,chooseFaction,chooseSkin,chooseUnit,chooseAction,completeSolo,completeMultiplayer,grantXP,show,hide,enterMatch,openMultiplayer,returnToLobby});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize);else initialize();
 })(window);

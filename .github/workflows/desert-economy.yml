@@ -27,6 +27,8 @@ jobs:
         run: node desert-strike/smoke-device-account.test.cjs
       - name: Hero consolidation and exact aggregate stats
         run: node desert-strike/smoke-consolidation.test.cjs
+      - name: Paid proactive hard AI and income parity
+        run: node desert-strike/smoke-hard-ai.test.cjs
       - name: Economy and occupied production slots
         run: node desert-strike/smoke-economy.test.cjs
       - name: Cooperative combat
