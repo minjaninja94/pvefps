@@ -152,6 +152,7 @@ assert.equal(eq.enemyCash,405,'AI second economy upgrade costs the same 95 CR');
 // Anti-spam: the opponent responds to one cheap melee role, without gifted money.
 click('restartButton');click('startButton');
 const rush=econGame.state(),g=sandbox.window.__gameTest;
+rush.enemyFaction=0; // fixed Forge opponent for the original flyer-counter scenario
 rush.built.fill(null);for(let i=0;i<5;i++)rush.built[i]=0;
 assert.equal(g.aiReadOpponent().dominant,0,'5/5 charge buildings recognized as a single-role rush');
 rush.wave=1;rush.enemyCash=300;
@@ -173,6 +174,7 @@ click('startButton');
 click('unitCards',{role:'0'});
 for(let i=0;i<5;i++)click('buildGrid',{cell:String(i)});
 const spam=g.state();
+spam.enemyFaction=0; // lock original anti-claw scenario; species-specific behavior has separate tests
 assert.equal(spam.faction,1);
 assert.equal(spam.built.filter(r=>r===0).length,5);
 assert.equal(Math.floor(spam.cash),35);
