@@ -58,5 +58,5 @@ lobby.completeMultiplayer({winner:0,side:0,matchId:'room-1'});lobby.completeMult
 assert.match(fakeEl('lobbyRecord').textContent,/온라인 1승/,'duplicate reports are not awarded');
 assert.ok(store.has('desert-front-training-v2'),'guest progression saved locally');
 assert.match(read('front-lobby.js'),/async function restoreAccount\(/,'Google persistence restores on reload');
-assert.match(fs.readFileSync(path.join(root,'..','firebase-network.js'),'utf8'),/uid:auth\.currentUser\?\.uid/,'network identity follows changed Firebase sessions');
+assert.match(fs.readFileSync(path.join(root,'..','firebase-network.js'),'utf8'),/uid:auth\.currentUser\.uid/,'network identity follows changed Firebase sessions');
 console.log('Nine-faction test passed: 72 unique units, 1,920 generated 2.5D frames, 3 structures, lobby mode/UI, XP ranks, unlockable cosmetics.');
