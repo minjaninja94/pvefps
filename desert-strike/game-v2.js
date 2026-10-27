@@ -22,7 +22,10 @@ const FACTIONS=[
  {id:'astral',name:'성운결사',tag:'ASTRAL ORDER',logo:'✧',color:'#d6b8ff',bonus:'공격/치유 +9% · 최대 HP −1%',mut:{hp:.99,dmg:1.09,speed:1},units:['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],slogan:'에너지·보호막·정밀 타격',secondary:'#443257'},
  {id:'marine',name:'해병성채',tag:'MARINE FORTRESS',logo:'★',color:'#dba77c',bonus:'긴빠이·자진입대 · 황룡 8초 간격 3회 투입',mut:{hp:1.09,dmg:1.06,speed:1.01},units:['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],	slogan:'모히칸·붉은 군모·검은 얼굴·해병수육',secondary:'#58412f'},
  {id:'beastkin',name:'월영 수인족',tag:'MOONFANG CLAN',logo:'♞',color:'#f0b4a6',bonus:'근접 피해 +22% · 기동 +14% / 원거리 피해 −13%',mut:{hp:1.04,dmg:1,speed:1.06},units:['백랑 검사','여우불 투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],slogan:'늑대귀·여우꼬리·야수 기병·근접 난전',secondary:'#603d46'},
- {id:'elf',name:'은월 엘프족',tag:'SILVERWOOD ELVES',logo:'✦',color:'#b2e6cf',bonus:'원거리 사거리 +10% · 화력 +4.5% / 근접 피해 −16%',mut:{hp:.94,dmg:1,speed:.99},units:['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사'],slogan:'긴 귀·은발·장궁·마법 결정·후방 화력',secondary:'#375c52'}
+ {id:'elf',name:'은월 엘프족',tag:'SILVERWOOD ELVES',logo:'✦',color:'#b2e6cf',bonus:'원거리 사거리 +10% · 화력 +4.5% / 근접 피해 −16%',mut:{hp:.94,dmg:1,speed:.99},units:['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사'],slogan:'긴 귀·은발·장궁·마법 결정·후방 화력',secondary:'#375c52'},
+ {id:'furry',name:'야월 퍼리족',tag:'WILDFUR PACK',logo:'♣',color:'#e8c392',bonus:'야성 근접 +10% · 생존 기동 +7% / 사격 −7%',mut:{hp:1.02,dmg:1,speed:1.07},units:['늑대 추적자','여우총 사냥꾼','송곳니 분쇄자','곰 털갑옷 수호자','하울 창투사','들소 포격수','알파 늑대 기수','달빛 무리치유사'],slogan:'전신 털·주둥이·갈기·늑대 무리',secondary:'#634634'},
+ {id:'robot',name:'크롬 로보족',tag:'CHROME SYNDICATE',logo:'⬡',color:'#83c5fd',bonus:'기계 장갑 +6% · 정밀사격 +4% / 회복 −30%',mut:{hp:1.06,dmg:1,speed:0.95},units:['블레이드 오토마타','레이저 정찰기','레일 관통병기','티탄 실드 워커','플랙 대공드론','공성 캐논','전술 변형 메카','나노 정비유닛'],slogan:'완전 기계·안드로이드·워커·합금 신체',secondary:'#264e67'},
+ {id:'octoper',name:'옥토퍼 군체',tag:'ABYSSAL OCTOPER',logo:'✺',color:'#c5a0fa',bonus:'마도포격 +10% · 광역 반경 +12% / 전열 체력 −7%',mut:{hp:0.93,dmg:1,speed:1.01},units:['팔완 돌격체','먹물 주술사','심해 관통술사','갑각 문어수호자','팔완 대공술사','심연 의식술사','마력 비행수','군체 사제'],slogan:'여덟 촉수·흡반·발광 마력·심해 군체',secondary:'#4a3370'}
 ];
 const RNAME=ROLE.map(r=>r.name),SPRITES=new Map();
 let selectedFaction=0,state=null,selectedRole=null,demolition=false,activeView='base',lastFrame=0,uiElapsed=0;
@@ -33,15 +36,15 @@ function money(n){return Math.floor(n).toLocaleString('ko-KR');}
 function getDef(role,faction){
  const r=ROLE[role],f=FACTIONS[faction];
  const isBongo=faction===3&&role===6;
- const isBeast=faction===4,isElf=faction===5,isProwler=isBeast&&role===6;
- const melee=isBeast&&(role===0||role===3||role===6);
+ const isBeast=faction===4,isElf=faction===5,isFurry=faction===6,isRobot=faction===7,isOcto=faction===8,isProwler=isBeast&&role===6;
+ const melee=(isBeast||isFurry)&&(role===0||role===3||role===6);
  const rangeBoost=isElf&&[1,2,4,5,6].includes(role);
  return {...r,unitName:f.units[role],factionName:f.name,name:isBongo?'차량':isProwler?'기병':r.name,mark:isBongo?'▰':isProwler?'♞':r.mark,
   hp:isBongo?565:r.hp*f.mut.hp*2.25*(isElf&&role===0?.88:isBeast&&role===3?1.13:1),
-  damage:isBongo?36:isProwler?37:r.damage*f.mut.dmg*.94*(isBeast?(melee?1.22:.87):isElf?(rangeBoost?1.045:role===0?.84:1):1),
-  heal:(r.heal||0)*f.mut.dmg*1.5,speed:isBongo?77:isProwler?90:r.speed*f.mut.speed*.84*(melee?1.14:1),
+  damage:isBongo?36:isProwler?37:r.damage*f.mut.dmg*.94*(isBeast?(melee?1.22:.87):isElf?(rangeBoost?1.045:role===0?.84:1):isFurry?(melee?1.10:.93):isRobot&&[1,2,4,5].includes(role)?1.04:isOcto&&[2,4,5].includes(role)?1.10:1),
+  heal:(r.heal||0)*f.mut.dmg*1.5*(isRobot?.70:1),blast:(r.blast||0)*(isOcto?1.12:1),speed:isBongo?77:isProwler?90:r.speed*f.mut.speed*.84*(melee?1.14:1),
   kind:isBongo||isProwler?'ground':r.kind,armor:isBongo?7:isProwler?3:r.armor,
-  range:isBongo?43:isProwler?40:r.range*(rangeBoost?1.10:1),
+  range:isBongo?43:isProwler?40:r.range*(rangeBoost?1.10:isRobot&&[1,2,4,5].includes(role)?1.04:1),
   rate:isBongo?1.45:isProwler?.95:r.rate,
   airTarget:isBongo||isProwler?false:r.airTarget,
   good:isBongo||isProwler?[0,7]:r.good,bad:isBongo||isProwler?[2,3]:r.bad,
@@ -49,6 +52,9 @@ function getDef(role,faction){
   isProwler?'흑표 돌격기수: 공중이 아닌 지상 기병으로 적 전열에 급습합니다. 근접 돌진에 강하지만 대장갑·중장갑에 취약합니다.':
   isBeast?'수인족: 근접 전투·기동력이 강하지만 후방 사격 화력은 낮습니다. '+r.tips:
   isElf?'엘프족: 후방 장궁·마법에 강하지만 전위 난전이 취약합니다. '+r.tips:
+  isFurry?'퍼리족: 전신 털과 야성적인 추격으로 근접전에 강합니다. '+r.tips:
+  isRobot?'로보족: 합금 장갑과 정밀사격이 강하지만 수리 효율은 낮습니다. '+r.tips:
+  isOcto?'옥토퍼: 팔완 마법사가 포격·주술에 강합니다. '+r.tips:
   faction===3&&role===7?'해병수육: 생산 시설마다 매 웨이브 0·8·16초에 순차 3기 출격. 아군 광역 회복 뒤 자신은 소모됩니다.':r.tips};
 }
 function ecoCostFor(level){return Math.round(70*Math.pow(1.36,level));}

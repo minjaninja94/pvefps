@@ -1,6 +1,6 @@
 'use strict';
 // Reproducible Monte Carlo balance benchmark, runs the *real Desert Front game engine*.
-// No made-up combat formula; 6 factions, mirrored sides, seeded randomness.
+// No made-up combat formula; 9 factions, mirrored sides, seeded randomness.
 // Run: node desert-strike/balance-sim.cjs [skirmish|campaign|all] [seedCount]
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const game=fs.readFileSync(path.join(__dirname,'game-v2.js'),'utf8');

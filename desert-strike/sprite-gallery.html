@@ -23,9 +23,12 @@ const labels=[
  ['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],
  ['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],
  ['백랑 검사','여우불 투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],
- ['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사']
+ ['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사'],
+ ['늑대 추적자','여우총 사냥꾼','송곳니 분쇄자','곰 털갑옷 수호자','하울 창투사','들소 포격수','알파 늑대 기수','달빛 무리치유사'],
+ ['블레이드 오토마타','레이저 정찰기','레일 관통병기','티탄 실드 워커','플랙 대공드론','공성 캐논','전술 변형 메카','나노 정비유닛'],
+ ['팔완 돌격체','먹물 주술사','심해 관통술사','갑각 문어수호자','팔완 대공술사','심연 의식술사','마력 비행수','군체 사제']
 ];
-const names=['철갑연합','심연군체','성운결사','해병성채','월영 수인족','은월 엘프족'],roles=['돌격','사격','대장갑','장갑','대공','포격','비행','지원'];
+const names=['철갑연합','심연군체','성운결사','해병성채','월영 수인족','은월 엘프족','야월 퍼리족','크롬 로보족','옥토퍼 군체'],roles=['돌격','사격','대장갑','장갑','대공','포격','비행','지원'];
 const actions=[['idle','대기'],['move','이동'],['attack','공격'],['siege','건물 타격'],['death','사망']];
 let faction=0,role=0,mode='move',index=0,auto=true,last=0;
 const $=id=>document.getElementById(id),S=window.IsoWorld||window.DesertSprites;
@@ -42,7 +45,7 @@ function showFrame(){
  $('detailInfo').textContent=names[faction]+' / '+actions.find(a=>a[0]===mode)[1]+' · 16프레임';
 }
 function render(){
- $('factionButtons').innerHTML=names.map((name,i)=>'<button data-f="'+i+'" class="'+(i===faction?'active':'')+'"><b>'+name+'</b><small>'+['INDUSTRIAL','BIOLOGICAL','PSIONIC','MARINE FORTRESS','BEASTGIRLS','SILVERWOOD ELVES'][i]+'</small></button>').join('');
+ $('factionButtons').innerHTML=names.map((name,i)=>'<button data-f="'+i+'" class="'+(i===faction?'active':'')+'"><b>'+name+'</b><small>'+['INDUSTRIAL','BIOLOGICAL','PSIONIC','MARINE FORTRESS','BEASTGIRLS','SILVERWOOD ELVES','WILDFUR PACK','CHROME SYNDICATE','ABYSSAL OCTOPER'][i]+'</small></button>').join('');
  $('roster').innerHTML=labels[faction].map((name,i)=>'<button class="unit'+(i===role?' active':'')+'" data-r="'+i+'"><canvas width="72" height="72" data-image="'+i+'"></canvas><span>'+name+'<small>'+roles[i]+'</small></span></button>').join('');
  $('roster').querySelectorAll('canvas').forEach(c=>c.getContext('2d').drawImage(S.portrait(faction,Number(c.dataset.image)),0,0));
  $('modes').innerHTML=actions.map(([m,label])=>'<button class="'+(mode===m?'active':'')+'" data-m="'+m+'">'+label+' · 16F</button>').join('');
@@ -57,7 +60,7 @@ $('range').addEventListener('input',e=>{index=Number(e.target.value);auto=false;
 $('autoplay').addEventListener('click',()=>{auto=!auto;$('autoplay').textContent=auto?'Ⅱ 정지':'▶ 재생';});
 $('exportPNG').addEventListener('click',()=>{
  const png=renderSheet(faction,role,mode);
- const a=document.createElement('a');a.download='desert-front-isometric-'+['forge','brood','astral','marine','beastkin','elf'][faction]+'-'+role+'-'+mode+'-16f.png';
+ const a=document.createElement('a');a.download='desert-front-isometric-'+['forge','brood','astral','marine','beastkin','elf','furry','robot','octoper'][faction]+'-'+role+'-'+mode+'-16f.png';
  a.href=png.toDataURL('image/png');document.body.appendChild(a);a.click();a.remove();
 });
 function loop(t){
@@ -83,5 +86,5 @@ render();requestAnimationFrame(loop);
 <div class="info"><span class="pill">MOVE · 16F</span><span class="pill">ATTACK · 16F</span><span class="pill">SIEGE · 16F</span><span class="pill">DEATH · 16F</span><span class="pill">IDLE · 16F</span></div>
 <p class="note">월영 수인족과 은월 엘프족은 실제 생성형 일러스트 아틀라스(WebP)를 결합한 픽셀 스프라이트입니다. 원화를 2.5D 무기·하체 모션과 합성하여 16프레임으로 재생하며, PNG 저장 버튼으로 시트를 내보낼 수 있습니다. 나머지 진영은 기존 전용 도트 기반입니다.</p>
 </section></div>
-<section class="catalog"><h2>전체 진영 · 48개 외형</h2><div class="catalog-grid" id="catalog"></div></section>
+<section class="catalog"><h2>전체 진영 · 72개 외형</h2><div class="catalog-grid" id="catalog"></div></section>
 </div></body></html>

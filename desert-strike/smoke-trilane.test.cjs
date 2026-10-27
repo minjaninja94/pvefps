@@ -33,7 +33,7 @@ assert.equal(E.LANES,3);assert.equal(E.SLOTS,75);
 }
 function human(n,team=0,faction=0){return {uid:'P'+n,name:'지휘관'+n,team,faction};}
 for(const size of [1,2,3]){
- const players=Array.from({length:size},(_,i)=>human(i,0,i%6)).concat(Array.from({length:size},(_,i)=>human(i+size,1,(i+size)%6)));
+ const players=Array.from({length:size},(_,i)=>human(i,0,i%9)).concat(Array.from({length:size},(_,i)=>human(i+size,1,(i+size)%6)));
  const match=E.create({mode:'pvp',size,members:players});
  assert.equal(match.state.players.length,size*2,'human team count');
  assert.equal(match.state.players.filter(p=>p.bot).length,0,'PvP may not add bots');
@@ -68,7 +68,7 @@ for(const size of [1,2,3]){
  console.log(size+'v'+size+' construction/credit/spawn passed');
 }
 for(const size of [2,3]){
- const humans=Array.from({length:size},(_,i)=>human(i,0,(i+3)%6));
+ const humans=Array.from({length:size},(_,i)=>human(i,0,(i+3)%9));
  const match=E.create({mode:'coop',size,members:humans});
  assert.equal(match.state.players.filter(p=>p.bot).length,size,'AI opponent count matches human squad size');
  for(const p of humans)for(let line=0;line<3;line++)assert.equal(match.order(p.uid,{type:'build',lane:line,slot:line,role:0}).ok,true);

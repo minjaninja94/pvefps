@@ -154,7 +154,7 @@ service cloud.firestore {
       function player(p) {
         return p is map && p.keys().hasOnly(['name','faction','team','ready'])
           && p.name is string && p.name.size() >= 1 && p.name.size() <= 16
-          && p.faction is int && p.faction >= 0 && p.faction <= 5
+          && p.faction is int && p.faction >= 0 && p.faction <= 8
           && p.team in [0,1] && p.ready is bool;
       }
       function shape(r) {
