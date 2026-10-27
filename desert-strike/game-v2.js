@@ -207,7 +207,7 @@ function createUnit(side,slot,role){
  const isBongo=faction===3&&role===6;
  if(faction===3&&role===7)state.marineStats.huangSpawns++;
  state.units.push({uid:state.nextUnitId++,side,role,faction,x,y,hp:def.hp*bonus,maxHP:def.hp*bonus,
-  cooldown:random(.1,.7),anim:random(0,16),facing:side===0?1:-1,blink:0,moving:false,strike:null,
+  cooldown:random(.1,.7),anim:random(0,16),facing:side===0?1:-1,blink:0,spawnAge:0,hitAge:0,skillAge:0,moving:false,strike:null,
   hitRadius:isBongo?30:faction===4&&role===6?22:role===3?26:role===6?14:role===5?17:role===0?17:15,ramCooldown:0});
  pulse(x,y,COLORS[side],12);
 }
@@ -417,6 +417,7 @@ function beginStrike(u,target=null,baseSide=null,healing=false){
  const def=getDef(u.role,u.faction);
  const duration=clamp(def.rate*.75,.5,.83);
  u.strike={mode:baseSide!==null?'siege':'attack',target,baseSide,healing,age:0,duration,hit:false};
+ if(healing)u.skillAge=.62;
  u.cooldown=def.rate*random(.92,1.07);
 }
 function resolveStrike(u,hit){
@@ -472,7 +473,7 @@ function marineSpoils(v,attacker,roll=Math.random){
 function damage(u,amount,source,attacker=null,roll=Math.random){
  if(u.hp<=0)return;
  const hit=calcDamage(typeof source==='number'?source:null,u,amount);
- u.hp-=hit;u.blink=.12;
+ u.hp-=hit;u.blink=.12;u.hitAge=.36;
  if(Math.random()<.15)floatText(u.x,u.y-25,Math.round(hit),COLORS[u.side===0?1:0]);
  if(u.hp<=0){killUnit(u);marineSpoils(u,attacker,roll);}
 }
@@ -653,7 +654,8 @@ function tick(dt){
  for(const u of state.units){
   if(u.hp<=0)continue;
   const def=getDef(u.role,u.faction);
-  u.cooldown-=ds;u.anim+=ds*12;u.blink=Math.max(0,u.blink-ds);u.moving=false;
+  u.cooldown-=ds;u.anim+=ds*12;u.blink=Math.max(0,u.blink-ds);
+  u.spawnAge=Math.min(5,(u.spawnAge||0)+ds);u.hitAge=Math.max(0,(u.hitAge||0)-ds);u.skillAge=Math.max(0,(u.skillAge||0)-ds);u.moving=false;
   if(u.strike){
    const hit=u.strike;hit.age+=ds;
    if(!hit.hit && hit.age>=hit.duration*.47){hit.hit=true;resolveStrike(u,hit);}
@@ -892,21 +894,22 @@ function sprite(f,r,phase){
 function drawUnit(g,u,scale=1){
  const dead=u.killed===true;
  const flying=getDef(u.role,u.faction).kind==='air';
- const mode=dead?'death':u.strike?.mode||(u.moving?'move':'idle');
+ const mode=dead?'death':u.hitAge>0?'hit':u.spawnAge<.42?'spawn':u.skillAge>0?'skill':u.strike?.mode||(u.moving?'move':'idle');
  const frame=dead?Math.min(15,Math.floor((u.deathAge||0)/1.08*16))
   :u.strike?Math.min(15,Math.floor(u.strike.age/u.strike.duration*16))
   :Math.floor(u.anim)%16;
  const iso=window.IsoWorld,at=iso?iso.project(u.x,u.y):{x:u.x,y:u.y};
  const w=(iso?(u.role===3?78:u.role===6?77:68):(u.role===3?55:u.role===6?52:47))*scale;
  const h=(iso?(u.role===3?78:u.role===6?77:68):(u.role===3?55:u.role===6?52:47))*scale;
- const artwork=iso?.frame(u.faction,u.role,mode,frame)||window.DesertSprites?.frame(u.faction,u.role,mode,frame)||sprite(u.faction,u.role,frame%2);
+ const baseMode=['idle','move','attack','siege','death'].includes(mode)?mode:'idle';
+ const artwork=iso?.frame(u.faction,u.role,baseMode,frame)||window.DesertSprites?.frame(u.faction,u.role,baseMode,frame)||sprite(u.faction,u.role,frame%2);
  g.fillStyle='#05141c88';g.beginPath();g.ellipse(at.x,at.y+13*scale,17*scale,4*scale,0,0,Math.PI*2);g.fill();
  g.save();g.translate(at.x,at.y);
  if(u.facing<0)g.scale(-1,1);
  g.imageSmoothingEnabled=false;
- if(u.side===0)g.filter=window.DesertLobby?.skinFilter?.(u.faction)||'none';
- g.drawImage(artwork,-w/2,-h/2-(flying?9+Math.sin(u.anim)*2:0),w,h);
- g.filter='none';
+ const filter=u.side===0?window.DesertLobby?.skinFilter?.(u.faction)||'none':'none';
+ if(iso&&window.DesertUnitMotion)window.DesertUnitMotion.draw(g,{faction:u.faction,role:u.role,action:mode,frame,x:-w/2,y:-h/2-(flying?9+Math.sin(u.anim)*2:0),size:w,filter});
+ else{g.filter=filter;g.drawImage(artwork,-w/2,-h/2-(flying?9+Math.sin(u.anim)*2:0),w,h);g.filter='none';}
  g.restore();
  if(dead)return;
  if(u.conscripted){g.strokeStyle='#f7d277';g.lineWidth=2*scale;g.beginPath();g.ellipse(at.x,at.y+10*scale,17*scale,5*scale,0,0,Math.PI*2);g.stroke();}

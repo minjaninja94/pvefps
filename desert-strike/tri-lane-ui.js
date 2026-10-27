@@ -90,8 +90,14 @@ function draw(){
   ctx.beginPath();ctx.ellipse(x,y+3,12,4,0,0,Math.PI*2);ctx.fill();
   if(u.conscripted){ctx.strokeStyle='#ffd675';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(x,y+6,13,5,0,0,Math.PI*2);ctx.stroke();}
   const frame=((u.frame||0)+Math.floor((performance.now()-lastSnapshotAt)/84))%16;
-  const sprite=iso?.frame(u.faction,u.role,u.act||'move',frame),d=u.role===3||u.role===6?53:46;
-  if(sprite){ctx.imageSmoothingEnabled=false;ctx.save();ctx.filter=global.DesertLobby?.filterForSkin?.(u.skin)||'none';ctx.drawImage(sprite,x-d/2,y-d*.84,d,d);ctx.restore();}
+  const baseAction=['idle','move','attack','siege','death'].includes(u.act)?u.act:'move';
+  const sprite=iso?.frame(u.faction,u.role,baseAction,frame),d=u.role===3||u.role===6?53:46;
+  if(sprite){
+   ctx.imageSmoothingEnabled=false;
+   const filter=global.DesertLobby?.filterForSkin?.(u.skin)||'none';
+   if(global.DesertUnitMotion)global.DesertUnitMotion.draw(ctx,{faction:u.faction,role:u.role,action:u.act||'move',frame,x:x-d/2,y:y-d*.84,size:d,filter});
+   else{ctx.save();ctx.filter=filter;ctx.drawImage(sprite,x-d/2,y-d*.84,d,d);ctx.restore();}
+  }
   else{ctx.fillStyle=u.team===0?'#a5ece7':'#ef9e8a';ctx.fillRect(x-5,y-9,10,14);}
   ctx.fillStyle='#081c25';ctx.fillRect(x-12,y-d*.9,24,3);
   ctx.fillStyle=u.team===0?'#75ddd6':'#f59479';ctx.fillRect(x-12,y-d*.9,24*Math.max(0,u.hp/u.maxHP),3);
@@ -135,6 +141,7 @@ function drawOverview(){
 }
 function onSnapshot(v){
  if(!v){snap=null;return;}if(v.width!==3300||v.height!==1560||!Array.isArray(v.players))return;
+ if(!$('frontLobby').hidden)global.DesertLobby?.enterMatch?.();
  snap=v;lastSnapshotAt=performance.now();$('mpCommand').hidden=false;
  const me=my(),side=me?.team??0;
  if(me){
@@ -214,7 +221,7 @@ function init(){
  }));
  $('mpJoin').addEventListener('click',runClick(async()=>{
   message('방에 참가하는 중입니다…');
-  await NET.join({code:$('mpRoomCode').value,team:Number($('mpTeam').value),name:$('mpName').value,faction:faction()});
+  await NET.join({code:$('mpRoomCode').value,team:Number($('mpTeam').value),name:$('mpName').value,faction:faction(),skin:skin()});
  }));
  $('mpReady').addEventListener('click',runClick(()=>NET.ready(!lobby?.room?.players?.[myId]?.ready)));
  $('mpLaunch').addEventListener('click',runClick(()=>NET.start()));
@@ -233,5 +240,5 @@ function renderMotion(ts){
 }
 requestAnimationFrame(renderMotion);
 
-global.DesertTriUI=Object.freeze({draw,onSnapshot});
+global.DesertTriUI=Object.freeze({draw,onSnapshot,leave,practiceStart});
 })(window);

@@ -82,7 +82,7 @@ function create({mode='pvp',size=1,members=[]}={}){
   const radius=role===3?23:((p.faction===3||p.faction===4)&&role===6)?27:role===6?15:15;
   if(p.faction===3&&role===7)state.marineStats.huangSpawns++;
   state.units.push({id:state.nextUnit++,uid:p.uid,team:p.team,faction:p.faction,role,lane,spawnLane:lane,x,y,hp:d.hp,maxHP:d.hp,skin:p.skin,cool:Math.random()*.6,
-    radius,frame:Math.floor(Math.random()*16),act:'move',attackAge:0});
+    radius,frame:Math.floor(Math.random()*16),act:'move',attackAge:0,spawnAge:0,hitAge:0,skillAge:0});
  }
  function selectCounter(lane,bot){
   // Observed frontline units only: AI must not inspect unscouted human facilities.
@@ -179,12 +179,13 @@ function create({mode='pvp',size=1,members=[]}={}){
   }
   if(v.hp<=0)return;
   v.hp-=Math.max(3,damage*mult-defender.armor*.66);
-  v.attackAge=.12;
+  v.attackAge=.12;v.hitAge=.3;
   if(v.hp<=0&&!v.killed){v.killed=true;marineSpoils(a,v);}
  }
  function attack(a,v){
   const d=definition(a.faction,a.role);
   a.cool=Math.max(.3,d.rate);a.act='attack';a.attackAge=.33;
+  if(a.role===7)a.skillAge=.54;
   const dmg=d.damage;
   if(a.role===7){
    if(a.faction===3){
@@ -231,6 +232,7 @@ function create({mode='pvp',size=1,members=[]}={}){
    if(u.hp<=0)continue;
    const d=definition(u.faction,u.role),support=u.role===7,r=support?SUPPORT_RADIUS:AGGRO_RADIUS;
    u.cool=Math.max(0,u.cool-dt);u.frame=(u.frame+dt*11)%16;u.attackAge=Math.max(0,u.attackAge-dt);
+   u.spawnAge=Math.min(5,(u.spawnAge||0)+dt);u.hitAge=Math.max(0,(u.hitAge||0)-dt);u.skillAge=Math.max(0,(u.skillAge||0)-dt);
    const valid=v=>v&&v.hp>0&&v.id!==u.id&&(support?
      v.team===u.team&&v.hp<v.maxHP-10:
      v.team!==u.team&&(d.airTarget||definition(v.faction,v.role).kind!=='air'));
@@ -375,7 +377,7 @@ function create({mode='pvp',size=1,members=[]}={}){
    players:state.players.map(p=>({uid:p.uid,name:p.name,faction:p.faction,skin:p.skin,team:p.team,bot:p.bot,
     cash:allied(p)?Math.floor(p.cash):null,eco:allied(p)?p.eco:null,
     buildings:p.buildings.map((slots,lane)=>allied(p)||visible[lane]?slots:Array(SLOTS).fill(null))})),
-   units:state.units.filter(u=>!isHidden(u.team,u.lane,u.x)).map(u=>({id:u.id,uid:u.uid,team:u.team,faction:u.faction,skin:u.skin||'default',role:u.role,lane:u.lane,x:Math.round(u.x),y:Math.round(u.y),hp:Math.ceil(u.hp),maxHP:Math.ceil(u.maxHP),conscripted:!!u.conscripted,frame:Math.floor(u.frame),act:u.attackAge>0?'attack':u.act})),
+   units:state.units.filter(u=>!isHidden(u.team,u.lane,u.x)).map(u=>({id:u.id,uid:u.uid,team:u.team,faction:u.faction,skin:u.skin||'default',role:u.role,lane:u.lane,x:Math.round(u.x),y:Math.round(u.y),hp:Math.ceil(u.hp),maxHP:Math.ceil(u.maxHP),conscripted:!!u.conscripted,frame:Math.floor(u.frame),act:u.hitAge>0?'hit':u.spawnAge<.42?'spawn':u.skillAge>0?'skill':u.attackAge>0?'attack':u.act})),
    effects:state.effects.filter(e=>!isHidden(e.team,e.lane,e.x)).map(e=>({...e,x:Math.round(e.x),y:Math.round(e.y)}))};
  }
  return {state,order,tick,wave,snapshot,definition};
