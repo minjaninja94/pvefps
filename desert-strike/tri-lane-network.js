@@ -85,10 +85,13 @@ async function join(opts){
   if(r.status!=='lobby'||r.expires<Date.now())throw Error('대기 중인 방만 참가할 수 있습니다.');
   const players={...r.players};
   if(uid in players)throw Error('이미 같은 방에 참가했습니다.');
-  const team=r.mode==='coop'?0:Number(opts.team);
+  let team=r.mode==='coop'?0:Number(opts.team);
   if(![0,1].includes(team))throw Error('잘못된 팀');
   const cap=r.size;
-  if(Object.values(players).filter(p=>p.team===team).length>=cap)throw Error('선택한 팀이 가득 찼습니다.');
+  if(Object.values(players).filter(p=>p.team===team).length>=cap){
+   if(r.mode==='pvp'&&Object.values(players).filter(p=>p.team===1-team).length<cap)team=1-team;
+   else throw Error('두 팀 모두 정원이 가득 찼습니다.');
+  }
   if(Object.keys(players).length>=r.size*(r.mode==='pvp'?2:1))throw Error('방 정원이 가득 찼습니다.');
   players[uid]={name:validateName(opts.name),team,faction:Number(opts.faction),ready:false};
   if(players[uid].faction<0||players[uid].faction>5)throw Error('종족 선택 오류');
