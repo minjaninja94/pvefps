@@ -258,6 +258,7 @@ for(const scenario of spamCases){
  }
  assert.ok(game.wave>=12 || game.baseHP[0]===0,scenario.name+' should run a prolonged campaign');
  assert.ok(game.enemyBuilt.includes(scenario.counter),scenario.name+' AI should buy appropriate counter');
+ console.log('DEBUG SPAM',scenario.name,JSON.stringify({wave:game.wave,ended:game.ended,ourHP:game.baseHP[0],enemyHP:game.baseHP[1],turrets:game.turretHP,enemyBuilt:game.enemyBuilt.filter(x=>x!==null).reduce((o,id)=>(o[id]=(o[id]||0)+1,o),{}),playerBuilt:game.built.filter(x=>x!==null).length,enemyEco:game.enemyEco,enemyCash:Math.floor(game.enemyCash),players:game.units.filter(x=>x.side===0).length,enemies:game.units.filter(x=>x.side===1).length}));
  assert.ok(game.baseHP[1]>0,scenario.name+' should not win merely through single-type spam');
  console.log('Spam balance case passed:',scenario.name,'wave',game.wave,'enemy HP',Math.floor(game.baseHP[1]));
 }
