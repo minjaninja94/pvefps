@@ -146,6 +146,106 @@ service cloud.firestore {
       }
     }
 
+
+    // Desert Front: invite-code Firestore lobby + SDP only. Never store unit/combat packets.
+    match /desertRooms/{roomId} {
+      function member(r) { return request.auth != null && request.auth.uid in r.players; }
+      function nowMs() { return request.time.toMillis(); }
+      function player(p) {
+        return p is map && p.keys().hasOnly(['name','faction','team','ready'])
+          && p.name is string && p.name.size() >= 1 && p.name.size() <= 16
+          && p.faction is int && p.faction >= 0 && p.faction <= 5
+          && p.team in [0,1] && p.ready is bool;
+      }
+      function shape(r) {
+        return r.keys().hasOnly(['version','host','mode','size','status','created','expires','players'])
+          && r.version == 1 && r.host is string && r.host.size() > 0
+          && r.mode in ['pvp','coop'] && r.size in [1,2,3]
+          && (r.mode != 'coop' || r.size >= 2)
+          && r.status in ['lobby','playing']
+          && r.created is number && r.expires is number
+          && r.expires > nowMs()-120000
+          && r.expires <= nowMs()+7260000
+          && r.players is map && r.players.size() >= 1
+          && r.players.size() <= (r.mode == 'coop' ? r.size : r.size*2)
+          && r.host in r.players;
+      }
+      function unchanged(a,b) {
+        return b.diff(a).affectedKeys().hasOnly(['players']);
+      }
+      function updatePlayers(a,b) {
+        return b.players.diff(a.players).affectedKeys().hasOnly([request.auth.uid])
+          && (
+            (b.players.size() == a.players.size()+1
+              && !(request.auth.uid in a.players) && request.auth.uid in b.players
+              && player(b.players[request.auth.uid]) && !b.players[request.auth.uid].ready
+              && (a.mode != 'coop' || b.players[request.auth.uid].team == 0))
+            || (b.players.size() == a.players.size()
+              && request.auth.uid in a.players
+              && request.auth.uid in b.players
+              && player(b.players[request.auth.uid])
+              && b.players[request.auth.uid].name == a.players[request.auth.uid].name
+              && b.players[request.auth.uid].team == a.players[request.auth.uid].team
+              && b.players[request.auth.uid].faction == a.players[request.auth.uid].faction)
+            || (b.players.size() == a.players.size()-1
+              && request.auth.uid in a.players
+              && !(request.auth.uid in b.players)
+              && request.auth.uid != a.host)
+          );
+      }
+      allow get: if request.auth != null;
+      allow list: if false;
+      allow create: if request.auth != null && shape(request.resource.data)
+        && request.resource.data.host == request.auth.uid
+        && request.resource.data.players.keys().hasOnly([request.auth.uid])
+        && request.resource.data.players.size() == 1
+        && player(request.resource.data.players[request.auth.uid])
+        && request.resource.data.players[request.auth.uid].team == 0
+        && !request.resource.data.players[request.auth.uid].ready
+        && request.resource.data.status == 'lobby'
+        && request.resource.data.created >= nowMs()-60000
+        && request.resource.data.created <= nowMs()+60000;
+      allow update: if request.auth != null
+        && resource.data.expires > nowMs()
+        && shape(request.resource.data)
+        && (
+          (resource.data.status == 'lobby' && request.resource.data.status == 'lobby'
+            && unchanged(resource.data,request.resource.data)
+            && updatePlayers(resource.data,request.resource.data))
+          || (request.auth.uid == resource.data.host
+            && resource.data.status == 'lobby' && request.resource.data.status == 'playing'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']))
+        );
+      allow delete: if request.auth != null && request.auth.uid == resource.data.host;
+
+      match /signals/{guest} {
+        function room() { return get(/databases/$(database)/documents/desertRooms/$(roomId)).data; }
+        function allowed() {
+          return request.auth != null && room().expires > request.time.toMillis()
+            && request.auth.uid in room().players
+            && (request.auth.uid == room().host || request.auth.uid == guest);
+        }
+        function valid(v) {
+          return v.keys().hasOnly(['offer','answer','updated'])
+            && v.offer is string && v.offer.size() <= 18000
+            && v.answer is string && v.answer.size() <= 18000
+            && v.updated is number
+            && v.updated > request.time.toMillis()-120000
+            && v.updated <= request.time.toMillis()+60000;
+        }
+        allow get: if allowed();
+        allow list: if false;
+        allow create: if allowed() && request.auth.uid == room().host
+          && guest != room().host && valid(request.resource.data)
+          && request.resource.data.answer == '';
+        allow update: if allowed() && request.auth.uid == guest
+          && valid(request.resource.data)
+          && request.resource.data.offer == resource.data.offer
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answer','updated']);
+        allow delete: if allowed() && request.auth.uid == room().host;
+      }
+    }
+
     match /{document=**} { allow read, write: if false; }
   }
 }
