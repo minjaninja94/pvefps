@@ -31,7 +31,9 @@
   else if(slash){g.rotate(Math.sin(Math.PI*fraction)*-.09);}
   g.scale(scale,scale);
   // transparent source animation sheets contain no unit names, UI or backgrounds
-  g.drawImage(asset.image,x,y,W,W,-W/2,-HEIGHT/2-7,W,HEIGHT+13);
+  // Scale the full 96x96 atlas cell into a padded 72px canvas. No top/bottom clipping.
+  const fitted=64;
+  g.drawImage(asset.image,x,y,W,W,-fitted/2,-fitted/2,fitted,fitted);
   if(mode==='attack'&&phase>=5&&phase<=11){
    g.globalAlpha=.65;g.strokeStyle=faction===8?'#d674fb':faction===7?'#87e5ff':'#ffe2ad';
    g.lineWidth=2;g.beginPath();
@@ -54,7 +56,7 @@
    else{s.status='error';s.error='Atlas must be 480×768.';}
   };
   img.onerror=()=>{s.status='error';s.error='Missing sprite asset: '+NAMES[faction];};
-  img.src='./assets/sprites/'+NAMES[faction]+'.webp?v=real-atlas-1';
+  img.src='./assets/sprites/'+NAMES[faction]+'.webp?v=real-atlas-2';
  }
  function preload(){NAMES.forEach((_,f)=>load(f));}
  global.DesertRealSprites=Object.freeze({

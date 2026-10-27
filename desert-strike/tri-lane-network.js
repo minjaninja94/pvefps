@@ -12,7 +12,7 @@ const msg=e=>global.IronFirebase?.message?.(e)||e?.message||String(e);
 function notify(key,data){try{events[key]?.(data);}catch(e){console.error('멀티 UI 갱신 오류',e);}}
 function status(s){notify('status',s);}
 function validateName(s){return String(s||'지휘관').trim().replace(/[<>]/g,'').slice(0,16)||'지휘관';}
-function validateSkin(s){return ['default','twilight','aurora','gold'].includes(s)?s:'default';}
+function validateSkin(s){return ['default','moe','twilight','aurora','gold'].includes(s)?s:'default';}
 function code(){const bytes=new Uint8Array(6);crypto.getRandomValues(bytes);return Array.from(bytes,n=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[n%32]).join('');}
 const path=()=>fs.doc(db,'desertRooms',roomId);
 const signalPath=guest=>fs.doc(db,'desertRooms',roomId,'signals',guest);

@@ -348,7 +348,6 @@ function renderFactionSprite(f,role,mode,frame){
  const key=[f,role,mode,frame].join('-');
  const old=cache.get(key);if(old)return old;
  // Marine special forces (Odo Bongo and Huanglong) NEVER use the generic
- // 8-role atlas: it erased their distinctive appearance after the sprite update.
  if(f===3&&(role===6||role===7)){
   const cv=document.createElement('canvas');cv.width=SIZE;cv.height=SIZE;
   const g=cv.getContext('2d');if(!g)return cv;
@@ -367,9 +366,7 @@ function renderFactionSprite(f,role,mode,frame){
  const a=PAL[f]||PAL[0],t=frame/16,cyc=t*Math.PI*2,walk=mode==='move',hit=mode==='attack'||mode==='siege';
  if(f>=6&&f<=9&&global.ExpansionArt){global.ExpansionArt.draw(g,f,role,mode,frame);cache.set(key,cv);return cv;}
  if((f===4||f===5)&&(global.MaidenArt||global.HeroineFactions)){
-  // Exactly ONE model per frame. Generated cutout replaces the old 3D-ish rig,
-  // rather than being painted over it (the source of double bodies and clipping).
-  const illustrated=global.MaidenArt?.drawStandalone?.(g,f,role,mode,frame);
+   const illustrated=global.MaidenArt?.drawStandalone?.(g,f,role,mode,frame);
   if(!illustrated)global.HeroineFactions?.draw(g,f,role,mode,frame);
   cache.set(key,cv);return cv;
  }
@@ -388,8 +385,7 @@ function renderFactionSprite(f,role,mode,frame){
    g.translate(fall*10,fall*7);g.rotate(fall*1.12);g.globalAlpha=fall>.88?(1-fall)*8:1;
   }else if(impact)g.rotate(-.11+.20*(frame-6)/5);
   else if(mode==='attack'||mode==='siege')g.rotate(-.055*Math.sin(cyc));
-  // Icon rows at the foot of the three-faction concept sheet are intentionally excluded.
-  const cropH=f===3?sh*.94:sh*.74,sy=f===3?0:sh*.035;
+   const cropH=f===3?sh*.94:sh*.74,sy=f===3?0:sh*.035;
   const dw=role===3?67:role===6?67:61,dh=role===3?70:role===6?66:64;
   g.drawImage(atlas,col*sw,row*sh+sy,sw,cropH,-dw*.5,-dh*.93,dw,dh);
   if(impact){
