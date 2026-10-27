@@ -200,3 +200,37 @@ body{background:
 .mp-overview{background:#10232c;border:1px solid #5b7879;border-radius:7px;padding:2px;margin:4px 0 9px}
 #mpOverviewCanvas{display:block;width:100%;height:88px;border-radius:4px;image-rendering:pixelated;cursor:pointer;touch-action:manipulation}
 @media(max-width:620px){.mp-battle-wrap{max-height:540px}#mpOverviewCanvas{height:80px}}
+
+/* ACTUAL COMMITTED IMAGE ART — same sprite atlas feeds faction covers, 16 unit cards
+   and the animated 2.5D renderer. No placeholder canvas screenshots. */
+.faction-card.faction-maiden{overflow:hidden;isolation:isolate;padding:11px 12px 14px;gap:5px;background:#1d2c34}
+.faction-card.faction-maiden .faction-hero{
+  display:block;width:100%;height:auto;min-height:0;aspect-ratio:4/3;
+  margin:0 0 4px;border-radius:7px;border:1px solid #63717a;
+  background-image:url("./assets/maiden-atlas.webp?v=illustration1");
+  background-repeat:no-repeat;background-size:200% auto;
+  image-rendering:auto;filter:none;
+  box-shadow:inset 0 -17px 18px #08192455,0 2px 6px #0008;
+}
+.faction-card.faction-maiden .faction-hero-beast{background-position:left top}
+.faction-card.faction-maiden .faction-hero-elf{background-position:right top}
+.faction-card.faction-maiden .faction-icon{z-index:2;top:16px;left:18px;color:#ffe4d1;text-shadow:0 2px 7px #000d}
+.faction-card.faction-maiden strong{font-size:16px;line-height:1.2}
+.faction-card.faction-maiden small{line-height:1.3}
+.faction-card.faction-maiden .bonus{font-size:10px;line-height:1.35}
+.faction-card.faction-maiden.selected{outline:2px solid #eac5a2;background:#352c37}
+.unit-card .uc-sprite:has(.maiden-unit-portrait){width:100%;height:86px;display:flex;justify-content:center;align-items:center;margin:2px 0 4px;background:#111d27;border:1px solid #385063;border-radius:6px;overflow:hidden}
+.maiden-unit-portrait{
+ display:block;flex:none;width:64px;height:80px;
+ background-image:url("./assets/maiden-atlas.webp?v=illustration1");
+ background-repeat:no-repeat;background-size:512px 352px;
+ image-rendering:auto;filter:drop-shadow(0 3px 3px #0009);
+}
+.unit-card:has(.maiden-unit-portrait){border-color:#746879;background:linear-gradient(160deg,#2d2938,#182831);min-height:192px}
+.unit-card:has(.maiden-unit-portrait):hover,.unit-card:has(.maiden-unit-portrait).selected{background:linear-gradient(155deg,#50394c,#272f3e);border-color:#f1c8a3}
+@media(max-width:620px){
+  .unit-card .uc-sprite:has(.maiden-unit-portrait){height:66px}
+  .maiden-unit-portrait{transform:scale(.77)}
+  .unit-card:has(.maiden-unit-portrait){min-height:172px;padding:6px}
+  .faction-card.faction-maiden .faction-hero{aspect-ratio:4/3}
+}
