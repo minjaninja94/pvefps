@@ -36,7 +36,7 @@ const firestore={
   return result;
  }
 };
-let hostPending=null;
+let nextOffer=1;const offered=new Map();
 class Channel {
  constructor(){this.readyState='connecting';this.onopen=null;this.onmessage=null;this.onclose=null;this.peer=null;}
  connect(other){this.peer=other;other.peer=this;this.readyState='open';other.readyState='open';
@@ -47,16 +47,18 @@ class Channel {
 }
 class FakePeer {
  constructor(){this.iceGatheringState='complete';this.connectionState='connected';this.localDescription=null;this.currentRemoteDescription=null;this.ondatachannel=null;}
- createDataChannel(){const ch=new Channel();hostPending={pc:this,ch};return ch;}
- async createOffer(){return {type:'offer',sdp:'TEST-SDP-OFFER'};}
+ createDataChannel(){const ch=new Channel();this.channel=ch;this.offerId=nextOffer++;offered.set(this.offerId,ch);return ch;}
+ async createOffer(){return {type:'offer',sdp:'TEST-SDP-OFFER-'+this.offerId};}
  async createAnswer(){return {type:'answer',sdp:'TEST-SDP-ANSWER'};}
  async setLocalDescription(sdp){this.localDescription=sdp;}
  async setRemoteDescription(sdp){
   this.currentRemoteDescription=sdp;
-  if(sdp.type==='offer'&&hostPending){
-   const remote=new Channel(),pair=hostPending;
+  if(sdp.type==='offer'){
+   const id=Number(sdp.sdp.split('-').pop()),hostChannel=offered.get(id);
+   if(!hostChannel)throw Error('Invalid or missing offer '+id);
+   const remote=new Channel();
    this.ondatachannel?.({channel:remote});
-   pair.ch.connect(remote);
+   hostChannel.connect(remote);
   }
  }
  addEventListener(){}removeEventListener(){}close(){}
@@ -104,5 +106,37 @@ async function main(){
  assert.ok(!records.has('desertRooms/'+room+'/signals/guestUser'),'host deletes SDP on room close');
  await guest.network.leave();
  console.log('Mocked end-to-end 1v1 passed: Firebase room, signed join, P2P offer/answer, ready, host start, guest build, authoritative credits, cleanup');
+
+ // Also reproduce full 2v2, 3v3 and 2/3-player co-op invite rooms and SDP.
+ for(const [mode,size] of [['pvp',2],['pvp',3],['coop',2],['coop',3]]){
+  const hostId='H_'+mode+size,leader=buildClient(hostId);
+  const count=mode==='pvp'?size*2:size;
+  const guests=Array.from({length:count-1},(_,i)=>buildClient('G_'+mode+size+'_'+i));
+  const id=await leader.network.create({mode,size,name:'캡틴',faction:4});
+  for(let i=0;i<guests.length;i++){
+   const team=mode==='coop'?0:i<size-1?0:1;
+   await guests[i].network.join({code:id,name:'조력자'+i,faction:i%6,team});
+  }
+  await until(()=>leader.network.current().peers.size===guests.length,3500);
+  await leader.network.ready(true);
+  for(const client of guests)await client.network.ready(true);
+  await until(()=>Object.values(leader.network.current().room.players).every(p=>p.ready));
+  await leader.network.start();
+  const actual=count+(mode==='coop'?size:0);
+  await until(()=>guests.every(c=>c.events.snap.some(packet=>packet?.players?.length===actual)),3000);
+  for(const client of guests){
+   const own=client.network.current().uid;
+   assert.equal(client.network.sendOrder({type:'build',lane:0,slot:2,role:0}).ok,true);
+   await until(()=>client.events.snap.some(packet=>packet?.players?.find(p=>p.uid===own)?.buildings[0][2]===0));
+  }
+  const state=guests[0].events.snap.at(-1);
+  assert.equal(state.players.length,actual);
+  assert.equal(state.size,size);assert.equal(state.mode,mode);
+  if(mode==='coop')assert.equal(state.players.filter(p=>p.bot).length,size);
+  await leader.network.leave();await until(()=>!records.has('desertRooms/'+id));
+  for(const client of guests)await client.network.leave();
+  console.log('Mocked '+mode+' '+size+'-per-team P2P room passed: '+count+' people, '+actual+' commanders/AI');
+ }
+
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});
