@@ -7,7 +7,7 @@ const initialIncome=1,WAVE_STIPEND=24,MAX_ECONOMY=7;
 const TOWER_RANGE=285,TOWER_PERIOD=.31,TOWER_DAMAGE=28,FOG_END_WAVE=6,ENEMY_FOG_X=WORLD_W-770;
 const HEAL_WINDOW=1,HEAL_BUDGET=80;
 const BROOD_BIRTH_CHANCE=.20,BROOD_BIRTH_COOLDOWN=11,BROOD_BIRTH_CAP=8,BROOD_ALIVE_CAP=14;
-const OCTOPER_REGEN=.0006,ROBOT_REPAIR=.0015,ROBOT_SHIELD_INTERVAL=5,ROBOT_SHIELD_REDUCTION=.25;
+const OCTOPER_REGEN=.0006,ROBOT_REPAIR=.0015;
 const INK_DURATION=2.5,INK_COOLDOWN=5;
 // Marine-only logistics. Low-probability transfer + fragile capture, max two recruits each wave.
 const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=1,HUANGLONG_INTERVAL=8;
@@ -29,7 +29,7 @@ const FACTIONS=[
  {id:'beastkin',name:'월영 수인족',tag:'MOONFANG CLAN',logo:'♞',color:'#f0b4a6',bonus:'근접 피해 +8% · 근접 흡혈 1.5%(타격당 3HP 상한) · 근접 기동 +5% / 원거리 약화',mut:{hp:1,dmg:1,speed:1.02},units:['백랑 검사','여우족 단검투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],slogan:'늑대귀·여우꼬리·야수 기병·근접 난전',secondary:'#603d46'},
  {id:'elf',name:'은월 엘프족',tag:'SILVERWOOD ELVES',logo:'✦',color:'#b2e6cf',bonus:'원거리 사거리 +10% · 12% 확률 정밀 치명타(+25% 피해) / 근접 약화',mut:{hp:.94,dmg:1,speed:.99},units:['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사'],slogan:'긴 귀·은발·장궁·마법 결정·후방 화력',secondary:'#375c52'},
  {id:'furry',name:'야월 퍼리족',tag:'WILDFUR PACK',logo:'♣',color:'#e8c392',bonus:'무리 사냥: 근처 아군 퍼리와 근접 공격 시 피해 +6% · 기동 +7%',mut:{hp:1.02,dmg:1,speed:1.07},units:['늑대 추적자','여우총 사냥꾼','송곳니 분쇄자','곰 털갑옷 수호자','하울 창투사','들소 포격수','알파 늑대 기수','달빛 무리치유사'],slogan:'전신 털·주둥이·갈기·늑대 무리',secondary:'#634634'},
- {id:'robot',name:'크롬 로보족',tag:'CHROME SYNDICATE',logo:'⬡',color:'#83c5fd',bonus:'전투 중 나노 수리: 초당 HP 0.15% · 5초마다 첫 피해 25% 경감 · 정밀사격 +8%',mut:{hp:1.07,dmg:1,speed:.99},units:['블레이드 오토마타','레이저 정찰기','레일 관통병기','티탄 실드 워커','플랙 대공드론','공성 캐논','전술 변형 메카','나노 정비유닛'],slogan:'완전 기계·안드로이드·워커·합금 신체',secondary:'#264e67'},
+ {id:'robot',name:'크롬 로보족',tag:'CHROME SYNDICATE',logo:'⬡',color:'#83c5fd',bonus:'전투 중 나노 수리: 초당 HP 0.15% · 정밀사격 +8% · 피해 경감 없음',mut:{hp:1.07,dmg:1,speed:.99},units:['블레이드 오토마타','레이저 정찰기','레일 관통병기','티탄 실드 워커','플랙 대공드론','공성 캐논','전술 변형 메카','나노 정비유닛'],slogan:'완전 기계·안드로이드·워커·합금 신체',secondary:'#264e67'},
  {id:'octoper',name:'옥토퍼 군체',tag:'ABYSSAL OCTOPER',logo:'✺',color:'#c5a0fa',bonus:'촉수 재생: 초당 HP 0.06% 미세 회복 · 주술 피격 시 먹물 침식(2.5초 둔화 20%, 공격 −10%)',mut:{hp:.99,dmg:1,speed:1.01},units:['팔완 돌격체','먹물 주술사','심해 관통술사','갑각 문어수호자','팔완 대공술사','심연 의식술사','마력 비행수','군체 사제'],slogan:'여덟 촉수·흡반·발광 마력·심해 군체',secondary:'#4a3370'},
  {id:'fairy',name:'농농 페어리족',tag:'PETAL FAIRIES',logo:'❀',color:'#ffadd4',bonus:'꽃가루 연쇄치유: 5초마다 다른 아군 1기 3% 추가 회복 · 치료 효율 −10% · 체력 −16%',mut:{hp:.84,dmg:1,speed:1.01},units:['꽃잎 소검사','이슬 마도사','씨앗 관통술사','버섯껍질 방패수','반딧불 대공술사','꽃가루 폭격사','별빛 나비정령','꽃샘 치유사'],slogan:'작고 귀여운 요정·꽃잎날개·치유·요정 마법',secondary:'#84577c'}
 ];
@@ -59,7 +59,7 @@ function getDef(role,faction){
   isBeast?'수인족: 근접 공격 +8%, 실피해 1.5% 흡혈(최대 3HP). 비행기·마법병종 없이 근거리 난전 특화. '+r.tips:
   isElf?'엘프족: 원거리 공격 12% 확률로 정밀 치명타(+25%). 후방 장궁에 강하지만 근접전은 약합니다. '+r.tips:
   isFurry?'퍼리족: 근처 동료와 협공하면 근접 피해 +6%. 전신 털과 야성적인 추격으로 근접전에 강합니다. '+r.tips:
-  isRobot?'로보족: 교전 중에도 초당 체력 0.15% 자체수리, 5초마다 첫 피격 25% 흡수. 정밀 사격 강화. '+r.tips:
+  isRobot?'로보족: 교전 중에도 초당 체력 0.15% 자체수리, 정밀사격 +8%. 피격 방벽은 성운결사만 보유합니다. '+r.tips:
   isOcto?'옥토퍼: 초당 최대 HP 0.06% 미세 재생. 주술 공격 5초마다 먹물 침식(2.5초 둔화·약화). '+r.tips:
   isFairy?'페어리: 치료량 10% 감소, 5초마다 다른 아군 1기에게 치료량의 3% 연쇄치유. '+r.tips:
   faction===3&&role===7?'해병수육: 생산 시설마다 매 웨이브 0·8·16초에 순차 3기 출격. 아군 광역 회복 뒤 자신은 소모됩니다.':r.tips};
@@ -495,9 +495,6 @@ function damage(u,amount,source,attacker=null,roll=Math.random){
  if(u.hp<=0)return;
  let hit=calcDamage(typeof source==='number'?source:null,u,amount);
  if(u.faction===0&&[3,4].includes(u.role))hit*=.94;
- if(u.faction===7&&state.elapsed-(u.lastShieldAt??-999)>=ROBOT_SHIELD_INTERVAL){
-  u.lastShieldAt=state.elapsed;hit*=1-ROBOT_SHIELD_REDUCTION;pulse(u.x,u.y,'#89e9fb',16);
- }
  if(u.faction===2&&state.elapsed-(u.lastWardAt??-999)>=10){u.lastWardAt=state.elapsed;hit*=.82;}
  if(attacker?.faction===5&&[1,2,4,5,6].includes(source)&&Math.random()<.12)hit*=1.25;
  if(attacker?.faction===6&&[0,3,6].includes(source)&&!attacker.isHatchling&&state.units.some(a=>

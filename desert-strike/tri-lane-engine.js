@@ -21,7 +21,7 @@ const BASE=[
 const clamp=(v,l,r)=>Math.max(l,Math.min(r,v));
 const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=2,HUANGLONG_INTERVAL=8;
 const BROOD_BIRTH_CHANCE=.20,BROOD_BIRTH_COOLDOWN=11,BROOD_BIRTH_CAP=10,BROOD_ALIVE_CAP=14;
-const OCTOPER_REGEN=.0006,ROBOT_REPAIR=.0015,ROBOT_SHIELD_INTERVAL=5,ROBOT_SHIELD_REDUCTION=.25;
+const OCTOPER_REGEN=.0006,ROBOT_REPAIR=.0015;
 const INK_DURATION=2.5,INK_COOLDOWN=5;
 const GOODS=[[5,7],[0,7],[3,4],[1,4],[6],[1,4],[0,3],[3,1]];
 const BADS=[[3,1],[3,5],[0,1],[2,6],[3,2],[0,6],[4,1],[0,5]];
@@ -209,10 +209,6 @@ function create({mode='pvp',size=1,members=[]}={}){
   if(v.hp<=0)return;
   let hit=Math.max(3,damage*mult-defender.armor*.66);
   if(v.faction===0&&[3,4].includes(v.role))hit*=.94;
-  if(v.faction===7&&state.seconds-(v.lastShieldAt??-999)>=ROBOT_SHIELD_INTERVAL){
-   v.lastShieldAt=state.seconds;hit*=1-ROBOT_SHIELD_REDUCTION;
-   state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'chromeShield',time:.42,team:v.team});
-  }
   if(v.faction===2&&state.seconds-(v.lastWardAt??-999)>=10){v.lastWardAt=state.seconds;hit*=.82;}
   if(a.faction===5&&[1,2,4,5,6].includes(a.role)&&Math.random()<.12)hit*=1.25;
   if(a.faction===6&&[0,3,6].includes(a.role)&&!a.isHatchling&&state.units.some(u=>
@@ -387,10 +383,6 @@ function create({mode='pvp',size=1,members=[]}={}){
    const v=hostile[0],f=definition(v.faction,v.role),dmg=TOWER_DAMAGE*(f.kind==='air'?1.25:v.role===3?1.12:1);
    let hit=Math.max(3,dmg-f.armor*.66);
    if(v.faction===0&&[3,4].includes(v.role))hit*=.94;
-   if(v.faction===7&&state.seconds-(v.lastShieldAt??-999)>=ROBOT_SHIELD_INTERVAL){
-    v.lastShieldAt=state.seconds;hit*=1-ROBOT_SHIELD_REDUCTION;
-    state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'chromeShield',time:.42,team:v.team});
-   }
    if(v.faction===2&&state.seconds-(v.lastWardAt??-999)>=10){v.lastWardAt=state.seconds;hit*=.82;}
    v.hp-=hit;v.lastDamagedAt=state.seconds;
    state.towerCooldown[lane][team]=TOWER_PERIOD;
