@@ -1232,7 +1232,7 @@ function wire(){
   chirp(540,.07);
  });
  $('startButton').addEventListener('click',start);
- $('restartButton').addEventListener('click',()=>{initFactions();reset();});
+ $('restartButton').addEventListener('click',()=>{initFactions();reset();if(window.DesertLobby){$('startOverlay').classList.add('hidden');window.DesertLobby.show();}});
  $('unitCards').addEventListener('click',e=>{const b=e.target.closest('[data-role]');if(b)selectRole(Number(b.dataset.role));});
  $('buildGrid').addEventListener('click',e=>{const b=e.target.closest('[data-cell]');if(b)place(Number(b.dataset.cell));});
  $('buildGrid').addEventListener('contextmenu',e=>{const b=e.target.closest('[data-cell]');if(!b)return;e.preventDefault();
