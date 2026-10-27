@@ -32,17 +32,43 @@ const octo=[
  ['#8ba6d7','#445c93','#9aeeff','#25345d','#faf0ff'],
  ['#c2a3ce','#75538e','#c4ffd7','#423050','#ffe8f3']
 ];
+const fairy=[
+ ['#ffd1ed','#b96ea5','#eaffc5','#805a99','#fff1dd'],
+ ['#fce2a5','#be95c1','#b5fdf0','#6c779f','#ffdfb6'],
+ ['#ffc8d3','#a878a8','#fbe6a5','#6c5291','#fff5eb'],
+ ['#d7efb9','#8aaf91','#fff0b3','#5d7d78','#fdf6d8'],
+ ['#def5fa','#85bfcb','#ffb8eb','#6d8db6','#e2ffe5'],
+ ['#eacafa','#a98abc','#f7eab4','#615e92','#fcf7ff'],
+ ['#fcd9ef','#aa8ece','#bafafa','#5e82c1','#fff5f8'],
+ ['#ffedba','#aeccac','#f7bfe1','#65878c','#ffffff']
+];
 function rect(g,x,y,w,h,c){g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));}
 function ell(g,x,y,rx,ry,c){g.fillStyle=c;g.beginPath();g.ellipse(x,y,rx,ry,0,0,TAU);g.fill();}
 function poly(g,points,c){g.fillStyle=c;g.beginPath();g.moveTo(...points[0]);for(const p of points.slice(1))g.lineTo(...p);g.closePath();g.fill();}
 function stroke(g,points,c,w){g.strokeStyle=c;g.lineWidth=w;g.lineCap='round';g.beginPath();g.moveTo(...points[0]);for(const p of points.slice(1))g.lineTo(...p);g.stroke();}
 function draw(g,f,role,mode,frame){
- const C=(f===6?fur:f===7?robot:octo)[role],step=Math.sin(frame/16*TAU),walk=mode==='move',combat=mode==='attack'||mode==='siege',dead=mode==='death',impact=combat&&frame>=6&&frame<=11;
+ const C=(f===6?fur:f===7?robot:f===8?octo:fairy)[role],step=Math.sin(frame/16*TAU),walk=mode==='move',combat=mode==='attack'||mode==='siege',dead=mode==='death',impact=combat&&frame>=6&&frame<=11;
  const bob=walk?Math.abs(step)*3:Math.sin(frame/16*TAU)*.8,arm=combat?Math.sin(Math.PI*frame/16)*12:step*(walk?3:1);
  g.save();g.translate(0,dead?frame*.88: -bob);
  if(dead){g.translate(36,47);g.rotate(frame/15*.92);g.translate(-36,-47);g.globalAlpha=frame>12?(15-frame)/3:1;}
  ell(g,36,62,23,5,'#10172077');
- if(f===6){
+ if(f===9){
+  // Small flower fairies with playful chibi wings, petal dresses and no sexualized features.
+  const flutter=Math.sin(frame/16*TAU)*3;
+  for(const side of [-1,1]){
+   ell(g,36+side*(17+flutter),30,14,22,C[2]);ell(g,36+side*(13-flutter),45,11,15,C[4]);
+   stroke(g,[[36,34],[36+side*28,27],[36+side*22,39]],C[1],2);
+  }
+  for(const side of [-1,1]){stroke(g,[[36+side*7,46],[36+side*9+step*2,60]],C[1],5);ell(g,36+side*9+step*2,61,5,3,C[3]);}
+  poly(g,[[25,34],[47,34],[54,50],[43,57],[29,57],[18,50]],C[1]);
+  poly(g,[[28,37],[44,37],[48,49],[40,53],[32,53],[24,49]],C[0]);
+  for(let k=0;k<5;k++)poly(g,[[24+k*5,48],[21+k*5,57],[28+k*5,51]],C[4]);
+  ell(g,36,21,15,16,C[0]);ell(g,36,20,12,12,C[4]);
+  ell(g,31,21,2.5,3,C[3]);ell(g,42,21,2.5,3,C[3]);
+  for(let k=0;k<5;k++)ell(g,24+k*6,12+(k%2)*3,5,6,k%2?C[1]:C[0]);
+  stroke(g,[[24,39],[18,47-arm*.15]],C[4],5);stroke(g,[[48,39],[54,46-arm*.15]],C[4],5);
+  ell(g,55,45-arm*.15,6,6,C[2]);
+ }else if(f===6){
   // Fully anthropomorphic muzzles, dense cheek/neck fur and large bushy tail, not human ears on a body.
   stroke(g,[[40,51],[53+step*2,52],[62+step*3,43],[61,32]],C[1],11);
   ell(g,60+step*2,35,8,12,C[0]);ell(g,58,37,4,8,C[2]);

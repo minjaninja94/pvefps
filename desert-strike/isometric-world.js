@@ -28,7 +28,8 @@ const PAL=[
  {outline:'#1a2931',shadow:'#294b49',low:'#476c68',base:'#739e90',high:'#c9e6d4',trim:'#b7dac8',glow:'#c6f7e1',dark:'#1b3034',skin:'#f3dacc'},
  {outline:'#35241c',shadow:'#4b362b',low:'#80624b',base:'#c19a71',high:'#f1d1a7',trim:'#efbb88',glow:'#f9d28c',dark:'#30251f',skin:'#efd3a6'},
  {outline:'#091827',shadow:'#183e58',low:'#315e79',base:'#6798b9',high:'#d0e9fa',trim:'#81e4f1',glow:'#7cf7ff',dark:'#102b42',skin:'#bdd4e2'},
- {outline:'#20152f',shadow:'#34254f',low:'#664d92',base:'#ac82d9',high:'#edd6ff',trim:'#8eecdc',glow:'#a8fff1',dark:'#1d1e45',skin:'#bcabdc'}
+ {outline:'#20152f',shadow:'#34254f',low:'#664d92',base:'#ac82d9',high:'#edd6ff',trim:'#8eecdc',glow:'#a8fff1',dark:'#1d1e45',skin:'#bcabdc'},
+ {outline:'#382b42',shadow:'#69435f',low:'#a16e9c',base:'#e3abc9',high:'#fff1e9',trim:'#ffdfa9',glow:'#b9fff3',dark:'#47344a',skin:'#ffe6db'}
 ];
 const rnd=Math.round,clamp=(a,b,c)=>Math.min(c,Math.max(b,a));
 const hash=(a,b=0)=>{let x=(a*374761393+b*668265263)|0;x=(x^(x>>13))*1274126177;return ((x^(x>>16))>>>0)/4294967295;};
@@ -201,6 +202,13 @@ function structure(g,x,y,faction,turret,hpRatio=1){
   p(g,[[-36,2],[-31,-48],[0,-86],[31,-48],[36,2]],a.shadow);
   p(g,[[-30,-26],[-16,-66],[0,-80],[16,-66],[30,-26]],a.base);
   g.fillStyle=a.glow;g.beginPath();g.ellipse(0,-39,13,17,0,0,7);g.fill();
+ }else if(faction===9){
+  // Flower-petal fairy canopy and glass dew reactor, scaled to the shared world.
+  box(g,-30,-25,turret?55:67,turret?40:54,14,'#f9e0b5','#916d9a','#69465a');
+  p(g,[[-40,-28],[-23,-54],[0,-77],[23,-54],[40,-28],[0,-39]],a.base);
+  p(g,[[-37,-31],[-14,-58],[0,-69],[15,-57],[37,-31],[0,-43]],a.high);
+  for(let i=0;i<5;i++){const x=-22+i*11;g.fillStyle=i%2?a.trim:a.glow;g.fillRect(x,-55+(i%2)*8,6,5);}
+  g.fillStyle=a.glow;g.fillRect(-8,-16,16,14);
  }else if(faction===2){
   // Crystal order: floating prismatic tower with a real left/right face.
   box(g,-34,-37,turret?51:78,turret?40:82,28,a.high,a.low,a.shadow);
@@ -307,7 +315,7 @@ function renderFactionSprite(f,role,mode,frame){
  const g=cv.getContext('2d');if(!g)return cv;
  const a=PAL[f]||PAL[0],t=frame/16,cyc=t*Math.PI*2,walk=mode==='move',hit=mode==='attack'||mode==='siege';
  if(f===3&&role===6){drawOdoBongo(g,mode,frame);cache.set(key,cv);return cv;}
- if(f>=6&&f<=8&&global.ExpansionArt){global.ExpansionArt.draw(g,f,role,mode,frame);cache.set(key,cv);return cv;}
+ if(f>=6&&f<=9&&global.ExpansionArt){global.ExpansionArt.draw(g,f,role,mode,frame);cache.set(key,cv);return cv;}
  if((f===4||f===5)&&global.HeroineFactions){
   global.HeroineFactions.draw(g,f,role,mode,frame);
   // Overlay authentic generated maiden portraits, maintaining the 16-frame rig underneath.

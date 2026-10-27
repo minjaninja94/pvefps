@@ -153,7 +153,7 @@ service cloud.firestore {
       function valid(d){return d.keys().hasOnly(['name','faction','skin'])
         && d.keys().hasAll(['name','faction','skin'])
         && d.name is string && d.name.size() >= 1 && d.name.size() <= 16
-        && d.faction is int && d.faction >= 0 && d.faction <= 8
+        && d.faction is int && d.faction >= 0 && d.faction <= 9
         && d.skin in ['default','twilight','aurora','gold'];}
       allow get: if own();
       allow list: if false;
@@ -168,7 +168,7 @@ service cloud.firestore {
       function player(p) {
         return p is map && p.keys().hasOnly(['name','faction','team','ready','skin'])
           && p.name is string && p.name.size() >= 1 && p.name.size() <= 16
-          && p.faction is int && p.faction >= 0 && p.faction <= 8
+          && p.faction is int && p.faction >= 0 && p.faction <= 9
           && (!('skin' in p) || p.skin in ['default','twilight','aurora','gold'])
           && p.team in [0,1] && p.ready is bool;
       }

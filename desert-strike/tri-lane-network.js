@@ -95,7 +95,7 @@ async function join(opts){
   }
   if(Object.keys(players).length>=r.size*(r.mode==='pvp'?2:1))throw Error('방 정원이 가득 찼습니다.');
   players[uid]={name:validateName(opts.name),team,faction:Number(opts.faction),skin:validateSkin(opts.skin),ready:false};
-  if(players[uid].faction<0||players[uid].faction>8)throw Error('종족 선택 오류');
+  if(players[uid].faction<0||players[uid].faction>9)throw Error('종족 선택 오류');
   tx.update(ref,{players});
  });
  listenRoom();status('방 '+roomId+' 참가 완료 · 연결과 준비 상태를 확인하세요.');

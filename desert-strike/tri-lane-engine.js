@@ -25,8 +25,8 @@ const BADS=[[3,1],[3,5],[0,1],[2,6],[3,2],[0,6],[4,1],[0,5]];
 function definition(faction,role){
  const shared=global.DesertRoster?.getDef;
  if(typeof shared==='function')return shared(role,faction);
- const t=BASE[role],mut=[[1.055,1,.96],[.995,1,1.12],[.99,1.09,1],[1.09,1.06,1.01],[1.04,1,1.06],[.94,1,.99],[1.02,1,1.07],[1.06,1,.95],[.93,1,1.01]][faction]||[1,1,1];
- const beast=faction===4,elf=faction===5,furry=faction===6,robot=faction===7,octo=faction===8,bongo=faction===3&&role===6,prowler=beast&&role===6;
+ const t=BASE[role],mut=[[1.055,1,.96],[.995,1,1.12],[.99,1.09,1],[1.09,1.06,1.01],[1.04,1,1.06],[.94,1,.99],[1.02,1,1.07],[1.06,1,.95],[.93,1,1.01],[.88,1,1.08]][faction]||[1,1,1];
+ const beast=faction===4,elf=faction===5,furry=faction===6,robot=faction===7,octo=faction===8,fairy=faction===9,bongo=faction===3&&role===6,prowler=beast&&role===6;
  const melee=(beast||furry)&&[0,3,6].includes(role),ranged=elf&&[1,2,4,5,6].includes(role);
  return {
   hp:bongo?565:t[0]*2.25*mut[0]*(elf&&role===0?.88:beast&&role===3?1.13:1),
@@ -37,7 +37,7 @@ function definition(faction,role){
   speed:bongo?77:prowler?90:t[5]*mut[2]*.84*(melee?1.14:1),
   airTarget:bongo||prowler?false:t[6],
   kind:bongo||prowler?'ground':t[7],
-  heal:(role===7?36:0)*mut[1]*1.5*(robot?.70:1),
+  heal:(role===7?36:0)*mut[1]*1.5*(robot?.70:fairy?1.12:1),
   blast:role===5?(octo?58*1.12:58):0,
   good:bongo||prowler?[0,7]:GOODS[role],bad:bongo||prowler?[2,3]:BADS[role]
  };
@@ -46,10 +46,10 @@ function roomPlayers(input){const x=Array.isArray(input)?input:Object.values(inp
 function create({mode='pvp',size=1,members=[]}={}){
  if(!['pvp','coop'].includes(mode)||!Number.isInteger(size)||size<1||size>3||(mode==='coop'&&size<2))throw Error('경기 모드/인원 오류');
  const humans=roomPlayers(members);
- if(humans.some(p=>!p.uid||p.team<0||p.team>1||p.faction<0||p.faction>8)||new Set(humans.map(p=>p.uid)).size!==humans.length)throw Error('부적절한 참가자 목록');
+ if(humans.some(p=>!p.uid||p.team<0||p.team>1||p.faction<0||p.faction>9)||new Set(humans.map(p=>p.uid)).size!==humans.length)throw Error('부적절한 참가자 목록');
  if(mode==='coop'&&(humans.length!==size||humans.some(p=>p.team!==0)))throw Error('협동 인원과 팀이 일치하지 않습니다');
  if(mode==='pvp'&&(humans.filter(p=>p.team===0).length!==size||humans.filter(p=>p.team===1).length!==size))throw Error('경쟁 양 팀 인원이 일치하지 않습니다');
- const players=humans.concat(mode==='coop'?Array.from({length:size},(_,i)=>({uid:'AI_'+i,name:'적 AI '+(i+1),team:1,faction:(i+3)%9,bot:true})):[]);
+ const players=humans.concat(mode==='coop'?Array.from({length:size},(_,i)=>({uid:'AI_'+i,name:'적 AI '+(i+1),team:1,faction:(i+3)%10,bot:true})):[]);
  const state={mode,size,seconds:0,wave:0,next:24,ended:false,winner:null,
   width:WIDTH,height:HEIGHT,lanes:LANES,
   cores:Array.from({length:LANES},()=>[2500,2500]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0},players:players.map(p=>({...p,cash:360,eco:0,buildings:Array.from({length:3},()=>Array(SLOTS).fill(null))})),lanePressure:[.5,.5,.5]};

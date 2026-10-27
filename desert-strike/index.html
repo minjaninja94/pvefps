@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Nine-Faction Strategy</title><meta name="description" content="9종족 72병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=nine3"></head>
+<title>DESERT FRONT | 2.5D Nine-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=nine3"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
-  <header class="lobby-header"><span class="lobby-mark">D<span>///</span>F</span><div><strong>DESERT FRONT</strong><small>TACTICAL COMMAND CENTER / NINE FACTIONS</small></div><span id="lobbyAccountStatus" class="lobby-account-status">게스트 지휘관</span></header>
+  <header class="lobby-header"><span class="lobby-mark">D<span>///</span>F</span><div><strong>DESERT FRONT</strong><small>TACTICAL COMMAND CENTER / TEN FACTIONS</small></div><span id="lobbyAccountStatus" class="lobby-account-status">게스트 지휘관</span></header>
   <div class="lobby-hero-grid">
    <main class="lobby-panel lobby-main">
     <div class="lobby-eyebrow">OPERATION CONTROL • SEASON 00</div>
@@ -18,7 +18,7 @@
     <div class="lobby-auth"><button id="lobbyGoogle" type="button">Google로 계정 생성 / 연결</button><button id="lobbyGuest" type="button">게스트로 진행</button><p>별도 비밀번호는 받거나 저장하지 않습니다. 다른 사이트 비밀번호를 게임에 입력하지 마세요. Google 로그인은 Firebase Auth를 사용합니다.</p><small id="lobbyAuthMessage" role="status">게스트의 레벨·스킨은 이 브라우저에 보관됩니다. 계정 설정 시 프로필 동기화를 시도합니다.</small></div>
    </aside>
   </div>
-  <section class="lobby-panel lobby-loadout"><div class="lobby-section-title"><div><div class="lobby-eyebrow">FACTION ROSTER</div><h2>9종족 선택</h2></div><span>72개 전투 유닛</span></div><div id="lobbyFactions" class="lobby-factions"></div>
+  <section class="lobby-panel lobby-loadout"><div class="lobby-section-title"><div><div class="lobby-eyebrow">FACTION ROSTER</div><h2>10종족 선택</h2></div><span>80개 전투 유닛</span></div><div id="lobbyFactions" class="lobby-factions"></div>
    <div class="lobby-section-title"><div><div class="lobby-eyebrow">APPEARANCE ONLY</div><h2>지휘관 스킨</h2></div><span id="lobbySkinMessage">레벨을 올려 해금</span></div><div id="lobbySkins" class="lobby-skins"></div>
   </section>
   <footer class="lobby-footer">레벨·훈련 랭크는 현재 로컬 진행도이며 공식 경쟁 랭킹이 아닙니다. 안전한 공식 랭킹에는 서버 판정이 필요합니다.</footer>
@@ -63,7 +63,7 @@
    <label>지휘관 이름<input id="mpName" maxlength="16" placeholder="지휘관" value="지휘관"></label>
    <label>경기 방식<select id="mpMode"><option value="pvp">팀 경쟁 PvP</option><option value="coop">협동 대 AI</option></select></label>
    <label>팀당 인원<select id="mpSize"><option value="1">1명 (1:1)</option><option value="2">2명 (2:2)</option><option value="3">3명 (3:3)</option></select></label>
-   <label>사용 종족<select id="mpFaction"><option value="0">철갑연합</option><option value="1">심연군체</option><option value="2">성운결사</option><option value="3">해병성채</option><option value="4">월영 수인족</option><option value="5">은월 엘프족</option><option value="6">야월 퍼리족</option><option value="7">크롬 로보족</option><option value="8">옥토퍼 군체</option></select></label>
+   <label>사용 종족<select id="mpFaction"><option value="0">철갑연합</option><option value="1">심연군체</option><option value="2">성운결사</option><option value="3">해병성채</option><option value="4">월영 수인족</option><option value="5">은월 엘프족</option><option value="6">야월 퍼리족</option><option value="7">크롬 로보족</option><option value="8">옥토퍼 군체</option><option value="9">농농 페어리족</option></select></label>
    <label>선호 팀<select id="mpTeam"><option value="0">아군 (왼쪽)</option><option value="1">상대팀 (오른쪽)</option></select></label>
    <label>방 코드<input id="mpRoomCode" maxlength="12" placeholder="예: ABC123"></label>
   </div>
@@ -95,7 +95,7 @@
 </div>
 <footer><span id="notification" role="status">진영을 선택하고 전투를 시작하세요.</span><span class="footer-tag">DESERT FRONT · ORIGINAL PROTOTYPE</span></footer>
 </div>
-<div id="startOverlay" class="modal-backdrop"><div class="modal-panel start-panel"><span class="eyebrow">DEPLOYMENT / CHOOSE YOUR FACTION</span><h2>전투 진영 선택</h2><p>아홉 진영이 역할 상성을 공유하지만 특성은 다릅니다. 월영 수인족은 근접, 은월 엘프족은 원거리 전투에 특화되어 있습니다. 상대 AI는 다른 진영으로 시작합니다.</p><div id="factionCards" class="faction-cards"></div><button id="startButton" class="btn start-cta">선택한 진영으로 출격 ↗</button><small class="modal-note">개별 유닛은 자체 제작 픽셀 그래픽이며 스타크래프트 원본 자산을 사용하지 않습니다.</small></div></div>
+<div id="startOverlay" class="modal-backdrop"><div class="modal-panel start-panel"><span class="eyebrow">DEPLOYMENT / CHOOSE YOUR FACTION</span><h2>전투 진영 선택</h2><p>열 종족이 역할 상성을 공유하지만 특성은 다릅니다. 월영 수인족은 근접, 은월 엘프족은 원거리 전투에 특화되어 있습니다. 상대 AI는 다른 진영으로 시작합니다.</p><div id="factionCards" class="faction-cards"></div><button id="startButton" class="btn start-cta">선택한 진영으로 출격 ↗</button><small class="modal-note">개별 유닛은 자체 제작 픽셀 그래픽이며 스타크래프트 원본 자산을 사용하지 않습니다.</small></div></div>
 <div id="endOverlay" class="modal-backdrop hidden"><div class="modal-panel end-panel"><span class="eyebrow">BATTLE REPORT</span><h2 id="endTitle">승리</h2><p id="endSummary"></p><button id="restartButton" class="btn start-cta">다시 시작 · 진영 선택</button></div></div>
 <dialog id="helpDialog"><div class="help-inner"><h2>데저트 프런트 조작법</h2><p>① 내 기지: 유닛 카드를 선택하고 15×5 생산 슬롯을 눌러 생산 시설 설치 / 철거는 비용의 55% 환급</p><p>② 전장: 확장 전장 · 미니맵/전선 추적 · 자동 전투 관전 / 역할 마크로 상성 파악 / 유닛을 눌러 능력 확인 / 배속과 일시정지</p><p>③ 특수 기능: 1회 핵폭탄 / 유료 궤도 폭격 / 채굴망·무기·장갑 강화 / 방어 포탑 보수</p><p>생산 건물은 보호되고 방어 포탑이 적을 막습니다. 기지 본체가 파괴되면 패배합니다. 초반 360 CR로 시작하고, 기본 수입 0.5초당 1 CR에서 경제 강화 시 주기당 +1 CR씩 증가합니다. 24초마다 출격합니다.</p><p>키보드: 1–8 유닛 선택, 1·2·3 화면 전환은 Alt+숫자, Space 일시정지, Esc 선택 해제.</p><button class="btn start-cta" id="helpClose">확인</button></div></dialog>
 <script src="./marine-art-data.js" defer></script>

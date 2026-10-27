@@ -171,7 +171,7 @@ function order(cmd){
 function practiceStart(){
  if(lobby)return message('온라인 방에서 나간 뒤 연습할 수 있습니다.');
  myId='local';
- practice=E.create({mode:'pvp',size:1,members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%9,bot:true}]});
+ practice=E.create({mode:'pvp',size:1,members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%10,bot:true}]});
  practice.state.players[1].buildings[1][1]=0;practice.state.players[1].buildings[1][17]=1;
  practice.state.players[1].cash-=160;
  $('mpStateTag').textContent='오프라인 연습';message('3라인 오프라인 연습 · Firebase 연결 없이 작동합니다.');

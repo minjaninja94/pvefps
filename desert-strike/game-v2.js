@@ -27,7 +27,8 @@ const FACTIONS=[
  {id:'elf',name:'은월 엘프족',tag:'SILVERWOOD ELVES',logo:'✦',color:'#b2e6cf',bonus:'원거리 사거리 +10% · 화력 +4.5% / 근접 피해 −16%',mut:{hp:.94,dmg:1,speed:.99},units:['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사'],slogan:'긴 귀·은발·장궁·마법 결정·후방 화력',secondary:'#375c52'},
  {id:'furry',name:'야월 퍼리족',tag:'WILDFUR PACK',logo:'♣',color:'#e8c392',bonus:'야성 근접 +10% · 생존 기동 +7% / 사격 −7%',mut:{hp:1.02,dmg:1,speed:1.07},units:['늑대 추적자','여우총 사냥꾼','송곳니 분쇄자','곰 털갑옷 수호자','하울 창투사','들소 포격수','알파 늑대 기수','달빛 무리치유사'],slogan:'전신 털·주둥이·갈기·늑대 무리',secondary:'#634634'},
  {id:'robot',name:'크롬 로보족',tag:'CHROME SYNDICATE',logo:'⬡',color:'#83c5fd',bonus:'기계 장갑 +6% · 정밀사격 +4% / 회복 −30%',mut:{hp:1.06,dmg:1,speed:0.95},units:['블레이드 오토마타','레이저 정찰기','레일 관통병기','티탄 실드 워커','플랙 대공드론','공성 캐논','전술 변형 메카','나노 정비유닛'],slogan:'완전 기계·안드로이드·워커·합금 신체',secondary:'#264e67'},
- {id:'octoper',name:'옥토퍼 군체',tag:'ABYSSAL OCTOPER',logo:'✺',color:'#c5a0fa',bonus:'마도포격 +10% · 광역 반경 +12% / 전열 체력 −7%',mut:{hp:0.93,dmg:1,speed:1.01},units:['팔완 돌격체','먹물 주술사','심해 관통술사','갑각 문어수호자','팔완 대공술사','심연 의식술사','마력 비행수','군체 사제'],slogan:'여덟 촉수·흡반·발광 마력·심해 군체',secondary:'#4a3370'}
+ {id:'octoper',name:'옥토퍼 군체',tag:'ABYSSAL OCTOPER',logo:'✺',color:'#c5a0fa',bonus:'마도포격 +10% · 광역 반경 +12% / 전열 체력 −7%',mut:{hp:0.93,dmg:1,speed:1.01},units:['팔완 돌격체','먹물 주술사','심해 관통술사','갑각 문어수호자','팔완 대공술사','심연 의식술사','마력 비행수','군체 사제'],slogan:'여덟 촉수·흡반·발광 마력·심해 군체',secondary:'#4a3370'},
+ {id:'fairy',name:'농농 페어리족',tag:'PETAL FAIRIES',logo:'❀',color:'#ffadd4',bonus:'치유 +12% · 기동 +8% / 체력 −12%',mut:{hp:.88,dmg:1,speed:1.08},units:['꽃잎 소검사','이슬 마도사','씨앗 관통술사','버섯껍질 방패수','반딧불 대공술사','꽃가루 폭격사','별빛 나비정령','꽃샘 치유사'],slogan:'작고 귀여운 요정·꽃잎날개·치유·요정 마법',secondary:'#84577c'}
 ];
 const RNAME=ROLE.map(r=>r.name),SPRITES=new Map();
 let selectedFaction=0,state=null,selectedRole=null,demolition=false,activeView='base',lastFrame=0,uiElapsed=0;
@@ -38,13 +39,13 @@ function money(n){return Math.floor(n).toLocaleString('ko-KR');}
 function getDef(role,faction){
  const r=ROLE[role],f=FACTIONS[faction];
  const isBongo=faction===3&&role===6;
- const isBeast=faction===4,isElf=faction===5,isFurry=faction===6,isRobot=faction===7,isOcto=faction===8,isProwler=isBeast&&role===6;
+ const isBeast=faction===4,isElf=faction===5,isFurry=faction===6,isRobot=faction===7,isOcto=faction===8,isFairy=faction===9,isProwler=isBeast&&role===6;
  const melee=(isBeast||isFurry)&&(role===0||role===3||role===6);
  const rangeBoost=isElf&&[1,2,4,5,6].includes(role);
  return {...r,unitName:f.units[role],factionName:f.name,name:isBongo?'차량':isProwler?'기병':r.name,mark:isBongo?'▰':isProwler?'♞':r.mark,
   hp:isBongo?565:r.hp*f.mut.hp*2.25*(isElf&&role===0?.88:isBeast&&role===3?1.13:1),
   damage:isBongo?36:isProwler?37:r.damage*f.mut.dmg*.94*(isBeast?(melee?1.22:.87):isElf?(rangeBoost?1.045:role===0?.84:1):isFurry?(melee?1.10:.93):isRobot&&[1,2,4,5].includes(role)?1.04:isOcto&&[2,4,5].includes(role)?1.10:1),
-  heal:(r.heal||0)*f.mut.dmg*1.5*(isRobot?.70:1),blast:(r.blast||0)*(isOcto?1.12:1),speed:isBongo?77:isProwler?90:r.speed*f.mut.speed*.84*(melee?1.14:1),
+  heal:(r.heal||0)*f.mut.dmg*1.5*(isRobot?.70:isFairy?1.12:1),blast:(r.blast||0)*(isOcto?1.12:1),speed:isBongo?77:isProwler?90:r.speed*f.mut.speed*.84*(melee?1.14:1),
   kind:isBongo||isProwler?'ground':r.kind,armor:isBongo?7:isProwler?3:r.armor,
   range:isBongo?43:isProwler?40:r.range*(rangeBoost?1.10:isRobot&&[1,2,4,5].includes(role)?1.04:1),
   rate:isBongo?1.45:isProwler?.95:r.rate,
@@ -57,6 +58,7 @@ function getDef(role,faction){
   isFurry?'퍼리족: 전신 털과 야성적인 추격으로 근접전에 강합니다. '+r.tips:
   isRobot?'로보족: 합금 장갑과 정밀사격이 강하지만 수리 효율은 낮습니다. '+r.tips:
   isOcto?'옥토퍼: 팔완 마법사가 포격·주술에 강합니다. '+r.tips:
+  isFairy?'페어리: 작은 날개와 치유 마법으로 아군을 지원합니다. '+r.tips:
   faction===3&&role===7?'해병수육: 생산 시설마다 매 웨이브 0·8·16초에 순차 3기 출격. 아군 광역 회복 뒤 자신은 소모됩니다.':r.tips};
 }
 function ecoCostFor(level){return Math.round(70*Math.pow(1.36,level));}
@@ -953,7 +955,8 @@ function structure(g,x,y,side,turret=true,health=1){
   {metal:'#7bada5',dark:'#2e5a52',trim:'#def6d2',glow:'#b2ffe2'},
   {metal:'#886b50',dark:'#403026',trim:'#ecc893',glow:'#ffd5a2'},
   {metal:'#638ba8',dark:'#162d47',trim:'#b6dff5',glow:'#77e4ff'},
-  {metal:'#8066b0',dark:'#2b1949',trim:'#ccb8f8',glow:'#c1f7fe'}
+  {metal:'#8066b0',dark:'#2b1949',trim:'#ccb8f8',glow:'#c1f7fe'},
+  {metal:'#c47fa5',dark:'#63385b',trim:'#ffe1b4',glow:'#ffd0f3'}
  ][faction]||{metal:'#648b91',dark:'#203b44',trim:'#ffe3b2',glow:'#9cf4df'};
  const cx=palette.glow;
  g.fillStyle='#07161988';g.beginPath();g.ellipse(0,27,turret?31:49,turret?20:37,0,0,7);g.fill();
