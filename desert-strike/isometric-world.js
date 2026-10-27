@@ -355,6 +355,11 @@ function renderFactionSprite(f,role,mode,frame){
   if(role===6)drawOdoBongo(g,mode,frame);else drawHuanglongMarine(g,mode,frame);
   cache.set(key,cv);return cv;
  }
+ if(global.DesertSpecialArt?.isSpecial(f,role)){
+  const cv=document.createElement('canvas');cv.width=SIZE;cv.height=SIZE;
+  const g=cv.getContext('2d');
+  if(g&&global.DesertSpecialArt.draw(g,f,role,mode,frame)){cache.set(key,cv);return cv;}
+ }
  const illustrated=global.DesertRealSprites?.frame(f,role,mode,frame);
  if(illustrated){cache.set(key,illustrated);return illustrated;}
  const cv=document.createElement('canvas');cv.width=SIZE;cv.height=SIZE;
