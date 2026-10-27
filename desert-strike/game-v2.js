@@ -802,9 +802,7 @@ function updateUI(full=false){
 }
 function initFactions(){
  $('factionCards').innerHTML=FACTIONS.map((f,i)=>{
-  const art=(i===4||i===5)
-   ?'<span class="faction-hero faction-hero-'+(i===4?'beast':'elf')+'" role="img" aria-label="'+f.name+' 대표 캐릭터 일러스트"></span>'
-   :i>=6?'<canvas class="faction-hero-new" width="72" height="72" data-art-faction="'+i+'" aria-label="'+f.name+' 대표 유닛 스프라이트"></canvas>':'';
+  const art=i>=4?'<img class="faction-hero-new" src="./assets/portraits/'+f.id+'.svg" alt="'+f.name+' 초상화" loading="lazy">':'';
   return '<button class="faction-card'+(i===selectedFaction?' selected':'')+(i>=4?' faction-maiden':'')+'" data-faction="'+i+'">'+
    '<span class="faction-icon" style="color:'+f.color+'">'+f.logo+'</span>'+art+
    '<strong>'+f.name+'</strong><span class="eyebrow">'+f.tag+'</span><small>'+f.slogan+'</small><span class="bonus">'+f.bonus+'</span></button>';

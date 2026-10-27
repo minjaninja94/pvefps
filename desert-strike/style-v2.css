@@ -295,3 +295,9 @@ body{background:
 .lobby-stage-portrait{position:absolute;z-index:1;height:100%;max-width:65%;top:0;left:15%;object-fit:contain;object-position:top center;filter:drop-shadow(0 0 28px #7bb9be44);pointer-events:none}
 #lobbyHero.faction-portrait-active{position:absolute;right:8%;bottom:5%;width:100px;height:100px;opacity:.9;filter:drop-shadow(0 8px 4px #000c)}
 @media(max-width:700px){.lobby-stage-portrait{left:10%;max-width:70%}#lobbyHero.faction-portrait-active{width:75px;height:75px}}
+
+.lobby-faction .lobby-faction-art{width:100%;max-width:76px;height:80px;object-fit:contain;object-position:center top;background:radial-gradient(ellipse,#374d62,#192536);border-radius:7px}
+.faction-card.faction-maiden .faction-hero-new{display:block;align-self:center;width:100%;height:142px!important;max-width:125px;object-fit:contain;object-position:center top;image-rendering:auto;background:linear-gradient(145deg,#273244,#132332);border-radius:9px}
+.faction-cards{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:1000px){.faction-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.faction-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.faction-card.faction-maiden .faction-hero-new{height:120px!important}}

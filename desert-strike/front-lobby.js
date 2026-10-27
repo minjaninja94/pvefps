@@ -32,7 +32,9 @@ function render(){
  $('lobbyRank').textContent=rank();$('lobbyRecord').textContent='싱글 '+progress.wins+'승 '+progress.losses+'패 · 온라인 '+progress.mpWins+'승 '+progress.mpLosses+'패 · 비공식 훈련 랭크';
  $('lobbyNickname').value=progress.nickname;
  $('lobbyFactionName').textContent=fac.name;$('lobbyFactionTrait').textContent=fac.slogan;
- $('lobbyFactions').innerHTML=FACTIONS.map((f,i)=>'<button class="lobby-faction'+(i===progress.selectedFaction?' selected':'')+'" data-faction="'+i+'" style="--fac:'+f.color+'"><span class="lobby-icon">'+f.logo+'</span><canvas width="72" height="72" data-portrait="'+i+'"></canvas><strong>'+f.name+'</strong><small>'+f.tag+'</small></button>').join('');
+ const img=$('lobbyHeroArt');if(img){img.hidden=progress.selectedFaction<4;img.src=progress.selectedFaction<4?'':'./assets/portraits/'+fac.id+'.svg';}
+ $('lobbyHero').classList.toggle('faction-portrait-active',progress.selectedFaction>=4);
+ $('lobbyFactions').innerHTML=FACTIONS.map((f,i)=>'<button class="lobby-faction'+(i===progress.selectedFaction?' selected':'')+'" data-faction="'+i+'" style="--fac:'+f.color+'"><span class="lobby-icon">'+f.logo+'</span>'+(i>=4?'<img class="lobby-faction-art" src="./assets/portraits/'+f.id+'.svg" alt="">':'<canvas width="72" height="72" data-portrait="'+i+'"></canvas>')+'<strong>'+f.name+'</strong><small>'+f.tag+'</small></button>').join('');
  $('lobbyFactions').querySelectorAll('canvas').forEach(c=>{const f=Number(c.dataset.portrait);try{let p=global.IsoWorld?.portrait(f,f===8?5:f===7?1:0);if(p)c.getContext('2d').drawImage(p,0,0,72,72);}catch(_){}});
  $('lobbySkins').innerHTML=SKINS.map(x=>'<button class="lobby-skin'+(s.id===x.id?' selected':'')+'" data-skin="'+x.id+'" style="--skin:'+x.tone+'" '+(l.level<x.level?'disabled':'')+'><span class="skin-swatch">✦</span><strong>'+x.name+'</strong><small>'+(l.level<x.level?'LV.'+x.level+' 해금':x.desc)+'</small></button>').join('');
  $('lobbySkinMessage').textContent=s.name+' 선택 · 게임 능력치는 변경되지 않습니다.';
