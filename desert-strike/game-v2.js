@@ -6,6 +6,8 @@ const COLORS=['#79dfee','#ff9a79'],LANES=[110,180,260,340,410];
 const initialIncome=1,WAVE_STIPEND=24,MAX_ECONOMY=7;
 const TOWER_RANGE=285,TOWER_PERIOD=.31,TOWER_DAMAGE=28,FOG_END_WAVE=6,ENEMY_FOG_X=WORLD_W-770;
 const HEAL_WINDOW=1,HEAL_BUDGET=80;
+const BROOD_BIRTH_CHANCE=.20,BROOD_BIRTH_COOLDOWN=11,BROOD_BIRTH_CAP=8,BROOD_ALIVE_CAP=14;
+const OCTOPER_REGEN=.0006,ROBOT_REPAIR=.002,ROBOT_REPAIR_DELAY=6;
 // Marine-only logistics. Low-probability transfer + fragile capture, max two recruits each wave.
 const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=1,HUANGLONG_INTERVAL=8;
 const ROLE=[
@@ -19,16 +21,16 @@ const ROLE=[
  {key:'support',name:'지원',mark:'✚',token:'✚',cost:145,hp:136,damage:0,heal:36,armor:1,range:139,rate:1.24,speed:61,airTarget:false,kind:'ground',tips:'부상당한 전열을 치료하며 전투 지속력을 높입니다.',good:[3,1],bad:[0,5]}
 ];
 const FACTIONS=[
- {id:'forge',name:'철갑연합',tag:'FORGE UNION',logo:'▦',color:'#79ddea',bonus:'최대 HP +5.5% · 이동 속도 −4%',mut:{hp:1.055,dmg:1,speed:.96},units:['진격 보병','기관총병','관통 로켓','철갑 전차','복합 대공포','궤도 자주포','추적 비행기','전장 구호병'],slogan:'공학·화력·단단한 전열',secondary:'#224956'},
- {id:'brood',name:'심연군체',tag:'DUSK BROOD',logo:'♜',color:'#b9df8d',bonus:'이동 속도 +12% · 최대 HP −0.5%',mut:{hp:.995,dmg:1,speed:1.12},units:['송곳 발톱','산성 침벌','부식 포자충','거대 갑각수','가시 포자탑','폭식 투석충','비행 포식자','치유 공생충'],slogan:'생체 돌파·기동·포식',secondary:'#344d2b'},
- {id:'astral',name:'성운결사',tag:'ASTRAL ORDER',logo:'✧',color:'#d6b8ff',bonus:'공격/치유 +9% · 최대 HP −1%',mut:{hp:.99,dmg:1.09,speed:1},units:['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],slogan:'에너지·보호막·정밀 타격',secondary:'#443257'},
+ {id:'forge',name:'철갑연합',tag:'FORGE UNION',logo:'▦',color:'#79ddea',bonus:'철갑 장갑병 피격 −6% · HP +5.5% / 기동 −4%',mut:{hp:1.055,dmg:1,speed:.96},units:['진격 보병','기관총병','관통 로켓','철갑 전차','복합 대공포','궤도 자주포','추적 비행기','전장 구호병'],slogan:'공학·화력·단단한 전열',secondary:'#224956'},
+ {id:'brood',name:'심연군체',tag:'DUSK BROOD',logo:'♜',color:'#b9df8d',bonus:'포자 산란: 공격 시 20% 확률로 체력 1 공생충 출생(웨이브당 8기) · 기동 +12%',mut:{hp:.995,dmg:1,speed:1.12},units:['송곳 발톱','산성 침벌','부식 포자충','거대 갑각수','가시 포자탑','폭식 투석충','비행 포식자','치유 공생충'],slogan:'생체 돌파·기동·포식',secondary:'#344d2b'},
+ {id:'astral',name:'성운결사',tag:'ASTRAL ORDER',logo:'✧',color:'#d6b8ff',bonus:'비전 방벽: 10초마다 1회 피격 피해 −18% · 마법 공격/치유 +9%',mut:{hp:.99,dmg:1.09,speed:1},units:['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],slogan:'에너지·보호막·정밀 타격',secondary:'#443257'},
  {id:'marine',name:'해병성채',tag:'MARINE FORTRESS',logo:'★',color:'#dba77c',bonus:'긴빠이·자진입대 · 황룡 8초 간격 3회 투입',mut:{hp:1.09,dmg:1.06,speed:1.01},units:['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],	slogan:'모히칸·붉은 군모·검은 얼굴·해병수육',secondary:'#58412f'},
- {id:'beastkin',name:'월영 수인족',tag:'MOONFANG CLAN',logo:'♞',color:'#f0b4a6',bonus:'근접 피해 +22% · 기동 +14% / 원거리 피해 −13%',mut:{hp:1.04,dmg:1,speed:1.06},units:['백랑 검사','여우불 투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],slogan:'늑대귀·여우꼬리·야수 기병·근접 난전',secondary:'#603d46'},
- {id:'elf',name:'은월 엘프족',tag:'SILVERWOOD ELVES',logo:'✦',color:'#b2e6cf',bonus:'원거리 사거리 +10% · 화력 +4.5% / 근접 피해 −16%',mut:{hp:.94,dmg:1,speed:.99},units:['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사'],slogan:'긴 귀·은발·장궁·마법 결정·후방 화력',secondary:'#375c52'},
- {id:'furry',name:'야월 퍼리족',tag:'WILDFUR PACK',logo:'♣',color:'#e8c392',bonus:'야성 근접 +10% · 생존 기동 +7% / 사격 −7%',mut:{hp:1.02,dmg:1,speed:1.07},units:['늑대 추적자','여우총 사냥꾼','송곳니 분쇄자','곰 털갑옷 수호자','하울 창투사','들소 포격수','알파 늑대 기수','달빛 무리치유사'],slogan:'전신 털·주둥이·갈기·늑대 무리',secondary:'#634634'},
- {id:'robot',name:'크롬 로보족',tag:'CHROME SYNDICATE',logo:'⬡',color:'#83c5fd',bonus:'기계 장갑 +6% · 정밀사격 +4% / 회복 −30%',mut:{hp:1.06,dmg:1,speed:0.95},units:['블레이드 오토마타','레이저 정찰기','레일 관통병기','티탄 실드 워커','플랙 대공드론','공성 캐논','전술 변형 메카','나노 정비유닛'],slogan:'완전 기계·안드로이드·워커·합금 신체',secondary:'#264e67'},
- {id:'octoper',name:'옥토퍼 군체',tag:'ABYSSAL OCTOPER',logo:'✺',color:'#c5a0fa',bonus:'마도포격 +10% · 광역 반경 +12% / 전열 체력 −7%',mut:{hp:0.93,dmg:1,speed:1.01},units:['팔완 돌격체','먹물 주술사','심해 관통술사','갑각 문어수호자','팔완 대공술사','심연 의식술사','마력 비행수','군체 사제'],slogan:'여덟 촉수·흡반·발광 마력·심해 군체',secondary:'#4a3370'},
- {id:'fairy',name:'농농 페어리족',tag:'PETAL FAIRIES',logo:'❀',color:'#ffadd4',bonus:'치유 +12% · 기동 +8% / 체력 −12%',mut:{hp:.88,dmg:1,speed:1.08},units:['꽃잎 소검사','이슬 마도사','씨앗 관통술사','버섯껍질 방패수','반딧불 대공술사','꽃가루 폭격사','별빛 나비정령','꽃샘 치유사'],slogan:'작고 귀여운 요정·꽃잎날개·치유·요정 마법',secondary:'#84577c'}
+ {id:'beastkin',name:'월영 수인족',tag:'MOONFANG CLAN',logo:'♞',color:'#f0b4a6',bonus:'근접 피해 +22% · 근접 흡혈 5% · 기동 +14% / 원거리 약화',mut:{hp:1.04,dmg:1,speed:1.06},units:['백랑 검사','여우불 투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],slogan:'늑대귀·여우꼬리·야수 기병·근접 난전',secondary:'#603d46'},
+ {id:'elf',name:'은월 엘프족',tag:'SILVERWOOD ELVES',logo:'✦',color:'#b2e6cf',bonus:'원거리 사거리 +10% · 12% 확률 정밀 치명타(+25% 피해) / 근접 약화',mut:{hp:.94,dmg:1,speed:.99},units:['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사'],slogan:'긴 귀·은발·장궁·마법 결정·후방 화력',secondary:'#375c52'},
+ {id:'furry',name:'야월 퍼리족',tag:'WILDFUR PACK',logo:'♣',color:'#e8c392',bonus:'무리 사냥: 근처 아군 퍼리와 근접 공격 시 피해 +6% · 기동 +7%',mut:{hp:1.02,dmg:1,speed:1.07},units:['늑대 추적자','여우총 사냥꾼','송곳니 분쇄자','곰 털갑옷 수호자','하울 창투사','들소 포격수','알파 늑대 기수','달빛 무리치유사'],slogan:'전신 털·주둥이·갈기·늑대 무리',secondary:'#634634'},
+ {id:'robot',name:'크롬 로보족',tag:'CHROME SYNDICATE',logo:'⬡',color:'#83c5fd',bonus:'비전투 나노 수리: 6초 비피격 후 초당 최대 HP 0.2% 회복 · 아군 치료 −30%',mut:{hp:1.06,dmg:1,speed:0.95},units:['블레이드 오토마타','레이저 정찰기','레일 관통병기','티탄 실드 워커','플랙 대공드론','공성 캐논','전술 변형 메카','나노 정비유닛'],slogan:'완전 기계·안드로이드·워커·합금 신체',secondary:'#264e67'},
+ {id:'octoper',name:'옥토퍼 군체',tag:'ABYSSAL OCTOPER',logo:'✺',color:'#c5a0fa',bonus:'촉수 재생: 전투 중에도 초당 최대 HP 0.06% 미세 회복 · 마도포격 특화',mut:{hp:0.93,dmg:1,speed:1.01},units:['팔완 돌격체','먹물 주술사','심해 관통술사','갑각 문어수호자','팔완 대공술사','심연 의식술사','마력 비행수','군체 사제'],slogan:'여덟 촉수·흡반·발광 마력·심해 군체',secondary:'#4a3370'},
+ {id:'fairy',name:'농농 페어리족',tag:'PETAL FAIRIES',logo:'❀',color:'#ffadd4',bonus:'꽃가루 연쇄치유: 치료할 때 근처 아군 1기 추가 회복(12%) · 기동 +8%',mut:{hp:.88,dmg:1,speed:1.08},units:['꽃잎 소검사','이슬 마도사','씨앗 관통술사','버섯껍질 방패수','반딧불 대공술사','꽃가루 폭격사','별빛 나비정령','꽃샘 치유사'],slogan:'작고 귀여운 요정·꽃잎날개·치유·요정 마법',secondary:'#84577c'}
 ];
 const RNAME=ROLE.map(r=>r.name),SPRITES=new Map();
 let selectedFaction=0,state=null,selectedRole=null,demolition=false,activeView='base',lastFrame=0,uiElapsed=0;
@@ -61,6 +63,23 @@ function getDef(role,faction){
   isFairy?'페어리: 작은 날개와 치유 마법으로 아군을 지원합니다. '+r.tips:
   faction===3&&role===7?'해병수육: 생산 시설마다 매 웨이브 0·8·16초에 순차 3기 출격. 아군 광역 회복 뒤 자신은 소모됩니다.':r.tips};
 }
+function combatDef(u){
+ const d=getDef(u.role,u.faction);
+ return u.isHatchling?{...d,hp:1,damage:5,range:24,rate:1.28,speed:108,armor:0,airTarget:false,kind:'ground'}:d;
+}
+function broodLay(parent,target,roll=Math.random){
+ if(parent.faction!==1||parent.isHatchling||parent.conscripted||parent.role===7||parent.hp<=0
+   ||!target||target.hp<=0||target.side===parent.side||state.broodBirths[parent.side]>=BROOD_BIRTH_CAP
+   ||state.units.filter(v=>v.hp>0&&v.side===parent.side&&v.isHatchling).length>=BROOD_ALIVE_CAP
+   ||state.units.filter(v=>v.hp>0&&v.side===parent.side).length>=SIDE_SUPPLY
+   ||state.elapsed-(parent.lastBroodBirth??-999)<BROOD_BIRTH_COOLDOWN||roll()>=BROOD_BIRTH_CHANCE)return;
+ parent.lastBroodBirth=state.elapsed;state.broodBirths[parent.side]++;state.broodBirthsTotal[parent.side]++;
+ const x=clamp(parent.x+(parent.side===0?17:-17)+random(-12,12),30,WORLD_W-30),y=clamp(parent.y+random(-22,22),68,452);
+ state.units.push({...parent,uid:state.nextUnitId++,role:0,x,y,hp:1,maxHP:1,
+  hitRadius:7,isHatchling:true,conscripted:false,strike:null,killed:false,spawnAge:0,hitAge:0,skillAge:0,
+  anim:0,cooldown:1,blink:0,lastBroodBirth:state.elapsed,moving:false,spawnedAt:state.elapsed});
+ pulse(x,y,'#b4f19a',14);floatText(x,y-15,'공생충 탄생','#b7ef86');
+}
 function ecoCostFor(level){return Math.round(70*Math.pow(1.36,level));}
 function ecoCost(){return ecoCostFor(state.eco);}
 function weaponCost(){return Math.round(200*Math.pow(1.65,state.weapon));}
@@ -86,6 +105,7 @@ function reset(){
  wave:0,next:INTERVAL,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],
  built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},
+ broodBirths:[0,0],broodBirthsTotal:[0,0],
  towerShots:[],aiSight:new Set(),nukes:1,barrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
  nextUnitId:1,attackCount:0};
  selectedRole=null;demolition=false;bannerSeconds=0;barrageSeconds=0;
@@ -208,7 +228,7 @@ function createUnit(side,slot,role){
  if(faction===3&&role===7)state.marineStats.huangSpawns++;
  state.units.push({uid:state.nextUnitId++,side,role,faction,x,y,hp:def.hp*bonus,maxHP:def.hp*bonus,
   cooldown:random(.1,.7),anim:random(0,16),facing:side===0?1:-1,blink:0,spawnAge:0,hitAge:0,skillAge:0,moving:false,strike:null,
-  hitRadius:isBongo?30:faction===4&&role===6?22:role===3?26:role===6?14:role===5?17:role===0?17:15,ramCooldown:0});
+  hitRadius:isBongo?30:faction===4&&role===6?22:role===3?26:role===6?14:role===5?17:role===0?17:15,ramCooldown:0,spawnedAt:state.elapsed,lastDamagedAt:state.elapsed});
  pulse(x,y,COLORS[side],12);
 }
 // AI spends the same credits as the player, but actually studies the player's build.
@@ -357,7 +377,7 @@ function aiInvest(){
 }
 function wave(){
  state.wave++;state.cash+=WAVE_STIPEND;
- state.marineSupports=[];state.marineRecruitCount=[0,0];
+ state.marineSupports=[];state.marineRecruitCount=[0,0];state.broodBirths=[0,0];
  state.enemyCash+=WAVE_STIPEND;
  aiInvest();
  const headcount=[state.units.filter(u=>u.side===0).length,state.units.filter(u=>u.side===1).length];
@@ -414,7 +434,7 @@ function killUnit(u){
 }
 function beginStrike(u,target=null,baseSide=null,healing=false){
  if(u.strike)return;
- const def=getDef(u.role,u.faction);
+ const def=combatDef(u);
  const duration=clamp(def.rate*.75,.5,.83);
  u.strike={mode:baseSide!==null?'siege':'attack',target,baseSide,healing,age:0,duration,hit:false};
  if(healing)u.skillAge=.62;
@@ -443,7 +463,7 @@ function resolveStrike(u,hit){
     killUnit(u);
    }
   }else if(hit.target&&hit.target.hp>0&&hit.target.hp<hit.target.maxHP)
-   heal(hit.target,getDef(u.role,u.faction).heal*(u.side===0?1+.08*state.weapon:1));
+   heal(hit.target,getDef(u.role,u.faction).heal*(u.side===0?1+.08*state.weapon:1),false,u);
  }else if(hit.baseSide!==null){
   fire(u,null,hit.baseSide);
  }else if(hit.target&&hit.target.hp>0){
@@ -455,7 +475,7 @@ function resolveStrike(u,hit){
 // Kills by living, non-conscripted Marine units can trigger one-time logistics effects.
 // No credit for defensive turrets, nukes, artillery buttons or already captured conscripts.
 function marineSpoils(v,attacker,roll=Math.random){
- if(!attacker||attacker.faction!==3||attacker.side===v.side||attacker.conscripted||v.conscripted)return;
+ if(!attacker||attacker.faction!==3||attacker.side===v.side||attacker.conscripted||v.conscripted||v.isHatchling)return;
  if(roll()<MARINE_LOOT_CHANCE){
   const amount=Math.min(24,Math.floor(ROLE[v.role].cost*.12));
   const key=v.side===0?'cash':'enemyCash',to=attacker.side===0?'cash':'enemyCash';
@@ -472,19 +492,34 @@ function marineSpoils(v,attacker,roll=Math.random){
 }
 function damage(u,amount,source,attacker=null,roll=Math.random){
  if(u.hp<=0)return;
- const hit=calcDamage(typeof source==='number'?source:null,u,amount);
- u.hp-=hit;u.blink=.12;u.hitAge=.36;
+ let hit=calcDamage(typeof source==='number'?source:null,u,amount);
+ if(u.faction===0&&[3,4].includes(u.role))hit*=.94;
+ if(u.faction===2&&state.elapsed-(u.lastWardAt??-999)>=10){u.lastWardAt=state.elapsed;hit*=.82;}
+ if(attacker?.faction===5&&[1,2,4,5,6].includes(source)&&Math.random()<.12)hit*=1.25;
+ if(attacker?.faction===6&&[0,3,6].includes(source)&&!attacker.isHatchling&&state.units.some(a=>
+    a!==attacker&&a.hp>0&&a.side===attacker.side&&a.faction===6&&Math.hypot(a.x-attacker.x,a.y-attacker.y)<165))hit*=1.06;
+ const before=u.hp;
+ u.hp-=hit;u.blink=.12;u.hitAge=.36;u.lastDamagedAt=state.elapsed;
+ if(attacker?.faction===4&&[0,3,6].includes(source)&&!attacker.isHatchling&&attacker.hp>0)
+  attacker.hp=Math.min(attacker.maxHP,attacker.hp+Math.min(8,Math.min(before,hit)*.05));
  if(Math.random()<.15)floatText(u.x,u.y-25,Math.round(hit),COLORS[u.side===0?1:0]);
  if(u.hp<=0){killUnit(u);marineSpoils(u,attacker,roll);}
 }
-function heal(u,amount,burst=false){
+function heal(u,amount,burst=false,healer=null){
+ if(u.isHatchling)return;
  if(!burst){
   if(u.healWindowStart===undefined||state.elapsed-u.healWindowStart>=HEAL_WINDOW){u.healWindowStart=state.elapsed;u.healWindowUsed=0;}
   amount=Math.max(0,Math.min(amount,Math.max(HEAL_BUDGET,u.maxHP*.085)-u.healWindowUsed));
   u.healWindowUsed+=amount;
  }
  if(amount<=0)return;
+ const recovered=Math.min(amount,u.maxHP-u.hp);
  u.hp=Math.min(u.maxHP,u.hp+amount);pulse(u.x,u.y,'#94f7a9',11);
+ if(healer?.faction===9&&recovered>0){
+  const partner=state.units.find(v=>v!==u&&v!==healer&&v.hp>0&&!v.isHatchling&&v.side===healer.side&&v.hp<v.maxHP
+   &&Math.hypot(v.x-u.x,v.y-u.y)<145);
+  if(partner){partner.hp=Math.min(partner.maxHP,partner.hp+recovered*.12);pulse(partner.x,partner.y,'#ffbce2',9);}
+ }
 }
 function structureHit(side,amount){
  if(state.turretHP[side]>0){
@@ -525,7 +560,7 @@ function nearestUnit(u,def){
 }
 function nearInjured(u){
  let candidate=null,score=1e7;
- for(const v of state.units)if(v.side===u.side&&v.hp>0&&v!==u&&v.hp<v.maxHP-12){
+ for(const v of state.units)if(v.side===u.side&&v.hp>0&&!v.isHatchling&&v!==u&&v.hp<v.maxHP-12){
   const d=distance(u,v)-(1-v.hp/v.maxHP)*80;
   if(d<score){score=d;candidate=v;}
  }
@@ -590,12 +625,12 @@ function bongoImpact(u,dt){
 }
 function move(u,x,y,dt){
  const dx=x-u.x,dy=y-u.y,d=Math.hypot(dx,dy)||1,def=getDef(u.role,u.faction);
- const step=def.speed*dt;
+ const step=combatDef(u).speed*dt;
  u.x+=dx/d*Math.min(step,d);u.y+=dy/d*Math.min(step,d);
  u.facing=dx>=0?1:-1;u.moving=d>1;u.x=clamp(u.x,30,WORLD_W-30);u.y=clamp(u.y,68,452);
 }
 function fire(u,t=null,baseSide=null){
- const def=getDef(u.role,u.faction),x=t?t.x:baseSide===0?(state.turretHP[0]>0?190:90):(state.turretHP[1]>0?WORLD_W-190:WORLD_W-90),y=t?t.y:260;
+ const def=combatDef(u),x=t?t.x:baseSide===0?(state.turretHP[0]>0?190:90):(state.turretHP[1]>0?WORLD_W-190:WORLD_W-90),y=t?t.y:260;
  if(def.range<48){
   if(t && u.faction===3&&u.role===6){
    // Armored bumper: splash up to three clustered ground enemies, not flying units.
@@ -616,6 +651,7 @@ function fire(u,t=null,baseSide=null){
    target:t,baseSide,damage:def.damage*(u.side===0?1+.08*state.weapon:1),
    speed:200+(def.range<200?205:120),blast:def.blast||0,ttl:3.5});
  }
+ if(t&&t.hp>0)broodLay(u,t);
  u.blink=.13;
 }
 function projectileImpact(p){
@@ -654,7 +690,12 @@ function tick(dt){
  state.sortedTeams=[state.units.filter(u=>u.side===0).sort((a,b)=>a.x-b.x),state.units.filter(u=>u.side===1).sort((a,b)=>a.x-b.x)];
  for(const u of state.units){
   if(u.hp<=0)continue;
-  const def=getDef(u.role,u.faction);
+  const def=combatDef(u);
+  if(!u.isHatchling){
+   if(u.faction===8)u.hp=Math.min(u.maxHP,u.hp+u.maxHP*OCTOPER_REGEN*ds);
+   if(u.faction===7&&state.elapsed-(u.lastDamagedAt??u.spawnedAt??state.elapsed)>=ROBOT_REPAIR_DELAY)
+    u.hp=Math.min(u.maxHP,u.hp+u.maxHP*ROBOT_REPAIR*ds);
+  }
   u.cooldown-=ds;u.anim+=ds*12;u.blink=Math.max(0,u.blink-ds);
   u.spawnAge=Math.min(5,(u.spawnAge||0)+ds);u.hitAge=Math.max(0,(u.hitAge||0)-ds);u.skillAge=Math.max(0,(u.skillAge||0)-ds);u.moving=false;
   if(u.strike){
@@ -752,6 +793,7 @@ function updateUI(full=false){
  $('myHealthFill').style.width=100*state.baseHP[0]/MAX_BASE+'%';
  $('enemyHealthFill').style.width=(enemyBaseVisible()?100*state.baseHP[1]/MAX_BASE:0)+'%';
  $('factionLabel').textContent=FACTIONS[state.faction].name;
+ const traitStatus=$('factionTraitStatus');if(traitStatus){traitStatus.hidden=false;traitStatus.textContent='◆ '+FACTIONS[state.faction].name+' · '+FACTIONS[state.faction].bonus+(state.faction===1?' · 공생충 '+state.broodBirths[0]+'/'+BROOD_BIRTH_CAP+' (전체 '+state.broodBirthsTotal[0]+'기)':'');}
  const marineOps=$('marineAbilityStatus');
  if(marineOps){marineOps.hidden=state.faction!==3; if(state.faction===3)marineOps.textContent='★ 해병성채 | 긴빠이 '+state.marineStats.loot+'회 (+'+state.marineStats.lootedCR+' CR) | 자진입대 '+state.marineStats.recruits+'회 · 이번 웨이브 '+state.marineRecruitCount[0]+'/'+MARINE_RECRUIT_CAP+' | 황룡 '+state.marineStats.huangSpawns+'기 소환 | 오도봉고 '+(state.marineStats.bongoCharges||0)+'회 돌진';}
  $('enemyFactionLabel').textContent='VS '+FACTIONS[state.enemyFaction].name;
@@ -895,6 +937,7 @@ function sprite(f,r,phase){
  return SPRITES.get(key);
 }
 function drawUnit(g,u,scale=1){
+ if(u.isHatchling)scale*=.58;
  const dead=u.killed===true;
  const flying=getDef(u.role,u.faction).kind==='air';
  const mode=dead?'death':u.hitAge>0?'hit':u.spawnAge<.42?'spawn':u.skillAge>0?'skill':u.strike?.mode||(u.moving?'move':'idle');
@@ -918,6 +961,7 @@ function drawUnit(g,u,scale=1){
  else{g.filter=filter;g.drawImage(artwork,-w/2,-h/2-(flying?9+Math.sin(u.anim)*2:0),w,h);g.filter='none';}
  g.restore();
  if(dead)return;
+ if(u.isHatchling){g.strokeStyle='#c0f78c';g.lineWidth=2*scale;g.beginPath();g.ellipse(at.x,at.y+10*scale,13*scale,5*scale,0,0,Math.PI*2);g.stroke();}
  if(u.conscripted){g.strokeStyle='#f7d277';g.lineWidth=2*scale;g.beginPath();g.ellipse(at.x,at.y+10*scale,17*scale,5*scale,0,0,Math.PI*2);g.stroke();}
  const role=ROLE[u.role],y=at.y-47*scale-(flying?9:0);
  g.fillStyle='#07161cd8';g.fillRect(at.x-10*scale,y-8*scale,20*scale,16*scale);
