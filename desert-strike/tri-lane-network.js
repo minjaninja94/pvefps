@@ -39,8 +39,13 @@ async function leave(){
  if(!roomId)return resetLocal();
  const id=roomId,currentUid=uid,isHost=host;
  try{
-  if(isHost)await fs.deleteDoc(path());
-  else await fs.runTransaction(db,async tx=>{
+  if(isHost){
+   // Delete SDP docs before removing the parent; Firestore does not cascade child deletion.
+   for(const m of members())if(m.uid!==currentUid){
+    try{await fs.deleteDoc(signalPath(m.uid));}catch(e){}
+   }
+   await fs.deleteDoc(path());
+  }else await fs.runTransaction(db,async tx=>{
    const r=await tx.get(path());if(!r.exists())return;
    const players={...r.data().players};delete players[currentUid];
    tx.update(path(),{players});
