@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id);
 const NET=global.DesertTriNetwork,E=global.DesertTriEngine;
 if(!NET||!E)return;
 let snap=null,lane=1,role=0,demolish=false,practice=null,practiceTimer=null;
-let myId='',lobby=null,host=false,gridKey='';
+let myId='',lobby=null,host=false,gridKey='',lastSnapshotAt=0,lastDrawAt=0;
 const LANES=['상단','중앙','하단'],ICONS=['⚔','⌖','◆','▣','✣','✹','♞','✚'];
 function message(msg){$('mpStatus').textContent=msg;}
 function faction(){return Number($('mpFaction').value)||0;}
@@ -77,7 +77,8 @@ function draw(){
    const x=u.x/3,y=top+28+(u.y-l*520)/520*446;
    if(x<-20||x>1120)continue;
    ctx.fillStyle=u.team===0?'#4aa5b066':'#da826b66';ctx.beginPath();ctx.ellipse(x,y+3,8,3,0,0,7);ctx.fill();
-   const sprite=iso?.frame(u.faction,u.role,u.act||'move',u.frame||0);
+   const animatedFrame=((u.frame||0)+Math.floor((performance.now()-lastSnapshotAt)/84))%16;
+   const sprite=iso?.frame(u.faction,u.role,u.act||'move',animatedFrame);
    const d=u.role===3||u.role===6?68:60;
    if(sprite){ctx.imageSmoothingEnabled=false;ctx.drawImage(sprite,x-d/2,y-d*.85,d,d);}
    else{ctx.fillStyle=u.team===0?'#a5ece7':'#ef9e8a';ctx.fillRect(x-5,y-8,10,12);}
@@ -113,7 +114,7 @@ function drawOverview(){
 }
 function onSnapshot(v){
  if(!v){snap=null;return;}if(v.width!==3300||v.height!==1560||!Array.isArray(v.players))return;
- snap=v;$('mpCommand').hidden=false;
+ snap=v;lastSnapshotAt=performance.now();$('mpCommand').hidden=false;
  const me=my(),side=me?.team??0;
  if(me){
   $('mpMyResources').textContent=me.cash+' CR';
@@ -134,7 +135,7 @@ function onSnapshot(v){
  }
  $('mpLaneSummary').replaceChildren(f);
  if(v.ended){$('mpStateTag').textContent=v.winner===null?'무승부':v.winner===side?'승리':'패배';}
- buildGrid();draw();drawOverview();
+ buildGrid();drawOverview();
 }
 function order(cmd){
  if(!snap||snap.ended)return message('진행 중인 경기가 없습니다.');
@@ -198,5 +199,15 @@ function init(){
  uiButtons();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+// Smooth 12-FPS character motion between 5-Hz authoritative snapshots.
+// This is visual-only; no client combat prediction or client-authoritative hits.
+function renderMotion(ts){
+ if(ts-lastDrawAt>=78&&snap&&!document.hidden&&$('view-multiplayer').classList.contains('active')){
+  lastDrawAt=ts;draw();
+ }
+ requestAnimationFrame(renderMotion);
+}
+requestAnimationFrame(renderMotion);
+
 global.DesertTriUI=Object.freeze({draw,onSnapshot});
 })(window);
