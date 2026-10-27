@@ -11,6 +11,7 @@
 <script src="./marine-art-data.js" defer></script>
 <script src="./sprite-animations.js" defer></script>
 <script src="./iso-real-atlas-data.js?v=iso3" defer></script>
+<script src="./heroine-factions.js?v=heroine1" defer></script>
 <script src="./isometric-world.js?v=iso3" defer></script>
 <script defer>
 (() => {
@@ -19,9 +20,11 @@ const labels=[
  ['진격 보병','기관총병','관통 로켓','철갑 전차','복합 대공포','궤도 자주포','추적 비행기','전장 구호병'],
  ['송곳 발톱','산성 침벌','부식 포자충','거대 갑각수','가시 포자탑','폭식 투석충','비행 포식자','치유 공생충'],
  ['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],
- ['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','쾌흥태 · 항공강습','황룡 · 해병수육']
+ ['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],
+ ['백랑 검사','여우불 투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],
+ ['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사']
 ];
-const names=['철갑연합','심연군체','성운결사','해병성채'],roles=['돌격','사격','대장갑','장갑','대공','포격','비행','지원'];
+const names=['철갑연합','심연군체','성운결사','해병성채','월영 수인족','은월 엘프족'],roles=['돌격','사격','대장갑','장갑','대공','포격','비행','지원'];
 const actions=[['idle','대기'],['move','이동'],['attack','공격'],['siege','건물 타격'],['death','사망']];
 let faction=0,role=0,mode='move',index=0,auto=true,last=0;
 const $=id=>document.getElementById(id),S=window.IsoWorld||window.DesertSprites;
@@ -38,7 +41,7 @@ function showFrame(){
  $('detailInfo').textContent=names[faction]+' / '+actions.find(a=>a[0]===mode)[1]+' · 16프레임';
 }
 function render(){
- $('factionButtons').innerHTML=names.map((name,i)=>'<button data-f="'+i+'" class="'+(i===faction?'active':'')+'"><b>'+name+'</b><small>'+['INDUSTRIAL','BIOLOGICAL','PSIONIC','MARINE FORTRESS'][i]+'</small></button>').join('');
+ $('factionButtons').innerHTML=names.map((name,i)=>'<button data-f="'+i+'" class="'+(i===faction?'active':'')+'"><b>'+name+'</b><small>'+['INDUSTRIAL','BIOLOGICAL','PSIONIC','MARINE FORTRESS','BEASTGIRLS','SILVERWOOD ELVES'][i]+'</small></button>').join('');
  $('roster').innerHTML=labels[faction].map((name,i)=>'<button class="unit'+(i===role?' active':'')+'" data-r="'+i+'"><canvas width="72" height="72" data-image="'+i+'"></canvas><span>'+name+'<small>'+roles[i]+'</small></span></button>').join('');
  $('roster').querySelectorAll('canvas').forEach(c=>c.getContext('2d').drawImage(S.portrait(faction,Number(c.dataset.image)),0,0));
  $('modes').innerHTML=actions.map(([m,label])=>'<button class="'+(mode===m?'active':'')+'" data-m="'+m+'">'+label+' · 16F</button>').join('');
@@ -67,7 +70,7 @@ render();requestAnimationFrame(loop);
 </script>
 </head>
 <body><div class="wrap">
-<header><div><span class="eyebrow">DESERT FRONT / ORIGINAL PIXEL ANIMATION ATLAS</span><h1>32 유닛 · 2.5D 모션 도감</h1><p>4개 진영 × 8개 병종 × 5개 동작 × 16프레임. 역할과 진영에 따라 독립적으로 생성된 투명 픽셀 스프라이트입니다.</p></div><a href="./index.html">← 게임으로 돌아가기</a></header>
+<header><div><span class="eyebrow">DESERT FRONT / ORIGINAL PIXEL ANIMATION ATLAS</span><h1>48 유닛 · 2.5D 모션 도감</h1><p>4개 진영 × 8개 병종 × 5개 동작 × 16프레임. 역할과 진영에 따라 독립적으로 생성된 투명 픽셀 스프라이트입니다.</p></div><a href="./index.html">← 게임으로 돌아가기</a></header>
 <div id="factionButtons" class="factions"></div>
 <div class="layout">
 <section class="roster"><h2>병종 선택</h2><div id="roster" class="roster-grid"></div></section>
