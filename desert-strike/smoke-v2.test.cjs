@@ -42,9 +42,12 @@ const doc={
  querySelectorAll(q){return q==='.screen'?screens:q==='.tab'||q==='[data-view]'?allTabs:[];},
  addEventListener(type,fn){doc[type]=fn;}
 };
-const sandbox={document:doc,window:{addEventListener(){}},requestAnimationFrame(fn){queue.push(fn);},console,Math,Number,String,Object,Array,Map,Set,Date};
+let forcedMarineRoll=null;
+const controlledMath=Object.create(Math);
+controlledMath.random=()=>forcedMarineRoll===null?Math.random():forcedMarineRoll;
+const sandbox={document:doc,window:{addEventListener(){}},requestAnimationFrame(fn){queue.push(fn);},console,Math:controlledMath,Number,String,Object,Array,Map,Set,Date};
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'sprite-animations.js'),'utf8'),sandbox,{timeout:4000,filename:'sprite-animations.js'});
-vm.runInNewContext(code.replace('initFactions();wire();reset();','window.__gameTest={state:()=>state,createUnit,resolveStrike,ecoCostFor,aiInvest,wave,tick,upgrade,aiReadOpponent,aiChoose,aiCountersFor,structureDamage,aiAdaptFacilities,separateUnits,unitRadius,bongoImpact,getDef,damage,nearestUnit};initFactions();wire();reset();'),sandbox,{timeout:3500,filename:'game-v2.js'});
+vm.runInNewContext(code.replace('initFactions();wire();reset();','window.__gameTest={state:()=>state,createUnit,resolveStrike,ecoCostFor,aiInvest,wave,tick,upgrade,aiReadOpponent,aiChoose,aiCountersFor,structureDamage,aiAdaptFacilities,separateUnits,unitRadius,bongoImpact,getDef,damage,nearestUnit,marineSpoils,deployMarineSupports};initFactions();wire();reset();'),sandbox,{timeout:3500,filename:'game-v2.js'});
 assert.equal(el('cash').textContent,'360');
 assert.match(el('unitCards').innerHTML,/강점:/);
 assert.match(el('unitCards').innerHTML,/약점:/);
@@ -320,3 +323,38 @@ newRace.built[0]=1;newRace.built[1]=2;newRace.built[2]=5;newRace.built[3]=7;
 g.wave();for(let i=0;i<450;i++)g.tick(.12);
 assert.ok(newRace.wave>=3 && newRace.units.every(u=>Number.isFinite(u.hp)&&Number.isFinite(u.x)&&Number.isFinite(u.y)),'elf battle and AI run without invalid coordinates');
 console.log('Six playable factions, 48 named units, Beastgirl melee and Elf ranged trait tests passed.');
+
+// Marine logistics: deterministic kill accounting, ownership, anti-chain and sequential Huanglong spawns.
+{
+ click('restartButton');click('factionCards',{faction:'3'});click('startButton');
+ const g=sandbox.window.__gameTest,st=g.state();
+ st.faction=3;st.enemyFaction=0;st.enemyCash=500;st.cash=250;
+ st.units.length=0;st.built.fill(null);st.enemyBuilt.fill(null);
+ st.built[3]=7;st.live=true;st.wave=0;st.next=24;
+ g.wave();
+ assert.equal(st.marineStats.huangSpawns,1,'one Huanglong on wave opening');
+ assert.equal(st.marineSupports.length,2,'two later staggered Huanglong spawns queued');
+ for(let i=0;i<40;i++)g.tick(.2);
+ assert.equal(st.marineStats.huangSpawns,2,'second Huanglong at 8 seconds');
+ for(let i=0;i<40;i++)g.tick(.2);
+ assert.equal(st.marineStats.huangSpawns,3,'third Huanglong at 16 seconds');
+ for(let i=0;i<35;i++)g.tick(.2);
+ assert.equal(st.marineStats.huangSpawns,3,'no fourth Huanglong in one wave');
+ st.units.length=0;st.marineRecruitCount=[0,0];
+ const killer={side:0,faction:3,role:1,conscripted:false};
+ const foe=g.createUnit(1,0,3),victim=st.units[0];
+ st.enemyCash=100;
+ forcedMarineRoll=0;
+ g.damage(victim,victim.hp+300,1,killer);
+ forcedMarineRoll=null;
+ assert.equal(st.enemyCash,76,'ginppai takes at most 24 paid credits from victim');
+ assert.equal(st.cash,274,'ginppai credits the actual killer');
+ assert.equal(st.marineStats.recruits,1,'one defeated enemy is conscripted');
+ const recruited=st.units.find(u=>u.conscripted&&u.hp>0);
+ assert.ok(recruited&&recruited.side===0&&recruited.faction===0,'conscript retains original unit identity, changes control');
+ assert.ok(recruited.hp<=recruited.maxHP*.101,'conscript starts critically wounded');
+ st.enemyCash=0;st.marineRecruitCount=[2,0];
+ const other=st.units.filter(u=>u.side===1&&u.hp>0)[0]||null;
+ if(other)g.damage(other,other.hp+1,1,killer);
+ assert.equal(st.marineStats.recruits,1,'conscript cap and zero opponent cash prevent extra awards');
+}

@@ -17,6 +17,7 @@ const BASE=[
  [136,0,1,139,1.24,61,false,'ground']
 ];
 const clamp=(v,l,r)=>Math.max(l,Math.min(r,v));
+const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=2,HUANGLONG_INTERVAL=8;
 const GOODS=[[5,7],[0,7],[3,4],[1,4],[6],[1,4],[0,3],[3,1]];
 const BADS=[[3,1],[3,5],[0,1],[2,6],[3,2],[0,6],[4,1],[0,5]];
 function definition(faction,role){
@@ -49,7 +50,7 @@ function create({mode='pvp',size=1,members=[]}={}){
  const players=humans.concat(mode==='coop'?Array.from({length:size},(_,i)=>({uid:'AI_'+i,name:'적 AI '+(i+1),team:1,faction:(i+3)%6,bot:true})):[]);
  const state={mode,size,seconds:0,wave:0,next:24,ended:false,winner:null,
   width:WIDTH,height:HEIGHT,lanes:LANES,
-  cores:Array.from({length:LANES},()=>[2500,2500]),units:[],effects:[],nextUnit:1,players:players.map(p=>({...p,cash:360,eco:0,buildings:Array.from({length:3},()=>Array(SLOTS).fill(null))})),lanePressure:[.5,.5,.5]};
+  cores:Array.from({length:LANES},()=>[2500,2500]),units:[],effects:[],nextUnit:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0},players:players.map(p=>({...p,cash:360,eco:0,buildings:Array.from({length:3},()=>Array(SLOTS).fill(null))})),lanePressure:[.5,.5,.5]};
  const byUid=uid=>state.players.find(p=>p.uid===uid);
  function order(uid,data){
   const p=byUid(uid);
@@ -76,6 +77,7 @@ function create({mode='pvp',size=1,members=[]}={}){
   const x=p.team===0?235+(slot%15)*4:WIDTH-235-(slot%15)*4;
   const y=lane*LANE_H+265+((Math.floor(slot/15)*11+(slot%15)*21)%196)-98;
   const radius=role===3?23:((p.faction===3||p.faction===4)&&role===6)?27:role===6?15:15;
+  if(p.faction===3&&role===7)state.marineStats.huangSpawns++;
   state.units.push({id:state.nextUnit++,uid:p.uid,team:p.team,faction:p.faction,role,lane,x,y,hp:d.hp,maxHP:d.hp,cool:Math.random()*.6,
     radius,frame:Math.floor(Math.random()*16),act:'move',attackAge:0});
  }
@@ -107,14 +109,51 @@ function create({mode='pvp',size=1,members=[]}={}){
   }
  }
  function wave(){
-  state.wave++;for(const p of state.players)p.cash+=24;
+  state.wave++;state.marineSupports=[];state.marineRecruitCount.clear();
+  for(const p of state.players)p.cash+=24;
   for(const bot of state.players.filter(p=>p.bot))botPurchase(bot);
   for(let lane=0;lane<LANES;lane++)for(let team=0;team<2;team++){
    let count=state.units.filter(u=>u.lane===lane&&u.team===team&&u.hp>0).length;
    for(const p of state.players)if(p.team===team)for(let slot=0;slot<SLOTS&&count<75;slot++){
-    const role=p.buildings[lane][slot];if(role!==null){spawn(p,lane,slot,role);count++;}
+    const role=p.buildings[lane][slot];
+    if(role!==null){
+     spawn(p,lane,slot,role);count++;
+     if(p.faction===3&&role===7)for(const t of [1,2])state.marineSupports.push({uid:p.uid,lane,slot,wave:state.wave,due:state.seconds+HUANGLONG_INTERVAL*t});
+    }
    }
   }
+ }
+ function deployMarineSupports(){
+  if(!state.marineSupports.length)return;
+  state.marineSupports=state.marineSupports.filter(job=>{
+   if(job.wave!==state.wave)return false;
+   if(job.due>state.seconds+1e-6)return true;
+   const p=byUid(job.uid);
+   if(p&&p.faction===3&&p.buildings[job.lane][job.slot]===7&&state.cores[job.lane][p.team]>0
+    &&state.units.filter(x=>x.hp>0&&x.lane===job.lane&&x.team===p.team).length<75)spawn(p,job.lane,job.slot,7);
+   return false;
+  });
+ }
+ function marineSpoils(a,v,roll=Math.random){
+  if(a.faction!==3||a.team===v.team||a.conscripted||v.conscripted)return;
+  const owner=byUid(a.uid),enemy=byUid(v.uid);
+  if(!owner||!enemy)return;
+  if(roll()<MARINE_LOOT_CHANCE){
+   const wanted=Math.min(24,Math.floor(COST[v.role]*.12));
+   const taken=Math.min(wanted,Math.max(0,Math.floor(enemy.cash)));
+   if(taken>0){
+    enemy.cash-=taken;owner.cash+=taken;state.marineStats.loot++;state.marineStats.lootedCR+=taken;
+    state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'ginppai',time:.5,team:a.team});
+   }
+  }
+  const recruits=state.marineRecruitCount.get(a.uid)||0;
+  if(recruits>=MARINE_RECRUIT_CAP||roll()>=MARINE_RECRUIT_CHANCE)return;
+  if(state.units.filter(x=>x.hp>0&&x.lane===v.lane&&x.team===a.team).length>=75)return;
+  state.marineRecruitCount.set(a.uid,recruits+1);
+  state.marineStats.recruits++;
+  state.units.push({...v,id:state.nextUnit++,uid:a.uid,team:a.team,hp:Math.max(1,Math.floor(v.maxHP*MARINE_RECRUIT_HP)),
+   cool:1.5,conscripted:true,killed:false,attackAge:.4,act:'move'});
+  state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'conscript',time:.7,team:a.team});
  }
  function applyHit(a,v,damage){
   const attacker=definition(a.faction,a.role),defender=definition(v.faction,v.role);
@@ -125,8 +164,10 @@ function create({mode='pvp',size=1,members=[]}={}){
    if(attacker.good.includes(v.role))mult*=1.55;
    if(attacker.bad.includes(v.role))mult*=.7;
   }
+  if(v.hp<=0)return;
   v.hp-=Math.max(3,damage*mult-defender.armor*.66);
   v.attackAge=.12;
+  if(v.hp<=0&&!v.killed){v.killed=true;marineSpoils(a,v);}
  }
  function attack(a,v){
   const d=definition(a.faction,a.role);
@@ -227,6 +268,7 @@ function create({mode='pvp',size=1,members=[]}={}){
   const before=Math.floor((state.seconds-dt)*2),now=Math.floor(state.seconds*2);
   if(now>before)for(const p of state.players)p.cash+=(now-before)*(1+p.eco);
   while(state.next<=0){state.next+=24;wave();}
+  deployMarineSupports();
   stepUnits(dt);
   if(state.seconds>=1200&&!state.ended){
    const scores=[0,0];for(const v of state.cores){scores[0]+=v[0];scores[1]+=v[1];}
@@ -239,7 +281,7 @@ function create({mode='pvp',size=1,members=[]}={}){
    ended:state.ended,winner:state.winner,cores:state.cores,lanePressure:state.lanePressure.map(x=>Math.round(x*100)/100),
    players:state.players.map(p=>({uid:p.uid,name:p.name,faction:p.faction,team:p.team,bot:p.bot,cash:Math.floor(p.cash),eco:p.eco,
     buildings:p.buildings})),
-   units:state.units.map(u=>({id:u.id,uid:u.uid,team:u.team,faction:u.faction,role:u.role,lane:u.lane,x:Math.round(u.x),y:Math.round(u.y),hp:Math.ceil(u.hp),maxHP:Math.ceil(u.maxHP),frame:Math.floor(u.frame),act:u.attackAge>0?'attack':u.act})),
+   units:state.units.map(u=>({id:u.id,uid:u.uid,team:u.team,faction:u.faction,role:u.role,lane:u.lane,x:Math.round(u.x),y:Math.round(u.y),hp:Math.ceil(u.hp),maxHP:Math.ceil(u.maxHP),conscripted:!!u.conscripted,frame:Math.floor(u.frame),act:u.attackAge>0?'attack':u.act})),
    effects:state.effects.map(e=>({...e,x:Math.round(e.x),y:Math.round(e.y)}))};
  }
  return {state,order,tick,wave,snapshot,definition};

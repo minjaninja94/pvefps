@@ -4,6 +4,8 @@ const $=id=>document.getElementById(id);
 const CW=1100,CH=520,WORLD_W=3300,HOME_H=340,MAX_BASE=7200,MAX_TURRET=1700,INTERVAL=24,COLS=15,ROWS=5,SLOTS=COLS*ROWS,INCOME_PERIOD=.5,SIDE_SUPPLY=220;
 const COLORS=['#79dfee','#ff9a79'],LANES=[110,180,260,340,410];
 const initialIncome=1,WAVE_STIPEND=24,MAX_ECONOMY=7;
+// Marine-only logistics. Low-probability transfer + fragile capture, max two recruits each wave.
+const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=2,HUANGLONG_INTERVAL=8;
 const ROLE=[
  {key:'charge',name:'돌격',mark:'⚔',token:'⚔',cost:65,hp:115,damage:21,armor:1,range:29,rate:.77,speed:82,airTarget:false,kind:'ground',tips:'적 포병·지원병 후방을 빠르게 찌릅니다. 장갑 기지 공격력은 낮습니다.',good:[5,7],bad:[3,1]},
  {key:'rifle',name:'사격',mark:'⌖',token:'⌖',cost:95,hp:108,damage:17,armor:1,range:164,rate:.8,speed:60,airTarget:true,kind:'ground',tips:'저렴한 범용 원거리 병력. 공중도 공격합니다.',good:[0,7],bad:[3,5]},
@@ -18,7 +20,7 @@ const FACTIONS=[
  {id:'forge',name:'철갑연합',tag:'FORGE UNION',logo:'▦',color:'#79ddea',bonus:'최대 HP +5.5% · 이동 속도 −4%',mut:{hp:1.055,dmg:1,speed:.96},units:['진격 보병','기관총병','관통 로켓','철갑 전차','복합 대공포','궤도 자주포','추적 비행기','전장 구호병'],slogan:'공학·화력·단단한 전열',secondary:'#224956'},
  {id:'brood',name:'심연군체',tag:'DUSK BROOD',logo:'♜',color:'#b9df8d',bonus:'이동 속도 +12% · 최대 HP −0.5%',mut:{hp:.995,dmg:1,speed:1.12},units:['송곳 발톱','산성 침벌','부식 포자충','거대 갑각수','가시 포자탑','폭식 투석충','비행 포식자','치유 공생충'],slogan:'생체 돌파·기동·포식',secondary:'#344d2b'},
  {id:'astral',name:'성운결사',tag:'ASTRAL ORDER',logo:'✧',color:'#d6b8ff',bonus:'공격/치유 +9% · 최대 HP −1%',mut:{hp:.99,dmg:1.09,speed:1},units:['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],slogan:'에너지·보호막·정밀 타격',secondary:'#443257'},
- {id:'marine',name:'해병성채',tag:'MARINE FORTRESS',logo:'★',color:'#dba77c',bonus:'돌격 특화 · 내구 +9% · 황룡 1회성 수육 회복',mut:{hp:1.09,dmg:1.06,speed:1.01},units:['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],	slogan:'모히칸·붉은 군모·검은 얼굴·해병수육',secondary:'#58412f'},
+ {id:'marine',name:'해병성채',tag:'MARINE FORTRESS',logo:'★',color:'#dba77c',bonus:'긴빠이·자진입대 · 황룡 8초 간격 3회 투입',mut:{hp:1.09,dmg:1.06,speed:1.01},units:['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],	slogan:'모히칸·붉은 군모·검은 얼굴·해병수육',secondary:'#58412f'},
  {id:'beastkin',name:'월영 수인족',tag:'MOONFANG CLAN',logo:'♞',color:'#f0b4a6',bonus:'근접 피해 +22% · 기동 +14% / 원거리 피해 −13%',mut:{hp:1.04,dmg:1,speed:1.06},units:['백랑 검사','여우불 투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],slogan:'늑대귀·여우꼬리·야수 기병·근접 난전',secondary:'#603d46'},
  {id:'elf',name:'은월 엘프족',tag:'SILVERWOOD ELVES',logo:'✦',color:'#b2e6cf',bonus:'원거리 사거리 +10% · 화력 +4.5% / 근접 피해 −16%',mut:{hp:.94,dmg:1,speed:.99},units:['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사'],slogan:'긴 귀·은발·장궁·마법 결정·후방 화력',secondary:'#375c52'}
 ];
@@ -47,7 +49,7 @@ function getDef(role,faction){
   isProwler?'흑표 돌격기수: 공중이 아닌 지상 기병으로 적 전열에 급습합니다. 근접 돌진에 강하지만 대장갑·중장갑에 취약합니다.':
   isBeast?'수인족: 근접 전투·기동력이 강하지만 후방 사격 화력은 낮습니다. '+r.tips:
   isElf?'엘프족: 후방 장궁·마법에 강하지만 전위 난전이 취약합니다. '+r.tips:
-  faction===3&&role===7?'해병수육: 부상 아군을 발견하면 본인이 전투에서 사라지며 주변 아군 다수를 크게 회복합니다. 1회성 소모 지원병.':r.tips};
+  faction===3&&role===7?'해병수육: 생산 시설마다 매 웨이브 0·8·16초에 순차 3기 출격. 아군 광역 회복 뒤 자신은 소모됩니다.':r.tips};
 }
 function ecoCostFor(level){return Math.round(70*Math.pow(1.36,level));}
 function ecoCost(){return ecoCostFor(state.eco);}
@@ -73,6 +75,7 @@ function reset(){
  state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:360,eco:0,enemyEco:0,weapon:0,armor:0,incomeClock:0,cameraX:1100,followFront:true,
  wave:0,next:INTERVAL,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],
  built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
+ marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0},
  nukes:1,barrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
  nextUnitId:1,attackCount:0};
  selectedRole=null;demolition=false;bannerSeconds=0;barrageSeconds=0;
@@ -190,6 +193,7 @@ function createUnit(side,slot,role){
  const y=LANES[row]+(col-7)*3+random(-7,7);
  const bonus=side===0?1+.09*state.armor:1;
  const isBongo=faction===3&&role===6;
+ if(faction===3&&role===7)state.marineStats.huangSpawns++;
  state.units.push({uid:state.nextUnitId++,side,role,faction,x,y,hp:def.hp*bonus,maxHP:def.hp*bonus,
   cooldown:random(.1,.7),anim:random(0,16),facing:side===0?1:-1,blink:0,moving:false,strike:null,
   hitRadius:isBongo?30:faction===4&&role===6?22:role===3?26:role===6?14:role===5?17:role===0?17:15,ramCooldown:0});
@@ -323,16 +327,36 @@ function aiInvest(){
 }
 function wave(){
  state.wave++;state.cash+=WAVE_STIPEND;
+ state.marineSupports=[];state.marineRecruitCount=[0,0];
  state.enemyCash+=WAVE_STIPEND;
  aiInvest();
  const headcount=[state.units.filter(u=>u.side===0).length,state.units.filter(u=>u.side===1).length];
  for(let i=0;i<SLOTS;i++){
-  if(state.built[i]!==null&&headcount[0]<SIDE_SUPPLY){createUnit(0,i,state.built[i]);headcount[0]++;}
-  if(state.enemyBuilt[i]!==null&&headcount[1]<SIDE_SUPPLY){createUnit(1,i,state.enemyBuilt[i]);headcount[1]++;}
+  if(state.built[i]!==null){
+   const role=state.built[i];
+   if(headcount[0]<SIDE_SUPPLY){createUnit(0,i,role);headcount[0]++;}
+   if(state.faction===3&&role===7)for(const interval of [1,2])state.marineSupports.push({side:0,slot:i,role,wave:state.wave,due:state.elapsed+HUANGLONG_INTERVAL*interval});
+  }
+  if(state.enemyBuilt[i]!==null){
+   const role=state.enemyBuilt[i];
+   if(headcount[1]<SIDE_SUPPLY){createUnit(1,i,role);headcount[1]++;}
+   if(state.enemyFaction===3&&role===7)for(const interval of [1,2])state.marineSupports.push({side:1,slot:i,role,wave:state.wave,due:state.elapsed+HUANGLONG_INTERVAL*interval});
+  }
  }
  banner('WAVE '+String(state.wave).padStart(2,'0')+' · DEPLOYED');
  setMessage('웨이브 '+state.wave+' 출격 · 아군 '+state.built.filter(v=>v!==null).length+'기 / 적군 '+state.enemyBuilt.filter(v=>v!==null).length+'기');
  chirp(430,.17);updateUI(true);
+}
+function deployMarineSupports(){
+ if(!state.marineSupports.length)return;
+ state.marineSupports=state.marineSupports.filter(job=>{
+  if(job.wave!==state.wave)return false;
+  if(job.due>state.elapsed+1e-6)return true;
+  const buildings=job.side===0?state.built:state.enemyBuilt;
+  const faction=job.side===0?state.faction:state.enemyFaction;
+  if(faction===3&&buildings[job.slot]===7&&state.units.filter(u=>u.hp>0&&u.side===job.side).length<SIDE_SUPPLY)createUnit(job.side,job.slot,7);
+  return false;
+ });
 }
 function distance(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
 function structureDamage(role,amount){
@@ -397,12 +421,30 @@ function resolveStrike(u,hit){
   pulse(u.x+u.facing*27,u.y,'#b4af91',9);
  }
 }
-function damage(u,amount,source){
+// Kills by living, non-conscripted Marine units can trigger one-time logistics effects.
+// No credit for defensive turrets, nukes, artillery buttons or already captured conscripts.
+function marineSpoils(v,attacker,roll=Math.random){
+ if(!attacker||attacker.faction!==3||attacker.side===v.side||attacker.conscripted||v.conscripted)return;
+ if(roll()<MARINE_LOOT_CHANCE){
+  const amount=Math.min(24,Math.floor(ROLE[v.role].cost*.12));
+  const key=v.side===0?'cash':'enemyCash',to=attacker.side===0?'cash':'enemyCash';
+  const stolen=Math.min(amount,Math.max(0,Math.floor(state[key])));
+  if(stolen>0){state[key]-=stolen;state[to]+=stolen;state.marineStats.loot++;state.marineStats.lootedCR+=stolen;floatText(v.x,v.y-28,'긴빠이 +'+stolen+' CR','#f8d292');}
+ }
+ if(state.marineRecruitCount[attacker.side]>=MARINE_RECRUIT_CAP||roll()>=MARINE_RECRUIT_CHANCE)return;
+ if(state.units.filter(x=>x.hp>0&&x.side===attacker.side).length>=SIDE_SUPPLY)return;
+ state.marineRecruitCount[attacker.side]++;
+ state.marineStats.recruits++;
+ state.units.push({...v,uid:state.nextUnitId++,side:attacker.side,hp:Math.max(1,Math.floor(v.maxHP*MARINE_RECRUIT_HP)),killed:false,conscripted:true,strike:null,
+  cooldown:1.5,blink:.4,ramCooldown:1.8,moving:false,facing:attacker.side===0?1:-1});
+ floatText(v.x,v.y-43,'자진입대!','#f7e0ac');
+}
+function damage(u,amount,source,attacker=null){
  if(u.hp<=0)return;
  const hit=calcDamage(typeof source==='number'?source:null,u,amount);
  u.hp-=hit;u.blink=.12;
  if(Math.random()<.15)floatText(u.x,u.y-25,Math.round(hit),COLORS[u.side===0?1:0]);
- if(u.hp<=0)killUnit(u);
+ if(u.hp<=0){killUnit(u);marineSpoils(u,attacker);}
 }
 function heal(u,amount){u.hp=Math.min(u.maxHP,u.hp+amount);pulse(u.x,u.y,'#94f7a9',11);}
 function structureHit(side,amount){
@@ -434,7 +476,7 @@ function nearestUnit(u,def){
   const next=Math.min(dxA,dxB);
   if(candidate&&next>(score+175))break;
   const v=dxA<=dxB?targets[a--]:targets[b++];
-  if(v.hp<=0||(!def.airTarget&&getDef(v.role,v.faction).kind==='air'))continue;
+  if(v.hp<=0||v.side===u.side||(!def.airTarget&&getDef(v.role,v.faction).kind==='air'))continue;
   const dy=Math.abs(u.y-v.y);
   const d=Math.hypot(next,dy);
   const bonus=(u.role===4&&getDef(v.role,v.faction).kind==='air'?175:0)+(def.good.includes(v.role)?Math.min(35,def.range*.2):0);
@@ -499,7 +541,7 @@ function bongoImpact(u,dt){
  for(const v of candidates.slice(0,3)){
   // Drive-by anti-melee, reduced against true heavy armor; no building bonus.
   const antiMelee=v.role===0?1.45:v.role===3?.38:1;
-  damage(v,(u.faction===4?30:42)*mods*antiMelee,null);
+  damage(v,(u.faction===4?30:42)*mods*antiMelee,null,u);
   v.x=clamp(v.x+u.facing*13,30,WORLD_W-30);
   pulse(v.x,v.y,'#edb46c',14);
  }
@@ -521,16 +563,16 @@ function fire(u,t=null,baseSide=null){
    for(const v of state.units){
     if(v.side===u.side||v.hp<=0||getDef(v.role,v.faction).kind==='air')continue;
     if(Math.hypot(t.x-v.x,t.y-v.y)>48)continue;
-    damage(v,def.damage*(u.side===0?1+.08*state.weapon:1)*(v.role===0?1.3:v.role===3?.55:1),null);
+    damage(v,def.damage*(u.side===0?1+.08*state.weapon:1)*(v.role===0?1.3:v.role===3?.55:1),null,u);
     if(++hits>=3)break;
    }
    pulse(t.x,t.y,'#f1af72',23);
   }
-  else if(t)damage(t,def.damage*(u.side===0?1+.08*state.weapon:1),u.role);
+  else if(t)damage(t,def.damage*(u.side===0?1+.08*state.weapon:1),u.role,u);
   else structureHit(baseSide,structureDamage(u.role,def.damage*(u.side===0?1+.08*state.weapon:1)));
   pulse(x,y,'#ffdbae',6);
  }else{
-  state.shots.push({side:u.side,source:u.role,x:u.x,y:u.y,tx:x,ty:y,
+  state.shots.push({side:u.side,faction:u.faction,conscripted:!!u.conscripted,source:u.role,x:u.x,y:u.y,tx:x,ty:y,
    target:t,baseSide,damage:def.damage*(u.side===0?1+.08*state.weapon:1),
    speed:200+(def.range<200?205:120),blast:def.blast||0,ttl:3.5});
  }
@@ -544,10 +586,10 @@ function projectileImpact(p){
   for(const v of state.units)if(v.hp>0&&v.side!==p.side){
    if(getDef(v.role,v.faction).kind==='air'&&!ROLE[p.source].airTarget)continue;
    const d=Math.hypot(v.x-x,v.y-y);
-   if(d<=p.blast+10)damage(v,p.damage*(1-.48*d/(p.blast+10)),p.source);
+   if(d<=p.blast+10)damage(v,p.damage*(1-.48*d/(p.blast+10)),p.source,p);
   }
  }else if(p.target&&p.target.hp>0&&Math.hypot(p.target.x-x,p.target.y-y)<40){
-  damage(p.target,p.damage,p.source);
+  damage(p.target,p.damage,p.source,p);
  }
 }
 function tick(dt){
@@ -568,6 +610,7 @@ function tick(dt){
  while(state.incomeClock>=INCOME_PERIOD){state.incomeClock-=INCOME_PERIOD;state.cash+=initialIncome+state.eco;state.enemyCash+=initialIncome+state.enemyEco;}
  state.barrageCd=Math.max(0,state.barrageCd-ds);
  while(state.next<=0){state.next+=INTERVAL;wave();}
+ deployMarineSupports();
  state.sortedTeams=[state.units.filter(u=>u.side===0).sort((a,b)=>a.x-b.x),state.units.filter(u=>u.side===1).sort((a,b)=>a.x-b.x)];
  for(const u of state.units){
   if(u.hp<=0)continue;

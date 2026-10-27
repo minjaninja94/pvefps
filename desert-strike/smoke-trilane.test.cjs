@@ -16,6 +16,8 @@ assert.match(network,/RTCPeerConnection/);assert.match(network,/fs\.runTransacti
 assert.ok(!network.includes("setDoc(path(),{units"),'no per-frame units in Firestore');
 let seed=17;const random=Object.create(Math);
 random.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+let forceMarineRoll=null;
+random.random=()=>forceMarineRoll===null?((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296):forceMarineRoll;
 const win={};vm.runInNewContext(src,{window:win,Math:random,Array,Number,Object,Map,Set,console},{timeout:10000});
 const E=win.DesertTriEngine;
 assert.equal(E.WIDTH*E.HEIGHT,3300*520*3,'triple area from the one-lane world');
@@ -100,3 +102,35 @@ assert.throws(()=>E.create({mode:'pvp',size:2,members:[human(0),human(0),human(1
  assert.ok(m.state.units.every(u=>u.hp<=u.maxHP),'health bounds');
 }
 console.log('3x-area real-combat test passed: 1v1,2v2,3v3 and 2/3-player coop, credits, refunds, all three lanes and collisions');
+
+// Marine one-facility: 0s/8s/16s waves, resource theft + critically wounded allegiance flip.
+{
+ const m=E.create({mode:'pvp',size:1,members:[human(0,0,3),human(1,1,0)]});
+ assert.ok(m.order('P0',{type:'build',lane:0,slot:1,role:7}).ok);
+ m.wave();
+ assert.equal(m.state.marineStats.huangSpawns,1);
+ assert.equal(m.state.marineSupports.length,2);
+ for(let i=0;i<40;i++)m.tick(.2);
+ assert.equal(m.state.marineStats.huangSpawns,2,'second troop after 8s');
+ for(let i=0;i<40;i++)m.tick(.2);
+ assert.equal(m.state.marineStats.huangSpawns,3,'third troop after 16s');
+ const killer=m.state.players[0],victim=m.state.players[1];
+ assert.ok(m.order('P0',{type:'build',lane:0,slot:2,role:1}).ok);
+ assert.ok(m.order('P1',{type:'build',lane:0,slot:2,role:3}).ok);
+ m.wave();
+ const marine=m.state.units.find(u=>u.uid==='P0'&&u.role===1);
+ const enemy=m.state.units.find(u=>u.uid==='P1'&&u.role===3);
+ assert.ok(marine&&enemy);
+ // Keep combat actors at touching distance and lock out other damage sources.
+ marine.x=enemy.x=1500;marine.y=enemy.y=250;marine.cool=0;
+ enemy.hp=1;enemy.cool=99999;
+ const initialCash=killer.cash,initialEnemyCash=victim.cash;
+ forceMarineRoll=0;
+ for(let i=0;i<8&&enemy.hp>0;i++)m.tick(.2);
+ forceMarineRoll=null;
+ assert.ok(enemy.hp<=0,'Marine attack actually kills');
+ assert.ok(killer.cash>initialCash&&victim.cash<initialEnemyCash,'kill steals real opponent resources');
+ const recruited=m.state.units.find(u=>u.conscripted&&u.uid==='P0'&&u.role===3);
+ assert.ok(recruited&&recruited.team===0&&recruited.faction===0&&recruited.hp>0,'captured tank belongs to marine player');
+ assert.ok(recruited.hp<=recruited.maxHP*.101,'converted enemy barely survives');
+}
