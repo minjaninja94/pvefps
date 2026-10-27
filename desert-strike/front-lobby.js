@@ -10,6 +10,7 @@ const SKINS=[
 ];
 const KEY='desert-front-training-v2',empty=()=>({xp:0,wins:0,losses:0,mpWins:0,mpLosses:0,selectedFaction:0,selectedSkin:'default',nickname:'지휘관'});
 let progress=empty(),uid=null,active=false,lastMultiplayer='',authBusy=false;
+let selectedUnit=0,selectedAction='idle',animationStart=0,animationTick=0,onlineOpen=false;
 function safeName(v){return String(v||'지휘관').trim().replace(/[<>\u0000-\u001f]/g,'').slice(0,16)||'지휘관';}
 function load(){
  try{const v=JSON.parse(localStorage.getItem(KEY)||'{}');const p=empty();
@@ -24,6 +25,48 @@ function rank(){const score=progress.mpWins*3+progress.wins*.5;return score>=100
 function currentSkin(){const lv=levelFromXP(progress.xp).level;return SKINS.find(x=>x.id===progress.selectedSkin&&lv>=x.level)||SKINS[0];}
 function filterForSkin(id){return SKINS.find(x=>x.id===id)?.filter||'none';}
 function stateChange(){save();render();if(uid)void syncProfile();}
+function updateUnitInfo(){
+ const i=progress.selectedFaction,r=selectedUnit,fac=FACTIONS[i],unit=global.DesertRoster?.getDef?.(r,i);
+ if(!fac||!unit)return;
+ $('lobbyUnitTitle').textContent=fac.units[r]+' · '+(global.DesertRoster?.ROLE?.[r]?.name||'');
+ $('lobbyUnitStats').textContent='HP '+Math.round(unit.hp)+'  ·  공격 '+Math.round(unit.damage)+'  ·  사거리 '+Math.round(unit.range)+'  ·  속도 '+Math.round(unit.speed)+'  ·  '+(unit.airTarget?'대공 가능':'지상 공격')+'  ·  '+(unit.tips||'');
+ $('lobbyUnitAnimBadge').textContent=global.DesertUnitMotion?.ACTIONS.find(a=>a.id===selectedAction)?.label||'대기';
+ $('lobbyUnitActions').querySelectorAll('[data-action]').forEach(btn=>btn.classList.toggle('active',btn.dataset.action===selectedAction));
+}
+function renderUnitGallery(){
+ const f=FACTIONS[progress.selectedFaction];
+ if(!f||!$('lobbyUnitGrid'))return;
+ const R=global.DesertRoster;
+ $('lobbyUnitGrid').innerHTML=f.units.map((name,i)=>'<button type="button" class="lobby-unit-card'+(selectedUnit===i?' selected':'')+'" data-unit="'+i+'"><canvas width="72" height="72" data-motion-role="'+i+'" aria-label="'+name+' 이동 애니메이션"></canvas><strong>'+name+'</strong><small>'+(R.ROLE[i]?.name||'')+'</small></button>').join('');
+ updateUnitInfo();
+}
+function drawUnitAnimations(ts){
+ global.requestAnimationFrame(drawUnitAnimations);
+ if(!active||document.hidden||ts-animationTick<70)return;
+ animationTick=ts;
+ const f=progress.selectedFaction,m=global.DesertUnitMotion;
+ if(!m||!global.IsoWorld)return;
+ const elapsed=(ts-animationStart)/1000,filter=currentSkin().filter;
+ $('lobbyUnitGrid').querySelectorAll('canvas[data-motion-role]').forEach(c=>{
+  const r=Number(c.dataset.motionRole),ctx=c.getContext('2d');
+  if(!ctx)return;
+  ctx.clearRect(0,0,72,72);
+  m.draw(ctx,{faction:f,role:r,action:r===selectedUnit?selectedAction:'move',frame:m.frameAt(r===selectedUnit?selectedAction:'move',elapsed),size:72,filter});
+ });
+ const large=$('lobbyUnitPreview'),ctx=large?.getContext('2d');
+ if(ctx){ctx.clearRect(0,0,192,192);m.draw(ctx,{faction:f,role:selectedUnit,action:selectedAction,frame:m.frameAt(selectedAction,elapsed),size:178,x:7,y:7,filter});}
+ const small=$('lobbyHero'),smallCtx=small?.getContext('2d');
+ if(smallCtx){smallCtx.clearRect(0,0,72,72);m.draw(smallCtx,{faction:f,role:selectedUnit,action:selectedAction,frame:m.frameAt(selectedAction,elapsed),size:72,filter});}
+}
+function chooseUnit(i){
+ if(!Number.isInteger(i)||i<0||i>=8)return;
+ selectedUnit=i;selectedAction='idle';animationStart=performance.now();
+ renderUnitGallery();
+}
+function chooseAction(action){
+ if(!global.DesertUnitMotion?.ACTIONS.some(a=>a.id===action))return;
+ selectedAction=action;animationStart=performance.now();updateUnitInfo();
+}
 function render(){
  if(!FACTIONS.length)return;
  const fac=FACTIONS[progress.selectedFaction]||FACTIONS[0],l=levelFromXP(progress.xp),s=currentSkin();
@@ -38,6 +81,7 @@ function render(){
  $('lobbyFactions').querySelectorAll('canvas').forEach(c=>{const f=Number(c.dataset.portrait);try{let p=global.IsoWorld?.portrait(f,f===8?5:f===7?1:0);if(p)c.getContext('2d').drawImage(p,0,0,72,72);}catch(_){}});
  $('lobbySkins').innerHTML=SKINS.map(x=>'<button class="lobby-skin'+(s.id===x.id?' selected':'')+'" data-skin="'+x.id+'" style="--skin:'+x.tone+'" '+(l.level<x.level?'disabled':'')+'><span class="skin-swatch">✦</span><strong>'+x.name+'</strong><small>'+(l.level<x.level?'LV.'+x.level+' 해금':x.desc)+'</small></button>').join('');
  $('lobbySkinMessage').textContent=s.name+' 선택 · 게임 능력치는 변경되지 않습니다.';
+ renderUnitGallery();
  const cv=$('lobbyHero'),ctx=cv.getContext('2d');if(ctx){
   ctx.clearRect(0,0,72,72);let art=global.IsoWorld?.frame(progress.selectedFaction,progress.selectedFaction===8?5:0,'idle',5);
   if(art){ctx.filter=s.filter;ctx.drawImage(art,0,0,72,72);ctx.filter='none';}
@@ -46,7 +90,10 @@ function render(){
 }
 function show(){active=true;$('frontLobby').hidden=false;document.body.classList.add('lobby-active');render();}
 function hide(){active=false;$('frontLobby').hidden=true;document.body.classList.remove('lobby-active');}
-function chooseFaction(i){if(!Number.isInteger(i)||i<0||i>=FACTIONS.length)return;progress.selectedFaction=i;stateChange();}
+function chooseFaction(i){
+ if(!Number.isInteger(i)||i<0||i>=FACTIONS.length)return;
+ progress.selectedFaction=i;selectedUnit=0;selectedAction='idle';animationStart=performance.now();stateChange();
+}
 function chooseSkin(id){const sk=SKINS.find(x=>x.id===id),l=levelFromXP(progress.xp).level;if(!sk||l<sk.level)return false;progress.selectedSkin=id;stateChange();return true;}
 function grantXP(amount){progress.xp=Math.min(10000000,progress.xp+Math.max(0,Math.floor(amount)));stateChange();}
 function completeSolo({win,wave}){if(win)progress.wins++;else progress.losses++;grantXP((win?120:45)+Math.min(80,Math.floor((wave||0)*3)));}
@@ -107,23 +154,62 @@ function prepare(){
  const button=[...document.querySelectorAll('#factionCards [data-faction]')].find(x=>Number(x.dataset.faction)===progress.selectedFaction);
  if(button)button.click();$('mpFaction').value=String(progress.selectedFaction);$('mpName').value=progress.nickname;
 }
-function single(){prepare();hide();$('startButton').click();}
-function multiplayer(practice=false){
- prepare();hide();$('startOverlay').classList.add('hidden');
- const tab=document.querySelector('[data-view="multiplayer"]');if(tab)tab.click();
- if(practice)$('mpPractice').click();
+function single(){
+ prepare();onlineOpen=false;$('lobbyMultiplayerConfig').hidden=true;
+ hide();$('startButton').click();
+ $('startOverlay').classList.add('hidden');
+}
+function openMultiplayer(){
+ prepare();onlineOpen=true;$('lobbyMultiplayerConfig').hidden=false;
+ $('lobbyMultiplayerConfig').scrollIntoView?.({behavior:'smooth',block:'start'});
+}
+function enterMatch(){
+ prepare();onlineOpen=false;
+ $('lobbyMultiplayerConfig').hidden=true;
+ $('startOverlay').classList.add('hidden');
+ hide();
+ const tab=document.querySelector('[data-view="multiplayer"]');
+ if(tab&&!tab.classList.contains('active'))tab.click();
+}
+function practiceBattle(){
+ enterMatch();
+ $('mpPractice').click();
+}
+async function returnToLobby(){
+ // Fully leave the online room or cancel practice before exposing setup again.
+ try{await global.DesertTriUI?.leave?.();}catch(e){$('lobbyAuthMessage').textContent='방 종료 오류: '+(e.message||String(e));}
+ $('restartButton').click();
+ $('startOverlay').classList.add('hidden');$('endOverlay').classList.add('hidden');
+ onlineOpen=false;$('lobbyMultiplayerConfig').hidden=true;
+ show();
 }
 function initialize(){
- if(!FACTIONS.length||!$('frontLobby'))return;progress=load();
+ if(!FACTIONS.length||!$('frontLobby'))return;progress=load();animationStart=performance.now();
+ // Reparent original multiplayer room controls, preserving their handlers and IDs.
+ // The combat view now holds ONLY battlefield/HUD, never a second setup screen.
+ const roomPanel=$('mpLobby'),mount=$('lobbyMultiMount');
+ if(roomPanel&&mount){
+  mount.append(roomPanel);
+  // Race/name are already selected above in the main commander lobby.
+  $('mpFaction')?.closest('label')?.setAttribute('hidden','');
+  $('mpName')?.closest('label')?.setAttribute('hidden','');
+  $('mpPractice').hidden=true;
+ }
+ $('lobbyUnitGrid').addEventListener('click',e=>{const b=e.target.closest('[data-unit]');if(b)chooseUnit(Number(b.dataset.unit));});
+ $('lobbyUnitActions').addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(b)chooseAction(b.dataset.action);});
+ $('lobbyCloseMulti').addEventListener('click',()=>{if(global.DesertTriNetwork?.current()?.roomId)return;$('lobbyMultiplayerConfig').hidden=true;onlineOpen=false;});
+ global.requestAnimationFrame?.(drawUnitAnimations);
  $('lobbyFactions').addEventListener('click',e=>{const b=e.target.closest('[data-faction]');if(b)chooseFaction(Number(b.dataset.faction));});
  $('lobbySkins').addEventListener('click',e=>{const b=e.target.closest('[data-skin]');if(b)chooseSkin(b.dataset.skin);});
- $('lobbySolo').addEventListener('click',single);$('lobbyMulti').addEventListener('click',()=>multiplayer(false));$('lobbyPractice').addEventListener('click',()=>multiplayer(true));
- $('backToLobby').addEventListener('click',()=>{if(global.DesertTriNetwork?.current()?.roomId)return alert('온라인 경기에서는 방 나가기 후 로비로 이동해 주세요.');if(!$('mpLeave').disabled)$('mpLeave').click();$('restartButton').click();show();});
+ $('lobbySolo').addEventListener('click',single);
+ $('lobbyMulti').addEventListener('click',openMultiplayer);
+ $('lobbyPractice').addEventListener('click',practiceBattle);
+ $('backToLobby').addEventListener('click',()=>{void returnToLobby();});
  $('lobbySaveName').addEventListener('click',()=>{progress.nickname=safeName($('lobbyNickname').value);stateChange();});
  $('lobbyGoogle').addEventListener('click',google);$('lobbyGuest').addEventListener('click',()=>{void guest();});
  global.addEventListener?.('maiden-art-ready',render);global.addEventListener?.('isometric-art-ready',render);
  show();void restoreAccount();
 }
-global.DesertLobby=Object.freeze({levelFromXP,filterForSkin,skinFilter:()=>currentSkin().filter,selectedSkin:()=>currentSkin().id,selectedFaction:()=>progress.selectedFaction,chooseFaction,chooseSkin,completeSolo,completeMultiplayer,grantXP,show,hide});
+global.DesertLobby=Object.freeze({levelFromXP,filterForSkin,skinFilter:()=>currentSkin().filter,selectedSkin:()=>currentSkin().id,selectedFaction:()=>progress.selectedFaction,selectedUnit:()=>selectedUnit,chooseFaction,chooseSkin,chooseUnit,chooseAction,completeSolo,completeMultiplayer,grantXP,show,hide,enterMatch,openMultiplayer,returnToLobby});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize);else initialize();
 })(window);
