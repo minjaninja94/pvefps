@@ -45,6 +45,16 @@ jobs:
         run: node desert-strike/smoke-heroine.test.cjs
 
       - name: Six-faction mirrored skirmish win rates
-        run: node desert-strike/balance-sim.cjs skirmish 2
+        run: node desert-strike/balance-sim.cjs skirmish 2 | tee /tmp/desert-skirmish.log
       - name: Six-faction mirrored long-wave campaigns
-        run: node desert-strike/balance-sim.cjs campaign 2
+        run: node desert-strike/balance-sim.cjs campaign 2 | tee /tmp/desert-campaign.log
+      - name: Save six-faction benchmark evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: desert-front-balance-report
+          path: |
+            /tmp/desert-balance.json
+            /tmp/desert-skirmish.log
+            /tmp/desert-campaign.log
+          if-no-files-found: warn

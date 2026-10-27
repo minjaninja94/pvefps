@@ -14,6 +14,8 @@ const fakeMath=Object.create(Math);fakeMath.random=rand;
 const sandbox={document,window:{addEventListener(){}},requestAnimationFrame(fn){queue.push(fn);},console:{log(){}},Math:fakeMath,Number,String,Object,Array,Map,Set,Date};
 vm.runInNewContext(source.replace('initFactions();wire();reset();','window.__sim={state:()=>state,reset,tick,wave,getDef,aiInitialBuild,createUnit};initFactions();wire();reset();'),sandbox,{timeout:10000,filename:'game-v2.js'});
 const game=sandbox.window.__sim;
+assert.equal(game.getDef(2,0).cost,150,'benchmark must use live armor breaker cost');
+assert.equal(game.getDef(5,0).cost,245,'benchmark must use live artillery cost');
 const combos=[
  [0,1,2,3,4,5,6,7],[0,0,1,2,3,4,5,7],[0,1,1,2,3,5,6,7],
  [0,1,2,2,3,4,5,7],[0,1,2,3,3,4,6,7],[0,1,2,3,4,5,5,7]
@@ -23,13 +25,13 @@ function run(a,b,trial){
  game.reset();const s=game.state();s.faction=a;s.enemyFaction=b;s.live=true;game.aiInitialBuild();
  // Equal investments, mirrored initial economy. Opponent continues to use its real adaptive AI.
  const roster=combos[trial%combos.length];
- for(const role of roster){const slot=s.built.findIndex(x=>x===null);if(slot<0)break;const cost=[65,95,120,145,105,160,205,90][role];if(s.cash>=cost){s.built[slot]=role;s.cash-=cost;}}
+ for(const role of roster){const slot=s.built.findIndex(x=>x===null);if(slot<0)break;const cost=game.getDef(role,a).cost;if(s.cash>=cost){s.built[slot]=role;s.cash-=cost;}}
  for(let step=0;step<2500&&!s.ended;step++){
   // The player side follows the same no-free-money purchase rules.
   if(step%35===0){
    const slot=s.built.findIndex(x=>x===null);
    const role=roster[(step/35|0)%roster.length];
-   const cost=[65,95,120,145,105,160,205,90][role];
+   const cost=game.getDef(role,a).cost;
    if(slot>=0&&s.cash>=cost){s.built[slot]=role;s.cash-=cost;}
   }
   game.tick(.16);

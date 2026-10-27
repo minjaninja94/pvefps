@@ -37,11 +37,13 @@ function simulateAI(){
  }
  if(state.wave%2){mirror();aiInvest();mirror();aiInvest();}
  else{aiInvest();mirror();aiInvest();mirror();}
+ window.__balance.trace.push({wave:state.wave,cash:[state.cash,state.enemyCash],eco:[state.eco,state.enemyEco],buildings:[state.built.filter(x=>x!==null).length,state.enemyBuilt.filter(x=>x!==null).length],units:[state.units.filter(u=>u.side===0).length,state.units.filter(u=>u.side===1).length]});
 }
 window.__balance={
  reset,createUnit,tick,aiInvest,wave,getDef,FACTIONS,ROLE,SLOTS,
  state:()=>state,
  init(){
+  this.trace=[];
   state.live=true;state.ended=false;state.followFront=false;
   state.cash=360;state.enemyCash=360;
   for(const [slot,role] of [[1,0],[17,1]]){
@@ -59,7 +61,7 @@ vm.runInNewContext(source,ctx,{filename:'game-v2.js',timeout:10000});
 const core=ctx.window.__balance;
 const N=core.FACTIONS.length,combinations=[];
 for(let i=0;i<N;i++)for(let j=i+1;j<N;j++)combinations.push([i,j]);
-function seeded(pairIndex,side,run){rngState=(0xdefaced1+(pairIndex+1)*19349663+side*83492791+run*2654435761)>>>0;}
+function seeded(pairIndex,run){rngState=(0xdefaced1+(pairIndex+1)*19349663+run*2654435761)>>>0;}
 const outcomes=Array.from({length:N},()=>({win:0,loss:0,draw:0,score:0,games:0}));
 const matrix=Array.from({length:N},()=>Array(N).fill(null));
 function score(engagement){
@@ -75,7 +77,7 @@ function score(engagement){
 function runMatch(f0,f1,seedIndex,pairIndex,mode){
  core.reset();core.init();
  const s=core.state();s.faction=f0;s.enemyFaction=f1;
- seeded(pairIndex,f0===Math.min(f0,f1)?0:1,seedIndex);
+ seeded(pairIndex,seedIndex);
  if(mode==='skirmish'){
   s.built.fill(null);s.enemyBuilt.fill(null);
   s.units.length=0;s.shots.length=0;s.next=999999;s.wave=8;
@@ -102,11 +104,11 @@ function runMatch(f0,f1,seedIndex,pairIndex,mode){
  const winner=mode==='skirmish'
    ?points[0]>points[1]*1.03?0:points[1]>points[0]*1.03?1:-1
    :s.ended?(s.baseHP[1]<=0?0:1):-1;
- return {winner,points,wave:s.wave,timeout:!s.ended};
+ return {winner,points,wave:s.wave,timeout:!s.ended,cash:[s.cash,s.enemyCash],eco:[s.eco,s.enemyEco],buildings:[s.built.filter(x=>x!==null).length,s.enemyBuilt.filter(x=>x!==null).length],baseHP:[...s.baseHP],trace:core.trace};
 }
 const selected=which==='all'?['skirmish','campaign']:[which];
 for(const mode of selected){
- const out=Array.from({length:N},()=>({w:0,l:0,d:0,score:0,n:0}));
+ const out=Array.from({length:N},()=>({w:0,l:0,d:0,n:0,cash:0,eco:0,buildings:0,baseHP:0,wave:0,timeouts:0,phases:Array.from({length:4},()=>({n:0,cash:0,eco:0,buildings:0,units:0}))}));
  const pairResults=[];
  const start=Date.now();
  for(let idx=0;idx<combinations.length;idx++){
@@ -117,10 +119,18 @@ for(const mode of selected){
    const res=runMatch(f0,f1,seed,idx,mode);
    const fwin=res.winner===-1?-1:res.winner===0?f0:f1;
    for(const f of [i,j]){
-    out[f].n++;
-    if(fwin===f)out[f].w++;
-    else if(fwin>=0)out[f].l++;
-    else out[f].d++;
+    const entry=out[f],pos=f===f0?0:1;
+    entry.n++;entry.cash+=res.cash[pos];entry.eco+=res.eco[pos];
+    entry.buildings+=res.buildings[pos];entry.baseHP+=res.baseHP[pos];entry.wave+=res.wave;
+    if(mode==='campaign'&&res.timeout)entry.timeouts++;
+    for(const row of res.trace){
+     const band=row.wave<=4?0:row.wave<=10?1:row.wave<=16?2:3;
+     const phase=entry.phases[band];phase.n++;phase.cash+=row.cash[pos];
+     phase.eco+=row.eco[pos];phase.buildings+=row.buildings[pos];phase.units+=row.units[pos];
+    }
+    if(fwin===f)entry.w++;
+    else if(fwin>=0)entry.l++;
+    else entry.d++;
    }
    results.push({winner:fwin,wave:res.wave,margin:Math.round(res.points[0]-res.points[1])});
   }
@@ -130,7 +140,8 @@ for(const mode of selected){
  textSummary(mode,out,pairResults,Date.now()-start);
 }
 function textSummary(mode,results,pairs,ms){
- console.log('BALANCE_JSON '+JSON.stringify({mode,samples,ms,factions:core.FACTIONS.map((f,i)=>({id:f.id,name:f.name,...results[i],winRate:Math.round(results[i].w/Math.max(1,results[i].n)*1000)/10})),pairs}));
+ const avg=(num,den)=>Math.round(num/Math.max(1,den)*10)/10;
+ console.log('BALANCE_JSON '+JSON.stringify({mode,samples,ms,factions:core.FACTIONS.map((f,i)=>{const r=results[i];return {id:f.id,name:f.name,w:r.w,l:r.l,d:r.d,n:r.n,winRate:avg(r.w*100,r.n),avgCash:avg(r.cash,r.n),avgEco:avg(r.eco,r.n),avgBuildings:avg(r.buildings,r.n),avgBaseHP:avg(r.baseHP,r.n),avgWave:avg(r.wave,r.n),timeouts:r.timeouts,phases:r.phases.map(p=>({n:p.n,avgCash:avg(p.cash,p.n),avgEco:avg(p.eco,p.n),avgBuildings:avg(p.buildings,p.n),avgUnits:avg(p.units,p.n)}))};}),pairs}));
  console.log('BALANCE_TABLE '+mode+' '+ms+'ms');
  for(const x of core.FACTIONS.map((f,i)=>({race:f.name,...results[i]})))console.log('RACE',x.race,JSON.stringify({wins:x.w,losses:x.l,draws:x.d,rate:(100*x.w/x.n).toFixed(1)+'%'}));
  for(const p of pairs)console.log('PAIR',core.FACTIONS[p.a].id,'vs',core.FACTIONS[p.b].id,':',p.iwins,'-',p.jwins,'draw',p.draws);

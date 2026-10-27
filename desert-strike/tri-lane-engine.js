@@ -17,12 +17,27 @@ const BASE=[
  [136,0,1,139,1.24,61,false,'ground']
 ];
 const clamp=(v,l,r)=>Math.max(l,Math.min(r,v));
+const GOODS=[[5,7],[0,7],[3,4],[1,4],[6],[1,4],[0,3],[3,1]];
+const BADS=[[3,1],[3,5],[0,1],[2,6],[3,2],[0,6],[4,1],[0,5]];
 function definition(faction,role){
  const shared=global.DesertRoster?.getDef;
  if(typeof shared==='function')return shared(role,faction);
- const t=BASE[role],mut=[[1.09,1,.96],[.92,1,1.12],[.95,1.08,1],[1.04,1.02,1.01],[1.04,1,1.06],[.94,1,.99]][faction]||[1,1,1];
- const beast=faction===4,elf=faction===5,melee=[0,3,6].includes(role),ranged=[1,2,4,5,6].includes(role);
- return {hp:t[0]*2.25*mut[0],damage:t[1]*.94*mut[1]*(beast?(melee?1.16:.87):elf?(ranged?1.1:.84):1),armor:t[2],range:t[3]*(elf&&ranged?1.18:1),rate:t[4],speed:t[5]*.84*mut[2]*(beast&&melee?1.14:1),airTarget:t[6]&&!(faction===4&&role===6),kind:(faction===3||faction===4)&&role===6?'ground':t[7],heal:role===7?36:0,blast:role===5?58:0};
+ const t=BASE[role],mut=[[1.09,1,.96],[.995,1,1.12],[.95,1.08,1],[1.09,1.06,1.01],[1.04,1,1.06],[.94,1,.99]][faction]||[1,1,1];
+ const beast=faction===4,elf=faction===5,bongo=faction===3&&role===6,prowler=beast&&role===6;
+ const melee=beast&&[0,3,6].includes(role),ranged=elf&&[1,2,4,5,6].includes(role);
+ return {
+  hp:bongo?565:t[0]*2.25*mut[0]*(elf&&role===0?.88:beast&&role===3?1.13:1),
+  damage:bongo?36:prowler?33:t[1]*.94*mut[1]*(beast?(melee?1.16:.87):elf?(ranged?1.045:role===0?.84:1):1),
+  armor:bongo?7:prowler?3:t[2],
+  range:bongo?43:prowler?40:t[3]*(ranged?1.10:1),
+  rate:bongo?1.45:prowler?.95:t[4],
+  speed:bongo?77:prowler?90:t[5]*mut[2]*.84*(melee?1.14:1),
+  airTarget:bongo||prowler?false:t[6],
+  kind:bongo||prowler?'ground':t[7],
+  heal:(role===7?36:0)*mut[1]*1.5,
+  blast:role===5?58:0,
+  good:bongo||prowler?[0,7]:GOODS[role],bad:bongo||prowler?[2,3]:BADS[role]
+ };
 }
 function roomPlayers(input){const x=Array.isArray(input)?input:Object.values(input||{});return x.map(p=>({uid:String(p.uid||p.id||''),name:String(p.name||'지휘관').slice(0,16),team:Number(p.team),faction:Number(p.faction),bot:!!p.bot}));}
 function create({mode='pvp',size=1,members=[]}={}){
@@ -64,10 +79,14 @@ function create({mode='pvp',size=1,members=[]}={}){
   state.units.push({id:state.nextUnit++,uid:p.uid,team:p.team,faction:p.faction,role,lane,x,y,hp:d.hp,maxHP:d.hp,cool:Math.random()*.6,
     radius,frame:Math.floor(Math.random()*16),act:'move',attackAge:0});
  }
- function selectCounter(lane){
-  const counts=Array(8).fill(0);
-  for(const p of state.players)if(p.team===0)for(const x of p.buildings[lane])if(x!==null)counts[x]++;
+ function selectCounter(lane,bot){
+  const counts=Array(8).fill(0), foes=state.players.filter(p=>p.team===0);
+  for(const p of foes)for(const x of p.buildings[lane])if(x!==null)counts[x]++;
   const major=counts.indexOf(Math.max(...counts));
+  // Role 6 is a ground truck/cavalry for these factions, not an aircraft.
+  if(major===6&&foes.some(p=>(p.faction===3||p.faction===4)&&p.buildings[lane].includes(6)))return 2;
+  // Marine trucks and beast cavalry can answer a sufficiently large melee swarm.
+  if(major===0&&counts[0]>=3&&(bot.faction===3||bot.faction===4)&&bot.cash>=COST[6])return 6;
   const preferred=[[1,6,3],[3,5],[0,1],[2,6],[2,3],[0,6],[4,1],[0,5]][major];
   return preferred[0];
  }
@@ -77,8 +96,7 @@ function create({mode='pvp',size=1,members=[]}={}){
    const enemy=state.players.filter(p=>p.team===0).reduce((sum,p)=>sum+p.buildings[lane].filter(x=>x!==null).length,0);
    const desired=Math.max(1,Math.min(18,Math.ceil(enemy/size*1.05)));
    if(existing>=desired)continue;
-   let role=selectCounter(lane);
-   if(role===6&&[3,4].includes(bot.faction))role=2;
+   let role=selectCounter(lane,bot);
    if(bot.cash<COST[role])role=1;
    if(bot.cash<COST[role])continue;
    const slot=bot.buildings[lane].findIndex(x=>x===null);
@@ -99,15 +117,15 @@ function create({mode='pvp',size=1,members=[]}={}){
   }
  }
  function applyHit(a,v,damage){
+  const attacker=definition(a.faction,a.role),defender=definition(v.faction,v.role);
   let mult=1;
-  if(a.role===2&&[3,4].includes(v.role))mult=1.55;
-  if(a.role===4&&definition(v.faction,v.role).kind==='air')mult=1.85;
-  if(a.role===1&&v.role===0)mult=1.55;
-  if(a.role===6&&[0,3].includes(v.role))mult=1.3;
-  if(a.role===0&&v.role===3)mult=.68;
-  if(a.role===5&&v.role===0)mult=.7;
-  if(v.role===6&&(v.faction===3||v.faction===4)){mult=a.role===2?1.65:a.role===0?.68:1;}
-  v.hp-=Math.max(3,damage*mult-definition(v.faction,v.role).armor*.66);
+  if(v.role===6&&(v.faction===3||v.faction===4)){
+   mult=a.role===2?1.65:a.role===0?.68:a.role===4?.78:1;
+  }else{
+   if(attacker.good.includes(v.role))mult*=1.55;
+   if(attacker.bad.includes(v.role))mult*=.7;
+  }
+  v.hp-=Math.max(3,damage*mult-defender.armor*.66);
   v.attackAge=.12;
  }
  function attack(a,v){

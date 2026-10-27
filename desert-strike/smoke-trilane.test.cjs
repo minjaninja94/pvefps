@@ -20,6 +20,15 @@ const win={};vm.runInNewContext(src,{window:win,Math:random,Array,Number,Object,
 const E=win.DesertTriEngine;
 assert.equal(E.WIDTH*E.HEIGHT,3300*520*3,'triple area from the one-lane world');
 assert.equal(E.LANES,3);assert.equal(E.SLOTS,75);
+{
+ const isolated=E.create({mode:'pvp',size:1,members:[{uid:'verify0',team:0,faction:3},{uid:'verify1',team:1,faction:5}]});
+ assert.equal(isolated.definition(3,6).hp,565,'isolated multiplayer Marine truck must match single-player HP');
+ assert.equal(isolated.definition(3,6).kind,'ground');
+ assert.equal(isolated.definition(4,6).kind,'ground');
+ assert.equal(isolated.definition(5,6).kind,'air');
+ assert.ok(isolated.definition(5,1).range>isolated.definition(0,1).range);
+ assert.ok(isolated.definition(1,0).hp>isolated.definition(5,0).hp);
+}
 function human(n,team=0,faction=0){return {uid:'P'+n,name:'지휘관'+n,team,faction};}
 for(const size of [1,2,3]){
  const players=Array.from({length:size},(_,i)=>human(i,0,i%6)).concat(Array.from({length:size},(_,i)=>human(i+size,1,(i+size)%6)));
