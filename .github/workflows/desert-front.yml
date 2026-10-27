@@ -23,6 +23,7 @@ jobs:
           node --check desert-strike/sprite-animations.js
           node --check desert-strike/isometric-world.js
           node --check desert-strike/heroine-factions.js
+          node --check desert-strike/balance-sim.cjs
       - name: Gameplay regression V1
         run: node desert-strike/smoke.test.cjs
       - name: Gameplay V2
@@ -33,3 +34,6 @@ jobs:
         run: node desert-strike/smoke-isometric.test.cjs
       - name: Beastgirls and elven mages full sprite coverage
         run: node desert-strike/smoke-heroine.test.cjs
+
+      - name: Six-faction mirrored skirmish win rates
+        run: node desert-strike/balance-sim.cjs skirmish 2
