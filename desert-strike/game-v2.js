@@ -467,7 +467,7 @@ function marineSpoils(v,attacker,roll=Math.random){
  state.marineRecruitCount[attacker.side]++;
  state.marineStats.recruits++;
  state.units.push({...v,uid:state.nextUnitId++,side:attacker.side,hp:Math.max(1,Math.floor(v.maxHP*MARINE_RECRUIT_HP)),killed:false,conscripted:true,strike:null,
-  cooldown:1.5,blink:.4,ramCooldown:1.8,moving:false,facing:attacker.side===0?1:-1});
+  cooldown:1.5,blink:.4,spawnAge:0,hitAge:0,skillAge:0,ramCooldown:1.8,moving:false,facing:attacker.side===0?1:-1});
  floatText(v.x,v.y-43,'자진입대!','#f7e0ac');
 }
 function damage(u,amount,source,attacker=null,roll=Math.random){
@@ -897,6 +897,9 @@ function drawUnit(g,u,scale=1){
  const mode=dead?'death':u.hitAge>0?'hit':u.spawnAge<.42?'spawn':u.skillAge>0?'skill':u.strike?.mode||(u.moving?'move':'idle');
  const frame=dead?Math.min(15,Math.floor((u.deathAge||0)/1.08*16))
   :u.strike?Math.min(15,Math.floor(u.strike.age/u.strike.duration*16))
+  :mode==='spawn'?Math.min(15,Math.floor((u.spawnAge||0)/.42*16))
+  :mode==='hit'?Math.min(15,Math.floor((1-(u.hitAge||0)/.36)*16))
+  :mode==='skill'?Math.min(15,Math.floor((1-(u.skillAge||0)/.62)*16))
   :Math.floor(u.anim)%16;
  const iso=window.IsoWorld,at=iso?iso.project(u.x,u.y):{x:u.x,y:u.y};
  const w=(iso?(u.role===3?78:u.role===6?77:68):(u.role===3?55:u.role===6?52:47))*scale;

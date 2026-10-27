@@ -29,7 +29,7 @@ function updateUnitInfo(){
  const i=progress.selectedFaction,r=selectedUnit,fac=FACTIONS[i],unit=global.DesertRoster?.getDef?.(r,i);
  if(!fac||!unit)return;
  $('lobbyUnitTitle').textContent=fac.units[r]+' · '+(global.DesertRoster?.ROLE?.[r]?.name||'');
- $('lobbyUnitStats').textContent='HP '+Math.round(unit.hp)+'  ·  공격 '+Math.round(unit.damage)+'  ·  사거리 '+Math.round(unit.range)+'  ·  속도 '+Math.round(unit.speed)+'  ·  '+(unit.airTarget?'대공 가능':'지상 공격')+'  ·  '+(unit.tips||'');
+ $('lobbyUnitStats').textContent='HP '+Math.round(unit.hp)+' · 공격 '+Math.round(unit.damage)+' · 치료 '+Math.round(unit.heal||0)+' · 사거리 '+Math.round(unit.range)+' · 속도 '+Math.round(unit.speed)+' · '+(unit.airTarget?'대공 가능':'지상 공격')+' · '+(unit.tips||'');
  $('lobbyUnitAnimBadge').textContent=global.DesertUnitMotion?.ACTIONS.find(a=>a.id===selectedAction)?.label||'대기';
  $('lobbyUnitActions').querySelectorAll('[data-action]').forEach(btn=>btn.classList.toggle('active',btn.dataset.action===selectedAction));
 }
@@ -151,10 +151,18 @@ async function guest(){
  info('게스트 모드로 전환했습니다. 진행도는 이 기기에만 저장됩니다.');render();
 }
 function prepare(){
+ // Drafted commander names are saved when leaving the lobby, without an extra confirmation menu.
+ const edited=safeName($('lobbyNickname').value);
+ if(progress.nickname!==edited){progress.nickname=edited;save();if(uid)void syncProfile();}
  const button=[...document.querySelectorAll('#factionCards [data-faction]')].find(x=>Number(x.dataset.faction)===progress.selectedFaction);
  if(button)button.click();$('mpFaction').value=String(progress.selectedFaction);$('mpName').value=progress.nickname;
 }
 function single(){
+ if(global.DesertTriNetwork?.current()?.roomId){
+  $('lobbyMultiplayerConfig').hidden=false;
+  $('mpStatus').textContent='먼저 참여 중인 방에서 나가야 싱글플레이를 시작할 수 있습니다.';
+  return;
+ }
  prepare();onlineOpen=false;$('lobbyMultiplayerConfig').hidden=true;
  hide();$('startButton').click();
  $('startOverlay').classList.add('hidden');
@@ -164,6 +172,7 @@ function openMultiplayer(){
  $('lobbyMultiplayerConfig').scrollIntoView?.({behavior:'smooth',block:'start'});
 }
 function enterMatch(){
+ if($('frontLobby').hidden)return;
  prepare();onlineOpen=false;
  $('lobbyMultiplayerConfig').hidden=true;
  $('startOverlay').classList.add('hidden');

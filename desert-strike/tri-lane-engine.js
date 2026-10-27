@@ -165,7 +165,7 @@ function create({mode='pvp',size=1,members=[]}={}){
   state.marineRecruitCount.set(a.uid,recruits+1);
   state.marineStats.recruits++;
   state.units.push({...v,id:state.nextUnit++,uid:a.uid,team:a.team,hp:Math.max(1,Math.floor(v.maxHP*MARINE_RECRUIT_HP)),
-   cool:1.5,conscripted:true,killed:false,attackAge:.4,act:'move'});
+   cool:1.5,conscripted:true,killed:false,spawnAge:0,hitAge:0,skillAge:0,attackAge:.4,act:'move'});
   state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'conscript',time:.7,team:a.team});
  }
  function applyHit(a,v,damage){
