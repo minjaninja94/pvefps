@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Nine-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=tenfog2"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=motion1"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -19,7 +19,20 @@
    </aside>
   </div>
   <section class="lobby-panel lobby-loadout"><div class="lobby-section-title"><div><div class="lobby-eyebrow">FACTION ROSTER</div><h2>10종족 선택</h2></div><span>80개 전투 유닛</span></div><div id="lobbyFactions" class="lobby-factions"></div>
+   <div class="lobby-section-title"><div><div class="lobby-eyebrow">UNIT MOTION ROSTER / 80 UNITS</div><h2>유닛별 애니메이션 도감</h2></div><span>병종 선택 · 동작 확인 · 능력치</span></div>
+   <div class="lobby-unit-layout"><div id="lobbyUnitGrid" class="lobby-unit-grid" aria-label="유닛 8종 애니메이션"></div>
+    <div class="lobby-unit-inspector"><div class="lobby-unit-stage"><canvas id="lobbyUnitPreview" width="192" height="192"></canvas><span id="lobbyUnitAnimBadge">대기</span></div>
+     <strong id="lobbyUnitTitle">유닛 선택</strong><div id="lobbyUnitStats"></div>
+     <div id="lobbyUnitActions" class="lobby-unit-actions">
+      <button type="button" data-action="idle" class="active">대기</button><button type="button" data-action="move">이동</button><button type="button" data-action="attack">공격</button><button type="button" data-action="siege">공성</button>
+      <button type="button" data-action="hit">피격</button><button type="button" data-action="skill">스킬</button><button type="button" data-action="spawn">소환</button><button type="button" data-action="death">사망</button>
+     </div></div></div>
    <div class="lobby-section-title"><div><div class="lobby-eyebrow">APPEARANCE ONLY</div><h2>지휘관 스킨</h2></div><span id="lobbySkinMessage">레벨을 올려 해금</span></div><div id="lobbySkins" class="lobby-skins"></div>
+  </section>
+  <section id="lobbyMultiplayerConfig" class="lobby-panel lobby-online-setup" hidden>
+   <div class="lobby-section-title"><div><div class="lobby-eyebrow">ONLINE ROOM / COMMANDER SETUP</div><h2>멀티플레이 방 설정</h2></div><button type="button" id="lobbyCloseMulti" class="btn outline">닫기</button></div>
+   <p class="lobby-online-tip">종족과 스킨은 위에서 선택합니다. 이 로비에서 팀·인원·방 코드·준비를 완료한 뒤 실제 전투 화면으로 이동합니다.</p>
+   <div id="lobbyMultiMount"></div>
   </section>
   <footer class="lobby-footer">레벨·훈련 랭크는 현재 로컬 진행도이며 공식 경쟁 랭킹이 아닙니다. 안전한 공식 랭킹에는 서버 판정이 필요합니다.</footer>
  </div>
@@ -107,9 +120,10 @@
 <script src="./isometric-world.js?v=tenfog2" defer></script>
 <script src="../firebase-config.js" defer></script>
 <script src="../firebase-network.js" defer></script>
+<script src="./unit-motion.js?v=motion1" defer></script>
 <script src="./tri-lane-engine.js?v=tenfog2" defer></script>
 <script src="./tri-lane-network.js?v=tenfog2" defer></script>
 <script src="./tri-lane-ui.js?v=tenfog2" defer></script>
 <script src="./game-v2.js?v=tenfog2" defer></script>
-<script src="./front-lobby.js?v=tenfog2" defer></script>
+<script src="./front-lobby.js?v=motion1" defer></script>
 </body></html>

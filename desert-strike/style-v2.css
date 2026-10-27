@@ -301,3 +301,23 @@ body{background:
 .faction-cards{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media(max-width:1000px){.faction-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:600px){.faction-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.faction-card.faction-maiden .faction-hero-new{height:120px!important}}
+
+/* 80-unit animated roster and multiplayer room setup live in the first lobby. */
+.lobby-unit-layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(270px,.85fr);gap:12px}
+.lobby-unit-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.lobby-unit-card{min-width:0;min-height:120px;display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;text-align:center;background:#162c39;border:1px solid #557283;border-radius:10px;color:#e8eeed;padding:6px 3px;cursor:pointer}
+.lobby-unit-card.selected{border:2px solid #f3d59b;background:#39403f}.lobby-unit-card:hover{border-color:#a1dfe3;background:#2e4553}
+.lobby-unit-card canvas{height:64px;width:64px;image-rendering:pixelated}.lobby-unit-card strong{font-size:11px;word-break:keep-all}.lobby-unit-card small{color:#aac2cf;font-size:10px}
+.lobby-unit-inspector{padding:12px;display:grid;gap:9px;border:1px solid #49687b;background:#0e2431;border-radius:11px}
+.lobby-unit-inspector>strong{font-size:17px;color:#ffe3ba}.lobby-unit-inspector #lobbyUnitStats{font-size:11px;color:#abcad1;line-height:1.7}
+.lobby-unit-stage{display:flex;align-items:center;justify-content:center;position:relative;min-height:200px;background:radial-gradient(ellipse,#385b68,#0e2030 72%);border-radius:9px}
+#lobbyUnitPreview{display:block;width:192px;height:192px;image-rendering:pixelated}
+#lobbyUnitAnimBadge{position:absolute;top:8px;right:8px;font-size:10px;background:#162636dd;padding:4px 7px;border-radius:6px;color:#dcebdc}
+.lobby-unit-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.lobby-unit-actions button{padding:7px 3px;font-size:11px;min-height:32px;color:#deeded;background:#213b4c;border:1px solid #526979;border-radius:6px}
+.lobby-unit-actions button.active{color:#ffe4af;background:#534638;border-color:#e9bf84}
+.lobby-online-setup{margin-top:20px;scroll-margin-top:15px}.lobby-online-setup[hidden]{display:none!important}
+.lobby-online-setup .mp-lobby{margin:0;background:#152a37}.lobby-online-tip{font-size:12px;color:#b4cad0}
+#lobbyMultiMount .mp-lobby-grid label[hidden]{display:none!important}
+@media(max-width:880px){.lobby-unit-layout{grid-template-columns:1fr}}
+@media(max-width:580px){.lobby-unit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.lobby-unit-card{min-height:112px}}
