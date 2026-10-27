@@ -161,7 +161,7 @@ function onSnapshot(v){
 function order(cmd){
  if(!snap||snap.ended)return message('진행 중인 경기가 없습니다.');
  if(cmd.type==='build'&&cmd.role!==null){
-  const me=my();if(me?.buildings?.[cmd.lane]?.[cmd.slot]!==null){message('이미 생산시설이 있습니다. 먼저 철거해야 다른 건물을 지을 수 있습니다.');return;}
+  const me=my();if(me&&me.buildings[cmd.lane][cmd.slot]!==null){message('이미 생산시설이 있습니다. 먼저 철거해야 다른 건물을 지을 수 있습니다.');return;}
  }
  const r=practice?practice.order(myId,cmd):NET.sendOrder(cmd);
  if(!r?.ok)message(r?.reason||'명령 실패');

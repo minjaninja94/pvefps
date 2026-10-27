@@ -251,7 +251,8 @@ function aiChoose(budget=state.enemyCash){
  const myCounts=Array(ROLE.length).fill(0);
  for(const role of state.enemyBuilt)if(role!==null)myCounts[role]++;
  // Mixed heavy/air/healer compositions require two real counter types, not a random counter.
- const tanks=intel.counts[3],air=intel.counts[6],medics=intel.counts[7];
+ const groundVehicle=state.faction===3||state.faction===4;
+ const tanks=intel.counts[3]+(groundVehicle?intel.counts[6]:0),air=groundVehicle?0:intel.counts[6],medics=intel.counts[7];
  if(tanks>=2&&air>=2){
   if(affordable.includes(4)&&myCounts[4]<Math.ceil(air*.9))return 4;
   if(affordable.includes(2)&&myCounts[2]<Math.ceil(tanks*1.05))return 2;
