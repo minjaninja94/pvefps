@@ -241,6 +241,7 @@ function structure(g,x,y,faction,turret,hpRatio=1){
  g.restore();
 }
 function factory(g,x,y,faction,role,active){
+ if(active&&role===8&&global.DesertResourceArt?.draw?.(g,x-26,y-40,56))return;
  g.save();g.translate(x,y);g.imageSmoothingEnabled=false;
  const a=PAL[faction]||PAL[0];
  // Raised industrial pad in protective rear: isometric even when empty.

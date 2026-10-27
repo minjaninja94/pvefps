@@ -37,23 +37,25 @@ function onRoom(v){
  uiButtons();
 }
 function unitIcon(canvas,f,r,size=72){
+ if(r===8){const g=canvas.getContext('2d');if(!g)return;g.clearRect(0,0,size,size);if(global.DesertResourceArt?.draw?.(g,0,0,size))return;g.fillStyle='#efcd80';g.font='bold '+Math.floor(size*.60)+'px sans-serif';g.textAlign='center';g.fillText('⬡',size/2,size*.74);return;}
  const g=canvas.getContext('2d');if(!g)return;g.clearRect(0,0,size,size);
  global.DesertUnitMotion?.draw(g,{faction:f,role:r,action:'idle',frame:0,size,skin:skin()});
 }
 function unitCards(){
- const me=my(),fac=me?.faction??faction(),key=fac+':'+role+':'+skin();
+ const me=my(),fac=me?.faction??faction(),key=fac+':'+role+':'+skin()+':'+(me?.eco||0)+':'+((me?.ecoReadyAt||0)>(snap?.seconds||0))+':'+Math.floor((snap?.seconds||0)/120);
  if(cardsKey!==key){cardsKey=key;const out=$('mpUnitCards');out.replaceChildren();
- for(let i=0;i<8;i++){
-  const d=global.DesertRoster?.getDef(i,fac),b=document.createElement('button');b.type='button';b.dataset.role=i;b.className='mp-unit-card'+(role===i?' active':'');b.setAttribute('aria-pressed',String(role===i));
+ for(let i=0;i<9;i++){
+  const d=i===8?null:global.DesertRoster?.getDef(i,fac),b=document.createElement('button');b.type='button';b.dataset.role=i;b.className='mp-unit-card'+(role===i?' active':'');b.setAttribute('aria-pressed',String(role===i));
   const cv=document.createElement('canvas');cv.width=cv.height=72;unitIcon(cv,fac,i);
-  const name=document.createElement('strong');name.textContent=global.DesertRoster?.FACTIONS[fac]?.units[i]||E.NAMES[i];
-  const cost=document.createElement('small');cost.textContent=E.COST[i]+' CR · '+(d?.kind==='air'?'비행':'지상');
+  const name=document.createElement('strong');name.textContent=i===8?'자원채취 건물':global.DesertRoster?.FACTIONS[fac]?.units[i]||E.NAMES[i];
+  const cost=document.createElement('small');cost.textContent=(i===8?E.ecoPrice(me?.eco||0):E.COST[i])+' CR · '+(i===8?'슬롯 1칸':d?.kind==='air'?'비행':'지상');
+  if(i===8)b.disabled=(me?.eco||0)>=7||(me?.ecoReadyAt||0)>(snap?.seconds||0);
   b.append(cv,name,cost);out.append(b);
  }
- const d=global.DesertRoster?.getDef(role,fac);
- $('mpUnitDetails').textContent=(d?.tips||'')+' · 단축키 1–8 · 유닛 선택 후 빈 슬롯 터치';
+ const d=role===8?null:global.DesertRoster?.getDef(role,fac);
+ $('mpUnitDetails').textContent=(role===8?'자원채취: 인컴 +1 CR / 0.5초. 건설 직후 '+E.ecoStabilize((me?.eco||0)+1,snap?.seconds||0)+'초간 기본·추가 인컴과 웨이브 지원금 중단. 최대 7개.':d?.tips||'')+' · 단축키 1–8 · 유닛 선택 후 빈 슬롯 터치';
  }
- $('mpUnitCards').querySelectorAll('[data-role]').forEach(b=>b.classList.toggle('unaffordable',!!me&&me.cash<E.COST[Number(b.dataset.role)]));
+ $('mpUnitCards').querySelectorAll('[data-role]').forEach(b=>b.classList.toggle('unaffordable',!!me&&me.cash<(Number(b.dataset.role)===8?E.ecoPrice(me.eco):E.COST[Number(b.dataset.role)])));
 }
 function buildGrid(){
  const p=my();if(!p)return;
@@ -169,11 +171,12 @@ function onSnapshot(v){
  const me=my(),side=me?.team??0;
  if(me){
   $('mpMyResources').textContent=me.cash+' CR';
-  $('mpMyIncome').textContent='+'+(1+me.eco)+' / 0.5초';
+  const remaining=Math.max(0,(me.ecoReadyAt||0)-v.seconds);
+  $('mpMyIncome').textContent=remaining>0?'인컴 중단 '+Math.ceil(remaining)+'초':'+'+(1+me.eco)+' / 0.5초';
   $('mpBuiltCount').textContent=me.buildings.reduce((n,bs)=>n+bs.filter(x=>x!==null).length,0)+'개 건설';
-  const cost=Math.round(70*Math.pow(1.36,me.eco));
-  $('mpEco').textContent=me.eco>=7?'최대 경제':'경제 강화 · '+cost+' CR';
-  $('mpEco').disabled=me.eco>=7||me.cash<cost||v.ended;
+  const cost=E.ecoPrice(me.eco);
+  $('mpEco').textContent=me.eco>=7?'채취 건물 7 / 7':'자원채취 건물 · '+cost+' CR';
+  $('mpEco').disabled=me.eco>=7||me.cash<cost||remaining>0||v.ended;
  }
  $('mpWave').textContent='WAVE '+String(v.wave).padStart(2,'0');
  $('mpCountdown').textContent=Math.max(0,v.next).toFixed(1)+'초';
@@ -237,7 +240,7 @@ function init(){
  global.addEventListener?.('desert-real-sprites-ready',()=>{cardsKey='';gridKey='';if(snap){unitCards();buildGrid();}});
  $('mpDemolish').addEventListener('click',()=>{demolish=!demolish;gridKey='';buildGrid();});
  $('mpBuildGrid').addEventListener('click',e=>{const b=e.target.closest('[data-slot]');if(b)order({type:'build',lane,slot:Number(b.dataset.slot),role:demolish?null:role});});
- $('mpEco').addEventListener('click',()=>order({type:'econ'}));
+ $('mpEco').addEventListener('click',()=>{role=8;demolish=false;cardsKey='';unitCards();$('mpUnitCards').scrollIntoView?.({block:'nearest',behavior:'smooth'});});
  $('mpMode').addEventListener('change',()=>{
   const coop=$('mpMode').value==='coop';$('mpSize').querySelector('option[value="1"]').disabled=coop;
   if(coop&&$('mpSize').value==='1')$('mpSize').value='2';

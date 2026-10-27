@@ -87,7 +87,7 @@ function render(){
  renderCovers();
  $('mpFaction').value=String(progress.selectedFaction);$('mpName').value=progress.nickname;
 }
-function show(){delete document.body.dataset.playMode;active=true;$('frontLobby').hidden=false;document.body.classList.add('lobby-active');render();}
+function show(){global.DesertCommandHud?.closeUpgrades?.();delete document.body.dataset.playMode;active=true;$('frontLobby').hidden=false;document.body.classList.add('lobby-active');render();}
 function hide(){active=false;$('frontLobby').hidden=true;document.body.classList.remove('lobby-active');}
 function chooseFaction(i){
  if(!Number.isInteger(i)||i<0||i>=FACTIONS.length)return;
@@ -171,7 +171,7 @@ function openMultiplayer(){
  $('lobbyMultiplayerConfig').scrollIntoView?.({behavior:'smooth',block:'start'});
 }
 function enterMatch(){
- document.body.dataset.playMode='multi';
+ global.DesertCommandHud?.closeUpgrades?.();document.body.dataset.playMode='multi';
  prepare();onlineOpen=false;
  $('lobbyMultiplayerConfig').hidden=true;
  $('startOverlay').classList.add('hidden');

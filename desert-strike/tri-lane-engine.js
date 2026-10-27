@@ -7,7 +7,8 @@
 const LANES=3,WIDTH=3300,HEIGHT=1560,LANE_H=520,COLS=15,ROWS=5,SLOTS=COLS*ROWS;
 const TOWER_HP=1250,TOWER_RANGE=285,TOWER_PERIOD=.34,TOWER_DAMAGE=27,FOG_END_WAVE=6,FOG_WIDTH=770;
 const AGGRO_RADIUS=590,AGGRO_LEASH=740,SUPPORT_RADIUS=615,CONTACT_CELL=64;
-const COST=[65,95,150,205,165,245,205,145], NAMES=['돌격','사격','대장갑','장갑','대공','포격','특수','지원'];
+const EXTRACTOR=8,ecoPrice=level=>Math.round(70*Math.pow(1.36,level)),ecoStabilize=(level,seconds)=>4+2*level+Math.min(6,Math.floor(Math.max(0,seconds)/120));
+const COST=[65,95,150,205,165,245,205,145,70], NAMES=['돌격','사격','대장갑','장갑','대공','포격','특수','지원','자원채취'];
 const BASE=[
  [115,21,1,29,.77,82,false,'ground'],
  [108,17,1,164,.8,60,true,'ground'],
@@ -59,7 +60,7 @@ function create({mode='pvp',size=1,members=[]}={}){
  const players=humans.concat(mode==='coop'?Array.from({length:size},(_,i)=>({uid:'AI_'+i,name:'적 AI '+(i+1),team:1,faction:(i+3)%10,bot:true})):[]);
  const state={mode,size,seconds:0,wave:0,next:24,ended:false,winner:null,
   width:WIDTH,height:HEIGHT,lanes:LANES,
-  cores:Array.from({length:LANES},()=>[2500,2500]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,cash:360,eco:0,buildings:Array.from({length:3},()=>Array(SLOTS).fill(null))})),lanePressure:[.5,.5,.5]};
+  cores:Array.from({length:LANES},()=>[2500,2500]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,cash:360,eco:0,ecoReadyAt:0,mineCosts:{},buildings:Array.from({length:3},()=>Array(SLOTS).fill(null))})),lanePressure:[.5,.5,.5]};
  const byUid=uid=>state.players.find(p=>p.uid===uid);
  function marineRecord(uid,key,amount=1){
   const v=state.marineStatsByUid.get(uid)||{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0};
@@ -86,11 +87,7 @@ function create({mode='pvp',size=1,members=[]}={}){
  function order(uid,data){
   const p=byUid(uid);
   if(!p||p.bot||state.ended||!data||typeof data!=='object')return {ok:false,reason:'조작 권한이 없습니다.'};
-  if(data.type==='econ'){
-   const price=Math.round(70*Math.pow(1.36,p.eco));
-   if(p.eco>=7||p.cash<price)return {ok:false,reason:'경제 강화 자원 부족'};
-   p.cash-=price;p.eco++;return {ok:true};
-  }
+  if(data.type==='econ')return {ok:false,reason:'자원채취 건물을 선택하고 빈 생산 슬롯에 건설하세요.'};
   if(data.type!=='build')return {ok:false,reason:'지원하지 않는 명령'};
   const {lane,slot,role}=data;
   if(!Number.isInteger(lane)||lane<0||lane>=LANES||!Number.isInteger(slot)||slot<0||slot>=SLOTS)return {ok:false,reason:'건설 위치 오류'};
@@ -98,10 +95,14 @@ function create({mode='pvp',size=1,members=[]}={}){
   const old=p.buildings[lane][slot];
   if(old===role)return {ok:false,reason:'이미 같은 생산 시설이 있습니다.'};
   if(old!==null&&role!==null)return {ok:false,reason:'이미 생산시설이 있는 자리입니다. 철거 후 새로 건설하세요.'};
-  const refund=old===null?0:Math.floor(COST[old]*.55);
-  const payment=(role===null?0:COST[role])-refund;
+  if(role===EXTRACTOR&&(p.eco>=7||state.seconds<p.ecoReadyAt))return {ok:false,reason:p.eco>=7?'자원채취 건물은 최대 7개입니다.':'채굴망 안정화 중에는 추가 건설할 수 없습니다.'};
+  const key=lane+'-'+slot;
+  const refund=old===null?0:Math.floor((old===EXTRACTOR?p.mineCosts[key]:COST[old])*.55);
+  const payment=(role===null?0:role===EXTRACTOR?ecoPrice(p.eco):COST[role])-refund;
   if(payment>p.cash)return {ok:false,reason:'자원 부족'};
   p.cash-=payment;p.buildings[lane][slot]=role;
+  if(old===EXTRACTOR){p.eco--;delete p.mineCosts[key];}
+  if(role===EXTRACTOR){p.mineCosts[key]=payment;p.eco++;p.ecoReadyAt=state.seconds+ecoStabilize(p.eco,state.seconds);}
   return {ok:true,cash:p.cash};
  }
  function spawn(p,lane,slot,role){
@@ -145,20 +146,20 @@ function create({mode='pvp',size=1,members=[]}={}){
     bot.buildings[lane][slot]=role;bot.cash-=COST[role];
    }
   }
-  if(state.wave>5&&bot.eco<5&&bot.cash>390){
-   const c=Math.round(70*Math.pow(1.36,bot.eco));
-   if(bot.cash>=c+180){bot.eco++;bot.cash-=c;}
+  if(state.wave>5&&bot.eco<5&&state.seconds>=bot.ecoReadyAt){
+   const c=ecoPrice(bot.eco),lane=bot.buildings.findIndex(slots=>slots.some(x=>x===null));
+   if(lane>=0&&bot.cash>=c+180){const slot=bot.buildings[lane].findIndex(x=>x===null);bot.buildings[lane][slot]=EXTRACTOR;bot.mineCosts[lane+'-'+slot]=c;bot.cash-=c;bot.eco++;bot.ecoReadyAt=state.seconds+ecoStabilize(bot.eco,state.seconds);}
   }
  }
  function wave(){
   state.wave++;state.marineSupports=[];state.marineRecruitCount.clear();state.broodBirthsByUid.clear();
-  for(const p of state.players)p.cash+=24;
+  for(const p of state.players)if(state.seconds>=p.ecoReadyAt)p.cash+=24;
   for(const bot of state.players.filter(p=>p.bot))botPurchase(bot);
   for(let lane=0;lane<LANES;lane++)for(let team=0;team<2;team++){
    let count=state.units.filter(u=>u.lane===lane&&u.team===team&&u.hp>0).length;
    for(const p of state.players)if(p.team===team)for(let slot=0;slot<SLOTS&&count<75;slot++){
     const role=p.buildings[lane][slot];
-    if(role!==null){
+    if(role!==null&&role!==EXTRACTOR){
      spawn(p,lane,slot,role);count++;
      if(p.faction===3&&role===7)for(const t of [1,2])state.marineSupports.push({uid:p.uid,lane,slot,wave:state.wave,due:state.seconds+HUANGLONG_INTERVAL*t});
     }
@@ -407,7 +408,7 @@ function create({mode='pvp',size=1,members=[]}={}){
   dt=clamp(Number(dt)||0,0,.2);state.seconds+=dt;state.next-=dt;
   // Correct fixed income for every *owner*, not pooled by team.
   const before=Math.floor((state.seconds-dt)*2),now=Math.floor(state.seconds*2);
-  if(now>before)for(const p of state.players)p.cash+=(now-before)*(1+p.eco);
+  if(now>before)for(let slice=before+1;slice<=now;slice++)for(const p of state.players)if(slice*.5+1e-6>=p.ecoReadyAt)p.cash+=1+p.eco;
   while(state.next<=0){state.next+=24;wave();}
   deployMarineSupports();
   stepUnits(dt);
@@ -437,12 +438,12 @@ function create({mode='pvp',size=1,members=[]}={}){
    factionTraits:state.players.filter(p=>!viewer||p.team===viewer.team).map(p=>({uid:p.uid,faction:p.faction,births:state.broodBirthsByUid.get(p.uid)||0,totalBirths:state.broodTotalByUid.get(p.uid)||0})),
    marineOps:state.players.filter(p=>p.faction===3&&(!viewer||p.team===viewer.team)).map(p=>({uid:p.uid,team:p.team,...(state.marineStatsByUid.get(p.uid)||{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0}),waveRecruits:state.marineRecruitCount.get(p.uid)||0})),
    players:state.players.map(p=>({uid:p.uid,name:p.name,faction:p.faction,skin:p.skin,team:p.team,bot:p.bot,
-    cash:allied(p)?Math.floor(p.cash):null,eco:allied(p)?p.eco:null,
+    cash:allied(p)?Math.floor(p.cash):null,eco:allied(p)?p.eco:null,ecoReadyAt:allied(p)?p.ecoReadyAt:null,
     buildings:p.buildings.map((slots,lane)=>allied(p)||visible[lane]?slots:Array(SLOTS).fill(null))})),
    units:state.units.filter(u=>!isHidden(u.team,u.lane,u.x)).map(u=>({id:u.id,uid:u.uid,team:u.team,faction:u.faction,skin:u.skin||'default',role:u.role,lane:u.lane,x:Math.round(u.x),y:Math.round(u.y),hp:Math.ceil(u.hp),maxHP:Math.ceil(u.maxHP),conscripted:!!u.conscripted,isHatchling:!!u.isHatchling,frame:Math.floor(u.frame),act:u.hitAge>0?'hit':u.spawnAge<.42?'spawn':u.skillAge>0?'skill':u.attackAge>0?'attack':u.act})),
    effects:state.effects.filter(e=>!isHidden(e.team,e.lane,e.x)).map(e=>({...e,x:Math.round(e.x),y:Math.round(e.y)}))};
  }
  return {state,order,tick,wave,snapshot,definition};
 }
-global.DesertTriEngine=Object.freeze({create,definition,WIDTH,HEIGHT,LANE_H,LANES,COLS,ROWS,SLOTS,COST,NAMES});
+global.DesertTriEngine=Object.freeze({create,definition,WIDTH,HEIGHT,LANE_H,LANES,COLS,ROWS,SLOTS,COST,NAMES,EXTRACTOR,ecoPrice,ecoStabilize});
 })(typeof window==='undefined'?globalThis:window);
