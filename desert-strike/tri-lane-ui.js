@@ -88,10 +88,11 @@ function draw(){
   if(x<-30||x>1130)continue;
   ctx.fillStyle=u.team===0?'#4aa5b088':'#da826b88';
   ctx.beginPath();ctx.ellipse(x,y+3,12,4,0,0,Math.PI*2);ctx.fill();
+  if(u.isHatchling){ctx.strokeStyle='#b5f79a';ctx.lineWidth=1.3;ctx.beginPath();ctx.ellipse(x,y+3,8,3,0,0,Math.PI*2);ctx.stroke();}
   if(u.conscripted){ctx.strokeStyle='#ffd675';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(x,y+6,13,5,0,0,Math.PI*2);ctx.stroke();}
   const frame=((u.frame||0)+Math.floor((performance.now()-lastSnapshotAt)/84))%16;
   const baseAction=['idle','move','attack','siege','death'].includes(u.act)?u.act:'move';
-  const sprite=iso?.frame(u.faction,u.role,baseAction,frame),d=u.role===3||u.role===6?53:46;
+  const sprite=iso?.frame(u.faction,u.role,baseAction,frame),d=(u.role===3||u.role===6?53:46)*(u.isHatchling?.55:1);
   if(sprite){
    ctx.imageSmoothingEnabled=false;
    const filter=global.DesertLobby?.filterForSkin?.(u.skin)||'none';
@@ -109,7 +110,7 @@ function draw(){
  for(const e of snap.effects||[]){
   ctx.strokeStyle=e.kind==='tower'?'#fff0ac':e.kind==='conscript'?'#ffcf55':e.kind==='ginppai'?'#91e2b6':'#f6dba8';
   ctx.lineWidth=e.kind==='tower'?3:2;ctx.beginPath();ctx.ellipse(e.x/3,wy(e.y),e.kind==='huanglong'?28:13,e.kind==='huanglong'?15:6,0,0,Math.PI*2);ctx.stroke();
-  const label={ginppai:'긴빠이 +CR',conscript:'자진입대!',huanglong:'황룡 · 해병수육!',bongo:'오도봉고 돌진!'}[e.kind];
+  const label={ginppai:'긴빠이 +CR',conscript:'자진입대!',huanglong:'황룡 · 해병수육!',bongo:'오도봉고 돌진!',broodling:'공생충 출생!',pollen:'꽃가루 치유'}[e.kind];
   if(label){ctx.fillStyle=e.kind==='huanglong'?'#ffe69b':'#ffe0b0';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText(label,e.x/3,wy(e.y)-23);}
  }
  if(snap.fog?.length){
@@ -156,6 +157,10 @@ function onSnapshot(v){
  }
  $('mpWave').textContent='WAVE '+String(v.wave).padStart(2,'0');
  $('mpCountdown').textContent=Math.max(0,v.next).toFixed(1)+'초';
+ const traitHud=$('mpFactionTraits');
+ if(traitHud){const myTrait=(v.factionTraits||[]).find(x=>x.uid===myId),faction=global.DesertRoster?.FACTIONS?.[me?.faction];
+  traitHud.hidden=!faction||me?.faction===3;
+  if(faction&&me?.faction!==3)traitHud.textContent='◆ '+faction.name+' | '+faction.bonus+(myTrait&&myTrait.faction===1?' · 공생충 '+myTrait.births+'/10 · 누적 '+myTrait.totalBirths+'기':'');}
  const marineHud=$('mpMarineAbilities');
  if(marineHud){const info=(v.marineOps||[]).find(o=>o.uid===myId);marineHud.hidden=!info;
   if(info)marineHud.textContent='★ 해병 특성 | 긴빠이 '+info.loot+'회 (+'+info.lootedCR+' CR) | 자진입대 '+info.recruits+'회 · 이번 웨이브 '+info.waveRecruits+'/2 | 황룡 '+info.huangSpawns+'기 | 오도봉고 '+info.bongoCharges+'회';}

@@ -66,7 +66,7 @@ function create({mode='pvp',size=1,members=[]}={}){
  }
  function broodLay(parent,target,roll=Math.random){
   if(parent.faction!==1||parent.isHatchling||parent.conscripted||parent.role===7||parent.hp<=0
-   ||!target||target.hp<=0||target.team===parent.team)return;
+   ||!target||target.team===parent.team)return;
   const uid=parent.uid,used=state.broodBirthsByUid.get(uid)||0;
   if(used>=BROOD_BIRTH_CAP||state.seconds-(parent.lastBroodBirth??-999)<BROOD_BIRTH_COOLDOWN
    ||state.units.filter(u=>u.hp>0&&u.uid===uid&&u.isHatchling).length>=BROOD_ALIVE_CAP

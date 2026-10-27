@@ -25,7 +25,7 @@ const FACTIONS=[
  {id:'brood',name:'심연군체',tag:'DUSK BROOD',logo:'♜',color:'#b9df8d',bonus:'포자 산란: 공격 시 20% 확률로 체력 1 공생충 출생(웨이브당 8기) · 기동 +12%',mut:{hp:.995,dmg:1,speed:1.12},units:['송곳 발톱','산성 침벌','부식 포자충','거대 갑각수','가시 포자탑','폭식 투석충','비행 포식자','치유 공생충'],slogan:'생체 돌파·기동·포식',secondary:'#344d2b'},
  {id:'astral',name:'성운결사',tag:'ASTRAL ORDER',logo:'✧',color:'#d6b8ff',bonus:'비전 방벽: 10초마다 1회 피격 피해 −18% · 마법 공격/치유 +9%',mut:{hp:.99,dmg:1.09,speed:1},units:['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],slogan:'에너지·보호막·정밀 타격',secondary:'#443257'},
  {id:'marine',name:'해병성채',tag:'MARINE FORTRESS',logo:'★',color:'#dba77c',bonus:'긴빠이·자진입대 · 황룡 8초 간격 3회 투입',mut:{hp:1.09,dmg:1.06,speed:1.01},units:['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],	slogan:'모히칸·붉은 군모·검은 얼굴·해병수육',secondary:'#58412f'},
- {id:'beastkin',name:'월영 수인족',tag:'MOONFANG CLAN',logo:'♞',color:'#f0b4a6',bonus:'근접 피해 +22% · 근접 흡혈 5% · 기동 +14% / 원거리 약화',mut:{hp:1.04,dmg:1,speed:1.06},units:['백랑 검사','여우불 투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],slogan:'늑대귀·여우꼬리·야수 기병·근접 난전',secondary:'#603d46'},
+ {id:'beastkin',name:'월영 수인족',tag:'MOONFANG CLAN',logo:'♞',color:'#f0b4a6',bonus:'근접 피해 +22% · 근접 흡혈 5% · 기동 +14% / 원거리 약화',mut:{hp:1.04,dmg:1,speed:1.06},units:['백랑 검사','여우족 단검투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],slogan:'늑대귀·여우꼬리·야수 기병·근접 난전',secondary:'#603d46'},
  {id:'elf',name:'은월 엘프족',tag:'SILVERWOOD ELVES',logo:'✦',color:'#b2e6cf',bonus:'원거리 사거리 +10% · 12% 확률 정밀 치명타(+25% 피해) / 근접 약화',mut:{hp:.94,dmg:1,speed:.99},units:['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사'],slogan:'긴 귀·은발·장궁·마법 결정·후방 화력',secondary:'#375c52'},
  {id:'furry',name:'야월 퍼리족',tag:'WILDFUR PACK',logo:'♣',color:'#e8c392',bonus:'무리 사냥: 근처 아군 퍼리와 근접 공격 시 피해 +6% · 기동 +7%',mut:{hp:1.02,dmg:1,speed:1.07},units:['늑대 추적자','여우총 사냥꾼','송곳니 분쇄자','곰 털갑옷 수호자','하울 창투사','들소 포격수','알파 늑대 기수','달빛 무리치유사'],slogan:'전신 털·주둥이·갈기·늑대 무리',secondary:'#634634'},
  {id:'robot',name:'크롬 로보족',tag:'CHROME SYNDICATE',logo:'⬡',color:'#83c5fd',bonus:'비전투 나노 수리: 6초 비피격 후 초당 최대 HP 0.2% 회복 · 아군 치료 −30%',mut:{hp:1.06,dmg:1,speed:0.95},units:['블레이드 오토마타','레이저 정찰기','레일 관통병기','티탄 실드 워커','플랙 대공드론','공성 캐논','전술 변형 메카','나노 정비유닛'],slogan:'완전 기계·안드로이드·워커·합금 신체',secondary:'#264e67'},
@@ -55,12 +55,12 @@ function getDef(role,faction){
   good:isBongo||isProwler?[0,7]:r.good,bad:isBongo||isProwler?[2,3]:r.bad,
   tips:isBongo?'오도봉고: 공군 대신 출격하는 지상 돌파 차량. 돌격병 밀집 부대를 들이받아 최대 3명까지 범위 피해. 대장갑에 취약하고 기지 피해는 약합니다.':
   isProwler?'흑표 돌격기수: 공중이 아닌 지상 기병으로 적 전열에 급습합니다. 근접 돌진에 강하지만 대장갑·중장갑에 취약합니다.':
-  isBeast?'수인족: 근접 전투·기동력이 강하지만 후방 사격 화력은 낮습니다. '+r.tips:
-  isElf?'엘프족: 후방 장궁·마법에 강하지만 전위 난전이 취약합니다. '+r.tips:
-  isFurry?'퍼리족: 전신 털과 야성적인 추격으로 근접전에 강합니다. '+r.tips:
-  isRobot?'로보족: 합금 장갑과 정밀사격이 강하지만 수리 효율은 낮습니다. '+r.tips:
-  isOcto?'옥토퍼: 팔완 마법사가 포격·주술에 강합니다. '+r.tips:
-  isFairy?'페어리: 작은 날개와 치유 마법으로 아군을 지원합니다. '+r.tips:
+  isBeast?'수인족: 근접 특화·공격 시 피해 5% 흡혈. 비행기나 마법병종이 없고 원거리 화력은 낮습니다. '+r.tips:
+  isElf?'엘프족: 원거리 공격 12% 확률로 정밀 치명타(+25%). 후방 장궁에 강하지만 근접전은 약합니다. '+r.tips:
+  isFurry?'퍼리족: 근처 동료와 협공하면 근접 피해 +6%. 전신 털과 야성적인 추격으로 근접전에 강합니다. '+r.tips:
+  isRobot?'로보족: 6초간 피격되지 않으면 초당 체력 0.2%를 자동 수리합니다. 아군 치료 효율은 낮습니다. '+r.tips:
+  isOcto?'옥토퍼: 초당 최대 HP의 0.06%를 아주 천천히 재생하며 포격·주술에 강합니다. '+r.tips:
+  isFairy?'페어리: 치료한 아군 근처의 다른 1기에도 치유량 12%를 전달합니다. '+r.tips:
   faction===3&&role===7?'해병수육: 생산 시설마다 매 웨이브 0·8·16초에 순차 3기 출격. 아군 광역 회복 뒤 자신은 소모됩니다.':r.tips};
 }
 function combatDef(u){
@@ -69,7 +69,7 @@ function combatDef(u){
 }
 function broodLay(parent,target,roll=Math.random){
  if(parent.faction!==1||parent.isHatchling||parent.conscripted||parent.role===7||parent.hp<=0
-   ||!target||target.hp<=0||target.side===parent.side||state.broodBirths[parent.side]>=BROOD_BIRTH_CAP
+   ||!target||target.side===parent.side||state.broodBirths[parent.side]>=BROOD_BIRTH_CAP
    ||state.units.filter(v=>v.hp>0&&v.side===parent.side&&v.isHatchling).length>=BROOD_ALIVE_CAP
    ||state.units.filter(v=>v.hp>0&&v.side===parent.side).length>=SIDE_SUPPLY
    ||state.elapsed-(parent.lastBroodBirth??-999)<BROOD_BIRTH_COOLDOWN||roll()>=BROOD_BIRTH_CHANCE)return;
@@ -648,24 +648,25 @@ function fire(u,t=null,baseSide=null){
   pulse(x,y,'#ffdbae',6);
  }else{
   state.shots.push({side:u.side,faction:u.faction,conscripted:!!u.conscripted,source:u.role,x:u.x,y:u.y,tx:x,ty:y,
-   target:t,baseSide,damage:def.damage*(u.side===0?1+.08*state.weapon:1),
+   target:t,baseSide,sourceUnit:u.uid,damage:def.damage*(u.side===0?1+.08*state.weapon:1),
    speed:200+(def.range<200?205:120),blast:def.blast||0,ttl:3.5});
  }
- if(t&&t.hp>0)broodLay(u,t);
+ if(t)broodLay(u,t);
  u.blink=.13;
 }
 function projectileImpact(p){
  const x=p.tx,y=p.ty;
+ const shooter=state.units.find(u=>u.uid===p.sourceUnit)||p;
  pulse(x,y,p.source===4?'#8cebf4':'#ffc88d',p.blast?45:12);
  if(p.baseSide!==null){structureHit(p.baseSide,structureDamage(p.source,p.damage));return;}
  if(p.blast){
   for(const v of state.units)if(v.hp>0&&v.side!==p.side){
    if(getDef(v.role,v.faction).kind==='air'&&!ROLE[p.source].airTarget)continue;
    const d=Math.hypot(v.x-x,v.y-y);
-   if(d<=p.blast+10)damage(v,p.damage*(1-.48*d/(p.blast+10)),p.source,p);
+   if(d<=p.blast+10)damage(v,p.damage*(1-.48*d/(p.blast+10)),p.source,shooter);
   }
  }else if(p.target&&p.target.hp>0&&Math.hypot(p.target.x-x,p.target.y-y)<40){
-  damage(p.target,p.damage,p.source,p);
+  damage(p.target,p.damage,p.source,shooter);
  }
 }
 function tick(dt){

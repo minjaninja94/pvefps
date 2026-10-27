@@ -74,7 +74,7 @@ function render(){
  $('lobbyLevel').textContent='LV. '+l.level;$('lobbyXP').textContent=l.within+' / '+l.needed+' XP';$('lobbyXPFill').style.width=Math.min(100,l.within/l.needed*100)+'%';
  $('lobbyRank').textContent=rank();$('lobbyRecord').textContent='싱글 '+progress.wins+'승 '+progress.losses+'패 · 온라인 '+progress.mpWins+'승 '+progress.mpLosses+'패 · 비공식 훈련 랭크';
  $('lobbyNickname').value=progress.nickname;
- $('lobbyFactionName').textContent=fac.name;$('lobbyFactionTrait').textContent=fac.slogan;
+ $('lobbyFactionName').textContent=fac.name;$('lobbyFactionTrait').textContent=fac.bonus+' · '+fac.slogan;
  const img=$('lobbyHeroArt');if(img){img.hidden=progress.selectedFaction<4;img.src=progress.selectedFaction<4?'':'./assets/portraits/'+fac.id+'.svg';}
  $('lobbyHero').classList.toggle('faction-portrait-active',progress.selectedFaction>=4);
  $('lobbyFactions').innerHTML=FACTIONS.map((f,i)=>'<button class="lobby-faction'+(i===progress.selectedFaction?' selected':'')+'" data-faction="'+i+'" style="--fac:'+f.color+'"><span class="lobby-icon">'+f.logo+'</span>'+(i>=4?'<img class="lobby-faction-art" src="./assets/portraits/'+f.id+'.svg" alt="">':'<canvas width="72" height="72" data-portrait="'+i+'"></canvas>')+'<strong>'+f.name+'</strong><small>'+f.tag+'</small></button>').join('');
