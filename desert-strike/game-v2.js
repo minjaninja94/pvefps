@@ -39,30 +39,48 @@ let audio=null,bannerSeconds=0,barrageSeconds=0,stamp=0;
 function clamp(n,a,b){return Math.min(b,Math.max(a,n));}
 function random(a,b){return a+Math.random()*(b-a);}
 function money(n){return Math.floor(n).toLocaleString('ko-KR');}
+const BASIC_GUIDES=[
+'지상 돌격. 적 사격병과 포격병에게 빠르게 접근합니다. 장갑병에는 약합니다.',
+'원거리 사격. 뒤에서 공격하고 비행 유닛도 공격합니다.',
+'대장갑 무기. 전차와 중장갑을 파괴합니다. 근접병에게 약합니다.',
+'지상 중장갑. 앞에서 피해를 받아 아군을 보호합니다. 대장갑에 약합니다.',
+'대공 사격. 비행 유닛을 우선 공격합니다.',
+'장거리 광역 포격. 뭉친 지상 적에 강하지만 근접전에 약합니다.',
+'비행 유닛. 적 근접 공격을 피하지만 대공 무기에 약합니다.',
+'지원병. 부상한 아군을 치료합니다. 적 돌격병에 약합니다.'
+];
+const SPECIAL_GUIDES={
+'3-3':'황근출. 지상 중장갑 도끼 전사로 전열을 지킵니다.',
+'3-6':'오도봉고. 지상 돌격 차량. 최대 3명의 지상 적을 충돌 공격하며 대장갑에 약합니다.',
+'3-7':'황룡. 매 웨이브 0·8·16초에 출격해 주변 아군을 한 번 크게 치료합니다.',
+'4-6':'흑표 돌격기수. 지상 기병. 빠른 돌진으로 적 최대 3명을 공격하며 대장갑에 약합니다.',
+'6-6':'알파 늑대 기수. 지상 야수 기병. 빠르게 접근해 적 후방을 압박합니다.',
+'7-6':'전술 변형 메카. 비행하지 않는 지상 중장갑. 지상·공중을 원거리 공격합니다.',
+'8-5':'심연 의식술사. 넓은 범위의 주술 공격으로 지상 적을 공격합니다.',
+'8-6':'마력 비행수. 공중 생명체. 대공 공격에 약합니다.',
+'9-6':'별빛 나비정령. 공중 정령. 대공 공격에 약합니다.',
+'9-7':'꽃샘 치유사. 아군을 치료하며 가끔 주위 아군 한 명을 추가 회복합니다.'
+};
+function unitGuide(faction,role){return SPECIAL_GUIDES[faction+'-'+role]||BASIC_GUIDES[role];}
 function getDef(role,faction){
  const r=ROLE[role],f=FACTIONS[faction];
  const isBongo=faction===3&&role===6;
+ const groundSpecial=role===6&&[3,4,6,7].includes(faction);
  const isBeast=faction===4,isElf=faction===5,isFurry=faction===6,isRobot=faction===7,isOcto=faction===8,isFairy=faction===9,isProwler=isBeast&&role===6;
  const melee=(isBeast||isFurry)&&(role===0||role===3||role===6);
  const rangeBoost=isElf&&[1,2,4,5,6].includes(role);
- return {...r,unitName:f.units[role],factionName:f.name,name:isBongo?'차량':isProwler?'기병':r.name,mark:isBongo?'▰':isProwler?'♞':r.mark,
+ return {...r,unitName:f.units[role],factionName:f.name,name:isBongo?'돌격 차량':isProwler?'돌격 기병':groundSpecial&&faction===6?'늑대 기병':groundSpecial&&faction===7?'지상 메카':r.name,mark:isBongo?'▰':isProwler?'♞':groundSpecial&&faction===6?'♞':groundSpecial&&faction===7?'⬡':r.mark,
   hp:isBongo?565:r.hp*f.mut.hp*2.25*(isElf&&role===0?.88:isBeast&&role===3?1.05:1),
   damage:isBongo?36:isProwler?33:r.damage*f.mut.dmg*.94*(isBeast?(melee?1.08:.83):isElf?(rangeBoost?1.045:role===0?.84:1):isFurry?(melee?1.10:.93):isRobot&&[1,2,4,5].includes(role)?1.08:isOcto&&[2,4,5].includes(role)?1.16:1),
   heal:(r.heal||0)*f.mut.dmg*1.5*(isRobot?.85:isFairy?.90:1),blast:(r.blast||0)*(isOcto?1.15:1),speed:isBongo?77:isProwler?90:r.speed*f.mut.speed*.84*(melee?1.05:1),
-  kind:isBongo||isProwler?'ground':r.kind,armor:isBongo?7:isProwler?3:r.armor,
+  kind:groundSpecial?'ground':r.kind,armor:isBongo?7:isProwler?3:groundSpecial&&faction===7?5:r.armor,
   range:isBongo?43:isProwler?40:r.range*(rangeBoost?1.10:isRobot&&[1,2,4,5].includes(role)?1.04:1),
   rate:isBongo?1.45:isProwler?.95:r.rate,
-  airTarget:isBongo||isProwler?false:r.airTarget,
-  good:isBongo||isProwler?[0,7]:r.good,bad:isBongo||isProwler?[2,3]:r.bad,
-  tips:isBongo?'오도봉고: 공군 대신 출격하는 지상 돌파 차량. 돌격병 밀집 부대를 들이받아 최대 3명까지 범위 피해. 대장갑에 취약하고 기지 피해는 약합니다.':
-  isProwler?'흑표 돌격기수: 공중이 아닌 지상 기병으로 적 전열에 급습합니다. 근접 돌진에 강하지만 대장갑·중장갑에 취약합니다.':
-  isBeast?'수인족: 근접 공격 +8%, 실피해 1.5% 흡혈(최대 3HP). 비행기·마법병종 없이 근거리 난전 특화. '+r.tips:
-  isElf?'엘프족: 원거리 공격 12% 확률로 정밀 치명타(+25%). 후방 장궁에 강하지만 근접전은 약합니다. '+r.tips:
-  isFurry?'퍼리족: 근처 동료와 협공하면 근접 피해 +6%. 전신 털과 야성적인 추격으로 근접전에 강합니다. '+r.tips:
-  isRobot?'로보족: 교전 중에도 초당 체력 0.15% 자체수리, 정밀사격 +8%. 피격 방벽은 성운결사만 보유합니다. '+r.tips:
-  isOcto?'옥토퍼: 초당 최대 HP 0.06% 미세 재생. 주술 공격 5초마다 먹물 침식(2.5초 둔화·약화). '+r.tips:
-  isFairy?'페어리: 치료량 10% 감소, 5초마다 다른 아군 1기에게 치료량의 3% 연쇄치유. '+r.tips:
-  faction===3&&role===7?'해병수육: 생산 시설마다 매 웨이브 0·8·16초에 순차 3기 출격. 아군 광역 회복 뒤 자신은 소모됩니다.':r.tips};
+  airTarget:groundSpecial&&faction!==7?false:r.airTarget,
+  good:isBongo||isProwler?[0,7]:groundSpecial&&faction===6?[0,7]:groundSpecial&&faction===7?[0,3]:r.good,bad:isBongo||isProwler?[2,3]:groundSpecial&&faction===6?[2,3]:groundSpecial&&faction===7?[2,5]:r.bad,
+  tips:unitGuide(faction,role),
+  unitType:groundSpecial?'ground-special':r.kind
+};
 }
 function combatDef(u){
  const d=getDef(u.role,u.faction);
@@ -260,7 +278,7 @@ function aiReadOpponent(){
  return {counts,total:sum,dominant,major};
 }
 function aiCountersFor(role){
- if(role===6&&(state.faction===3||state.faction===4))return [2,3]; // Player Marine truck is ground armor, not aircraft.
+ if(role===6&&([3,4,6,7].includes(state.faction)))return [2,3]; // Player Marine truck is ground armor, not aircraft.
  if(role===0&&(state.enemyFaction===3||state.enemyFaction===4))return [1,3,6]; // Marines field an Odo Bongo rather than a flier.
  if(role===3&&(state.enemyFaction===3||state.enemyFaction===4))return [2]; // Odo Bongo cannot counter heavy tanks; use actual armor breakers.
  return AI_COUNTER_ROLES[role];
@@ -272,7 +290,7 @@ function aiChoose(budget=state.enemyCash){
  const myCounts=Array(ROLE.length).fill(0);
  for(const role of state.enemyBuilt)if(role!==null)myCounts[role]++;
  // Mixed heavy/air/healer compositions require two real counter types, not a random counter.
- const groundVehicle=state.faction===3||state.faction===4;
+ const groundVehicle=[3,4,6,7].includes(state.faction);
  const tanks=intel.counts[3]+(groundVehicle?intel.counts[6]:0),air=groundVehicle?0:intel.counts[6],medics=intel.counts[7];
  if(tanks>=2&&air>=2){
   if(affordable.includes(4)&&myCounts[4]<Math.ceil(air*.9))return 4;
@@ -349,9 +367,9 @@ function aiInvest(){
  // Spend normal starting income on a genuine early offensive army to punish pure eco greed.
  const opening=Math.min(12,4+Math.floor(Math.max(0,state.wave-1)*1.2));
  // Keep pace with a committed enemy production build, but not by spawning free units.
- const isAirRush=heavyRush&&intel.dominant===6&&state.faction!==3&&state.faction!==4;
+ const isAirRush=heavyRush&&intel.dominant===6&&![3,4,6,7].includes(state.faction);
  const isTankRush=heavyRush&&intel.dominant===3;
- const isTruckRush=heavyRush&&intel.dominant===6&&(state.faction===3||state.faction===4);
+ const isTruckRush=heavyRush&&intel.dominant===6&&([3,4,6,7].includes(state.faction));
  // Single-unit spam has little tactical flexibility. Counter it by investing earned credits
  // in a stronger specialist army rather than hoarding cash at a same-size facility cap.
  const focusMultiplier=isAirRush?1.6:isTankRush?1.45:isTruckRush?1.4:heavyRush?1.05:.85;

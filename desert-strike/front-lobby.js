@@ -28,8 +28,8 @@ function stateChange(){save();render();if(uid)void syncProfile();}
 function updateUnitInfo(){
  const i=progress.selectedFaction,r=selectedUnit,fac=FACTIONS[i],unit=global.DesertRoster?.getDef?.(r,i);
  if(!fac||!unit)return;
- $('lobbyUnitTitle').textContent=fac.units[r]+' · '+(global.DesertRoster?.ROLE?.[r]?.name||'');
- $('lobbyUnitStats').textContent='HP '+Math.round(unit.hp)+' · 공격 '+Math.round(unit.damage)+' · 치료 '+Math.round(unit.heal||0)+' · 사거리 '+Math.round(unit.range)+' · 속도 '+Math.round(unit.speed)+' · '+(unit.airTarget?'대공 가능':'지상 공격')+' · '+(unit.tips||'');
+ $('lobbyUnitTitle').textContent=fac.units[r]+' · '+unit.name;
+ $('lobbyUnitStats').textContent='HP '+Math.round(unit.hp)+' · 공격 '+Math.round(unit.damage)+' · 치료 '+Math.round(unit.heal||0)+' · 사거리 '+Math.round(unit.range)+' · 속도 '+Math.round(unit.speed)+' · '+(unit.kind==='air'?'비행':unit.name.includes('기병')?'지상 기병':unit.name.includes('차량')?'지상 차량':unit.name.includes('메카')?'지상 메카':'지상')+(unit.airTarget?' · 대공 가능':'')+' · '+(unit.tips||'');
  $('lobbyUnitAnimBadge').textContent=global.DesertUnitMotion?.ACTIONS.find(a=>a.id===selectedAction)?.label||'대기';
  $('lobbyUnitActions').querySelectorAll('[data-action]').forEach(btn=>btn.classList.toggle('active',btn.dataset.action===selectedAction));
 }
@@ -37,7 +37,7 @@ function renderUnitGallery(){
  const f=FACTIONS[progress.selectedFaction];
  if(!f||!$('lobbyUnitGrid'))return;
  const R=global.DesertRoster;
- $('lobbyUnitGrid').innerHTML=f.units.map((name,i)=>'<button type="button" class="lobby-unit-card'+(selectedUnit===i?' selected':'')+'" data-unit="'+i+'"><canvas width="72" height="72" data-motion-role="'+i+'" aria-label="'+name+' 이동 애니메이션"></canvas><strong>'+name+'</strong><small>'+(R.ROLE[i]?.name||'')+'</small></button>').join('');
+ $('lobbyUnitGrid').innerHTML=f.units.map((name,i)=>'<button type="button" class="lobby-unit-card'+(selectedUnit===i?' selected':'')+'" data-unit="'+i+'"><canvas width="72" height="72" data-motion-role="'+i+'" aria-label="'+name+' 이동 애니메이션"></canvas><strong>'+name+'</strong><small>'+(R.getDef?.(i,progress.selectedFaction)?.name||'')+'</small></button>').join('');
  updateUnitInfo();
 }
 function drawUnitAnimations(ts){

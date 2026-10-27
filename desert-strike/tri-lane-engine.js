@@ -29,20 +29,20 @@ function definition(faction,role){
  const shared=global.DesertRoster?.getDef;
  if(typeof shared==='function')return shared(role,faction);
  const t=BASE[role],mut=[[1.055,1,.96],[.995,1,1.12],[.99,1.09,1],[1.09,1.06,1.01],[1,1,1.02],[.94,1,.99],[1.02,1,1.07],[1.07,1,.99],[.99,1,1.01],[.84,1,1.01]][faction]||[1,1,1];
- const beast=faction===4,elf=faction===5,furry=faction===6,robot=faction===7,octo=faction===8,fairy=faction===9,bongo=faction===3&&role===6,prowler=beast&&role===6;
+ const beast=faction===4,elf=faction===5,furry=faction===6,robot=faction===7,octo=faction===8,fairy=faction===9,bongo=faction===3&&role===6,prowler=beast&&role===6,groundSpecial=role===6&&[3,4,6,7].includes(faction);
  const melee=(beast||furry)&&[0,3,6].includes(role),ranged=elf&&[1,2,4,5,6].includes(role);
  return {
   hp:bongo?565:t[0]*2.25*mut[0]*(elf&&role===0?.88:beast&&role===3?1.05:1),
   damage:bongo?36:prowler?33:t[1]*.94*mut[1]*(beast?(melee?1.08:.83):elf?(ranged?1.045:role===0?.84:1):furry?(melee?1.10:.93):robot&&[1,2,4,5].includes(role)?1.08:octo&&[2,4,5].includes(role)?1.16:1),
-  armor:bongo?7:prowler?3:t[2],
+  armor:bongo?7:prowler?3:groundSpecial&&robot?5:t[2],
   range:bongo?43:prowler?40:t[3]*(ranged?1.10:robot&&[1,2,4,5].includes(role)?1.04:1),
   rate:bongo?1.45:prowler?.95:t[4],
   speed:bongo?77:prowler?90:t[5]*mut[2]*.84*(melee?1.05:1),
-  airTarget:bongo||prowler?false:t[6],
-  kind:bongo||prowler?'ground':t[7],
+  airTarget:groundSpecial&&!robot?false:t[6],
+  kind:groundSpecial?'ground':t[7],
   heal:(role===7?36:0)*mut[1]*1.5*(robot?.85:fairy?.90:1),
   blast:role===5?(octo?58*1.15:58):0,
-  good:bongo||prowler?[0,7]:GOODS[role],bad:bongo||prowler?[2,3]:BADS[role]
+  good:bongo||prowler?[0,7]:groundSpecial&&furry?[0,7]:groundSpecial&&robot?[0,3]:GOODS[role],bad:bongo||prowler?[2,3]:groundSpecial&&furry?[2,3]:groundSpecial&&robot?[2,5]:BADS[role]
  };
 }
 function combatDef(u){
@@ -120,7 +120,7 @@ function create({mode='pvp',size=1,members=[]}={}){
     &&(u.x>=WIDTH*.56||ours.some(s=>Math.hypot(s.x-u.x,s.y-u.y)<340)))counts[u.role]++;
   const known=counts.reduce((a,b)=>a+b,0);
   if(!known)return bot.buildings[lane].filter(x=>x!==null).length%3===0?0:1;
-  const air=state.units.filter(u=>u.hp>0&&u.team===0&&u.lane===lane&&u.role===6&&u.faction!==3&&u.faction!==4).length;
+  const air=state.units.filter(u=>u.hp>0&&u.team===0&&u.lane===lane&&u.role===6&&![3,4,6,7].includes(u.faction)).length;
   const tanks=counts[3],healers=counts[7];
   const mine=role=>bot.buildings[lane].filter(x=>x===role).length;
   if(air>=2&&mine(4)<Math.ceil(air*.85))return 4;
