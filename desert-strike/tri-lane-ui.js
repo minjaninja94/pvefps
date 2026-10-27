@@ -72,6 +72,10 @@ function draw(){
    ctx.fillStyle=side===0?'#85e2df':'#e8977d';ctx.fillRect(x,top+245,22,54);
    ctx.fillStyle='#101c27';ctx.fillRect(x,top+238,22,6);
    ctx.fillStyle=side===0?'#85e2df':'#e8977d';ctx.fillRect(x,top+238,22*snap.cores[l][side]/2500,6);
+   const tx=side===0?42:1036;
+   ctx.fillStyle=side===0?'#358d88':'#c4715e';ctx.fillRect(tx,top+246,13,41);
+   ctx.fillStyle='#111d27';ctx.fillRect(tx,top+241,13,4);
+   ctx.fillStyle='#f5cb91';ctx.fillRect(tx,top+241,13*(snap.turrets?.[l]?.[side]??0)/1250,4);
   }
   const units=snap.units.filter(u=>u.lane===l).sort((a,b)=>a.y-b.y);
   for(const u of units){
@@ -90,6 +94,12 @@ function draw(){
   for(const e of snap.effects||[])if(e.lane===l){
    ctx.strokeStyle=e.kind==='conscript'?'#ffcf55':e.kind==='ginppai'?'#91e2b6':'#ffdf9b';ctx.lineWidth=e.kind==='conscript'?3:2;
    ctx.beginPath();ctx.ellipse(e.x/3,top+28+(e.y-l*520)/520*446,11,4,0,0,7);ctx.stroke();
+  }
+  if(snap.fog?.[l]){
+   const x=snap.viewerTeam===0?((3300-770)/3):0;
+   ctx.fillStyle='#081521e9';ctx.fillRect(x,top,770/3,510);
+   ctx.fillStyle='#b6cecf';ctx.font='bold 12px monospace';ctx.textAlign='center';
+   ctx.fillText('정찰 전 · 적 기지 미확인',x+770/6,top+160);
   }
   const p=snap.lanePressure[l]??.5;
   ctx.fillStyle='#8adecf';ctx.fillRect(0,top+510,1100*p,9);
@@ -111,6 +121,7 @@ function drawOverview(){
   for(const u of snap.units)if(u.lane===l){
    g.fillStyle=u.team===0?'#86dedc':'#f5a28a';g.fillRect(u.x/3,y+8,3,9);
   }
+  if(snap.fog?.[l]){g.fillStyle='#071521e9';g.fillRect(snap.viewerTeam===0?1100-770/3:0,y,770/3,29);}
   if(l===lane){g.strokeStyle='#efcc9d';g.strokeRect(1,y+1,1098,28);}
  }
 }

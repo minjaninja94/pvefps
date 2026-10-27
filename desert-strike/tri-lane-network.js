@@ -134,7 +134,7 @@ function handleChannel(guest,ch){
  ch.onopen=()=>{
   hostPeerOpen.add(guest);status('실시간 연결: '+hostPeerOpen.size+'명');
   notify('peers',new Set(hostPeerOpen));
-  if(host&&engine)send(ch,{type:'snapshot',state:engine.snapshot()});
+  if(host&&engine)send(ch,{type:'snapshot',state:engine.snapshot(guest)});
  };
  ch.onclose=()=>{hostPeerOpen.delete(guest);notify('peers',new Set(hostPeerOpen));status('연결 종료: '+guest.slice(0,6));};
  ch.onerror=()=>status('P2P 연결 오류. 일부 네트워크는 TURN 릴레이 없이는 연결되지 않습니다.');
@@ -183,9 +183,8 @@ function broadcast(force=false){
  const now=performance.now();
  if(!force&&now-lastFrame<200)return;
  lastFrame=now;
- const pkt={type:'snapshot',state:engine.snapshot()};
- for(const ch of channels.values())send(ch,pkt);
- notify('snapshot',pkt.state);
+ for(const [guest,ch] of channels)send(ch,{type:'snapshot',state:engine.snapshot(guest)});
+ notify('snapshot',engine.snapshot(uid));
 }
 async function start(){
  if(!host||!room)throw Error('방장만 경기를 시작할 수 있습니다.');

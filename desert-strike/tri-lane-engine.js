@@ -5,6 +5,7 @@
 (function(global){
 'use strict';
 const LANES=3,WIDTH=3300,HEIGHT=1560,LANE_H=520,COLS=15,ROWS=5,SLOTS=COLS*ROWS;
+const TOWER_HP=1250,TOWER_RANGE=285,TOWER_PERIOD=.34,TOWER_DAMAGE=27,FOG_END_WAVE=6,FOG_WIDTH=770;
 const COST=[65,95,150,205,165,245,205,145], NAMES=['돌격','사격','대장갑','장갑','대공','포격','특수','지원'];
 const BASE=[
  [115,21,1,29,.77,82,false,'ground'],
@@ -50,7 +51,7 @@ function create({mode='pvp',size=1,members=[]}={}){
  const players=humans.concat(mode==='coop'?Array.from({length:size},(_,i)=>({uid:'AI_'+i,name:'적 AI '+(i+1),team:1,faction:(i+3)%9,bot:true})):[]);
  const state={mode,size,seconds:0,wave:0,next:24,ended:false,winner:null,
   width:WIDTH,height:HEIGHT,lanes:LANES,
-  cores:Array.from({length:LANES},()=>[2500,2500]),units:[],effects:[],nextUnit:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0},players:players.map(p=>({...p,cash:360,eco:0,buildings:Array.from({length:3},()=>Array(SLOTS).fill(null))})),lanePressure:[.5,.5,.5]};
+  cores:Array.from({length:LANES},()=>[2500,2500]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0},players:players.map(p=>({...p,cash:360,eco:0,buildings:Array.from({length:3},()=>Array(SLOTS).fill(null))})),lanePressure:[.5,.5,.5]};
  const byUid=uid=>state.players.find(p=>p.uid===uid);
  function order(uid,data){
   const p=byUid(uid);
@@ -82,30 +83,40 @@ function create({mode='pvp',size=1,members=[]}={}){
     radius,frame:Math.floor(Math.random()*16),act:'move',attackAge:0});
  }
  function selectCounter(lane,bot){
-  const counts=Array(8).fill(0), foes=state.players.filter(p=>p.team===0);
-  for(const p of foes)for(const x of p.buildings[lane])if(x!==null)counts[x]++;
+  // Observed frontline units only: AI must not inspect unscouted human facilities.
+  const counts=Array(8).fill(0),ours=state.units.filter(u=>u.hp>0&&u.team===1&&u.lane===lane);
+  for(const u of state.units)if(u.hp>0&&u.team===0&&u.lane===lane
+    &&(u.x>=WIDTH*.56||ours.some(s=>Math.hypot(s.x-u.x,s.y-u.y)<340)))counts[u.role]++;
+  const known=counts.reduce((a,b)=>a+b,0);
+  if(!known)return bot.buildings[lane].filter(x=>x!==null).length%3===0?0:1;
+  const air=state.units.filter(u=>u.hp>0&&u.team===0&&u.lane===lane&&u.role===6&&u.faction!==3&&u.faction!==4).length;
+  const tanks=counts[3],healers=counts[7];
+  const mine=role=>bot.buildings[lane].filter(x=>x===role).length;
+  if(air>=2&&mine(4)<Math.ceil(air*.85))return 4;
+  if(tanks>=2&&mine(2)<Math.ceil(tanks*.95))return 2;
+  if(healers>=2&&tanks>=1&&mine(5)<2)return 5;
   const major=counts.indexOf(Math.max(...counts));
-  // Role 6 is a ground truck/cavalry for these factions, not an aircraft.
-  if(major===6&&foes.some(p=>(p.faction===3||p.faction===4)&&p.buildings[lane].includes(6)))return 2;
-  // Marine trucks and beast cavalry can answer a sufficiently large melee swarm.
+  if(major===6&&state.units.some(u=>u.lane===lane&&u.team===0&&u.role===6&&(u.faction===3||u.faction===4)))return 2;
   if(major===0&&counts[0]>=3&&(bot.faction===3||bot.faction===4)&&bot.cash>=COST[6])return 6;
-  const preferred=[[1,6,3],[3,5],[0,1],[2,6],[2,3],[0,6],[4,1],[0,5]][major];
-  return preferred[0];
+  return [[1,6,3],[3,5],[0,1],[2,6],[2,3],[0,6],[4,1],[0,5]][major][0];
  }
  function botPurchase(bot){
+  // A paid early army deters players from investing everything in economy.
   for(let lane=0;lane<3;lane++){
    const existing=bot.buildings[lane].filter(x=>x!==null).length;
-   const enemy=state.players.filter(p=>p.team===0).reduce((sum,p)=>sum+p.buildings[lane].filter(x=>x!==null).length,0);
-   const desired=Math.max(1,Math.min(18,Math.ceil(enemy/size*1.05)));
-   if(existing>=desired)continue;
-   let role=selectCounter(lane,bot);
-   if(bot.cash<COST[role])role=1;
-   if(bot.cash<COST[role])continue;
-   const slot=bot.buildings[lane].findIndex(x=>x===null);
-   if(slot>=0){bot.buildings[lane][slot]=role;bot.cash-=COST[role];}
+   const desired=Math.min(12,1+Math.floor((state.wave+1)/3)+Math.floor(Math.max(0,state.wave-7)/3));
+   let count=Math.max(0,desired-existing);
+   while(count-->0){
+    let role=selectCounter(lane,bot);
+    if(bot.cash<COST[role])role=bot.cash>=COST[1]?1:0;
+    if(bot.cash<COST[role])break;
+    const slot=bot.buildings[lane].findIndex(x=>x===null);if(slot<0)break;
+    bot.buildings[lane][slot]=role;bot.cash-=COST[role];
+   }
   }
   if(state.wave>5&&bot.eco<5&&bot.cash>390){
-   const c=Math.round(70*Math.pow(1.36,bot.eco));bot.eco++;bot.cash-=c;
+   const c=Math.round(70*Math.pow(1.36,bot.eco));
+   if(bot.cash>=c+180){bot.eco++;bot.cash-=c;}
   }
  }
  function wave(){
@@ -181,7 +192,11 @@ function create({mode='pvp',size=1,members=[]}={}){
      const before=x.hp;x.hp=Math.min(x.maxHP,x.hp+Math.max(135,x.maxHP*.32));healed+=x.hp-before;
     }
     if(healed>0)a.hp=0;
-   }else v.hp=Math.min(v.maxHP,v.hp+(d.heal||36));
+   }else{
+    if(v.healWindowStart===undefined||state.seconds-v.healWindowStart>=1){v.healWindowStart=state.seconds;v.healWindowUsed=0;}
+    const amount=Math.max(0,Math.min(d.heal||36,Math.max(80,v.maxHP*.085)-v.healWindowUsed));
+    v.healWindowUsed+=amount;v.hp=Math.min(v.maxHP,v.hp+amount);
+   }
    return;
   }
   if(a.role===6&&(a.faction===3||a.faction===4)){
@@ -223,11 +238,15 @@ function create({mode='pvp',size=1,members=[]}={}){
      u.x+=dx/len*step;u.y+=dy/len*step;u.act='move';
     }
    }else{
-    const tx=u.team===0?WIDTH-110:110,ty=(u.lane+.5)*LANE_H;
+    const defense=1-u.team,tx=state.turrets[u.lane][defense]>0?(defense===0?215:WIDTH-215):(defense===0?110:WIDTH-110),ty=(u.lane+.5)*LANE_H;
     const dist=Math.hypot(tx-u.x,ty-u.y);
     if(dist>Math.max(48,d.range*.85)){
      const sp=Math.min(d.speed*dt,dist);u.x+=(tx-u.x)/dist*sp;u.y+=(ty-u.y)/dist*sp;u.act='move';
-    }else if(u.cool<=0){state.cores[u.lane][1-u.team]=Math.max(0,state.cores[u.lane][1-u.team]-d.damage*([.52,.88,1.12,1.08,.82,1.55,.87,.4][u.role]||1));u.cool=d.rate;u.act='attack';u.attackAge=.28;}
+    }else if(u.cool<=0){
+     const hit=d.damage*([.52,.88,1.12,1.08,.82,1.55,.87,.4][u.role]||1);
+     if(state.turrets[u.lane][defense]>0)state.turrets[u.lane][defense]=Math.max(0,state.turrets[u.lane][defense]-hit);
+     else state.cores[u.lane][defense]=Math.max(0,state.cores[u.lane][defense]-hit);
+     u.cool=d.rate;u.act='attack';u.attackAge=.28;}
    }
    u.x=clamp(u.x,35,WIDTH-35);
    u.y=clamp(u.y,u.lane*LANE_H+80,(u.lane+1)*LANE_H-80);
@@ -248,6 +267,21 @@ function create({mode='pvp',size=1,members=[]}={}){
     const push=Math.min(16,(min-d)*.47);
     u.x-=dx/d*push;u.y-=dy/d*push;v.x+=dx/d*push;v.y+=dy/d*push;
    }
+  }
+  // Independent anti-snowball towers in all three lanes for both teams.
+  for(let lane=0;lane<LANES;lane++)for(let team=0;team<2;team++){
+   if(state.turrets[lane][team]<=0)continue;
+   const x=team===0?215:WIDTH-215,y=(lane+.5)*LANE_H;
+   state.towerCooldown[lane][team]=Math.max(0,state.towerCooldown[lane][team]-dt);
+   if(state.towerCooldown[lane][team]>0)continue;
+   const hostile=state.units.filter(u=>u.hp>0&&u.team!==team&&u.lane===lane&&Math.hypot(u.x-x,u.y-y)<=TOWER_RANGE);
+   if(!hostile.length)continue;
+   hostile.sort((a,b)=>(Math.hypot(a.x-x,a.y-y)*.55+a.hp/a.maxHP*42-(a.role===7?35:0))
+    -(Math.hypot(b.x-x,b.y-y)*.55+b.hp/b.maxHP*42-(b.role===7?35:0)));
+   const v=hostile[0],f=definition(v.faction,v.role),dmg=TOWER_DAMAGE*(f.kind==='air'?1.25:v.role===3?1.12:1);
+   v.hp-=Math.max(3,dmg-f.armor*.66);
+   state.towerCooldown[lane][team]=TOWER_PERIOD;
+   state.effects.push({x:v.x,y:v.y,lane,kind:'tower',time:.16,team});
   }
   state.units=state.units.filter(u=>u.hp>0);
   for(const e of state.effects)e.time-=dt;
@@ -275,14 +309,29 @@ function create({mode='pvp',size=1,members=[]}={}){
    state.ended=true;state.winner=scores[0]===scores[1]?null:scores[0]>scores[1]?0:1;
   }
  }
- function snapshot(){
-  // One compact, sanitized authoritative packet per 200–350ms. Never trusts client state.
+ function snapshot(viewerUid=null){
+  // Host keeps full state internally. Guest packets are redacted per viewer, not
+  // cosmetically hidden in Canvas (which would still leak their buildings via WebRTC).
+  const viewer=viewerUid===null?null:byUid(viewerUid);
+  const seen=(lane)=>{
+   if(!viewer||state.wave>=FOG_END_WAVE)return true;
+   const enemySide=1-viewer.team;
+   return state.units.some(u=>u.hp>0&&u.team===viewer.team&&u.lane===lane
+    &&(enemySide===1?u.x>=WIDTH-FOG_WIDTH-220:u.x<=FOG_WIDTH+220));
+  };
+  const visible=Array.from({length:LANES},(_,lane)=>seen(lane));
+  const isHidden=(team,lane,x)=>viewer&&team!==viewer.team&&!visible[lane]
+   &&(viewer.team===0?x>=WIDTH-FOG_WIDTH:x<=FOG_WIDTH);
+  const allied=p=>!viewer||p.team===viewer.team;
+  const isAllowed=p=>!viewer||p.team===viewer.team||visible.every(Boolean);
   return {mode:state.mode,size:state.size,width:WIDTH,height:HEIGHT,seconds:Math.round(state.seconds*10)/10,wave:state.wave,next:Math.ceil(state.next*10)/10,
-   ended:state.ended,winner:state.winner,cores:state.cores,lanePressure:state.lanePressure.map(x=>Math.round(x*100)/100),
-   players:state.players.map(p=>({uid:p.uid,name:p.name,faction:p.faction,skin:p.skin,team:p.team,bot:p.bot,cash:Math.floor(p.cash),eco:p.eco,
-    buildings:p.buildings})),
-   units:state.units.map(u=>({id:u.id,uid:u.uid,team:u.team,faction:u.faction,skin:u.skin||'default',role:u.role,lane:u.lane,x:Math.round(u.x),y:Math.round(u.y),hp:Math.ceil(u.hp),maxHP:Math.ceil(u.maxHP),conscripted:!!u.conscripted,frame:Math.floor(u.frame),act:u.attackAge>0?'attack':u.act})),
-   effects:state.effects.map(e=>({...e,x:Math.round(e.x),y:Math.round(e.y)}))};
+   ended:state.ended,winner:state.winner,cores:state.cores,turrets:state.turrets,lanePressure:state.lanePressure.map(x=>Math.round(x*100)/100),
+   fog:visible.map(s=>!s),viewerTeam:viewer?.team??null,
+   players:state.players.map(p=>({uid:p.uid,name:p.name,faction:p.faction,skin:p.skin,team:p.team,bot:p.bot,
+    cash:allied(p)?Math.floor(p.cash):null,eco:allied(p)?p.eco:null,
+    buildings:p.buildings.map((slots,lane)=>allied(p)||visible[lane]?slots:Array(SLOTS).fill(null))})),
+   units:state.units.filter(u=>!isHidden(u.team,u.lane,u.x)).map(u=>({id:u.id,uid:u.uid,team:u.team,faction:u.faction,skin:u.skin||'default',role:u.role,lane:u.lane,x:Math.round(u.x),y:Math.round(u.y),hp:Math.ceil(u.hp),maxHP:Math.ceil(u.maxHP),conscripted:!!u.conscripted,frame:Math.floor(u.frame),act:u.attackAge>0?'attack':u.act})),
+   effects:state.effects.filter(e=>!isHidden(e.team,e.lane,e.x)).map(e=>({...e,x:Math.round(e.x),y:Math.round(e.y)}))};
  }
  return {state,order,tick,wave,snapshot,definition};
 }
