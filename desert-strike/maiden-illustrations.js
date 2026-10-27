@@ -45,6 +45,20 @@
   g.translate(lean, -bounce);
   if(dead){g.translate(36,47);g.rotate(t*.45);g.translate(-36,-47);}
   g.drawImage(tile,f===4?9:7,f===4?7:5,f===4?54:57,f===4?59:62);
+  // Coordinated 2.5D luminous trim and fluttering cape for both illustrated heroine races.
+  const accent=f===4?'#f4b7c4':'#b6f7df',back=f===4?'#86607c':'#607f96';
+  g.globalAlpha=dead?.20:.65;
+  g.strokeStyle=back;g.lineWidth=2;g.beginPath();
+  g.moveTo(20,47);g.quadraticCurveTo(17-Math.sin(rad)*3,52,14-Math.sin(rad)*5,59);g.stroke();
+  g.strokeStyle=accent;g.lineWidth=1;g.beginPath();
+  g.moveTo(20,48);g.quadraticCurveTo(17-Math.sin(rad)*3,52,14-Math.sin(rad)*5,59);g.stroke();
+  if(!dead){
+   g.globalAlpha=.8;g.fillStyle=accent;
+   const glitter=(frame+role*3)%16;
+   g.fillRect(52+Math.sin(rad)*3,11+glitter*.25,2,2);
+   g.fillRect(19-Math.sin(rad)*3,8+(glitter%5),1,2);
+  }
+  g.globalAlpha=dead?Math.max(0,1-t):.97;
   if(attack&&frame>=7&&frame<=10){
    g.globalCompositeOperation='screen';g.fillStyle=f===4?'#f3abb1':'#afeecf';
    g.fillRect(60,12,3,20);g.fillRect(65,18,3,10);

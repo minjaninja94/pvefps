@@ -21,7 +21,12 @@
       const user = auth.currentUser || (await authSDK.signInAnonymously(auth)).user;
       return { ...shared, uid: user.uid };
     })().catch(e => { authPromise = null; throw e; });
-    return authPromise;
+    const cached=await authPromise;
+    // OAuth linking or guest sign-out may change the UID after the first login.
+    // Never reuse a stale UID when creating network rooms.
+    const sdk=await import(SDK + 'firebase-auth.js');
+    const auth=sdk.getAuth(cached.app);await auth.authStateReady();
+    return {...cached,uid:auth.currentUser?.uid||cached.uid};
   }
   function message(e) {
     if (/operation-not-allowed|admin-restricted-operation/.test(e?.code || '')) return 'Firebase에서 익명 로그인을 활성화해야 합니다. MULTIPLAYER_SETUP.md의 1번을 확인해 주세요.';
