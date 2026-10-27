@@ -26,7 +26,8 @@
     // Never reuse a stale UID when creating network rooms.
     const sdk=await import(SDK + 'firebase-auth.js');
     const auth=sdk.getAuth(cached.app);await auth.authStateReady();
-    return {...cached,uid:auth.currentUser?.uid||cached.uid};
+    if(!auth.currentUser)await sdk.signInAnonymously(auth);
+    return {...cached,uid:auth.currentUser.uid};
   }
   function message(e) {
     if (/operation-not-allowed|admin-restricted-operation/.test(e?.code || '')) return 'Firebase에서 익명 로그인을 활성화해야 합니다. MULTIPLAYER_SETUP.md의 1번을 확인해 주세요.';

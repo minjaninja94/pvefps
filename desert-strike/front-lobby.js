@@ -116,7 +116,7 @@ function initialize(){
  $('lobbyFactions').addEventListener('click',e=>{const b=e.target.closest('[data-faction]');if(b)chooseFaction(Number(b.dataset.faction));});
  $('lobbySkins').addEventListener('click',e=>{const b=e.target.closest('[data-skin]');if(b)chooseSkin(b.dataset.skin);});
  $('lobbySolo').addEventListener('click',single);$('lobbyMulti').addEventListener('click',()=>multiplayer(false));$('lobbyPractice').addEventListener('click',()=>multiplayer(true));
- $('backToLobby').addEventListener('click',()=>{if(global.DesertTriNetwork?.current()?.roomId)return alert('온라인 경기에서는 방 나가기 후 로비로 이동해 주세요.');$('restartButton').click();show();});
+ $('backToLobby').addEventListener('click',()=>{if(global.DesertTriNetwork?.current()?.roomId)return alert('온라인 경기에서는 방 나가기 후 로비로 이동해 주세요.');if(!$('mpLeave').disabled)$('mpLeave').click();$('restartButton').click();show();});
  $('lobbySaveName').addEventListener('click',()=>{progress.nickname=safeName($('lobbyNickname').value);stateChange();});
  $('lobbyGoogle').addEventListener('click',google);$('lobbyGuest').addEventListener('click',()=>{void guest();});
  global.addEventListener?.('maiden-art-ready',render);global.addEventListener?.('isometric-art-ready',render);
