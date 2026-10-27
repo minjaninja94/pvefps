@@ -7,7 +7,8 @@ const initialIncome=1,WAVE_STIPEND=24,MAX_ECONOMY=7;
 const TOWER_RANGE=285,TOWER_PERIOD=.31,TOWER_DAMAGE=28,FOG_END_WAVE=6,ENEMY_FOG_X=WORLD_W-770;
 const HEAL_WINDOW=1,HEAL_BUDGET=80;
 const BROOD_BIRTH_CHANCE=.20,BROOD_BIRTH_COOLDOWN=11,BROOD_BIRTH_CAP=8,BROOD_ALIVE_CAP=14;
-const OCTOPER_REGEN=.0006,ROBOT_REPAIR=.002,ROBOT_REPAIR_DELAY=6;
+const OCTOPER_REGEN=.0006,ROBOT_REPAIR=.0015,ROBOT_SHIELD_INTERVAL=5,ROBOT_SHIELD_REDUCTION=.25;
+const INK_DURATION=2.5,INK_COOLDOWN=5;
 // Marine-only logistics. Low-probability transfer + fragile capture, max two recruits each wave.
 const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=1,HUANGLONG_INTERVAL=8;
 const ROLE=[
@@ -25,12 +26,12 @@ const FACTIONS=[
  {id:'brood',name:'심연군체',tag:'DUSK BROOD',logo:'♜',color:'#b9df8d',bonus:'포자 산란: 공격 시 20% 확률로 체력 1 공생충 출생(웨이브당 8기) · 기동 +12%',mut:{hp:.995,dmg:1,speed:1.12},units:['송곳 발톱','산성 침벌','부식 포자충','거대 갑각수','가시 포자탑','폭식 투석충','비행 포식자','치유 공생충'],slogan:'생체 돌파·기동·포식',secondary:'#344d2b'},
  {id:'astral',name:'성운결사',tag:'ASTRAL ORDER',logo:'✧',color:'#d6b8ff',bonus:'비전 방벽: 10초마다 1회 피격 피해 −18% · 마법 공격/치유 +9%',mut:{hp:.99,dmg:1.09,speed:1},units:['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],slogan:'에너지·보호막·정밀 타격',secondary:'#443257'},
  {id:'marine',name:'해병성채',tag:'MARINE FORTRESS',logo:'★',color:'#dba77c',bonus:'긴빠이·자진입대 · 황룡 8초 간격 3회 투입',mut:{hp:1.09,dmg:1.06,speed:1.01},units:['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],	slogan:'모히칸·붉은 군모·검은 얼굴·해병수육',secondary:'#58412f'},
- {id:'beastkin',name:'월영 수인족',tag:'MOONFANG CLAN',logo:'♞',color:'#f0b4a6',bonus:'근접 피해 +22% · 근접 흡혈 5% · 기동 +14% / 원거리 약화',mut:{hp:1.04,dmg:1,speed:1.06},units:['백랑 검사','여우족 단검투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],slogan:'늑대귀·여우꼬리·야수 기병·근접 난전',secondary:'#603d46'},
+ {id:'beastkin',name:'월영 수인족',tag:'MOONFANG CLAN',logo:'♞',color:'#f0b4a6',bonus:'근접 피해 +8% · 근접 흡혈 1.5%(타격당 3HP 상한) · 근접 기동 +5% / 원거리 약화',mut:{hp:1,dmg:1,speed:1.02},units:['백랑 검사','여우족 단검투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],slogan:'늑대귀·여우꼬리·야수 기병·근접 난전',secondary:'#603d46'},
  {id:'elf',name:'은월 엘프족',tag:'SILVERWOOD ELVES',logo:'✦',color:'#b2e6cf',bonus:'원거리 사거리 +10% · 12% 확률 정밀 치명타(+25% 피해) / 근접 약화',mut:{hp:.94,dmg:1,speed:.99},units:['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사'],slogan:'긴 귀·은발·장궁·마법 결정·후방 화력',secondary:'#375c52'},
  {id:'furry',name:'야월 퍼리족',tag:'WILDFUR PACK',logo:'♣',color:'#e8c392',bonus:'무리 사냥: 근처 아군 퍼리와 근접 공격 시 피해 +6% · 기동 +7%',mut:{hp:1.02,dmg:1,speed:1.07},units:['늑대 추적자','여우총 사냥꾼','송곳니 분쇄자','곰 털갑옷 수호자','하울 창투사','들소 포격수','알파 늑대 기수','달빛 무리치유사'],slogan:'전신 털·주둥이·갈기·늑대 무리',secondary:'#634634'},
- {id:'robot',name:'크롬 로보족',tag:'CHROME SYNDICATE',logo:'⬡',color:'#83c5fd',bonus:'비전투 나노 수리: 6초 비피격 후 초당 최대 HP 0.2% 회복 · 아군 치료 −30%',mut:{hp:1.06,dmg:1,speed:0.95},units:['블레이드 오토마타','레이저 정찰기','레일 관통병기','티탄 실드 워커','플랙 대공드론','공성 캐논','전술 변형 메카','나노 정비유닛'],slogan:'완전 기계·안드로이드·워커·합금 신체',secondary:'#264e67'},
- {id:'octoper',name:'옥토퍼 군체',tag:'ABYSSAL OCTOPER',logo:'✺',color:'#c5a0fa',bonus:'촉수 재생: 전투 중에도 초당 최대 HP 0.06% 미세 회복 · 마도포격 특화',mut:{hp:0.93,dmg:1,speed:1.01},units:['팔완 돌격체','먹물 주술사','심해 관통술사','갑각 문어수호자','팔완 대공술사','심연 의식술사','마력 비행수','군체 사제'],slogan:'여덟 촉수·흡반·발광 마력·심해 군체',secondary:'#4a3370'},
- {id:'fairy',name:'농농 페어리족',tag:'PETAL FAIRIES',logo:'❀',color:'#ffadd4',bonus:'꽃가루 연쇄치유: 치료할 때 근처 아군 1기 추가 회복(12%) · 기동 +8%',mut:{hp:.88,dmg:1,speed:1.08},units:['꽃잎 소검사','이슬 마도사','씨앗 관통술사','버섯껍질 방패수','반딧불 대공술사','꽃가루 폭격사','별빛 나비정령','꽃샘 치유사'],slogan:'작고 귀여운 요정·꽃잎날개·치유·요정 마법',secondary:'#84577c'}
+ {id:'robot',name:'크롬 로보족',tag:'CHROME SYNDICATE',logo:'⬡',color:'#83c5fd',bonus:'전투 중 나노 수리: 초당 HP 0.15% · 5초마다 첫 피해 25% 경감 · 정밀사격 +8%',mut:{hp:1.07,dmg:1,speed:.99},units:['블레이드 오토마타','레이저 정찰기','레일 관통병기','티탄 실드 워커','플랙 대공드론','공성 캐논','전술 변형 메카','나노 정비유닛'],slogan:'완전 기계·안드로이드·워커·합금 신체',secondary:'#264e67'},
+ {id:'octoper',name:'옥토퍼 군체',tag:'ABYSSAL OCTOPER',logo:'✺',color:'#c5a0fa',bonus:'촉수 재생: 초당 HP 0.06% 미세 회복 · 주술 피격 시 먹물 침식(2.5초 둔화 20%, 공격 −10%)',mut:{hp:.99,dmg:1,speed:1.01},units:['팔완 돌격체','먹물 주술사','심해 관통술사','갑각 문어수호자','팔완 대공술사','심연 의식술사','마력 비행수','군체 사제'],slogan:'여덟 촉수·흡반·발광 마력·심해 군체',secondary:'#4a3370'},
+ {id:'fairy',name:'농농 페어리족',tag:'PETAL FAIRIES',logo:'❀',color:'#ffadd4',bonus:'꽃가루 연쇄치유: 5초마다 다른 아군 1기 3% 추가 회복 · 치료 효율 −10% · 체력 −16%',mut:{hp:.84,dmg:1,speed:1.01},units:['꽃잎 소검사','이슬 마도사','씨앗 관통술사','버섯껍질 방패수','반딧불 대공술사','꽃가루 폭격사','별빛 나비정령','꽃샘 치유사'],slogan:'작고 귀여운 요정·꽃잎날개·치유·요정 마법',secondary:'#84577c'}
 ];
 const RNAME=ROLE.map(r=>r.name),SPRITES=new Map();
 let selectedFaction=0,state=null,selectedRole=null,demolition=false,activeView='base',lastFrame=0,uiElapsed=0;
@@ -45,9 +46,9 @@ function getDef(role,faction){
  const melee=(isBeast||isFurry)&&(role===0||role===3||role===6);
  const rangeBoost=isElf&&[1,2,4,5,6].includes(role);
  return {...r,unitName:f.units[role],factionName:f.name,name:isBongo?'차량':isProwler?'기병':r.name,mark:isBongo?'▰':isProwler?'♞':r.mark,
-  hp:isBongo?565:r.hp*f.mut.hp*2.25*(isElf&&role===0?.88:isBeast&&role===3?1.13:1),
-  damage:isBongo?36:isProwler?37:r.damage*f.mut.dmg*.94*(isBeast?(melee?1.22:.87):isElf?(rangeBoost?1.045:role===0?.84:1):isFurry?(melee?1.10:.93):isRobot&&[1,2,4,5].includes(role)?1.04:isOcto&&[2,4,5].includes(role)?1.10:1),
-  heal:(r.heal||0)*f.mut.dmg*1.5*(isRobot?.70:isFairy?1.12:1),blast:(r.blast||0)*(isOcto?1.12:1),speed:isBongo?77:isProwler?90:r.speed*f.mut.speed*.84*(melee?1.14:1),
+  hp:isBongo?565:r.hp*f.mut.hp*2.25*(isElf&&role===0?.88:isBeast&&role===3?1.05:1),
+  damage:isBongo?36:isProwler?33:r.damage*f.mut.dmg*.94*(isBeast?(melee?1.08:.83):isElf?(rangeBoost?1.045:role===0?.84:1):isFurry?(melee?1.10:.93):isRobot&&[1,2,4,5].includes(role)?1.08:isOcto&&[2,4,5].includes(role)?1.16:1),
+  heal:(r.heal||0)*f.mut.dmg*1.5*(isRobot?.85:isFairy?.90:1),blast:(r.blast||0)*(isOcto?1.15:1),speed:isBongo?77:isProwler?90:r.speed*f.mut.speed*.84*(melee?1.05:1),
   kind:isBongo||isProwler?'ground':r.kind,armor:isBongo?7:isProwler?3:r.armor,
   range:isBongo?43:isProwler?40:r.range*(rangeBoost?1.10:isRobot&&[1,2,4,5].includes(role)?1.04:1),
   rate:isBongo?1.45:isProwler?.95:r.rate,
@@ -55,12 +56,12 @@ function getDef(role,faction){
   good:isBongo||isProwler?[0,7]:r.good,bad:isBongo||isProwler?[2,3]:r.bad,
   tips:isBongo?'오도봉고: 공군 대신 출격하는 지상 돌파 차량. 돌격병 밀집 부대를 들이받아 최대 3명까지 범위 피해. 대장갑에 취약하고 기지 피해는 약합니다.':
   isProwler?'흑표 돌격기수: 공중이 아닌 지상 기병으로 적 전열에 급습합니다. 근접 돌진에 강하지만 대장갑·중장갑에 취약합니다.':
-  isBeast?'수인족: 근접 특화·공격 시 피해 5% 흡혈. 비행기나 마법병종이 없고 원거리 화력은 낮습니다. '+r.tips:
+  isBeast?'수인족: 근접 공격 +8%, 실피해 1.5% 흡혈(최대 3HP). 비행기·마법병종 없이 근거리 난전 특화. '+r.tips:
   isElf?'엘프족: 원거리 공격 12% 확률로 정밀 치명타(+25%). 후방 장궁에 강하지만 근접전은 약합니다. '+r.tips:
   isFurry?'퍼리족: 근처 동료와 협공하면 근접 피해 +6%. 전신 털과 야성적인 추격으로 근접전에 강합니다. '+r.tips:
-  isRobot?'로보족: 6초간 피격되지 않으면 초당 체력 0.2%를 자동 수리합니다. 아군 치료 효율은 낮습니다. '+r.tips:
-  isOcto?'옥토퍼: 초당 최대 HP의 0.06%를 아주 천천히 재생하며 포격·주술에 강합니다. '+r.tips:
-  isFairy?'페어리: 치료한 아군 근처의 다른 1기에도 치유량 12%를 전달합니다. '+r.tips:
+  isRobot?'로보족: 교전 중에도 초당 체력 0.15% 자체수리, 5초마다 첫 피격 25% 흡수. 정밀 사격 강화. '+r.tips:
+  isOcto?'옥토퍼: 초당 최대 HP 0.06% 미세 재생. 주술 공격 5초마다 먹물 침식(2.5초 둔화·약화). '+r.tips:
+  isFairy?'페어리: 치료량 10% 감소, 5초마다 다른 아군 1기에게 치료량의 3% 연쇄치유. '+r.tips:
   faction===3&&role===7?'해병수육: 생산 시설마다 매 웨이브 0·8·16초에 순차 3기 출격. 아군 광역 회복 뒤 자신은 소모됩니다.':r.tips};
 }
 function combatDef(u){
@@ -494,14 +495,22 @@ function damage(u,amount,source,attacker=null,roll=Math.random){
  if(u.hp<=0)return;
  let hit=calcDamage(typeof source==='number'?source:null,u,amount);
  if(u.faction===0&&[3,4].includes(u.role))hit*=.94;
+ if(u.faction===7&&state.elapsed-(u.lastShieldAt??-999)>=ROBOT_SHIELD_INTERVAL){
+  u.lastShieldAt=state.elapsed;hit*=1-ROBOT_SHIELD_REDUCTION;pulse(u.x,u.y,'#89e9fb',16);
+ }
  if(u.faction===2&&state.elapsed-(u.lastWardAt??-999)>=10){u.lastWardAt=state.elapsed;hit*=.82;}
  if(attacker?.faction===5&&[1,2,4,5,6].includes(source)&&Math.random()<.12)hit*=1.25;
  if(attacker?.faction===6&&[0,3,6].includes(source)&&!attacker.isHatchling&&state.units.some(a=>
     a!==attacker&&a.hp>0&&a.side===attacker.side&&a.faction===6&&Math.hypot(a.x-attacker.x,a.y-attacker.y)<165))hit*=1.06;
+ if(attacker&&(attacker.inkUntil||0)>state.elapsed)hit*=.90;
  const before=u.hp;
  u.hp-=hit;u.blink=.12;u.hitAge=.36;u.lastDamagedAt=state.elapsed;
  if(attacker?.faction===4&&[0,3,6].includes(source)&&!attacker.isHatchling&&attacker.hp>0)
-  attacker.hp=Math.min(attacker.maxHP,attacker.hp+Math.min(8,Math.min(before,hit)*.05));
+  attacker.hp=Math.min(attacker.maxHP,attacker.hp+Math.min(3,Math.max(0,Math.min(before,hit))*.015));
+ if(attacker?.faction===8&&[1,2,4,5].includes(source)&&state.elapsed-(attacker.lastInkCast??-999)>=INK_COOLDOWN){
+  attacker.lastInkCast=state.elapsed;u.inkUntil=Math.max(u.inkUntil||0,state.elapsed+INK_DURATION);
+  floatText(u.x,u.y-30,'먹물 침식','#d5adff');
+ }
  if(Math.random()<.15)floatText(u.x,u.y-25,Math.round(hit),COLORS[u.side===0?1:0]);
  if(u.hp<=0){killUnit(u);marineSpoils(u,attacker,roll);}
 }
@@ -515,10 +524,10 @@ function heal(u,amount,burst=false,healer=null){
  if(amount<=0)return;
  const recovered=Math.min(amount,u.maxHP-u.hp);
  u.hp=Math.min(u.maxHP,u.hp+amount);pulse(u.x,u.y,'#94f7a9',11);
- if(healer?.faction===9&&recovered>0){
+ if(healer?.faction===9&&recovered>0&&state.elapsed-(healer.lastPollenAt??-999)>=5){
   const partner=state.units.find(v=>v!==u&&v!==healer&&v.hp>0&&!v.isHatchling&&v.side===healer.side&&v.hp<v.maxHP
    &&Math.hypot(v.x-u.x,v.y-u.y)<145);
-  if(partner){partner.hp=Math.min(partner.maxHP,partner.hp+recovered*.12);pulse(partner.x,partner.y,'#ffbce2',9);}
+  if(partner){healer.lastPollenAt=state.elapsed;partner.hp=Math.min(partner.maxHP,partner.hp+recovered*.03);pulse(partner.x,partner.y,'#ffbce2',9);}
  }
 }
 function structureHit(side,amount){
@@ -625,7 +634,7 @@ function bongoImpact(u,dt){
 }
 function move(u,x,y,dt){
  const dx=x-u.x,dy=y-u.y,d=Math.hypot(dx,dy)||1,def=getDef(u.role,u.faction);
- const step=combatDef(u).speed*dt;
+ const step=combatDef(u).speed*dt*((u.inkUntil||0)>state.elapsed?.80:1);
  u.x+=dx/d*Math.min(step,d);u.y+=dy/d*Math.min(step,d);
  u.facing=dx>=0?1:-1;u.moving=d>1;u.x=clamp(u.x,30,WORLD_W-30);u.y=clamp(u.y,68,452);
 }
@@ -694,8 +703,7 @@ function tick(dt){
   const def=combatDef(u);
   if(!u.isHatchling){
    if(u.faction===8)u.hp=Math.min(u.maxHP,u.hp+u.maxHP*OCTOPER_REGEN*ds);
-   if(u.faction===7&&state.elapsed-(u.lastDamagedAt??u.spawnedAt??state.elapsed)>=ROBOT_REPAIR_DELAY)
-    u.hp=Math.min(u.maxHP,u.hp+u.maxHP*ROBOT_REPAIR*ds);
+   if(u.faction===7)u.hp=Math.min(u.maxHP,u.hp+u.maxHP*ROBOT_REPAIR*ds);
   }
   u.cooldown-=ds;u.anim+=ds*12;u.blink=Math.max(0,u.blink-ds);
   u.spawnAge=Math.min(5,(u.spawnAge||0)+ds);u.hitAge=Math.max(0,(u.hitAge||0)-ds);u.skillAge=Math.max(0,(u.skillAge||0)-ds);u.moving=false;

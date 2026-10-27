@@ -21,26 +21,27 @@ const BASE=[
 const clamp=(v,l,r)=>Math.max(l,Math.min(r,v));
 const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=2,HUANGLONG_INTERVAL=8;
 const BROOD_BIRTH_CHANCE=.20,BROOD_BIRTH_COOLDOWN=11,BROOD_BIRTH_CAP=10,BROOD_ALIVE_CAP=14;
-const OCTOPER_REGEN=.0006,ROBOT_REPAIR=.002,ROBOT_REPAIR_DELAY=6;
+const OCTOPER_REGEN=.0006,ROBOT_REPAIR=.0015,ROBOT_SHIELD_INTERVAL=5,ROBOT_SHIELD_REDUCTION=.25;
+const INK_DURATION=2.5,INK_COOLDOWN=5;
 const GOODS=[[5,7],[0,7],[3,4],[1,4],[6],[1,4],[0,3],[3,1]];
 const BADS=[[3,1],[3,5],[0,1],[2,6],[3,2],[0,6],[4,1],[0,5]];
 function definition(faction,role){
  const shared=global.DesertRoster?.getDef;
  if(typeof shared==='function')return shared(role,faction);
- const t=BASE[role],mut=[[1.055,1,.96],[.995,1,1.12],[.99,1.09,1],[1.09,1.06,1.01],[1.04,1,1.06],[.94,1,.99],[1.02,1,1.07],[1.06,1,.95],[.93,1,1.01],[.88,1,1.08]][faction]||[1,1,1];
+ const t=BASE[role],mut=[[1.055,1,.96],[.995,1,1.12],[.99,1.09,1],[1.09,1.06,1.01],[1,1,1.02],[.94,1,.99],[1.02,1,1.07],[1.07,1,.99],[.99,1,1.01],[.84,1,1.01]][faction]||[1,1,1];
  const beast=faction===4,elf=faction===5,furry=faction===6,robot=faction===7,octo=faction===8,fairy=faction===9,bongo=faction===3&&role===6,prowler=beast&&role===6;
  const melee=(beast||furry)&&[0,3,6].includes(role),ranged=elf&&[1,2,4,5,6].includes(role);
  return {
-  hp:bongo?565:t[0]*2.25*mut[0]*(elf&&role===0?.88:beast&&role===3?1.13:1),
-  damage:bongo?36:prowler?37:t[1]*.94*mut[1]*(beast?(melee?1.22:.87):elf?(ranged?1.045:role===0?.84:1):furry?(melee?1.10:.93):robot&&[1,2,4,5].includes(role)?1.04:octo&&[2,4,5].includes(role)?1.10:1),
+  hp:bongo?565:t[0]*2.25*mut[0]*(elf&&role===0?.88:beast&&role===3?1.05:1),
+  damage:bongo?36:prowler?33:t[1]*.94*mut[1]*(beast?(melee?1.08:.83):elf?(ranged?1.045:role===0?.84:1):furry?(melee?1.10:.93):robot&&[1,2,4,5].includes(role)?1.08:octo&&[2,4,5].includes(role)?1.16:1),
   armor:bongo?7:prowler?3:t[2],
   range:bongo?43:prowler?40:t[3]*(ranged?1.10:robot&&[1,2,4,5].includes(role)?1.04:1),
   rate:bongo?1.45:prowler?.95:t[4],
-  speed:bongo?77:prowler?90:t[5]*mut[2]*.84*(melee?1.14:1),
+  speed:bongo?77:prowler?90:t[5]*mut[2]*.84*(melee?1.05:1),
   airTarget:bongo||prowler?false:t[6],
   kind:bongo||prowler?'ground':t[7],
-  heal:(role===7?36:0)*mut[1]*1.5*(robot?.70:fairy?1.12:1),
-  blast:role===5?(octo?58*1.12:58):0,
+  heal:(role===7?36:0)*mut[1]*1.5*(robot?.85:fairy?.90:1),
+  blast:role===5?(octo?58*1.15:58):0,
   good:bongo||prowler?[0,7]:GOODS[role],bad:bongo||prowler?[2,3]:BADS[role]
  };
 }
@@ -208,21 +209,30 @@ function create({mode='pvp',size=1,members=[]}={}){
   if(v.hp<=0)return;
   let hit=Math.max(3,damage*mult-defender.armor*.66);
   if(v.faction===0&&[3,4].includes(v.role))hit*=.94;
+  if(v.faction===7&&state.seconds-(v.lastShieldAt??-999)>=ROBOT_SHIELD_INTERVAL){
+   v.lastShieldAt=state.seconds;hit*=1-ROBOT_SHIELD_REDUCTION;
+   state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'chromeShield',time:.42,team:v.team});
+  }
   if(v.faction===2&&state.seconds-(v.lastWardAt??-999)>=10){v.lastWardAt=state.seconds;hit*=.82;}
   if(a.faction===5&&[1,2,4,5,6].includes(a.role)&&Math.random()<.12)hit*=1.25;
   if(a.faction===6&&[0,3,6].includes(a.role)&&!a.isHatchling&&state.units.some(u=>
     u!==a&&u.hp>0&&u.team===a.team&&u.faction===6&&Math.hypot(u.x-a.x,u.y-a.y)<165))hit*=1.06;
+  if((a.inkUntil||0)>state.seconds)hit*=.90;
   const before=v.hp;
   v.hp-=hit;v.attackAge=.12;v.hitAge=.3;v.lastDamagedAt=state.seconds;
   if(a.faction===4&&[0,3,6].includes(a.role)&&!a.isHatchling&&a.hp>0)
-   a.hp=Math.min(a.maxHP,a.hp+Math.min(8,Math.min(before,hit)*.05));
+   a.hp=Math.min(a.maxHP,a.hp+Math.min(3,Math.max(0,Math.min(before,hit))*.015));
+  if(a.faction===8&&[1,2,4,5].includes(a.role)&&state.seconds-(a.lastInkCast??-999)>=INK_COOLDOWN){
+   a.lastInkCast=state.seconds;v.inkUntil=Math.max(v.inkUntil||0,state.seconds+INK_DURATION);
+   state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'ink',time:.6,team:a.team});
+  }
   if(v.hp<=0&&!v.killed){v.killed=true;marineSpoils(a,v);}
  }
  function attack(a,v){
   const d=combatDef(a);
   a.cool=Math.max(.3,d.rate);a.act='attack';a.attackAge=.33;
   if(a.role===7)a.skillAge=.54;
-  const dmg=d.damage;
+  const dmg=d.damage*((a.inkUntil||0)>state.seconds?.90:1);
   if(a.role===7){
    if(v.isHatchling)return;
    if(a.faction===3){
@@ -237,10 +247,10 @@ function create({mode='pvp',size=1,members=[]}={}){
     const amount=Math.max(0,Math.min(d.heal||36,Math.max(80,v.maxHP*.085)-v.healWindowUsed));
     v.healWindowUsed+=amount;const recovered=Math.min(amount,v.maxHP-v.hp);
     v.hp=Math.min(v.maxHP,v.hp+amount);
-    if(a.faction===9&&recovered>0){
+    if(a.faction===9&&recovered>0&&state.seconds-(a.lastPollenAt??-999)>=5){
      const partner=state.units.find(u=>u.id!==a.id&&u.id!==v.id&&u.hp>0&&!u.isHatchling
       &&u.team===a.team&&u.hp<u.maxHP&&Math.hypot(u.x-v.x,u.y-v.y)<145);
-     if(partner){partner.hp=Math.min(partner.maxHP,partner.hp+recovered*.12);
+     if(partner){a.lastPollenAt=state.seconds;partner.hp=Math.min(partner.maxHP,partner.hp+recovered*.03);
       state.effects.push({x:partner.x,y:partner.y,lane:partner.lane,kind:'pollen',time:.45,team:a.team});}
     }
    }
@@ -277,10 +287,10 @@ function create({mode='pvp',size=1,members=[]}={}){
   for(const u of state.units){
    if(u.hp<=0)continue;
    const d=combatDef(u),support=u.role===7,r=support?SUPPORT_RADIUS:AGGRO_RADIUS;
+   const moveSpeed=d.speed*((u.inkUntil||0)>state.seconds?.80:1);
    if(!u.isHatchling){
     if(u.faction===8)u.hp=Math.min(u.maxHP,u.hp+u.maxHP*OCTOPER_REGEN*dt);
-    if(u.faction===7&&state.seconds-(u.lastDamagedAt??u.spawnedAt??state.seconds)>=ROBOT_REPAIR_DELAY)
-     u.hp=Math.min(u.maxHP,u.hp+u.maxHP*ROBOT_REPAIR*dt);
+    if(u.faction===7)u.hp=Math.min(u.maxHP,u.hp+u.maxHP*ROBOT_REPAIR*dt);
    }
    u.cool=Math.max(0,u.cool-dt);u.frame=(u.frame+dt*11)%16;u.attackAge=Math.max(0,u.attackAge-dt);
    u.spawnAge=Math.min(5,(u.spawnAge||0)+dt);u.hitAge=Math.max(0,(u.hitAge||0)-dt);u.skillAge=Math.max(0,(u.skillAge||0)-dt);
@@ -299,7 +309,7 @@ function create({mode='pvp',size=1,members=[]}={}){
     const reach=support?d.range*.88:d.range<48?Math.max(d.range,u.radius+target.radius+6):d.range*.88;
     if(best<=reach){if(u.cool<=0)attack(u,target);}
     else{
-     const distance=Math.max(1,best),move=Math.min(d.speed*dt,Math.max(0,best-reach*.68));
+     const distance=Math.max(1,best),move=Math.min(moveSpeed*dt,Math.max(0,best-reach*.68));
      u.x+=(target.x-u.x)/distance*move;u.y+=(target.y-u.y)/distance*move;u.act='move';
     }
    }else{
@@ -312,7 +322,7 @@ function create({mode='pvp',size=1,members=[]}={}){
       if(dd<dist){dist=dd;friend=v;}
      }
      if(friend&&dist>115){
-      const move=Math.min(d.speed*dt,dist-105);
+      const move=Math.min(moveSpeed*dt,dist-105);
       u.x+=(friend.x-u.x)/dist*move;u.y+=(friend.y-u.y)/dist*move;u.act='move';
      }
     }else{
@@ -322,7 +332,7 @@ function create({mode='pvp',size=1,members=[]}={}){
      const ty=(lane+.5)*LANE_H,dist=Math.hypot(tx-u.x,ty-u.y);
      if(state.cores[lane][defender]>0){
       if(dist>Math.max(48,d.range*.85)){
-       const step=Math.min(d.speed*dt,dist);
+       const step=Math.min(moveSpeed*dt,dist);
        u.x+=(tx-u.x)/Math.max(dist,1)*step;u.y+=(ty-u.y)/Math.max(dist,1)*step;u.act='move';
       }else if(u.cool<=0){
        const damage=d.damage*([.52,.88,1.12,1.08,.82,1.55,.87,.4][u.role]||1);
@@ -335,7 +345,7 @@ function create({mode='pvp',size=1,members=[]}={}){
       const remaining=state.cores.map((cores,i)=>cores[defender]>0?i:-1).filter(i=>i>=0);
       if(remaining.length){
        const closest=remaining.sort((x,y)=>Math.abs((x+.5)*LANE_H-u.y)-Math.abs((y+.5)*LANE_H-u.y))[0];
-       u.y+=clamp((closest+.5)*LANE_H-u.y,-d.speed*dt,d.speed*dt);u.act='move';
+       u.y+=clamp((closest+.5)*LANE_H-u.y,-moveSpeed*dt,moveSpeed*dt);u.act='move';
       }
      }
     }
@@ -377,6 +387,10 @@ function create({mode='pvp',size=1,members=[]}={}){
    const v=hostile[0],f=definition(v.faction,v.role),dmg=TOWER_DAMAGE*(f.kind==='air'?1.25:v.role===3?1.12:1);
    let hit=Math.max(3,dmg-f.armor*.66);
    if(v.faction===0&&[3,4].includes(v.role))hit*=.94;
+   if(v.faction===7&&state.seconds-(v.lastShieldAt??-999)>=ROBOT_SHIELD_INTERVAL){
+    v.lastShieldAt=state.seconds;hit*=1-ROBOT_SHIELD_REDUCTION;
+    state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'chromeShield',time:.42,team:v.team});
+   }
    if(v.faction===2&&state.seconds-(v.lastWardAt??-999)>=10){v.lastWardAt=state.seconds;hit*=.82;}
    v.hp-=hit;v.lastDamagedAt=state.seconds;
    state.towerCooldown[lane][team]=TOWER_PERIOD;
