@@ -3,7 +3,8 @@
 (function(global){'use strict';
 const $=id=>document.getElementById(id),FACTIONS=global.DesertRoster?.FACTIONS||[];
 const SKINS=[
- {id:'default',name:'기본 제복',level:1,desc:'오리지널 전투복',filter:'none',tone:'#a9d9ce'},
+ {id:'default',name:'기본 제복',level:1,desc:'종족별 원본 스프라이트',filter:'none',tone:'#a9d9ce'},
+ {id:'moe',name:'모에화 빔',level:1,desc:'전 병종 SD 캐릭터',filter:'none',tone:'#f4afd5'},
  {id:'twilight',name:'황혼 작전',level:3,desc:'자줏빛 야전 도색',filter:'hue-rotate(55deg) saturate(1.3)',tone:'#ba91f2'},
  {id:'aurora',name:'오로라 특무',level:6,desc:'청록 발광형 전투복',filter:'hue-rotate(145deg) saturate(1.15)',tone:'#8bdff6'},
  {id:'gold',name:'황금 근위',level:10,desc:'시즌 훈련 보상',filter:'sepia(.62) saturate(1.35) contrast(1.05)',tone:'#e9c47f'}
@@ -46,15 +47,15 @@ function drawUnitAnimations(ts){
  animationTick=ts;
  const f=progress.selectedFaction,m=global.DesertUnitMotion;
  if(!m||!global.IsoWorld)return;
- const elapsed=(ts-animationStart)/1000,filter=currentSkin().filter;
+ const elapsed=(ts-animationStart)/1000,filter=currentSkin().filter,skin=currentSkin().id;
  $('lobbyUnitGrid').querySelectorAll('canvas[data-motion-role]').forEach(c=>{
   const r=Number(c.dataset.motionRole),ctx=c.getContext('2d');
   if(!ctx)return;
   ctx.clearRect(0,0,72,72);
-  m.draw(ctx,{faction:f,role:r,action:r===selectedUnit?selectedAction:'move',frame:m.frameAt(r===selectedUnit?selectedAction:'move',elapsed),size:72,filter});
+  m.draw(ctx,{faction:f,role:r,action:r===selectedUnit?selectedAction:'move',frame:m.frameAt(r===selectedUnit?selectedAction:'move',elapsed),size:72,filter,skin});
  });
  const large=$('lobbyUnitPreview'),ctx=large?.getContext('2d');
- if(ctx){ctx.clearRect(0,0,192,192);m.draw(ctx,{faction:f,role:selectedUnit,action:selectedAction,frame:m.frameAt(selectedAction,elapsed),size:178,x:7,y:7,filter});}
+ if(ctx){ctx.clearRect(0,0,192,192);m.draw(ctx,{faction:f,role:selectedUnit,action:selectedAction,frame:m.frameAt(selectedAction,elapsed),size:178,x:7,y:7,filter,skin});}
  const small=$('lobbyHero'),smallCtx=small?.getContext('2d');
  if(smallCtx){smallCtx.clearRect(0,0,72,72);m.draw(smallCtx,{faction:f,role:selectedUnit,action:selectedAction,frame:m.frameAt(selectedAction,elapsed),size:72,filter});}
 }
