@@ -6,7 +6,7 @@
 <title>DESERT FRONT — Sprite Motion Atlas</title>
 <style>
 :root{color-scheme:dark;--bg:#0b151d;--surface:#1c2b34;--border:#3b5766;--text:#e6edeb;--sub:#a5b8c0;--gold:#f5c88d}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#2c444c,#0b151d 60%);color:var(--text);font:14px/1.6 Inter,system-ui,"Noto Sans KR",sans-serif}button,select,input{font:inherit}button{cursor:pointer;border:1px solid var(--border);background:#253846;color:var(--text);border-radius:8px;padding:10px 13px}button:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}button.active{background:#584535;border-color:#f2c58a;color:#ffe0a8}button:hover{background:#3e5562}a{color:#ffdfa8;text-decoration:none}.wrap{max-width:1300px;margin:0 auto;padding:25px 18px}header{display:flex;justify-content:space-between;align-items:center;gap:15px;border-bottom:1px solid var(--border);padding-bottom:18px}.eyebrow{font:900 10px monospace;letter-spacing:.17em;color:var(--gold)}h1{font-size:clamp(26px,4vw,45px);letter-spacing:-.04em;margin:7px 0}h2{font-size:18px;margin:0 0 12px}p{margin:5px 0;color:var(--sub)}.factions{display:flex;flex-wrap:wrap;gap:9px;margin:25px 0}.factions button{flex:1;min-width:110px}.factions b,.factions small{display:block}.factions small{color:#b1c0c4;font-size:10px;letter-spacing:.05em}.layout{display:grid;grid-template-columns:310px 1fr;gap:18px}.roster,.stage{background:linear-gradient(140deg,#1c303b,#132530);border:1px solid var(--border);border-radius:12px;padding:17px;min-width:0}.roster-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.unit{display:flex;align-items:center;gap:5px;min-width:0;text-align:left;min-height:75px}.unit canvas{image-rendering:pixelated;width:48px;height:48px;flex:0 0 48px}.unit span{font-weight:800;font-size:11px;line-height:1.3}.unit small{display:block;color:#a3c0c9;font:700 10px monospace}.modes{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0 16px}.showcase{background:radial-gradient(ellipse at center,#455456 0,#2c383c 72%,#1b252b);border:1px solid #657b83;border-radius:11px;min-height:284px;display:flex;justify-content:center;align-items:center;position:relative;overflow:hidden}.showcase:after{content:"";position:absolute;bottom:25px;left:15px;right:15px;border-bottom:2px dashed #9eab9c34;z-index:0}.showcase canvas{image-rendering:pixelated;width:min(280px,70%);height:auto;aspect-ratio:1;position:relative;z-index:1;filter:drop-shadow(0 11px 6px #07151c9a)}.showcase .label{position:absolute;top:12px;left:15px;font:900 11px monospace;color:#fbe0b9}.showcase .frameLabel{position:absolute;top:12px;right:15px;font:900 11px monospace;color:#c8dbdf}.player{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:12px 0 16px}.player label{display:flex;align-items:center;gap:6px;color:#b7cbd0}.player input{accent-color:#eac18e}.player input[type=range]{width:min(260px,45vw)}.player button{padding:8px 12px}.strip{overflow-x:auto;background:#0f222b;border:1px solid var(--border);border-radius:9px;padding:10px}.strip canvas{width:1152px;height:72px;image-rendering:pixelated;max-width:none;display:block}.info{margin-top:15px;display:flex;gap:12px;flex-wrap:wrap}.pill{font:800 11px monospace;color:#b8e5e9;border:1px solid #446570;background:#1b303c;padding:7px 10px;border-radius:6px}.catalog{margin-top:20px;background:#172a34;border:1px solid var(--border);border-radius:11px;padding:17px}.catalog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.catalog-card{background:#213945;border:1px solid var(--border);padding:10px;border-radius:8px;display:flex;align-items:center;gap:9px}.catalog-card canvas{image-rendering:pixelated;flex:0 0 50px}.catalog-card b{font-size:12px}.catalog-card small{display:block;font-size:10px;color:#c0cfd4}.note{margin-top:14px;color:#8fadb5;font-size:12px}.loading{display:none}@media(max-width:850px){.layout{grid-template-columns:1fr}.roster-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.catalog-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:530px){.wrap{padding:12px 8px}.roster,.stage{padding:10px}.roster-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.catalog-grid{grid-template-columns:1fr 1fr}.unit{padding:5px}.unit canvas{width:38px;height:38px;flex-basis:38px}.showcase{min-height:260px}.factions{gap:5px}.factions button{padding:8px 4px;font-size:12px}.strip canvas{width:1152px;height:72px}}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#2c444c,#0b151d 60%);color:var(--text);font:14px/1.6 Inter,system-ui,"Noto Sans KR",sans-serif}button,select,input{font:inherit}button{cursor:pointer;border:1px solid var(--border);background:#253846;color:var(--text);border-radius:8px;padding:10px 13px}button:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}button.active{background:#584535;border-color:#f2c58a;color:#ffe0a8}button:hover{background:#3e5562}a{color:#ffdfa8;text-decoration:none}.wrap{max-width:1300px;margin:0 auto;padding:25px 18px}header{display:flex;justify-content:space-between;align-items:center;gap:15px;border-bottom:1px solid var(--border);padding-bottom:18px}.eyebrow{font:900 10px monospace;letter-spacing:.17em;color:var(--gold)}h1{font-size:clamp(26px,4vw,45px);letter-spacing:-.04em;margin:7px 0}h2{font-size:18px;margin:0 0 12px}p{margin:5px 0;color:var(--sub)}.factions{display:flex;flex-wrap:wrap;gap:9px;margin:25px 0}.factions button{flex:1;min-width:110px}.factions b,.factions small{display:block}.factions small{color:#b1c0c4;font-size:10px;letter-spacing:.05em}.layout{display:grid;grid-template-columns:310px 1fr;gap:18px}.roster,.stage{background:linear-gradient(140deg,#1c303b,#132530);border:1px solid var(--border);border-radius:12px;padding:17px;min-width:0}.roster-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.unit{display:flex;align-items:center;gap:5px;min-width:0;text-align:left;min-height:75px}.unit canvas{image-rendering:pixelated;width:48px;height:48px;flex:0 0 48px}.unit span{font-weight:800;font-size:11px;line-height:1.3}.unit small{display:block;color:#a3c0c9;font:700 10px monospace}.modes{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0 16px}.showcase{background:radial-gradient(ellipse at center,#455456 0,#2c383c 72%,#1b252b);border:1px solid #657b83;border-radius:11px;min-height:284px;display:flex;justify-content:center;align-items:center;position:relative;overflow:hidden}.showcase:after{content:"";position:absolute;bottom:25px;left:15px;right:15px;border-bottom:2px dashed #9eab9c34;z-index:0}.showcase canvas{image-rendering:pixelated;width:min(280px,70%);height:auto;aspect-ratio:1;position:relative;z-index:1;filter:drop-shadow(0 11px 6px #07151c9a)}.showcase .label{position:absolute;top:12px;left:15px;font:900 11px monospace;color:#fbe0b9}.showcase .frameLabel{position:absolute;top:12px;right:15px;font:900 11px monospace;color:#c8dbdf}.player{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:12px 0 16px}.player label{display:flex;align-items:center;gap:6px;color:#b7cbd0}.player input{accent-color:#eac18e}.player input[type=range]{width:min(260px,45vw)}.player button{padding:8px 12px}.strip{overflow-x:auto;background:#0f222b;border:1px solid var(--border);border-radius:9px;padding:10px}.strip canvas{width:1152px;height:72px;image-rendering:pixelated;max-width:none;display:block}.info{margin-top:15px;display:flex;gap:12px;flex-wrap:wrap}.pill{font:800 11px monospace;color:#b8e5e9;border:1px solid #446570;background:#1b303c;padding:7px 10px;border-radius:6px}.catalog{margin-top:20px;background:#172a34;border:1px solid var(--border);border-radius:11px;padding:17px}.catalog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.catalog-card{background:#213945;border:1px solid var(--border);padding:10px;border-radius:8px;display:flex;align-items:center;gap:9px}.catalog-card canvas{image-rendering:pixelated;flex:0 0 50px}.catalog-card b{font-size:12px}.catalog-card small{display:block;font-size:10px;color:#c0cfd4}.note{margin-top:14px;color:#8fadb5;font-size:12px}select{padding:7px 10px;margin:0 0 12px;background:#152c3b;color:#f3e6d1;border:1px solid #758b96;border-radius:6px}.loading{display:none}@media(max-width:850px){.layout{grid-template-columns:1fr}.roster-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.catalog-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:530px){.wrap{padding:12px 8px}.roster,.stage{padding:10px}.roster-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.catalog-grid{grid-template-columns:1fr 1fr}.unit{padding:5px}.unit canvas{width:38px;height:38px;flex-basis:38px}.showcase{min-height:260px}.factions{gap:5px}.factions button{padding:8px 4px;font-size:12px}.strip canvas{width:1152px;height:72px}}
 </style>
 <script src="./marine-art-data.js" defer></script>
 <script src="./sprite-animations.js" defer></script>
@@ -15,7 +15,9 @@
 <script src="./expansion-art.js?v=tenfog2" defer></script>
 <script src="./maiden-illustrations.js?v=tenfog2" defer></script>
 <script src="./sprite-atlas.js?v=real-atlas-1" defer></script>
-<script src="./isometric-world.js?v=real-atlas-1" defer></script>
+<script src="./special-unit-art.js?v=custom1" defer></script>
+<script src="./isometric-world.js?v=custom1" defer></script>
+<script src="./moe-unit-art.js?v=moe1" defer></script>
 <script defer>
 (() => {
 'use strict';
@@ -24,7 +26,7 @@ const labels=[
  ['송곳 발톱','산성 침벌','부식 포자충','거대 갑각수','가시 포자탑','폭식 투석충','비행 포식자','치유 공생충'],
  ['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],
  ['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],
- ['백랑 검사','여우불 투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],
+ ['백랑 검사','여우족 단검투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],
  ['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사'],
  ['늑대 추적자','여우총 사냥꾼','송곳니 분쇄자','곰 털갑옷 수호자','하울 창투사','들소 포격수','알파 늑대 기수','달빛 무리치유사'],
  ['블레이드 오토마타','레이저 정찰기','레일 관통병기','티탄 실드 워커','플랙 대공드론','공성 캐논','전술 변형 메카','나노 정비유닛'],
@@ -32,33 +34,36 @@ const labels=[
  ['꽃잎 소검사','이슬 마도사','씨앗 관통술사','버섯껍질 방패수','반딧불 대공술사','꽃가루 폭격사','별빛 나비정령','꽃샘 치유사']
 ];
 const names=['철갑연합','심연군체','성운결사','해병성채','월영 수인족','은월 엘프족','야월 퍼리족','크롬 로보족','옥토퍼 군체','농농 페어리족'],roles=['돌격','사격','대장갑','장갑','대공','포격','비행','지원'];
+const roleName=(f,r)=>r===6&&[3,4,6,7].includes(f)?{3:'지상 차량',4:'지상 기병',6:'지상 기병',7:'지상 메카'}[f]:roleName(f,r);
 const actions=[['idle','대기'],['move','이동'],['attack','공격'],['siege','건물 타격'],['death','사망']];
-let faction=0,role=0,mode='move',index=0,auto=true,last=0;
+let faction=0,role=0,mode='move',index=0,auto=true,last=0,skin='default';
 const $=id=>document.getElementById(id),S=window.IsoWorld||window.DesertSprites;
-function renderSheet(f,r,mode){const c=document.createElement("canvas");c.width=S.SIZE*16;c.height=S.SIZE;const g=c.getContext("2d");g.imageSmoothingEnabled=false;for(let i=0;i<16;i++)g.drawImage(S.frame(f,r,mode,i),i*S.SIZE,0);return c;}
+const unitArt=(f,r,m,i)=>skin==='moe'&&window.DesertMoeArt?.frame?.(f,r,m,i)||S.frame(f,r,m,i);
+function renderSheet(f,r,mode){const c=document.createElement("canvas");c.width=S.SIZE*16;c.height=S.SIZE;const g=c.getContext("2d");g.imageSmoothingEnabled=false;for(let i=0;i<16;i++)g.drawImage(unitArt(f,r,mode,i),i*S.SIZE,0);return c;}
 function showFrame(){
  const main=$('mainSprite'),g=main.getContext('2d');g.clearRect(0,0,S.SIZE,S.SIZE);
- g.imageSmoothingEnabled=false;g.drawImage(S.frame(faction,role,mode,index),0,0);
+ g.imageSmoothingEnabled=false;g.drawImage(unitArt(faction,role,mode,index),0,0);
  $('frameValue').textContent='FRAME '+String(index+1).padStart(2,'0')+' / 16';
  $('range').value=index;
  const sheet=$('sheet'),sg=sheet.getContext('2d');
  sheet.width=S.SIZE*16;sheet.height=S.SIZE;
  sg.imageSmoothingEnabled=false;sg.drawImage(renderSheet(faction,role,mode),0,0);
- $('detailTitle').textContent=labels[faction][role]+' · '+roles[role];
- $('detailInfo').textContent=names[faction]+' / '+actions.find(a=>a[0]===mode)[1]+' · 16프레임';
+ $('detailTitle').textContent=labels[faction][role]+' · '+roleName(faction,role);
+ $('detailInfo').textContent=names[faction]+' · '+roleName(faction,role)+' / '+actions.find(a=>a[0]===mode)[1]+' · 16프레임';
 }
 function render(){
  $('factionButtons').innerHTML=names.map((name,i)=>'<button data-f="'+i+'" class="'+(i===faction?'active':'')+'"><b>'+name+'</b><small>'+['INDUSTRIAL','BIOLOGICAL','PSIONIC','MARINE FORTRESS','BEASTGIRLS','SILVERWOOD ELVES','WILDFUR PACK','CHROME SYNDICATE','ABYSSAL OCTOPER','PETAL FAIRIES'][i]+'</small></button>').join('');
- $('roster').innerHTML=labels[faction].map((name,i)=>'<button class="unit'+(i===role?' active':'')+'" data-r="'+i+'"><canvas width="72" height="72" data-image="'+i+'"></canvas><span>'+name+'<small>'+roles[i]+'</small></span></button>').join('');
- $('roster').querySelectorAll('canvas').forEach(c=>c.getContext('2d').drawImage(S.portrait(faction,Number(c.dataset.image)),0,0));
+ $('roster').innerHTML=labels[faction].map((name,i)=>'<button class="unit'+(i===role?' active':'')+'" data-r="'+i+'"><canvas width="72" height="72" data-image="'+i+'"></canvas><span>'+name+'<small>'+roleName(faction,i)+'</small></span></button>').join('');
+ $('roster').querySelectorAll('canvas').forEach(c=>c.getContext('2d').drawImage(unitArt(faction,Number(c.dataset.image),'idle',5),0,0));
  $('modes').innerHTML=actions.map(([m,label])=>'<button class="'+(mode===m?'active':'')+'" data-m="'+m+'">'+label+' · 16F</button>').join('');
- $('catalog').innerHTML=labels.map((row,f)=>row.map((name,r)=>'<div class="catalog-card"><canvas width="72" height="72" data-faction="'+f+'" data-role="'+r+'"></canvas><span><b>'+name+'</b><small>'+names[f]+' / '+roles[r]+'</small></span></div>').join('')).join('');
- $('catalog').querySelectorAll('canvas').forEach(c=>c.getContext('2d').drawImage(S.portrait(Number(c.dataset.faction),Number(c.dataset.role)),0,0));
+ $('catalog').innerHTML=labels.map((row,f)=>row.map((name,r)=>'<div class="catalog-card"><canvas width="72" height="72" data-faction="'+f+'" data-role="'+r+'"></canvas><span><b>'+name+'</b><small>'+names[f]+' / '+roleName(f,r)+'</small></span></div>').join('')).join('');
+ $('catalog').querySelectorAll('canvas').forEach(c=>c.getContext('2d').drawImage(unitArt(Number(c.dataset.faction),Number(c.dataset.role),'idle',5),0,0));
  showFrame();
 }
 $('factionButtons').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;faction=Number(b.dataset.f);render();});
 $('roster').addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(!b)return;role=Number(b.dataset.r);render();});
 $('modes').addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(!b)return;mode=b.dataset.m;index=0;render();});
+$('skinMode').addEventListener('change',e=>{skin=e.target.value==='moe'?'moe':'default';render();});
 $('range').addEventListener('input',e=>{index=Number(e.target.value);auto=false;$('autoplay').textContent='▶ 재생';showFrame();});
 $('autoplay').addEventListener('click',()=>{auto=!auto;$('autoplay').textContent=auto?'Ⅱ 정지':'▶ 재생';});
 $('exportPNG').addEventListener('click',()=>{
@@ -79,16 +84,16 @@ render();requestAnimationFrame(loop);
 </script>
 </head>
 <body><div class="wrap">
-<header><div><span class="eyebrow">DESERT FRONT / ORIGINAL PIXEL ANIMATION ATLAS</span><h1>48 유닛 · 2.5D 모션 도감</h1><p>6개 진영 × 8개 병종 × 5개 동작 × 16프레임. 역할과 진영에 따라 독립적으로 생성된 투명 픽셀 스프라이트입니다.</p></div><a href="./index.html">← 게임으로 돌아가기</a></header>
+<header><div><span class="eyebrow">DESERT FRONT / UNIT ANIMATION ATLAS</span><h1>80병종 · 스프라이트 도감</h1><p>10종족의 80병종과 전용 특수 유닛을 확인하세요.</p></div><a href="./index.html">← 게임으로 돌아가기</a></header>
 <div id="factionButtons" class="factions"></div>
 <div class="layout">
 <section class="roster"><h2>병종 선택</h2><div id="roster" class="roster-grid"></div></section>
-<section class="stage"><h2 id="detailTitle">모션 확인</h2><p id="detailInfo"></p><div id="modes" class="modes"></div>
+<section class="stage"><h2 id="detailTitle">모션 확인</h2><label>외형 선택 <select id="skinMode"><option value="default">기본 외형</option><option value="moe">모에화 빔</option></select></label><p id="detailInfo"></p><div id="modes" class="modes"></div>
 <div class="showcase"><span class="label">SPRITE PREVIEW · 72×72</span><span class="frameLabel" id="frameValue">FRAME 01 / 16</span><canvas id="mainSprite" width="72" height="72"></canvas></div>
 <div class="player"><button id="autoplay">Ⅱ 정지</button><button id="exportPNG">16프레임 PNG 저장 ↓</button><label>프레임 확인 <input type="range" id="range" min="0" max="15" step="1" value="0"></label><span class="pill">16 단계 키프레임</span></div>
 <div class="strip"><canvas id="sheet" width="1152" height="72"></canvas></div>
 <div class="info"><span class="pill">MOVE · 16F</span><span class="pill">ATTACK · 16F</span><span class="pill">SIEGE · 16F</span><span class="pill">DEATH · 16F</span><span class="pill">IDLE · 16F</span></div>
-<p class="note">월영 수인족과 은월 엘프족은 실제 생성형 일러스트 아틀라스(WebP)를 결합한 픽셀 스프라이트입니다. 원화를 2.5D 무기·하체 모션과 합성하여 16프레임으로 재생하며, PNG 저장 버튼으로 시트를 내보낼 수 있습니다. 나머지 진영은 기존 전용 도트 기반입니다.</p>
+<p class="note">선택한 외형과 동작을 프레임별로 확인하거나 PNG로 저장할 수 있습니다.</p>
 </section></div>
 <section class="catalog"><h2>전체 진영 · 80개 외형</h2><div class="catalog-grid" id="catalog"></div></section>
 </div></body></html>

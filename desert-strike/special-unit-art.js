@@ -24,8 +24,8 @@ function mount(g,f,attack,frame){
  rect(g,27,32,17,5,'#bc6d4b');rect(g,32,28,8,11,'#e8d0a5');
  // Rider: wolf knight in red mantle / furry alpha in steel-gray cloak.
  poly(g,[[31,27],[27,18],[34,16],[44,18],[47,28],[43,37],[31,36]],canine?'#345264':'#a43d43');
- face(g,37,13,canine?'#7c8b9b':'#e0b09e',canine?'#445a69':'#a44548','#fe625d');
- poly(g,[[28,6],[30,-1],[37,6]],q[2]);poly(g,[[44,6],[49,-1],[47,9]],q[2]);
+ face(g,37,17,canine?'#7c8b9b':'#e0b09e',canine?'#445a69':'#a44548','#fe625d');
+ poly(g,[[28,9],[30,3],[37,9]],q[2]);poly(g,[[44,9],[49,3],[47,11]],q[2]);
  rect(g,25,27,9,5,'#d1b38a');rect(g,46,26,5,6,'#cbb6a1');
  if(attack&&frame>=4&&frame<=11){poly(g,[[50,21],[68,12],[67,17],[54,30]],'#e8d0b0');rect(g,62,12,4,14,'#8fe0d8');}
  else{rect(g,50,12,3,22,canine?'#afd0d0':'#efd9c1');}

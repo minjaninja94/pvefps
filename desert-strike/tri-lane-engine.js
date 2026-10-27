@@ -29,14 +29,14 @@ function definition(faction,role){
  const shared=global.DesertRoster?.getDef;
  if(typeof shared==='function')return shared(role,faction);
  const t=BASE[role],mut=[[1.055,1,.96],[.995,1,1.12],[.99,1.09,1],[1.09,1.06,1.01],[1,1,1.02],[.94,1,.99],[1.02,1,1.07],[1.07,1,.99],[.99,1,1.01],[.84,1,1.01]][faction]||[1,1,1];
- const beast=faction===4,elf=faction===5,furry=faction===6,robot=faction===7,octo=faction===8,fairy=faction===9,bongo=faction===3&&role===6,prowler=beast&&role===6,groundSpecial=role===6&&[3,4,6,7].includes(faction);
+ const beast=faction===4,elf=faction===5,furry=faction===6,robot=faction===7,octo=faction===8,fairy=faction===9,bongo=faction===3&&role===6,prowler=beast&&role===6,wolfRider=furry&&role===6,groundSpecial=role===6&&[3,4,6,7].includes(faction);
  const melee=(beast||furry)&&[0,3,6].includes(role),ranged=elf&&[1,2,4,5,6].includes(role);
  return {
   hp:bongo?565:t[0]*2.25*mut[0]*(elf&&role===0?.88:beast&&role===3?1.05:1),
-  damage:bongo?36:prowler?33:t[1]*.94*mut[1]*(beast?(melee?1.08:.83):elf?(ranged?1.045:role===0?.84:1):furry?(melee?1.10:.93):robot&&[1,2,4,5].includes(role)?1.08:octo&&[2,4,5].includes(role)?1.16:1),
+  damage:bongo?36:prowler?33:wolfRider?32:t[1]*.94*mut[1]*(beast?(melee?1.08:.83):elf?(ranged?1.045:role===0?.84:1):furry?(melee?1.10:.93):robot&&[1,2,4,5].includes(role)?1.08:octo&&[2,4,5].includes(role)?1.16:1),
   armor:bongo?7:prowler?3:groundSpecial&&robot?5:t[2],
-  range:bongo?43:prowler?40:t[3]*(ranged?1.10:robot&&[1,2,4,5].includes(role)?1.04:1),
-  rate:bongo?1.45:prowler?.95:t[4],
+  range:bongo?43:prowler?40:wolfRider?42:t[3]*(ranged?1.10:robot&&[1,2,4,5].includes(role)?1.04:1),
+  rate:bongo?1.45:prowler?.95:wolfRider?.9:t[4],
   speed:bongo?77:prowler?90:t[5]*mut[2]*.84*(melee?1.05:1),
   airTarget:groundSpecial&&!robot?false:t[6],
   kind:groundSpecial?'ground':t[7],
@@ -108,7 +108,7 @@ function create({mode='pvp',size=1,members=[]}={}){
   const d=definition(p.faction,role);
   const x=p.team===0?235+(slot%15)*4:WIDTH-235-(slot%15)*4;
   const y=lane*LANE_H+265+((Math.floor(slot/15)*11+(slot%15)*21)%196)-98;
-  const radius=role===3?23:((p.faction===3||p.faction===4)&&role===6)?27:role===6?15:15;
+  const radius=role===3?23:role===6&&[3,7].includes(p.faction)?28:role===6&&[4,6].includes(p.faction)?24:role===6?15:15;
   if(p.faction===3&&role===7){state.marineStats.huangSpawns++;marineRecord(p.uid,'huangSpawns');}
   state.units.push({id:state.nextUnit++,uid:p.uid,team:p.team,faction:p.faction,role,lane,spawnLane:lane,x,y,hp:d.hp,maxHP:d.hp,skin:p.skin,cool:Math.random()*.6,
     radius,frame:Math.floor(Math.random()*16),act:'move',attackAge:0,spawnAge:0,hitAge:0,skillAge:0,spawnedAt:state.seconds,lastDamagedAt:state.seconds});
@@ -127,7 +127,7 @@ function create({mode='pvp',size=1,members=[]}={}){
   if(tanks>=2&&mine(2)<Math.ceil(tanks*.95))return 2;
   if(healers>=2&&tanks>=1&&mine(5)<2)return 5;
   const major=counts.indexOf(Math.max(...counts));
-  if(major===6&&state.units.some(u=>u.lane===lane&&u.team===0&&u.role===6&&(u.faction===3||u.faction===4)))return 2;
+  if(major===6&&state.units.some(u=>u.lane===lane&&u.team===0&&u.role===6&&[3,4,6,7].includes(u.faction)))return 2;
   if(major===0&&counts[0]>=3&&(bot.faction===3||bot.faction===4)&&bot.cash>=COST[6])return 6;
   return [[1,6,3],[3,5],[0,1],[2,6],[2,3],[0,6],[4,1],[0,5]][major][0];
  }
@@ -200,7 +200,7 @@ function create({mode='pvp',size=1,members=[]}={}){
  function applyHit(a,v,damage){
   const attacker=definition(a.faction,a.role),defender=definition(v.faction,v.role);
   let mult=1;
-  if(v.role===6&&(v.faction===3||v.faction===4)){
+  if(v.role===6&&[3,4,6,7].includes(v.faction)){
    mult=a.role===2?1.65:a.role===0?.68:a.role===4?.78:1;
   }else{
    if(attacker.good.includes(v.role))mult*=1.55;

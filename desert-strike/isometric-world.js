@@ -413,7 +413,7 @@ function renderFactionSprite(f,role,mode,frame){
  function part(q,col){p(g,q,col||a.base);}
  function rect(x,y,w,h,col){g.fillStyle=col||a.base;g.fillRect(rnd(x),rnd(y),rnd(w),rnd(h));}
  function edge(x,y,w,h,col){rect(x-2,y-2,w+4,h+4,a.outline);rect(x,y,w,h,col);}
- const heavy=role===3||role===5||role===4,air=role===6,healer=role===7;
+ const heavy=role===3||role===5||role===4,air=role===6&&![3,4,6,7].includes(f),healer=role===7;
  g.clearRect(0,0,SIZE,SIZE);
  g.save();g.translate(36,54);
  if(dead){g.rotate(fall*1.25);g.translate(fall*15,fall*9);g.globalAlpha=fall>.75?1-(fall-.75)*3:1;}

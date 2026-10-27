@@ -64,18 +64,18 @@ const SPECIAL_GUIDES={
 function unitGuide(faction,role){return SPECIAL_GUIDES[faction+'-'+role]||BASIC_GUIDES[role];}
 function getDef(role,faction){
  const r=ROLE[role],f=FACTIONS[faction];
- const isBongo=faction===3&&role===6;
+ const isBongo=faction===3&&role===6,isWolfRider=faction===6&&role===6;
  const groundSpecial=role===6&&[3,4,6,7].includes(faction);
  const isBeast=faction===4,isElf=faction===5,isFurry=faction===6,isRobot=faction===7,isOcto=faction===8,isFairy=faction===9,isProwler=isBeast&&role===6;
  const melee=(isBeast||isFurry)&&(role===0||role===3||role===6);
  const rangeBoost=isElf&&[1,2,4,5,6].includes(role);
  return {...r,unitName:f.units[role],factionName:f.name,name:isBongo?'돌격 차량':isProwler?'돌격 기병':groundSpecial&&faction===6?'늑대 기병':groundSpecial&&faction===7?'지상 메카':r.name,mark:isBongo?'▰':isProwler?'♞':groundSpecial&&faction===6?'♞':groundSpecial&&faction===7?'⬡':r.mark,
   hp:isBongo?565:r.hp*f.mut.hp*2.25*(isElf&&role===0?.88:isBeast&&role===3?1.05:1),
-  damage:isBongo?36:isProwler?33:r.damage*f.mut.dmg*.94*(isBeast?(melee?1.08:.83):isElf?(rangeBoost?1.045:role===0?.84:1):isFurry?(melee?1.10:.93):isRobot&&[1,2,4,5].includes(role)?1.08:isOcto&&[2,4,5].includes(role)?1.16:1),
+  damage:isBongo?36:isProwler?33:isWolfRider?32:r.damage*f.mut.dmg*.94*(isBeast?(melee?1.08:.83):isElf?(rangeBoost?1.045:role===0?.84:1):isFurry?(melee?1.10:.93):isRobot&&[1,2,4,5].includes(role)?1.08:isOcto&&[2,4,5].includes(role)?1.16:1),
   heal:(r.heal||0)*f.mut.dmg*1.5*(isRobot?.85:isFairy?.90:1),blast:(r.blast||0)*(isOcto?1.15:1),speed:isBongo?77:isProwler?90:r.speed*f.mut.speed*.84*(melee?1.05:1),
   kind:groundSpecial?'ground':r.kind,armor:isBongo?7:isProwler?3:groundSpecial&&faction===7?5:r.armor,
-  range:isBongo?43:isProwler?40:r.range*(rangeBoost?1.10:isRobot&&[1,2,4,5].includes(role)?1.04:1),
-  rate:isBongo?1.45:isProwler?.95:r.rate,
+  range:isBongo?43:isProwler?40:isWolfRider?42:r.range*(rangeBoost?1.10:isRobot&&[1,2,4,5].includes(role)?1.04:1),
+  rate:isBongo?1.45:isProwler?.95:isWolfRider?.9:r.rate,
   airTarget:groundSpecial&&faction!==7?false:r.airTarget,
   good:isBongo||isProwler?[0,7]:groundSpecial&&faction===6?[0,7]:groundSpecial&&faction===7?[0,3]:r.good,bad:isBongo||isProwler?[2,3]:groundSpecial&&faction===6?[2,3]:groundSpecial&&faction===7?[2,5]:r.bad,
   tips:unitGuide(faction,role),
@@ -247,7 +247,7 @@ function createUnit(side,slot,role){
  if(faction===3&&role===7)state.marineStats.huangSpawns++;
  state.units.push({uid:state.nextUnitId++,side,role,faction,x,y,hp:def.hp*bonus,maxHP:def.hp*bonus,
   cooldown:random(.1,.7),anim:random(0,16),facing:side===0?1:-1,blink:0,spawnAge:0,hitAge:0,skillAge:0,moving:false,strike:null,
-  hitRadius:isBongo?30:faction===4&&role===6?22:role===3?26:role===6?14:role===5?17:role===0?17:15,ramCooldown:0,spawnedAt:state.elapsed,lastDamagedAt:state.elapsed});
+  hitRadius:isBongo?30:faction===4&&role===6?22:faction===6&&role===6?24:faction===7&&role===6?28:role===3?26:role===6?14:role===5?17:role===0?17:15,ramCooldown:0,spawnedAt:state.elapsed,lastDamagedAt:state.elapsed});
  pulse(x,y,COLORS[side],12);
 }
 // AI spends the same credits as the player, but actually studies the player's build.
@@ -278,7 +278,7 @@ function aiReadOpponent(){
  return {counts,total:sum,dominant,major};
 }
 function aiCountersFor(role){
- if(role===6&&([3,4,6,7].includes(state.faction)))return [2,3]; // Player Marine truck is ground armor, not aircraft.
+ if(role===6&&[3,4,6,7].includes(state.faction))return [2,3];
  if(role===0&&(state.enemyFaction===3||state.enemyFaction===4))return [1,3,6]; // Marines field an Odo Bongo rather than a flier.
  if(role===3&&(state.enemyFaction===3||state.enemyFaction===4))return [2]; // Odo Bongo cannot counter heavy tanks; use actual armor breakers.
  return AI_COUNTER_ROLES[role];
@@ -438,7 +438,7 @@ function calcDamage(attacker,target,amount){
  let out=amount;
  if(attacker!==null){
   const role=ROLE[attacker];
-  if(target.role===6&&(target.faction===3||target.faction===4)){if(attacker===2)out*=1.65;else if(attacker===0)out*=.68;else if(attacker===4)out*=.78;}
+  if(target.role===6&&[3,4,6,7].includes(target.faction)){if(attacker===2)out*=1.65;else if(attacker===0)out*=.68;else if(attacker===4)out*=.78;}
   else{if(role.good.includes(target.role))out*=1.55;if(role.bad.includes(target.role))out*=.7;}
  }
  const armor=getDef(target.role,target.faction).armor;
@@ -593,7 +593,7 @@ function nearInjured(u){
 // Local spatial-hash collision prevents 200+ units piling on a single pixel.
 // Ground units of either side have physical footprints. Aircraft float over ground
 // but still avoid other aircraft. Rebuild hash per pass so resolution stays stable.
-function unitRadius(u){return u.hitRadius||(u.faction===3&&u.role===6?30:u.faction===4&&u.role===6?22:u.role===3?26:u.role===6?14:u.role===5?17:u.role===0?17:15);}
+function unitRadius(u){return u.hitRadius||(u.faction===3&&u.role===6?30:u.faction===4&&u.role===6?22:u.faction===6&&u.role===6?24:u.faction===7&&u.role===6?28:u.role===3?26:u.role===6?14:u.role===5?17:u.role===0?17:15);}
 function physicalLayer(u){return getDef(u.role,u.faction).kind==='air'?'air':'ground';}
 function separateUnits(){
  const CELL=76;
