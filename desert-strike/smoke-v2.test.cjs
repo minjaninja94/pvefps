@@ -348,6 +348,7 @@ console.log('Six playable factions, 48 named units, Beastgirl melee and Elf rang
  forcedMarineRoll=0;
  g.damage(victim,victim.hp*10,1,killer);
  forcedMarineRoll=null;
+ console.log('DEBUG MARINE DROP',JSON.stringify({targetHp:victim.hp,targetSide:victim.side,targetRole:victim.role,attacker:killer,loot:st.marineStats,enemyCash:st.enemyCash,myCash:st.cash,forced:controlledMath.random()}));
  assert.equal(st.enemyCash,76,'ginppai takes at most 24 paid credits from victim');
  assert.equal(st.cash,myCashBefore+24,'ginppai credits the actual killer');
  assert.equal(st.marineStats.recruits,1,'one defeated enemy is conscripted');
