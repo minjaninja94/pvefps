@@ -225,6 +225,10 @@ function aiChoose(budget=state.enemyCash){
    // Melee-only armies cannot attack aircraft. Buy one air unit once affordable,
    // then mix rifle + armor rather than exploit an unlimited flier swarm.
    if(intel.dominant===0 && state.wave>=2 && affordable.includes(6) && myCounts[6]<Math.max(1,Math.floor(intel.counts[0]/6)))return 6;
+   // Dedicated anti-air is essential against air-only forces; rifles alone are insufficient.
+   if(intel.dominant===6&&state.faction!==3&&affordable.includes(4)&&myCounts[4]<Math.ceil(intel.counts[6]*.85))return 4;
+   // Against tank spam, prioritize armor breakers. Marines must never answer tanks with trucks.
+   if(intel.dominant===3&&affordable.includes(2)&&myCounts[2]<Math.ceil(intel.counts[3]*1.1))return 2;
    matching.sort((a,b)=>{
     const ac=myCounts[a]/Math.max(1,Math.ceil(intel.counts[intel.dominant]*.55));
     const bc=myCounts[b]/Math.max(1,Math.ceil(intel.counts[intel.dominant]*.55));
@@ -280,10 +284,16 @@ function aiInvest(){
  const invaded=state.units.some(u=>u.side===0&&u.x>WORLD_W-580&&u.hp>0);
  const heavyRush=intel.total>=4&&intel.dominant!==null;
  // Keep pace with a committed enemy production build, but not by spawning free units.
+ const isAirRush=heavyRush&&intel.dominant===6&&state.faction!==3;
+ const isTankRush=heavyRush&&intel.dominant===3;
+ const isTruckRush=heavyRush&&intel.dominant===6&&state.faction===3;
+ // Single-unit spam has little tactical flexibility. Counter it by investing earned credits
+ // in a stronger specialist army rather than hoarding cash at a same-size facility cap.
+ const focusMultiplier=isAirRush?1.6:isTankRush?1.45:isTruckRush?1.4:heavyRush?1.05:.85;
  const desired=Math.min(SLOTS,Math.max(2+Math.floor(state.wave/3),
-  Math.ceil(intel.total*(heavyRush?1:.85)),invaded?intel.total+1:0));
+  Math.ceil(intel.total*focusMultiplier),invaded?intel.total+2:0));
  // One reasonable purchasing opportunity per wave, up to three early in a rush.
- let purchases=Math.min(invaded?3:heavyRush?3:state.wave<=5?2:3,Math.max(0,desired-enemyCount));
+ let purchases=Math.min(invaded||isAirRush||isTankRush||isTruckRush?4:heavyRush?3:state.wave<=5?2:3,Math.max(0,desired-enemyCount));
  const reserve=invaded||heavyRush?0:state.wave<=3?25:50;
  if(state.wave>=4&&state.wave%3===0&&!invaded&&state.enemyEco<MAX_ECONOMY){
   const wantLevel=Math.min(MAX_ECONOMY,Math.max(state.eco,Math.floor(state.wave/5)));
