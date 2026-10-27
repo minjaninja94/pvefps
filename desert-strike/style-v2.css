@@ -128,3 +128,10 @@ body{background:
  .unit-card .pixel-preview{width:42px;height:41px}
  .canvas-wrap{border-width:2px}
 }
+
+/* Six-faction selection, keeps readable cards on Android screens. */
+.faction-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.faction-card{min-width:0;min-height:140px;overflow-wrap:anywhere}
+.faction-card .bonus{display:block;font-size:11px;line-height:1.4}
+@media(max-width:780px){.faction-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}}
+@media(max-width:380px){.faction-card{padding:10px 6px;min-height:128px}.faction-card small{font-size:10px}}
