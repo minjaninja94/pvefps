@@ -57,7 +57,7 @@ $('range').addEventListener('input',e=>{index=Number(e.target.value);auto=false;
 $('autoplay').addEventListener('click',()=>{auto=!auto;$('autoplay').textContent=auto?'Ⅱ 정지':'▶ 재생';});
 $('exportPNG').addEventListener('click',()=>{
  const png=renderSheet(faction,role,mode);
- const a=document.createElement('a');a.download='desert-front-isometric-'+['forge','brood','astral','marine'][faction]+'-'+role+'-'+mode+'-16f.png';
+ const a=document.createElement('a');a.download='desert-front-isometric-'+['forge','brood','astral','marine','beastkin','elf'][faction]+'-'+role+'-'+mode+'-16f.png';
  a.href=png.toDataURL('image/png');document.body.appendChild(a);a.click();a.remove();
 });
 function loop(t){
@@ -66,12 +66,13 @@ function loop(t){
 }
 window.addEventListener('marine-art-ready',render);
 window.addEventListener('isometric-art-ready',render);
+window.addEventListener('maiden-art-ready',()=>{S.invalidateMaiden?.();render();});
 render();requestAnimationFrame(loop);
 })();
 </script>
 </head>
 <body><div class="wrap">
-<header><div><span class="eyebrow">DESERT FRONT / ORIGINAL PIXEL ANIMATION ATLAS</span><h1>48 유닛 · 2.5D 모션 도감</h1><p>4개 진영 × 8개 병종 × 5개 동작 × 16프레임. 역할과 진영에 따라 독립적으로 생성된 투명 픽셀 스프라이트입니다.</p></div><a href="./index.html">← 게임으로 돌아가기</a></header>
+<header><div><span class="eyebrow">DESERT FRONT / ORIGINAL PIXEL ANIMATION ATLAS</span><h1>48 유닛 · 2.5D 모션 도감</h1><p>6개 진영 × 8개 병종 × 5개 동작 × 16프레임. 역할과 진영에 따라 독립적으로 생성된 투명 픽셀 스프라이트입니다.</p></div><a href="./index.html">← 게임으로 돌아가기</a></header>
 <div id="factionButtons" class="factions"></div>
 <div class="layout">
 <section class="roster"><h2>병종 선택</h2><div id="roster" class="roster-grid"></div></section>
@@ -80,7 +81,7 @@ render();requestAnimationFrame(loop);
 <div class="player"><button id="autoplay">Ⅱ 정지</button><button id="exportPNG">16프레임 PNG 저장 ↓</button><label>프레임 확인 <input type="range" id="range" min="0" max="15" step="1" value="0"></label><span class="pill">16 단계 키프레임</span></div>
 <div class="strip"><canvas id="sheet" width="1152" height="72"></canvas></div>
 <div class="info"><span class="pill">MOVE · 16F</span><span class="pill">ATTACK · 16F</span><span class="pill">SIEGE · 16F</span><span class="pill">DEATH · 16F</span><span class="pill">IDLE · 16F</span></div>
-<p class="note">원본 게임 이미지를 사용하지 않은 자체 제작 절차적 픽셀 아트입니다. 현재 브라우저 캔버스에서 프레임을 생성하고 게임에서 공유하며, PNG 저장 버튼으로 선택한 동작의 16프레임 가로 시트를 저장할 수 있습니다. 수작업 원화는 아닙니다.</p>
+<p class="note">월영 수인족과 은월 엘프족은 실제 생성형 일러스트 아틀라스(WebP)를 결합한 픽셀 스프라이트입니다. 원화를 2.5D 무기·하체 모션과 합성하여 16프레임으로 재생하며, PNG 저장 버튼으로 시트를 내보낼 수 있습니다. 나머지 진영은 기존 전용 도트 기반입니다.</p>
 </section></div>
 <section class="catalog"><h2>전체 진영 · 48개 외형</h2><div class="catalog-grid" id="catalog"></div></section>
 </div></body></html>
