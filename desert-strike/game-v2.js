@@ -712,9 +712,14 @@ function updateUI(full=false){
  }
 }
 function initFactions(){
- $('factionCards').innerHTML=FACTIONS.map((f,i)=>
- '<button class="faction-card'+(i===selectedFaction?' selected':'')+'" data-faction="'+i+'"><span class="faction-icon" style="color:'+f.color+'">'+f.logo+
- '</span><strong>'+f.name+'</strong><span class="eyebrow">'+f.tag+'</span><small>'+f.slogan+'</small><span class="bonus">'+f.bonus+'</span></button>').join('');
+ $('factionCards').innerHTML=FACTIONS.map((f,i)=>{
+  const portrait=(i===4||i===5)?window.IsoWorld?.portrait(i,i===4?0:1):null;
+  const art=portrait&&typeof portrait.toDataURL==='function'?
+   '<img class="faction-hero" alt="" aria-hidden="true" src="'+portrait.toDataURL('image/png')+'">':'';
+  return '<button class="faction-card'+(i===selectedFaction?' selected':'')+(i>=4?' faction-maiden':'')+'" data-faction="'+i+'">'+
+   '<span class="faction-icon" style="color:'+f.color+'">'+f.logo+'</span>'+art+
+   '<strong>'+f.name+'</strong><span class="eyebrow">'+f.tag+'</span><small>'+f.slogan+'</small><span class="bonus">'+f.bonus+'</span></button>';
+ }).join('');
  $('counterMatrix').innerHTML=ROLE.map((r,i)=>'<div class="matrix-item"><b>'+r.mark+' '+r.name+'</b>'+
  '<div class="good">'+(i===7?'조합 시너지: ':'강점: ')+r.good.map(x=>ROLE[x].mark+ROLE[x].name).join(' / ')+'</div>'+
  '<div class="bad">약점: '+r.bad.map(x=>ROLE[x].mark+ROLE[x].name).join(' / ')+'</div></div>').join('');
@@ -1076,7 +1081,7 @@ function drawProductionMinimap(){
 }
 function frame(now){
  const delta=Math.min((now-lastFrame)/1000||0,.045);lastFrame=now;
- if(state){tick(delta);drawBattle();drawBase();drawMinimap();drawProductionMinimap();}
+ if(state){tick(delta);if(activeView!=='multiplayer'){drawBattle();drawBase();drawMinimap();drawProductionMinimap();}}
  requestAnimationFrame(frame);
 }
 function inspectBattle(event){
