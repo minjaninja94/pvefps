@@ -47,7 +47,7 @@ const controlledMath=Object.create(Math);
 controlledMath.random=()=>forcedMarineRoll===null?Math.random():forcedMarineRoll;
 const sandbox={document:doc,window:{addEventListener(){}},requestAnimationFrame(fn){queue.push(fn);},console,Math:controlledMath,Number,String,Object,Array,Map,Set,Date};
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'sprite-animations.js'),'utf8'),sandbox,{timeout:4000,filename:'sprite-animations.js'});
-vm.runInNewContext(code.replace('initFactions();wire();reset();','window.__gameTest={state:()=>state,createUnit,resolveStrike,ecoCostFor,aiInvest,wave,tick,upgrade,aiReadOpponent,aiChoose,aiCountersFor,structureDamage,aiAdaptFacilities,separateUnits,unitRadius,bongoImpact,getDef,damage,nearestUnit,marineSpoils,deployMarineSupports};initFactions();wire();reset();'),sandbox,{timeout:3500,filename:'game-v2.js'});
+vm.runInNewContext(code.replace('initFactions();wire();reset();','window.__gameTest={state:()=>state,createUnit,resolveStrike,ecoCostFor,aiInvest,wave,tick,upgrade,aiReadOpponent,aiChoose,aiCountersFor,structureDamage,aiAdaptFacilities,separateUnits,unitRadius,bongoImpact,getDef,damage,nearestUnit,marineSpoils,deployMarineSupports,heal,enemyBaseVisible,enemyUnitVisible};initFactions();wire();reset();'),sandbox,{timeout:3500,filename:'game-v2.js'});
 assert.equal(el('cash').textContent,'360');
 assert.match(el('unitCards').innerHTML,/강점:/);
 assert.match(el('unitCards').innerHTML,/약점:/);
@@ -142,12 +142,12 @@ econGame.wave();
 assert.equal(eq.cash,24,'player wave payout');
 assert.equal(eq.enemyCash,24,'AI wave payout must match player');
 eq.wave=6;eq.enemyEco=0;eq.enemyCash=500;
-eq.enemyBuilt.fill(null);for(let i=0;i<4;i++)eq.enemyBuilt[i]=0;
+eq.enemyBuilt.fill(null);for(let i=0;i<12;i++)eq.enemyBuilt[i]=0;
 econGame.aiInvest();
 assert.equal(eq.enemyEco,1,'AI may upgrade economy, but must buy it with the same money');
 assert.equal(eq.enemyCash,430,'AI first economy upgrade costs exactly the player price of 70');
 eq.wave=12;eq.enemyCash=500;
-eq.enemyBuilt.fill(null);for(let i=0;i<8;i++)eq.enemyBuilt[i]=0;
+eq.enemyBuilt.fill(null);for(let i=0;i<12;i++)eq.enemyBuilt[i]=0;
 econGame.aiInvest();
 assert.equal(eq.enemyEco,2,'AI has paced economy upgrades');
 assert.equal(eq.enemyCash,405,'AI second economy upgrade costs the same 95 CR');
@@ -164,7 +164,9 @@ click('restartButton');click('startButton');
 const rush=econGame.state(),g=sandbox.window.__gameTest;
 rush.enemyFaction=0; // fixed Forge opponent for the original flyer-counter scenario
 rush.built.fill(null);for(let i=0;i<5;i++)rush.built[i]=0;
-assert.equal(g.aiReadOpponent().dominant,0,'5/5 charge buildings recognized as a single-role rush');
+assert.equal(g.aiReadOpponent().dominant,null,'unscouted enemy factories never count as seen units');
+for(let i=0;i<5;i++){g.createUnit(0,i,0);const seen=rush.units.at(-1);seen.x=2050;seen.y=240+i*4;}
+assert.equal(g.aiReadOpponent().dominant,0,'five visibly scouted melee units are recognized');
 rush.wave=1;rush.enemyCash=300;
 const beforeCounter=rush.enemyBuilt.filter(v=>v===1).length;
 const moneyBefore=rush.enemyCash;
@@ -361,3 +363,29 @@ console.log('Six playable factions, 48 named units, Beastgirl melee and Elf rang
  forcedMarineRoll=null;
  assert.equal(st.marineStats.recruits,1,'conscript cap and zero opponent cash prevent extra awards');
 }
+
+// Defensive single-target tower, scouting fog, and medic anti-stacking regressions.
+{
+ click('restartButton');click('startButton');
+ const test=g.state();
+ test.built.fill(null);test.enemyBuilt.fill(null);test.units.length=0;
+ test.wave=0;test.next=24;test.enemyFaction=0;
+ assert.equal(g.enemyBaseVisible(),false,'enemy base is concealed before scouting');
+ g.createUnit(1,0,6);
+ const airplane=test.units.at(-1);airplane.x=330;airplane.y=260;
+ const airHP=airplane.hp;
+ for(let i=0;i<12;i++)g.tick(.12);
+ assert.ok(airplane.hp<airHP,'the home tower fires repeatedly at a lone attacking aircraft');
+ assert.equal(g.enemyUnitVisible({side:1,x:3100}),false,'unknown enemy reinforcements in fog cannot be rendered');
+ g.createUnit(0,0,1);test.units.at(-1).x=2600;
+ assert.equal(g.enemyBaseVisible(),true,'a surviving scout reveals the enemy base');
+ test.units.at(-1).hp=0;test.wave=6;
+ assert.equal(g.enemyBaseVisible(),true,'late intelligence lifts the temporary opening fog');
+ const tank={hp:100,maxHP:900};
+ test.elapsed=0;
+ g.heal(tank,54);g.heal(tank,54);g.heal(tank,54);
+ assert.equal(tank.hp,180,'healer spam is budgeted to 80 HP per second on a 900 HP tank');
+ test.elapsed=1.01;g.heal(tank,54);assert.equal(tank.hp,234,'healing recovers at a new second');
+ test.elapsed=1.02;g.heal(tank,300,true);assert.equal(tank.hp,534,'one-shot Marine support retains its burst identity');
+}
+console.log('Rapid turret, temporary fog of war and diminishing healer stacking passed.');

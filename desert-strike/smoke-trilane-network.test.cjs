@@ -99,6 +99,7 @@ async function main(){
  const received=guest.events.snap.find(s=>s?.players?.find(p=>p.uid==='guestUser')?.buildings[2][8]===1);
  assert.equal(received.players.find(p=>p.uid==='guestUser').cash,265);
  assert.equal(received.players.find(p=>p.uid==='hostUser').cash,null,'unscouted opponent cash must not leak over WebRTC');
+ assert.equal(host.events.snap.at(-1).players.find(p=>p.uid==='guestUser').cash,null,'host UI also receives per-viewer redaction');
  assert.ok(received.players.find(p=>p.uid==='hostUser').buildings.every(l=>l.every(x=>x===null)),'opponent facilities hidden from guest data packets');
  const invalid=host.network.sendOrder({type:'build',lane:4,slot:7,role:0});
  assert.equal(invalid.ok,false,'bad lane rejected');

@@ -43,6 +43,8 @@ jobs:
         run: node desert-strike/smoke-trilane-network.test.cjs
       - name: Nine-faction 72-unit art and commander lobby progression
         run: node desert-strike/smoke-nine.test.cjs
+      - name: Tower / vision / anti-greed strategy regressions
+        run: node desert-strike/smoke-strategy.test.cjs
       - name: Nine-faction seeded 150-match balance simulation
         run: node desert-strike/smoke-balance.test.cjs > /tmp/desert-balance.json
       - name: Beastgirls and elven mages full sprite coverage

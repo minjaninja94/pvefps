@@ -22,6 +22,7 @@ const win={};vm.runInNewContext(src,{window:win,Math:random,Array,Number,Object,
 const E=win.DesertTriEngine;
 assert.equal(E.WIDTH*E.HEIGHT,3300*520*3,'triple area from the one-lane world');
 assert.equal(E.LANES,3);assert.equal(E.SLOTS,75);
+assert.equal(E.create({mode:'pvp',size:1,members:[{uid:'A',team:0,faction:0},{uid:'B',team:1,faction:1}]}).state.turrets.length,3,'each of the three lanes must have independent defensive towers');
 {
  const isolated=E.create({mode:'pvp',size:1,members:[{uid:'verify0',team:0,faction:3},{uid:'verify1',team:1,faction:5}]});
  assert.equal(isolated.definition(3,6).hp,565,'isolated multiplayer Marine truck must match single-player HP');
@@ -134,3 +135,32 @@ console.log('3x-area real-combat test passed: 1v1,2v2,3v3 and 2/3-player coop, c
  assert.ok(recruited&&recruited.team===0&&recruited.faction===0&&recruited.hp>0,'captured tank belongs to marine player');
  assert.ok(recruited.hp<=recruited.maxHP*.101,'converted enemy barely survives');
 }
+
+// Per-viewer fog is applied before network transmission, and each lane can be scouted independently.
+{
+ const match=E.create({mode:'pvp',size:1,members:[human(0,0,0),human(1,1,1)]});
+ assert.equal(match.snapshot('P0').fog[0],true,'own player has fog on enemy base');
+ assert.equal(match.snapshot('P1').fog[0],true,'other team receives mirrored fog');
+ assert.equal(match.snapshot('P0').players[1].cash,null,'no opponent economy leakage');
+ assert.equal(match.snapshot('P0').players[1].buildings[0].length,75);
+ assert.ok(match.snapshot('P0').players[1].buildings[0].every(role=>role===null));
+ assert.ok(match.order('P1',{type:'build',lane:0,slot:5,role:6}).ok);
+ assert.equal(match.snapshot('P0').players[1].buildings[0][5],null,'hidden construction never reaches guest snapshot');
+ match.wave();
+ assert.equal(match.snapshot('P0').units.some(u=>u.team===1&&u.role===6),false,'reinforcements in enemy spawn are hidden');
+ const spy=match.state.units.find(u=>u.team===1&&u.role===6);
+ const scout=match.state.players[0];assert.ok(match.order('P0',{type:'build',lane:0,slot:0,role:1}).ok);
+ match.wave();
+ const our=match.state.units.find(u=>u.team===0&&u.role===1);
+ our.x=2600;
+ assert.equal(match.snapshot('P0').fog[0],false);
+ assert.equal(match.snapshot('P0').players[1].buildings[0][5],6,'scout reveals enemy production');
+ assert.equal(match.snapshot('P0').fog[1],true,'other lanes stay concealed');
+ // Lone air raider cannot completely ignore home turret.
+ our.hp=0;spy.x=330;spy.y=260;spy.hp=spy.maxHP;spy.cool=99;
+ const oldHP=spy.hp;
+ for(let i=0;i<6;i++)match.tick(.2);
+ assert.ok(spy.hp<oldHP,'defensive tower directly attacks an airborne target');
+ assert.ok(match.state.turrets.every(l=>l.length===2&&l.every(h=>h>=0&&h<=1250)));
+}
+console.log('3-lane fog packet redaction, independent scouting and anti-air towers passed.');
