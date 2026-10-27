@@ -22,12 +22,12 @@ const BADS=[[3,1],[3,5],[0,1],[2,6],[3,2],[0,6],[4,1],[0,5]];
 function definition(faction,role){
  const shared=global.DesertRoster?.getDef;
  if(typeof shared==='function')return shared(role,faction);
- const t=BASE[role],mut=[[1.09,1,.96],[.995,1,1.12],[.95,1.08,1],[1.09,1.06,1.01],[1.04,1,1.06],[.94,1,.99]][faction]||[1,1,1];
+ const t=BASE[role],mut=[[1.055,1,.96],[.995,1,1.12],[.99,1.09,1],[1.09,1.06,1.01],[1.04,1,1.06],[.94,1,.99]][faction]||[1,1,1];
  const beast=faction===4,elf=faction===5,bongo=faction===3&&role===6,prowler=beast&&role===6;
  const melee=beast&&[0,3,6].includes(role),ranged=elf&&[1,2,4,5,6].includes(role);
  return {
   hp:bongo?565:t[0]*2.25*mut[0]*(elf&&role===0?.88:beast&&role===3?1.13:1),
-  damage:bongo?36:prowler?33:t[1]*.94*mut[1]*(beast?(melee?1.16:.87):elf?(ranged?1.045:role===0?.84:1):1),
+  damage:bongo?36:prowler?37:t[1]*.94*mut[1]*(beast?(melee?1.22:.87):elf?(ranged?1.045:role===0?.84:1):1),
   armor:bongo?7:prowler?3:t[2],
   range:bongo?43:prowler?40:t[3]*(ranged?1.10:1),
   rate:bongo?1.45:prowler?.95:t[4],
@@ -136,8 +136,8 @@ function create({mode='pvp',size=1,members=[]}={}){
    if(a.faction===3){
     // Huanglong's existing one-use Marine banquet heals the entire injured squad.
     let healed=0;
-    for(const x of state.units)if(x.id!==a.id&&x.hp>0&&x.team===a.team&&x.lane===a.lane&&x.hp<x.maxHP&&Math.hypot(a.x-x.x,a.y-x.y)<175){
-     const before=x.hp;x.hp=Math.min(x.maxHP,x.hp+Math.max(115,x.maxHP*.28));healed+=x.hp-before;
+    for(const x of state.units)if(x.id!==a.id&&x.hp>0&&x.team===a.team&&x.lane===a.lane&&x.hp<x.maxHP&&Math.hypot(a.x-x.x,a.y-x.y)<195){
+     const before=x.hp;x.hp=Math.min(x.maxHP,x.hp+Math.max(135,x.maxHP*.32));healed+=x.hp-before;
     }
     if(healed>0)a.hp=0;
    }else v.hp=Math.min(v.maxHP,v.hp+(d.heal||36));

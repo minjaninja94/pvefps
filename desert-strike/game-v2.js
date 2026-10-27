@@ -15,11 +15,11 @@ const ROLE=[
  {key:'support',name:'지원',mark:'✚',token:'✚',cost:145,hp:136,damage:0,heal:36,armor:1,range:139,rate:1.24,speed:61,airTarget:false,kind:'ground',tips:'부상당한 전열을 치료하며 전투 지속력을 높입니다.',good:[3,1],bad:[0,5]}
 ];
 const FACTIONS=[
- {id:'forge',name:'철갑연합',tag:'FORGE UNION',logo:'▦',color:'#79ddea',bonus:'최대 HP +9% · 이동 속도 −4%',mut:{hp:1.09,dmg:1,speed:.96},units:['진격 보병','기관총병','관통 로켓','철갑 전차','복합 대공포','궤도 자주포','추적 비행기','전장 구호병'],slogan:'공학·화력·단단한 전열',secondary:'#224956'},
+ {id:'forge',name:'철갑연합',tag:'FORGE UNION',logo:'▦',color:'#79ddea',bonus:'최대 HP +5.5% · 이동 속도 −4%',mut:{hp:1.055,dmg:1,speed:.96},units:['진격 보병','기관총병','관통 로켓','철갑 전차','복합 대공포','궤도 자주포','추적 비행기','전장 구호병'],slogan:'공학·화력·단단한 전열',secondary:'#224956'},
  {id:'brood',name:'심연군체',tag:'DUSK BROOD',logo:'♜',color:'#b9df8d',bonus:'이동 속도 +12% · 최대 HP −0.5%',mut:{hp:.995,dmg:1,speed:1.12},units:['송곳 발톱','산성 침벌','부식 포자충','거대 갑각수','가시 포자탑','폭식 투석충','비행 포식자','치유 공생충'],slogan:'생체 돌파·기동·포식',secondary:'#344d2b'},
- {id:'astral',name:'성운결사',tag:'ASTRAL ORDER',logo:'✧',color:'#d6b8ff',bonus:'공격/치유 +8% · 최대 HP −5%',mut:{hp:.95,dmg:1.08,speed:1},units:['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],slogan:'에너지·보호막·정밀 타격',secondary:'#443257'},
+ {id:'astral',name:'성운결사',tag:'ASTRAL ORDER',logo:'✧',color:'#d6b8ff',bonus:'공격/치유 +9% · 최대 HP −1%',mut:{hp:.99,dmg:1.09,speed:1},units:['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],slogan:'에너지·보호막·정밀 타격',secondary:'#443257'},
  {id:'marine',name:'해병성채',tag:'MARINE FORTRESS',logo:'★',color:'#dba77c',bonus:'돌격 특화 · 내구 +9% · 황룡 1회성 수육 회복',mut:{hp:1.09,dmg:1.06,speed:1.01},units:['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],	slogan:'모히칸·붉은 군모·검은 얼굴·해병수육',secondary:'#58412f'},
- {id:'beastkin',name:'월영 수인족',tag:'MOONFANG CLAN',logo:'♞',color:'#f0b4a6',bonus:'근접 피해 +16% · 기동 +14% / 원거리 피해 −13%',mut:{hp:1.04,dmg:1,speed:1.06},units:['백랑 검사','여우불 투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],slogan:'늑대귀·여우꼬리·야수 기병·근접 난전',secondary:'#603d46'},
+ {id:'beastkin',name:'월영 수인족',tag:'MOONFANG CLAN',logo:'♞',color:'#f0b4a6',bonus:'근접 피해 +22% · 기동 +14% / 원거리 피해 −13%',mut:{hp:1.04,dmg:1,speed:1.06},units:['백랑 검사','여우불 투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],slogan:'늑대귀·여우꼬리·야수 기병·근접 난전',secondary:'#603d46'},
  {id:'elf',name:'은월 엘프족',tag:'SILVERWOOD ELVES',logo:'✦',color:'#b2e6cf',bonus:'원거리 사거리 +10% · 화력 +4.5% / 근접 피해 −16%',mut:{hp:.94,dmg:1,speed:.99},units:['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사'],slogan:'긴 귀·은발·장궁·마법 결정·후방 화력',secondary:'#375c52'}
 ];
 const RNAME=ROLE.map(r=>r.name),SPRITES=new Map();
@@ -36,7 +36,7 @@ function getDef(role,faction){
  const rangeBoost=isElf&&[1,2,4,5,6].includes(role);
  return {...r,unitName:f.units[role],factionName:f.name,name:isBongo?'차량':isProwler?'기병':r.name,mark:isBongo?'▰':isProwler?'♞':r.mark,
   hp:isBongo?565:r.hp*f.mut.hp*2.25*(isElf&&role===0?.88:isBeast&&role===3?1.13:1),
-  damage:isBongo?36:isProwler?33:r.damage*f.mut.dmg*.94*(isBeast?(melee?1.16:.87):isElf?(rangeBoost?1.045:role===0?.84:1):1),
+  damage:isBongo?36:isProwler?37:r.damage*f.mut.dmg*.94*(isBeast?(melee?1.22:.87):isElf?(rangeBoost?1.045:role===0?.84:1):1),
   heal:(r.heal||0)*f.mut.dmg*1.5,speed:isBongo?77:isProwler?90:r.speed*f.mut.speed*.84*(melee?1.14:1),
   kind:isBongo||isProwler?'ground':r.kind,armor:isBongo?7:isProwler?3:r.armor,
   range:isBongo?43:isProwler?40:r.range*(rangeBoost?1.10:1),
@@ -300,7 +300,7 @@ function aiInvest(){
  // Single-unit spam has little tactical flexibility. Counter it by investing earned credits
  // in a stronger specialist army rather than hoarding cash at a same-size facility cap.
  const focusMultiplier=isAirRush?1.6:isTankRush?1.45:isTruckRush?1.4:heavyRush?1.05:.85;
- const desired=Math.min(SLOTS,Math.max(2+Math.floor(state.wave/3),
+ const desired=Math.min(SLOTS,Math.max(2+Math.floor(state.wave/3)+Math.floor(Math.max(0,state.wave-9)/2),
   Math.ceil(intel.total*focusMultiplier),invaded?intel.total+2:0));
  // One reasonable purchasing opportunity per wave, up to three early in a rush.
  let purchases=Math.min(invaded||isAirRush||isTankRush||isTruckRush?4:heavyRush?3:state.wave<=5?2:3,Math.max(0,desired-enemyCount));
@@ -370,14 +370,14 @@ function resolveStrike(u,hit){
   if(u.faction===3&&u.role===7){
    // 황룡의 해병수육: one summoned support unit is consumed to heal all injured allies nearby.
    // This is a special skill, not a normal renewable healing attack.
-   const radius=175;
+   const radius=195;
    let healed=0;
    for(const mate of state.units){
     if(mate.side!==u.side||mate===u||mate.hp<=0||mate.hp>=mate.maxHP)continue;
     const d=Math.hypot(mate.x-u.x,mate.y-u.y);
     if(d<=radius){
      const before=mate.hp;
-     const amount=Math.min(mate.maxHP-mate.hp,Math.max(115,mate.maxHP*.28)*(u.side===0?1+.08*state.weapon:1));
+     const amount=Math.min(mate.maxHP-mate.hp,Math.max(135,mate.maxHP*.32)*(u.side===0?1+.08*state.weapon:1));
      heal(mate,amount);healed+=mate.hp-before;
     }
    }

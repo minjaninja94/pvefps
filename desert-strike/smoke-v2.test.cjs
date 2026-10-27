@@ -144,10 +144,17 @@ econGame.aiInvest();
 assert.equal(eq.enemyEco,1,'AI may upgrade economy, but must buy it with the same money');
 assert.equal(eq.enemyCash,430,'AI first economy upgrade costs exactly the player price of 70');
 eq.wave=12;eq.enemyCash=500;
-eq.enemyBuilt.fill(null);for(let i=0;i<6;i++)eq.enemyBuilt[i]=0;
+eq.enemyBuilt.fill(null);for(let i=0;i<8;i++)eq.enemyBuilt[i]=0;
 econGame.aiInvest();
 assert.equal(eq.enemyEco,2,'AI has paced economy upgrades');
 assert.equal(eq.enemyCash,405,'AI second economy upgrade costs the same 95 CR');
+// Late-game cash overflow must be spent on paid facilities, not left uninvested.
+eq.wave=17;eq.enemyCash=1200;eq.enemyBuilt.fill(null);
+for(let i=0;i<3;i++)eq.enemyBuilt[i]=1;
+const facilityCountBefore=eq.enemyBuilt.filter(v=>v!==null).length;
+econGame.aiInvest();
+assert.ok(eq.enemyBuilt.filter(v=>v!==null).length>facilityCountBefore,'AI buys more producers in late waves');
+assert.ok(eq.enemyCash<1200&&eq.enemyCash>=0,'late-game reinvestment uses earned credits');
 
 // Anti-spam: the opponent responds to one cheap melee role, without gifted money.
 click('restartButton');click('startButton');
