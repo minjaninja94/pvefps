@@ -1047,9 +1047,36 @@ function drawMinimap(){
  g.fillStyle='#fff3bb14';g.fillRect(left,0,CW/WORLD_W*1100,82);
  g.strokeStyle='#fce0a7';g.lineWidth=3;g.strokeRect(left+1,2,CW/WORLD_W*1100-2,78);
 }
+function drawProductionMinimap(){
+ const c=$('productionMinimap'),status=$('productionFrontStatus');
+ if(!c||!status||!state)return;
+ const g=c.getContext('2d');if(!g)return;
+ const w=c.width,h=c.height;
+ g.clearRect(0,0,w,h);g.fillStyle='#10212c';g.fillRect(0,0,w,h);
+ for(const y of LANES){g.fillStyle='#b2c4b422';g.fillRect(0,y/CH*h-3,w,6);}
+ const friendly=state.units.filter(u=>u.side===0&&u.hp>0),enemy=state.units.filter(u=>u.side===1&&u.hp>0);
+ let frontline=0;
+ for(const u of state.units)if(u.hp>0){g.fillStyle=u.side===0?'#74e4e2':'#ff8e7d';g.fillRect(Math.floor(u.x/WORLD_W*w),Math.floor(u.y/CH*h),u.role===3?5:3,3);}
+ if(friendly.length&&enemy.length){
+  const mine=Math.max(...friendly.map(u=>u.x)),theirs=Math.min(...enemy.map(u=>u.x));
+  frontline=(mine+theirs)/2;
+ }else if(friendly.length)frontline=Math.max(...friendly.map(u=>u.x));
+ else if(enemy.length)frontline=Math.min(...enemy.map(u=>u.x));
+ else frontline=WORLD_W/2;
+ const ratio=frontline/WORLD_W;
+ g.fillStyle='#70d9dd';g.fillRect(0,h-5,Math.max(1,w*ratio),5);
+ g.fillStyle='#f08e7f';g.fillRect(w*ratio,h-5,w*(1-ratio),5);
+ g.strokeStyle='#f9e8b7';g.lineWidth=2;g.strokeRect(state.cameraX/WORLD_W*w,1,CW/WORLD_W*w,h-7);
+ for(const x of [3,w-8]){g.fillStyle=x<10?'#9af0e8':'#ffa28c';g.fillRect(x,h/2-8,5,16);}
+ const breached=enemy.filter(u=>u.x<550).length,press=friendly.filter(u=>u.x>WORLD_W-550).length;
+ let label=breached?'위험 · 적 '+breached+'기 기지 침공':ratio<.42?'열세 · 아군 방면으로 전선 후퇴':ratio>.58?'우세 · 적 진영 압박':press?'우세 · 적 본진 공격 중':'교착 · 중앙 전선 대치';
+ if(state.turretHP[0]<=0)label='위험 · 아군 포탑 파괴 / '+label;
+ status.textContent=label;
+ status.dataset.tendency=breached||ratio<.42?'danger':ratio>.58?'advantage':'even';
+}
 function frame(now){
  const delta=Math.min((now-lastFrame)/1000||0,.045);lastFrame=now;
- if(state){tick(delta);drawBattle();drawBase();drawMinimap();}
+ if(state){tick(delta);drawBattle();drawBase();drawMinimap();drawProductionMinimap();}
  requestAnimationFrame(frame);
 }
 function inspectBattle(event){
@@ -1102,6 +1129,11 @@ function wire(){
  $('panLeft').addEventListener('click',()=>pan(-1));
  $('panRight').addEventListener('click',()=>pan(1));
  $('followFront').addEventListener('click',()=>{state.followFront=true;updateUI(false);});
+ $('productionMinimap').addEventListener('click',e=>{
+  const rect=e.currentTarget.getBoundingClientRect();
+  state.cameraX=clamp((e.clientX-rect.left)/rect.width*WORLD_W-CW/2,0,WORLD_W-CW);
+  state.followFront=false;changeView('battle');updateUI(false);
+ });
  $('battleMinimap').addEventListener('click',e=>{
   const rect=e.currentTarget.getBoundingClientRect();
   state.cameraX=clamp(((e.clientX-rect.left)/rect.width)*WORLD_W-CW/2,0,WORLD_W-CW);
@@ -1129,6 +1161,7 @@ function wire(){
    $('pauseButton').textContent=state.paused?'▶ 계속하기':'Ⅱ 일시정지';updateUI(true);}}
  });
 }
+window.DesertRoster=Object.freeze({FACTIONS,ROLE,getDef,cost:(role)=>ROLE[role]?.cost??Infinity});
 initFactions();wire();reset();
 if(typeof window.addEventListener==='function')window.addEventListener('marine-art-ready',()=>updateUI(true));
 if(typeof window.addEventListener==='function')window.addEventListener('isometric-art-ready',()=>updateUI(true));
