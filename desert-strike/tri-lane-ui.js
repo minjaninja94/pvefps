@@ -96,7 +96,7 @@ function draw(){
   if(sprite){
    ctx.imageSmoothingEnabled=false;
    const filter=global.DesertLobby?.filterForSkin?.(u.skin)||'none';
-   if(global.DesertUnitMotion)global.DesertUnitMotion.draw(ctx,{faction:u.faction,role:u.role,action:u.act||'move',frame,x:x-d/2,y:y-d*.84,size:d,filter});
+   if(global.DesertUnitMotion)global.DesertUnitMotion.draw(ctx,{faction:u.faction,role:u.role,action:u.act||'move',frame,x:x-d/2,y:y-d*.84,size:d,filter,isHatchling:!!u.isHatchling});
    else{ctx.save();ctx.filter=filter;ctx.drawImage(sprite,x-d/2,y-d*.84,d,d);ctx.restore();}
   }
   else{ctx.fillStyle=u.team===0?'#a5ece7':'#ef9e8a';ctx.fillRect(x-5,y-9,10,14);}

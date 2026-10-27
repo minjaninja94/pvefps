@@ -958,7 +958,7 @@ function drawUnit(g,u,scale=1){
  if(u.facing<0)g.scale(-1,1);
  g.imageSmoothingEnabled=false;
  const filter=u.side===0?window.DesertLobby?.skinFilter?.(u.faction)||'none':'none';
- if(iso&&window.DesertUnitMotion)window.DesertUnitMotion.draw(g,{faction:u.faction,role:u.role,action:mode,frame,x:-w/2,y:-h/2-(flying?9+Math.sin(u.anim)*2:0),size:w,filter});
+ if(iso&&window.DesertUnitMotion)window.DesertUnitMotion.draw(g,{faction:u.faction,role:u.role,action:mode,frame,x:-w/2,y:-h/2-(flying?9+Math.sin(u.anim)*2:0),size:w,filter,isHatchling:!!u.isHatchling});
  else{g.filter=filter;g.drawImage(artwork,-w/2,-h/2-(flying?9+Math.sin(u.anim)*2:0),w,h);g.filter='none';}
  g.restore();
  if(dead)return;

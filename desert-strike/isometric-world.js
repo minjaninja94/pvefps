@@ -538,9 +538,46 @@ function effect(g,x,y,scale,mode='hit',frame=0){
  }
  g.restore();
 }
+// Separate symbiote hatchling sprite: a weak, one-hit larva, not a shrunken adult soldier.
+const broodlingCache=new Map();
+function broodlingFrame(mode='idle',frame=0){
+ const f=((Math.floor(frame)||0)%FRAMES+FRAMES)%FRAMES,key=mode+'-'+f;
+ if(broodlingCache.has(key))return broodlingCache.get(key);
+ const cv=document.createElement('canvas');cv.width=SIZE;cv.height=SIZE;
+ const g=cv.getContext('2d');if(!g)return cv;
+ g.imageSmoothingEnabled=false;
+ const t=f/16*Math.PI*2,scoot=mode==='move'?Math.sin(t)*2:0;
+ const lift=mode==='move'?Math.abs(Math.sin(t))*2:Math.sin(t)*.4;
+ g.save();g.translate(0,-lift);
+ if(mode==='death'){g.translate(36,51);g.rotate(f/15*.9);g.translate(-36,-51);g.globalAlpha=Math.max(.06,1-f/15);}
+ // six spindle legs and a curved segmented grub shell
+ for(let i=0;i<3;i++){
+  const x=23+i*11+scoot;
+  g.fillStyle='#293c2b';g.fillRect(x,48,4,10+(i%2)*3);
+  g.fillRect(x+18,48,4,10+((i+1)%2)*3);
+ }
+ g.fillStyle='#1c2f2b';g.beginPath();g.ellipse(37+scoot,43,22,15,-.12,0,Math.PI*2);g.fill();
+ g.fillStyle='#6ba75b';g.beginPath();g.ellipse(36+scoot,40,20,13,-.13,0,Math.PI*2);g.fill();
+ for(let i=0;i<3;i++){
+  g.strokeStyle=i%2?'#2a5c40':'#3c784a';g.lineWidth=3;
+  g.beginPath();g.moveTo(25+i*8+scoot,31);g.lineTo(26+i*8+scoot,50);g.stroke();
+ }
+ g.fillStyle='#bdde77';g.fillRect(15+scoot,35,7,9);
+ g.fillStyle='#172922';g.fillRect(17+scoot,38,3,4);
+ g.fillStyle='#d7ff9b';g.fillRect(17+scoot,38,2,2);
+ g.strokeStyle='#45713a';g.lineWidth=2;g.beginPath();
+ g.moveTo(16+scoot,36);g.lineTo(11+scoot,26);
+ g.moveTo(20+scoot,34);g.lineTo(21+scoot,24);g.stroke();
+ g.fillStyle='#d6f2a1';g.fillRect(9+scoot,24,3,3);g.fillRect(20+scoot,22,3,3);
+ if((mode==='attack'||mode==='siege')&&f>=5&&f<=10){
+  g.fillStyle='#dfffa4';g.fillRect(6+scoot,38,7,3);
+  g.fillRect(1+scoot,37,4,2);
+ }
+ g.restore();broodlingCache.set(key,cv);return cv;
+}
 global.IsoWorld=Object.freeze({
  SIZE,FRAMES,project:worldToScreen,unproject:screenToWorld,
- terrain,structure,factory,frame:renderFactionSprite,effect,
+ terrain,structure,factory,frame:renderFactionSprite,broodlingFrame,effect,
  portrait(f,role){return renderFactionSprite(f,role,'idle',4);},
  invalidateMaiden(){for(const k of [...cache.keys()])if(k.startsWith('4-')||k.startsWith('5-'))cache.delete(k);},
  invalidateSpriteFaction(f){for(const k of [...cache.keys()])if(k.startsWith(f+'-'))cache.delete(k);},
