@@ -16,7 +16,7 @@
   const phase=((Math.floor(frame)||0)%FRAMES+FRAMES)%FRAMES;
   const mode=mapAction(action),key=faction+'-'+role+'-'+mode+'-'+phase;
   if(cache.has(key))return cache.get(key);
-  const cv=document.createElement('canvas');cv.width=W;cv.height=HEIGHT;
+  const cv=document.createElement('canvas');cv.width=HEIGHT;cv.height=HEIGHT;
   const g=cv.getContext('2d');if(!g)return null;
   const fraction=phase/(FRAMES-1),rad=fraction*Math.PI*2;
   const pose=ACTIONS.indexOf(mode);
@@ -26,7 +26,7 @@
   const slash=mode==='attack'||mode==='skill',fallen=mode==='death';
   const scale=mode==='move'?1+.015*Math.sin(rad):1;
   g.save();g.imageSmoothingEnabled=false;
-  g.translate(W/2+stride,HEIGHT*.5-bounce);
+  g.translate(HEIGHT/2+stride,HEIGHT/2-bounce);
   if(fallen){g.translate(fraction*8,fraction*8);g.rotate(fraction*.87);g.globalAlpha=Math.max(.12,1-fraction*.88);}
   else if(slash){g.rotate(Math.sin(Math.PI*fraction)*-.09);}
   g.scale(scale,scale);
