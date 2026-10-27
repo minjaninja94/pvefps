@@ -52,8 +52,12 @@ function create({mode='pvp',size=1,members=[]}={}){
  const players=humans.concat(mode==='coop'?Array.from({length:size},(_,i)=>({uid:'AI_'+i,name:'적 AI '+(i+1),team:1,faction:(i+3)%10,bot:true})):[]);
  const state={mode,size,seconds:0,wave:0,next:24,ended:false,winner:null,
   width:WIDTH,height:HEIGHT,lanes:LANES,
-  cores:Array.from({length:LANES},()=>[2500,2500]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0},players:players.map(p=>({...p,cash:360,eco:0,buildings:Array.from({length:3},()=>Array(SLOTS).fill(null))})),lanePressure:[.5,.5,.5]};
+  cores:Array.from({length:LANES},()=>[2500,2500]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),players:players.map(p=>({...p,cash:360,eco:0,buildings:Array.from({length:3},()=>Array(SLOTS).fill(null))})),lanePressure:[.5,.5,.5]};
  const byUid=uid=>state.players.find(p=>p.uid===uid);
+ function marineRecord(uid,key,amount=1){
+  const v=state.marineStatsByUid.get(uid)||{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0};
+  v[key]=(v[key]||0)+amount;state.marineStatsByUid.set(uid,v);
+ }
  function order(uid,data){
   const p=byUid(uid);
   if(!p||p.bot||state.ended||!data||typeof data!=='object')return {ok:false,reason:'조작 권한이 없습니다.'};
@@ -80,7 +84,7 @@ function create({mode='pvp',size=1,members=[]}={}){
   const x=p.team===0?235+(slot%15)*4:WIDTH-235-(slot%15)*4;
   const y=lane*LANE_H+265+((Math.floor(slot/15)*11+(slot%15)*21)%196)-98;
   const radius=role===3?23:((p.faction===3||p.faction===4)&&role===6)?27:role===6?15:15;
-  if(p.faction===3&&role===7)state.marineStats.huangSpawns++;
+  if(p.faction===3&&role===7){state.marineStats.huangSpawns++;marineRecord(p.uid,'huangSpawns');}
   state.units.push({id:state.nextUnit++,uid:p.uid,team:p.team,faction:p.faction,role,lane,spawnLane:lane,x,y,hp:d.hp,maxHP:d.hp,skin:p.skin,cool:Math.random()*.6,
     radius,frame:Math.floor(Math.random()*16),act:'move',attackAge:0,spawnAge:0,hitAge:0,skillAge:0});
  }
@@ -155,7 +159,7 @@ function create({mode='pvp',size=1,members=[]}={}){
    const wanted=Math.min(24,Math.floor(COST[v.role]*.12));
    const taken=Math.min(wanted,Math.max(0,Math.floor(enemy.cash)));
    if(taken>0){
-    enemy.cash-=taken;owner.cash+=taken;state.marineStats.loot++;state.marineStats.lootedCR+=taken;
+    enemy.cash-=taken;owner.cash+=taken;state.marineStats.loot++;state.marineStats.lootedCR+=taken;marineRecord(a.uid,'loot');marineRecord(a.uid,'lootedCR',taken);
     state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'ginppai',time:.5,team:a.team});
    }
   }
@@ -163,7 +167,7 @@ function create({mode='pvp',size=1,members=[]}={}){
   if(recruits>=MARINE_RECRUIT_CAP||roll()>=MARINE_RECRUIT_CHANCE)return;
   if(state.units.filter(x=>x.hp>0&&x.lane===v.lane&&x.team===a.team).length>=75)return;
   state.marineRecruitCount.set(a.uid,recruits+1);
-  state.marineStats.recruits++;
+  state.marineStats.recruits++;marineRecord(a.uid,'recruits');
   state.units.push({...v,id:state.nextUnit++,uid:a.uid,team:a.team,hp:Math.max(1,Math.floor(v.maxHP*MARINE_RECRUIT_HP)),
    cool:1.5,conscripted:true,killed:false,spawnAge:0,hitAge:0,skillAge:0,attackAge:.4,act:'move'});
   state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'conscript',time:.7,team:a.team});
@@ -194,7 +198,7 @@ function create({mode='pvp',size=1,members=[]}={}){
     for(const x of state.units)if(x.id!==a.id&&x.hp>0&&x.team===a.team&&x.hp<x.maxHP&&Math.hypot(a.x-x.x,a.y-x.y)<195){
      const before=x.hp;x.hp=Math.min(x.maxHP,x.hp+Math.max(135,x.maxHP*.32));healed+=x.hp-before;
     }
-    if(healed>0)a.hp=0;
+    if(healed>0){a.hp=0;state.effects.push({x:a.x,y:a.y,lane:a.lane,kind:'huanglong',time:.9,team:a.team});}
    }else{
     if(v.healWindowStart===undefined||state.seconds-v.healWindowStart>=1){v.healWindowStart=state.seconds;v.healWindowUsed=0;}
     const amount=Math.max(0,Math.min(d.heal||36,Math.max(80,v.maxHP*.085)-v.healWindowUsed));
@@ -207,6 +211,7 @@ function create({mode='pvp',size=1,members=[]}={}){
    const nearby=state.units.filter(x=>x.team!==a.team&&x.hp>0&&definition(x.faction,x.role).kind==='ground'&&Math.hypot(x.x-v.x,x.y-v.y)<58)
     .sort((x,y)=>Math.hypot(x.x-v.x,x.y-v.y)-Math.hypot(y.x-v.x,y.y-v.y)).slice(0,3);
    for(const x of nearby)applyHit(a,x,dmg*(x.role===0?1.35:x.role===3?.55:1));
+   if(a.faction===3&&nearby.length){state.marineStats.bongoCharges++;marineRecord(a.uid,'bongoCharges');state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'bongo',time:.5,team:a.team});}
   }else if(a.role===5){
    for(const x of state.units)if(x.team!==a.team&&x.hp>0&&definition(x.faction,x.role).kind!=='air'&&Math.hypot(x.x-v.x,x.y-v.y)<66)applyHit(a,x,dmg*.8);
   }else applyHit(a,v,dmg);
@@ -374,6 +379,7 @@ function create({mode='pvp',size=1,members=[]}={}){
   return {mode:state.mode,size:state.size,width:WIDTH,height:HEIGHT,seconds:Math.round(state.seconds*10)/10,wave:state.wave,next:Math.ceil(state.next*10)/10,
    ended:state.ended,winner:state.winner,cores:state.cores,turrets:state.turrets,lanePressure:state.lanePressure.map(x=>Math.round(x*100)/100),
    fog:visible.map(s=>!s),viewerTeam:viewer?.team??null,
+   marineOps:state.players.filter(p=>p.faction===3&&(!viewer||p.team===viewer.team)).map(p=>({uid:p.uid,team:p.team,...(state.marineStatsByUid.get(p.uid)||{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0}),waveRecruits:state.marineRecruitCount.get(p.uid)||0})),
    players:state.players.map(p=>({uid:p.uid,name:p.name,faction:p.faction,skin:p.skin,team:p.team,bot:p.bot,
     cash:allied(p)?Math.floor(p.cash):null,eco:allied(p)?p.eco:null,
     buildings:p.buildings.map((slots,lane)=>allied(p)||visible[lane]?slots:Array(SLOTS).fill(null))})),

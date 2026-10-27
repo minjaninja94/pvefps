@@ -108,7 +108,9 @@ function draw(){
  }
  for(const e of snap.effects||[]){
   ctx.strokeStyle=e.kind==='tower'?'#fff0ac':e.kind==='conscript'?'#ffcf55':e.kind==='ginppai'?'#91e2b6':'#f6dba8';
-  ctx.lineWidth=e.kind==='tower'?3:2;ctx.beginPath();ctx.ellipse(e.x/3,wy(e.y),13,6,0,0,Math.PI*2);ctx.stroke();
+  ctx.lineWidth=e.kind==='tower'?3:2;ctx.beginPath();ctx.ellipse(e.x/3,wy(e.y),e.kind==='huanglong'?28:13,e.kind==='huanglong'?15:6,0,0,Math.PI*2);ctx.stroke();
+  const label={ginppai:'긴빠이 +CR',conscript:'자진입대!',huanglong:'황룡 · 해병수육!',bongo:'오도봉고 돌진!'}[e.kind];
+  if(label){ctx.fillStyle=e.kind==='huanglong'?'#ffe69b':'#ffe0b0';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText(label,e.x/3,wy(e.y)-23);}
  }
  if(snap.fog?.length){
   for(let l=0;l<3;l++)if(snap.fog[l]){
@@ -154,6 +156,9 @@ function onSnapshot(v){
  }
  $('mpWave').textContent='WAVE '+String(v.wave).padStart(2,'0');
  $('mpCountdown').textContent=Math.max(0,v.next).toFixed(1)+'초';
+ const marineHud=$('mpMarineAbilities');
+ if(marineHud){const info=(v.marineOps||[]).find(o=>o.uid===myId);marineHud.hidden=!info;
+  if(info)marineHud.textContent='★ 해병 특성 | 긴빠이 '+info.loot+'회 (+'+info.lootedCR+' CR) | 자진입대 '+info.recruits+'회 · 이번 웨이브 '+info.waveRecruits+'/2 | 황룡 '+info.huangSpawns+'기 | 오도봉고 '+info.bongoCharges+'회';}
  const f=document.createDocumentFragment();
  for(let l=0;l<3;l++){
   const status=side===0?v.lanePressure[l]:1-v.lanePressure[l];
