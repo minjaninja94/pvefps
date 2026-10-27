@@ -4,6 +4,8 @@ const $=id=>document.getElementById(id);
 const CW=1100,CH=520,WORLD_W=3300,HOME_H=340,MAX_BASE=7200,MAX_TURRET=1700,INTERVAL=24,COLS=15,ROWS=5,SLOTS=COLS*ROWS,INCOME_PERIOD=.5,SIDE_SUPPLY=220;
 const COLORS=['#79dfee','#ff9a79'],LANES=[110,180,260,340,410];
 const initialIncome=1,WAVE_STIPEND=24,MAX_ECONOMY=7;
+const TOWER_RANGE=285,TOWER_PERIOD=.31,TOWER_DAMAGE=28,FOG_END_WAVE=6,ENEMY_FOG_X=WORLD_W-770;
+const HEAL_WINDOW=1,HEAL_BUDGET=80;
 // Marine-only logistics. Low-probability transfer + fragile capture, max two recruits each wave.
 const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=1,HUANGLONG_INTERVAL=8;
 const ROLE=[
@@ -82,7 +84,7 @@ function reset(){
  wave:0,next:INTERVAL,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],
  built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0},
- nukes:1,barrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
+ towerShots:[],aiSight:new Set(),nukes:1,barrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
  nextUnitId:1,attackCount:0};
  selectedRole=null;demolition=false;bannerSeconds=0;barrageSeconds=0;
  $('startOverlay').classList.remove('hidden');$('endOverlay').classList.add('hidden');
@@ -218,8 +220,14 @@ const AI_COUNTER_ROLES=[
  [0,5]    // medic -> charge/siege
 ];
 function aiReadOpponent(){
+ // The AI sees enemy composition only after its troops observe it. No hidden factory reads.
+ const sightings=state.aiSight||(state.aiSight=new Set());
  const counts=Array(ROLE.length).fill(0);
- for(const role of state.built)if(role!==null)counts[role]++;
+ for(const foe of state.units){
+  if(foe.side!==0||foe.hp<=0||sightings.has(foe.uid))continue;
+  if(foe.x>=WORLD_W*.57||state.units.some(u=>u.side===1&&u.hp>0&&Math.hypot(u.x-foe.x,u.y-foe.y)<=340))sightings.add(foe.uid);
+ }
+ for(const foe of state.units)if(foe.side===0&&foe.hp>0&&sightings.has(foe.uid))counts[foe.role]++;
  const sum=counts.reduce((a,b)=>a+b,0);
  let major=0;
  for(let i=1;i<counts.length;i++)if(counts[i]>counts[major])major=i;
@@ -238,6 +246,15 @@ function aiChoose(budget=state.enemyCash){
  if(!affordable.length)return null;
  const myCounts=Array(ROLE.length).fill(0);
  for(const role of state.enemyBuilt)if(role!==null)myCounts[role]++;
+ // Mixed heavy/air/healer compositions require two real counter types, not a random counter.
+ const tanks=intel.counts[3],air=intel.counts[6],medics=intel.counts[7];
+ if(tanks>=2&&air>=2){
+  if(affordable.includes(4)&&myCounts[4]<Math.ceil(air*.9))return 4;
+  if(affordable.includes(2)&&myCounts[2]<Math.ceil(tanks*1.05))return 2;
+  if(medics>=2&&affordable.includes(5)&&myCounts[5]<Math.ceil(medics*.5))return 5;
+ }
+ if(tanks>=2&&medics>=2&&affordable.includes(2)&&myCounts[2]<tanks)return 2;
+ if(air>=2&&medics>=2&&affordable.includes(4)&&myCounts[4]<air)return 4;
  if(intel.dominant!==null){
   const primary=aiCountersFor(intel.dominant);
   const matching=primary.filter(id=>affordable.includes(id));
@@ -303,6 +320,8 @@ function aiInvest(){
  const enemyCount=state.enemyBuilt.filter(role=>role!==null).length;
  const invaded=state.units.some(u=>u.side===0&&u.x>WORLD_W-580&&u.hp>0);
  const heavyRush=intel.total>=4&&intel.dominant!==null;
+ // Spend normal starting income on a genuine early offensive army to punish pure eco greed.
+ const opening=Math.min(12,4+Math.floor(Math.max(0,state.wave-1)*1.2));
  // Keep pace with a committed enemy production build, but not by spawning free units.
  const isAirRush=heavyRush&&intel.dominant===6&&state.faction!==3&&state.faction!==4;
  const isTankRush=heavyRush&&intel.dominant===3;
@@ -310,13 +329,13 @@ function aiInvest(){
  // Single-unit spam has little tactical flexibility. Counter it by investing earned credits
  // in a stronger specialist army rather than hoarding cash at a same-size facility cap.
  const focusMultiplier=isAirRush?1.6:isTankRush?1.45:isTruckRush?1.4:heavyRush?1.05:.85;
- const desired=Math.min(SLOTS,Math.max(2+Math.floor(state.wave/3)+Math.floor(Math.max(0,state.wave-9)/2),
+ const desired=Math.min(SLOTS,Math.max(opening,2+Math.floor(state.wave/3)+Math.floor(Math.max(0,state.wave-9)/2),
   Math.ceil(intel.total*focusMultiplier),invaded?intel.total+2:0));
  // One reasonable purchasing opportunity per wave, up to three early in a rush.
  let purchases=Math.min(invaded||isAirRush||isTankRush||isTruckRush?4:heavyRush?3:state.wave<=5?2:3,Math.max(0,desired-enemyCount));
- const reserve=invaded||heavyRush?0:state.wave<=3?25:50;
- if(state.wave>=4&&state.wave%3===0&&!invaded&&state.enemyEco<MAX_ECONOMY){
-  const wantLevel=Math.min(MAX_ECONOMY,Math.max(state.eco,Math.floor(state.wave/5)));
+ const reserve=invaded||heavyRush||state.wave<=4?0:50;
+ if(state.wave>=5&&state.wave%3===0&&!invaded&&state.enemyEco<MAX_ECONOMY){
+  const wantLevel=Math.min(MAX_ECONOMY,Math.floor(state.wave/4));
   const ecoPrice=ecoCostFor(state.enemyEco);
   if(state.enemyEco<wantLevel&&state.enemyCash>=ecoPrice+150){
    state.enemyCash-=ecoPrice;state.enemyEco++;
@@ -350,7 +369,7 @@ function wave(){
   }
  }
  banner('WAVE '+String(state.wave).padStart(2,'0')+' · DEPLOYED');
- setMessage('웨이브 '+state.wave+' 출격 · 아군 '+state.built.filter(v=>v!==null).length+'기 / 적군 '+state.enemyBuilt.filter(v=>v!==null).length+'기');
+ setMessage('웨이브 '+state.wave+' 출격 · 아군 '+state.built.filter(v=>v!==null).length+'기 / 상대의 실제 병력은 정찰로 확인');
  chirp(430,.17);updateUI(true);
 }
 function deployMarineSupports(){
@@ -408,7 +427,7 @@ function resolveStrike(u,hit){
     if(d<=radius){
      const before=mate.hp;
      const amount=Math.min(mate.maxHP-mate.hp,Math.max(135,mate.maxHP*.32)*(u.side===0?1+.08*state.weapon:1));
-     heal(mate,amount);healed+=mate.hp-before;
+     heal(mate,amount,true);healed+=mate.hp-before;
     }
    }
    if(healed>0){
@@ -452,7 +471,15 @@ function damage(u,amount,source,attacker=null,roll=Math.random){
  if(Math.random()<.15)floatText(u.x,u.y-25,Math.round(hit),COLORS[u.side===0?1:0]);
  if(u.hp<=0){killUnit(u);marineSpoils(u,attacker,roll);}
 }
-function heal(u,amount){u.hp=Math.min(u.maxHP,u.hp+amount);pulse(u.x,u.y,'#94f7a9',11);}
+function heal(u,amount,burst=false){
+ if(!burst){
+  if(u.healWindowStart===undefined||state.elapsed-u.healWindowStart>=HEAL_WINDOW){u.healWindowStart=state.elapsed;u.healWindowUsed=0;}
+  amount=Math.max(0,Math.min(amount,Math.max(HEAL_BUDGET,u.maxHP*.085)-u.healWindowUsed));
+  u.healWindowUsed+=amount;
+ }
+ if(amount<=0)return;
+ u.hp=Math.min(u.maxHP,u.hp+amount);pulse(u.x,u.y,'#94f7a9',11);
+}
 function structureHit(side,amount){
  if(state.turretHP[side]>0){
   state.turretHP[side]=Math.max(0,state.turretHP[side]-amount);
@@ -661,17 +688,23 @@ function tick(dt){
   if(d<step+6||p.ttl<=0){projectileImpact(p);state.shots.splice(i,1);}
   else{p.x+=dx/d*step;p.y+=dy/d*step;}
  }
+ // Rapid defensive single-target turret, per side; targets air and armor as well.
  for(let side=0;side<=1;side++){
-  const near=state.units.filter(u=>u.side!==side&&u.hp>0&&Math.hypot(u.x-(side===0?190:WORLD_W-190),u.y-260)<220);
-  if(near.length&&state.turretHP[side]>0){
-   state['cool'+side]=(state['cool'+side]||0)-ds;
-   if(state['cool'+side]<=0){
-    state['cool'+side]=.62;
-    const target=near.reduce((a,b)=>distance(a,{x:side===0?190:WORLD_W-190,y:260})<distance(b,{x:side===0?190:WORLD_W-190,y:260})?a:b);
-    damage(target,18,'turret');pulse(target.x,target.y,COLORS[side],9);
-   }
-  }
+  if(state.turretHP[side]<=0)continue;
+  const origin={x:side===0?190:WORLD_W-190,y:260};
+  state['cool'+side]=Math.max(0,(state['cool'+side]||0)-ds);
+  if(state['cool'+side]>0)continue;
+  const near=state.units.filter(u=>u.side!==side&&u.hp>0&&distance(u,origin)<=TOWER_RANGE);
+  if(!near.length)continue;
+  near.sort((a,b)=>distance(a,origin)*.55+a.hp/a.maxHP*42-(a.role===7?35:0)
+   -(distance(b,origin)*.55+b.hp/b.maxHP*42-(b.role===7?35:0)));
+  const target=near[0],def=getDef(target.role,target.faction);
+  damage(target,TOWER_DAMAGE*(def.kind==='air'?1.25:target.role===3?1.12:1),'turret');
+  state['cool'+side]=TOWER_PERIOD;
+  state.towerShots.push({side,x:origin.x,y:origin.y,tx:target.x,ty:target.y,time:.14});
  }
+ for(const shot of state.towerShots)shot.time-=ds;
+ state.towerShots=state.towerShots.filter(x=>x.time>0);
  state.units=state.units.filter(v=>v.hp>0);
  for(const u of state.deadUnits)u.deathAge+=ds;
  state.deadUnits=state.deadUnits.filter(u=>u.deathAge<1.08);
@@ -707,9 +740,9 @@ function updateUI(full=false){
  $('wave').textContent=String(state.wave).padStart(2,'0');
  $('timer').textContent=Math.max(0,state.next).toFixed(1);
  $('myHealth').textContent=Math.ceil(state.baseHP[0])+' / '+MAX_BASE;
- $('enemyHealth').textContent=Math.ceil(state.baseHP[1])+' / '+MAX_BASE;
+ $('enemyHealth').textContent=enemyBaseVisible()?Math.ceil(state.baseHP[1])+' / '+MAX_BASE:'정찰 전';
  $('myHealthFill').style.width=100*state.baseHP[0]/MAX_BASE+'%';
- $('enemyHealthFill').style.width=100*state.baseHP[1]/MAX_BASE+'%';
+ $('enemyHealthFill').style.width=(enemyBaseVisible()?100*state.baseHP[1]/MAX_BASE:0)+'%';
  $('factionLabel').textContent=FACTIONS[state.faction].name;
  $('enemyFactionLabel').textContent='VS '+FACTIONS[state.enemyFaction].name;
  const inv=state.units.filter(u=>u.side===1&&u.x<490).length;
@@ -999,6 +1032,10 @@ function structure(g,x,y,side,turret=true,health=1){
  }
  g.restore();
 }
+function enemyBaseVisible(){
+ return state.wave>=FOG_END_WAVE||state.units.some(u=>u.side===0&&u.hp>0&&u.x>=ENEMY_FOG_X-220);
+}
+function enemyUnitVisible(u){return u.side===0||u.x<ENEMY_FOG_X||enemyBaseVisible();}
 function drawBattle(){
  const c=$('battleCanvas'),g=c.getContext('2d');if(!g)return;
  g.clearRect(0,0,CW,CH);
@@ -1006,7 +1043,7 @@ function drawBattle(){
  ground(g,WORLD_W,CH);
  structure(g,90,260,0,false,state.baseHP[0]);structure(g,WORLD_W-90,260,1,false,state.baseHP[1]);
  structure(g,190,260,0,true,state.turretHP[0]);structure(g,WORLD_W-190,260,1,true,state.turretHP[1]);
- for(const u of [...state.units,...state.deadUnits].filter(u=>u.x>=state.cameraX-85&&u.x<=state.cameraX+CW+85).sort((a,b)=>a.y-b.y))drawUnit(g,u,1);
+ for(const u of [...state.units,...state.deadUnits].filter(u=>u.x>=state.cameraX-85&&u.x<=state.cameraX+CW+85&&enemyUnitVisible(u)).sort((a,b)=>a.y-b.y))drawUnit(g,u,1);
  if(window.DesertSprites){
   for(const impact of state.structureFX){
    const x=impact.side===0?(impact.part==='turret'?190:90):(impact.part==='turret'?WORLD_W-190:WORLD_W-90);
@@ -1014,7 +1051,14 @@ function drawBattle(){
    else window.DesertSprites.structureImpact(g,x,260,impact.side===0?state.faction:state.enemyFaction,impact.mode,impact.age/impact.duration);
   }
  }
+ for(const shot of state.towerShots){
+  g.strokeStyle=shot.side===0?'#91f2ea':'#ffc6aa';g.lineWidth=2.5;
+  const start=window.IsoWorld?window.IsoWorld.project(shot.x,shot.y):shot;
+  const end=window.IsoWorld?window.IsoWorld.project(shot.tx,shot.ty):{x:shot.tx,y:shot.ty};
+  g.beginPath();g.moveTo(start.x,start.y);g.lineTo(end.x,end.y);g.stroke();
+ }
  for(const p of state.shots){
+  if(p.side===1&&p.x>=ENEMY_FOG_X&&!enemyBaseVisible())continue;
   g.strokeStyle=p.side===0?'#a7eaff':'#ffbaa4';g.lineWidth=p.blast?4:2.5;
   const src=window.IsoWorld?window.IsoWorld.project(p.x,p.y):p;
   const dest=window.IsoWorld?window.IsoWorld.project(p.x+(p.tx-p.x)*.17,p.y+(p.ty-p.y)*.17):{x:p.x+(p.tx-p.x)*.17,y:p.y+(p.ty-p.y)*.17};
@@ -1022,14 +1066,21 @@ function drawBattle(){
   g.fillStyle=p.blast?'#ffcf89':'#fff5c3';g.fillRect(src.x-2,src.y-2,4,4);
  }
  for(const e of state.effects){
+  if(e.x>=ENEMY_FOG_X&&!enemyBaseVisible())continue;
   const a=clamp(e.time/.5,0,1);g.globalAlpha=a;
   const pos=window.IsoWorld?window.IsoWorld.project(e.x,e.y):e;
   g.strokeStyle=e.color;g.lineWidth=3;g.beginPath();g.ellipse(pos.x,pos.y,e.size*(1.25-.3*a),e.size*.53*(1.25-.3*a),0,0,7);g.stroke();
  }g.globalAlpha=1;
  for(const o of state.floaters){
+  if(o.x>=ENEMY_FOG_X&&!enemyBaseVisible())continue;
   g.fillStyle=o.color;g.globalAlpha=clamp(o.time/.85,0,1);
   g.font='900 13px monospace';g.textAlign='center';const fp=window.IsoWorld?window.IsoWorld.project(o.x,o.y):o;g.fillText(o.t,fp.x,fp.y);
  }g.globalAlpha=1;
+ if(!enemyBaseVisible()){
+  g.fillStyle='#07121af0';g.fillRect(ENEMY_FOG_X,-120,WORLD_W-ENEMY_FOG_X+180,CH+260);
+  g.strokeStyle='#9bb6ba88';g.lineWidth=3;g.beginPath();g.moveTo(ENEMY_FOG_X,0);g.lineTo(ENEMY_FOG_X,CH);g.stroke();
+  g.fillStyle='#bdd4d1';g.font='bold 14px monospace';g.textAlign='left';g.fillText('정찰 전 · 적 후방 미확인',ENEMY_FOG_X+24,58);
+ }
  g.restore();
  if(state.paused){g.fillStyle='#0c1d27b0';g.fillRect(0,0,CW,CH);
   g.fillStyle='#ffdfac';g.font='900 56px monospace';g.textAlign='center';g.fillText('PAUSED',550,260);}
@@ -1103,10 +1154,13 @@ function drawMinimap(){
   g.fillStyle=i%2?'#6b635123':'#84977d19';g.fillRect(0,y-5,1100,10);
  }
  for(const u of state.units){
+  if(!enemyUnitVisible(u))continue;
   g.fillStyle=u.side===0?'#78dde8':'#ff896b';
   g.fillRect(Math.floor(u.x/WORLD_W*1100),Math.floor(u.y/CH*82),u.role===3?4:3,u.role===3?4:3);
  }
+ if(!enemyBaseVisible()){g.fillStyle='#091621e8';g.fillRect(ENEMY_FOG_X/WORLD_W*1100,0,1100*(WORLD_W-ENEMY_FOG_X)/WORLD_W,82);}
  for(const side of [0,1]){
+  if(side===1&&!enemyBaseVisible())continue;
   g.fillStyle=side===0?'#72ddea':'#f18c72';
   g.fillRect(side===0?2:1087,30,10,22);
  }
@@ -1123,7 +1177,7 @@ function drawProductionMinimap(){
  for(const y of LANES){g.fillStyle='#b2c4b422';g.fillRect(0,y/CH*h-3,w,6);}
  const friendly=state.units.filter(u=>u.side===0&&u.hp>0),enemy=state.units.filter(u=>u.side===1&&u.hp>0);
  let frontline=0;
- for(const u of state.units)if(u.hp>0){g.fillStyle=u.side===0?'#74e4e2':'#ff8e7d';g.fillRect(Math.floor(u.x/WORLD_W*w),Math.floor(u.y/CH*h),u.role===3?5:3,3);}
+ for(const u of state.units)if(u.hp>0&&enemyUnitVisible(u)){g.fillStyle=u.side===0?'#74e4e2':'#ff8e7d';g.fillRect(Math.floor(u.x/WORLD_W*w),Math.floor(u.y/CH*h),u.role===3?5:3,3);}
  if(friendly.length&&enemy.length){
   const mine=Math.max(...friendly.map(u=>u.x)),theirs=Math.min(...enemy.map(u=>u.x));
   frontline=(mine+theirs)/2;
@@ -1133,6 +1187,7 @@ function drawProductionMinimap(){
  const ratio=frontline/WORLD_W;
  g.fillStyle='#70d9dd';g.fillRect(0,h-5,Math.max(1,w*ratio),5);
  g.fillStyle='#f08e7f';g.fillRect(w*ratio,h-5,w*(1-ratio),5);
+ if(!enemyBaseVisible()){g.fillStyle='#091621ec';g.fillRect(ENEMY_FOG_X/WORLD_W*w,0,w*(WORLD_W-ENEMY_FOG_X)/WORLD_W,h);}
  g.strokeStyle='#f9e8b7';g.lineWidth=2;g.strokeRect(state.cameraX/WORLD_W*w,1,CW/WORLD_W*w,h-7);
  for(const x of [3,w-8]){g.fillStyle=x<10?'#9af0e8':'#ffa28c';g.fillRect(x,h/2-8,5,16);}
  const breached=enemy.filter(u=>u.x<550).length,press=friendly.filter(u=>u.x>WORLD_W-550).length;
