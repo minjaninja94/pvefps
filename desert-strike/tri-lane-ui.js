@@ -112,7 +112,8 @@ function draw(){
   const phase=Math.floor((performance.now()-lastSnapshotAt)/84);
   const frame=u.act==='death'?Math.min(15,(u.frame||0)+phase):((u.frame||0)+phase)%16;
   const baseAction=['idle','move','attack','siege','death'].includes(u.act)?u.act:'move';
-  const sprite=iso?.frame(u.faction,u.role,baseAction,frame),d=(u.role===3||u.role===6?53:46)*(u.isHatchling?.55:1);
+  const sprite=iso?.frame(u.faction,u.role,baseAction,frame),d=(u.role===3||u.role===6?53:46)*(u.isHatchling?.55:1)*(u.heroCount===20?2:1);
+  if(u.heroCount===20){global.DesertConsolidation?.aura(ctx,x,y,d,performance.now()/1000);ctx.fillStyle='#ff7687';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText('★ ×20',x,y-d*.95);}
   if(sprite){
    ctx.imageSmoothingEnabled=false;
    const filter=global.DesertLobby?.filterForSkin?.(u.skin)||'none';

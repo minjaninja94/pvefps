@@ -83,15 +83,21 @@ function getDef(role,faction){
   unitType:groundSpecial?'ground-special':r.kind
 };
 }
+function armyPopulation(side){return window.DesertConsolidation?.population(state.units,u=>u.side===side)??state.units.filter(u=>u.hp>0&&u.side===side).length;}
+function compactArmy(){
+ const result=window.DesertConsolidation?.compact(state.units,{now:state.elapsed});if(!result)return;
+ for(const shot of state.shots)if(result.redirects.has(shot.target))shot.target=result.redirects.get(shot.target);
+ for(const hero of result.heroes)floatText(hero.x,hero.y-35,'영웅 ×20','#ff5968');
+}
 function combatDef(u){
- const d=getDef(u.role,u.faction);
+ const base=getDef(u.role,u.faction),d=window.DesertConsolidation?.definition(base,u)||base;
  return u.isHatchling?{...d,hp:1,damage:5,range:24,rate:1.28,speed:108,armor:0,airTarget:false,kind:'ground'}:d;
 }
 function broodLay(parent,target,roll=Math.random){
  if(parent.faction!==1||parent.isHatchling||parent.conscripted||parent.role===7||parent.hp<=0
    ||!target||target.side===parent.side||state.broodBirths[parent.side]>=BROOD_BIRTH_CAP
    ||state.units.filter(v=>v.hp>0&&v.side===parent.side&&v.isHatchling).length>=BROOD_ALIVE_CAP
-   ||state.units.filter(v=>v.hp>0&&v.side===parent.side).length>=SIDE_SUPPLY
+   ||armyPopulation(parent.side)>=SIDE_SUPPLY
    ||state.elapsed-(parent.lastBroodBirth??-999)<BROOD_BIRTH_COOLDOWN||roll()>=BROOD_BIRTH_CHANCE)return;
  parent.lastBroodBirth=state.elapsed;state.broodBirths[parent.side]++;state.broodBirthsTotal[parent.side]++;
  const x=clamp(parent.x+(parent.side===0?17:-17)+random(-12,12),30,WORLD_W-30),y=clamp(parent.y+random(-22,22),68,452);
@@ -137,7 +143,7 @@ function reset(){
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},
  broodBirths:[0,0],broodBirthsTotal:[0,0],
  towerShots:[],aiSight:new Set(),nukes:1,barrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
- nextUnitId:1,attackCount:0};
+ nextUnitId:1,attackCount:0,nextConsolidation:1};
  selectedRole=null;demolition=false;bannerSeconds=0;barrageSeconds=0;
  $('startOverlay').classList.remove('hidden');$('endOverlay').classList.add('hidden');
  $('pauseButton').textContent='Ⅱ 일시정지';$('speedButton').textContent='▶ 1×';
@@ -414,7 +420,7 @@ function wave(){
  state.marineSupports=[];state.marineRecruitCount=[0,0];state.broodBirths=[0,0];
  if(ecoRemaining(1)<=0)state.enemyCash+=WAVE_STIPEND;
  aiInvest();
- const headcount=[state.units.filter(u=>u.side===0).length,state.units.filter(u=>u.side===1).length];
+ const headcount=[armyPopulation(0),armyPopulation(1)];
  for(let i=0;i<SLOTS;i++){
   if(state.built[i]!==null&&state.built[i]!==EXTRACTOR){
    const role=state.built[i];
@@ -438,7 +444,7 @@ function deployMarineSupports(){
   if(job.due>state.elapsed+1e-6)return true;
   const buildings=job.side===0?state.built:state.enemyBuilt;
   const faction=job.side===0?state.faction:state.enemyFaction;
-  if(faction===3&&buildings[job.slot]===7&&state.units.filter(u=>u.hp>0&&u.side===job.side).length<SIDE_SUPPLY)createUnit(job.side,job.slot,7);
+  if(faction===3&&buildings[job.slot]===7&&armyPopulation(job.side)<SIDE_SUPPLY)createUnit(job.side,job.slot,7);
   return false;
  });
 }
@@ -456,7 +462,7 @@ function calcDamage(attacker,target,amount){
   if(target.role===6&&[3,4,6,7].includes(target.faction)){if(attacker===2)out*=1.65;else if(attacker===0)out*=.68;else if(attacker===4)out*=.78;}
   else{if(role.good.includes(target.role))out*=1.55;if(role.bad.includes(target.role))out*=.7;}
  }
- const armor=getDef(target.role,target.faction).armor;
+ const armor=combatDef(target).armor;
  return Math.max(3,out-armor*.66);
 }
 function killUnit(u){
@@ -486,7 +492,7 @@ function resolveStrike(u,hit){
     const d=Math.hypot(mate.x-u.x,mate.y-u.y);
     if(d<=radius){
      const before=mate.hp;
-     const amount=Math.min(mate.maxHP-mate.hp,Math.max(135,mate.maxHP*.32)*(u.side===0?1+.08*state.weapon:1));
+     const amount=Math.min(mate.maxHP-mate.hp,Math.max(135,mate.maxHP*.32)*(u.heroCount||1)*(u.side===0?1+.08*state.weapon:1));
      heal(mate,amount,true);healed+=mate.hp-before;
     }
    }
@@ -497,7 +503,7 @@ function resolveStrike(u,hit){
     killUnit(u);
    }
   }else if(hit.target&&hit.target.hp>0&&hit.target.hp<hit.target.maxHP)
-   heal(hit.target,getDef(u.role,u.faction).heal*(u.side===0?1+.08*state.weapon:1),false,u);
+   heal(hit.target,combatDef(u).heal*(u.side===0?1+.08*state.weapon:1),false,u);
  }else if(hit.baseSide!==null){
   fire(u,null,hit.baseSide);
  }else if(hit.target&&hit.target.hp>0){
@@ -517,7 +523,7 @@ function marineSpoils(v,attacker,roll=Math.random){
   if(stolen>0){state[key]-=stolen;state[to]+=stolen;state.marineStats.loot++;state.marineStats.lootedCR+=stolen;floatText(v.x,v.y-28,'긴빠이 +'+stolen+' CR','#f8d292');}
  }
  if(state.marineRecruitCount[attacker.side]>=MARINE_RECRUIT_CAP||roll()>=MARINE_RECRUIT_CHANCE)return;
- if(state.units.filter(x=>x.hp>0&&x.side===attacker.side).length>=SIDE_SUPPLY)return;
+ if(armyPopulation(attacker.side)>=SIDE_SUPPLY)return;
  state.marineRecruitCount[attacker.side]++;
  state.marineStats.recruits++;
  state.units.push({...v,uid:state.nextUnitId++,side:attacker.side,hp:Math.max(1,Math.floor(v.maxHP*MARINE_RECRUIT_HP)),killed:false,conscripted:true,strike:null,
@@ -536,7 +542,7 @@ function damage(u,amount,source,attacker=null,roll=Math.random){
  const before=u.hp;
  u.hp-=hit;u.blink=.12;u.hitAge=.36;u.lastDamagedAt=state.elapsed;
  if(attacker?.faction===4&&[0,3,6].includes(source)&&!attacker.isHatchling&&attacker.hp>0)
-  attacker.hp=Math.min(attacker.maxHP,attacker.hp+Math.min(3,Math.max(0,Math.min(before,hit))*.015));
+  attacker.hp=Math.min(attacker.maxHP,attacker.hp+Math.min(3*(attacker.heroCount||1),Math.max(0,Math.min(before,hit))*.015));
  if(attacker?.faction===8&&[1,2,4,5].includes(source)&&state.elapsed-(attacker.lastInkCast??-999)>=INK_COOLDOWN){
   attacker.lastInkCast=state.elapsed;u.inkUntil=Math.max(u.inkUntil||0,state.elapsed+INK_DURATION);
   floatText(u.x,u.y-30,'먹물 침식','#d5adff');
@@ -548,7 +554,7 @@ function heal(u,amount,burst=false,healer=null){
  if(u.isHatchling)return;
  if(!burst){
   if(u.healWindowStart===undefined||state.elapsed-u.healWindowStart>=HEAL_WINDOW){u.healWindowStart=state.elapsed;u.healWindowUsed=0;}
-  amount=Math.max(0,Math.min(amount,Math.max(HEAL_BUDGET,u.maxHP*.085)-u.healWindowUsed));
+  amount=Math.max(0,Math.min(amount,Math.max(HEAL_BUDGET*(u.heroCount||1),u.maxHP*.085)-u.healWindowUsed));
   u.healWindowUsed+=amount;
  }
  if(amount<=0)return;
@@ -655,7 +661,7 @@ function bongoImpact(u,dt){
  for(const v of candidates.slice(0,3)){
   // Drive-by anti-melee, reduced against true heavy armor; no building bonus.
   const antiMelee=v.role===0?1.45:v.role===3?.38:1;
-  damage(v,(u.faction===4?30:42)*mods*antiMelee,null,u);
+  damage(v,(u.faction===4?30:42)*(u.heroCount||1)*mods*antiMelee,null,u);
   v.x=clamp(v.x+u.facing*13,30,WORLD_W-30);
   pulse(v.x,v.y,'#edb46c',14);
  }
@@ -723,6 +729,7 @@ function tick(dt){
  }
  const ds=dt*state.rate;
  state.elapsed+=ds;state.next-=ds;state.incomeClock+=ds;
+ if(state.elapsed>=state.nextConsolidation){state.nextConsolidation=state.elapsed+1;compactArmy();}
  while(state.incomeClock>=INCOME_PERIOD){const at=state.elapsed-state.incomeClock+INCOME_PERIOD;state.incomeClock-=INCOME_PERIOD;if(at+1e-6>=state.ecoReadyAt)state.cash+=initialIncome+state.eco;if(at+1e-6>=state.enemyEcoReadyAt)state.enemyCash+=initialIncome+state.enemyEco;}
  state.barrageCd=Math.max(0,state.barrageCd-ds);
  while(state.next<=0){state.next+=INTERVAL;wave();}
@@ -890,7 +897,8 @@ function updateUI(full=false){
 }
 function initFactions(){
  $('factionCards').innerHTML=FACTIONS.map((f,i)=>{
-  const art=i>=4?'<img class="faction-hero-new" src="./assets/portraits/'+f.id+'.svg" alt="'+f.name+' 초상화" loading="lazy">':'';
+  const moe=window.DesertLobby?.selectedSkin?.()==='moe';
+  const art=moe?'<img class="faction-hero-new" src="./assets/sprites/moe-'+f.id+'-portrait.webp" alt="'+f.name+' 모에화 초상화">':i>=4?'<img class="faction-hero-new" src="./assets/portraits/'+f.id+'.svg" alt="'+f.name+' 초상화" loading="lazy">':'';
   return '<button class="faction-card'+(i===selectedFaction?' selected':'')+(i>=4?' faction-maiden':'')+'" data-faction="'+i+'">'+
    '<span class="faction-icon" style="color:'+f.color+'">'+f.logo+'</span>'+art+
    '<strong>'+f.name+'</strong><span class="eyebrow">'+f.tag+'</span><small>'+f.slogan+'</small><span class="bonus">'+f.bonus+'</span></button>';
@@ -976,6 +984,7 @@ function sprite(f,r,phase){
  return SPRITES.get(key);
 }
 function drawUnit(g,u,scale=1){
+ if(u.heroCount===20)scale*=2;
  if(u.isHatchling)scale*=.58;
  const dead=u.killed===true;
  const flying=getDef(u.role,u.faction).kind==='air';
@@ -990,6 +999,7 @@ function drawUnit(g,u,scale=1){
  const w=(iso?(u.role===3?78:u.role===6?77:68):(u.role===3?55:u.role===6?52:47))*scale;
  const h=(iso?(u.role===3?78:u.role===6?77:68):(u.role===3?55:u.role===6?52:47))*scale;
  const baseMode=['idle','move','attack','siege','death'].includes(mode)?mode:'idle';
+ if(u.heroCount===20)window.DesertConsolidation?.aura(g,at.x,at.y+12*scale,w,performance.now()/1000);
  const artwork=iso?.frame(u.faction,u.role,baseMode,frame)||window.DesertSprites?.frame(u.faction,u.role,baseMode,frame)||sprite(u.faction,u.role,frame%2);
  g.fillStyle='#05141c88';g.beginPath();g.ellipse(at.x,at.y+13*scale,17*scale,4*scale,0,0,Math.PI*2);g.fill();
  g.save();g.translate(at.x,at.y);
@@ -1006,7 +1016,7 @@ function drawUnit(g,u,scale=1){
  g.fillStyle='#07161cd8';g.fillRect(at.x-10*scale,y-8*scale,20*scale,16*scale);
  g.strokeStyle=u.side===0?'#85e9fa':'#fdad92';g.lineWidth=1;g.strokeRect(at.x-10*scale,y-8*scale,20*scale,16*scale);
  g.fillStyle=u.side===0?'#d0f9ff':'#ffe4d0';g.textAlign='center';g.font='900 '+Math.round(13*scale)+'px monospace';
- g.fillText(getDef(u.role,u.faction).mark,at.x,y+4*scale);
+ g.fillText(u.heroCount===20?'★ ×20':getDef(u.role,u.faction).mark,at.x,y+4*scale);
  if(u.hp<u.maxHP){
   g.fillStyle='#06171c';g.fillRect(at.x-16*scale,y-12*scale,32*scale,4*scale);
   g.fillStyle=COLORS[u.side];g.fillRect(at.x-16*scale,y-12*scale,32*scale*Math.max(0,u.hp/u.maxHP),4*scale);
@@ -1304,8 +1314,8 @@ function inspectBattle(event){
  let picked=null,best=60;
  for(const u of state.units){const d=Math.hypot(u.x-x,u.y-y);if(d<best){best=d;picked=u;}}
  if(!picked)return;
- const def=getDef(picked.role,picked.faction);
- $('inspect').innerHTML='<b>'+FACTIONS[picked.faction].name+' · '+def.unitName+' '+def.mark+'</b> | HP '+
+ const def=combatDef(picked);
+ $('inspect').innerHTML='<b>'+FACTIONS[picked.faction].name+' · '+def.unitName+(picked.heroCount===20?' ★ 영웅 ×20':'')+' '+def.mark+'</b> | HP '+
  Math.ceil(picked.hp)+' / '+Math.ceil(picked.maxHP)+' · '+(picked.side===0?'아군':'적군')+
  '<br><span class="matchups">'+roleMatchupHtml(picked.role,picked.faction)+'</span>';
 }
@@ -1379,8 +1389,8 @@ function wire(){
    $('pauseButton').textContent=state.paused?'▶ 계속하기':'Ⅱ 일시정지';updateUI(true);}}
  });
 }
-window.DesertRoster=Object.freeze({FACTIONS,ROLE,getDef,cost:(role)=>ROLE[role]?.cost??Infinity});
-initFactions();wire();reset();
+window.DesertRoster=Object.freeze({FACTIONS,ROLE,getDef,refreshChoices:initFactions,cost:(role)=>ROLE[role]?.cost??Infinity});
+window.addEventListener?.('desert-moe-ready',()=>{if(state){state.lastCards=undefined;updateUI(true);}});initFactions();wire();reset();
 if(typeof window.addEventListener==='function')window.addEventListener('marine-art-ready',()=>updateUI(true));
 if(typeof window.addEventListener==='function')window.addEventListener('isometric-art-ready',()=>updateUI(true));
 if(typeof window.addEventListener==='function')window.addEventListener('maiden-art-ready',()=>{window.IsoWorld?.invalidateMaiden?.();initFactions();updateUI(true);});

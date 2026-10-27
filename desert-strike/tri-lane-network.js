@@ -18,7 +18,7 @@ const path=()=>fs.doc(db,'desertRooms',roomId);
 const signalPath=guest=>fs.doc(db,'desertRooms',roomId,'signals',guest);
 async function identity(){
  if(!global.IronFirebase)throw Error('Firebase 네트워크 모듈이 아직 준비되지 않았습니다.');
- scope=await global.IronFirebase.identity();
+ scope=await (global.DesertDeviceAccount?global.DesertDeviceAccount.identity():global.IronFirebase.identity());
  db=scope.db;fs=scope.fs;uid=scope.uid;return scope;
 }
 function members(){return Object.entries(room?.players||{}).map(([id,p])=>({uid:id,...p}));}

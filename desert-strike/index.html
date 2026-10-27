@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=economy4"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=heroes5"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -15,7 +15,7 @@
    <aside class="lobby-panel lobby-profile">
     <div class="lobby-eyebrow">COMMANDER PROFILE</div><div id="lobbyRank" class="lobby-rank">훈련병</div><div class="lobby-level"><b id="lobbyLevel">LV. 1</b><span id="lobbyXP">0 / 170 XP</span></div><div class="lobby-xp-track"><i id="lobbyXPFill"></i></div><p id="lobbyRecord">전적 0승 0패 · 훈련 랭크</p>
     <div class="lobby-profile-options"><label>지휘관 이름<input id="lobbyNickname" maxlength="16" value="지휘관" autocomplete="nickname"></label><button id="lobbySaveName" type="button">프로필 저장</button></div>
-    <div class="lobby-auth"><button id="lobbyGoogle" type="button">Google로 계정 생성 / 연결</button><button id="lobbyGuest" type="button">게스트로 진행</button><p>별도 비밀번호는 받거나 저장하지 않습니다. 다른 사이트 비밀번호를 게임에 입력하지 마세요. Google 로그인은 Firebase Auth를 사용합니다.</p><small id="lobbyAuthMessage" role="status">게스트의 레벨·스킨은 이 브라우저에 보관됩니다. 계정 설정 시 프로필 동기화를 시도합니다.</small></div>
+    <div class="lobby-auth"><button id="lobbyDeviceLogin" type="button">이 기기로 간편 접속</button><button id="lobbyCopyIds" type="button">접속 ID 복사</button><label>유저 고유 ID<input id="lobbyUserId" readonly autocomplete="off" aria-label="유저 고유 ID"></label><label>기기 접속 ID<input id="lobbyDeviceId" readonly autocomplete="off" aria-label="기기 접속 ID"></label><p>비밀번호 없이 같은 브라우저에서 자동 접속합니다. ID는 식별용이며 실제 인증 정보는 이 기기에 보관됩니다. 브라우저 데이터를 삭제하거나 다른 기기로 바꾸면 새 계정이 됩니다.</p><small id="lobbyAuthMessage" role="status">기기 계정을 준비하고 있습니다.</small></div>
    </aside>
   </div>
   <section class="lobby-panel lobby-loadout"><div class="lobby-section-title"><div><div class="lobby-eyebrow">FACTION ROSTER</div><h2>10종족 선택</h2></div><span>80개 전투 유닛</span></div><div id="lobbyFactions" class="lobby-factions"></div>
@@ -127,19 +127,21 @@
 <script src="./heroine-factions.js?v=tenfog2" defer></script>
 <script src="./expansion-art.js?v=tenfog2" defer></script>
 <script src="./maiden-illustrations.js?v=tenfog2" defer></script>
-<script src="./sprite-atlas.js?v=economy4" defer></script>
-<script src="./special-unit-art.js?v=economy4" defer></script>
-<script src="./resource-art.js?v=economy4" defer></script>
-<script src="./isometric-world.js?v=economy4" defer></script>
+<script src="./sprite-atlas.js?v=heroes5" defer></script>
+<script src="./special-unit-art.js?v=heroes5" defer></script>
+<script src="./resource-art.js?v=heroes5" defer></script>
+<script src="./isometric-world.js?v=heroes5" defer></script>
 <script src="../firebase-config.js" defer></script>
 <script src="../firebase-network.js" defer></script>
-<script src="./moe-unit-art.js?v=moe1" defer></script>
-<script src="./unit-motion.js?v=moe2" defer></script>
+<script src="./moe-unit-art.js?v=heroes5" defer></script>
+<script src="./unit-motion.js?v=heroes5" defer></script>
+<script src="./unit-consolidation.js?v=heroes5" defer></script>
 <script src="./tri-lane-engine.js?v=ground2" defer></script>
-<script src="./tri-lane-network.js?v=economy4" defer></script>
-<script src="./tri-lane-ui.js?v=economy4" defer></script>
-<script src="./game-v2.js?v=economy4" defer></script>
-<script src="./commander-covers.js?v=economy4" defer></script>
-<script src="./command-hud.js?v=economy4" defer></script>
-<script src="./front-lobby.js?v=economy4" defer></script>
+<script src="./device-account.js?v=heroes5" defer></script>
+<script src="./tri-lane-network.js?v=heroes5" defer></script>
+<script src="./tri-lane-ui.js?v=heroes5" defer></script>
+<script src="./game-v2.js?v=heroes5" defer></script>
+<script src="./commander-covers.js?v=heroes5" defer></script>
+<script src="./command-hud.js?v=heroes5" defer></script>
+<script src="./front-lobby.js?v=heroes5" defer></script>
 </body></html>

@@ -47,7 +47,7 @@ function definition(faction,role){
  };
 }
 function combatDef(u){
- const d=definition(u.faction,u.role);
+ const base=definition(u.faction,u.role),d=global.DesertConsolidation?.definition(base,u)||base;
  return u.isHatchling?{...d,hp:1,damage:5,range:24,rate:1.28,speed:108,armor:0,airTarget:false,kind:'ground'}:d;
 }
 function roomPlayers(input){const x=Array.isArray(input)?input:Object.values(input||{});return x.map(p=>({uid:String(p.uid||p.id||''),name:String(p.name||'지휘관').slice(0,16),team:Number(p.team),faction:Number(p.faction),skin:['default','moe','twilight','aurora','gold'].includes(p.skin)?p.skin:'default',bot:!!p.bot}));}
@@ -60,7 +60,7 @@ function create({mode='pvp',size=1,members=[]}={}){
  const players=humans.concat(mode==='coop'?Array.from({length:size},(_,i)=>({uid:'AI_'+i,name:'적 AI '+(i+1),team:1,faction:(i+3)%10,bot:true})):[]);
  const state={mode,size,seconds:0,wave:0,next:24,ended:false,winner:null,
   width:WIDTH,height:HEIGHT,lanes:LANES,
-  cores:Array.from({length:LANES},()=>[2500,2500]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,cash:360,eco:0,ecoReadyAt:0,mineCosts:{},buildings:Array.from({length:3},()=>Array(SLOTS).fill(null))})),lanePressure:[.5,.5,.5]};
+  cores:Array.from({length:LANES},()=>[2500,2500]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,nextConsolidation:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,cash:360,eco:0,ecoReadyAt:0,mineCosts:{},buildings:Array.from({length:3},()=>Array(SLOTS).fill(null))})),lanePressure:[.5,.5,.5]};
  const byUid=uid=>state.players.find(p=>p.uid===uid);
  function marineRecord(uid,key,amount=1){
   const v=state.marineStatsByUid.get(uid)||{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0};
@@ -156,7 +156,7 @@ function create({mode='pvp',size=1,members=[]}={}){
   for(const p of state.players)if(state.seconds>=p.ecoReadyAt)p.cash+=24;
   for(const bot of state.players.filter(p=>p.bot))botPurchase(bot);
   for(let lane=0;lane<LANES;lane++)for(let team=0;team<2;team++){
-   let count=state.units.filter(u=>u.lane===lane&&u.team===team&&u.hp>0).length;
+   let count=(global.DesertConsolidation?.population(state.units,u=>u.lane===lane&&u.team===team)??state.units.filter(u=>u.lane===lane&&u.team===team&&u.hp>0).length);
    for(const p of state.players)if(p.team===team)for(let slot=0;slot<SLOTS&&count<75;slot++){
     const role=p.buildings[lane][slot];
     if(role!==null&&role!==EXTRACTOR){
@@ -173,7 +173,7 @@ function create({mode='pvp',size=1,members=[]}={}){
    if(job.due>state.seconds+1e-6)return true;
    const p=byUid(job.uid);
    if(p&&p.faction===3&&p.buildings[job.lane][job.slot]===7&&state.cores[job.lane][p.team]>0
-    &&state.units.filter(x=>x.hp>0&&x.lane===job.lane&&x.team===p.team).length<75)spawn(p,job.lane,job.slot,7);
+    &&(global.DesertConsolidation?.population(state.units,x=>x.lane===job.lane&&x.team===p.team)??state.units.filter(x=>x.hp>0&&x.lane===job.lane&&x.team===p.team).length)<75)spawn(p,job.lane,job.slot,7);
    return false;
   });
  }
@@ -199,7 +199,7 @@ function create({mode='pvp',size=1,members=[]}={}){
   state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'conscript',time:.7,team:a.team});
  }
  function applyHit(a,v,damage){
-  const attacker=definition(a.faction,a.role),defender=definition(v.faction,v.role);
+  const attacker=combatDef(a),defender=combatDef(v);
   let mult=1;
   if(v.role===6&&[3,4,6,7].includes(v.faction)){
    mult=a.role===2?1.65:a.role===0?.68:a.role===4?.78:1;
@@ -218,7 +218,7 @@ function create({mode='pvp',size=1,members=[]}={}){
   const before=v.hp;
   v.hp-=hit;v.attackAge=.12;v.hitAge=.3;v.lastDamagedAt=state.seconds;
   if(a.faction===4&&[0,3,6].includes(a.role)&&!a.isHatchling&&a.hp>0)
-   a.hp=Math.min(a.maxHP,a.hp+Math.min(3,Math.max(0,Math.min(before,hit))*.015));
+   a.hp=Math.min(a.maxHP,a.hp+Math.min(3*(a.heroCount||1),Math.max(0,Math.min(before,hit))*.015));
   if(a.faction===8&&[1,2,4,5].includes(a.role)&&state.seconds-(a.lastInkCast??-999)>=INK_COOLDOWN){
    a.lastInkCast=state.seconds;v.inkUntil=Math.max(v.inkUntil||0,state.seconds+INK_DURATION);
    state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'ink',time:.6,team:a.team});
@@ -236,12 +236,12 @@ function create({mode='pvp',size=1,members=[]}={}){
     // Huanglong's existing one-use Marine banquet heals the entire injured squad.
     let healed=0;
     for(const x of state.units)if(x.id!==a.id&&x.hp>0&&!x.isHatchling&&x.team===a.team&&x.hp<x.maxHP&&Math.hypot(a.x-x.x,a.y-x.y)<195){
-     const before=x.hp;x.hp=Math.min(x.maxHP,x.hp+Math.max(135,x.maxHP*.32));healed+=x.hp-before;
+     const before=x.hp;x.hp=Math.min(x.maxHP,x.hp+Math.max(135,x.maxHP*.32)*(a.heroCount||1));healed+=x.hp-before;
     }
     if(healed>0){a.hp=0;state.effects.push({x:a.x,y:a.y,lane:a.lane,kind:'huanglong',time:.9,team:a.team});}
    }else{
     if(v.healWindowStart===undefined||state.seconds-v.healWindowStart>=1){v.healWindowStart=state.seconds;v.healWindowUsed=0;}
-    const amount=Math.max(0,Math.min(d.heal||36,Math.max(80,v.maxHP*.085)-v.healWindowUsed));
+    const amount=Math.max(0,Math.min(d.heal||36,Math.max(80*(v.heroCount||1),v.maxHP*.085)-v.healWindowUsed));
     v.healWindowUsed+=amount;const recovered=Math.min(amount,v.maxHP-v.hp);
     v.hp=Math.min(v.maxHP,v.hp+amount);
     if(a.faction===9&&recovered>0&&state.seconds-(a.lastPollenAt??-999)>=5){
@@ -381,7 +381,7 @@ function create({mode='pvp',size=1,members=[]}={}){
    if(!hostile.length)continue;
    hostile.sort((a,b)=>(Math.hypot(a.x-x,a.y-y)*.55+a.hp/a.maxHP*42-(a.role===7?35:0))
     -(Math.hypot(b.x-x,b.y-y)*.55+b.hp/b.maxHP*42-(b.role===7?35:0)));
-   const v=hostile[0],f=definition(v.faction,v.role),dmg=TOWER_DAMAGE*(f.kind==='air'?1.25:v.role===3?1.12:1);
+   const v=hostile[0],f=combatDef(v),dmg=TOWER_DAMAGE*(f.kind==='air'?1.25:v.role===3?1.12:1);
    let hit=Math.max(3,dmg-f.armor*.66);
    if(v.faction===0&&[3,4].includes(v.role))hit*=.94;
    if(v.faction===2&&state.seconds-(v.lastWardAt??-999)>=10){v.lastWardAt=state.seconds;hit*=.82;}
@@ -406,6 +406,7 @@ function create({mode='pvp',size=1,members=[]}={}){
  function tick(dt){
   if(state.ended)return;
   dt=clamp(Number(dt)||0,0,.2);state.seconds+=dt;state.next-=dt;
+  if(state.seconds>=state.nextConsolidation){state.nextConsolidation=state.seconds+1;global.DesertConsolidation?.compact(state.units,{now:state.seconds,multiplayer:true});}
   // Correct fixed income for every *owner*, not pooled by team.
   const before=Math.floor((state.seconds-dt)*2),now=Math.floor(state.seconds*2);
   if(now>before)for(let slice=before+1;slice<=now;slice++)for(const p of state.players)if(slice*.5+1e-6>=p.ecoReadyAt)p.cash+=1+p.eco;
@@ -440,7 +441,7 @@ function create({mode='pvp',size=1,members=[]}={}){
    players:state.players.map(p=>({uid:p.uid,name:p.name,faction:p.faction,skin:p.skin,team:p.team,bot:p.bot,
     cash:allied(p)?Math.floor(p.cash):null,eco:allied(p)?p.eco:null,ecoReadyAt:allied(p)?p.ecoReadyAt:null,
     buildings:p.buildings.map((slots,lane)=>allied(p)||visible[lane]?slots:Array(SLOTS).fill(null))})),
-   units:state.units.filter(u=>!isHidden(u.team,u.lane,u.x)).map(u=>({id:u.id,uid:u.uid,team:u.team,faction:u.faction,skin:u.skin||'default',role:u.role,lane:u.lane,x:Math.round(u.x),y:Math.round(u.y),hp:Math.ceil(u.hp),maxHP:Math.ceil(u.maxHP),conscripted:!!u.conscripted,isHatchling:!!u.isHatchling,frame:Math.floor(u.frame),act:u.hitAge>0?'hit':u.spawnAge<.42?'spawn':u.skillAge>0?'skill':u.attackAge>0?'attack':u.act})),
+   units:state.units.filter(u=>!isHidden(u.team,u.lane,u.x)).map(u=>({id:u.id,uid:u.uid,team:u.team,faction:u.faction,skin:u.skin||'default',role:u.role,lane:u.lane,x:Math.round(u.x),y:Math.round(u.y),hp:Math.ceil(u.hp),maxHP:Math.ceil(u.maxHP),heroCount:u.heroCount===20?20:1,conscripted:!!u.conscripted,isHatchling:!!u.isHatchling,frame:Math.floor(u.frame),act:u.hitAge>0?'hit':u.spawnAge<.42?'spawn':u.skillAge>0?'skill':u.attackAge>0?'attack':u.act})),
    effects:state.effects.filter(e=>!isHidden(e.team,e.lane,e.x)).map(e=>({...e,x:Math.round(e.x),y:Math.round(e.y)}))};
  }
  return {state,order,tick,wave,snapshot,definition};

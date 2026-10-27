@@ -74,7 +74,9 @@ function renderCovers(){const art=global.DesertCommanderCovers;if(!art)return;co
 function render(){
  if(!FACTIONS.length)return;
  const fac=FACTIONS[progress.selectedFaction]||FACTIONS[0],l=levelFromXP(progress.xp),s=currentSkin();
- $('lobbyAccountStatus').textContent=uid?'연결된 지휘관':'게스트 · 이 기기';
+ const account=global.DesertDeviceAccount?.status?.();
+ $('lobbyAccountStatus').textContent=account?(uid?'기기 인증 연결':'기기 계정 · 오프라인'):'게스트 · 이 기기';
+ if(account){$('lobbyUserId').value=account.accountId;$('lobbyDeviceId').value=account.deviceId;}
  $('lobbyLevel').textContent='LV. '+l.level;$('lobbyXP').textContent=l.within+' / '+l.needed+' XP';$('lobbyXPFill').style.width=Math.min(100,l.within/l.needed*100)+'%';
  $('lobbyRank').textContent=rank();$('lobbyRecord').textContent='싱글 '+progress.wins+'승 '+progress.losses+'패 · 온라인 '+progress.mpWins+'승 '+progress.mpLosses+'패 · 비공식 훈련 랭크';
  $('lobbyNickname').value=progress.nickname;
@@ -93,7 +95,7 @@ function chooseFaction(i){
  if(!Number.isInteger(i)||i<0||i>=FACTIONS.length)return;
  progress.selectedFaction=i;selectedUnit=0;selectedAction='idle';animationStart=performance.now();stateChange();
 }
-function chooseSkin(id){const sk=SKINS.find(x=>x.id===id),l=levelFromXP(progress.xp).level;if(!sk||l<sk.level)return false;progress.selectedSkin=id;stateChange();return true;}
+function chooseSkin(id){const sk=SKINS.find(x=>x.id===id),l=levelFromXP(progress.xp).level;if(!sk||l<sk.level)return false;progress.selectedSkin=id;global.DesertRoster?.refreshChoices?.();stateChange();return true;}
 function grantXP(amount){progress.xp=Math.min(10000000,progress.xp+Math.max(0,Math.floor(amount)));stateChange();}
 function completeSolo({win,wave}){if(win)progress.wins++;else progress.losses++;grantXP((win?120:45)+Math.min(80,Math.floor((wave||0)*3)));}
 function completeMultiplayer({winner,side,matchId}){if(!matchId||lastMultiplayer===matchId)return;lastMultiplayer=matchId;if(winner===side)progress.mpWins++;else if(winner!==null)progress.mpLosses++;grantXP(winner===side?165:75);}
@@ -106,48 +108,26 @@ async function syncProfile(){
  }catch(e){info('계정은 연결됐지만 프로필 DB 동기화는 설정 확인이 필요합니다: '+(global.IronFirebase.message?.(e)||e.message));}
 }
 async function restoreAccount(){
- if(!global.IronFirebase)return;
+ if(!global.DesertDeviceAccount)return;
  try{
-  const {app,db,fs}=await global.IronFirebase.ready(),sdk=await import('https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js');
-  const auth=sdk.getAuth(app);await auth.authStateReady();
-  if(!auth.currentUser||auth.currentUser.isAnonymous)return;
-  uid=auth.currentUser.uid;
-  try{
-   const snap=await fs.getDoc(fs.doc(db,'desertProfiles',uid));
-   if(snap.exists()){
-    const pref=snap.data();
-    if(pref.name)progress.nickname=safeName(pref.name);
+  const account=await global.DesertDeviceAccount.identity();uid=account.uid;
+  try{const snap=await account.fs.getDoc(account.fs.doc(account.db,'desertProfiles',uid));
+   if(snap.exists()){const pref=snap.data();if(pref.name)progress.nickname=safeName(pref.name);
     if(Number.isInteger(pref.faction)&&pref.faction>=0&&pref.faction<FACTIONS.length)progress.selectedFaction=pref.faction;
-    if(SKINS.some(x=>x.id===pref.skin&&levelFromXP(progress.xp).level>=x.level))progress.selectedSkin=pref.skin;
-    save();
-   }
-  }catch(_){info('계정 인증 성공 · 개인 프로필 DB 규칙이 배포되어야 기기 설정을 동기화할 수 있습니다.');}
-  render();info('Google 계정 자동 로그인 · 레벨과 훈련 랭크는 이 기기의 로컬 진행도입니다.');
- }catch(_){/* Offline guest play remains available. */}
+    if(SKINS.some(x=>x.id===pref.skin&&levelFromXP(progress.xp).level>=x.level))progress.selectedSkin=pref.skin;save();}
+  }catch(_){}
+  render();info('기기 인증 완료 · 다음 방문에도 이 브라우저에서 자동 접속합니다.');
+ }catch(e){render();info('기기 계정으로 플레이할 수 있습니다. 온라인 인증은 연결 후 다시 시도합니다.');}
 }
-async function google(){
- if(authBusy)return;authBusy=true;$('lobbyGoogle').disabled=true;info('Google 로그인 창을 준비하는 중…');
- try{
-  const {app}=await global.IronFirebase.ready(),sdk=await import('https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js');
-  const auth=sdk.getAuth(app);await sdk.setPersistence(auth,sdk.browserLocalPersistence);
-  const provider=new sdk.GoogleAuthProvider();
-  let result;
-  try{result=auth.currentUser?.isAnonymous?await sdk.linkWithPopup(auth.currentUser,provider):await sdk.signInWithPopup(auth,provider);}
-  catch(e){if(e?.code==='auth/credential-already-in-use'||e?.code==='auth/email-already-in-use')result=await sdk.signInWithPopup(auth,provider);else throw e;}
-  uid=result.user.uid;info('Google 계정이 연결되었습니다.');await syncProfile();render();
- }catch(e){info('Google 로그인에 실패했습니다. Firebase에서 Google 제공자와 승인된 도메인을 확인하세요: '+(e?.message||String(e)));}
- finally{authBusy=false;$('lobbyGoogle').disabled=false;}
+async function deviceLogin(){
+ if(authBusy)return;authBusy=true;$('lobbyDeviceLogin').disabled=true;info('이 기기의 인증 정보를 확인하는 중…');
+ try{await restoreAccount();if(uid)await syncProfile();}
+ finally{authBusy=false;$('lobbyDeviceLogin').disabled=false;}
 }
-async function guest(){
- uid=null;
- try{
-  if(global.IronFirebase){
-   const {app}=await global.IronFirebase.ready(),sdk=await import('https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js');
-   const auth=sdk.getAuth(app);
-   await sdk.signOut(auth);await sdk.setPersistence(auth,sdk.browserSessionPersistence);
-  }
- }catch(_){}
- info('게스트 모드로 전환했습니다. 진행도는 이 기기에만 저장됩니다.');render();
+async function copyIds(){
+ const a=global.DesertDeviceAccount.status();
+ try{await global.navigator.clipboard.writeText('유저 ID: '+a.accountId+'\n기기 ID: '+a.deviceId);info('식별 ID를 복사했습니다. 다른 기기의 로그인 비밀번호로는 사용할 수 없습니다.');}
+ catch(_){$('lobbyUserId').select();info('유저 ID가 선택되었습니다. 복사해서 보관할 수 있습니다.');}
 }
 function prepare(){
  // Drafted commander names are saved when leaving the lobby, without an extra confirmation menu.
@@ -214,8 +194,8 @@ function initialize(){
  $('lobbyPractice').addEventListener('click',practiceBattle);
  $('backToLobby').addEventListener('click',()=>{void returnToLobby();});
  $('lobbySaveName').addEventListener('click',()=>{progress.nickname=safeName($('lobbyNickname').value);stateChange();});
- $('lobbyGoogle').addEventListener('click',google);$('lobbyGuest').addEventListener('click',()=>{void guest();});
- global.addEventListener?.('maiden-art-ready',renderCovers);global.addEventListener?.('isometric-art-ready',renderCovers);global.addEventListener?.('desert-real-sprites-ready',renderCovers);
+ $('lobbyDeviceLogin').addEventListener('click',()=>{void deviceLogin();});$('lobbyCopyIds').addEventListener('click',()=>{void copyIds();});
+ global.addEventListener?.('maiden-art-ready',renderCovers);global.addEventListener?.('isometric-art-ready',renderCovers);global.addEventListener?.('desert-real-sprites-ready',renderCovers);global.addEventListener?.('desert-moe-ready',renderCovers);
  show();void restoreAccount();
 }
 global.DesertLobby=Object.freeze({levelFromXP,filterForSkin,skinFilter:()=>currentSkin().filter,selectedSkin:()=>currentSkin().id,selectedFaction:()=>progress.selectedFaction,selectedUnit:()=>selectedUnit,chooseFaction,chooseSkin,chooseUnit,chooseAction,completeSolo,completeMultiplayer,grantXP,show,hide,enterMatch,openMultiplayer,returnToLobby});

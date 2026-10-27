@@ -1,0 +1,14 @@
+'use strict';
+const assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path'),{webcrypto}=require('node:crypto');
+const source=fs.readFileSync(path.join(__dirname,'device-account.js'),'utf8'),storage=new Map();
+function client(uid){const auth={currentUser:uid?{uid}:null,authStateReady:async()=>{}};let logins=0,persistence=null;
+ const w={crypto:webcrypto,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},IronFirebase:{ready:async()=>({app:{},db:{},fs:{}})},DesertDeviceAuthSDK:{browserLocalPersistence:'LOCAL',getAuth:()=>auth,setPersistence:async(a,p)=>{persistence=p;},signInAnonymously:async()=>{logins++;auth.currentUser={uid:'private-auth-uid'};return {user:auth.currentUser};}}};
+ vm.runInNewContext(source,{window:w,Uint8Array,Date,Array,JSON,Object,Error});return {api:w.DesertDeviceAccount,logins:()=>logins,persistence:()=>persistence,w};}
+(async()=>{let c=client();const a=c.api.status();assert.match(a.accountId,/^U-[a-f0-9]{24}$/);assert.match(a.deviceId,/^D-[a-f0-9]{24}$/);assert.notEqual(a.accountId.slice(2),a.deviceId.slice(2));assert.equal(a.online,false);
+ const [one,two]=await Promise.all([c.api.identity(),c.api.identity()]);assert.equal(one.uid,'private-auth-uid');assert.equal(two.uid,one.uid);assert.equal(c.logins(),1);assert.equal(c.persistence(),'LOCAL');
+ c=client('private-auth-uid');const restored=c.api.status();assert.equal(restored.accountId,a.accountId);assert.equal(restored.deviceId,a.deviceId);assert.equal((await c.api.identity()).uid,'private-auth-uid');assert.equal(c.logins(),0);c.w.DesertDeviceAuthSDK.getAuth().currentUser={uid:'changed-auth-session'};assert.equal((await c.api.identity()).uid,'changed-auth-session','do not reuse a stale authenticated UID');
+ // Copying the public IDs cannot switch the server-side account.
+ c=client('different-authenticated-owner');assert.equal(c.api.status().accountId,a.accountId);assert.equal((await c.api.identity()).uid,'different-authenticated-owner');
+ c=client();c.w.IronFirebase.ready=async()=>{throw Error('offline');};await assert.rejects(()=>c.api.identity());assert.equal(c.api.status().accountId,a.accountId,'offline account and solo progress remain usable');
+ const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8'),lobby=fs.readFileSync(path.join(__dirname,'front-lobby.js'),'utf8');assert.ok(!html.includes('lobbyGoogle'));assert.ok(!lobby.includes('signInWithPopup'));assert.ok(html.includes('lobbyDeviceId'));assert.ok(!html.includes('type="password"'));
+ console.log('Device account regression passed: stable random user/device IDs, local credential persistence, one authenticated UID, no public-ID impersonation, offline identity and no Google/password UI.');})();
