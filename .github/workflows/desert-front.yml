@@ -32,6 +32,8 @@ jobs:
         run: node desert-strike/smoke-animations.test.cjs
       - name: 2.5D original 32-unit isometric rendering
         run: node desert-strike/smoke-isometric.test.cjs
+      - name: Six-faction seeded 150-match balance simulation
+        run: node desert-strike/smoke-balance.test.cjs > /tmp/desert-balance.json
       - name: Beastgirls and elven mages full sprite coverage
         run: node desert-strike/smoke-heroine.test.cjs
 
