@@ -43,6 +43,8 @@ function draw(g,f,role,mode,frame){
  const bob=move?Math.abs(wave)*2:Math.sin(2*PI*t)*.6;
  const step=move?wave*4:0;
  const sweep=attack?Math.sin(t*PI)*9:0;
+ const hairFlow=(move?4:attack?7:2)*Math.sin(2*PI*t)+(attack?Math.sin(t*PI)*4:0);
+ const robeFlow=(move?Math.sin(2*PI*t)*5:attack?Math.sin(t*PI)*7:Math.sin(2*PI*t)*1.3);
  g.clearRect(0,0,S,S);g.save();g.imageSmoothingEnabled=false;
  // All sprites share an angled 3/4 view and diagonal ground ellipse.
  el(g,35,64,role===3?21:role===6?24:14,4,'#0714199c');
@@ -70,11 +72,22 @@ function draw(g,f,role,mode,frame){
  if(death){g.translate(35,52);g.rotate(fall*1.15);g.translate(-35,-52);g.globalAlpha=Math.max(.15,1-fall*.8);}
  else if(role!==6)g.translate(0,-bob);
  const x=34,y=14;
+ // Unified fantasy illustration language: layered cape, embroidered edge,
+ // charcoal silhouettes and jewel-colored faction fabric.
+ if(role!==6||!beast){
+  poly(g,[[22,24],[36,20],[51,28],[61+robeFlow,47],[53+robeFlow,64],[43,51],[25,58],[13-robeFlow,64],[16,43]],'#19212d');
+  poly(g,[[22,27],[36,22],[48,30],[58+robeFlow,55],[49+robeFlow,61],[41,45],[29,53],[17-robeFlow,60],[19,39]],C.low);
+  poly(g,[[46,33],[55+robeFlow,50],[50+robeFlow,58]],C.trim);
+  if(!beast){poly(g,[[20,38],[15-robeFlow,63],[29,57]],'#83b2a3');}
+ }
  // Clothing drape / split legs. Character has prominent leg movement on all 16 walking frames.
  poly(g,[[20,35],[31,36],[30+step*.5,57],[21+step*.5,62],[16,60]],'#181e28');
  poly(g,[[36,34],[46,36],[49-step*.6,57],[44-step*.6,63],[35,59]],'#1b2430');
  poly(g,[[20,50],[30,51],[29+step*.5,61],[17+step*.5,63]],C.armor);
  poly(g,[[39,51],[49,51],[49-step*.5,62],[38-step*.5,64]],C.cloth);
+ // Tall boots and diagonal stockings emphasize the long-legged adult heroine design.
+ rect(g,22+step*.45,54,5,3,C.trim);rect(g,40-step*.45,54,6,3,C.trim);
+ rect(g,18+step*.5,61,12,2,'#17222c');rect(g,38-step*.5,62,11,2,'#17222c');
  // Animal tails sway behind torso. Ears remain silhouette-strong at tiny sizes.
  if(beast){
   const sw=Math.sin(t*2*PI)*5;
@@ -93,6 +106,13 @@ function draw(g,f,role,mode,frame){
  poly(g,[[28,26],[36,25],[34,50],[25,49]],C.armor);
  poly(g,[[38,27],[44,29],[46,49],[35,50]],C.trim);
  poly(g,[[31,29],[37,29],[40,46],[29,44]],C.cloth);
+ // Tailored fantasy bodice: shaped breastplate, narrow belted waist and
+ // ornamental seams, all non-explicit; softer than bulky sci-fi silhouettes.
+ poly(g,[[28,28],[34,26],[39,32],[36,38],[28,36]],C.armor);
+ poly(g,[[36,28],[42,27],[45,35],[38,39],[35,33]],C.high||C.trim);
+ poly(g,[[30,30],[34,30],[33,33],[29,33]],C.trim);
+ rect(g,33,35,9,2,'#e8c9a0');
+ poly(g,[[29,37],[40,39],[36,42],[29,40]],C.cloth);
  rect(g,26,43,21,3,C.trim);
  rect(g,31,44,11,2,'#e6d8af');
  for(let j=0;j<5;j++)rect(g,21+j*6,52+(j%2),4,2,j%2?C.trim:C.low);
@@ -100,15 +120,21 @@ function draw(g,f,role,mode,frame){
  poly(g,[[26,17],[31,11],[43,12],[49,21],[44,31],[31,31],[26,25]],'#6a4b43');
  poly(g,[[27,17],[32,12],[42,13],[47,20],[43,29],[32,29],[28,24]],'#f5d6c7');
  poly(g,[[34,25],[38,27],[42,25]],'#e7aba9'); // subtle cheek
- rect(g,33,20,3,4,C.eyes);rect(g,42,20,3,4,C.eyes);
- rect(g,33,19,4,1,'#28333a');rect(g,42,19,4,1,'#28333a');
+ const blinking=mode==='idle'&&(frame===7||frame===8);
+ rect(g,33,20,3,blinking?1:4,C.eyes);rect(g,42,20,3,blinking?1:4,C.eyes);
+ rect(g,32,19,5,1,'#222a33');rect(g,41,19,5,1,'#222a33');
+ rect(g,32,18,1,2,'#232e33');rect(g,45,18,1,2,'#232e33');
  rect(g,34,20,1,1,'#fbf8ef');rect(g,43,20,1,1,'#fbf8ef');
  rect(g,38,27,3,1,'#ba888e');
+ rect(g,29,25,2,1,'#efa4a7');rect(g,45,25,2,1,'#efa4a7');
  // Hair crown, off-center bang, long locks, and back braid.
  poly(g,[[26,18],[23,10],[30,6],[39,5],[48,10],[50,18],[44,15],[36,12],[31,19]],C.low);
  poly(g,[[25,16],[29,7],[37,4],[45,8],[49,13],[43,13],[38,11],[33,16]],C.hair);
  poly(g,[[24,14],[29,18],[27,34],[22,39],[22,21]],C.low);
- poly(g,[[48,13],[52,27],[50,41],[44,38],[45,21]],C.hair);
+ poly(g,[[48,13],[52+hairFlow*.24,27],[50+hairFlow*.4,41],[44+hairFlow*.26,38],[45,21]],C.hair);
+ poly(g,[[21,16],[22-hairFlow*.22,38],[16-hairFlow*.47,54],[25-hairFlow*.19,46],[27,25]],C.hair);
+ poly(g,[[47,17],[54+hairFlow*.3,39],[59+hairFlow*.64,55],[48+hairFlow*.3,46],[44,29]],C.low);
+ poly(g,[[22-hairFlow*.25,41],[20-hairFlow*.55,52],[27,42]],C.trim);
  poly(g,[[28,11],[39,8],[33,16],[30,24],[27,22]],C.hair);
  rect(g,32,8,10,2,'#fff5dd80');
  // Hair ornament and animal vs elf ear distinction.
@@ -126,6 +152,9 @@ function draw(g,f,role,mode,frame){
    poly(g,[[46,8],[53,-1],[53,6]],C.trim);
   }
   rect(g,43,9,5,2,C.trim);
+  // Small tied ribbon and jewel at the root of animal ears.
+  poly(g,[[39,12],[45,9],[42,15]],C.trim);
+  rect(g,43,11,2,2,'#fff7e7');
  }else{
   // Long horizontal elf ears with hair tucked behind.
   poly(g,[[26,20],[14,16],[22,26],[27,25]],'#dcb8b0');
@@ -133,6 +162,9 @@ function draw(g,f,role,mode,frame){
   poly(g,[[48,21],[57,17],[51,23]],'#e6afad');
   rect(g,36,8,9,2,C.trim);
   rect(g,38,5,2,4,C.weapon);
+  // Pierced elven ear: silver leaf earring distinct from animal ears.
+  rect(g,53,22,2,5,'#dfd6ba');
+  rect(g,54,28,2,2,C.trim);
  }
  // Role-specific armor shapes to make 16 units recognizable at small display sizes.
  if(role===3){
