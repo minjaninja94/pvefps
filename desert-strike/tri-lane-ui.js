@@ -45,6 +45,7 @@ function buildGrid(){
  const f=document.createDocumentFragment();
  for(let i=0;i<E.SLOTS;i++){
   const r=cells[i],b=document.createElement('button');b.type='button';b.dataset.slot=String(i);
+  b.disabled=r!==null&&!demolish;
   b.className=(r===null?'':'filled ')+(demolish&&r!==null?'demolish':'');
   b.textContent=r===null?'+':ICONS[r];
   b.title=(r===null?'빈 자리':E.NAMES[r]+' 생산 시설')+' · '+LANES[lane]+' 라인 '+(i+1);
@@ -55,57 +56,64 @@ function buildGrid(){
 function draw(){
  if(!snap)return;
  const ctx=$('mpBattleCanvas').getContext('2d');if(!ctx)return;
- const W=1100,iso=global.IsoWorld;
- ctx.clearRect(0,0,W,1560);
- for(let l=0;l<3;l++){
-  const top=l*520,selected=l===lane;
-  ctx.fillStyle=selected?'#293c41':'#162a33';ctx.fillRect(0,top,W,520);
-  // Same slanted tile grid as isometric singleplayer, scaled for 3x the world area.
-  ctx.strokeStyle=selected?'#67827952':'#5c727740';ctx.lineWidth=1;
-  for(let y=top+12;y<top+505;y+=19)for(let x=(Math.floor(y/19)%2)*25;x<W;x+=50){
-   ctx.beginPath();ctx.moveTo(x-24,y);ctx.lineTo(x,y-9);ctx.lineTo(x+24,y);ctx.stroke();
-  }
-  ctx.font='bold 12px monospace';ctx.textAlign='left';ctx.fillStyle=selected?'#f7d8ae':'#a8c5c2';
-  ctx.fillText(LANES[l]+' LINE',11,top+22);
-  for(let side=0;side<2;side++){
-   const x=side===0?10:1068;
-   ctx.fillStyle=side===0?'#85e2df':'#e8977d';ctx.fillRect(x,top+245,22,54);
-   ctx.fillStyle='#101c27';ctx.fillRect(x,top+238,22,6);
-   ctx.fillStyle=side===0?'#85e2df':'#e8977d';ctx.fillRect(x,top+238,22*snap.cores[l][side]/2500,6);
-   const tx=side===0?42:1036;
-   ctx.fillStyle=side===0?'#358d88':'#c4715e';ctx.fillRect(tx,top+246,13,41);
-   ctx.fillStyle='#111d27';ctx.fillRect(tx,top+241,13,4);
-   ctx.fillStyle='#f5cb91';ctx.fillRect(tx,top+241,13*(snap.turrets?.[l]?.[side]??0)/1250,4);
-  }
-  const units=snap.units.filter(u=>u.lane===l).sort((a,b)=>a.y-b.y);
-  for(const u of units){
-   const x=u.x/3,y=top+28+(u.y-l*520)/520*446;
-   if(x<-20||x>1120)continue;
-   ctx.fillStyle=u.team===0?'#4aa5b066':'#da826b66';ctx.beginPath();ctx.ellipse(x,y+3,8,3,0,0,7);ctx.fill();
-   if(u.conscripted){ctx.strokeStyle='#ffd675';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(x,y+5,11,4,0,0,Math.PI*2);ctx.stroke();}
-   const animatedFrame=((u.frame||0)+Math.floor((performance.now()-lastSnapshotAt)/84))%16;
-   const sprite=iso?.frame(u.faction,u.role,u.act||'move',animatedFrame);
-   const d=u.role===3||u.role===6?68:60;
-   if(sprite){ctx.imageSmoothingEnabled=false;ctx.save();ctx.filter=global.DesertLobby?.filterForSkin?.(u.skin)||'none';ctx.drawImage(sprite,x-d/2,y-d*.85,d,d);ctx.restore();}
-   else{ctx.fillStyle=u.team===0?'#a5ece7':'#ef9e8a';ctx.fillRect(x-5,y-8,10,12);}
-   ctx.fillStyle='#081c25';ctx.fillRect(x-8,y-d*.91,16,3);
-   ctx.fillStyle=u.team===0?'#75ddd6':'#f59479';ctx.fillRect(x-8,y-d*.91,16*Math.max(0,u.hp/u.maxHP),3);
-  }
-  for(const e of snap.effects||[])if(e.lane===l){
-   ctx.strokeStyle=e.kind==='conscript'?'#ffcf55':e.kind==='ginppai'?'#91e2b6':'#ffdf9b';ctx.lineWidth=e.kind==='conscript'?3:2;
-   ctx.beginPath();ctx.ellipse(e.x/3,top+28+(e.y-l*520)/520*446,11,4,0,0,7);ctx.stroke();
-  }
-  if(snap.fog?.[l]){
-   const x=snap.viewerTeam===0?((3300-770)/3):0;
-   ctx.fillStyle='#081521e9';ctx.fillRect(x,top,770/3,510);
-   ctx.fillStyle='#b6cecf';ctx.font='bold 12px monospace';ctx.textAlign='center';
-   ctx.fillText('정찰 전 · 적 기지 미확인',x+770/6,top+160);
-  }
-  const p=snap.lanePressure[l]??.5;
-  ctx.fillStyle='#8adecf';ctx.fillRect(0,top+510,1100*p,9);
-  ctx.fillStyle='#ea9176';ctx.fillRect(1100*p,top+510,1100*(1-p),9);
-  if(selected){ctx.strokeStyle='#f1d4a3';ctx.lineWidth=2;ctx.strokeRect(1,top+1,1098,518);}
+ const W=1100,H=660,iso=global.IsoWorld;
+ const wy=y=>y/1560*H;
+ ctx.clearRect(0,0,W,H);
+ const bg=ctx.createLinearGradient(0,0,0,H);
+ bg.addColorStop(0,'#263e42');bg.addColorStop(.48,'#233943');bg.addColorStop(1,'#142e3b');
+ ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+ // One unified grid: no independent lane panels, collision barriers or scroll switching.
+ for(let y=12;y<H;y+=23)for(let x=(Math.floor(y/23)%2)*26;x<W;x+=52){
+  ctx.strokeStyle='#98b5aa22';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(x-25,y);ctx.lineTo(x,y-9);ctx.lineTo(x+25,y);ctx.stroke();
  }
+ for(let l=0;l<3;l++){
+  const y=wy(l*520),cy=wy((l+.5)*520);
+  ctx.strokeStyle=l===lane?'#d3aa7150':'#8faaa626';
+  if(l){ctx.setLineDash([8,12]);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();ctx.setLineDash([]);}
+  ctx.font='700 11px monospace';ctx.fillStyle='#b2c7c5a9';ctx.textAlign='left';ctx.fillText(LANES[l]+' 생산 구역',12,y+15);
+  for(let side=0;side<2;side++){
+   const coreX=side===0?24:1076,towerX=side===0?69:1031;
+   const hp=snap.cores[l][side]||0,thp=snap.turrets?.[l]?.[side]||0;
+   ctx.fillStyle=side===0?'#80d5d4':'#e19580';ctx.fillRect(coreX-11,cy-21,22,42);
+   ctx.fillStyle=side===0?'#3a9792':'#a86658';ctx.fillRect(towerX-8,cy-16,16,32);
+   ctx.fillStyle='#0a1b28';ctx.fillRect(coreX-12,cy-29,24,5);ctx.fillRect(towerX-10,cy-23,20,4);
+   ctx.fillStyle='#fbd293';ctx.fillRect(coreX-12,cy-29,24*hp/2500,5);ctx.fillRect(towerX-10,cy-23,20*thp/1250,4);
+  }
+ }
+ // Every faction shares a single global depth order, including fighters from other spawn lanes.
+ const units=[...snap.units].sort((a,b)=>a.y-b.y);
+ for(const u of units){
+  const x=u.x/3,y=wy(u.y);
+  if(x<-30||x>1130)continue;
+  ctx.fillStyle=u.team===0?'#4aa5b088':'#da826b88';
+  ctx.beginPath();ctx.ellipse(x,y+3,12,4,0,0,Math.PI*2);ctx.fill();
+  if(u.conscripted){ctx.strokeStyle='#ffd675';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(x,y+6,13,5,0,0,Math.PI*2);ctx.stroke();}
+  const frame=((u.frame||0)+Math.floor((performance.now()-lastSnapshotAt)/84))%16;
+  const sprite=iso?.frame(u.faction,u.role,u.act||'move',frame),d=u.role===3||u.role===6?53:46;
+  if(sprite){ctx.imageSmoothingEnabled=false;ctx.save();ctx.filter=global.DesertLobby?.filterForSkin?.(u.skin)||'none';ctx.drawImage(sprite,x-d/2,y-d*.84,d,d);ctx.restore();}
+  else{ctx.fillStyle=u.team===0?'#a5ece7':'#ef9e8a';ctx.fillRect(x-5,y-9,10,14);}
+  ctx.fillStyle='#081c25';ctx.fillRect(x-12,y-d*.9,24,3);
+  ctx.fillStyle=u.team===0?'#75ddd6':'#f59479';ctx.fillRect(x-12,y-d*.9,24*Math.max(0,u.hp/u.maxHP),3);
+  if(u.act==='attack'){
+   ctx.strokeStyle=u.team===0?'#80e3d55e':'#f5a4885e';ctx.lineWidth=1.5;
+   ctx.beginPath();ctx.ellipse(x,y,18,11,0,0,Math.PI*2);ctx.stroke();
+  }
+ }
+ for(const e of snap.effects||[]){
+  ctx.strokeStyle=e.kind==='tower'?'#fff0ac':e.kind==='conscript'?'#ffcf55':e.kind==='ginppai'?'#91e2b6':'#f6dba8';
+  ctx.lineWidth=e.kind==='tower'?3:2;ctx.beginPath();ctx.ellipse(e.x/3,wy(e.y),13,6,0,0,Math.PI*2);ctx.stroke();
+ }
+ if(snap.fog?.length){
+  for(let l=0;l<3;l++)if(snap.fog[l]){
+   const x=snap.viewerTeam===0?(3300-770)/3:0,top=wy(l*520),hh=wy(520);
+   ctx.fillStyle='#091720ed';ctx.fillRect(x,top,770/3,hh);
+   ctx.font='700 11px monospace';ctx.fillStyle='#bad1d2';ctx.textAlign='center';
+   ctx.fillText('정찰 전',x+770/6,top+hh/2);
+  }
+ }
+ ctx.strokeStyle='#e2c38b88';ctx.lineWidth=1.2;
+ ctx.strokeRect(1,1,W-2,H-2);
 }
 function drawOverview(){
  if(!snap)return;
@@ -152,6 +160,9 @@ function onSnapshot(v){
 }
 function order(cmd){
  if(!snap||snap.ended)return message('진행 중인 경기가 없습니다.');
+ if(cmd.type==='build'&&cmd.role!==null){
+  const me=my();if(me?.buildings?.[cmd.lane]?.[cmd.slot]!==null){message('이미 생산시설이 있습니다. 먼저 철거해야 다른 건물을 지을 수 있습니다.');return;}
+ }
  const r=practice?practice.order(myId,cmd):NET.sendOrder(cmd);
  if(!r?.ok)message(r?.reason||'명령 실패');
  else if(practice)onSnapshot(practice.snapshot());
@@ -183,7 +194,7 @@ function init(){
  function pickLane(id){
   lane=id;$('mpLaneTabs').querySelectorAll('[data-lane]').forEach(b=>b.classList.toggle('active',Number(b.dataset.lane)===lane));
   gridKey='';buildGrid();draw();drawOverview();
-  const canvas=$('mpBattleCanvas');canvas.parentElement.scrollTop=canvas.clientHeight*lane/3;
+  // Lane tabs now pick a building deployment band without moving the world camera.
  }
  $('mpOverviewCanvas').addEventListener('click',e=>{const r=e.currentTarget.getBoundingClientRect();pickLane(Math.min(2,Math.max(0,Math.floor((e.clientY-r.top)/r.height*3))));});
  $('mpBattleCanvas').addEventListener('click',e=>{const r=e.currentTarget.getBoundingClientRect();pickLane(Math.min(2,Math.max(0,Math.floor((e.clientY-r.top)/r.height*3))));});

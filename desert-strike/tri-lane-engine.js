@@ -1,11 +1,12 @@
 /* Desert Front — 3-line authoritative multiplayer combat kernel.
  * No DOM, Firebase or browser dependency. One host simulates; clients send orders.
- * Area: original 3300 x 520 -> 3300 x 1560 (3 independent 520-high lanes).
+ * Area: original 3300 x 520 -> 3300 x 1560 (one shared 1560-high battle world with 3 deployment bands).
  */
 (function(global){
 'use strict';
 const LANES=3,WIDTH=3300,HEIGHT=1560,LANE_H=520,COLS=15,ROWS=5,SLOTS=COLS*ROWS;
 const TOWER_HP=1250,TOWER_RANGE=285,TOWER_PERIOD=.34,TOWER_DAMAGE=27,FOG_END_WAVE=6,FOG_WIDTH=770;
+const AGGRO_RADIUS=390,AGGRO_LEASH=535,SUPPORT_RADIUS=460,CONTACT_CELL=64;
 const COST=[65,95,150,205,165,245,205,145], NAMES=['돌격','사격','대장갑','장갑','대공','포격','특수','지원'];
 const BASE=[
  [115,21,1,29,.77,82,false,'ground'],
@@ -67,6 +68,7 @@ function create({mode='pvp',size=1,members=[]}={}){
   if(role!==null&&(!Number.isInteger(role)||role<0||role>=COST.length))return {ok:false,reason:'병종 오류'};
   const old=p.buildings[lane][slot];
   if(old===role)return {ok:false,reason:'이미 같은 생산 시설이 있습니다.'};
+  if(old!==null&&role!==null)return {ok:false,reason:'이미 생산시설이 있는 자리입니다. 철거 후 새로 건설하세요.'};
   const refund=old===null?0:Math.floor(COST[old]*.55);
   const payment=(role===null?0:COST[role])-refund;
   if(payment>p.cash)return {ok:false,reason:'자원 부족'};
@@ -79,7 +81,7 @@ function create({mode='pvp',size=1,members=[]}={}){
   const y=lane*LANE_H+265+((Math.floor(slot/15)*11+(slot%15)*21)%196)-98;
   const radius=role===3?23:((p.faction===3||p.faction===4)&&role===6)?27:role===6?15:15;
   if(p.faction===3&&role===7)state.marineStats.huangSpawns++;
-  state.units.push({id:state.nextUnit++,uid:p.uid,team:p.team,faction:p.faction,role,lane,x,y,hp:d.hp,maxHP:d.hp,skin:p.skin,cool:Math.random()*.6,
+  state.units.push({id:state.nextUnit++,uid:p.uid,team:p.team,faction:p.faction,role,lane,spawnLane:lane,x,y,hp:d.hp,maxHP:d.hp,skin:p.skin,cool:Math.random()*.6,
     radius,frame:Math.floor(Math.random()*16),act:'move',attackAge:0});
  }
  function selectCounter(lane,bot){
@@ -188,7 +190,7 @@ function create({mode='pvp',size=1,members=[]}={}){
    if(a.faction===3){
     // Huanglong's existing one-use Marine banquet heals the entire injured squad.
     let healed=0;
-    for(const x of state.units)if(x.id!==a.id&&x.hp>0&&x.team===a.team&&x.lane===a.lane&&x.hp<x.maxHP&&Math.hypot(a.x-x.x,a.y-x.y)<195){
+    for(const x of state.units)if(x.id!==a.id&&x.hp>0&&x.team===a.team&&x.hp<x.maxHP&&Math.hypot(a.x-x.x,a.y-x.y)<195){
      const before=x.hp;x.hp=Math.min(x.maxHP,x.hp+Math.max(135,x.maxHP*.32));healed+=x.hp-before;
     }
     if(healed>0)a.hp=0;
@@ -201,80 +203,121 @@ function create({mode='pvp',size=1,members=[]}={}){
   }
   if(a.role===6&&(a.faction===3||a.faction===4)){
    // Ground truck/panther charges punish a melee clump without hitting aircraft.
-   const nearby=state.units.filter(x=>x.lane===a.lane&&x.team!==a.team&&x.hp>0&&definition(x.faction,x.role).kind==='ground'&&Math.hypot(x.x-v.x,x.y-v.y)<58)
+   const nearby=state.units.filter(x=>x.team!==a.team&&x.hp>0&&definition(x.faction,x.role).kind==='ground'&&Math.hypot(x.x-v.x,x.y-v.y)<58)
     .sort((x,y)=>Math.hypot(x.x-v.x,x.y-v.y)-Math.hypot(y.x-v.x,y.y-v.y)).slice(0,3);
    for(const x of nearby)applyHit(a,x,dmg*(x.role===0?1.35:x.role===3?.55:1));
   }else if(a.role===5){
-   for(const x of state.units)if(x.lane===a.lane&&x.team!==a.team&&x.hp>0&&definition(x.faction,x.role).kind!=='air'&&Math.hypot(x.x-v.x,x.y-v.y)<66)applyHit(a,x,dmg*.8);
+   for(const x of state.units)if(x.team!==a.team&&x.hp>0&&definition(x.faction,x.role).kind!=='air'&&Math.hypot(x.x-v.x,x.y-v.y)<66)applyHit(a,x,dmg*.8);
   }else applyHit(a,v,dmg);
   if(state.effects.length>100)state.effects.shift();
-  state.effects.push({x:v.x,y:v.y,lane:a.lane,kind:a.role===5?'blast':'hit',time:.3,team:a.team});
+  state.effects.push({x:v.x,y:v.y,lane:Math.min(LANES-1,Math.floor(v.y/LANE_H)),kind:a.role===5?'blast':'hit',time:.3,team:a.team});
  }
  function stepUnits(dt){
-  const teams=Array.from({length:3},()=>[[],[]]);
-  for(const u of state.units)if(u.hp>0)teams[u.lane][u.team].push(u);
+  // Three production bands feed one continuous world. Units can seek across both old borders.
+  const alive=state.units.filter(u=>u.hp>0),byId=new Map(alive.map(u=>[u.id,u]));
+  const grid=new Map(),cell=200;
+  for(const v of alive){
+   const k=v.team+','+Math.floor(v.x/cell)+','+Math.floor(v.y/cell);
+   if(!grid.has(k))grid.set(k,[]);grid.get(k).push(v);
+  }
+  function nearby(team,x,y,r){
+   const out=[],cx=Math.floor(x/cell),cy=Math.floor(y/cell),steps=Math.ceil(r/cell);
+   for(let dx=-steps;dx<=steps;dx++)for(let dy=-steps;dy<=steps;dy++){
+    for(const v of grid.get(team+','+(cx+dx)+','+(cy+dy))||[])if(v.hp>0&&Math.hypot(v.x-x,v.y-y)<=r)out.push(v);
+   }
+   return out;
+  }
   for(const u of state.units){
-   if(u.hp<=0||state.cores[u.lane][1-u.team]<=0)continue;
-   const d=definition(u.faction,u.role);u.cool=Math.max(0,u.cool-dt);u.frame=(u.frame+dt*11)%16;
-   u.attackAge=Math.max(0,u.attackAge-dt);
-   const enemies=teams[u.lane][1-u.team];
-   let target=null,best=Infinity;
-   if(u.role===7){
-    for(const v of teams[u.lane][u.team])if(v!==u&&v.hp>0&&v.hp<v.maxHP-10){
-     const distance=Math.hypot(v.x-u.x,v.y-u.y);
-     if(distance<best){best=distance;target=v;}
-    }
-   }else for(const v of enemies){
-    if(v.hp<=0||(!d.airTarget&&definition(v.faction,v.role).kind==='air'))continue;
+   if(u.hp<=0)continue;
+   const d=definition(u.faction,u.role),support=u.role===7,r=support?SUPPORT_RADIUS:AGGRO_RADIUS;
+   u.cool=Math.max(0,u.cool-dt);u.frame=(u.frame+dt*11)%16;u.attackAge=Math.max(0,u.attackAge-dt);
+   const valid=v=>v&&v.hp>0&&v.id!==u.id&&(support?
+     v.team===u.team&&v.hp<v.maxHP-10:
+     v.team!==u.team&&(d.airTarget||definition(v.faction,v.role).kind!=='air'));
+   let target=byId.get(u.targetId),best=target?Math.hypot(target.x-u.x,target.y-u.y):Infinity;
+   if(!valid(target)||best>(support?SUPPORT_RADIUS:AGGRO_LEASH)){target=null;best=Infinity;}
+   for(const v of nearby(support?u.team:1-u.team,u.x,u.y,r)){
+    if(!valid(v))continue;
     const distance=Math.hypot(v.x-u.x,v.y-u.y);
-    if(distance<best){best=distance;target=v;}
+    if(distance+36<best){target=v;best=distance;}
    }
    if(target){
-    const reach=d.range<48?Math.max(d.range,u.radius+target.radius+6):d.range*.88;
-    if(best<=reach){
-     if(u.cool<=0)attack(u,target);
-    }else{
-     const dx=target.x-u.x,dy=target.y-u.y,len=best||1,step=Math.min(d.speed*dt,best);
-     u.x+=dx/len*step;u.y+=dy/len*step;u.act='move';
+    u.targetId=target.id;
+    const reach=support?d.range*.88:d.range<48?Math.max(d.range,u.radius+target.radius+6):d.range*.88;
+    if(best<=reach){if(u.cool<=0)attack(u,target);}
+    else{
+     const distance=Math.max(1,best),move=Math.min(d.speed*dt,Math.max(0,best-reach*.68));
+     u.x+=(target.x-u.x)/distance*move;u.y+=(target.y-u.y)/distance*move;u.act='move';
     }
    }else{
-    const defense=1-u.team,tx=state.turrets[u.lane][defense]>0?(defense===0?215:WIDTH-215):(defense===0?110:WIDTH-110),ty=(u.lane+.5)*LANE_H;
-    const dist=Math.hypot(tx-u.x,ty-u.y);
-    if(dist>Math.max(48,d.range*.85)){
-     const sp=Math.min(d.speed*dt,dist);u.x+=(tx-u.x)/dist*sp;u.y+=(ty-u.y)/dist*sp;u.act='move';
-    }else if(u.cool<=0){
-     const hit=d.damage*([.52,.88,1.12,1.08,.82,1.55,.87,.4][u.role]||1);
-     if(state.turrets[u.lane][defense]>0)state.turrets[u.lane][defense]=Math.max(0,state.turrets[u.lane][defense]-hit);
-     else state.cores[u.lane][defense]=Math.max(0,state.cores[u.lane][defense]-hit);
-     u.cool=d.rate;u.act='attack';u.attackAge=.28;}
+    u.targetId=null;
+    if(support){
+     // Healers regroup with any allied front, not just the lane they were built in.
+     let friend=null,dist=Infinity;
+     for(const v of alive)if(v.team===u.team&&v.id!==u.id&&v.role!==7){
+      const dd=Math.hypot(v.x-u.x,v.y-u.y);
+      if(dd<dist){dist=dd;friend=v;}
+     }
+     if(friend&&dist>115){
+      const move=Math.min(d.speed*dt,dist-105);
+      u.x+=(friend.x-u.x)/dist*move;u.y+=(friend.y-u.y)/dist*move;u.act='move';
+     }
+    }else{
+     // Choose an enemy defense based on *current* position after cross-band aggro.
+     const lane=clamp(Math.floor(u.y/LANE_H),0,LANES-1),defender=1-u.team;
+     const tx=state.turrets[lane][defender]>0?(defender===0?215:WIDTH-215):(defender===0?110:WIDTH-110);
+     const ty=(lane+.5)*LANE_H,dist=Math.hypot(tx-u.x,ty-u.y);
+     if(state.cores[lane][defender]>0){
+      if(dist>Math.max(48,d.range*.85)){
+       const step=Math.min(d.speed*dt,dist);
+       u.x+=(tx-u.x)/Math.max(dist,1)*step;u.y+=(ty-u.y)/Math.max(dist,1)*step;u.act='move';
+      }else if(u.cool<=0){
+       const damage=d.damage*([.52,.88,1.12,1.08,.82,1.55,.87,.4][u.role]||1);
+       if(state.turrets[lane][defender]>0)state.turrets[lane][defender]=Math.max(0,state.turrets[lane][defender]-damage);
+       else state.cores[lane][defender]=Math.max(0,state.cores[lane][defender]-damage);
+       u.cool=d.rate;u.act='attack';u.attackAge=.28;
+      }
+     }else{
+      // Fort cleared: cross the map vertically to assault another surviving fort.
+      const remaining=state.cores.map((cores,i)=>cores[defender]>0?i:-1).filter(i=>i>=0);
+      if(remaining.length){
+       const closest=remaining.sort((x,y)=>Math.abs((x+.5)*LANE_H-u.y)-Math.abs((y+.5)*LANE_H-u.y))[0];
+       u.y+=clamp((closest+.5)*LANE_H-u.y,-d.speed*dt,d.speed*dt);u.act='move';
+      }
+     }
+    }
    }
-   u.x=clamp(u.x,35,WIDTH-35);
-   u.y=clamp(u.y,u.lane*LANE_H+80,(u.lane+1)*LANE_H-80);
+   u.x=clamp(u.x,35,WIDTH-35);u.y=clamp(u.y,35,HEIGHT-35);
+   u.lane=clamp(Math.floor(u.y/LANE_H),0,LANES-1);
   }
-  // Shared-space hash per lane prevents infantry from stacking into a single high-DPS pixel.
-  const grid=new Map(),cell=64;
+  // Collision cells are global; two units straddling the old line now repel.
+  const collision=new Map(),c=CONTACT_CELL;
   for(const u of state.units)if(u.hp>0){
-   const key=u.lane+','+Math.floor(u.x/cell)+','+Math.floor(u.y/cell);
-   if(!grid.has(key))grid.set(key,[]);grid.get(key).push(u);
+   const k=Math.floor(u.x/c)+','+Math.floor(u.y/c);
+   if(!collision.has(k))collision.set(k,[]);collision.get(k).push(u);
   }
   for(const u of state.units)if(u.hp>0){
-   const gy=Math.floor(u.y/cell),gx=Math.floor(u.x/cell),layer=definition(u.faction,u.role).kind;
-   for(let ox=-1;ox<=1;ox++)for(let oy=-1;oy<=1;oy++)for(const v of grid.get(u.lane+','+(gx+ox)+','+(gy+oy))||[]){
-    if(v.id<=u.id||v.hp<=0||definition(v.faction,v.role).kind!==layer)continue;
-    let dx=v.x-u.x,dy=v.y-u.y,d=Math.hypot(dx,dy),min=u.radius+v.radius;
-    if(d>=min)continue;
-    if(d<.01){dx=(u.id%3)-1;dy=(v.id%3)-1||1;d=Math.hypot(dx,dy);}
-    const push=Math.min(16,(min-d)*.47);
-    u.x-=dx/d*push;u.y-=dy/d*push;v.x+=dx/d*push;v.y+=dy/d*push;
+   const cx=Math.floor(u.x/c),cy=Math.floor(u.y/c),layer=definition(u.faction,u.role).kind;
+   for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
+    for(const v of collision.get((cx+dx)+','+(cy+dy))||[]){
+     if(v.id<=u.id||v.hp<=0||definition(v.faction,v.role).kind!==layer)continue;
+     let vx=v.x-u.x,vy=v.y-u.y,len=Math.hypot(vx,vy),min=u.radius+v.radius;
+     if(len>=min)continue;
+     if(len<.01){vx=(u.id%3)-1;vy=(v.id%3)-1||1;len=Math.hypot(vx,vy);}
+     const push=Math.min(16,(min-len)*.47);
+     u.x=clamp(u.x-vx/len*push,35,WIDTH-35);u.y=clamp(u.y-vy/len*push,35,HEIGHT-35);
+     v.x=clamp(v.x+vx/len*push,35,WIDTH-35);v.y=clamp(v.y+vy/len*push,35,HEIGHT-35);
+    }
    }
   }
+  for(const u of state.units)if(u.hp>0)u.lane=clamp(Math.floor(u.y/LANE_H),0,LANES-1);
   // Independent anti-snowball towers in all three lanes for both teams.
   for(let lane=0;lane<LANES;lane++)for(let team=0;team<2;team++){
    if(state.turrets[lane][team]<=0)continue;
    const x=team===0?215:WIDTH-215,y=(lane+.5)*LANE_H;
    state.towerCooldown[lane][team]=Math.max(0,state.towerCooldown[lane][team]-dt);
    if(state.towerCooldown[lane][team]>0)continue;
-   const hostile=state.units.filter(u=>u.hp>0&&u.team!==team&&u.lane===lane&&Math.hypot(u.x-x,u.y-y)<=TOWER_RANGE);
+   const hostile=state.units.filter(u=>u.hp>0&&u.team!==team&&Math.hypot(u.x-x,u.y-y)<=TOWER_RANGE);
    if(!hostile.length)continue;
    hostile.sort((a,b)=>(Math.hypot(a.x-x,a.y-y)*.55+a.hp/a.maxHP*42-(a.role===7?35:0))
     -(Math.hypot(b.x-x,b.y-y)*.55+b.hp/b.maxHP*42-(b.role===7?35:0)));
@@ -287,9 +330,11 @@ function create({mode='pvp',size=1,members=[]}={}){
   for(const e of state.effects)e.time-=dt;
   state.effects=state.effects.filter(e=>e.time>0);
   for(let lane=0;lane<LANES;lane++){
-   const mine=teams[lane][0].length?Math.max(...teams[lane][0].map(u=>u.x)):WIDTH/2;
-   const theirs=teams[lane][1].length?Math.min(...teams[lane][1].map(u=>u.x)):WIDTH/2;
-   state.lanePressure[lane]=clamp((mine+theirs)/2/WIDTH,.04,.96);
+   const ours=state.units.filter(u=>u.hp>0&&u.team===0&&u.lane===lane);
+   const theirs=state.units.filter(u=>u.hp>0&&u.team===1&&u.lane===lane);
+   const left=ours.length?Math.max(...ours.map(u=>u.x)):WIDTH/2;
+   const right=theirs.length?Math.min(...theirs.map(u=>u.x)):WIDTH/2;
+   state.lanePressure[lane]=clamp((left+right)/2/WIDTH,.04,.96);
   }
   let lost=[0,0];
   for(const cores of state.cores){if(cores[0]<=0)lost[0]++;if(cores[1]<=0)lost[1]++;}
@@ -316,7 +361,7 @@ function create({mode='pvp',size=1,members=[]}={}){
   const seen=(lane)=>{
    if(!viewer||state.wave>=FOG_END_WAVE)return true;
    const enemySide=1-viewer.team;
-   return state.units.some(u=>u.hp>0&&u.team===viewer.team&&u.lane===lane
+   return state.units.some(u=>u.hp>0&&u.team===viewer.team&&Math.floor(u.y/LANE_H)===lane
     &&(enemySide===1?u.x>=WIDTH-FOG_WIDTH-220:u.x<=FOG_WIDTH+220));
   };
   const visible=Array.from({length:LANES},(_,lane)=>seen(lane));

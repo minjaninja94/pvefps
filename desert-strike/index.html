@@ -74,11 +74,11 @@
  <section class="panel mp-command" id="mpCommand" hidden>
   <div class="mp-command-bar"><div><span class="eyebrow">PERSONAL COMMAND</span><strong id="mpMyResources">360 CR</strong> <span id="mpMyIncome">+1 / 0.5초</span></div><div><b id="mpWave">웨이브 0</b> · <span id="mpCountdown">24초</span></div><button id="mpEco" class="btn outline">경제 강화</button></div>
   <div class="mp-lane-tabs" id="mpLaneTabs"><button class="active" data-lane="0">상단 라인</button><button data-lane="1">중앙 라인</button><button data-lane="2">하단 라인</button></div>
-  <div class="mp-overview"><canvas id="mpOverviewCanvas" width="1100" height="96" aria-label="3라인 전황 미니맵. 원하는 라인을 눌러 이동합니다."></canvas></div><div class="mp-battle-wrap"><canvas id="mpBattleCanvas" width="1100" height="1560" aria-label="3개 전선. 전체 전장 면적 3300×1560."></canvas><div class="mp-help">3개 라인 · 좌측 아군 / 우측 적군 · 전선이 오른쪽일수록 우세</div></div>
+  <div class="mp-overview"><canvas id="mpOverviewCanvas" width="1100" height="96" aria-label="3라인 전황 미니맵. 원하는 라인을 눌러 이동합니다."></canvas></div><div class="mp-battle-wrap"><canvas id="mpBattleCanvas" width="1100" height="660" aria-label="하나로 연결된 3300×1560 전장. 생산 위치만 3개 구역으로 구분됩니다."></canvas><div class="mp-help">통합 전장 · 라인 경계에서도 자동 어그로·추격·교전 · 좌측 아군 / 우측 적군</div></div>
   <div class="mp-lane-summary" id="mpLaneSummary"></div>
   <div class="mp-build-controls"><strong>내 생산 건물 배치 <span id="mpSelectedLane">상단 라인</span></strong><span id="mpBuiltCount">0개 건설</span><label>유닛 종류<select id="mpUnitType"></select></label><button id="mpDemolish" class="btn outline">철거 선택</button></div>
   <div id="mpBuildGrid" class="mp-build-grid" aria-label="선택한 라인의 생산 시설 75칸"></div>
-  <p class="subtext">한 건물은 선택한 라인에만 출격합니다. 참가자별 자원은 독립적이며 세 라인 어디든 배치할 수 있습니다. 24초마다 생산. 같은 팀이 만든 건물은 소유자만 변경할 수 있습니다.</p>
+  <p class="subtext">라인은 출격 위치만 결정합니다. 전투 병력은 하나의 전장을 자유롭게 이동하고 인접 지역의 적을 추격합니다. 참가자별 자원은 독립적입니다. 24초마다 생산. 같은 팀이 만든 건물은 소유자만 변경할 수 있습니다.</p>
  </section>
 </div>
 <div class="screen" id="view-special">

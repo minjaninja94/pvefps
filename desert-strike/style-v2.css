@@ -162,7 +162,7 @@ body{background:
 .mp-lane-tabs button{padding:9px 3px;border:1px solid #6a7b79;border-radius:7px;background:#203139;color:#a9c1be;font:800 13px system-ui;cursor:pointer;min-height:45px}
 .mp-lane-tabs button.active{color:#fae1bc;background:#4a3937;border-color:#e5b78d}
 .mp-battle-wrap{width:100%;background:#101e26;border-radius:9px;overflow:hidden;border:1px solid #4e6872}
-#mpBattleCanvas{display:block;width:100%;height:auto;aspect-ratio:1100/1560;image-rendering:pixelated;touch-action:pan-y}
+#mpBattleCanvas{display:block;width:100%;height:auto;aspect-ratio:1100/660;image-rendering:pixelated;touch-action:manipulation}
 .mp-help{font-size:11px;color:#b5c0bf;padding:6px 9px}
 .mp-lane-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:9px}
 .mp-lane-summary div{background:#10252f;border:1px solid #40555f;padding:9px;border-radius:7px;font-size:12px;color:#c9d6d0;line-height:1.4}
@@ -196,10 +196,10 @@ body{background:
 @media(max-width:620px){.faction-card.faction-maiden{min-height:194px}.faction-card.faction-maiden .faction-hero{height:94px;width:94px}}
 
 /* Full 3x map, independently scrollable with pinned miniature overview. */
-.mp-battle-wrap{max-height:600px;overflow-y:auto;overscroll-behavior:contain;scrollbar-color:#758f8e #152b34;scrollbar-width:thin}
+.mp-battle-wrap{overflow:hidden;scrollbar-width:none}
 .mp-overview{background:#10232c;border:1px solid #5b7879;border-radius:7px;padding:2px;margin:4px 0 9px}
 #mpOverviewCanvas{display:block;width:100%;height:88px;border-radius:4px;image-rendering:pixelated;cursor:pointer;touch-action:manipulation}
-@media(max-width:620px){.mp-battle-wrap{max-height:540px}#mpOverviewCanvas{height:80px}}
+@media(max-width:620px){#mpOverviewCanvas{height:80px}#mpBattleCanvas{width:100%;height:auto}}
 
 /* ACTUAL COMMITTED IMAGE ART — same sprite atlas feeds faction covers, 16 unit cards
    and the animated 2.5D renderer. No placeholder canvas screenshots. */
