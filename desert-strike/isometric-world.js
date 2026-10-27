@@ -281,6 +281,8 @@ function renderFactionSprite(f,role,mode,frame){
  if(f===3&&role===6){drawOdoBongo(g,mode,frame);cache.set(key,cv);return cv;}
  if((f===4||f===5)&&global.HeroineFactions){
   global.HeroineFactions.draw(g,f,role,mode,frame);
+  // Overlay authentic generated maiden portraits, maintaining the 16-frame rig underneath.
+  global.MaidenArt?.overlay(g,f,role,mode,frame);
   cache.set(key,cv);return cv;
  }
  const atlas=f===3?marineAtlas:f>=4?null:realAtlas;
@@ -457,6 +459,7 @@ global.IsoWorld=Object.freeze({
  SIZE,FRAMES,project:worldToScreen,unproject:screenToWorld,
  terrain,structure,factory,frame:renderFactionSprite,effect,
  portrait(f,role){return renderFactionSprite(f,role,'idle',4);},
+ invalidateMaiden(){for(const k of [...cache.keys()])if(k.startsWith('4-')||k.startsWith('5-'))cache.delete(k);},
  get cachedFrames(){return cache.size;}
 });
 })(window);
