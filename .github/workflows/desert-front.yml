@@ -39,6 +39,8 @@ jobs:
         run: node desert-strike/smoke-balance.test.cjs > /tmp/desert-balance.json
       - name: Three-line PvP and cooperative host-authoritative combat
         run: node desert-strike/smoke-trilane.test.cjs
+      - name: WebRTC and Firebase mocked 1v1 handshake and real-time orders
+        run: node desert-strike/smoke-trilane-network.test.cjs
       - name: Beastgirls and elven mages full sprite coverage
         run: node desert-strike/smoke-heroine.test.cjs
 
