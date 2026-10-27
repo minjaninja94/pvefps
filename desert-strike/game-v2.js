@@ -1081,7 +1081,7 @@ function drawProductionMinimap(){
 }
 function frame(now){
  const delta=Math.min((now-lastFrame)/1000||0,.045);lastFrame=now;
- if(state){tick(delta);if(activeView!=='multiplayer'){drawBattle();drawBase();drawMinimap();drawProductionMinimap();}}
+ if(state&&activeView!=='multiplayer'){tick(delta);drawBattle();drawBase();drawMinimap();drawProductionMinimap();}
  requestAnimationFrame(frame);
 }
 function inspectBattle(event){
