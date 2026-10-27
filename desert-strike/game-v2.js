@@ -1390,7 +1390,7 @@ function wire(){
  });
 }
 window.DesertRoster=Object.freeze({FACTIONS,ROLE,getDef,refreshChoices:initFactions,cost:(role)=>ROLE[role]?.cost??Infinity});
-window.addEventListener?.('desert-moe-ready',()=>{if(state){state.lastCards=undefined;updateUI(true);}});initFactions();wire();reset();
+for(const readyEvent of ['desert-moe-ready','desert-real-sprites-ready'])window.addEventListener?.(readyEvent,()=>{if(state){state.lastCards=undefined;updateUI(true);}});initFactions();wire();reset();
 if(typeof window.addEventListener==='function')window.addEventListener('marine-art-ready',()=>updateUI(true));
 if(typeof window.addEventListener==='function')window.addEventListener('isometric-art-ready',()=>updateUI(true));
 if(typeof window.addEventListener==='function')window.addEventListener('maiden-art-ready',()=>{window.IsoWorld?.invalidateMaiden?.();initFactions();updateUI(true);});
