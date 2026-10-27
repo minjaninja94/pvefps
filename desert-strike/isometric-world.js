@@ -347,20 +347,10 @@ function drawHuanglongMarine(g,mode,frame){
 function renderFactionSprite(f,role,mode,frame){
  const key=[f,role,mode,frame].join('-');
  const old=cache.get(key);if(old)return old;
- // Marine special forces (Odo Bongo and Huanglong) NEVER use the generic
- if(f===3&&(role===6||role===7)){
-  const cv=document.createElement('canvas');cv.width=SIZE;cv.height=SIZE;
-  const g=cv.getContext('2d');if(!g)return cv;
-  if(role===6)drawOdoBongo(g,mode,frame);else drawHuanglongMarine(g,mode,frame);
-  cache.set(key,cv);return cv;
- }
- if(global.DesertSpecialArt?.isSpecial(f,role)){
-  const cv=document.createElement('canvas');cv.width=SIZE;cv.height=SIZE;
-  const g=cv.getContext('2d');
-  if(g&&global.DesertSpecialArt.draw(g,f,role,mode,frame)){cache.set(key,cv);return cv;}
- }
- const illustrated=global.DesertRealSprites?.frame(f,role,mode,frame);
- if(illustrated){cache.set(key,illustrated);return illustrated;}
+ const special=global.DesertSpecialArt?.frame?.(f,role,mode,frame);
+ if(special){cache.set(key,special);return special;}
+ const reference=global.DesertRealSprites?.frame(f,role,mode,frame);
+ if(reference){cache.set(key,reference);return reference;}
  const cv=document.createElement('canvas');cv.width=SIZE;cv.height=SIZE;
  const g=cv.getContext('2d');if(!g)return cv;
  const a=PAL[f]||PAL[0],t=frame/16,cyc=t*Math.PI*2,walk=mode==='move',hit=mode==='attack'||mode==='siege';
