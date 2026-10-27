@@ -342,19 +342,22 @@ console.log('Six playable factions, 48 named units, Beastgirl melee and Elf rang
  assert.equal(st.marineStats.huangSpawns,3,'no fourth Huanglong in one wave');
  st.units.length=0;st.marineRecruitCount=[0,0];
  const killer={side:0,faction:3,role:1,conscripted:false};
- const foe=g.createUnit(1,0,3),victim=st.units[0];
+ g.createUnit(1,0,3);const victim=st.units[0];
  st.enemyCash=100;
+ const myCashBefore=st.cash;
  forcedMarineRoll=0;
- g.damage(victim,victim.hp+300,1,killer);
+ g.damage(victim,victim.hp*10,1,killer);
  forcedMarineRoll=null;
  assert.equal(st.enemyCash,76,'ginppai takes at most 24 paid credits from victim');
- assert.equal(st.cash,274,'ginppai credits the actual killer');
+ assert.equal(st.cash,myCashBefore+24,'ginppai credits the actual killer');
  assert.equal(st.marineStats.recruits,1,'one defeated enemy is conscripted');
  const recruited=st.units.find(u=>u.conscripted&&u.hp>0);
  assert.ok(recruited&&recruited.side===0&&recruited.faction===0,'conscript retains original unit identity, changes control');
  assert.ok(recruited.hp<=recruited.maxHP*.101,'conscript starts critically wounded');
  st.enemyCash=0;st.marineRecruitCount=[2,0];
- const other=st.units.filter(u=>u.side===1&&u.hp>0)[0]||null;
- if(other)g.damage(other,other.hp+1,1,killer);
+ g.createUnit(1,1,0);const other=st.units.find(u=>u.side===1&&u.hp>0);
+ forcedMarineRoll=0;
+ g.damage(other,other.hp*10,1,killer);
+ forcedMarineRoll=null;
  assert.equal(st.marineStats.recruits,1,'conscript cap and zero opponent cash prevent extra awards');
 }
