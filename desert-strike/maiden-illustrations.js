@@ -57,8 +57,8 @@
  image=new Image();image.decoding='async';
  image.onload=()=>{
   atlas.loaded=true;cache.clear();
-  if(typeof global.CustomEvent==='function')global.dispatchEvent(new CustomEvent('maiden-art-ready'));
-  else if(typeof global.Event==='function')global.dispatchEvent(new Event('maiden-art-ready'));
+  if(typeof global.CustomEvent==='function')global.dispatchEvent(new global.CustomEvent('maiden-art-ready'));
+  else if(typeof global.Event==='function')global.dispatchEvent(new global.Event('maiden-art-ready'));
  };
  image.onerror=()=>{atlas.failed=true;console.warn('미소녀 이미지 아틀라스를 불러오지 못했습니다.',SRC);};
  image.src=SRC;
