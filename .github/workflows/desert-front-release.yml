@@ -50,7 +50,7 @@ jobs:
           mkdir -p "$HOME/.local/share/godot/export_templates"
           cp -a /root/.local/share/godot/export_templates/4.3.stable "$HOME/.local/share/godot/export_templates/"
           mkdir -p desert-front-godot/build
-          godot --headless --path desert-front-godot --export-release "Windows Desktop" desert-front-godot/build/DesertFront.exe
+          (cd desert-front-godot && godot --headless --export-release "Windows Desktop" build/DesertFront.exe)
           test -s desert-front-godot/build/DesertFront.exe
           test -s desert-front-godot/build/DesertFront.pck
           test -s desert-front-godot/build/addons/nodetunnel/bin/nodetunnel.dll || {
