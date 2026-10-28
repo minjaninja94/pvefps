@@ -9,6 +9,7 @@ const TOWER_RANGE=285,TOWER_PERIOD=.31,TOWER_DAMAGE=28,FOG_END_WAVE=6,ENEMY_FOG_
 const HEAL_WINDOW=1,HEAL_BUDGET=80;
 const BROOD_BIRTH_CHANCE=.20,BROOD_BIRTH_COOLDOWN=11,BROOD_BIRTH_CAP=8,BROOD_ALIVE_CAP=14;
 const OCTOPER_REGEN=.0006,ROBOT_REPAIR=.0015;
+const BEAST_RANGED_DAMAGE_REDUCTION=.06,FAIRY_CHAIN_HEAL_RATIO=.05,FAIRY_HEAL_MULTIPLIER=1.08;
 const INK_DURATION=2.5,INK_COOLDOWN=5;
 // Marine-only logistics. Low-probability transfer + fragile capture, max two recruits each wave.
 const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=1,HUANGLONG_INTERVAL=8;
@@ -27,12 +28,12 @@ const FACTIONS=[
  {id:'brood',name:'심연군체',tag:'DUSK BROOD',logo:'♜',color:'#b9df8d',bonus:'기동·증원 특화 · 전 병종 이동속도 12% 증가 · 전투병 공격 시 20% 확률로 공생충 소환(개체당 11초 간격)',mut:{hp:.995,dmg:1,speed:1.12},units:['송곳 발톱','산성 침벌','부식 포자충','거대 갑각수','가시 포자탑','폭식 투석충','비행 포식자','치유 공생충'],slogan:'빠른 진격과 공생충 증원',secondary:'#344d2b'},
  {id:'astral',name:'성운결사',tag:'ASTRAL ORDER',logo:'✧',color:'#d6b8ff',bonus:'공격·치유 특화 · 전 병종 공격력·치유량 9% 증가 · 10초마다 1회 받는 피해 18% 감소',mut:{hp:.99,dmg:1.09,speed:1},units:['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],slogan:'공격과 치유를 강화하는 비전 방벽',secondary:'#443257'},
  {id:'marine',name:'해병성채',tag:'MARINE FORTRESS',logo:'★',color:'#dba77c',bonus:'전열·지원 특화 · 오도봉고 제외 7병종 체력 9% 증가 · 6개 공격 병종 공격력 6% 증가 · 지원병 치유량 6% 증가 · 황룡 웨이브당 3회 출격',mut:{hp:1.09,dmg:1.06,speed:1.01},units:['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],	slogan:'튼튼한 병력과 황룡의 광역 회복',secondary:'#58412f'},
- {id:'beastkin',name:'월영 수인족',tag:'MOONFANG CLAN',logo:'♞',color:'#f0b4a6',bonus:'근접전 특화 · 돌격·장갑병 공격력 8% 증가 · 장갑병 체력 5% 증가',mut:{hp:1,dmg:1,speed:1.02},units:['백랑 검사','여우족 단검투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],slogan:'강한 근접 공격과 튼튼한 장갑병',secondary:'#603d46'},
+ {id:'beastkin',name:'월영 수인족',tag:'MOONFANG CLAN',logo:'♞',color:'#f0b4a6',bonus:'기동·근접 방어 특화 · 전 병종 이동속도 2% 증가 · 돌격·장갑병 공격력 8% 증가 · 장갑병 체력 5% 증가 · 원거리 병종 공격 피해 6% 감소',mut:{hp:1,dmg:1,speed:1.02},units:['백랑 검사','여우족 단검투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],slogan:'강한 근접 공격과 튼튼한 장갑병',secondary:'#603d46'},
  {id:'elf',name:'은월 엘프족',tag:'SILVERWOOD ELVES',logo:'✦',color:'#b2e6cf',bonus:'원거리 정밀사격 특화 · 사격·대장갑·대공·포격·비행: 사거리 10% 증가, 12% 확률로 피해 25% 증가',mut:{hp:.94,dmg:1,speed:.99},units:['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사'],slogan:'긴 사거리와 확률 추가 피해',secondary:'#375c52'},
  {id:'furry',name:'야월 퍼리족',tag:'WILDFUR PACK',logo:'♣',color:'#e8c392',bonus:'근접 협공 특화 · 돌격·장갑병 공격력 10% 증가 · 아군 퍼리가 165거리 안에 있으면 돌격·장갑·늑대기수 피해 6% 증가',mut:{hp:1.02,dmg:1,speed:1.07},units:['늑대 추적자','여우총 사냥꾼','송곳니 분쇄자','곰 털갑옷 수호자','하울 창투사','들소 포격수','알파 늑대 기수','달빛 무리치유사'],slogan:'아군과 함께 싸우는 근접 협공',secondary:'#634634'},
  {id:'robot',name:'크롬 로보족',tag:'CHROME SYNDICATE',logo:'⬡',color:'#83c5fd',bonus:'원거리·자가수리 특화 · 사격·대장갑·대공·포격 공격력 8% 증가 · 매초 최대 체력의 0.15% 회복',mut:{hp:1.07,dmg:1,speed:.99},units:['블레이드 오토마타','레이저 정찰기','레일 관통병기','티탄 실드 워커','플랙 대공드론','공성 캐논','전술 변형 메카','나노 정비유닛'],slogan:'원거리 화력과 전투 중 자가수리',secondary:'#264e67'},
  {id:'octoper',name:'옥토퍼 군체',tag:'ABYSSAL OCTOPER',logo:'✺',color:'#c5a0fa',bonus:'주술·재생 특화 · 대장갑·대공·포격 공격력 16% 증가 · 매초 최대 체력의 0.06% 회복',mut:{hp:.99,dmg:1,speed:1.01},units:['팔완 돌격체','먹물 주술사','심해 관통술사','갑각 문어수호자','팔완 대공술사','심연 의식술사','마력 비행수','군체 사제'],slogan:'강한 주술 화력과 지속 재생',secondary:'#4a3370'},
- {id:'fairy',name:'농농 페어리족',tag:'PETAL FAIRIES',logo:'❀',color:'#ffadd4',bonus:'연쇄치유 특화 · 지원병이 5초마다 주변 다른 아군 1기에 실제 회복량의 3%를 추가 치유',mut:{hp:.84,dmg:1,speed:1.01},units:['꽃잎 소검사','이슬 마도사','씨앗 관통술사','버섯껍질 방패수','반딧불 대공술사','꽃가루 폭격사','별빛 나비정령','꽃샘 치유사'],slogan:'주변 아군에게 이어지는 연쇄치유',secondary:'#84577c'}
+ {id:'fairy',name:'농농 페어리족',tag:'PETAL FAIRIES',logo:'❀',color:'#ffadd4',bonus:'치유 특화 · 지원병 기본 치유량 8% 증가 · 5초마다 주변 다른 아군 1기에 실제 회복량의 5% 추가 치유',mut:{hp:.84,dmg:1,speed:1.01},units:['꽃잎 소검사','이슬 마도사','씨앗 관통술사','버섯껍질 방패수','반딧불 대공술사','꽃가루 폭격사','별빛 나비정령','꽃샘 치유사'],slogan:'주변 아군에게 이어지는 연쇄치유',secondary:'#84577c'}
 ];
 const RNAME=ROLE.map(r=>r.name),SPRITES=new Map();
 let selectedFaction=0,state=null,selectedRole=null,demolition=false,activeView='base',lastFrame=0,lastRenderAt=0,uiElapsed=0;
@@ -73,7 +74,7 @@ function getDef(role,faction){
  return {...r,unitName:f.units[role],factionName:f.name,name:isBongo?'돌격 차량':isProwler?'돌격 기병':groundSpecial&&faction===6?'늑대 기병':groundSpecial&&faction===7?'지상 메카':r.name,mark:isBongo?'▰':isProwler?'♞':groundSpecial&&faction===6?'♞':groundSpecial&&faction===7?'⬡':r.mark,
   hp:isBongo?565:r.hp*f.mut.hp*2.25*(isElf&&role===0?.88:isBeast&&role===3?1.05:1),
   damage:isBongo?36:isProwler?33:isWolfRider?32:r.damage*f.mut.dmg*.94*(isBeast?(melee?1.08:.83):isElf?(rangeBoost?1.045:role===0?.84:1):isFurry?(melee?1.10:.93):isRobot&&[1,2,4,5].includes(role)?1.08:isOcto&&[2,4,5].includes(role)?1.16:1),
-  heal:(r.heal||0)*f.mut.dmg*1.5*(isRobot?.85:isFairy?.90:1),blast:(r.blast||0)*(isOcto?1.15:1),speed:isBongo?77:isProwler?90:r.speed*f.mut.speed*.84*(melee?1.05:1),
+  heal:(r.heal||0)*f.mut.dmg*1.5*(isRobot?.85:isFairy?FAIRY_HEAL_MULTIPLIER:1),blast:(r.blast||0)*(isOcto?1.15:1),speed:isBongo?77:isProwler?90:r.speed*f.mut.speed*.84*(melee?1.05:1),
   kind:groundSpecial?'ground':r.kind,armor:isBongo?7:isProwler?3:groundSpecial&&faction===7?5:r.armor,
   range:isBongo?43:isProwler?40:isWolfRider?42:r.range*(rangeBoost?1.10:isRobot&&[1,2,4,5].includes(role)?1.04:1),
   rate:isBongo?1.45:isProwler?.95:isWolfRider?.9:r.rate,
@@ -580,6 +581,7 @@ function marineSpoils(v,attacker,roll=Math.random){
 function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
  if(u.hp<=0)return;
  let hit=calcDamage(typeof source==='number'?source:null,u,amount,attacker,volley);
+ if(u.faction===4&&attacker&&Number.isInteger(source)&&Number.isInteger(attacker.faction)&&getDef(source,attacker.faction).range>=48)hit*=1-BEAST_RANGED_DAMAGE_REDUCTION;
  if(u.faction===0&&[3,4].includes(u.role))hit*=.94;
  if(u.faction===2&&state.elapsed-(u.lastWardAt??-999)>=10){u.lastWardAt=state.elapsed;hit*=.82;}
  if(attacker?.faction===5&&[1,2,4,5,6].includes(source)&&Math.random()<.12)hit*=1.25;
@@ -611,7 +613,7 @@ function heal(u,amount,burst=false,healer=null){
  if(healer?.faction===9&&recovered>0&&state.elapsed-(healer.lastPollenAt??-999)>=5){
   const partner=state.units.find(v=>v!==u&&v!==healer&&v.hp>0&&!v.isHatchling&&v.side===healer.side&&v.hp<v.maxHP
    &&Math.hypot(v.x-u.x,v.y-u.y)<145);
-  if(partner){healer.lastPollenAt=state.elapsed;partner.hp=Math.min(partner.maxHP,partner.hp+(window.DesertGuardian?.healAmount(partner,recovered*.03,state.elapsed)??recovered*.03));pulse(partner.x,partner.y,'#ffbce2',9);}
+  if(partner){healer.lastPollenAt=state.elapsed;partner.hp=Math.min(partner.maxHP,partner.hp+(window.DesertGuardian?.healAmount(partner,recovered*FAIRY_CHAIN_HEAL_RATIO,state.elapsed)??recovered*FAIRY_CHAIN_HEAL_RATIO));pulse(partner.x,partner.y,'#ffbce2',9);}
  }
 }
 function defenseTarget(side,part=null){
