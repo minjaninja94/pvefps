@@ -12,7 +12,7 @@ function read(){try{const d=JSON.parse(localStorage.getItem(KEY)||'{}');return {
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(career));}catch(_){}}
 function tier(score){return TIERS.find(x=>score>=x[0])[1];}
 function record(input){
- if(!input||!['solo','pvp','classic','coop'].includes(input.mode))return;
+ if(!input||!['solo','pvp','classic','coop','practice'].includes(input.mode))return;
  const mode=input.mode,win=input.winner===null?'무승부':input.winner===input.side?'승리':'패배';
  const entry={at:new Date().toISOString(),mode,result:win,size:clamp(input.size||1,1,3),faction:clamp(input.faction,0,9),wave:clamp(input.wave,0,999),seconds:clamp(input.seconds,0,7200)};
  career.records.unshift(entry);career.records=career.records.slice(0,40);
@@ -74,7 +74,7 @@ function render(){
  for(const e of career.records.slice(0,40)){
   const row=document.createElement('div');row.className='career-record';
   let at;try{at=new Date(e.at).toLocaleString('ko-KR');}catch(_){at='기록';}
-  row.textContent=at+' · '+({solo:'싱글',pvp:'3라인 PvP',classic:'클래식 1:1',coop:'협동'}[e.mode]||e.mode)+' · '+e.size+'인 · '+e.result+' · W'+e.wave+' · '+Math.floor(e.seconds/60)+'분 '+e.seconds%60+'초';
+  row.textContent=at+' · '+({solo:'싱글',pvp:'3라인 PvP',classic:'클래식 1:1',coop:'협동',practice:'AI 연습'}[e.mode]||e.mode)+' · '+e.size+'인 · '+e.result+' · W'+e.wave+' · '+Math.floor(e.seconds/60)+'분 '+e.seconds%60+'초';
   history.append(row);
  }
 }
@@ -93,7 +93,7 @@ function init(){
  const panel=$('careerPanel'),open=$('careerOpen');
  if(open&&panel)open.addEventListener('click',()=>{panel.hidden=!panel.hidden;if(!panel.hidden){render();void session().then(renderAccount).catch(()=>{});}});
  const close=$('careerClose');if(close)close.addEventListener('click',()=>{panel.hidden=true;});
- const register=$('careerRegister');if(register)register.addEventListener('click',()=>act(()=>registerEmail()));
+ const registerButton=$('careerRegister');if(registerButton)registerButton.addEventListener('click',()=>act(()=>registerEmail()));
  function registerEmail(){return registerUser(true);}
  async function registerUser(isNew){
   const email=String($('careerEmail').value||'').trim(),password=$('careerPassword').value;

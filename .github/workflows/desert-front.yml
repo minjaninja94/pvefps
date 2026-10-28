@@ -38,6 +38,8 @@ jobs:
         run: node --test desert-strike/smoke-bgm.test.cjs
       - name: Godot 300-card augment parity and sandboxed host decisions
         run: node --test desert-strike/smoke-augments.test.cjs
+      - name: Local 40-match history and unofficial RP safety
+        run: node --test desert-strike/smoke-career.test.cjs
       - name: Godot combat voice assets and web event hooks
         run: node --test desert-strike/smoke-combat-audio.test.cjs
       - name: Fairy healing and beastkin ranged defense parity

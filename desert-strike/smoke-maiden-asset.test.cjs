@@ -18,7 +18,7 @@ for(const document of [html,gallery]){
 }
 assert.match(css,/assets\/maiden-atlas\.webp/,'faction cards and unit cards load real binary file');
 assert.match(css,/maiden-unit-portrait/,'16 real illustrated card portraits');
-assert.match(game,/class="maiden-unit-portrait"/);
+assert.match(game,/class="faction-hero-new"/,'current web unit/faction art uses new portrait cards');
 assert.match(game,/faction-hero-/);
 assert.match(game,/maiden-art-ready/);
 assert.match(iso,/MaidenArt\?\.overlay/);

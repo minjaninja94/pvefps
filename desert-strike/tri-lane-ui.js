@@ -4,7 +4,7 @@
 const $=id=>document.getElementById(id);
 const NET=global.DesertTriNetwork,E=global.DesertTriEngine;
 if(!NET||!E)return;
-let snap=null,lane=1,role=0,demolish=false,practice=null,practiceTimer=null,view='base',repairLane=1;
+let snap=null,lane=1,role=0,demolish=false,practice=null,practiceTimer=null,practiceRecorded=false,view='base',repairLane=1;
 let myId='',lobby=null,host=false,gridKey='',cardsKey='',augmentKey='',lastSnapshotAt=0,lastDrawAt=0;
 const LANES=['상단','중앙','하단'],ICONS=['⚔','⌖','◆','▣','✣','✹','♞','✚'];
 function message(msg){$('mpStatus').textContent=msg;}
@@ -331,7 +331,9 @@ function onSnapshot(v){
   f.append(el);
  }
  $('mpLaneSummary').replaceChildren(f);
- if(v.ended){global.DesertLobbyMusic?.stopBattle?.();$('mpStateTag').textContent=v.winner===null?'무승부':v.winner===side?'승리':'패배';if(!practice)global.DesertLobby?.completeMultiplayer?.({winner:v.winner,side,matchId:lobby?.id||'unknown',mode:v.mode,size:v.size,wave:v.wave,seconds:v.seconds,faction:me?.faction??faction()});}
+ if(v.ended){global.DesertLobbyMusic?.stopBattle?.();
+  if(practice&&!practiceRecorded){practiceRecorded=true;global.DesertCareer?.record?.({mode:'practice',size:1,side:0,winner:v.winner,faction:me?.faction??faction(),wave:v.wave,seconds:v.seconds,online:false});}
+  $('mpStateTag').textContent=v.winner===null?'무승부':v.winner===side?'승리':'패배';if(!practice)global.DesertLobby?.completeMultiplayer?.({winner:v.winner,side,matchId:lobby?.id||'unknown',mode:v.mode,size:v.size,wave:v.wave,seconds:v.seconds,faction:me?.faction??faction()});}
  renderAugment();unitCards();buildGrid();upgradeInfo();drawOverview();
 }
 function order(cmd){
@@ -345,6 +347,7 @@ function order(cmd){
  else message('명령 전달 완료 · 호스트 판정 대기');
 }
 async function practiceStart(){
+ practiceRecorded=false;
  if($('mpRuleset').value==='augment')await global.DesertAugments.load();
  if(lobby)return message('온라인 방에서 나간 뒤 연습할 수 있습니다.');
  myId='local';
@@ -358,7 +361,7 @@ async function practiceStart(){
  onSnapshot(practice.snapshot('local'));uiButtons();
 }
 async function leave(){
- if(practice){clearInterval(practiceTimer);practiceTimer=null;practice=null;myId='';snap=null;$('mpCommand').hidden=true;$('mpStateTag').textContent='연결 전';message('연습 종료');}
+ if(practice){clearInterval(practiceTimer);practiceTimer=null;practice=null;practiceRecorded=false;myId='';snap=null;$('mpCommand').hidden=true;$('mpStateTag').textContent='연결 전';message('연습 종료');}
  else{await NET.leave();snap=null;$('mpCommand').hidden=true;}
  $('mpViewTabs').hidden=true;setView('base');
  lane=1;repairLane=1;role=0;demolish=false;gridKey='';cardsKey='';augmentKey='';$('mpAugmentPanel').hidden=true;

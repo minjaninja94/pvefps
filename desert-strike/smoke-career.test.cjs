@@ -1,0 +1,23 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const source=fs.readFileSync(path.join(__dirname,'career-profile.js'),'utf8');
+test('local detailed career retains 40 matches and never awards RP for AI practice',()=>{
+ const storage=new Map(),handlers={};
+ const document={readyState:'loading',addEventListener:(event,fn)=>{handlers[event]=fn;},getElementById:()=>null};
+ const w={localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)}};
+ const context={window:w,localStorage:w.localStorage,document,Date,JSON,Number,Math,Array,String,Object};
+ vm.runInNewContext(source,context,{filename:'career-profile.js'});
+ const p=w.DesertCareer;
+ assert.equal(p.rating(),1000);
+ for(let i=0;i<43;i++)p.record({mode:'practice',size:1,side:0,winner:0,faction:1,wave:i,seconds:20,online:false});
+ assert.equal(p.history().length,40);
+ assert.equal(p.rating(),1000,'AI practice cannot award ratings');
+ p.record({mode:'pvp',size:2,side:0,winner:0,faction:2,wave:3,seconds:120,online:true});
+ assert.equal(p.rating(),1024);
+ p.record({mode:'classic',size:1,side:1,winner:0,faction:2,wave:4,seconds:180,online:true});
+ assert.equal(p.rating(),1000);
+ p.record({mode:'coop',side:0,winner:0,online:true});
+ assert.equal(p.rating(),1000,'co-op never grants competitive RP');
+ const d=JSON.parse(storage.get('desert-career-v1'));
+ assert.equal(d.records.length,40);assert.equal(d.records[0].mode,'coop');
+});
