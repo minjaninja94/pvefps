@@ -1,8 +1,12 @@
-# Desert Front soundtrack assets
+# Desert Front web audio assets
 
-- `lobby-theme.mp3`: lobby music (provided separately by the project owner; upload pending)
-- `battle-theme.mp3`: battle music extracted from the provided video (**committed to this directory**)
+- `lobby-theme.mp3`: user-provided main-lobby soundtrack (loops at 30% volume)
+- `battle-theme.mp3`: user-provided battle soundtrack (loops at 35% volume)
+- `voice_index.json`: 544 precisely timed voice clips (spawn / attack / hit / death) across 10 factions and both existing skins
+- `voice_cast.json`: casting metadata for 80 units
+- `voices/`: 17 OGG voice atlases copied losslessly from the native Godot project
+- `sfx/`: 13 original combat effect WAVs copied losslessly from the native Godot project
 
-The browser's BGM controller starts the battle track on solo, multiplayer and practice entry. Music loops at 35% volume during battles. When a match ends the battle track stops; on returning to the lobby, the lobby track resumes if `lobby-theme.mp3` has been supplied.
+Web playback uses `combat-audio.js` for sound effects and unit voices, independent of the unchanged `lobby-music.js` BGM controller. The two music tracks here are the existing web tracks, not Godot background music.
 
-The existing lobby BGM toggle controls both tracks and persists its setting. Browser autoplay restrictions may require a click or key press before the first playback.
+VOICEVOX Nemo is used for Japanese human unit voices. **Credit: VOICEVOX Nemo**. For third-party attribution and original effects details, see `../../AUDIO_CREDITS.md` and https://voicevox.hiroshiba.jp/nemo/term/. Browser audio begins after an interaction; OGG voice decoding depends on the browser's codec support.

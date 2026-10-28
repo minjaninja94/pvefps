@@ -26,6 +26,7 @@ test('Web BGM stays separate from combat voices',()=>{
  assert.match(combat,/VOICEVOX Nemo attribution/);
  assert.ok(html.indexOf('combat-audio.js')<html.indexOf('tri-lane-ui.js'));
  assert.ok(html.includes('combatAudioToggle'));
+ assert.ok(html.includes('VOICEVOX Nemo'));
 });
 test('Both solo and multiplayer emit audio on real unit events',()=>{
  const solo=read('game-v2.js'),multi=read('tri-lane-ui.js');
