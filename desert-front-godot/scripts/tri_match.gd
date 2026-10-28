@@ -1010,14 +1010,23 @@ func snapshot(viewer_uid: String = "") -> Dictionary:
 		visible.append(spotted)
 	var safe_players: Array = []
 	for p in players:
-		var entry: Dictionary = p.duplicate(true)
+		var entry: Dictionary = {
+			"uid":p["uid"],"name":p["name"],"team":p["team"],
+			"faction":p["faction"],"skin":p.get("skin","default"),
+			"bot":p["bot"],"cash":p["cash"],"eco":p["eco"],
+			"eco_ready_at":p["eco_ready_at"],"weapon":p["weapon"],
+			"armor":p["armor"],"nukes":p["nukes"],
+			"barrage_cd":p["barrage_cd"],
+			"buildings":p["buildings"].duplicate(true)
+		}
 		if not viewer.is_empty() and int(p["team"]) != int(viewer["team"]):
 			entry["cash"] = -1.0
 			entry["eco"] = -1
 			entry["weapon"] = -1
 			entry["armor"] = -1
 			entry["nukes"] = -1
-			entry["mine_costs"] = {}
+			entry["eco_ready_at"] = -1.0
+			entry["barrage_cd"] = -1.0
 			for lane in range(lanes):
 				if not bool(visible[lane]):
 					var row: Array = []
@@ -1030,9 +1039,21 @@ func snapshot(viewer_uid: String = "") -> Dictionary:
 		var lane: int = u["lane"]
 		if not viewer.is_empty() and int(u["team"]) != int(viewer["team"]) and not bool(visible[lane]) and (float(u["x"]) >= WIDTH-770.0 if int(viewer["team"]) == 0 else float(u["x"]) <= 770.0):
 			continue
-		safe_units.append(u.duplicate(true))
+		safe_units.append({
+			"id":u["id"], "uid":u["uid"],"team":u["team"],
+			"faction":u["faction"],"role":u["role"],
+			"skin":u.get("skin","default"),"lane":u["lane"],
+			"x":roundf(float(u["x"])), "y":roundf(float(u["y"])),
+			"hp":ceilf(float(u["hp"])), "max_hp":ceilf(float(u["max_hp"])),
+			"action":u.get("action","idle"),
+			"action_ttl":u.get("action_ttl",0.0),
+			"hero_count":u.get("hero_count",1),
+			"guardian":u.get("guardian",false),
+			"conscripted":u.get("conscripted",false),
+			"hatchling":u.get("hatchling",false)
+		})
 	return {
-		"mode":mode, "size":size, "lanes":lanes, "width":WIDTH,
+		"protocol":2, "mode":mode, "size":size, "lanes":lanes, "width":WIDTH,
 		"height":LANE_HEIGHT*lanes, "seconds":seconds, "wave":wave,
 		"next_wave":next_wave,"ended":ended,"winner":winner,
 		"cores":cores.duplicate(true),"turrets":turrets.duplicate(true),

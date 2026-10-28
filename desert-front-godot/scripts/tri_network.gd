@@ -25,6 +25,7 @@ var _pending := ""
 var _room_code := ""
 var _public := true
 var _last_sync := 0.0
+var _order_times: Dictionary = {}
 var _relay_addr := ""
 var _relay_app := ""
 var _last_error := ""
@@ -42,7 +43,8 @@ func _process(dt: float) -> void:
 	if mode == "host" and phase == "playing" and game != null:
 		game.advance(minf(dt,0.20))
 		_last_sync += dt
-		if _last_sync >= 0.24:
+		var interval := 0.22 if game.units.size() < 120 else (0.33 if game.units.size() < 240 else 0.48)
+		if _last_sync >= interval:
 			_last_sync = 0.0
 			_broadcast_state()
 
@@ -58,6 +60,7 @@ func leave() -> void:
 	game = null
 	_pending = ""
 	_room_code = ""
+	_order_times.clear()
 	if previous != "idle":
 		left_room.emit()
 
@@ -389,6 +392,12 @@ func client_order(command: Dictionary) -> void:
 		return
 	if str(command.get("type","")) not in ["build","upgrade","tactic"]:
 		return
+	# Limit untrusted client command floods; the host remains authoritative.
+	var now := Time.get_ticks_msec()
+	var last := int(_order_times.get(sender,0))
+	if now - last < 30:
+		return
+	_order_times[sender] = now
 	var result: Dictionary = game.order(str(sender),command)
 	if not result.get("ok",false):
 		feedback.rpc_id(sender,str(result.get("reason","명령 오류")))
@@ -413,7 +422,7 @@ func _broadcast_state() -> void:
 func state_update(data: Dictionary) -> void:
 	if mode != "client" or phase != "playing" or game == null:
 		return
-	if int(data.get("lanes",-1)) not in [1,3] or not data.get("units",null) is Array:
+	if int(data.get("protocol",0)) != 2 or int(data.get("lanes",-1)) not in [1,3] or not data.get("units",null) is Array:
 		return
 	game.load_snapshot(data)
 	state_received.emit(data)
