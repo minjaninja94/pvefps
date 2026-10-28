@@ -93,16 +93,32 @@
   <div id="mpMembers" class="mp-members">아직 참가한 방이 없습니다.</div>
  </section>
  <section class="panel mp-command" id="mpCommand" hidden>
-
-  <div class="mp-lane-tabs" id="mpLaneTabs"><button class="active" data-lane="0">상단 라인</button><button data-lane="1">중앙 라인</button><button data-lane="2">하단 라인</button></div>
-<div class="mp-battle-wrap"><canvas id="mpBattleCanvas" width="1100" height="660" aria-label="하나로 연결된 3300×1560 전장. 생산 위치만 3개 구역으로 구분됩니다."></canvas><div class="mp-help">통합 전장 · 라인 경계에서도 자동 어그로·추격·교전 · 좌측 아군 / 우측 적군</div></div>
+  <div class="mp-production-title"><div><span class="eyebrow">BASE DEVELOPMENT / THREE PRODUCTION LINES</span><h2>멀티 생산 기지</h2><p>싱글과 같은 방식으로 유닛을 선택하고 빈 칸에 건설하세요. 배치판에서 상·중·하 라인을 바로 전환할 수 있습니다.</p></div><a class="btn outline mp-jump" href="#mpBattleSection">전장 보기 ↓</a></div>
   <div id="mpFactionTraits" class="marine-ops faction-trait-banner" hidden role="status" aria-live="off"></div>
   <div id="mpMarineAbilities" class="marine-ops" hidden role="status" aria-live="off"></div>
-  <div class="mp-lane-summary" id="mpLaneSummary"></div>
-  <div class="mp-build-controls"><strong>내 생산 건물 배치 <span id="mpSelectedLane">상단 라인</span></strong><span id="mpBuiltCount">0개 건설</span><button id="mpDemolish" class="btn outline">철거 선택</button></div>
-  <div id="mpUnitCards" class="unit-cards" role="group" aria-label="생산할 유닛 선택"></div><div id="mpUnitDetails" class="unit-details" aria-live="polite"></div>
-  <div class="build-grid-viewport"><div id="mpBuildGrid" class="mp-build-grid" aria-label="선택한 라인의 생산 시설 75칸"></div></div>
-  <p class="subtext">라인은 출격 위치만 결정합니다. 전투 병력은 하나의 전장을 자유롭게 이동하고 인접 지역의 적을 추격합니다. 참가자별 자원은 독립적입니다. 24초마다 생산. 같은 팀이 만든 건물은 소유자만 변경할 수 있습니다.</p>
+  <div class="mp-formation-layout">
+   <section class="mp-roster-panel" aria-label="멀티 병력 편성"><div class="panel-heading"><div><span class="eyebrow">RECRUIT UNITS</span><h2>병력 편성</h2></div><span class="shortcut">1–8 단축키</span></div>
+    <p class="subtext">생산할 유닛을 고른 뒤 오른쪽 배치판의 빈 슬롯을 선택하세요. 자원채취 건물도 동일하게 배치합니다.</p>
+    <div id="mpUnitCards" class="unit-cards" role="group" aria-label="생산할 유닛 선택"></div><div id="mpUnitDetails" class="unit-details" aria-live="polite"></div>
+   </section>
+   <section class="mp-deployment-panel" id="mpDeploymentPanel" aria-label="3라인 생산 건물 배치"><div class="panel-heading"><div><span class="eyebrow">UNIT FORMATION / 15 × 5</span><h2>생산 건물 배치</h2></div><span id="mpBuiltCount" class="shortcut">0개 건설</span></div>
+    <div class="mp-build-controls"><strong id="mpSelectedLane">중앙 라인</strong><button id="mpDemolish" type="button" class="btn outline" aria-pressed="false">▤ 철거 모드</button></div>
+    <div class="mp-lane-tabs" id="mpLaneTabs" role="group" aria-label="건설할 라인 선택">
+     <button type="button" data-lane="0" aria-pressed="false"><strong>상단 라인</strong><small data-lane-count="0">0 / 75</small></button>
+     <button type="button" class="active" data-lane="1" aria-pressed="true"><strong>중앙 라인</strong><small data-lane-count="1">0 / 75</small></button>
+     <button type="button" data-lane="2" aria-pressed="false"><strong>하단 라인</strong><small data-lane-count="2">0 / 75</small></button>
+    </div>
+    <div class="mp-lane-switch"><button type="button" id="mpPrevLane" aria-label="이전 생산 라인">◀</button><span id="mpLaneHint" role="status" aria-live="polite">중앙 라인 · 좌우로 밀어 라인 전환</span><button type="button" id="mpNextLane" aria-label="다음 생산 라인">▶</button></div>
+    <div id="mpBuildSwipe" class="mp-build-swipe" aria-label="생산 건물 배치 영역. 좌우로 드래그하면 라인이 전환됩니다."><div class="build-grid-viewport mp-grid-viewport"><div id="mpBuildGrid" class="mp-build-grid" aria-label="중앙 라인의 생산 시설 75칸"></div></div></div>
+    <p class="mp-build-tip">빈 칸을 눌러 건설 · 철거 모드에서 건물 선택 · 좌우 드래그로 라인 전환</p>
+   </section>
+  </div>
+  <div class="mp-battle-section" id="mpBattleSection">
+   <div class="mp-production-title"><div><span class="eyebrow">LIVE BATTLE / THREE FRONTLINES</span><h2>실시간 전장</h2><p>세 라인은 하나로 연결된 전장입니다. 미니맵 또는 전장을 눌러 해당 라인에 배치할 수 있습니다.</p></div><a class="btn outline mp-jump" href="#mpDeploymentPanel">생산 배치 ↑</a></div>
+   <div class="mp-battle-wrap"><canvas id="mpBattleCanvas" width="1100" height="660" aria-label="하나로 연결된 3300×1560 전장. 누른 구역의 생산 라인이 선택됩니다."></canvas><div class="mp-help">통합 전장 · 좌측 아군 / 우측 적군 · 전장 터치 시 해당 라인 선택</div></div>
+   <div class="mp-lane-summary" id="mpLaneSummary"></div>
+  </div>
+  <p class="subtext">건물은 각 라인에서 24초마다 생산합니다. 병력은 라인 경계를 넘어 이동하며, 아군과 자원을 공유하지 않습니다. 자신이 건설한 건물만 철거할 수 있습니다.</p>
  </section>
 </div>
 <section id="upgradePanel" class="upgrade-layer" hidden role="dialog" aria-modal="false" aria-labelledby="upgradeTitle"><div id="view-special" class="upgrade-content">
