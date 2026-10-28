@@ -102,7 +102,7 @@ function broodLay(parent,target,roll=Math.random){
  parent.lastBroodBirth=state.elapsed;state.broodBirths[parent.side]++;state.broodBirthsTotal[parent.side]++;
  const x=clamp(parent.x+(parent.side===0?17:-17)+random(-12,12),30,WORLD_W-30),y=clamp(parent.y+random(-22,22),68,452);
  state.units.push({...parent,uid:state.nextUnitId++,role:0,x,y,hp:1,maxHP:1,
-  hitRadius:7,isHatchling:true,conscripted:false,strike:null,killed:false,spawnAge:0,hitAge:0,skillAge:0,
+  hitRadius:7,heroCount:1,isHatchling:true,conscripted:false,strike:null,killed:false,spawnAge:0,hitAge:0,skillAge:0,
   anim:0,cooldown:1,blink:0,lastBroodBirth:state.elapsed,moving:false,spawnedAt:state.elapsed});
  pulse(x,y,'#b4f19a',14);floatText(x,y-15,'공생충 탄생','#b7ef86');
 }
@@ -550,7 +550,9 @@ function marineSpoils(v,attacker,roll=Math.random){
  if(armyPopulation(attacker.side)>=SIDE_SUPPLY)return;
  state.marineRecruitCount[attacker.side]++;
  state.marineStats.recruits++;
- state.units.push({...v,uid:state.nextUnitId++,side:attacker.side,hp:Math.max(1,Math.floor(v.maxHP*MARINE_RECRUIT_HP)),killed:false,conscripted:true,strike:null,
+ const capturedHP=v.maxHP/(v.heroCount===20?20:1);
+ state.units.push({...v,uid:state.nextUnitId++,side:attacker.side,heroCount:1,maxHP:capturedHP,hp:Math.max(1,Math.floor(capturedHP*MARINE_RECRUIT_HP)),
+  hitRadius:v.heroCount===20?v.hitRadius/2:v.hitRadius,killed:false,conscripted:true,strike:null,inkUntil:0,lastInkCast:null,lastBroodBirth:null,
   cooldown:1.5,blink:.4,spawnAge:0,hitAge:0,skillAge:0,ramCooldown:1.8,moving:false,facing:attacker.side===0?1:-1});
  floatText(v.x,v.y-43,'자진입대!','#f7e0ac');
 }
