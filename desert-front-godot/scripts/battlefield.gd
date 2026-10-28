@@ -37,10 +37,16 @@ func _draw() -> void:
 	for y in [top_y, middle_y, low_y]:
 		draw_line(Vector2(0, y), Vector2(w, y), Color("#809a96", 0.12), 2.0)
 	draw_line(Vector2(w * 0.5, top_y - 60), Vector2(w * 0.5, low_y + 60), Color("#c4c2a0", 0.45), 2.0, true)
-	_draw_core(Vector2(32, middle_y), Color("#6bdbf4"), 0)
-	_draw_core(Vector2(w - 32, middle_y), Color("#f4a17e"), 1)
-	_draw_tower(Vector2(61, top_y), 0)
-	_draw_tower(Vector2(w - 61, low_y), 1)
+	_draw_core(_screen_position(110.0,260.0), Color("#6bdbf4"), 0)
+	_draw_core(_screen_position(Roster.WORLD_WIDTH-110.0,260.0), Color("#f4a17e"), 1)
+	_draw_tower(_screen_position(215.0,260.0), 0)
+	_draw_tower(_screen_position(Roster.WORLD_WIDTH-215.0,260.0), 1)
+	if simulation != null:
+		for side in range(2):
+			if float(simulation.forward_hp[side]) > 0.0:
+				var tower_x := 825.0 if side == 0 else Roster.WORLD_WIDTH-825.0
+				_draw_forward_tower(_screen_position(tower_x,260.0), side)
+
 	if simulation == null:
 		return
 	# Sort by vertical position, ensuring rear ranks are not painted over forward units.
@@ -71,7 +77,7 @@ func _draw_unit(u: Dictionary) -> void:
 	var faction: int = u["faction"]
 	var role: int = u["role"]
 	var pos := _screen_position(float(u["x"]), float(u["y"]))
-	var art_size := _sprite_size(role)
+	var art_size := _sprite_size(role) * (1.75 if int(u.get("hero_count",1)) == 20 else 1.0)
 	var tint := Color(Roster.FACTION_COLORS[faction])
 	draw_ellipse_shadow(pos, art_size)
 	var skin := str(u.get("skin","default"))
@@ -85,6 +91,9 @@ func _draw_unit(u: Dictionary) -> void:
 		_draw_sprite_frame(tex, pos, art_size, frame, team == 1, Color.WHITE, Sprites.frame_region(faction,role,frame,skin))
 	else:
 		_draw_marker_fallback(pos, art_size, role, tint, team)
+	if int(u.get("hero_count",1)) == 20:
+		var glow := Color("#5cf1a3") if bool(u.get("guardian",false)) else Color("#ff6173")
+		draw_arc(pos+Vector2(0,art_size*0.26),art_size*0.52,0.0,TAU,24,glow,2.3)
 	var hp_ratio: float = clampf(float(u["hp"]) / maxf(1.0, float(u["max_hp"])), 0.0, 1.0)
 	var hp_width: float = art_size * 0.67
 	var hp_y := pos.y - art_size * 0.77
@@ -134,6 +143,14 @@ func _draw_core(pos: Vector2, tint: Color, side: int) -> void:
 		var value: float = clampf(float(simulation.cores[side]) / Roster.CORE_HP, 0.0, 1.0)
 		draw_rect(Rect2(pos.x - 22, pos.y - 40, 44, 5), Color("#252c30"))
 		draw_rect(Rect2(pos.x - 22, pos.y - 40, 44 * value, 5), tint)
+
+func _draw_forward_tower(pos: Vector2, side: int) -> void:
+	var tint := Color("#6bdbf4") if side == 0 else Color("#f4a17e")
+	draw_circle(pos, 10.0, tint.darkened(0.3))
+	draw_arc(pos, 14.0, 0.0, TAU, 16, tint, 2.0)
+	var hp := clampf(float(simulation.forward_hp[side])/1000.0,0.0,1.0)
+	draw_rect(Rect2(pos.x-14,pos.y-22,28,4),Color("#19272d"))
+	draw_rect(Rect2(pos.x-14,pos.y-22,28*hp,4),tint)
 
 func _draw_tower(pos: Vector2, side: int) -> void:
 	if simulation != null and float(simulation.towers[side]) <= 0.0:
