@@ -12,7 +12,10 @@ const match=E.create({mode:'pvp',size:1,members:[{uid:'A',team:0,faction:0},{uid
 const a=match.state.players[0],b=match.state.players[1];
 const nearly=(x,y,msg)=>assert.ok(Math.abs(x-y)<1e-6,msg+': '+x+' / '+y);
 assert.equal(match.order('nobody',{type:'upgrade',kind:'weapon'}).ok,false);
+b.cash=10;
 assert.equal(match.order('B',{type:'upgrade',kind:'weapon'}).ok,false,'unaffordable upgrades rejected');
+assert.equal(b.cash,10,'failed research cannot debit credits');
+b.cash=360;
 assert.equal(match.order('A',{type:'upgrade',kind:'other'}).ok,false,'unrecognized upgrades rejected');
 assert.equal(match.order('A',{type:'tactic',kind:'other'}).ok,false,'unrecognized tactics rejected');
 let base=match.snapshot('A');
