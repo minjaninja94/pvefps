@@ -42,6 +42,8 @@ jobs:
         run: timeout 60s godot --headless --path desert-front-godot --script res://tests/art_smoke.gd
       - name: Compare all original 80 unit stats to the native roster
         run: python3 desert-front-godot/tools/verify_stat_parity.py
+      - name: Verify generated command icon atlas
+        run: timeout 60s godot --headless --path desert-front-godot --script res://tests/icons_smoke.gd
       - name: Run isolated simulation smoke test
         run: timeout 60s godot --headless --path desert-front-godot --script res://tests/smoke.gd
       - name: Verify classic, 3-line, 2v2, and AI co-op battle simulation
