@@ -110,9 +110,9 @@ async function main(){
  console.log('Mocked end-to-end 1v1 passed: Firebase room, signed join, P2P offer/answer, ready, host start, guest build, authoritative credits, cleanup');
 
  // Also reproduce full 2v2, 3v3 and 2/3-player co-op invite rooms and SDP.
- for(const [mode,size] of [['pvp',2],['pvp',3],['coop',2],['coop',3]]){
+ for(const [mode,size] of [['classic',1],['pvp',2],['pvp',3],['coop',2],['coop',3]]){
   const hostId='H_'+mode+size,leader=buildClient(hostId);
-  const count=mode==='pvp'?size*2:size;
+  const count=mode==='coop'?size:size*2;
   const guests=Array.from({length:count-1},(_,i)=>buildClient('G_'+mode+size+'_'+i));
   const id=await leader.network.create({mode,size,name:'캡틴',faction:4});
   for(let i=0;i<guests.length;i++){
@@ -134,6 +134,14 @@ async function main(){
   const state=guests[0].events.snap.at(-1);
   assert.equal(state.players.length,actual);
   assert.equal(state.size,size);assert.equal(state.mode,mode);
+  assert.equal(state.height,mode==='classic'?520:1560,'each guest receives the selected world height');
+  assert.equal(state.lanes,mode==='classic'?1:3,'map lane count must match the room');
+  if(mode==='classic'){
+   assert.equal(state.players[0].buildings.length,1,'classic online lobby has one factory grid');
+   assert.equal(state.coreMaxHP,7200,'classic solo-sized core HP arrives at guest');
+   assert.equal(guests[0].network.sendOrder({type:'build',lane:2,slot:3,role:0}).ok,true);
+   await until(()=>guests[0].events.status.some(x=>x.includes('건설 위치 오류')));
+  }
   if(mode==='coop')assert.equal(state.players.filter(p=>p.bot).length,size);
   await leader.network.leave();await until(()=>!records.has('desertRooms/'+id));
   for(const client of guests)await client.network.leave();
