@@ -68,7 +68,7 @@
  <div class="canvas-wrap base-canvas"><canvas id="baseCanvas" width="1100" height="340" aria-label="아군 기지, 방어 포탑과 침공 병력"></canvas><div class="canvas-note">● CORE & DEFENSE — 생산 시설은 보호 구역에 있습니다.</div></div>
  <div class="base-content">
  <section class="panel cards-panel"><div class="panel-heading"><div><span class="eyebrow">RECRUIT UNITS</span><h2>병력 편성</h2></div><button type="button" class="btn accent" data-open-upgrades>✦ 업그레이드</button><span class="shortcut">1–8 단축키</span><a class="sprite-gallery-link" href="./sprite-gallery.html" target="_blank" rel="noopener">2.5D 도트 모션 도감 ↗</a></div><p class="subtext">유닛을 고르면 <b>강점·약점·공격 대상</b>이 보입니다. 선택한 유닛을 아래 빈 슬롯에 설치하세요.</p><div id="econInfo" class="economy-status" role="status" aria-live="off"></div><div id="unitCards" class="unit-cards"></div><div id="unitDetails" class="unit-details">유닛을 선택하면 여기에서 상성 정보를 볼 수 있습니다.</div></section>
- <section class="panel build-panel"><div class="panel-heading"><div><span class="eyebrow">UNIT FORMATION</span><h2>생산 건물 · 15 × 5</h2></div><span id="builtCount" class="shortcut">0 / 75</span></div><p class="subtext">앞쪽 배치일수록 먼저 교전합니다. <b>웨이브마다 각 건물에서 1기씩 소환</b>됩니다.</p><div class="build-grid-viewport" aria-label="75개 생산 슬롯 가로 스크롤"><div id="buildGrid" class="build-grid" aria-label="기지 건설 슬롯"></div></div><div class="actions"><button id="demolishButton" class="btn outline">▤ 철거 모드</button><button id="clearButton" class="btn outline">✕ 선택 해제</button></div><div class="protection-note"><b>기지 방어 규칙</b><p>원작의 후대형 방식처럼 생산 시설은 직접 파괴되지 않습니다. 중간 타워 파괴 시 공격 팀에 150 CR을 지급하고 수비 측에 초록 오라의 돌격 가디언 1기를 소환합니다. 가디언은 중앙선을 넘지 않고 해당 라인을 지킵니다. 이후 본진 포탑과 핵심 기지를 공격합니다.</p></div></section>
+ <section class="panel build-panel"><div class="panel-heading"><div><span class="eyebrow">UNIT FORMATION</span><h2>생산 건물 · 15 × 5</h2></div><span id="builtCount" class="shortcut">0 / 75</span></div><p class="subtext">앞쪽 배치일수록 먼저 교전합니다. <b>웨이브마다 각 건물에서 1기씩 소환</b>됩니다.</p><div class="build-grid-viewport" aria-label="75개 생산 슬롯 가로 스크롤"><div id="buildGrid" class="build-grid" aria-label="기지 건설 슬롯"></div></div><div class="actions"><button id="demolishButton" class="btn outline">▤ 철거 모드</button><button id="clearButton" class="btn outline">✕ 선택 해제</button></div><div class="protection-note"><b>기지 방어 규칙</b><p>원작의 후대형 방식처럼 생산 시설은 직접 파괴되지 않습니다. 중간 타워 파괴 시 공격 팀에 150 CR을 지급하고 수비 측에 초록 오라의 돌격 가디언 1기를 소환합니다. 가디언은 중앙선을 넘지 않고 해당 라인을 지킵니다. 가디언이 받는 외부 치유는 25%, 최근 3초 내 피격 시 10%입니다. 이후 본진 포탑과 핵심 기지를 공격합니다.</p></div></section>
  </div>
 </div>
 <div class="screen" id="view-battle">
@@ -121,7 +121,7 @@
 </div>
 <div id="startOverlay" class="modal-backdrop"><div class="modal-panel start-panel"><span class="eyebrow">DEPLOYMENT / CHOOSE YOUR FACTION</span><h2>전투 진영 선택</h2><p>열 종족이 역할 상성을 공유하지만 특성은 다릅니다. 월영 수인족은 근접, 은월 엘프족은 원거리 전투에 특화되어 있습니다. 상대 AI는 다른 진영으로 시작합니다.</p><div id="factionCards" class="faction-cards"></div><button id="startButton" class="btn start-cta">선택한 진영으로 출격 ↗</button></div></div>
 <div id="endOverlay" class="modal-backdrop hidden"><div class="modal-panel end-panel"><span class="eyebrow">BATTLE REPORT</span><h2 id="endTitle">승리</h2><p id="endSummary"></p><button id="restartButton" class="btn start-cta">메인 로비로 돌아가기</button></div></div>
-<dialog id="helpDialog"><div class="help-inner"><h2>데저트 프런트 조작법</h2><p>① 내 기지: 유닛 카드를 선택하고 15×5 생산 슬롯을 눌러 생산 시설 설치 / 철거는 비용의 55% 환급</p><p>② 전장: 확장 전장 · 미니맵/전선 추적 · 자동 전투 관전 / 역할 마크로 상성 파악 / 유닛을 눌러 능력 확인 / 배속과 일시정지</p><p>③ 병력 편성 위 업그레이드: 핵폭탄 / 궤도 폭격 / 무기·장갑 강화 / 포탑 보수. 자원채취 건물은 생산 슬롯에 설치하며, 안정화 중에는 인컴이 중단됩니다.</p><p>중간 타워를 파괴하면 공격 팀 합계 150 CR과 수비 측 스플래시 없는 돌격 가디언 1기가 발생합니다. 초록 오라 가디언만 자기 진영·해당 라인 안에서 방어하며, 붉은 오라의 일반 포격 영웅은 중앙을 넘어 진격·공격할 수 있습니다. 생산 건물은 보호되고 방어 포탑이 적을 막습니다. 기지 본체가 파괴되면 패배합니다. 초반 360 CR로 시작하고, 기본 수입 0.5초당 1 CR에서 경제 강화 시 주기당 +1 CR씩 증가합니다. 24초마다 출격합니다.</p><p>동일 풀피 병력 20기는 영웅 1기로 합쳐집니다. 최대 체력은 20명분이며, 공격·회복량은 남은 체력에 해당하는 생존 병력 수에 따라 감소합니다. 장갑의 피해 감소는 병사 1명·공격 1발 기준으로 계산됩니다.</p><p>키보드: 1–8 유닛 선택, 1·2·3 화면 전환은 Alt+숫자, Space 일시정지, Esc 선택 해제.</p><button class="btn start-cta" id="helpClose">확인</button></div></dialog>
+<dialog id="helpDialog"><div class="help-inner"><h2>데저트 프런트 조작법</h2><p>① 내 기지: 유닛 카드를 선택하고 15×5 생산 슬롯을 눌러 생산 시설 설치 / 철거는 비용의 55% 환급</p><p>② 전장: 확장 전장 · 미니맵/전선 추적 · 자동 전투 관전 / 역할 마크로 상성 파악 / 유닛을 눌러 능력 확인 / 배속과 일시정지</p><p>③ 병력 편성 위 업그레이드: 핵폭탄 / 궤도 폭격 / 무기·장갑 강화 / 포탑 보수. 자원채취 건물은 생산 슬롯에 설치하며, 안정화 중에는 인컴이 중단됩니다.</p><p>중간 타워를 파괴하면 공격 팀 합계 150 CR과 수비 측 스플래시 없는 돌격 가디언 1기가 발생합니다. 초록 오라 가디언의 외부 치유량은 평소 25%, 최근 3초 내 피격 시 10%입니다. 가디언만 자기 진영·해당 라인 안에서 방어하며, 붉은 오라의 일반 포격 영웅은 중앙을 넘어 진격·공격할 수 있습니다. 생산 건물은 보호되고 방어 포탑이 적을 막습니다. 기지 본체가 파괴되면 패배합니다. 초반 360 CR로 시작하고, 기본 수입 0.5초당 1 CR에서 경제 강화 시 주기당 +1 CR씩 증가합니다. 24초마다 출격합니다.</p><p>동일 풀피 병력 20기는 영웅 1기로 합쳐집니다. 최대 체력은 20명분이며, 공격·회복량은 남은 체력에 해당하는 생존 병력 수에 따라 감소합니다. 장갑의 피해 감소는 병사 1명·공격 1발 기준으로 계산됩니다.</p><p>키보드: 1–8 유닛 선택, 1·2·3 화면 전환은 Alt+숫자, Space 일시정지, Esc 선택 해제.</p><button class="btn start-cta" id="helpClose">확인</button></div></dialog>
 <script src="./marine-art-data.js" defer></script>
 <script src="./sprite-animations.js" defer></script>
 <script src="./iso-real-atlas-data.js?v=iso3" defer></script>
@@ -137,13 +137,13 @@
 <script src="./moe-unit-art.js?v=uniform7" defer></script>
 <script src="./unit-motion.js?v=uniform7" defer></script>
 <script src="./unit-consolidation.js?v=balance2" defer></script>
-<script src="./defense-guardian.js?v=balance2" defer></script>
+<script src="./defense-guardian.js?v=guardianheal1" defer></script>
 <script src="./hard-ai.js?v=balance2" defer></script>
-<script src="./tri-lane-engine.js?v=balance2" defer></script>
+<script src="./tri-lane-engine.js?v=guardianheal1" defer></script>
 <script src="./device-account.js?v=uniform7" defer></script>
 <script src="./tri-lane-network.js?v=uniform7" defer></script>
 <script src="./tri-lane-ui.js?v=balance2" defer></script>
-<script src="./game-v2.js?v=balance2" defer></script>
+<script src="./game-v2.js?v=guardianheal1" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./front-lobby.js?v=balance2" defer></script>

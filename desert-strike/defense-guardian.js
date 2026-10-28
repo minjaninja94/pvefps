@@ -21,10 +21,15 @@ function canTarget(u,v,range,{width=3300,multiplayer=false}={}){
  const ownHalf=(u.team??u.side??u.guardianSide)===0?v.x<=width/2:v.x>=width/2;
  return ownHalf||Math.hypot(v.x-u.x,v.y-u.y)<=range*.88;
 }
+// External healing only. Intrinsic regeneration/lifesteal remains faction behavior.
+function healAmount(u,amount,now){
+ if(!u.guardian)return amount;
+ return amount*(now-(u.lastDamagedAt??-Infinity)<3?.10:.25);
+}
 function reward(players,team){
  const recipients=players.filter(p=>p.team===team).sort((a,b)=>String(a.uid).localeCompare(String(b.uid)));
  recipients.forEach((p,i)=>{p.cash+=Math.floor(BONUS/recipients.length)+(i<BONUS%recipients.length?1:0);});
 }
-const api=Object.freeze({HP,BONUS,ROLE,COUNT,towerX,mark,clampUnit,canTarget,reward});
+const api=Object.freeze({HP,BONUS,ROLE,COUNT,towerX,mark,clampUnit,canTarget,healAmount,reward});
 global.DesertGuardian=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

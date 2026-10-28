@@ -516,7 +516,7 @@ function resolveStrike(u,hit){
     const d=Math.hypot(mate.x-u.x,mate.y-u.y);
     if(d<=radius){
      const before=mate.hp;
-     const amount=Math.min(mate.maxHP-mate.hp,Math.max(135,mate.maxHP*.32)*(u.heroCount||1)*(u.side===0?1+.08*state.weapon:1));
+     const amount=Math.max(135,mate.maxHP*.32)*(u.heroCount||1)*(u.side===0?1+.08*state.weapon:1);
      heal(mate,amount,true);healed+=mate.hp-before;
     }
    }
@@ -581,13 +581,14 @@ function heal(u,amount,burst=false,healer=null){
   amount=Math.max(0,Math.min(amount,Math.max(HEAL_BUDGET*(u.heroCount||1),u.maxHP*.085)-u.healWindowUsed));
   u.healWindowUsed+=amount;
  }
+ amount=window.DesertGuardian?.healAmount(u,amount,state.elapsed)??amount;
  if(amount<=0)return;
  const recovered=Math.min(amount,u.maxHP-u.hp);
  u.hp=Math.min(u.maxHP,u.hp+amount);pulse(u.x,u.y,'#94f7a9',11);
  if(healer?.faction===9&&recovered>0&&state.elapsed-(healer.lastPollenAt??-999)>=5){
   const partner=state.units.find(v=>v!==u&&v!==healer&&v.hp>0&&!v.isHatchling&&v.side===healer.side&&v.hp<v.maxHP
    &&Math.hypot(v.x-u.x,v.y-u.y)<145);
-  if(partner){healer.lastPollenAt=state.elapsed;partner.hp=Math.min(partner.maxHP,partner.hp+recovered*.03);pulse(partner.x,partner.y,'#ffbce2',9);}
+  if(partner){healer.lastPollenAt=state.elapsed;partner.hp=Math.min(partner.maxHP,partner.hp+(window.DesertGuardian?.healAmount(partner,recovered*.03,state.elapsed)??recovered*.03));pulse(partner.x,partner.y,'#ffbce2',9);}
  }
 }
 function defenseTarget(side,part=null){

@@ -286,18 +286,20 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
     // Huanglong's existing one-use Marine banquet heals the entire injured squad.
     let healed=0;
     for(const x of state.units)if(x.id!==a.id&&x.hp>0&&!x.isHatchling&&x.team===a.team&&x.hp<x.maxHP&&Math.hypot(a.x-x.x,a.y-x.y)<195){
-     const before=x.hp;x.hp=Math.min(x.maxHP,x.hp+Math.max(135,x.maxHP*.32)*(a.heroCount||1));healed+=x.hp-before;
+     const before=x.hp,amount=Math.max(135,x.maxHP*.32)*(a.heroCount||1);
+     x.hp=Math.min(x.maxHP,x.hp+(global.DesertGuardian?.healAmount(x,amount,state.seconds)??amount));healed+=x.hp-before;
     }
     if(healed>0){a.hp=0;state.effects.push({x:a.x,y:a.y,lane:a.lane,kind:'huanglong',time:.9,team:a.team});}
    }else{
     if(v.healWindowStart===undefined||state.seconds-v.healWindowStart>=1){v.healWindowStart=state.seconds;v.healWindowUsed=0;}
     const amount=Math.max(0,Math.min(d.heal||36,Math.max(80*(v.heroCount||1),v.maxHP*.085)-v.healWindowUsed));
-    v.healWindowUsed+=amount;const recovered=Math.min(amount,v.maxHP-v.hp);
-    v.hp=Math.min(v.maxHP,v.hp+amount);
+    v.healWindowUsed+=amount;
+    const received=global.DesertGuardian?.healAmount(v,amount,state.seconds)??amount,recovered=Math.min(received,v.maxHP-v.hp);
+    v.hp=Math.min(v.maxHP,v.hp+received);
     if(a.faction===9&&recovered>0&&state.seconds-(a.lastPollenAt??-999)>=5){
      const partner=state.units.find(u=>u.id!==a.id&&u.id!==v.id&&u.hp>0&&!u.isHatchling
       &&u.team===a.team&&u.hp<u.maxHP&&Math.hypot(u.x-v.x,u.y-v.y)<145);
-     if(partner){a.lastPollenAt=state.seconds;partner.hp=Math.min(partner.maxHP,partner.hp+recovered*.03);
+     if(partner){a.lastPollenAt=state.seconds;partner.hp=Math.min(partner.maxHP,partner.hp+(global.DesertGuardian?.healAmount(partner,recovered*.03,state.seconds)??recovered*.03));
       state.effects.push({x:partner.x,y:partner.y,lane:partner.lane,kind:'pollen',time:.45,team:a.team});}
     }
    }

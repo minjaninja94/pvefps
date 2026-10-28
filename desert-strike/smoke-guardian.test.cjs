@@ -4,7 +4,7 @@ const read=f=>fs.readFileSync(path.join(__dirname,f),'utf8'),G=require('./defens
 const noop=()=>{},g=new Proxy({createLinearGradient:()=>({addColorStop:noop})},{get:(o,k)=>o[k]||noop});
 const els=new Map(),el=id=>{if(!els.has(id))els.set(id,{style:{},dataset:{},classList:{add:noop,remove:noop,toggle:noop},getContext:()=>g,querySelectorAll:()=>[],addEventListener:noop});return els.get(id);};
 const w={DesertGuardian:G,DesertConsolidation:C},doc={getElementById:el,querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>({getContext:()=>g})};
-const src=read('game-v2.js').replace('initFactions();wire();reset();','window.guardTest={reset,state:()=>state,createUnit,structureHit,projectileImpact,move,tick,getDef,marineSpoils,broodLay,fire};reset();');
+const src=read('game-v2.js').replace('initFactions();wire();reset();','window.guardTest={reset,state:()=>state,createUnit,structureHit,projectileImpact,move,tick,getDef,marineSpoils,broodLay,fire,heal,resolveStrike,damage};reset();');
 vm.runInNewContext(src,{window:w,document:doc,requestAnimationFrame:noop,Math,Map,Set,Object,Number,Array,String,Date});const api=w.guardTest;
 let s=api.state();const startCash=s.enemyCash;
 api.structureHit(0,999,'forward');assert.equal(s.forwardHP[0],1);assert.equal(s.units.length,0);assert.equal(s.enemyCash,startCash);
@@ -57,4 +57,37 @@ single.attack(gh,single.state.units[1]);assert.ok(single.state.units[1].hp<1e8);
 for(const side of [0,1])for(const lane of [0,1,2]){const u=G.mark({hp:100,maxHP:100,radius:17,team:side},side,lane);u.x=side===0?1900:1400;u.y=lane===0?1500:0;G.clampUnit(u,{multiplayer:true});assert.ok(side===0?u.x<=1616:u.x>=1684);assert.equal(Math.floor(u.y/520),lane);}
 const plain={x:2000,y:900,heroCount:20,role:5,side:0};G.clampUnit(plain);assert.equal(plain.x,2000,'no global artillery/hero leash');
 let colors=[];const ctx=new Proxy({},{get:(o,k)=>o[k]||noop,set:(o,k,v)=>{if(k==='strokeStyle')colors.push(v);o[k]=v;return true;}});C.aura(ctx,0,0,100,1,false);C.aura(ctx,0,0,100,1,true);assert.deepEqual(colors,['#ff4055','#52ff89']);
+// External healing reduction is identical in solo and authoritative multiplayer.
+const close=(actual,expected,label)=>assert.ok(Math.abs(actual-expected)<1e-7,`${label}: ${actual} != ${expected}`);
+function soloHealing(isGuardian,age){
+ api.reset();const s=api.state();s.elapsed=100;s.faction=0;api.createUnit(0,0,0);const target=s.units[0];
+ if(isGuardian)G.mark(target,0);else target.heroCount=20;
+ Object.assign(target,{hp:1000,maxHP:10000,lastDamagedAt:100-age,x:900,y:260});
+ api.createUnit(0,1,7);const medic=s.units[1];Object.assign(medic,{x:900,y:260});return {s,target,medic};
+}
+function multiHealing(isGuardian,age){
+ const e=E.create({members:[{uid:'a',team:0,faction:0},{uid:'b',team:1,faction:0}]});e.state.seconds=100;
+ e.spawn(e.state.players[0],0,0,0);const target=e.state.units[0];if(isGuardian)G.mark(target,0);else target.heroCount=20;
+ Object.assign(target,{hp:1000,maxHP:10000,lastDamagedAt:100-age,x:900,y:260});
+ e.spawn(e.state.players[0],0,1,7);const medic=e.state.units[1];Object.assign(medic,{x:900,y:260});return {e,target,medic};
+}
+for(const age of [0,2.999,3,3.001,10])for(const guarded of [false,true]){
+ const factor=guarded?(age<3?.1:.25):1;
+ const solo=soloHealing(guarded,age);api.heal(solo.target,100,false,solo.medic);close(solo.target.hp-1000,100*factor,'solo regular heal');
+ const multi=multiHealing(guarded,age);multi.e.attack(multi.medic,multi.target);close(multi.target.hp-1000,E.definition(0,7).heal*factor,'multiplayer regular heal');
+ // Huanglong's single-use banquet must not bypass the guardian multiplier.
+ const burst=soloHealing(guarded,age);burst.medic.faction=3;api.resolveStrike(burst.medic,{healing:true,target:burst.target});close(burst.target.hp-1000,3200*factor,'solo banquet');assert.equal(burst.medic.hp,0);
+ const mburst=multiHealing(guarded,age);mburst.medic.faction=3;mburst.e.attack(mburst.medic,mburst.target);close(mburst.target.hp-1000,3200*factor,'multiplayer banquet');assert.equal(mburst.medic.hp,0);
+ // Fairy pollen checks the recipient, not only the primary healing target.
+ const pollen=soloHealing(guarded,age);pollen.medic.faction=9;api.createUnit(0,2,0);const primary=pollen.s.units[2];Object.assign(primary,{x:900,y:260,hp:100,maxHP:1000});api.heal(primary,100,false,pollen.medic);close(pollen.target.hp-1000,85*.03*factor,'solo pollen');
+ const mpollen=multiHealing(guarded,age);mpollen.medic.faction=9;mpollen.e.spawn(mpollen.e.state.players[0],0,2,0);const mp=mpollen.e.state.units[2];Object.assign(mp,{x:900,y:260,hp:100,maxHP:1000});mpollen.e.attack(mpollen.medic,mp);close(mpollen.target.hp-1000,E.definition(9,7).heal*.03*factor,'multiplayer pollen');
+}
+for(const age of [1,4]){
+ const factor=age<3?.1:.25,solo=soloHealing(true,age),multi=multiHealing(true,age);
+ for(let i=0;i<100;i++){api.heal(solo.target,100);multi.e.attack(multi.medic,multi.target);}
+ close(solo.target.hp-1000,1600*factor,'solo shared healing budget');close(multi.target.hp-1000,1600*factor,'multiplayer shared healing budget');
+}
+const renewed=soloHealing(true,10);api.damage(renewed.target,10,'turret');const hpBefore=renewed.target.hp;api.heal(renewed.target,100);close(renewed.target.hp-hpBefore,10,'new damage reactivates three-second reduction');
+assert.equal(G.healAmount({guardian:true},100,100),25,'no previous damage defaults to out-of-combat healing');
+console.log('Guardian healing passed: regular support, Huanglong banquet, fairy pollen, 3-second boundary, new-damage reset, shared anti-stacking budget and unchanged ordinary heroes in both engines.');
 console.log('Guardian passed: paid-once 150 CR team reward, one defending 20x single-target assault hero, independent lanes/halves, authoritative collision clamping, no capture/duplicate summon, pinned projectiles, green aura and ordinary artillery heroes advancing/attacking across center in both engines.');
