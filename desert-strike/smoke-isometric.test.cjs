@@ -17,7 +17,7 @@ assert.ok(html.indexOf('iso-real-atlas-data.js')<html.indexOf('isometric-world.j
 assert.ok(html.includes('isometric-world.js'),'game must load iso renderer');
 assert.ok(html.indexOf('isometric-world.js')<html.indexOf('game-v2.js'),'iso module must load before game');
 assert.ok(gallery.includes('isometric-world.js'),'motion gallery must use same art');
-assert.ok(code.includes('iso?.frame(u.faction,u.role,mode,frame)'),'battle must display new 2.5D sprites');
+assert.ok(code.includes('iso?.frame(u.faction,u.role,baseMode,frame)'),'battle must display new 2.5D sprites');
 assert.ok(code.includes('window.IsoWorld.terrain'),'arena must use isometric environment');
 assert.ok(code.includes('window.IsoWorld.structure'),'battle/base structures must use iso art');
 assert.ok(code.includes('window.IsoWorld.factory'),'75 construction buildings must use iso art');
