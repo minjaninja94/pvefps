@@ -488,3 +488,15 @@ body:not([data-play-mode="multi"]) #mpViewTabs{display:none!important}
 }
 
 #view-multiplayer{scroll-margin-top:calc(var(--command-hud-height,230px) + 12px)}
+
+
+/* Single-map classic duel is exactly one 3300×520 arena, not a shrunk 3-lane field. */
+body[data-multi-arena="classic"] #mpLaneTabs,
+body[data-multi-arena="classic"] .mp-lane-switch,
+body[data-multi-arena="classic"] #mpRepairLanes{display:none!important}
+body[data-multi-arena="classic"] #mpBattleCanvas{aspect-ratio:1100/520;max-height:none;object-fit:contain}
+body[data-multi-arena="classic"] #mpLaneSummary{grid-template-columns:1fr}
+body[data-multi-arena="classic"] #mpBattleView .mp-production-title p{max-width:66ch}
+body[data-multi-arena="classic"] #mpDeploymentPanel .mp-build-controls{margin:14px 0}
+body[data-multi-arena="classic"] #mpDeploymentPanel #mpSelectedLane{font-size:15px}
+body[data-multi-arena="classic"] .mp-grid-viewport{max-height:620px}
