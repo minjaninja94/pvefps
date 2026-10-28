@@ -1,0 +1,89 @@
+'use strict';
+// Real UI module: three production lanes are selected inside the build board and by horizontal drag.
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const root=__dirname,src=fs.readFileSync(path.join(root,'tri-lane-ui.js'),'utf8');
+const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const css=fs.readFileSync(path.join(root,'style-v2.css'),'utf8');
+for(const id of ['mpBuildSwipe','mpPrevLane','mpNextLane','mpLaneHint','mpDeploymentPanel','mpLaneTabs','mpBuildGrid','mpBattleSection'])
+ assert.ok(html.includes('id="'+id+'"'),'missing in-board control '+id);
+assert.ok(html.indexOf('id="mpUnitCards"')<html.indexOf('id="mpLaneTabs"'));
+assert.ok(html.indexOf('id="mpLaneTabs"')<html.indexOf('id="mpBuildGrid"'));
+assert.ok(html.indexOf('id="mpBuildGrid"')<html.indexOf('id="mpBattleCanvas"'),'production board appears before live battlefield');
+assert.match(css,/#view-multiplayer \.mp-build-grid\{[^}]*repeat\(5,minmax\(0,1fr\)\)/);
+assert.match(css,/touch-action:pan-y/);
+const no=()=>{},calls=[],records=new Map();
+const g=new Proxy({createLinearGradient(){return {addColorStop(){}};},createRadialGradient(){return {addColorStop(){}};}},{get(o,k){return k in o?o[k]:no;}});
+const buttons=Array.from({length:3},(_,i)=>{
+ const count={textContent:'0 / 75'};
+ return {dataset:{lane:String(i)},classList:{toggle(n,on){this[n]=on;}},attrs:{},
+  setAttribute(k,v){this.attrs[k]=v;},querySelector(){return count;},count};
+});
+function item(id){
+ if(records.has(id))return records.get(id);
+ const handlers={};
+ const el={id,hidden:id!=='frontLobby',value:'',textContent:'',innerHTML:'',dataset:{},style:{},disabled:false,
+  attrs:{},handlers,children:[],scrollTop:0,
+  classList:{toggle(){},contains(){return true;}},setAttribute(k,v){this.attrs[k]=v;},
+  addEventListener(k,fn,capture){(handlers[k]||(handlers[k]=[])).push({fn,capture:!!capture});},
+  dispatch(k,event={}){for(const entry of handlers[k]||[])entry.fn({...event,currentTarget:this});},
+  append(...x){this.children.push(...x);},replaceChildren(...xs){this.children=xs.flatMap(x=>x.children||[x]);},
+  querySelector(q){return id==='mpBuildSwipe'&&q==='.mp-grid-viewport'?viewport:null;},
+  querySelectorAll(q){return id==='mpLaneTabs'&&q==='[data-lane]'?buttons:[];},
+  getContext(){return g;},getBoundingClientRect(){return {top:0,left:0,width:1000,height:100};},
+  scrollIntoView(){this.scrolled=true;},setPointerCapture(){},removeAttribute(){}};
+ if(id==='frontLobby')el.hidden=true;
+ records.set(id,el);return el;
+}
+const viewport={scrollTop:150};
+const doc={readyState:'complete',hidden:false,body:{dataset:{playMode:'multi'}},
+ getElementById:item,addEventListener:no,createElement(tag){
+  const el={tagName:tag,dataset:{},children:[],attrs:{},className:'',textContent:'',title:'',disabled:false,
+    width:0,height:0,append(...xs){this.children.push(...xs);},setAttribute(k,v){this.attrs[k]=v;},
+    getContext(){return g;}};
+  return el;
+ },createDocumentFragment(){return {children:[],append(x){this.children.push(x);}};}};
+const network={configure(handlers){this.handlers=handlers;},sendOrder(cmd){calls.push({...cmd});return {ok:true};}};
+const cost=[65,95,150,205,165,245,205,145],unitNames=['돌격','사격','대장갑','장갑','대공','포격','기동','지원'];
+const engine={SLOTS:75,COST:cost,NAMES:unitNames,ecoPrice(){return 70;},ecoStabilize(){return 8;}};
+const window={DesertTriEngine:engine,DesertTriNetwork:network,addEventListener:no,
+ DesertRoster:{FACTIONS:[{name:'철갑연합',units:unitNames}],getDef(){return {kind:'ground',tips:'테스트 병력'};}},};
+vm.runInNewContext(src,{window,document:doc,performance:{now:()=>1000},requestAnimationFrame:no,console,Math,Number,Array,Object,Promise,setInterval:no,clearInterval:no},{filename:'tri-lane-ui.js',timeout:10000});
+network.handlers.room({uid:'local',host:true,id:'test',room:{status:'playing',players:{local:{team:0,name:'시험',faction:0,ready:true}},host:'local'}});
+const buildings=Array.from({length:3},()=>Array(75).fill(null));
+buildings[1][3]=0;buildings[2][7]=2;
+const snapshot={width:3300,height:1560,players:[{uid:'local',team:0,faction:0,cash:300,eco:0,ecoReadyAt:0,buildings}],
+ seconds:0,wave:1,next:20,ended:false,cores:[[2500,2500],[2500,2500],[2500,2500]],
+ turrets:[[1250,1250],[1250,1250],[1250,1250]],forwardHP:[[1000,1000],[1000,1000],[1000,1000]],
+ lanePressure:[.5,.5,.5],units:[],effects:[],fog:[false,false,false],viewerTeam:0};
+window.DesertTriUI.onSnapshot(snapshot);
+assert.match(item('mpSelectedLane').textContent,/중앙/,'central lane is default');
+assert.equal(item('mpBuildGrid').children.length,75,'every lane renders full 75 slots');
+assert.equal(buttons[1].attrs['aria-pressed'],'true');
+assert.equal(buttons[1].count.textContent,'1 / 75');
+assert.equal(buttons[2].count.textContent,'1 / 75');
+item('mpBuildGrid').dispatch('click',{target:{closest(){return {dataset:{slot:'5'}};}}});
+assert.deepEqual(calls.at(-1),{type:'build',lane:1,slot:5,role:0},'center lane purchase targets lane 1');
+item('mpLaneTabs').dispatch('click',{target:{closest(){return buttons[2];}}});
+assert.match(item('mpSelectedLane').textContent,/하단/);
+assert.equal(item('mpNextLane').disabled,true);
+assert.equal(viewport.scrollTop,0,'lane switch resets vertical board scroll');
+item('mpBuildGrid').dispatch('click',{target:{closest(){return {dataset:{slot:'8'}};}}});
+assert.deepEqual(calls.at(-1),{type:'build',lane:2,slot:8,role:0},'bottom lane purchase targets lane 2');
+item('mpPrevLane').dispatch('click');
+assert.match(item('mpSelectedLane').textContent,/중앙/);
+const swipe=item('mpBuildSwipe'),before=calls.length;
+swipe.dispatch('pointerdown',{button:0,pointerId:1,clientX:260,clientY:150});
+swipe.dispatch('pointerup',{pointerId:1,clientX:100,clientY:151});
+assert.match(item('mpSelectedLane').textContent,/하단/,'left swipe moves to next line');
+let prevented=false,stopped=false;
+swipe.dispatch('click',{preventDefault(){prevented=true;},stopPropagation(){stopped=true;}});
+assert.ok(prevented&&stopped,'swipe must suppress unintended build click');
+assert.equal(calls.length,before,'swipe cannot spend resources');
+swipe.dispatch('pointerdown',{button:0,pointerId:2,clientX:100,clientY:150});
+swipe.dispatch('pointerup',{pointerId:2,clientX:250,clientY:150});
+assert.match(item('mpSelectedLane').textContent,/중앙/,'right swipe returns to previous line');
+swipe.dispatch('pointerdown',{button:0,pointerId:3,clientX:100,clientY:140});
+swipe.dispatch('pointerup',{pointerId:3,clientX:102,clientY:250});
+assert.match(item('mpSelectedLane').textContent,/중앙/,'vertical scroll does not switch lines');
+console.log('Multiplayer production UI passed: embedded lane picker, 75-slot grids, purchase lanes, swipe, click cancellation, vertical scroll.');
