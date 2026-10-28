@@ -5,3 +5,8 @@ build/
 
 # Generated copy of existing web art; original files are read-only.
 assets/sprites/*.webp
+*.import
+addons/nodetunnel/
+launcher/payload.zip
+
+launcher/*.syso

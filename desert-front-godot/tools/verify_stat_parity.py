@@ -5,6 +5,7 @@ Requires node and Godot 4.3, not Firebase. Source files are read-only.
 """
 import json
 import math
+import os
 import subprocess
 from pathlib import Path
 
@@ -28,7 +29,7 @@ web = subprocess.run(
 if web.returncode != 0:
     raise RuntimeError(f"Browser JS extraction exited {web.returncode}:\n{web.stderr}\n{web.stdout}")
 native = subprocess.run(
-    ["godot", "--headless", "--path", str(ROOT / "desert-front-godot"),
+    [os.environ.get("GODOT_BIN", "godot"), "--headless", "--path", str(ROOT / "desert-front-godot"),
      "--script", "res://tests/stat_dump.gd"],
     cwd=ROOT, check=True, capture_output=True, text=True, timeout=60
 )

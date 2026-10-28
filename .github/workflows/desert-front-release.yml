@@ -6,16 +6,19 @@ on:
       - feature/desert-front-godot-port
     paths:
       - ".github/workflows/desert-front-release.yml"
+      - "desert-front-godot/**"
+      - "desert-strike/**"
+      - "desert-front-download/**"
   workflow_dispatch:
 permissions:
   contents: write
 jobs:
-  build-and-publish:
+  test-and-export:
     runs-on: ubuntu-24.04
     container:
       image: barichello/godot-ci:4.3
     env:
-      RELEASE_TAG: desert-front-preview
+      RELEASE_TAG: desert-front-v0.4.0-alpha.1
       RELEASE_FILENAME: DesertFront-Preview-Windows.zip
       # NodeTunnel app ID is a public CLIENT identifier, not a credential.
       NODETUNNEL_APP_ID: "0j7l88abdzanueq"
@@ -43,6 +46,7 @@ jobs:
           timeout 60s godot --headless --path desert-front-godot --script res://tests/art_smoke.gd
           timeout 60s godot --headless --path desert-front-godot --script res://tests/icons_smoke.gd
           python3 desert-front-godot/tools/verify_stat_parity.py
+          python3 desert-front-godot/tools/verify_combat_parity.py
           timeout 60s godot --headless --path desert-front-godot --script res://tests/smoke.gd
           timeout 90s godot --headless --path desert-front-godot --script res://tests/tri_match_smoke.gd
           timeout 90s godot --headless --path desert-front-godot --script res://tests/tri_scene_smoke.gd
@@ -93,91 +97,73 @@ jobs:
             mkdir -p desert-front-godot/build/addons/nodetunnel/bin
             cp desert-front-godot/addons/nodetunnel/bin/nodetunnel.dll desert-front-godot/build/addons/nodetunnel/bin/
           }
-      - name: Package ZIP with preconfigured free relay
+      - name: Prepare native payload and third-party license
+        run: python3 desert-front-godot/tools/prepare_windows_payload.py
+      - name: Transfer verified native build to Windows packaging
+        uses: actions/upload-artifact@v4
+        with:
+          name: desert-front-windows-payload
+          path: desert-front-godot/build/
+          if-no-files-found: error
+          retention-days: 7
+  package-and-publish:
+    needs: test-and-export
+    runs-on: windows-2022
+    env:
+      RELEASE_TAG: desert-front-v0.4.0-alpha.1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: desert-front-windows-payload
+          path: desert-front-godot/build
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.10"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Set the native Windows game icon
+        shell: pwsh
         run: |
-          set -eu
-          python3 - <<'PY'
-          import os,pathlib,zipfile
-          base=pathlib.Path("desert-front-godot/build")
-          app=os.environ["NODETUNNEL_APP_ID"].strip()
-          assert len(app)>=8
-          (base/"online_relay.cfg").write_text('[relay]\napp_id="'+app+'"\naddress="us-east.nodetunnel.io:8080"\n',encoding="utf-8")
-          (base/"READ_FIRST.txt").write_text(
-              "DESERT FRONT / WINDOWS PREVIEW\n\n"
-              "1. Extract all files from this ZIP into one folder.\n"
-              "2. Run DesertFront.exe. No Steam login required.\n"
-              "3. Select Online Public Room or Private Room, or search/join.\n"
-              "4. Online service is beta and may be unavailable.\n"
-              "5. New 3-lane 1v1, 2v2, 3v3, co-op and moe skin are in ALPHA.\n"
-              "   Complete web parity and Internet reliability are NOT confirmed.\n"
-              "6. Online Internet P2P test with two remote PCs is NOT yet verified.\n"
-              "7. This unsigned test EXE may show a Windows SmartScreen warning.\n",
-              encoding="utf-8"
-          )
-          target=pathlib.Path(os.environ["RELEASE_FILENAME"])
-          with zipfile.ZipFile(target,"w",zipfile.ZIP_DEFLATED,compresslevel=6) as output:
-              for path in base.rglob("*"):
-                  if path.is_file(): output.write(path,path.relative_to(base).as_posix())
-              output.write("desert-front-godot/addons/nodetunnel/LICENSE","THIRD_PARTY_LICENSES/NodeTunnel_LICENSE.txt")
-          with zipfile.ZipFile(target) as archive:
-              for required in ("DesertFront.exe","DesertFront.pck","online_relay.cfg","addons/nodetunnel/bin/nodetunnel.dll"):
-                  assert required in archive.namelist(),required
-          print("Verified ZIP:",target.stat().st_size,"bytes")
-          PY
-      - name: Publish public GitHub prerelease and replace ZIP asset
+          $numericVersion = (Get-Content desert-front-godot/VERSION -Raw).Trim().Replace("-alpha.", ".")
+          $editor = Join-Path $env:RUNNER_TEMP "rcedit-x64.exe"
+          Invoke-WebRequest "https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe" -OutFile $editor
+          $shortExe = Join-Path $env:RUNNER_TEMP "DF.exe"
+          $shortIcon = Join-Path $env:RUNNER_TEMP "DF.ico"
+          Copy-Item desert-front-godot/build/DesertFront.exe $shortExe
+          Copy-Item desert-front-godot/assets/ui/desert-front-icon.ico $shortIcon
+          & $editor $shortExe --set-icon $shortIcon --set-file-version $numericVersion --set-product-version $numericVersion --set-version-string ProductName "Desert Front" --set-version-string FileDescription "Desert Front Windows Preview"
+          if ($LASTEXITCODE -ne 0) { throw "Could not apply the game window icon" }
+          Copy-Item $shortExe desert-front-godot/build/DesertFront.exe -Force
+      - name: Build one-file Windows launcher with its own icon
+        shell: pwsh
+        run: |
+          $numericVersion = (Get-Content desert-front-godot/VERSION -Raw).Trim().Replace("-alpha.", ".")
+          python desert-front-godot/tools/package_single_exe.py
+          Push-Location desert-front-godot/launcher
+          go run github.com/tc-hib/go-winres@v0.3.3 simply --arch amd64 --out rsrc --manifest gui --file-version $numericVersion --product-version $numericVersion --icon ../assets/ui/desert-front-icon.ico --product-name "Desert Front" --file-description "Desert Front Windows Preview"
+          if ($LASTEXITCODE -ne 0) { throw "Could not create the launcher icon" }
+          $env:GOOS = "windows"
+          $env:GOARCH = "amd64"
+          go build -trimpath -ldflags "-H=windowsgui -s -w" -o ../build/DesertFront-Windows.exe .
+          if ($LASTEXITCODE -ne 0) { throw "Could not build the single EXE" }
+          Pop-Location
+      - name: Test a clean first launch and cached second launch
+        shell: pwsh
+        run: |
+          $env:LOCALAPPDATA = Join-Path $env:RUNNER_TEMP "desert-front-clean-user"
+          $game = (Resolve-Path desert-front-godot/build/DesertFront-Windows.exe).Path
+          for ($i = 0; $i -lt 2; $i++) {
+            $result = Start-Process -FilePath $game -ArgumentList @("--headless", "--quit-after", "3") -WindowStyle Hidden -Wait -PassThru
+            if ($result.ExitCode -ne 0) { throw "Single-file launch failed (pass $i): $($result.ExitCode)" }
+          }
+          $files = Get-ChildItem $env:LOCALAPPDATA -Recurse -File
+          if (-not ($files | Where-Object Name -eq "nodetunnel.dll")) { throw "Online DLL was not extracted" }
+          if (-not ($files | Where-Object Name -eq "DesertFront.pck")) { throw "Game data was not extracted" }
+      - name: Publish verified EXE to GitHub prerelease
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPOSITORY: ${{ github.repository }}
           GH_TARGET: ${{ github.ref_name }}
-        run: |
-          set -eu
-          python3 - <<'PY'
-          import os,json,pathlib,urllib.request,urllib.error,urllib.parse
-          repo=os.environ["GH_REPOSITORY"]
-          headers={
-            "Authorization":"Bearer "+os.environ["GH_TOKEN"],
-            "Accept":"application/vnd.github+json",
-            "X-GitHub-Api-Version":"2022-11-28",
-            "User-Agent":"desert-front-publisher"
-          }
-          base="https://api.github.com/repos/"+repo
-          def api(url,method="GET",payload=None,kind=None):
-              hh=dict(headers)
-              data=None
-              if payload is not None:
-                  data=json.dumps(payload).encode() if kind is None else payload
-                  hh["Content-Type"]=kind or "application/json"
-              request=urllib.request.Request(url,headers=hh,data=data,method=method)
-              with urllib.request.urlopen(request,timeout=120) as response:
-                  result=response.read()
-                  return json.loads(result) if result and "json" in response.headers.get("Content-Type","") else result
-          tag=os.environ["RELEASE_TAG"]
-          name=os.environ["RELEASE_FILENAME"]
-          description=(
-            "DESERT FRONT Windows preview (Godot 4) - open public/private relay lobby, room codes, host-authoritative basic 1v1.\n\n"
-            "Download ZIP, extract completely, and run DesertFront.exe; no Steam account or player IP/port forwarding.\n\n"
-            "Experimental: Online relay uses NodeTunnel third-party beta and has not been tested between two remote PCs. "
-            "Original 80 unit pixel strips, 10 faction banners, 10 moe action sheets and 10 portraits are included. Native 3-line PvP 1v1/2v2/3v3, 2/3-person co-op, hero aggregation, guardian, faction passives, better hard AI, production/upgrade tabs, and PC-local match history are available. Remote Internet relay multiplayer, full web parity, and centralized online rankings remain unverified or incomplete."
-          )
-          try:
-              release=api(base+"/releases/tags/"+tag)
-          except urllib.error.HTTPError as error:
-              if error.code!=404: raise
-              release=api(base+"/releases",method="POST",payload={
-                "tag_name":tag,"target_commitish":os.environ["GH_TARGET"],
-                "name":"Desert Front | Windows Preview",
-                "body":description,"prerelease":True,"draft":False
-              })
-          else:
-              release=api(base+"/releases/"+str(release["id"]),method="PATCH",
-                payload={"body":description,"prerelease":True,"draft":False})
-          for asset in release.get("assets",[]):
-              if asset.get("name")==name:
-                  api(base+"/releases/assets/"+str(asset["id"]),method="DELETE")
-          raw=pathlib.Path(name).read_bytes()
-          url=release["upload_url"].split("{",1)[0]+"?"+urllib.parse.urlencode({"name":name})
-          result=api(url,method="POST",payload=raw,kind="application/zip")
-          assert result["name"]==name
-          print("Release URL:",release["html_url"])
-          print("Public file:",result["browser_download_url"])
-          PY
+        run: python desert-front-godot/tools/publish_release.py

@@ -42,7 +42,6 @@ var turret_cool := []
 var forward_cool := []
 var lane_pressure := []
 var next_unit_id := 1
-var _econ_timer := 0.0
 var _ai_timer := 0.0
 var _consolidate_timer := 0.0
 var _marine_jobs: Array[Dictionary] = []
@@ -282,7 +281,7 @@ func _spawn(p: Dictionary, lane: int, slot: int, role: int, guardian_spawn: bool
 		"last_brood":-999.0, "last_damage":-999.0,
 		"last_pollen":-999.0, "hero_count":1,
 		"guardian":false, "hatchling":false, "conscripted":false,
-		"radius":23.0 if role == 3 else (28.0 if role == 6 and f in [3,7] else 15.0)
+		"radius":23.0 if role == 3 else (28.0 if role == 6 and f in [3,7] else (24.0 if role == 6 and f in [4,6] else 15.0))
 	}
 	units.append(u)
 	next_unit_id += 1
@@ -758,7 +757,7 @@ func _tick_units(dt: float) -> void:
 				target = v
 		var speed := float(stats["speed"]) * (0.8 if float(u.get("ink_until",0.0)) > seconds else 1.0)
 		if not target.is_empty():
-			var reach := float(stats["range"])*0.88
+			var reach := float(stats["range"])*0.88 if supporting or float(stats["range"]) >= 48.0 else maxf(float(stats["range"]),float(u["radius"])+float(target["radius"])+6.0)
 			if best <= reach:
 				if float(u["cool"]) <= 0.0:
 					_attack(u,target)
@@ -974,15 +973,15 @@ func advance(dt: float) -> void:
 	dt = clampf(dt,0.0,0.2)
 	seconds += dt
 	next_wave -= dt
-	_econ_timer += dt
 	_ai_timer += dt
 	_consolidate_timer += dt
 	for p in players:
 		p["barrage_cd"] = maxf(0.0,float(p["barrage_cd"])-dt)
-	while _econ_timer >= 0.5:
-		_econ_timer -= 0.5
+	var before_slice := floori((seconds-dt)*2.0)
+	var now_slice := floori(seconds*2.0)
+	for income_slice in range(before_slice+1,now_slice+1):
 		for p in players:
-			if seconds >= float(p["eco_ready_at"]):
+			if income_slice*0.5+0.000001 >= float(p["eco_ready_at"]):
 				p["cash"] += 1.0 + int(p["eco"])
 	if difficulty == "hard" and _ai_timer >= 1.0:
 		_ai_timer -= 1.0

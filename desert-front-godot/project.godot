@@ -6,6 +6,8 @@ config_version=5
 [application]
 
 config/name="Desert Front - Godot Port"
+config/icon="res://assets/ui/desert-front-icon.png"
+config/windows_native_icon="res://assets/ui/desert-front-icon.ico"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 

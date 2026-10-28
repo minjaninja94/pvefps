@@ -500,3 +500,14 @@ body[data-multi-arena="classic"] #mpBattleView .mp-production-title p{max-width:
 body[data-multi-arena="classic"] #mpDeploymentPanel .mp-build-controls{margin:14px 0}
 body[data-multi-arena="classic"] #mpDeploymentPanel #mpSelectedLane{font-size:15px}
 body[data-multi-arena="classic"] .mp-grid-viewport{max-height:620px}
+/* Shared Desert Front command icons. Keep button text for accessible labels. */
+#lobbySolo::before,#lobbyMulti::before,#lobbyPractice::before,#lobbyDeviceLogin::before,#lobbySaveName::before,[data-open-upgrades]::before,#mpEco::before,#helpButton::before{content:"";display:inline-block;width:24px;height:24px;flex:none;vertical-align:middle;margin-right:8px;background-image:url("./assets/ui/command-icons.webp");background-repeat:no-repeat;background-size:288px 24px;image-rendering:pixelated}
+#lobbySolo::before{background-position:0 0}
+[data-open-upgrades]::before{background-position:-24px 0}
+#lobbyPractice::before{background-position:-72px 0}
+#helpButton::before{background-position:-192px 0}
+#lobbyMulti::before,#lobbyDeviceLogin::before{background-position:-216px 0}
+#lobbySaveName::before{background-position:-168px 0}
+#mpEco::before{background-position:-264px 0}
+
+.brand-icon{width:43px;height:43px;display:block;border-radius:9px;flex:none}

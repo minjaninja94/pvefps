@@ -44,6 +44,7 @@ var _history_dialog: AcceptDialog
 var _profile_dialog: AcceptDialog
 
 func _ready() -> void:
+	DisplayServer.window_set_title("Desert Front")
 	_network = NetworkSession.new()
 	_network.name = "NetworkSession"
 	add_child(_network)
