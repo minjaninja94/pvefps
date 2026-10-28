@@ -15,8 +15,8 @@ func _run() -> void:
 	assert(not duel.order("a",{"type":"build","lane":1,"slot":0,"role":0})["ok"])
 	assert(duel.order("b",{"type":"build","lane":0,"slot":1,"role":8})["ok"]) # independent owner slots
 	assert(duel.order("b",{"type":"build","lane":0,"slot":0,"role":7})["ok"])
-	for i in range(490):
-		duel.advance(0.05)
+	duel.next_wave = 0.01
+	duel.advance(0.05)
 	assert(duel.wave >= 1)
 	assert(duel.units.size() >= 2)
 	assert(duel.order("a",{"type":"upgrade","kind":"armor"})["ok"])
@@ -62,8 +62,8 @@ func _run() -> void:
 	assert(coop.players.size() == 6)
 	assert(coop.players[3]["bot"])
 	assert(coop.order("u2",{"type":"build","lane":1,"slot":0,"role":7})["ok"])
-	for i in range(480):
-		coop.advance(0.05)
+	coop.next_wave = 0.01
+	coop.advance(0.05)
 	assert(coop.wave >= 1)
 	assert(coop._count_builds(coop.players[3]) >= 1)
 	print("DESERT FRONT TRI MATCH SMOKE OK: modes, teams, lane builds, guardian, coop AI, snapshot")
