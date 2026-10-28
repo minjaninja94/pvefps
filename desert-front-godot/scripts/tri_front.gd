@@ -5,6 +5,7 @@ const Match = preload("res://scripts/tri_match.gd")
 const Net = preload("res://scripts/tri_network.gd")
 const TriView = preload("res://scripts/tri_view.gd")
 const Sprites = preload("res://scripts/sprite_assets.gd")
+const Records = preload("res://scripts/match_records.gd")
 var session
 var match_game
 var _offline := true
@@ -33,6 +34,8 @@ var _hud_timer := 0.0
 var _ready_flag := false
 var _demolition := false
 var _last_message := ""
+var _stored_match_result := false
+var _history_dialog: AcceptDialog
 
 func _ready() -> void:
 	session = Net.new()
@@ -56,6 +59,11 @@ func _process(dt: float) -> void:
 			match_game.advance(0.05)
 			_time_bank -= 0.05
 			count += 1
+	if match_game != null and match_game.ended and not _stored_match_result:
+		_stored_match_result = true
+		var mine: Dictionary = match_game.player_for(_local_uid())
+		if not mine.is_empty():
+			Records.record(str(match_game.mode),int(match_game.size),int(mine["faction"]),int(mine["team"]),int(match_game.winner),int(match_game.wave),float(match_game.seconds))
 	_hud_timer += dt
 	if _hud_timer > 0.25:
 		_hud_timer = 0
@@ -85,6 +93,13 @@ func _build_ui() -> void:
 	back.text = "← 클래식 전장"
 	back.pressed.connect(func()->void:get_tree().change_scene_to_file("res://scenes/main.tscn"))
 	top.add_child(back)
+	var history_btn := Button.new()
+	history_btn.text = "로컬 전적"
+	history_btn.pressed.connect(_show_local_records)
+	top.add_child(history_btn)
+	_history_dialog = AcceptDialog.new()
+	_history_dialog.title = "Desert Front · 이 PC 전적"
+	add_child(_history_dialog)
 	var toolbar := HBoxContainer.new()
 	shell.add_child(toolbar)
 	_modes = OptionButton.new()
@@ -288,6 +303,10 @@ func _update_skin_preview() -> void:
 	_skin_banner.texture = Sprites.skin_banner(faction,_selected_skin())
 	_skin_unit.texture = Sprites.skin_portrait(faction,role,_selected_skin())
 
+func _show_local_records() -> void:
+	_history_dialog.dialog_text = Records.recent_text()
+	_history_dialog.popup_centered(Vector2i(630,420))
+
 func _chosen() -> Dictionary:
 	var index := maxi(0,_modes.selected)
 	return [
@@ -300,6 +319,7 @@ func _chosen() -> Dictionary:
 	][index]
 
 func _practice() -> void:
+	_stored_match_result = false
 	session.leave()
 	_offline = true
 	_ready_button.disabled = true
@@ -379,6 +399,7 @@ func _code_created(code: String) -> void:
 	_set_status("초대 코드: %s · 친구에게 전달해 주세요." % code)
 
 func _match_started() -> void:
+	_stored_match_result = false
 	_offline = false
 	match_game = session.game
 	_view.simulation = match_game

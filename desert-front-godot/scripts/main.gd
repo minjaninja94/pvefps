@@ -5,6 +5,7 @@ const BattleSim = preload("res://scripts/battle_sim.gd")
 const BattleView = preload("res://scripts/battlefield.gd")
 const Sprites = preload("res://scripts/sprite_assets.gd")
 const NetworkSession = preload("res://scripts/network_session.gd")
+const Records = preload("res://scripts/match_records.gd")
 var simulation
 var _network
 var _address_input: LineEdit
@@ -30,6 +31,8 @@ var _armor_btn: Button
 var _time_bank := 0.0
 var _ui_tick := 0.0
 var _demolish := false
+var _stored_match_result := false
+var _history_dialog: AcceptDialog
 
 func _ready() -> void:
 	_network = NetworkSession.new()
@@ -55,6 +58,10 @@ func _process(dt: float) -> void:
 			simulation.advance(BattleSim.STEP)
 			_time_bank -= BattleSim.STEP
 			cycles += 1
+	if simulation.ended and not _stored_match_result:
+		_stored_match_result = true
+		var my_team := 1 if _network.mode == "client" else 0
+		Records.record("classic",1,simulation.enemy_faction if my_team == 1 else simulation.player_faction,my_team,simulation.winner,simulation.wave,simulation.seconds)
 	_ui_tick += dt
 	if _ui_tick >= 0.2:
 		_ui_tick = 0.0
@@ -94,6 +101,10 @@ func _build_interface() -> void:
 	_skin_picker.custom_minimum_size = Vector2(120,40)
 	_skin_picker.item_selected.connect(func(_i: int) -> void: _update_art_preview())
 	header.add_child(_skin_picker)
+	var history_btn := Button.new()
+	history_btn.text = "로컬 전적"
+	history_btn.pressed.connect(_show_local_records)
+	header.add_child(history_btn)
 	var restart := Button.new()
 	restart.text = "새 경기 시작"
 	restart.custom_minimum_size = Vector2(115, 40)
@@ -269,6 +280,13 @@ func _build_interface() -> void:
 	var footer := Label.new()
 	footer.text = "Standalone Godot build  ·  original browser game untouched"
 	shell.add_child(footer)
+	_history_dialog = AcceptDialog.new()
+	_history_dialog.title = "Desert Front · 이 PC 전적"
+	add_child(_history_dialog)
+
+func _show_local_records() -> void:
+	_history_dialog.dialog_text = Records.recent_text()
+	_history_dialog.popup_centered(Vector2i(630,420))
 
 func _selected_skin() -> String:
 	return "moe" if _skin_picker != null and _skin_picker.selected == 1 else "default"
@@ -288,6 +306,7 @@ func _update_art_preview() -> void:
 		_preview_label.text = "%s\n자원채취 건물" % Roster.FACTION_NAMES[faction]
 
 func _new_match() -> void:
+	_stored_match_result = false
 	_network.leave()
 	if _online_room_code != null:
 		_online_room_code.text = ""
@@ -385,6 +404,7 @@ func _on_lobby_changed(can_start: bool, connected: bool) -> void:
 	_ready_btn.text = "준비 취소" if _network.guest_ready else "준비 완료"
 
 func _on_match_begins(f0: int, f1: int) -> void:
+	_stored_match_result = false
 	simulation = BattleSim.new(f0, f1, _network.host_skin, _network.guest_skin)
 	simulation.versus_player = true
 	_view.simulation = simulation
