@@ -29,6 +29,8 @@ jobs:
           node --check desert-strike/tri-lane-network.js
           node --check desert-strike/tri-lane-ui.js
           node --check desert-strike/balance-sim.cjs
+      - name: Fairy healing and beastkin ranged defense parity
+        run: node desert-strike/smoke-faction-tuning.test.cjs
       - name: Gameplay regression V1
         run: node desert-strike/smoke.test.cjs
       - name: Gameplay V2
