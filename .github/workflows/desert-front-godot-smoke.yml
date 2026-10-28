@@ -52,6 +52,26 @@ jobs:
           godot --headless --path desert-front-godot --script res://tests/net_client.gd > /tmp/df-client.log 2>&1 || { cat /tmp/df-host.log /tmp/df-client.log; exit 1; }
           wait "$host_pid" || { cat /tmp/df-host.log /tmp/df-client.log; exit 1; }
           cat /tmp/df-host.log /tmp/df-client.log
+      - name: Verify 4-player 2v2 native LAN host/guest room and ordered production
+        run: |
+          set -eu
+          godot --headless --path desert-front-godot --script res://tests/tri_net_host.gd > /tmp/tri-2v2-host.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          sleep 2
+          godot --headless --path desert-front-godot --script res://tests/tri_net_client.gd -- 1 >/tmp/tri-2v2-guest1.log 2>&1 &
+          c1=$!
+          godot --headless --path desert-front-godot --script res://tests/tri_net_client.gd -- 1 >/tmp/tri-2v2-guest2.log 2>&1 &
+          c2=$!
+          godot --headless --path desert-front-godot --script res://tests/tri_net_client.gd -- 0 >/tmp/tri-2v2-guest3.log 2>&1 &
+          c3=$!
+          err=0
+          wait "$pid" || err=1
+          wait "$c1" || err=1
+          wait "$c2" || err=1
+          wait "$c3" || err=1
+          cat /tmp/tri-2v2-*.log
+          exit "$err"
       - name: Configure Godot Windows export templates
         run: |
           mkdir -p "$HOME/.local/share/godot/export_templates"
