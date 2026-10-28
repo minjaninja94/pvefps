@@ -40,6 +40,7 @@ func _run() -> void:
 	assert(tri.order("teammate",{"type":"build","lane":2,"slot":10,"role":3})["ok"])
 	assert(tri.order("visitor",{"type":"build","lane":0,"slot":10,"role":3})["ok"])
 	assert(not tri.order("nonexistent",{"type":"upgrade","kind":"weapon"})["ok"])
+	tri.player_for("host")["cash"] += 300.0
 	assert(tri.order("host",{"type":"upgrade","kind":"weapon"})["ok"])
 	assert(not tri.order("host",{"type":"tactic","kind":"nuke","lane":0})["ok"])
 	tri._hit_fort(1,0,1000.0,"forward")

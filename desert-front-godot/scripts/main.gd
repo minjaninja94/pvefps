@@ -92,6 +92,10 @@ func _build_interface() -> void:
 	restart.custom_minimum_size = Vector2(115, 40)
 	restart.pressed.connect(_new_match)
 	header.add_child(restart)
+	var multi := Button.new()
+	multi.text = "3라인 · 2:2 · 3:3 · 협동"
+	multi.pressed.connect(func() -> void: get_tree().change_scene_to_file("res://scenes/tri_front.tscn"))
+	header.add_child(multi)
 	var online_bar := HBoxContainer.new()
 	online_bar.add_theme_constant_override("separation", 8)
 	shell.add_child(online_bar)
