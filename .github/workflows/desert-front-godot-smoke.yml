@@ -35,17 +35,17 @@ jobs:
       - name: Import Godot project and check scripts
         run: godot --headless --path desert-front-godot --editor --quit
       - name: Validate 80 native sprite resources and 10 banners
-        run: godot --headless --path desert-front-godot --script res://tests/art_smoke.gd
+        run: timeout 60s godot --headless --path desert-front-godot --script res://tests/art_smoke.gd
       - name: Run isolated simulation smoke test
-        run: godot --headless --path desert-front-godot --script res://tests/smoke.gd
+        run: timeout 60s godot --headless --path desert-front-godot --script res://tests/smoke.gd
       - name: Verify classic, 3-line, 2v2, and AI co-op battle simulation
         run: timeout 90s godot --headless --path desert-front-godot --script res://tests/tri_match_smoke.gd
       - name: Verify balance and cosmetic parity invariants
         run: timeout 60s godot --headless --path desert-front-godot --script res://tests/parity_smoke.gd
       - name: Validate local saved-match summary
-        run: godot --headless --path desert-front-godot --script res://tests/records_smoke.gd
+        run: timeout 60s godot --headless --path desert-front-godot --script res://tests/records_smoke.gd
       - name: Validate local member XP and unofficial tier progression
-        run: godot --headless --path desert-front-godot --script res://tests/profile_tier_smoke.gd
+        run: timeout 60s godot --headless --path desert-front-godot --script res://tests/profile_tier_smoke.gd
       - name: Launch 3-line native multiplayer interface
         run: timeout 90s godot --headless --path desert-front-godot --script res://tests/tri_scene_smoke.gd
       - name: Run two-process LAN host/guest integration
