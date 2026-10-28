@@ -453,3 +453,36 @@ body[data-play-mode="multi"] .command-hud .stats,body[data-play-mode="multi"] .c
  #view-multiplayer .mp-grid-viewport{max-height:425px;padding:5px}
  #view-multiplayer .mp-build-grid{gap:4px}
 }
+
+
+/* Solo-style multiplayer navigation: one active screen, one shared command HUD. */
+#mpViewTabs[hidden]{display:none!important}
+body:not([data-play-mode="multi"]) #mpViewTabs{display:none!important}
+.command-hud #mpViewTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:6px 0 9px}
+.command-hud #mpViewTabs .tab{min-height:50px;display:flex;flex:1;align-items:center;gap:10px;padding:8px 15px;text-align:left}
+.command-hud #mpViewTabs .tab[aria-current="page"]{background:linear-gradient(135deg,#5d4a35,#292f32);border-color:#e3bd89}
+.command-hud #mpViewTabs .tab span:last-child{font-size:14px}
+.command-hud #mpViewTabs .tab small{display:block;font-size:9px;font-weight:800;color:#9cabb5}
+#view-multiplayer .mp-tab-screen[hidden]{display:none!important}
+#view-multiplayer .mp-tab-screen{display:block}
+#view-multiplayer #mpBattleView{margin-top:0;padding-top:0;border-top:0}
+#view-multiplayer #mpUpgradeView{padding:2px 0 16px}
+#view-multiplayer .mp-upgrade-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#view-multiplayer .mp-upgrade-grid>.feature-card{min-height:250px}
+#view-multiplayer .mp-upgrade-grid>.feature-card p{flex:1}
+#view-multiplayer .mp-repair-lanes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:8px 0 10px}
+#view-multiplayer .mp-repair-lanes button{min-height:44px;background:#1f3540;border-color:#52727b}
+#view-multiplayer .mp-repair-lanes button.active{border-color:#f4cd98;background:#554332;color:#ffeac1}
+@media(max-width:900px){
+ #view-multiplayer .mp-upgrade-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:620px){
+ .command-hud #mpViewTabs{gap:5px;padding:4px 0 7px}
+ .command-hud #mpViewTabs .tab{min-height:42px;gap:5px;padding:5px}
+ .command-hud #mpViewTabs .tab .tab-no{font-size:17px}
+ .command-hud #mpViewTabs .tab span:last-child{font-size:11px}
+ .command-hud #mpViewTabs .tab small{display:none}
+ #view-multiplayer .mp-upgrade-grid{grid-template-columns:1fr;gap:9px}
+ #view-multiplayer .mp-upgrade-grid>.feature-card{min-height:0;padding:14px}
+ #view-multiplayer .mp-upgrade-grid>.feature-card p{margin:3px 0 12px}
+}
