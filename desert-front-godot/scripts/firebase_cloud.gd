@@ -87,7 +87,7 @@ func connect_member() -> bool:
 					busy = false
 					return true
 	var url := "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + str(settings["key"])
-	var signed: Dictionary = await _http(url,HTTPClient.METHOD_POST,"{}")
+	var signed: Dictionary = await _http(url,HTTPClient.METHOD_POST,JSON.stringify({"returnSecureToken":true}))
 	busy = false
 	if bool(signed.get("ok",false)) and signed["value"] is Dictionary and _auth_response(signed["value"]):
 		return true
