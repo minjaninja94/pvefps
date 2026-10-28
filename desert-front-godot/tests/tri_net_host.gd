@@ -17,7 +17,7 @@ func _run() -> void:
 		push_error("2v2 LAN host could not start")
 		quit(2)
 		return
-	await create_timer(11.0).timeout
+	await create_timer(8.0).timeout
 	if not began or net.game == null:
 		push_error("2v2 LAN match did not begin")
 		quit(3)

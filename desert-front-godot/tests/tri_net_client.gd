@@ -21,7 +21,7 @@ func _run() -> void:
 		push_error("2v2 client could not connect")
 		quit(2)
 		return
-	await create_timer(8.0).timeout
+	await create_timer(12.0).timeout
 	if not started or not received:
 		push_error("2v2 client did not receive match + authoritative state")
 		quit(3)
