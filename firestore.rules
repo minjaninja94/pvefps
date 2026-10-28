@@ -154,11 +154,48 @@ service cloud.firestore {
         && d.keys().hasAll(['name','faction','skin'])
         && d.name is string && d.name.size() >= 1 && d.name.size() <= 16
         && d.faction is int && d.faction >= 0 && d.faction <= 9
-        && d.skin in ['default','twilight','aurora','gold'];}
+        && d.skin in ['default','moe','twilight','aurora','gold'];}
       allow get: if own();
       allow list: if false;
       allow create, update: if own() && valid(request.resource.data);
       allow delete: if own();
+    }
+
+    // Public directory contains only owner and TTL; player names and room contents
+    // remain in get-by-invite-code desertRooms. Never list private lobby documents.
+    match /desertPublicRooms/{code} {
+      function valid(r) {
+        return r.keys().hasOnly(['owner','created','expires'])
+          && r.keys().hasAll(['owner','created','expires'])
+          && r.owner is string && r.created is number && r.expires is number
+          && r.created >= request.time.toMillis()-60000
+          && r.created <= request.time.toMillis()+60000
+          && r.expires > request.time.toMillis()
+          && r.expires <= request.time.toMillis()+7260000;
+      }
+      allow get: if signed();
+      allow list: if signed() && request.query.limit <= 60;
+      allow create: if signed() && valid(request.resource.data) && request.resource.data.owner == request.auth.uid;
+      allow update: if false;
+      allow delete: if signed() && resource.data.owner == request.auth.uid;
+    }
+    // Web + Godot community board is UNVERIFIED self-reported data, never prizes.
+    match /desertCommunityBoard/{uid} {
+      function valid(r) {
+        return r.keys().hasOnly(['owner','nickname','rating','level','pvpWins','pvpLosses','faction','verified'])
+          && r.keys().hasAll(['owner','nickname','rating','level','pvpWins','pvpLosses','faction','verified'])
+          && r.owner == uid && r.nickname is string && r.nickname.size() >= 1 && r.nickname.size() <= 16
+          && r.rating is int && r.rating >= 100 && r.rating <= 3000
+          && r.level is int && r.level >= 1 && r.level <= 100
+          && r.pvpWins is int && r.pvpWins >= 0 && r.pvpWins <= 1000000
+          && r.pvpLosses is int && r.pvpLosses >= 0 && r.pvpLosses <= 1000000
+          && r.faction is int && r.faction >= 0 && r.faction <= 9
+          && r.verified == false;
+      }
+      allow get: if signed();
+      allow list: if signed() && request.query.limit <= 50;
+      allow create,update: if signed() && request.auth.uid == uid && valid(request.resource.data);
+      allow delete: if signed() && request.auth.uid == uid;
     }
 
     // Desert Front: invite-code Firestore lobby + SDP only. Never store unit/combat packets.
@@ -169,13 +206,17 @@ service cloud.firestore {
         return p is map && p.keys().hasOnly(['name','faction','team','ready','skin'])
           && p.name is string && p.name.size() >= 1 && p.name.size() <= 16
           && p.faction is int && p.faction >= 0 && p.faction <= 9
-          && (!('skin' in p) || p.skin in ['default','twilight','aurora','gold'])
+          && (!('skin' in p) || p.skin in ['default','moe','twilight','aurora','gold'])
           && p.team in [0,1] && p.ready is bool;
       }
       function shape(r) {
-        return r.keys().hasOnly(['version','host','mode','size','status','created','expires','players'])
+        return r.keys().hasOnly(['version','host','mode','size','status','created','expires','players','ruleset','seed','publicRoom'])
+          && (!('ruleset' in r) || r.ruleset in ['standard','augment'])
+          && (!('seed' in r) || r.seed is int)
+          && (!('publicRoom' in r) || r.publicRoom is bool)
           && r.version == 1 && r.host is string && r.host.size() > 0
-          && r.mode in ['pvp','coop'] && r.size in [1,2,3]
+          && r.mode in ['pvp','coop','classic'] && r.size in [1,2,3]
+          && (r.mode != 'classic' || r.size == 1)
           && (r.mode != 'coop' || r.size >= 2)
           && r.status in ['lobby','playing']
           && r.created is number && r.expires is number

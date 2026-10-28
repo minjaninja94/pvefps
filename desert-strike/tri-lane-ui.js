@@ -331,7 +331,7 @@ function onSnapshot(v){
   f.append(el);
  }
  $('mpLaneSummary').replaceChildren(f);
- if(v.ended){global.DesertLobbyMusic?.stopBattle?.();$('mpStateTag').textContent=v.winner===null?'무승부':v.winner===side?'승리':'패배';if(!practice)global.DesertLobby?.completeMultiplayer?.({winner:v.winner,side,matchId:lobby?.id||'unknown'});}
+ if(v.ended){global.DesertLobbyMusic?.stopBattle?.();$('mpStateTag').textContent=v.winner===null?'무승부':v.winner===side?'승리':'패배';if(!practice)global.DesertLobby?.completeMultiplayer?.({winner:v.winner,side,matchId:lobby?.id||'unknown',mode:v.mode,size:v.size,wave:v.wave,seconds:v.seconds,faction:me?.faction??faction()});}
  renderAugment();unitCards();buildGrid();upgradeInfo();drawOverview();
 }
 function order(cmd){
@@ -448,7 +448,7 @@ function init(){
  $('mpCreate').addEventListener('click',runClick(async()=>{
   message('Firebase 방을 생성합니다…');
   if($('mpRuleset').value==='augment')await global.DesertAugments.load();
-  await NET.create({mode:$('mpMode').value,size:Number($('mpSize').value),ruleset:$('mpRuleset').value,publicRoom:true,name:$('mpName').value,faction:faction(),skin:skin()});
+  await NET.create({mode:$('mpMode').value,size:Number($('mpSize').value),ruleset:$('mpRuleset').value,publicRoom:$('mpPublicCheck').checked,name:$('mpName').value,faction:faction(),skin:skin()});
  }));
  $('mpJoin').addEventListener('click',runClick(async()=>{
   message('방에 참가하는 중입니다…');

@@ -910,7 +910,7 @@ function endMatch(win){
  state.ended=true;
  window.DesertCombatAudio?.stop?.();
  window.DesertLobbyMusic?.stopBattle?.();
- window.DesertLobby?.completeSolo?.({win,matchedFaction:state.faction,wave:state.wave});
+ window.DesertLobby?.completeSolo?.({win,matchedFaction:state.faction,wave:state.wave,seconds:state.elapsed});
  $('endTitle').textContent=win?'작전 승리':'기지 함락';
  $('endTitle').style.color=win?'#fbd89b':'#f69a8e';
  $('endSummary').textContent=state.wave+'웨이브 · '+state.built.filter(v=>v!==null).length+'개 생산 시설 · 무기 Lv.'+state.weapon+' / 장갑 Lv.'+state.armor;

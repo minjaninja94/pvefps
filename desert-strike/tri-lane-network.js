@@ -16,6 +16,7 @@ function validateRuleset(s){return s==='augment'?'augment':'standard';}
 function validateSkin(s){return ['default','moe','twilight','aurora','gold'].includes(s)?s:'default';}
 function code(){const bytes=new Uint8Array(6);crypto.getRandomValues(bytes);return Array.from(bytes,n=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[n%32]).join('');}
 const path=()=>fs.doc(db,'desertRooms',roomId);
+const publicPath=code=>fs.doc(db,'desertPublicRooms',code||roomId);
 const signalPath=guest=>fs.doc(db,'desertRooms',roomId,'signals',guest);
 async function identity(){
  if(!global.IronFirebase)throw Error('Firebase 네트워크 모듈이 아직 준비되지 않았습니다.');
@@ -47,6 +48,7 @@ async function leave(){
     try{await fs.deleteDoc(signalPath(m.uid));}catch(e){}
    }
    await fs.deleteDoc(path());
+   try{await fs.deleteDoc(publicPath(id));}catch(_){}
   }else await fs.runTransaction(db,async tx=>{
    const r=await tx.get(path());if(!r.exists())return;
    const players={...r.data().players};delete players[currentUid];
@@ -68,9 +70,11 @@ async function create(opts){
  await identity();
  if(!['pvp','coop','classic'].includes(opts.mode)||![1,2,3].includes(Number(opts.size))||opts.mode==='coop'&&Number(opts.size)<2||opts.mode==='classic'&&Number(opts.size)!==1)throw Error('잘못된 인원/모드');
  roomId=code();host=true;
- room={version:1,host:uid,mode:opts.mode,size:Number(opts.size),ruleset:validateRuleset(opts.ruleset),seed:global.crypto.getRandomValues(new Uint32Array(1))[0]||1,publicRoom:opts.publicRoom!==false,status:'lobby',created:Date.now(),expires:Date.now()+7200000,
+ room={version:1,host:uid,mode:opts.mode,size:Number(opts.size),ruleset:validateRuleset(opts.ruleset),seed:crypto.getRandomValues(new Uint32Array(1))[0]||1,publicRoom:opts.publicRoom!==false,status:'lobby',created:Date.now(),expires:Date.now()+7200000,
   players:{[uid]:{name:validateName(opts.name),faction:Number(opts.faction),skin:validateSkin(opts.skin),team:0,ready:false}}};
  await fs.setDoc(path(),room);
+ if(room.publicRoom){try{await fs.setDoc(publicPath(roomId),{owner:uid,created:room.created,expires:room.expires});}
+  catch(e){status('공개방 목록 등록 실패: '+msg(e)+' · 초대 코드 참가만 가능합니다.');}}
  listenRoom();status('방 코드 '+roomId+' · 상대에게 코드를 공유하세요.');
  return roomId;
 }
@@ -197,6 +201,7 @@ async function start(){
  if(room.ruleset==='augment')await global.DesertAugments.load();
  engine=global.DesertTriEngine.create({mode:room.mode,size:room.size,members:members(),ruleset:validateRuleset(room.ruleset),seed:room.seed||1});
  await fs.updateDoc(path(),{status:'playing'});
+ if(room.publicRoom)try{await fs.deleteDoc(publicPath());}catch(_){}
  let last=performance.now();
  clock=setInterval(()=>{
   const now=performance.now();const dt=Math.max(0,Math.min((now-last)/1000,.2));last=now;
@@ -216,13 +221,19 @@ function configure(callbacks){events={...callbacks};}
 async function browse(){
  await identity();
  // Firestore rules must explicitly allow this query for signed-in visitors.
- const q=fs.query(fs.collection(db,'desertRooms'),fs.where('publicRoom','==',true),fs.limit(60));
+ const q=fs.query(fs.collection(db,'desertPublicRooms'),fs.limit(60));
  const now=Date.now(),response=await fs.getDocs(q);
- return response.docs.filter(doc=>{const room=doc.data();return room.status==='lobby'&&room.expires>now;})
-  .map(doc=>{const data=doc.data(),players=Object.values(data.players||{});
+ const rooms=await Promise.all(response.docs.filter(doc=>doc.data().expires>now).slice(0,30).map(async doc=>{
+  try{
+   const snap=await fs.getDoc(fs.doc(db,'desertRooms',doc.id));
+   if(!snap.exists())return null;
+   const data=snap.data(),players=Object.values(data.players||{});
+   if(data.status!=='lobby'||data.publicRoom!==true||data.expires<=now)return null;
    return {code:doc.id,mode:data.mode,size:data.size,ruleset:validateRuleset(data.ruleset),
     members:players.length,capacity:data.size*(data.mode==='coop'?1:2)};
-  }).filter(x=>x.members<x.capacity).sort((a,b)=>a.members-b.members);
+  }catch(_){return null;}
+ }));
+ return rooms.filter(x=>x&&x.members<x.capacity).sort((a,b)=>a.members-b.members);
 }
 function current(){return {roomId,room,uid,host,peers:new Set(hostPeerOpen),active};}
 global.DesertTriNetwork=Object.freeze({configure,identity,create,join,browse,ready,start,leave,sendOrder,current,validateName});

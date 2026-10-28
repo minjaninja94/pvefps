@@ -7,6 +7,8 @@
   battle: './assets/audio/battle-theme.mp3'
  };
  const VOLUMES = {lobby: 0.3, battle: 0.35};
+ const VOLUME_KEY='desert-front-volume-music';
+ try{const n=global.localStorage.getItem(VOLUME_KEY);if(n!==null&&n!==''&&Number.isFinite(Number(n))){VOLUMES.lobby=VOLUMES.battle=Math.min(1,Math.max(0,Number(n)/100));}}catch(_){}
  const players = Object.create(null);
  let scene = 'none';
  let enabled = true;
@@ -64,6 +66,12 @@
   if (enabled) tryPlay();
   else pauseAll();
  }
+ function setVolume(value) {
+  const next=Math.min(1,Math.max(0,Number(value)/100||0));VOLUMES.lobby=VOLUMES.battle=next;
+  try{global.localStorage.setItem(VOLUME_KEY,String(Math.round(next*100)));}catch(_){}
+  for(const kind of Object.keys(players))players[kind].volume=next;
+ }
+ function volume(){return Math.round(VOLUMES.lobby*100);}
  function init() {
   const button = toggleButton();
   if (button) button.addEventListener('click', () => setEnabled(!enabled));
@@ -77,7 +85,7 @@
   renderButton();
   if (document.body.classList.contains('lobby-active')) enterLobby();
  }
- global.DesertLobbyMusic = Object.freeze({enterLobby, exitLobby, stopBattle, setEnabled});
+ global.DesertLobbyMusic = Object.freeze({enterLobby, exitLobby, stopBattle, setEnabled,setVolume,volume});
  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
  else init();
 })(window);

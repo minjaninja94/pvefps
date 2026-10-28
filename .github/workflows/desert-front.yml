@@ -27,12 +27,17 @@ jobs:
           node --check desert-strike/front-lobby.js
           node --check desert-strike/lobby-music.js
           node --check desert-strike/combat-audio.js
+          node --check desert-strike/augment-rules.js
+          node --check desert-strike/career-profile.js
+          node --check desert-strike/audio-settings.js
           node --check desert-strike/tri-lane-engine.js
           node --check desert-strike/tri-lane-network.js
           node --check desert-strike/tri-lane-ui.js
           node --check desert-strike/balance-sim.cjs
       - name: Lobby and battle BGM transitions
         run: node --test desert-strike/smoke-bgm.test.cjs
+      - name: Godot 300-card augment parity and sandboxed host decisions
+        run: node --test desert-strike/smoke-augments.test.cjs
       - name: Godot combat voice assets and web event hooks
         run: node --test desert-strike/smoke-combat-audio.test.cjs
       - name: Fairy healing and beastkin ranged defense parity

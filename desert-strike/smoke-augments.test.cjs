@@ -1,0 +1,38 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const root=__dirname,data=JSON.parse(fs.readFileSync(path.join(root,'assets/augments.json'),'utf8'));
+test('Godot native augment catalogue retains all 300 cards and both effect kinds',()=>{
+ assert.equal(data.schema,1);assert.equal(data.cards.length,300);
+ assert.equal(new Set(data.cards.map(c=>c.id)).size,300);
+ assert.ok(data.cards.some(c=>c.effects.some(e=>e.kind==='stat')));
+ assert.ok(data.cards.some(c=>c.effects.some(e=>e.kind==='extra_spawn')));
+ for(let faction=0;faction<10;faction++)assert.equal(data.cards.filter(c=>c.scope==='faction-'+faction).length,25);
+});
+test('host-authoritative augment picks, rerolls, stats and viewer-specific offers',async()=>{
+ const w={},ctx={window:w,fetch:async()=>({ok:true,json:async()=>data}),Math,Map,Set,JSON,Number,Object,Array};
+ vm.runInNewContext(fs.readFileSync(path.join(root,'augment-rules.js'),'utf8'),ctx,{filename:'augment-rules.js'});
+ vm.runInNewContext(fs.readFileSync(path.join(root,'tri-lane-engine.js'),'utf8'),ctx,{filename:'tri-lane-engine.js'});
+ await w.DesertAugments.load();
+ const setup={mode:'pvp',size:1,members:[{uid:'a',faction:0,team:0},{uid:'b',faction:1,team:1}],ruleset:'augment',seed:1234};
+ const match=w.DesertTriEngine.create(setup);
+ assert.equal(match.state.ruleset,'augment');assert.equal(match.state.augmentChoice.round,1);
+ assert.equal(match.order('a',{type:'build',lane:0,slot:0,role:0}).ok,false,'selection first');
+ const a=match.snapshot('a'),b=match.snapshot('b');
+ assert.equal(a.augmentChoice.cards.length,3);assert.equal(b.augmentChoice.cards.length,3);
+ assert.equal(a.augmentChoice.selected,'');
+ assert.ok(!JSON.stringify(a.augmentChoice).includes(b.augmentChoice.cards[0]),'no rival draft leak');
+ const initial=a.augmentChoice.cards[0];
+ assert.equal(match.order('a',{type:'augment_reroll',slot:0}).ok,true);
+ assert.notEqual(match.snapshot('a').augmentChoice.cards[0],initial);
+ assert.equal(match.order('a',{type:'augment_reroll',slot:0}).ok,false);
+ assert.equal(match.order('a',{type:'augment_pick',slot:0}).ok,true);
+ assert.equal(match.order('a',{type:'augment_pick',slot:1}).ok,false);
+ assert.equal(match.order('b',{type:'augment_pick',slot:1}).ok,true);
+ assert.equal(match.state.augmentChoice,null);
+ const card=match.state.players[0].augments[0],d=w.DesertAugments.apply({hp:100,damage:20,armor:0,rate:1,regen:0},[card],0);
+ assert.ok(d.hp>=0&&d.damage>=0);
+ assert.equal(match.order('a',{type:'build',lane:0,slot:0,role:0}).ok,true);
+ const plain=w.DesertTriEngine.create({mode:'pvp',size:1,members:setup.members});
+ assert.equal(plain.state.augmentChoice,null);
+ assert.equal(plain.order('a',{type:'build',lane:0,slot:0,role:0}).ok,true);
+});

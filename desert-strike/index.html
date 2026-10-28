@@ -16,9 +16,26 @@
    <aside class="lobby-panel lobby-profile">
     <div class="lobby-eyebrow">COMMANDER PROFILE</div><div id="lobbyRank" class="lobby-rank">훈련병</div><div class="lobby-level"><b id="lobbyLevel">LV. 1</b><span id="lobbyXP">0 / 170 XP</span></div><div class="lobby-xp-track"><i id="lobbyXPFill"></i></div><p id="lobbyRecord">전적 0승 0패 · 훈련 랭크</p>
     <div class="lobby-profile-options"><label>지휘관 이름<input id="lobbyNickname" maxlength="16" value="지휘관" autocomplete="nickname"></label><button id="lobbySaveName" type="button">프로필 저장</button></div>
+    <button type="button" id="careerOpen" class="btn outline">회원 · 비공식 티어 · 전적</button>
     <div class="lobby-auth"><button id="lobbyDeviceLogin" type="button">이 기기로 간편 접속</button><button id="lobbyCopyIds" type="button">접속 ID 복사</button><label>유저 고유 ID<input id="lobbyUserId" readonly autocomplete="off" aria-label="유저 고유 ID"></label><label>기기 접속 ID<input id="lobbyDeviceId" readonly autocomplete="off" aria-label="기기 접속 ID"></label><p>비밀번호 없이 같은 브라우저에서 자동 접속합니다. ID는 식별용이며 실제 인증 정보는 이 기기에 보관됩니다. 브라우저 데이터를 삭제하거나 다른 기기로 바꾸면 새 계정이 됩니다.</p><small id="lobbyAuthMessage" role="status">기기 계정을 준비하고 있습니다.</small></div>
    </aside>
   </div>
+  <section id="careerPanel" class="lobby-panel career-panel" hidden>
+   <div class="lobby-section-title"><div><div class="lobby-eyebrow">COMMANDER ACCOUNT / MATCH HISTORY</div><h2>회원 · 비공식 티어 · 전적</h2></div><button type="button" id="careerClose" class="btn outline">닫기</button></div>
+   <p>전적과 RP는 이 브라우저의 자체 기록이며 서버가 결과를 검증하지 않습니다. 공식 순위나 현금 보상으로 사용할 수 없습니다.</p>
+   <strong id="careerRating">비공식 브론즈 · 1000 RP</strong>
+   <div id="careerAccount" class="career-account">Firebase 연결 전</div>
+   <div class="career-auth-form"><label>이메일 <input id="careerEmail" type="email" autocomplete="email" maxlength="254" placeholder="이메일 주소"></label><label>비밀번호 <input id="careerPassword" type="password" autocomplete="current-password" minlength="6" maxlength="128" placeholder="6자 이상"></label></div>
+   <div class="career-actions"><button type="button" id="careerRegister" class="btn accent">익명 계정을 이메일로 전환</button><button type="button" id="careerLogin" class="btn outline">기존 이메일 로그인</button><button type="button" id="careerPublish" class="btn outline">비공식 순위 등록</button><button type="button" id="careerShowBoard" class="btn outline">커뮤니티 순위 조회</button></div>
+   <div id="careerStatus" role="status">이메일 로그인은 Firebase Authentication의 이메일/비밀번호 제공자를 사용합니다.</div>
+   <h3>커뮤니티 순위 (자체 신고)</h3><div id="careerLeaderboard" class="career-history">순위를 조회하면 표시됩니다.</div>
+   <h3>최근 40경기 (이 브라우저)</h3><div id="careerHistory" class="career-history">아직 기록이 없습니다.</div>
+  </section>
+  <details class="lobby-panel audio-mixer"><summary>🔊 오디오 설정 · 음악 / 음성 / 효과음 개별 조정</summary><div class="audio-mixer-controls">
+   <label>배경음악 <input id="audioMusicVolume" type="range" min="0" max="100" value="30"><output id="audioMusicValue">30%</output></label>
+   <label>유닛 음성 <input id="audioVoiceVolume" type="range" min="0" max="100" value="50"><output id="audioVoiceValue">50%</output></label>
+   <label>전투 효과음 <input id="audioEffectsVolume" type="range" min="0" max="100" value="32"><output id="audioEffectsValue">32%</output></label>
+   </div></details>
   <section class="lobby-panel lobby-loadout"><div class="lobby-section-title"><div><div class="lobby-eyebrow">FACTION ROSTER</div><h2>10종족 선택</h2></div><span>80개 전투 유닛</span></div><div id="lobbyFactions" class="lobby-factions"></div>
    <div class="lobby-section-title"><div><div class="lobby-eyebrow">UNIT MOTION ROSTER / 80 UNITS</div><h2>유닛별 애니메이션 도감</h2></div><span>병종 선택 · 동작 확인 · 능력치</span></div>
    <div class="lobby-unit-layout"><div id="lobbyUnitGrid" class="lobby-unit-grid" aria-label="유닛 8종 애니메이션"></div>
@@ -87,7 +104,7 @@
  <section class="panel mp-lobby" id="mpLobby">
   <div class="mp-lobby-grid">
    <label>지휘관 이름<input id="mpName" maxlength="16" placeholder="지휘관" value="지휘관"></label>
-   <label>경기 규칙<select id="mpRuleset"><option value="standard">일반전</option><option value="augment">증강전 · 300종 카드</option></select></label>
+   <label class="mp-public-option"><input type="checkbox" id="mpPublicCheck" checked> 공개방으로 등록 (체크 해제 시 초대 코드 전용)</label><label>경기 규칙<select id="mpRuleset"><option value="standard">일반전</option><option value="augment">증강전 · 300종 카드</option></select></label>
    <label>경기 방식<select id="mpMode"><option value="pvp">3라인 팀 경쟁 PvP</option><option value="classic">클래식 1:1 · 싱글 전장</option><option value="coop">3라인 협동 대 AI</option></select></label>
    <label>팀당 인원<select id="mpSize"><option value="1">1명 (1:1)</option><option value="2">2명 (2:2)</option><option value="3">3명 (3:3)</option></select></label>
    <label>사용 종족<select id="mpFaction"><option value="0">철갑연합</option><option value="1">심연군체</option><option value="2">성운결사</option><option value="3">해병성채</option><option value="4">월영 수인족</option><option value="5">은월 엘프족</option><option value="6">야월 퍼리족</option><option value="7">크롬 로보족</option><option value="8">옥토퍼 군체</option><option value="9">농농 페어리족</option></select></label>
@@ -186,5 +203,7 @@
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=battlebgm1" defer></script>
+<script src="./career-profile.js?v=careerv1" defer></script>
+<script src="./audio-settings.js?v=mixerv1" defer></script>
 <script src="./front-lobby.js?v=lobbybgm1" defer></script>
 </body></html>

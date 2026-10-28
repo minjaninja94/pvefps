@@ -14,6 +14,8 @@
  const atlases = new Map();
  const Context = global.AudioContext || global.webkitAudioContext;
  let enabled = true, context = null, voiceIndex = null, indexPromise = null, generation = 0;
+ const levels={voice:.5,effects:.32};
+ for(const key of ['voice','effects'])try{const n=global.localStorage.getItem('desert-front-volume-'+key);if(n!==null&&Number.isFinite(Number(n)))levels[key]=Math.min(1,Math.max(0,Number(n)/100));}catch(_){}
  try { enabled = global.localStorage.getItem(ENABLED_KEY) !== 'false'; } catch (_) {}
 
  function toggle() { return document.getElementById('combatAudioToggle'); }
@@ -73,7 +75,7 @@
   let audio;
   try {
    audio = new Audio(ROOT+'sfx/'+kind+'.wav');
-   audio.volume = Math.min(1, .32*distanceGain(x));
+   audio.volume = Math.min(1, levels.effects*distanceGain(x));
    audio.preload = 'auto';
    activeEffects.add(audio);
    const cleanup = () => { activeEffects.delete(audio); audio.onended = null; audio.onerror = null; };
@@ -105,8 +107,8 @@
        length<=0 || offset+length>buffer.duration+.05) return;
    const source = context.createBufferSource(), gain = context.createGain();
    source.buffer = buffer;
-   gain.gain.value = Math.min(1, .5*distanceGain(x));
-   source.connect(gain); gain.connect(context.destination);
+   gain.gain.value = Math.min(1, levels.voice*distanceGain(x));
+   source.connect(gain); gain.connect(context.destination);source.gainNode=gain;
    activeVoices.add(source);
    source.onended = () => {
     activeVoices.delete(source);
@@ -128,6 +130,14 @@
   }
   activeEffects.clear();
  }
+ function setVolume(group,value){
+  if(!Object.prototype.hasOwnProperty.call(levels,group))return;
+  levels[group]=Math.min(1,Math.max(0,Number(value)/100||0));
+  try{global.localStorage.setItem('desert-front-volume-'+group,String(Math.round(levels[group]*100)));}catch(_){}
+  if(group==='effects')for(const audio of activeEffects)audio.volume=Math.min(audio.volume,levels.effects);
+  else for(const source of activeVoices)if(source.gainNode)source.gainNode.gain.value=levels.voice;
+ }
+ function volume(group){return Math.round((levels[group]||0)*100);}
  function setEnabled(value) {
   enabled = Boolean(value);
   try { global.localStorage.setItem(ENABLED_KEY, String(enabled)); } catch (_) {}
@@ -146,7 +156,7 @@
   global.addEventListener('pagehide', stop);
   renderToggle();
  }
- global.DesertCombatAudio = Object.freeze({cue,unit,attack,stop,setEnabled,loadIndex});
+ global.DesertCombatAudio = Object.freeze({cue,unit,attack,stop,setEnabled,setVolume,volume,loadIndex});
  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
  else init();
 })(window);
