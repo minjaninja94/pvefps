@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b141a">
+<meta name="description" content="DESERT FRONT — 열 종족의 전장을 지휘하세요. Windows PC용 무료 Godot 프리뷰 다운로드.">
+<meta property="og:title" content="DESERT FRONT — COMMAND THE FRONT">
+<meta property="og:description" content="10개의 진영. 자동 출격 전략. Windows PC 프리뷰 공개.">
+<meta property="og:type" content="website">
+<title>DESERT FRONT | PC Preview</title>
+<style>
+:root{color-scheme:dark;--ink:#e8efea;--dim:#9fb0ac;--cyan:#80ebd8;--warm:#eec997;--back:#071116;--edge:rgba(171,223,205,.17)}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--back);color:var(--ink);font-family:"Pretendard","Noto Sans KR","Malgun Gothic",ui-sans-serif,system-ui,sans-serif;line-height:1.55;overflow-x:hidden}
+body:before{content:"";pointer-events:none;position:fixed;inset:0;z-index:15;opacity:.11;background-image:linear-gradient(transparent 95%,#b8e8d0 95%);background-size:100% 4px}
+a{color:inherit;text-decoration:none}
+button,a{touch-action:manipulation}
+a:focus-visible,button:focus-visible{outline:2px solid #85f7df;outline-offset:4px}
+.wrap{width:min(1180px,calc(100% - 48px));margin-inline:auto}
+header{height:82px;display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid var(--edge);position:relative;z-index:5}
+.brand{display:flex;align-items:center;gap:13px;font-family:ui-monospace,Consolas,monospace;font-weight:900;letter-spacing:.09em}
+.brand-mark{font-size:29px;letter-spacing:-.14em;display:grid;place-items:center;color:var(--cyan)}
+.brand-name{display:flex;flex-direction:column;font-size:16px;line-height:1.13}
+.brand-name small{font-size:9px;color:#829995;font-weight:500;letter-spacing:.22em;margin-top:7px}
+nav{display:flex;gap:26px;align-items:center;color:#b6c5bd;font-size:13px;font-weight:700}
+nav a:hover{color:var(--cyan)}
+.nav-download{border:1px solid #70d7c3;padding:11px 16px;color:var(--cyan);font-weight:800}
+.hero{min-height:635px;position:relative;isolation:isolate;display:flex;align-items:center;overflow:hidden;border-bottom:1px solid var(--edge)}
+.hero:before{content:"";position:absolute;inset:0;z-index:-3;background:radial-gradient(circle at 74% 38%,#1e4d4b 0%,transparent 41%),radial-gradient(circle at 25% 69%,#243c42 0%,transparent 47%),linear-gradient(110deg,#09161b,#0b171e 58%,#132028)}
+.hero:after{content:"";position:absolute;inset:0;z-index:-2;opacity:.38;background:repeating-linear-gradient(90deg,transparent 0 95px,rgba(117,211,188,.12) 96px,transparent 97px),repeating-linear-gradient(0deg,transparent 0 95px,rgba(117,211,188,.1) 96px,transparent 97px);mask-image:linear-gradient(to right,transparent,#000 60%)}
+.hero-inner{padding:88px 0 106px;display:grid;grid-template-columns:1.1fr .9fr;gap:42px;align-items:center}
+.eyebrow{font-size:12px;color:var(--cyan);font-weight:900;letter-spacing:.24em;font-family:ui-monospace,Consolas,monospace}
+.h1{font-size:clamp(66px,8.6vw,124px);line-height:.87;letter-spacing:-.085em;font-family:Impact,"Arial Narrow","Malgun Gothic",sans-serif;font-stretch:condensed;margin:25px 0 28px;font-weight:900;text-shadow:0 14px 40px #0007}
+.h1 span{display:block}
+.h1 em{font-style:normal;color:var(--cyan)}
+.hero-sub{font-size:clamp(16px,2vw,22px);font-weight:750;letter-spacing:-.04em;margin:0 0 10px}
+.hero-copy{font-size:14px;color:var(--dim);max-width:485px;margin:0;line-height:1.9}
+.cta{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:32px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:17px 24px;min-height:55px;font-weight:900;font-size:14px;transition:.18s ease;background:#7ce5ce;color:#0b2928;border:1px solid #7ce5ce;white-space:nowrap}
+.btn:hover{background:#a8fff0;transform:translateY(-2px)}
+.btn.secondary{background:rgba(12,26,31,.55);color:#cce6df;border-color:#627f7b}
+.btn.secondary:hover{border-color:#94e7d5;color:#fff}
+.btn svg{width:17px;height:17px}
+.hero-note{font-size:11px;color:#92a49e;margin-top:15px}
+.stats{display:flex;align-items:center;gap:26px;margin-top:45px;flex-wrap:wrap}
+.stat{border-left:2px solid var(--cyan);padding-left:14px;display:flex;flex-direction:column}
+.stat b{font-size:29px;line-height:1.2;font-weight:850}
+.stat small{font-size:11px;color:#9baea8;letter-spacing:.05em}
+.radar{position:relative;height:490px;min-width:0;overflow:visible}
+.radar:before{content:"";position:absolute;inset:32px 0 0 5%;border:1px solid #6ce8d345;border-radius:50%;box-shadow:0 0 0 60px #64d4bd0b,0 0 0 125px #64d4bd07}
+.radar:after{content:"";position:absolute;left:51%;top:49%;width:12px;height:12px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 12px #7aefdb1b,0 0 38px 14px #7aefdb38}
+.squad{position:absolute;border:1px solid #7dc5b743;background:linear-gradient(155deg,#152d34e8,#0b1b25ed);padding:10px;box-shadow:0 24px 50px #0007;backdrop-filter:blur(12px)}
+.squad img{display:block;width:100%;height:100%;object-fit:cover;image-rendering:auto}
+.squad strong{position:absolute;left:12px;bottom:12px;right:12px;font-size:11px;font-family:monospace;letter-spacing:.05em;color:#f9fff7;background:#051216ba;padding:6px 8px}
+.squad.one{width:56%;height:52%;top:1%;left:1%;transform:rotate(-6deg)}
+.squad.two{width:58%;height:51%;right:0;top:25%;transform:rotate(5deg)}
+.squad.three{width:54%;height:43%;left:9%;bottom:0;transform:rotate(-3deg)}
+.hud-lines{position:absolute;right:-5px;top:0;font-size:10px;color:#91d5bf;letter-spacing:.07em;font-family:monospace;text-align:right;line-height:1.8}
+.section{padding:90px 0;border-bottom:1px solid var(--edge)}
+.section-kicker{color:var(--cyan);letter-spacing:.24em;font-size:11px;font-weight:800;font-family:monospace}
+.section-title{font-size:clamp(30px,4.6vw,49px);line-height:1.2;letter-spacing:-.06em;font-weight:900;margin:14px 0 16px}
+.section-lead{max-width:630px;color:var(--dim);font-size:15px;line-height:1.85;margin:0 0 35px}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.feature{border:1px solid var(--edge);padding:26px;background:linear-gradient(165deg,#112229,#0b171d);min-height:217px;position:relative}
+.feature .num{color:#6dd9c2;font:700 12px monospace}
+.feature h3{font-size:20px;margin:24px 0 9px;letter-spacing:-.04em}
+.feature p{font-size:13px;color:var(--dim);line-height:1.85;margin:0}
+.caution{display:flex;gap:15px;align-items:flex-start;border:1px solid #927d503f;background:#4c3f251a;padding:19px 21px;margin-top:22px}
+.caution .dot{width:8px;height:8px;border-radius:50%;background:var(--warm);box-shadow:0 0 0 5px #eec99720;flex:none;margin:8px 4px 0}
+.caution p{margin:0;color:#d7c9aa;font-size:13px;line-height:1.8}
+.caution strong{color:#f2d9aa}
+.download-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}
+.download-panel{background:linear-gradient(145deg,#142e31,#101c22);border:1px solid #5bd3b954;padding:34px}
+.download-panel .tag{display:inline-block;color:#a5efdb;font-size:12px;font-family:monospace;letter-spacing:.15em}
+.download-panel h3{font-size:32px;line-height:1.24;margin:15px 0;letter-spacing:-.04em}
+.download-panel p{color:#a4bbb3;font-size:13px;line-height:1.8}
+.download-panel .btn{margin-top:13px}
+.download-details{border:1px solid var(--edge);background:#0d1c23;padding:30px}
+.download-details h3{font-size:17px;margin:0 0 14px}
+.download-details dl{margin:0}
+.download-details dl div{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid #c0d2c017;gap:24px;font-size:13px}
+.download-details dt{color:#94ada3}.download-details dd{margin:0;text-align:right;font-weight:700}
+.step-list{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:34px}
+.step{padding:22px 24px;border-left:2px solid #72cdb8;background:#13262d65}
+.step b{display:block;color:#8be6d0;font:800 12px monospace}
+.step h4{margin:12px 0 6px;font-size:17px}
+.step p{margin:0;color:#9db3ab;font-size:13px;line-height:1.75}
+.faq{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.faq article{padding:23px 0;border-top:1px solid var(--edge)}
+.faq h3{font-size:16px;margin:0 0 9px}
+.faq p{font-size:13px;line-height:1.9;color:var(--dim);margin:0}
+footer{padding:39px 0 54px;color:#8ba6a0}
+.footer-inner{display:flex;align-items:center;justify-content:space-between;gap:14px;font-size:12px;flex-wrap:wrap}
+.footer-inner a:hover{color:var(--cyan)}
+@media(max-width:990px){.hero-inner{grid-template-columns:1fr}.hero{min-height:auto}.radar{height:340px;width:85%;max-width:620px;margin:auto}.hero-inner{padding:75px 0}nav a:not(.nav-download){display:none}.download-grid{grid-template-columns:1fr}}
+@media(max-width:670px){.wrap{width:min(100% - 32px,1180px)}header{height:72px}.brand-name{font-size:13px}.nav-download{padding:9px 12px;font-size:11px}.h1{font-size:70px}.hero-inner{padding:58px 0 76px;gap:6px}.radar{height:260px;width:100%}.hero-copy{font-size:13px}.stats{gap:16px;margin-top:31px}.stat b{font-size:24px}.section{padding:65px 0}.features,.step-list,.faq{grid-template-columns:1fr}.feature{min-height:0}.download-panel,.download-details{padding:24px}.download-panel h3{font-size:27px}.btn{width:100%}.cta{flex-direction:column;align-items:stretch}.squad strong{font-size:9px}.hud-lines{font-size:8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="brand" href="#top" aria-label="Desert Front 홈"><span class="brand-mark">D///F</span><span class="brand-name">DESERT FRONT<small>TACTICAL FRONTLINE</small></span></a>
+  <nav aria-label="메뉴"><a href="#game">게임 소개</a><a href="#how">시작 방법</a><a href="#faq">자주 묻는 질문</a><a class="nav-download" href="#download">PC 다운로드</a></nav>
+</header>
+</div>
+<main id="top">
+<section class="hero">
+<div class="wrap hero-inner">
+<div>
+<div class="eyebrow">TACTICAL AUTO-BATTLER / WINDOWS PREVIEW</div>
+<h1 class="h1"><span>DESERT</span><span><em>FRONT</em></span></h1>
+<p class="hero-sub">최후의 전선을 지휘하세요.</p>
+<p class="hero-copy">10개의 개성적인 진영, 병력 생산과 전술적 배치, 끝없이 밀고 당기는 전장. 웹에서 시작된 Desert Front가 이제 PC 실행 파일로 확장됩니다.</p>
+<div class="cta">
+<a class="btn download-link" href="https://github.com/minjaninja94/pvefps/releases/download/desert-front-preview/DesertFront-Preview-Windows.zip" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 17v4h16v-4"/></svg>Windows 프리뷰 다운로드</a>
+<a class="btn secondary" href="../desert-strike/" target="_blank" rel="noopener">원본 웹 게임 체험 ↗</a>
+</div>
+<p class="hero-note">무료 · Windows 64비트 · 압축 해제 후 실행 · 개발 중 알파 버전</p>
+<div class="stats">
+<div class="stat"><b>10</b><small>개성적인 진영</small></div>
+<div class="stat"><b>80</b><small>전투 유닛 데이터</small></div>
+<div class="stat"><b>1:1</b><small>PC 대전 프리뷰</small></div>
+</div>
+</div>
+<div class="radar" aria-label="원본 Desert Front 도트 아트 미리보기">
+<div class="hud-lines">◉ WORLD STATUS: CONTESTED<br>DEPLOYMENT SECTOR / 001<br>BUILD 00 — EARLY ACCESS</div>
+<div class="squad one"><img src="../desert-strike/assets/sprites/forge-banner.webp" alt="철갑연합 원본 도트 아트" loading="lazy"><strong>01 / FORGE UNION</strong></div>
+<div class="squad two"><img src="../desert-strike/assets/sprites/astral-banner.webp" alt="성운결사 원본 도트 아트" loading="lazy"><strong>02 / ASTRAL ORDER</strong></div>
+<div class="squad three"><img src="../desert-strike/assets/sprites/fairy-banner.webp" alt="페어리족 원본 도트 아트" loading="lazy"><strong>03 / PETAL FAIRIES</strong></div>
+</div>
+</div>
+</section>
+<section class="section" id="game">
+<div class="wrap">
+<div class="section-kicker">01 / HOW YOU COMMAND</div>
+<h2 class="section-title">생산하고, 강화하고,<br>전선을 돌파하세요.</h2>
+<p class="section-lead">병력을 하나하나 조종할 필요는 없습니다. 어떤 생산 시설을 세우고 어떤 타이밍에 전력을 확장할지, 지휘관의 판단이 승패를 가릅니다.</p>
+<div class="features">
+<article class="feature"><span class="num">01 / FACTION</span><h3>10개의 전투 진영</h3><p>철갑, 군체, 성운, 수인, 페어리 등 각 진영의 병종과 기본 능력치를 선택해 자신만의 전선을 구성합니다.</p></article>
+<article class="feature"><span class="num">02 / DEPLOY</span><h3>24초마다 출격</h3><p>생산 슬롯을 확보하고 크레딧을 운용하세요. 출격 주기마다 건설한 생산 시설에서 병력이 전장으로 진입합니다.</p></article>
+<article class="feature"><span class="num">03 / ONLINE BETA</span><h3>공개방과 초대 코드</h3><p>스팀 계정이나 IP 입력 없이 릴레이 서버로 방을 찾고 참가하도록 설계했습니다. 인터넷 대전 기능은 베타 검증 중입니다.</p></article>
+</div>
+<div class="caution"><span class="dot"></span><p><strong>개발 중인 PC 이식 프리뷰입니다.</strong> 위 이미지는 기존 웹 게임의 아트워크입니다. 현재 Godot PC 버전은 간이 그래픽으로 표시되며 원본의 모든 종족 특성, 애니메이션, 3라인 및 협동 모드가 아직 적용되지 않았습니다.</p></div>
+</div>
+</section>
+<section class="section" id="download">
+<div class="wrap">
+<div class="section-kicker">02 / DOWNLOAD</div>
+<h2 class="section-title">PC에서 전투를 시작하세요.</h2>
+<p class="section-lead">Steam 설치 없이 무료로 이용할 수 있는 Windows 프리뷰입니다. ZIP 파일을 내려받아 압축을 해제하면 됩니다.</p>
+<div class="download-grid">
+<div class="download-panel">
+<span class="tag">WINDOWS · 64 BIT · ALPHA PREVIEW</span>
+<h3>Desert Front<br>Windows Preview</h3>
+<p>실행 파일, 게임 데이터, 온라인 릴레이 플러그인 및 연결 설정을 하나의 ZIP에 포함했습니다.</p>
+<a class="btn download-link" href="https://github.com/minjaninja94/pvefps/releases/download/desert-front-preview/DesertFront-Preview-Windows.zip" rel="noopener">PC 버전 무료 다운로드 ↓</a>
+<p id="release-status" aria-live="polite">공개 배포 파일 확인 중…</p>
+</div>
+<div class="download-details"><h3>배포 정보</h3><dl>
+<div><dt>배포 플랫폼</dt><dd>Windows 10/11 · 64비트</dd></div>
+<div><dt>버전</dt><dd>Alpha Preview</dd></div>
+<div><dt>가격</dt><dd>무료</dd></div>
+<div><dt>설치</dt><dd>ZIP 압축 해제 후 EXE 실행</dd></div>
+<div><dt>로비 방식</dt><dd>NodeTunnel 릴레이 (베타)</dd></div>
+<div><dt>Steam 계정</dt><dd>필요 없음</dd></div>
+</dl></div>
+</div>
+<div class="step-list" id="how">
+<div class="step"><b>STEP 01</b><h4>ZIP 파일 다운로드</h4><p>PC 프리뷰 파일을 받고 원하는 폴더에 모든 파일을 압축 해제합니다.</p></div>
+<div class="step"><b>STEP 02</b><h4>DesertFront.exe 실행</h4><p>EXE, PCK, 온라인 연결 설정과 확장 파일을 같은 폴더 구조로 유지합니다.</p></div>
+<div class="step"><b>STEP 03</b><h4>싱글 또는 대전 시작</h4><p>싱글을 플레이하거나 공개방을 만들고 초대 코드를 공유합니다. 온라인 연결은 실험적 기능입니다.</p></div>
+</div>
+</div>
+</section>
+<section class="section" id="faq">
+<div class="wrap">
+<div class="section-kicker">03 / FAQ</div>
+<h2 class="section-title">다운로드 전 알아두세요.</h2>
+<div class="faq">
+<article><h3>스팀이 꼭 필요한가요?</h3><p>아니요. 이 PC 프리뷰는 Steam을 설치하지 않아도 실행됩니다.</p></article>
+<article><h3>포트 개방이나 IP 입력이 필요한가요?</h3><p>온라인 릴레이 모드는 IP 입력과 포트포워딩이 필요하지 않도록 구현했습니다. LAN 직접 연결은 별도 방식이며 IP 입력이 필요합니다.</p></article>
+<article><h3>웹 버전과 같은 게임인가요?</h3><p>현재는 Godot로 새로 이식 중인 초기 버전입니다. 원본 웹 게임의 모든 아트와 모드가 아직 적용되지는 않았습니다.</p></article>
+<article><h3>온라인 대전이 항상 가능한가요?</h3><p>아직 보장되지 않습니다. 외부 무료 베타 릴레이에 의존하며 서로 다른 네트워크의 실제 유저 접속은 추가 검증이 필요합니다.</p></article>
+<article><h3>Windows에서 경고가 나오는데요?</h3><p>초기 빌드는 코드 서명이 없는 실행 파일입니다. 파일 제공처가 공식 GitHub 저장소인지 확인하고 실행 여부를 결정하세요.</p></article>
+<article><h3>오류나 개선 사항을 제보하려면?</h3><p><a href="https://github.com/minjaninja94/pvefps/issues" target="_blank" rel="noopener" style="text-decoration:underline;color:var(--cyan)">GitHub Issues</a>에 증상과 스크린샷을 남겨주시면 됩니다.</p></article>
+</div>
+</div>
+</section>
+</main>
+<footer><div class="wrap footer-inner"><div>© 2026 DESERT FRONT · INDEPENDENT PREVIEW</div><div><a href="../desert-strike/" target="_blank" rel="noopener">원본 웹 게임</a> · <a href="https://github.com/minjaninja94/pvefps/releases/tag/desert-front-preview" target="_blank" rel="noopener">배포 기록</a> · <a href="https://github.com/minjaninja94/pvefps" target="_blank" rel="noopener">GitHub</a></div></div></footer>
+<script>
+(async()=>{const label=document.getElementById("release-status");try{const r=await fetch("https://api.github.com/repos/minjaninja94/pvefps/releases/tags/desert-front-preview",{headers:{"Accept":"application/vnd.github+json"}});if(!r.ok)throw Error("not published");const release=await r.json();const asset=(release.assets||[]).find(x=>x.name==="DesertFront-Preview-Windows.zip");if(!asset)throw Error("missing");document.querySelectorAll(".download-link").forEach(a=>a.href=asset.browser_download_url);const mb=(asset.size/1048576).toFixed(1);label.textContent="공개 배포 확인됨 · ZIP "+mb+" MB · "+new Date(asset.updated_at).toLocaleDateString("ko-KR")}catch(e){label.textContent="배포 파일을 확인할 수 없습니다. 다운로드 버튼에서 GitHub 배포 페이지로 이동합니다.";document.querySelectorAll(".download-link").forEach(a=>a.href="https://github.com/minjaninja94/pvefps/releases/tag/desert-front-preview")}})();
+</script>
+</body>
+</html>
