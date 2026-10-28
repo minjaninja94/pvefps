@@ -1,14 +1,20 @@
 extends AcceptDialog
 ## Shared lightweight profile editor. Local account is neither globally unique nor verified.
 const Profile = preload("res://scripts/local_profile.gd")
+const Cloud = preload("res://scripts/firebase_cloud.gd")
+const Icons = preload("res://scripts/ui_icons.gd")
 var _name: LineEdit
 var _info: Label
+var _cloud
+var _cloud_status: Label
+var _leaderboard_dialog: AcceptDialog
+var _cloud_buttons: Array[Button] = []
 
 func _ready() -> void:
 	title = "Desert Front · 회원 프로필 / 비공식 티어"
 	exclusive = false
 	var content := VBoxContainer.new()
-	content.custom_minimum_size = Vector2(540,270)
+	content.custom_minimum_size = Vector2(620,390)
 	add_child(content)
 	_info = Label.new()
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -28,11 +34,71 @@ func _ready() -> void:
 	warn.text = "현금화·전세계 순위는 별도 신뢰 가능한 검증 시스템이 필요합니다."
 	warn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	content.add_child(warn)
+	_cloud = Cloud.new()
+	add_child(_cloud)
+	var cloud_title := Label.new()
+	cloud_title.text = "Firebase pvefps · 온라인 커뮤니티 회원"
+	content.add_child(cloud_title)
+	var cloud_actions := HBoxContainer.new()
+	content.add_child(cloud_actions)
+	var buttons := [
+		{"text":"온라인 회원 연결","method":"_connect_firebase","icon":9},
+		{"text":"프로필 공개 등록","method":"_upload_profile","icon":8},
+		{"text":"커뮤니티 랭킹","method":"_show_cloud_board","icon":1}
+	]
+	for choice in buttons:
+		var button := Button.new()
+		button.text = str(choice["text"])
+		button.icon = Icons.get_icon(int(choice["icon"]))
+		button.pressed.connect(Callable(self,str(choice["method"])))
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		cloud_actions.add_child(button)
+		_cloud_buttons.append(button)
+	_cloud_status = Label.new()
+	_cloud_status.text = "연결되지 않음 · 온라인 랭킹은 비공식 자체신고 RP입니다."
+	_cloud_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	content.add_child(_cloud_status)
+	_leaderboard_dialog = AcceptDialog.new()
+	_leaderboard_dialog.title = "Desert Front · 온라인 비공식 순위"
+	add_child(_leaderboard_dialog)
 	_refresh()
+
+func _set_busy(value: bool) -> void:
+	for button in _cloud_buttons:
+		button.disabled = value
+
+func _connect_firebase() -> void:
+	_set_busy(true)
+	_cloud_status.text = "기존 Firebase 프로젝트 인증 중..."
+	var success: bool = await _cloud.connect_member()
+	_cloud_status.text = "Firebase 회원 연결 완료" if success else "연결 실패: " + _cloud.last_error
+	_set_busy(false)
+
+func _upload_profile() -> void:
+	_set_busy(true)
+	if _cloud.uid.is_empty():
+		if not await _cloud.connect_member():
+			_cloud_status.text = "인증 실패: " + _cloud.last_error
+			_set_busy(false)
+			return
+	var local := Profile.load_profile()
+	local["level"] = Profile.level_from_xp(int(local["xp"]))
+	var published: bool = await _cloud.publish(local)
+	_cloud_status.text = "비공식 순위 등록 완료" if published else "등록 실패: " + _cloud.last_error + " · firestore.rules 게시 여부 확인"
+	_set_busy(false)
+
+func _show_cloud_board() -> void:
+	_set_busy(true)
+	_cloud_status.text = "Firestore 커뮤니티 순위 조회 중..."
+	var entries: Array = await _cloud.leaderboard()
+	_leaderboard_dialog.dialog_text = Cloud.display_board(entries,_cloud.uid)
+	_leaderboard_dialog.popup_centered(Vector2i(750,520))
+	_cloud_status.text = "조회 완료 · 자기신고 랭킹" if _cloud.last_error.is_empty() else "조회 실패: " + _cloud.last_error
+	_set_busy(false)
 
 func open_profile() -> void:
 	_refresh()
-	popup_centered(Vector2i(620,340))
+	popup_centered(Vector2i(750,510))
 
 func _refresh() -> void:
 	if _info == null or _name == null:

@@ -48,6 +48,7 @@ jobs:
           timeout 60s godot --headless --path desert-front-godot --script res://tests/parity_smoke.gd
           timeout 60s godot --headless --path desert-front-godot --script res://tests/records_smoke.gd
           timeout 60s godot --headless --path desert-front-godot --script res://tests/profile_tier_smoke.gd
+          timeout 60s godot --headless --path desert-front-godot --script res://tests/firebase_schema_smoke.gd
       - name: Test local LAN host/guest connection
         run: |
           set -eu

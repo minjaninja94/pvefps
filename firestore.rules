@@ -147,7 +147,29 @@ service cloud.firestore {
     }
 
 
-    // Cloud-synced cosmetics ONLY. No client-writeable rank, XP, match victories or credits.
+    // Desert Front native: public COMMUNITY board, self-reported, never verified cash rank.
+    // Existing FPS rankings, rooms, personal cosmetic profiles stay unchanged.
+    match /desertCommunityBoard/{playerId} {
+      function owner() { return request.auth != null && request.auth.uid == playerId; }
+      function valid(d) {
+        return d.keys().hasOnly(['owner','nickname','rating','level','pvpWins','pvpLosses','faction','verified'])
+          && d.keys().hasAll(['owner','nickname','rating','level','pvpWins','pvpLosses','faction','verified'])
+          && d.owner == playerId
+          && d.nickname is string && d.nickname.size() >= 1 && d.nickname.size() <= 16
+          && d.rating is int && d.rating >= 100 && d.rating <= 3000
+          && d.level is int && d.level >= 1 && d.level <= 100
+          && d.pvpWins is int && d.pvpWins >= 0 && d.pvpWins <= 1000000
+          && d.pvpLosses is int && d.pvpLosses >= 0 && d.pvpLosses <= 1000000
+          && d.faction is int && d.faction >= 0 && d.faction <= 9
+          && d.verified == false;
+      }
+      allow read: if true;
+      allow create, update: if owner() && valid(request.resource.data);
+      allow delete: if owner();
+    }
+
+    // Browser cosmetics only. Unlike this private cosmetic profile,
+    // the native community board above is opt-in, public and explicitly unverified.
     match /desertProfiles/{profileId} {
       function own(){return request.auth != null && request.auth.uid == profileId;}
       function valid(d){return d.keys().hasOnly(['name','faction','skin'])
