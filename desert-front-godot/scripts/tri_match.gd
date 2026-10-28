@@ -12,6 +12,7 @@ const TOWER_HP := 1250.0
 const FORWARD_HP := 1000.0
 const GUARDIAN_REWARD := 150
 const MAX_UNIT_POP := 75
+const MAX_GLOBAL_UNITS := 520 # Supports 6 team-lane caps (6 x 75) plus hero/guardian overhead
 const GOODS := [[5,7],[0,7],[3,4],[1,4],[6],[1,4],[0,3],[3,1]]
 const BADS := [[3,1],[3,5],[0,1],[2,6],[3,2],[0,6],[4,1],[0,5]]
 const AI_PLANS := [
@@ -262,9 +263,9 @@ func _scouted(unit: Dictionary, team: int) -> bool:
 			return true
 	return false
 
-func _spawn(p: Dictionary, lane: int, slot: int, role: int) -> void:
-	if units.size() >= 440:
-		return
+func _spawn(p: Dictionary, lane: int, slot: int, role: int, guardian_spawn: bool = false) -> bool:
+	if units.size() >= MAX_GLOBAL_UNITS and not guardian_spawn:
+		return false
 	var f: int = p["faction"]
 	var team: int = p["team"]
 	var stats: Dictionary = Roster.definition(f,role)
@@ -284,6 +285,7 @@ func _spawn(p: Dictionary, lane: int, slot: int, role: int) -> void:
 	}
 	units.append(u)
 	next_unit_id += 1
+	return true
 
 func spawn_guardian(team: int, lane: int) -> void:
 	var defenders: Array[Dictionary] = []
@@ -293,7 +295,8 @@ func spawn_guardian(team: int, lane: int) -> void:
 	if defenders.is_empty():
 		return
 	var owner: Dictionary = defenders[lane % defenders.size()]
-	_spawn(owner,lane,0,0)
+	if not _spawn(owner,lane,0,0,true):
+		return
 	var u: Dictionary = units.back()
 	u["guardian"] = true
 	u["hero_count"] = 20
@@ -348,7 +351,8 @@ func _wave() -> void:
 						break
 					var role: int = p["buildings"][lane][slot]
 					if role >= 0 and role < 8:
-						_spawn(p,lane,slot,role)
+						if not _spawn(p,lane,slot,role):
+							break
 						count += 1
 						if int(p["faction"]) == 3 and role == 7:
 							for time_step in [1,2]:
@@ -540,14 +544,20 @@ func _damage(v: Dictionary, amount: float, attacker) -> void:
 		if victim_role == 6 and f in [3,4,6,7]:
 			mult = 1.65 if role == 2 else (0.68 if role == 0 else (0.78 if role == 4 else 1.0))
 		else:
-			var good: Array = GOODS[role]
-			var bad: Array = BADS[role]
+			var good: Array = a["stats"].get("good",GOODS[role])
+			var bad: Array = a["stats"].get("bad",BADS[role])
 			if victim_role in good:
 				mult *= 1.55
 			if victim_role in bad:
 				mult *= 0.70
 	var armor: float = float(d["armor"])
-	var damage := maxf(3.0,amount*mult - armor * 0.66)
+	var shots := 1
+	if attacker is Dictionary and int(attacker.get("hero_count",1)) == 20:
+		shots = clampi(ceili(float(attacker["hp"]) / maxf(1.0,float(attacker["max_hp"])/20.0) - 0.00001),1,20)
+	# Web DesertConsolidation.hit(): minimum damage per projectile;
+	# 20-unit hero is one grouped sprite, not twenty armor layers.
+	var effective_armor := armor / 20.0 if int(v.get("hero_count",1)) == 20 else armor
+	var damage := maxf(3.0*shots,amount*mult - effective_armor * 0.66 * shots)
 	if f == 4 and attacker is Dictionary and float(attacker["stats"]["range"]) >= 48.0:
 		damage *= 0.94
 	if f == 0 and int(v["role"]) in [3,4]:
@@ -561,14 +571,11 @@ func _damage(v: Dictionary, amount: float, attacker) -> void:
 			damage *= 1.25
 		if int(a["faction"]) == 6 and int(a["role"]) in [0,3,6]:
 			for ally in units:
-				if ally != a and int(ally["team"]) == int(a["team"]) and int(ally["faction"]) == 6 and _distance(a,ally) < 165.0:
+				if ally != a and float(ally["hp"]) > 0.0 and int(ally["team"]) == int(a["team"]) and int(ally["faction"]) == 6 and _distance(a,ally) < 165.0:
 					damage *= 1.06
 					break
 		if float(a.get("ink_until",0.0)) > seconds:
 			damage *= 0.90
-	if int(v.get("hero_count",1)) == 20:
-		# Armor is per projectile, not twenty layers.
-		damage = maxf(3.0,amount*mult - armor/20.0 * 0.66)
 	var prior: float = v["hp"]
 	v["hp"] -= damage
 	v["last_damage"] = seconds

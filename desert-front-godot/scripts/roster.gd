@@ -7,6 +7,8 @@ const WAVE_PERIOD := 24.0
 const CORE_HP := 7200.0
 const TOWER_HP := 1250.0
 const COST := [65, 95, 150, 205, 165, 245, 205, 145, 70]
+const GOODS := [[5,7],[0,7],[3,4],[1,4],[6],[1,4],[0,3],[3,1]]
+const BADS := [[3,1],[3,5],[0,1],[2,6],[3,2],[0,6],[4,1],[0,5]]
 const ROLE_NAMES := ["돌격", "사격", "대장갑", "장갑", "대공", "포격", "특수", "지원", "자원채취"]
 ## hp, damage, armor, range, cooldown, speed, can_attack_air, kind
 const BASE := [
@@ -88,5 +90,7 @@ static func definition(faction: int, role: int) -> Dictionary:
 		"air_target": (false if ground_special and not robot else bool(b[6])),
 		"kind": "ground" if ground_special else str(b[7]),
 		"heal": (36.0 if role == 7 else 0.0) * float(m[1]) * 1.5 * (0.85 if robot else (1.08 if fairy else 1.0)),
-		"blast": (58.0 * (1.15 if octo else 1.0)) if role == 5 else 0.0
+		"blast": (58.0 * (1.15 if octo else 1.0)) if role == 5 else 0.0,
+		"good": [0,7] if bongo or prowler or ground_special and furry else ([0,3] if ground_special and robot else GOODS[role]),
+		"bad": [2,3] if bongo or prowler or ground_special and furry else ([2,5] if ground_special and robot else BADS[role])
 	}
