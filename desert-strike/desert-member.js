@@ -118,7 +118,7 @@ async function joinMatch(opts){
    p_code:opts.code,p_mode:opts.mode,p_size:Number(opts.size),p_team:Number(opts.team),p_host:!!opts.host
   });
   if(error)throw error;
-  match={code:opts.code,tracked:true,playing:false,ended:false,winner:null};
+  match={code:opts.code,tracked:true,playing:false,ended:false,reportedResult:false,winner:null};
   return {ok:true,data};
  }catch(e){match=null;return {ok:false,reason:e.message||String(e)};}
 }
@@ -151,6 +151,7 @@ async function forfeit(){
 }
 async function reportResult(winner){
  if(!match?.tracked||!match.playing||match.ended||![0,1].includes(winner))return null;
+ match.reportedResult=true;
  try{
   const db=await api(),{data,error}=await db.rpc('desert_report_match_result',{p_code:match.code,p_winner:winner});
   if(error)throw error;
@@ -165,7 +166,7 @@ async function pendingState(){
 }
 function endMatch(){if(match)match.ended=true;}
 function fastForfeit(){
- if(!match?.tracked||!match.playing||match.ended||!session?.access_token)return;
+ if(!match?.tracked||!match.playing||match.ended||match.reportedResult||!session?.access_token)return;
  const body=JSON.stringify({p_code:match.code});
  fetch(PROJECT+'/rest/v1/rpc/desert_forfeit_match',{method:'POST',keepalive:true,
   headers:{'apikey':KEY,'Authorization':'Bearer '+session.access_token,'content-type':'application/json'},
