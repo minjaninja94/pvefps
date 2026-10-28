@@ -17,6 +17,7 @@ var _start_btn: Button
 var _ready_btn: Button
 var _view: Control
 var _faction_picker: OptionButton
+var _skin_picker: OptionButton
 var _role_picker: OptionButton
 var _banner_preview: TextureRect
 var _unit_preview: TextureRect
@@ -87,6 +88,12 @@ func _build_interface() -> void:
 	for faction_name in Roster.FACTION_NAMES:
 		_faction_picker.add_item(faction_name)
 	header.add_child(_faction_picker)
+	_skin_picker = OptionButton.new()
+	_skin_picker.add_item("기본 도트")
+	_skin_picker.add_item("모에화 스킨")
+	_skin_picker.custom_minimum_size = Vector2(120,40)
+	_skin_picker.item_selected.connect(func(_i: int) -> void: _update_art_preview())
+	header.add_child(_skin_picker)
 	var restart := Button.new()
 	restart.text = "새 경기 시작"
 	restart.custom_minimum_size = Vector2(115, 40)
@@ -256,20 +263,23 @@ func _build_interface() -> void:
 	_armor_btn.pressed.connect(_on_upgrade.bind("armor"))
 	upgrades.add_child(_armor_btn)
 	var note := Label.new()
-	note.text = "원본 도트 스프라이트 10종족 × 8병종 적용\n전투 이동·공격·스킬·사망 포즈 / 싱글 및 1:1 전장 공유\n종족 고유 능력·3라인·협동전은 추가 이식 필요"
+	note.text = "기본 도트 / 모에화 스킨 선택 및 동기화\n3라인 · 1:1~3:3 · 협동전은 상단 버튼에서 시작\n전체 웹판 밸런스·효과·랭킹은 추가 이식 중"
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(note)
 	var footer := Label.new()
 	footer.text = "Standalone Godot build  ·  original browser game untouched"
 	shell.add_child(footer)
 
+func _selected_skin() -> String:
+	return "moe" if _skin_picker != null and _skin_picker.selected == 1 else "default"
+
 func _update_art_preview() -> void:
 	if _banner_preview == null or _unit_preview == null:
 		return
 	var faction := maxi(0, _faction_picker.selected)
 	var role := maxi(0, _role_picker.selected)
-	_banner_preview.texture = Sprites.banner(faction)
-	_unit_preview.texture = Sprites.portrait(faction, role)
+	_banner_preview.texture = Sprites.skin_banner(faction, _selected_skin())
+	_unit_preview.texture = Sprites.skin_portrait(faction, role, _selected_skin())
 	if role < 8:
 		_preview_label.text = "%s\n%s" % [
 			Roster.FACTION_NAMES[faction], Roster.UNIT_NAMES[faction][role]
@@ -282,7 +292,7 @@ func _new_match() -> void:
 	if _online_room_code != null:
 		_online_room_code.text = ""
 	var faction: int = _faction_picker.selected
-	simulation = BattleSim.new(faction, (faction + 1) % 10)
+	simulation = BattleSim.new(faction, (faction + 1) % 10, _selected_skin())
 	_view.simulation = simulation
 	_time_bank = 0.0
 	_faction_picker.disabled = false
@@ -291,12 +301,12 @@ func _new_match() -> void:
 	_refresh()
 
 func _host_public_online() -> void:
-	if _network.host_online(_faction_picker.selected, true):
+	if _network.host_online(_faction_picker.selected, true, _selected_skin()):
 		_clear_match()
 		_faction_picker.disabled = true
 
 func _host_private_online() -> void:
-	if _network.host_online(_faction_picker.selected, false):
+	if _network.host_online(_faction_picker.selected, false, _selected_skin()):
 		_clear_match()
 		_faction_picker.disabled = true
 
@@ -318,7 +328,7 @@ func _join_code_online() -> void:
 	_join_online_room(_online_room_input.text)
 
 func _join_online_room(code: String) -> void:
-	if _network.join_online(code, _faction_picker.selected):
+	if _network.join_online(code, _faction_picker.selected, _selected_skin()):
 		_clear_match()
 		_faction_picker.disabled = true
 
@@ -336,13 +346,13 @@ func _on_online_room_code(code: String) -> void:
 
 func _host_game() -> void:
 	var selected: int = _faction_picker.selected
-	if _network.host_game(selected):
+	if _network.host_game(selected, _selected_skin()):
 		_clear_match()
 		_faction_picker.disabled = true
 
 func _join_game() -> void:
 	var selected: int = _faction_picker.selected
-	if _network.join_game(_address_input.text, selected):
+	if _network.join_game(_address_input.text, selected, _selected_skin()):
 		_clear_match()
 		_faction_picker.disabled = true
 
@@ -375,7 +385,7 @@ func _on_lobby_changed(can_start: bool, connected: bool) -> void:
 	_ready_btn.text = "준비 취소" if _network.guest_ready else "준비 완료"
 
 func _on_match_begins(f0: int, f1: int) -> void:
-	simulation = BattleSim.new(f0, f1)
+	simulation = BattleSim.new(f0, f1, _network.host_skin, _network.guest_skin)
 	simulation.versus_player = true
 	_view.simulation = simulation
 	_network.bind_simulation(simulation)

@@ -31,6 +31,12 @@ func _run_test() -> void:
 	assert(game.wave >= 1)
 	assert(game.units.size() > 0)
 	assert(game.cores[0] >= 0.0)
+	var skins = BattleSim.new(2, 3, "moe", "default")
+	skins._spawn(0, 0, 0)
+	assert(skins.units[0]["skin"] == "moe")
+	var copied_skins = BattleSim.new()
+	copied_skins.load_snapshot(skins.snapshot())
+	assert(copied_skins.units[0]["skin"] == "moe")
 	var duel = BattleSim.new(2, 3)
 	duel.versus_player = true
 	assert(duel.purchase_for_team(1, 4, 1))
