@@ -5,7 +5,7 @@ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=__dirname,src=fs.readFileSync(path.join(root,'tri-lane-ui.js'),'utf8');
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const css=fs.readFileSync(path.join(root,'style-v2.css'),'utf8');
-for(const id of ['mpBuildSwipe','mpPrevLane','mpNextLane','mpLaneHint','mpDeploymentPanel','mpLaneTabs','mpBuildGrid','mpBattleSection'])
+for(const id of ['mpBuildSwipe','mpPrevLane','mpNextLane','mpLaneHint','mpDeploymentPanel','mpLaneTabs','mpBuildGrid','mpBattleView','mpBaseView','mpUpgradeView','mpViewTabs','mpRepairButton','mpWeaponButton','mpArmorButton','mpBarrageButton','mpNukeButton'])
  assert.ok(html.includes('id="'+id+'"'),'missing in-board control '+id);
 assert.ok(html.indexOf('id="mpUnitCards"')<html.indexOf('id="mpLaneTabs"'));
 assert.ok(html.indexOf('id="mpLaneTabs"')<html.indexOf('id="mpBuildGrid"'));
@@ -14,6 +14,8 @@ assert.match(css,/#view-multiplayer \.mp-build-grid\{[^}]*repeat\(5,minmax\(0,1f
 assert.match(css,/touch-action:pan-y/);
 const no=()=>{},calls=[],records=new Map();
 const g=new Proxy({createLinearGradient(){return {addColorStop(){}};},createRadialGradient(){return {addColorStop(){}};}},{get(o,k){return k in o?o[k]:no;}});
+const nav=Array.from({length:3},(_,i)=>({dataset:{mpView:['base','battle','upgrade'][i]},attrs:{},classList:{toggle(k,v){this[k]=v;}},setAttribute(k,v){this.attrs[k]=v;},removeAttribute(k){delete this.attrs[k];}}));
+const repair=Array.from({length:3},(_,i)=>({dataset:{repairLane:String(i)},classList:{toggle(k,v){this[k]=v;}}}));
 const buttons=Array.from({length:3},(_,i)=>{
  const count={textContent:'0 / 75'};
  return {dataset:{lane:String(i)},classList:{toggle(n,on){this[n]=on;}},attrs:{},
@@ -29,7 +31,9 @@ function item(id){
   dispatch(k,event={}){for(const entry of handlers[k]||[])entry.fn({...event,currentTarget:this});},
   append(...x){this.children.push(...x);},replaceChildren(...xs){this.children=xs.flatMap(x=>x.children||[x]);},
   querySelector(q){return id==='mpBuildSwipe'&&q==='.mp-grid-viewport'?viewport:null;},
-  querySelectorAll(q){return id==='mpLaneTabs'&&q==='[data-lane]'?buttons:[];},
+  querySelectorAll(q){if(id==='mpLaneTabs'&&q==='[data-lane]')return buttons;
+    if(id==='mpViewTabs'&&q==='[data-mp-view]')return nav;
+    if(id==='mpRepairLanes'&&q==='[data-repair-lane]')return repair;return [];},
   getContext(){return g;},getBoundingClientRect(){return {top:0,left:0,width:1000,height:100};},
   scrollIntoView(){this.scrolled=true;},setPointerCapture(){},removeAttribute(){}};
  if(id==='frontLobby')el.hidden=true;
@@ -45,19 +49,33 @@ const doc={readyState:'complete',hidden:false,body:{dataset:{playMode:'multi'}},
  },createDocumentFragment(){return {children:[],append(x){this.children.push(x);}};}};
 const network={configure(handlers){this.handlers=handlers;},sendOrder(cmd){calls.push({...cmd});return {ok:true};}};
 const cost=[65,95,150,205,165,245,205,145],unitNames=['돌격','사격','대장갑','장갑','대공','포격','기동','지원'];
-const engine={SLOTS:75,COST:cost,NAMES:unitNames,ecoPrice(){return 70;},ecoStabilize(){return 8;}};
+const engine={SLOTS:75,COST:cost,NAMES:unitNames,ecoPrice(){return 70;},ecoStabilize(){return 8;},WEAPON_COST(n){return Math.round(200*Math.pow(1.65,n));},ARMOR_COST(n){return Math.round(190*Math.pow(1.63,n));}};
 const window={DesertTriEngine:engine,DesertTriNetwork:network,addEventListener:no,
  DesertRoster:{FACTIONS:[{name:'철갑연합',units:unitNames}],getDef(){return {kind:'ground',tips:'테스트 병력'};}},};
 vm.runInNewContext(src,{window,document:doc,performance:{now:()=>1000},requestAnimationFrame:no,console,Math,Number,Array,Object,Promise,setInterval:no,clearInterval:no},{filename:'tri-lane-ui.js',timeout:10000});
 network.handlers.room({uid:'local',host:true,id:'test',room:{status:'playing',players:{local:{team:0,name:'시험',faction:0,ready:true}},host:'local'}});
 const buildings=Array.from({length:3},()=>Array(75).fill(null));
 buildings[1][3]=0;buildings[2][7]=2;
-const snapshot={width:3300,height:1560,players:[{uid:'local',team:0,faction:0,cash:300,eco:0,ecoReadyAt:0,buildings}],
+const snapshot={width:3300,height:1560,players:[{uid:'local',team:0,faction:0,cash:300,eco:0,ecoReadyAt:0,weapon:0,armor:0,nukes:1,barrageCd:0,buildings}],
  seconds:0,wave:1,next:20,ended:false,cores:[[2500,2500],[2500,2500],[2500,2500]],
  turrets:[[1250,1250],[1250,1250],[1250,1250]],forwardHP:[[1000,1000],[1000,1000],[1000,1000]],
  lanePressure:[.5,.5,.5],units:[],effects:[],fog:[false,false,false],viewerTeam:0};
 window.DesertTriUI.onSnapshot(snapshot);
 assert.match(item('mpSelectedLane').textContent,/중앙/,'central lane is default');
+assert.equal(nav[0].attrs['aria-current'],'page','multiplayer base tab starts selected');
+window.DesertTriUI.setView('battle');
+assert.equal(item('mpBaseView').hidden,true,'battle tab hides production');
+assert.equal(item('mpBattleView').hidden,false,'battle tab shows battlefield');
+assert.equal(nav[1].attrs['aria-current'],'page');
+window.DesertTriUI.setView('upgrade');
+assert.equal(item('mpBattleView').hidden,true,'upgrade tab hides battlefield');
+assert.equal(item('mpUpgradeView').hidden,false,'upgrade tab shows actual tactics');
+item('mpWeaponButton').dispatch('click');
+assert.deepEqual(calls.at(-1),{type:'upgrade',kind:'weapon'},'weapon button sends authoritative upgrade order');
+item('mpRepairButton').dispatch('click');
+assert.deepEqual(calls.at(-1),{type:'tactic',kind:'repair',lane:1},'repair defaults to selected center lane');
+window.DesertTriUI.setView('base');
+assert.equal(item('mpBaseView').hidden,false,'production still accessible after upgrades');
 assert.equal(item('mpBuildGrid').children.length,75,'every lane renders full 75 slots');
 assert.equal(buttons[1].attrs['aria-pressed'],'true');
 assert.equal(buttons[1].count.textContent,'1 / 75');
