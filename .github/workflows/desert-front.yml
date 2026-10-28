@@ -25,6 +25,7 @@ jobs:
           node --check desert-strike/heroine-factions.js
           node --check desert-strike/expansion-art.js
           node --check desert-strike/front-lobby.js
+          node --check desert-strike/desert-member.js
           node --check desert-strike/lobby-music.js
           node --check desert-strike/combat-audio.js
           node --check desert-strike/augment-rules.js
@@ -40,6 +41,8 @@ jobs:
         run: node --test desert-strike/smoke-augments.test.cjs
       - name: Public-only Firestore room discovery and legacy invite safety
         run: node --test desert-strike/smoke-public-room.test.cjs
+      - name: Supabase username account guest and server-forfeit wiring
+        run: node --test desert-strike/smoke-supabase-members.test.cjs
       - name: Local 40-match history and unofficial RP safety
         run: node --test desert-strike/smoke-career.test.cjs
       - name: Godot combat voice assets and web event hooks

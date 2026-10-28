@@ -1,9 +1,6 @@
 name: One-time Desert Front Supabase live QA
 on:
-  push:
-    paths:
-      - "desert-strike/supabase-live.test.cjs"
-      - ".github/workflows/desert-supabase-live.yml"
+  workflow_dispatch:
 jobs:
   check:
     runs-on: ubuntu-latest
