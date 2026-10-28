@@ -231,8 +231,10 @@ function drawOverview(){
 }
 function onSnapshot(v){
  if(!v){snap=null;return;}if(v.width!==3300||v.height!==1560||!Array.isArray(v.players))return;
+ const fresh=!snap;
  if(!$('frontLobby').hidden)global.DesertLobby?.enterMatch?.();
  snap=v;lastSnapshotAt=performance.now();$('mpCommand').hidden=false;$('mpViewTabs').hidden=false;
+ if(fresh)setView('base');
  const me=my(),side=me?.team??0;
  if(me){
   $('mpMyResources').textContent=me.cash+' CR';
