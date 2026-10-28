@@ -55,7 +55,10 @@ func _run_test() -> void:
 
 	var online_node := preload("res://scripts/network_session.gd").new()
 	root.add_child(online_node)
-	assert(not online_node.host_online(0), "Unconfigured relay must fail closed")
+	var cfg := ConfigFile.new()
+	assert(cfg.load("res://online_relay.cfg") == OK)
+	assert(str(cfg.get_value("relay","app_id","")).length() >= 12)
+	# No network is opened in CI: real public relay connectivity requires external-network QA.
 	online_node.leave()
 	online_node.queue_free()
 	print("Desert Front Godot data + single lane smoke OK")
