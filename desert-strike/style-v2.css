@@ -486,3 +486,5 @@ body:not([data-play-mode="multi"]) #mpViewTabs{display:none!important}
  #view-multiplayer .mp-upgrade-grid>.feature-card{min-height:0;padding:14px}
  #view-multiplayer .mp-upgrade-grid>.feature-card p{margin:3px 0 12px}
 }
+
+#view-multiplayer{scroll-margin-top:calc(var(--command-hud-height,230px) + 12px)}
