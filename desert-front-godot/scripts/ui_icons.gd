@@ -1,6 +1,6 @@
 extends RefCounted
 ## 12 custom icons sliced from the new Desert Front concept art, packed 24x24 each.
-const ART := preload("res://assets/ui/command_icons_generated.png")
+const ART := preload("res://assets/ui/command_icons_generated.webp")
 const TILE := 24
 const NAMES := ["barracks","upgrade","magic","guardian","barrage","nuke","repair","settings","messages","members","achievement","shop"]
 
