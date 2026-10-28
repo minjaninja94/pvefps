@@ -38,7 +38,7 @@ assert.ok(engineWin.DesertRoster.getDef(0,6).damage>engineWin.DesertRoster.getDe
 const elements=new Map(),store=new Map(),listeners={};
 const fakeEl=id=>{
  if(!elements.has(id)){elements.set(id,{id,style:{},dataset:{},hidden:false,value:'',textContent:'',innerHTML:'',disabled:false,handlers:{},
-  addEventListener(k,fn){this.handlers[k]=fn;},append(){},querySelectorAll(){return []},getContext(){return {clearRect(){},drawImage(){},filter:'none'}},
+  addEventListener(k,fn){this.handlers[k]=fn;},append(){},closest(){return {setAttribute(){}}},querySelectorAll(){return []},getContext(){return {clearRect(){},drawImage(){},filter:'none'}},
   click(){this.handlers.click?.({target:this})},classList:{add(){},remove(){}}});}
  return elements.get(id);
 };
