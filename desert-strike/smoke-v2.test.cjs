@@ -235,12 +235,14 @@ assert.ok(victims.some((u,i)=>u.hp<health[i]),'Odo Bongo must ram clustered enem
 const hpAfter=victims[0].hp;
 g.bongoImpact(truckUnit,.12);
 assert.equal(victims[0].hp,hpAfter,'truck ram must respect cooldown');
-const aiTruck=g.state();aiTruck.built.fill(null);for(let i=0;i<5;i++)aiTruck.built[i]=0;
-aiTruck.enemyBuilt.fill(null);aiTruck.enemyFaction=3;aiTruck.wave=2;
-aiTruck.enemyCash=300;
-assert.equal(g.aiChoose(300),6,'marine AI selects Odo Bongo to counter mass infantry on wave 2');
-aiTruck.faction=3;aiTruck.built.fill(null);for(let i=0;i<5;i++)aiTruck.built[i]=6;
-aiTruck.enemyFaction=0;aiTruck.enemyCash=300;
+const aiTruck=g.state();aiTruck.built.fill(null);aiTruck.enemyBuilt.fill(null);aiTruck.units.length=0;
+aiTruck.faction=0;aiTruck.enemyFaction=3;aiTruck.wave=2;aiTruck.enemyCash=300;aiTruck.aiSight.clear();
+for(let i=0;i<5;i++){g.createUnit(0,i,0);const u=aiTruck.units.at(-1);u.x=2100;u.y=225+i*5;}
+assert.equal(g.aiReadOpponent().dominant,0,'AI must actually scout the infantry before countering it');
+assert.equal(g.aiChoose(300),6,'marine AI selects Odo Bongo to counter scouted mass infantry on wave 2');
+aiTruck.units.length=0;aiTruck.aiSight.clear();aiTruck.faction=3;aiTruck.enemyFaction=0;aiTruck.enemyCash=300;
+for(let i=0;i<5;i++){g.createUnit(0,i,6);const u=aiTruck.units.at(-1);u.x=2100;u.y=225+i*5;}
+assert.equal(g.aiReadOpponent().dominant,6,'AI scouts Odo Bongo as role six');
 assert.equal(g.aiChoose(300),2,'opponent recognizes Odo Bongo as armor, not aircraft');
 console.log('V2 smoke passed: collision spacing, Odo Bongo ram cooldown, Marine ground armor and strategic anti-rush AI.');
 
