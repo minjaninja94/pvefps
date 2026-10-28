@@ -24,6 +24,9 @@ let rngState=1;
 const randomMath=Object.create(Math);
 randomMath.random=()=>((rngState=(Math.imul(rngState,1664525)+1013904223)>>>0)/4294967296);
 const ctx={document,window:{addEventListener(){}},requestAnimationFrame(){},console,Math:randomMath,Date,Number,String,Object,Array,Map,Set};
+// Benchmark the shipped consolidation, guardian and AI rules, not their no-plugin fallbacks.
+for(const name of ['unit-consolidation.js','defense-guardian.js','hard-ai.js'])
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,name),'utf8'),ctx,{filename:name,timeout:10000});
 const simHooks=String.raw`
 function simulateAI(){
  // Run the exact same in-game AI brain, build prices, wave stipend and income for both sides.
@@ -70,7 +73,12 @@ function score(engagement){
  const s=core.state();
  if(engagement==='skirmish'){
   const points=[0,0];
-  for(const u of s.units)points[u.side]+=u.hp/u.maxHP*core.ROLE[u.role].cost;
+  for(const u of s.units){
+    // Temporary broodlings and captured conscripts are free reinforcements, not full-cost producers.
+    // One consolidated hero represents twenty purchased units, not a single purchased soldier.
+    if(u.isHatchling||u.conscripted||u.guardian||u.hp<=0)continue;
+    points[u.side]+=u.hp/u.maxHP*core.ROLE[u.role].cost*(u.heroCount===20?20:1);
+   }
   return points;
  }
  // Timeouts are only scored for diagnostics; never count a timeout as an actual victory.
