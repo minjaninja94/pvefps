@@ -348,6 +348,25 @@ func submit_build(slot: int, role: int) -> void:
 	elif mode == "client":
 		remote_build.rpc_id(1, slot, role)
 
+func submit_tactic(kind: String) -> void:
+	if phase != "playing" or _sim == null or kind not in ["repair","barrage","nuke"]:
+		return
+	if mode == "host":
+		_sim.tactic_for_team(0,kind)
+		_send_snapshot()
+	elif mode == "client":
+		remote_tactic.rpc_id(1,kind)
+
+@rpc("any_peer", "call_remote", "reliable")
+func remote_tactic(kind: String) -> void:
+	if mode != "host" or phase != "playing" or _sim == null or multiplayer.get_remote_sender_id() != guest_id:
+		return
+	if kind not in ["repair","barrage","nuke"]:
+		return
+	if not _sim.tactic_for_team(1,kind):
+		remote_feedback.rpc_id(guest_id,str(_sim.message))
+	_send_snapshot()
+
 func submit_upgrade(kind: String) -> void:
 	if phase != "playing" or _sim == null:
 		return

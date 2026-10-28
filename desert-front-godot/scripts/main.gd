@@ -31,6 +31,11 @@ var _grid: Array[Button] = []
 var _weapon_btn: Button
 var _armor_btn: Button
 var _time_bank := 0.0
+var _paused := false
+var _speed := 1.0
+var _ai_difficulty: OptionButton
+var _pause_button: Button
+var _speed_button: Button
 var _ui_tick := 0.0
 var _demolish := false
 var _stored_match_result := false
@@ -54,8 +59,8 @@ func _ready() -> void:
 func _process(dt: float) -> void:
 	if simulation == null:
 		return
-	if _network.mode != "client":
-		_time_bank += minf(dt, 0.25)
+	if _network.mode != "client" and (not _paused or _network.mode != "offline"):
+		_time_bank += minf(dt * (_speed if _network.mode == "offline" else 1.0), 0.25)
 		var cycles := 0
 		while _time_bank >= BattleSim.STEP and cycles < 6:
 			simulation.advance(BattleSim.STEP)
@@ -122,6 +127,24 @@ func _build_interface() -> void:
 	multi.text = "3라인 · 2:2 · 3:3 · 협동"
 	multi.pressed.connect(func() -> void: get_tree().change_scene_to_file("res://scenes/tri_front.tscn"))
 	header.add_child(multi)
+	var options := HBoxContainer.new()
+	shell.add_child(options)
+	_ai_difficulty = OptionButton.new()
+	_ai_difficulty.add_item("AI 보통")
+	_ai_difficulty.add_item("AI 하드")
+	_ai_difficulty.custom_minimum_size = Vector2(116,36)
+	options.add_child(_ai_difficulty)
+	_pause_button = Button.new()
+	_pause_button.text = "Ⅱ 일시정지"
+	_pause_button.pressed.connect(_toggle_pause)
+	options.add_child(_pause_button)
+	_speed_button = Button.new()
+	_speed_button.text = "▶ 1×"
+	_speed_button.pressed.connect(_toggle_speed)
+	options.add_child(_speed_button)
+	var help_label := Label.new()
+	help_label.text = "클래식: 1,700 HP 본진 포탑 · 전방 타워 · 가디언 · 종족 능력 · 영웅 합체"
+	options.add_child(help_label)
 	var online_bar := HBoxContainer.new()
 	online_bar.add_theme_constant_override("separation", 8)
 	shell.add_child(online_bar)
@@ -281,6 +304,14 @@ func _build_interface() -> void:
 	_armor_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_armor_btn.pressed.connect(_on_upgrade.bind("armor"))
 	upgrades.add_child(_armor_btn)
+	var tactics := HBoxContainer.new()
+	sidebar.add_child(tactics)
+	for item in [{"name":"포탑 수리","key":"repair"},{"name":"궤도 폭격","key":"barrage"},{"name":"긴급 핵","key":"nuke"}]:
+		var tactic_button := Button.new()
+		tactic_button.text = item["name"]
+		tactic_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tactic_button.pressed.connect(_on_tactic.bind(str(item["key"])))
+		tactics.add_child(tactic_button)
 	var note := Label.new()
 	note.text = "기본 도트 / 모에화 스킨 선택 및 동기화\n3라인 · 1:1~3:3 · 협동전은 상단 버튼에서 시작\n전체 웹판 밸런스·효과·랭킹은 추가 이식 중"
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -318,13 +349,30 @@ func _update_art_preview() -> void:
 	else:
 		_preview_label.text = "%s\n자원채취 건물" % Roster.FACTION_NAMES[faction]
 
+func _toggle_pause() -> void:
+	if _network.mode != "offline":
+		return
+	_paused = not _paused
+	_pause_button.text = "▶ 계속" if _paused else "Ⅱ 일시정지"
+
+func _toggle_speed() -> void:
+	if _network.mode != "offline":
+		return
+	_speed = 2.0 if _speed < 2.0 else (3.0 if _speed < 3.0 else 1.0)
+	_speed_button.text = "▶ %d×" % int(_speed)
+
 func _new_match() -> void:
+	_paused = false
+	_speed = 1.0
+	_pause_button.text = "Ⅱ 일시정지"
+	_speed_button.text = "▶ 1×"
 	_stored_match_result = false
 	_network.leave()
 	if _online_room_code != null:
 		_online_room_code.text = ""
 	var faction: int = _faction_picker.selected
 	simulation = BattleSim.new(faction, (faction + 1) % 10, _selected_skin())
+	simulation.difficulty = "hard" if _ai_difficulty.selected == 1 else "normal"
 	_view.simulation = simulation
 	_time_bank = 0.0
 	_faction_picker.disabled = false
@@ -435,6 +483,15 @@ func _on_network_snapshot(data: Dictionary) -> void:
 func _on_session_closed(_reason: String) -> void:
 	_clear_match()
 	_faction_picker.disabled = false
+
+func _on_tactic(kind: String) -> void:
+	if simulation == null:
+		return
+	if _network.mode == "offline":
+		simulation.tactic(kind)
+	else:
+		_network.submit_tactic(kind)
+	_refresh()
 
 func _on_slot(slot: int) -> void:
 	if simulation == null:

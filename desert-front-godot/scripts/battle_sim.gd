@@ -121,7 +121,7 @@ func advance(dt: float) -> void:
 	_sync()
 
 func snapshot() -> Dictionary:
-	return {"engine":engine.snapshot(),"versus_player":versus_player,
+	return {"engine":engine.snapshot(),"wave":wave,"units":units.duplicate(true),"versus_player":versus_player,
 		"difficulty":difficulty,"message":message,"faction0":player_faction,
 		"faction1":enemy_faction,"skin0":player_skin,"skin1":enemy_skin}
 
