@@ -99,7 +99,7 @@
  </section>
  <section class="panel mp-command" id="mpCommand" hidden>
   <div class="mp-tab-screen active" id="mpBaseView">
-  <div class="mp-production-title"><div><span class="eyebrow">BASE DEVELOPMENT / THREE PRODUCTION LINES</span><h2>멀티 생산 기지</h2><p>싱글과 같은 방식으로 유닛을 선택하고 빈 칸에 건설하세요. 배치판에서 상·중·하 라인을 바로 전환할 수 있습니다.</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="battle">전장 보기 →</button></div>
+  <div class="mp-production-title"><div><span class="eyebrow">BASE DEVELOPMENT / THREE PRODUCTION LINES</span><h2>멀티 생산 기지</h2><p id="mpBaseDescription">싱글과 같은 방식으로 유닛을 선택하고 빈 칸에 건설하세요. 배치판에서 상·중·하 라인을 바로 전환할 수 있습니다.</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="battle">전장 보기 →</button></div>
   <div id="mpFactionTraits" class="marine-ops faction-trait-banner" hidden role="status" aria-live="off"></div>
   <div id="mpMarineAbilities" class="marine-ops" hidden role="status" aria-live="off"></div>
   <div class="mp-formation-layout">
@@ -122,7 +122,7 @@
   <p class="subtext">건물은 각 라인에서 24초마다 생산합니다. 병력은 라인 경계를 넘어 이동하며, 아군과 자원을 공유하지 않습니다. 자신이 건설한 건물만 철거할 수 있습니다.</p>
   </div>
   <section class="mp-tab-screen mp-battle-section" id="mpBattleView" hidden>
-   <div class="mp-production-title"><div><span class="eyebrow">LIVE BATTLE / THREE FRONTLINES</span><h2>실시간 전장</h2><p>세 라인은 하나로 연결된 전장입니다. 미니맵 또는 전장을 눌러 해당 라인에 배치할 수 있습니다.</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="base">생산 배치 →</button></div>
+   <div class="mp-production-title"><div><span class="eyebrow">LIVE BATTLE / THREE FRONTLINES</span><h2>실시간 전장</h2><p id="mpBattleDescription">세 라인은 하나로 연결된 전장입니다. 미니맵 또는 전장을 눌러 해당 라인에 배치할 수 있습니다.</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="base">생산 배치 →</button></div>
    <div class="mp-battle-wrap"><canvas id="mpBattleCanvas" width="1100" height="660" aria-label="하나로 연결된 3300×1560 전장. 누른 구역의 생산 라인이 선택됩니다."></canvas><div class="mp-help">통합 전장 · 좌측 아군 / 우측 적군 · 전장 터치 시 해당 라인 선택</div></div>
    <div class="mp-lane-summary" id="mpLaneSummary"></div>
    <div id="mpInspect" class="inspect" aria-live="polite">전장 유닛을 누르면 병종과 체력을 확인할 수 있습니다. 빈 공간을 누르면 해당 라인이 선택됩니다.</div>
