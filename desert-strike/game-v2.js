@@ -118,8 +118,17 @@ function constructExtractor(side,index){
  slots[index]=EXTRACTOR;costs[index]=price;state[cash]-=price;state[mine]++;
  state[ready]=state.elapsed+ecoStabilize(state[mine],state.elapsed);return true;
 }
-function weaponCost(){return Math.round(200*Math.pow(1.65,state.weapon));}
-function armorCost(){return Math.round(190*Math.pow(1.63,state.armor));}
+function weaponCostFor(level){return Math.round(200*Math.pow(1.65,level));}
+function armorCostFor(level){return Math.round(190*Math.pow(1.63,level));}
+function weaponCost(){return weaponCostFor(state.weapon);}
+function armorCost(){return armorCostFor(state.armor);}
+function sideWeaponMultiplier(side){return 1+.08*(side===0?state.weapon:state.enemyWeapon);}
+function applyArmorResearch(side,level){
+ for(const u of state.units)if(u.side===side&&u.hp>0){
+  const extra=u.maxHP*(.09/(1+.09*(level-1)));
+  u.maxHP+=extra;u.hp+=extra;
+ }
+}
 function setMessage(t){$('notification').textContent=t;}
 function floatText(x,y,t,color='#fff1cb'){if(state.floaters.length>60)state.floaters.shift();state.floaters.push({x,y,t,color,time:.85});}
 function pulse(x,y,color='#f8d09e',size=19){
@@ -137,7 +146,7 @@ function chirp(hz=420,length=.08){
  }catch(_){}
 }
 function reset(){
- state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:360,eco:0,enemyEco:0,ecoReadyAt:0,enemyEcoReadyAt:0,mineCosts:{},enemyMineCosts:{},weapon:0,armor:0,incomeClock:0,cameraX:1100,followFront:true,
+ state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:360,eco:0,enemyEco:0,ecoReadyAt:0,enemyEcoReadyAt:0,mineCosts:{},enemyMineCosts:{},weapon:0,armor:0,enemyWeapon:0,enemyArmor:0,incomeClock:0,cameraX:1100,followFront:true,
  wave:0,next:INTERVAL,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],forwardHP:[1000,1000],forwardClaimed:[false,false],
  built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},
@@ -215,10 +224,7 @@ function upgrade(kind){
  }
  if(kind==='armor'&&state.armor<5&&state.cash>=armorCost()){
   state.cash-=armorCost();state.armor++;
-  for(const u of state.units)if(u.side===0&&u.hp>0){
-   const extra=u.maxHP*(.09/(1+.09*(state.armor-1)));
-   u.maxHP+=extra;u.hp+=extra;
-  }
+  applyArmorResearch(0,state.armor);
   setMessage('장갑 강화 Lv.'+state.armor+' · 아군 최대 HP 증가');chirp(650,.14);
  }
  if(kind==='repair'&&state.cash>=180&&state.turretHP[0]<MAX_TURRET){
@@ -263,7 +269,7 @@ function createUnit(side,slot,role){
  const row=Math.floor(slot/COLS),col=slot%COLS;
  const x=side===0?240+col*7:WORLD_W-240-col*7;
  const y=LANES[row]+(col-7)*3+random(-7,7);
- const bonus=side===0?1+.09*state.armor:1;
+ const bonus=1+.09*(side===0?state.armor:state.enemyArmor);
  const isBongo=faction===3&&role===6;
  if(faction===3&&role===7)state.marineStats.huangSpawns++;
  state.units.push({uid:state.nextUnitId++,side,role,faction,x,y,hp:def.hp*bonus,maxHP:def.hp*bonus,
@@ -355,8 +361,23 @@ function aiChoose(budget=state.enemyCash){
  for(const entry of top){left-=Math.max(1,8+entry.score-scores[0].score);if(left<=0)return entry.id;}
  return top[0].id;
 }
+// Hard AI pays the same per-level research price as the player, using earned CR.
+function hardResearch(){
+ if(state.wave<5||state.enemyBuilt.filter(role=>role!==null&&role!==EXTRACTOR).length<6)return false;
+ if(state.units.some(u=>u.side===0&&u.hp>0&&u.x>WORLD_W-500))return false;
+ const target=Math.min(5,1+Math.floor((state.wave-5)/4));
+ if(state.enemyWeapon>=target&&state.enemyArmor>=target)return false;
+ const kind=state.enemyWeapon<=state.enemyArmor?'weapon':'armor';
+ const price=kind==='weapon'?weaponCostFor(state.enemyWeapon):armorCostFor(state.enemyArmor);
+ if(state.enemyCash<price)return true; // reserve resources, no gifted research
+ state.enemyCash-=price;
+ if(kind==='weapon')state.enemyWeapon++;
+ else {state.enemyArmor++;applyArmorResearch(1,state.enemyArmor);}
+ return true;
+}
 function hardInvest(){
  const ai=window.DesertHardAI;if(!ai)return;
+ if(hardResearch())return;
  const brain=state.hardBrain||(state.hardBrain=ai.create(state.enemyFaction));
  const scouts=state.units.filter(u=>u.side===1&&u.hp>0);
  const seen=state.units.filter(u=>u.side===0&&u.hp>0&&(u.x>=WORLD_W*.57||scouts.some(v=>Math.hypot(v.x-u.x,v.y-u.y)<=340)));
@@ -516,7 +537,7 @@ function resolveStrike(u,hit){
     const d=Math.hypot(mate.x-u.x,mate.y-u.y);
     if(d<=radius){
      const before=mate.hp;
-     const amount=Math.max(135,mate.maxHP*.32)*(u.heroCount||1)*(u.side===0?1+.08*state.weapon:1);
+     const amount=Math.max(135,mate.maxHP*.32)*(u.heroCount||1)*(sideWeaponMultiplier(u.side));
      heal(mate,amount,true);healed+=mate.hp-before;
     }
    }
@@ -527,7 +548,7 @@ function resolveStrike(u,hit){
     killUnit(u);
    }
   }else if(hit.target&&hit.target.hp>0&&hit.target.hp<hit.target.maxHP)
-   heal(hit.target,combatDef(u).heal*(u.side===0?1+.08*state.weapon:1),false,u);
+   heal(hit.target,combatDef(u).heal*(sideWeaponMultiplier(u.side)),false,u);
  }else if(hit.baseSide!==null){
   fire(u,null,hit.baseSide,hit.structurePart);
  }else if(hit.target&&hit.target.hp>0){
@@ -705,7 +726,7 @@ function bongoImpact(u,dt){
  if(!candidates.length)return;
  u.ramCooldown=u.faction===4?2.2:1.85;
  if(u.faction===3)state.marineStats.bongoCharges++;
- const mods=u.side===0?1+state.weapon*.08:1;
+ const mods=sideWeaponMultiplier(u.side);
  for(const v of candidates.slice(0,3)){
   // Drive-by anti-melee, reduced against true heavy armor; no building bonus.
   const antiMelee=v.role===0?1.45:v.role===3?.38:1;
@@ -732,17 +753,17 @@ function fire(u,t=null,baseSide=null,structurePart=null){
    for(const v of state.units){
     if(v.side===u.side||v.hp<=0||getDef(v.role,v.faction).kind==='air')continue;
     if(Math.hypot(t.x-v.x,t.y-v.y)>48)continue;
-    damage(v,def.damage*(u.side===0?1+.08*state.weapon:1)*(v.role===0?1.3:v.role===3?.55:1),null,u);
+    damage(v,def.damage*(sideWeaponMultiplier(u.side))*(v.role===0?1.3:v.role===3?.55:1),null,u);
     if(++hits>=3)break;
    }
    pulse(t.x,t.y,'#f1af72',23);
   }
-  else if(t)damage(t,def.damage*(u.side===0?1+.08*state.weapon:1),u.role,u);
-  else structureHit(baseSide,structureDamage(u.role,def.damage*(u.side===0?1+.08*state.weapon:1)),fort.part);
+  else if(t)damage(t,def.damage*(sideWeaponMultiplier(u.side)),u.role,u);
+  else structureHit(baseSide,structureDamage(u.role,def.damage*(sideWeaponMultiplier(u.side))),fort.part);
   pulse(x,y,'#ffdbae',6);
  }else{
   state.shots.push({side:u.side,faction:u.faction,conscripted:!!u.conscripted,source:u.role,x:u.x,y:u.y,tx:x,ty:y,
-   target:t,baseSide,structurePart:fort?.part,sourceUnit:u.uid,damage:def.damage*(u.side===0?1+.08*state.weapon:1),
+   target:t,baseSide,structurePart:fort?.part,sourceUnit:u.uid,damage:def.damage*(sideWeaponMultiplier(u.side)),
    speed:200+(def.range<200?205:120),blast:def.blast||0,volley:window.DesertConsolidation?.strength(u)||1,ttl:3.5});
  }
  if(t)broodLay(u,t);
