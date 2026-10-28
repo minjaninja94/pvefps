@@ -2,6 +2,7 @@ extends Node
 ## Multi-peer NodeTunnel session for Desert Front classic/3lane PvP 1v1-3v3 and coop 2-3.
 ## The host alone simulates combat. No public client IP / inbound ports for relay rooms.
 const Match = preload("res://scripts/tri_match.gd")
+const Profile = preload("res://scripts/local_profile.gd")
 const LAN_PORT := 28766
 signal status_changed(text: String)
 signal roster_changed(roster: Array, mode: String, size: int)
@@ -18,6 +19,8 @@ var team_size := 1
 var members: Dictionary = {}
 var local_faction := 0
 var local_skin := "default"
+var local_name := "지휘관"
+var local_tier := "브론즈"
 var preferred_team := 1
 var game
 var _peer: MultiplayerPeer
@@ -182,7 +185,10 @@ func _prepare_host(p_mode: String,p_size: int,faction: int,skin: String = "defau
 	team_size = p_size
 	local_faction = clampi(faction,0,9)
 	local_skin = skin if skin in ["default","moe"] else "default"
-	members = {"1":{"uid":"1","id":1,"name":"방장","team":0,"faction":local_faction,"skin":local_skin,"ready":true}}
+	var profile := Profile.load_profile()
+	local_name = str(profile["nickname"])
+	local_tier = Profile.tier(int(profile["rating"]))
+	members = {"1":{"uid":"1","id":1,"name":local_name,"team":0,"faction":local_faction,"skin":local_skin,"tier":local_tier,"ready":true}}
 	return true
 
 func _wire_relay() -> void:
@@ -258,10 +264,11 @@ func _on_failed() -> void:
 
 func _hello_host() -> void:
 	if mode == "client" and phase == "lobby":
-		client_hello.rpc_id(1,local_faction,preferred_team,local_skin)
+		var profile := Profile.load_profile()
+		client_hello.rpc_id(1,local_faction,preferred_team,local_skin,str(profile["nickname"]),Profile.tier(int(profile["rating"])))
 
 @rpc("any_peer","call_remote","reliable")
-func client_hello(faction: int,team: int,skin: String = "default") -> void:
+func client_hello(faction: int,team: int,skin: String = "default",nickname: String = "지휘관",tier: String = "브론즈") -> void:
 	var sender := multiplayer.get_remote_sender_id()
 	if mode != "host" or phase != "lobby" or faction < 0 or faction > 9 or sender <= 1 or skin not in ["default","moe"]:
 		return
@@ -281,7 +288,8 @@ func client_hello(faction: int,team: int,skin: String = "default") -> void:
 	if occupied >= team_size:
 		feedback.rpc_id(sender,"선택한 팀 정원이 가득 찼습니다.")
 		return
-	members[str(sender)] = {"uid":str(sender),"id":sender,"name":"플레이어 %d" % sender,"team":chosen,"faction":faction,"skin":skin,"ready":false}
+	var display_tier := tier if tier in ["브론즈","실버","골드","플래티넘","다이아몬드","마스터"] else "브론즈"
+	members[str(sender)] = {"uid":str(sender),"id":sender,"name":Profile.sanitize_name(nickname),"team":chosen,"faction":faction,"skin":skin,"tier":display_tier,"ready":false}
 	_refresh_roster()
 	status_changed.emit("참가자 등록: %d / %d" % [members.size(),_expected_count()])
 

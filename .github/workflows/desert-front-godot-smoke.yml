@@ -44,6 +44,8 @@ jobs:
         run: timeout 60s godot --headless --path desert-front-godot --script res://tests/parity_smoke.gd
       - name: Validate local saved-match summary
         run: godot --headless --path desert-front-godot --script res://tests/records_smoke.gd
+      - name: Validate local member XP and unofficial tier progression
+        run: godot --headless --path desert-front-godot --script res://tests/profile_tier_smoke.gd
       - name: Launch 3-line native multiplayer interface
         run: timeout 90s godot --headless --path desert-front-godot --script res://tests/tri_scene_smoke.gd
       - name: Run two-process LAN host/guest integration

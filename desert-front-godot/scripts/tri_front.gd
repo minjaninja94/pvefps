@@ -6,6 +6,8 @@ const Net = preload("res://scripts/tri_network.gd")
 const TriView = preload("res://scripts/tri_view.gd")
 const Sprites = preload("res://scripts/sprite_assets.gd")
 const Records = preload("res://scripts/match_records.gd")
+const Profile = preload("res://scripts/local_profile.gd")
+const ProfileDialog = preload("res://scripts/profile_dialog.gd")
 var session
 var match_game
 var _offline := true
@@ -36,6 +38,7 @@ var _demolition := false
 var _last_message := ""
 var _stored_match_result := false
 var _history_dialog: AcceptDialog
+var _profile_dialog: AcceptDialog
 
 func _ready() -> void:
 	session = Net.new()
@@ -64,6 +67,7 @@ func _process(dt: float) -> void:
 		var mine: Dictionary = match_game.player_for(_local_uid())
 		if not mine.is_empty():
 			Records.record(str(match_game.mode),int(match_game.size),int(mine["faction"]),int(mine["team"]),int(match_game.winner),int(match_game.wave),float(match_game.seconds))
+			Profile.record_result(str(match_game.mode),int(match_game.winner),int(mine["team"]),not _offline and str(match_game.mode) == "pvp",int(match_game.wave))
 	_hud_timer += dt
 	if _hud_timer > 0.25:
 		_hud_timer = 0
@@ -97,6 +101,12 @@ func _build_ui() -> void:
 	history_btn.text = "로컬 전적"
 	history_btn.pressed.connect(_show_local_records)
 	top.add_child(history_btn)
+	var profile_btn := Button.new()
+	profile_btn.text = "회원·티어"
+	profile_btn.pressed.connect(_show_profile)
+	top.add_child(profile_btn)
+	_profile_dialog = ProfileDialog.new()
+	add_child(_profile_dialog)
 	_history_dialog = AcceptDialog.new()
 	_history_dialog.title = "Desert Front · 이 PC 전적"
 	add_child(_history_dialog)
@@ -303,6 +313,9 @@ func _update_skin_preview() -> void:
 	_skin_banner.texture = Sprites.skin_banner(faction,_selected_skin())
 	_skin_unit.texture = Sprites.skin_portrait(faction,role,_selected_skin())
 
+func _show_profile() -> void:
+	_profile_dialog.open_profile()
+
 func _show_local_records() -> void:
 	_history_dialog.dialog_text = Records.recent_text()
 	_history_dialog.popup_centered(Vector2i(630,420))
@@ -383,10 +396,11 @@ func _join_code(code: String) -> void:
 func _roster_changed(members: Array, mode: String, size: int) -> void:
 	var text_parts: Array[String] = []
 	for p in members:
-		text_parts.append("%s · %s · %s" % [
+		text_parts.append("%s · %s · %s · %s" % [
 			str(p["name"]),
 			"청팀" if int(p["team"]) == 0 else "적팀",
-			"준비" if bool(p["ready"]) else "대기"
+			"준비" if bool(p["ready"]) else "대기",
+			"비공식 "+str(p.get("tier","브론즈"))
 		])
 	_roster.text = "%s %d명 / %d명: %s" % [
 		mode,members.size(),size if mode == "coop" else size*2,

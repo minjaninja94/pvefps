@@ -6,6 +6,8 @@ const BattleView = preload("res://scripts/battlefield.gd")
 const Sprites = preload("res://scripts/sprite_assets.gd")
 const NetworkSession = preload("res://scripts/network_session.gd")
 const Records = preload("res://scripts/match_records.gd")
+const Profile = preload("res://scripts/local_profile.gd")
+const ProfileDialog = preload("res://scripts/profile_dialog.gd")
 var simulation
 var _network
 var _address_input: LineEdit
@@ -33,6 +35,7 @@ var _ui_tick := 0.0
 var _demolish := false
 var _stored_match_result := false
 var _history_dialog: AcceptDialog
+var _profile_dialog: AcceptDialog
 
 func _ready() -> void:
 	_network = NetworkSession.new()
@@ -62,6 +65,7 @@ func _process(dt: float) -> void:
 		_stored_match_result = true
 		var my_team := 1 if _network.mode == "client" else 0
 		Records.record("classic",1,simulation.enemy_faction if my_team == 1 else simulation.player_faction,my_team,simulation.winner,simulation.wave,simulation.seconds)
+		Profile.record_result("pvp" if simulation.versus_player else "classic",simulation.winner,my_team,simulation.versus_player,simulation.wave)
 	_ui_tick += dt
 	if _ui_tick >= 0.2:
 		_ui_tick = 0.0
@@ -105,6 +109,10 @@ func _build_interface() -> void:
 	history_btn.text = "로컬 전적"
 	history_btn.pressed.connect(_show_local_records)
 	header.add_child(history_btn)
+	var profile_btn := Button.new()
+	profile_btn.text = "회원·티어"
+	profile_btn.pressed.connect(_show_profile)
+	header.add_child(profile_btn)
 	var restart := Button.new()
 	restart.text = "새 경기 시작"
 	restart.custom_minimum_size = Vector2(115, 40)
@@ -283,6 +291,11 @@ func _build_interface() -> void:
 	_history_dialog = AcceptDialog.new()
 	_history_dialog.title = "Desert Front · 이 PC 전적"
 	add_child(_history_dialog)
+	_profile_dialog = ProfileDialog.new()
+	add_child(_profile_dialog)
+
+func _show_profile() -> void:
+	_profile_dialog.open_profile()
 
 func _show_local_records() -> void:
 	_history_dialog.dialog_text = Records.recent_text()
