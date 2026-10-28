@@ -9,6 +9,13 @@ func _initialize() -> void:
 	call_deferred("_run")
 func _run() -> void:
 	verify(Profile.tier(1000)=="브론즈","starting tier")
+	verify(Profile.skin_unlocked("moe",1),"moe skin available from level 1")
+	verify(not Profile.skin_unlocked("twilight",1),"twilight requires level 3")
+	verify(Profile.skin_unlocked("twilight",3),"twilight unlock level 3")
+	verify(not Profile.skin_unlocked("aurora",5),"aurora requires level 6")
+	verify(Profile.skin_unlocked("aurora",6),"aurora unlock level 6")
+	verify(not Profile.skin_unlocked("gold",9),"gold requires level 10")
+	verify(Profile.skin_unlocked("gold",10),"gold unlock level 10")
 	verify(Profile.tier(1100)=="실버","silver boundary")
 	verify(Profile.tier(1400)=="골드","gold boundary")
 	verify(Profile.tier(1700)=="플래티넘","platinum boundary")

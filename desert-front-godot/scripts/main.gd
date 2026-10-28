@@ -107,6 +107,13 @@ func _build_interface() -> void:
 	_skin_picker = OptionButton.new()
 	_skin_picker.add_item("기본 도트")
 	_skin_picker.add_item("모에화 스킨")
+	_skin_picker.add_item("황혼 작전 (Lv.3)")
+	_skin_picker.add_item("오로라 특무 (Lv.6)")
+	_skin_picker.add_item("황금 근위 (Lv.10)")
+	var account := Profile.load_profile()
+	var account_level := Profile.level_from_xp(int(account["xp"]))
+	for index in range(2,5):
+		_skin_picker.set_item_disabled(index,not Profile.skin_unlocked(Profile.SKINS[index],account_level))
 	_skin_picker.custom_minimum_size = Vector2(120,40)
 	_skin_picker.item_selected.connect(func(_i: int) -> void: _update_art_preview())
 	header.add_child(_skin_picker)
@@ -333,7 +340,11 @@ func _show_local_records() -> void:
 	_history_dialog.popup_centered(Vector2i(630,420))
 
 func _selected_skin() -> String:
-	return "moe" if _skin_picker != null and _skin_picker.selected == 1 else "default"
+	if _skin_picker == null or _skin_picker.selected < 0 or _skin_picker.selected >= Profile.SKINS.size():
+		return "default"
+	var skin: String = Profile.SKINS[_skin_picker.selected]
+	var level := Profile.level_from_xp(int(Profile.load_profile()["xp"]))
+	return skin if Profile.skin_unlocked(skin,level) else "default"
 
 func _update_art_preview() -> void:
 	if _banner_preview == null or _unit_preview == null:
@@ -341,7 +352,9 @@ func _update_art_preview() -> void:
 	var faction := maxi(0, _faction_picker.selected)
 	var role := maxi(0, _role_picker.selected)
 	_banner_preview.texture = Sprites.skin_banner(faction, _selected_skin())
+	_banner_preview.modulate = Sprites.palette_color(_selected_skin())
 	_unit_preview.texture = Sprites.skin_portrait(faction, role, _selected_skin())
+	_unit_preview.modulate = Sprites.palette_color(_selected_skin())
 	if role < 8:
 		_preview_label.text = "%s\n%s" % [
 			Roster.FACTION_NAMES[faction], Roster.UNIT_NAMES[faction][role]

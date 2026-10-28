@@ -88,7 +88,7 @@ func _draw_unit(u: Dictionary) -> void:
 		if float(u.get("action_ttl", 0.0)) > 0:
 			phase = _anim_seconds
 		var frame: int = Sprites.pose(action, phase)
-		_draw_sprite_frame(tex, pos, art_size, frame, team == 1, Color.WHITE, Sprites.frame_region(faction,role,frame,skin))
+		_draw_sprite_frame(tex, pos, art_size, frame, team == 1, Sprites.palette_color(skin), Sprites.frame_region(faction,role,frame,skin))
 	else:
 		_draw_marker_fallback(pos, art_size, role, tint, team)
 	if int(u.get("hero_count",1)) == 20:

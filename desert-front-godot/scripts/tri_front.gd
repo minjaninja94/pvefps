@@ -126,6 +126,13 @@ func _build_ui() -> void:
 	_skins = OptionButton.new()
 	_skins.add_item("기본 도트")
 	_skins.add_item("모에화")
+	_skins.add_item("황혼 (Lv.3)")
+	_skins.add_item("오로라 (Lv.6)")
+	_skins.add_item("황금 (Lv.10)")
+	var account := Profile.load_profile()
+	var account_level := Profile.level_from_xp(int(account["xp"]))
+	for index in range(2,5):
+		_skins.set_item_disabled(index,not Profile.skin_unlocked(Profile.SKINS[index],account_level))
 	_skins.custom_minimum_size = Vector2(114,37)
 	toolbar.add_child(_skins)
 	_team_picker = OptionButton.new()
@@ -303,7 +310,12 @@ func _build_ui() -> void:
 	upgrade_tab.add_child(note)
 
 func _selected_skin() -> String:
-	return "moe" if _skins.selected == 1 else "default"
+	var index := _skins.selected
+	if index < 0 or index >= Profile.SKINS.size():
+		return "default"
+	var skin: String = Profile.SKINS[index]
+	var level := Profile.level_from_xp(int(Profile.load_profile()["xp"]))
+	return skin if Profile.skin_unlocked(skin,level) else "default"
 
 func _update_skin_preview() -> void:
 	if _skin_unit == null or _skin_banner == null or _factions == null or _role_picker == null:
@@ -311,7 +323,9 @@ func _update_skin_preview() -> void:
 	var faction := maxi(0,_factions.selected)
 	var role := clampi(_role_picker.selected,0,7)
 	_skin_banner.texture = Sprites.skin_banner(faction,_selected_skin())
+	_skin_banner.modulate = Sprites.palette_color(_selected_skin())
 	_skin_unit.texture = Sprites.skin_portrait(faction,role,_selected_skin())
+	_skin_unit.modulate = Sprites.palette_color(_selected_skin())
 
 func _show_profile() -> void:
 	_profile_dialog.open_profile()

@@ -107,7 +107,7 @@ func _draw_unit(u: Dictionary) -> void:
 			action = "idle"
 		var index := Sprites.pose(action,phase)
 		draw_set_transform(pos,0,Vector2(-1,1) if team==1 else Vector2.ONE)
-		draw_texture_rect_region(src,Rect2(-sprite_size*.5,-sprite_size*.72,sprite_size,sprite_size),Sprites.frame_region(faction,role,index,skin),Color.WHITE)
+		draw_texture_rect_region(src,Rect2(-sprite_size*.5,-sprite_size*.72,sprite_size,sprite_size),Sprites.frame_region(faction,role,index,skin),Sprites.palette_color(skin))
 		draw_set_transform(Vector2.ZERO,0,Vector2.ONE)
 	else:
 		draw_circle(pos,sprite_size*0.24,Color(Roster.FACTION_COLORS[faction]))
@@ -126,7 +126,7 @@ func _draw_effect(effect: Dictionary) -> void:
 		var tex := Sprites.skin_atlas(int(effect["faction"]),int(effect["role"]),str(effect.get("skin","default")))
 		if tex != null:
 			var sprite_size := clampf(size.y/float(simulation.lanes)*0.34,20.0,54.0)
-			draw_texture_rect_region(tex,Rect2(pos.x-sprite_size*.5,pos.y-sprite_size*.6,sprite_size,sprite_size),Sprites.frame_region(int(effect["faction"]),int(effect["role"]),7,str(effect.get("skin","default"))),Color(1,1,1,fraction))
+			draw_texture_rect_region(tex,Rect2(pos.x-sprite_size*.5,pos.y-sprite_size*.6,sprite_size,sprite_size),Sprites.frame_region(int(effect["faction"]),int(effect["role"]),7,str(effect.get("skin","default"))),Color(Sprites.palette_color(str(effect.get("skin","default"))).r,Sprites.palette_color(str(effect.get("skin","default"))).g,Sprites.palette_color(str(effect.get("skin","default"))).b,fraction))
 		return
 	var color := Color("#9cfac7") if kind in ["repair","pollen","guardian"] else Color("#ffbb71")
 	if kind == "nuke":
