@@ -39,6 +39,8 @@ jobs:
         run: node desert-strike/smoke-animations.test.cjs
       - name: 2.5D original 32-unit isometric rendering
         run: node desert-strike/smoke-isometric.test.cjs
+      - name: Multiplayer in-board lane selector, swipe and build safety
+        run: node desert-strike/smoke-mp-production-ui.test.cjs
       - name: Three-line PvP and cooperative host-authoritative combat
         run: node desert-strike/smoke-trilane.test.cjs
       - name: Hero offspring and capture balance invariants
