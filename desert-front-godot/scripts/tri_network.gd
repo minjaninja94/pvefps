@@ -119,7 +119,7 @@ func join_online(code: String, faction: int, team: int, skin: String = "default"
 		status_changed.emit("방 코드가 올바르지 않습니다.")
 		return false
 	local_faction = clampi(faction,0,9)
-	local_skin = skin if skin in ["default","moe"] else "default"
+	local_skin = skin if skin in ["default","moe","twilight","aurora","gold"] else "default"
 	preferred_team = clampi(team,0,1)
 	if mode == "browse" and _peer != null:
 		mode = "client"
@@ -157,7 +157,7 @@ func host_lan(p_mode: String,p_size: int,faction: int,skin: String = "default") 
 func join_lan(address: String,faction: int,team: int,skin: String = "default") -> bool:
 	leave()
 	local_faction = clampi(faction,0,9)
-	local_skin = skin if skin in ["default","moe"] else "default"
+	local_skin = skin if skin in ["default","moe","twilight","aurora","gold"] else "default"
 	preferred_team = clampi(team,0,1)
 	mode = "client"
 	phase = "lobby"
@@ -184,7 +184,7 @@ func _prepare_host(p_mode: String,p_size: int,faction: int,skin: String = "defau
 	match_mode = p_mode
 	team_size = p_size
 	local_faction = clampi(faction,0,9)
-	local_skin = skin if skin in ["default","moe"] else "default"
+	local_skin = skin if skin in ["default","moe","twilight","aurora","gold"] else "default"
 	var profile := Profile.load_profile()
 	local_name = str(profile["nickname"])
 	local_tier = Profile.tier(int(profile["rating"]))
@@ -270,7 +270,7 @@ func _hello_host() -> void:
 @rpc("any_peer","call_remote","reliable")
 func client_hello(faction: int,team: int,skin: String = "default",nickname: String = "지휘관",tier: String = "브론즈") -> void:
 	var sender := multiplayer.get_remote_sender_id()
-	if mode != "host" or phase != "lobby" or faction < 0 or faction > 9 or sender <= 1 or skin not in ["default","moe"]:
+	if mode != "host" or phase != "lobby" or faction < 0 or faction > 9 or sender <= 1 or skin not in ["default","moe","twilight","aurora","gold"]:
 		return
 	if members.has(str(sender)) or members.size() >= _expected_count():
 		return

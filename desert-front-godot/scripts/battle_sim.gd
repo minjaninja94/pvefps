@@ -30,8 +30,8 @@ var difficulty := "normal"
 func _init(faction: int = 0, rival: int = 1, first_skin: String = "default", second_skin: String = "default") -> void:
 	player_faction = clampi(faction,0,9)
 	enemy_faction = clampi(rival,0,9)
-	player_skin = first_skin if first_skin in ["default","moe"] else "default"
-	enemy_skin = second_skin if second_skin in ["default","moe"] else "default"
+	player_skin = first_skin if first_skin in ["default","moe","twilight","aurora","gold"] else "default"
+	enemy_skin = second_skin if second_skin in ["default","moe","twilight","aurora","gold"] else "default"
 	engine = Match.new("classic",1,[
 		{"uid":"classic-home","name":"지휘관","team":0,"faction":player_faction,"skin":player_skin},
 		{"uid":"classic-away","name":"상대","team":1,"faction":enemy_faction,"skin":enemy_skin,"bot":true}

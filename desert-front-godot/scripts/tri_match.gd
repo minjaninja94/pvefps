@@ -88,7 +88,7 @@ func _init(match_mode: String = "classic", match_size: int = 1, members: Array =
 		p["name"] = str(p.get("name","지휘관")).left(16)
 		p["team"] = clampi(int(p.get("team",0)),0,1)
 		p["faction"] = clampi(int(p.get("faction",0)),0,9)
-		p["skin"] = str(p.get("skin","default")) if str(p.get("skin","default")) in ["default","moe"] else "default"
+		p["skin"] = str(p.get("skin","default")) if str(p.get("skin","default")) in ["default","moe","twilight","aurora","gold"] else "default"
 		p["bot"] = bool(p.get("bot",false))
 		p["cash"] = 360.0
 		p["eco"] = 0

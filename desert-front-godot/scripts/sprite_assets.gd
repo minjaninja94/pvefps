@@ -116,3 +116,17 @@ static func skin_banner(faction: int, skin: String = "default") -> Texture2D:
 		crop.region = Rect2(0, h * float(bounds[0]) / 512.0, tex.get_width(), h * float(bounds[1]-bounds[0]) / 512.0)
 		_moe_covers[path] = crop
 	return _moe_covers[path] as Texture2D
+
+
+## Palette previews use tint approximation of the browser's CSS hue/sepia filters.
+## Original base artwork remains unchanged; these are NOT pixel-identical filter outputs.
+static func palette_color(skin: String) -> Color:
+	match skin:
+		"twilight":
+			return Color("#c6a0e5")
+		"aurora":
+			return Color("#a0e5ed")
+		"gold":
+			return Color("#eaca8e")
+		_:
+			return Color.WHITE

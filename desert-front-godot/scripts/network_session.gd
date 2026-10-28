@@ -58,7 +58,7 @@ func host_game(selected_faction: int, selected_skin: String = "default") -> bool
 	faction = clampi(selected_faction, 0, 9)
 	host_faction = faction
 	guest_faction = (faction + 1) % 10
-	skin = selected_skin if selected_skin in ["default","moe"] else "default"
+	skin = selected_skin if selected_skin in ["default","moe","twilight","aurora","gold"] else "default"
 	host_skin = skin
 	guest_skin = "default"
 	_server = peer
@@ -81,7 +81,7 @@ func join_game(address: String, selected_faction: int, selected_skin: String = "
 	phase = "lobby"
 	faction = clampi(selected_faction, 0, 9)
 	guest_faction = faction
-	skin = selected_skin if selected_skin in ["default","moe"] else "default"
+	skin = selected_skin if selected_skin in ["default","moe","twilight","aurora","gold"] else "default"
 	guest_skin = skin
 	_server = peer
 	multiplayer.multiplayer_peer = peer
@@ -126,7 +126,7 @@ func _open_relay(intent: String, code: String, public: bool, chosen_faction: int
 	faction = clampi(chosen_faction, 0, 9)
 	host_faction = faction
 	guest_faction = faction
-	skin = selected_skin if selected_skin in ["default","moe"] else "default"
+	skin = selected_skin if selected_skin in ["default","moe","twilight","aurora","gold"] else "default"
 	host_skin = skin if intent == "host" else "default"
 	guest_skin = skin if intent == "join" else "default"
 	mode = "browse" if intent == "browse" else ("host" if intent == "host" else "client")
@@ -160,7 +160,7 @@ func join_online(room_code: String, selected_faction: int, selected_skin: String
 		_relay_join_code = code
 		mode = "client"
 		faction = clampi(selected_faction, 0, 9)
-		skin = selected_skin if selected_skin in ["default","moe"] else "default"
+		skin = selected_skin if selected_skin in ["default","moe","twilight","aurora","gold"] else "default"
 		guest_skin = skin
 		status_changed.emit("온라인 방 참가 중: %s" % code)
 		return _relay_peer.call("join_room", code) == OK
@@ -286,7 +286,7 @@ func _server_disconnected() -> void:
 func remote_client_hello(selected_faction: int, selected_skin: String = "default") -> void:
 	if mode != "host" or phase != "lobby":
 		return
-	if multiplayer.get_remote_sender_id() != guest_id or selected_faction < 0 or selected_faction >= 10 or selected_skin not in ["default","moe"]:
+	if multiplayer.get_remote_sender_id() != guest_id or selected_faction < 0 or selected_faction >= 10 or selected_skin not in ["default","moe","twilight","aurora","gold"]:
 		return
 	guest_faction = selected_faction
 	guest_skin = selected_skin
@@ -300,8 +300,8 @@ func remote_lobby(f0: int, f1: int, ready: bool, first_skin: String = "default",
 		return
 	host_faction = clampi(f0, 0, 9)
 	guest_faction = clampi(f1, 0, 9)
-	host_skin = first_skin if first_skin in ["default","moe"] else "default"
-	guest_skin = second_skin if second_skin in ["default","moe"] else "default"
+	host_skin = first_skin if first_skin in ["default","moe","twilight","aurora","gold"] else "default"
+	guest_skin = second_skin if second_skin in ["default","moe","twilight","aurora","gold"] else "default"
 	guest_ready = ready
 	status_changed.emit("방 참가 완료. 준비 완료를 선택하세요.")
 
@@ -334,8 +334,8 @@ func remote_start(f0: int, f1: int, first_skin: String = "default", second_skin:
 	if mode != "client" or phase != "lobby":
 		return
 	phase = "playing"
-	host_skin = first_skin if first_skin in ["default","moe"] else "default"
-	guest_skin = second_skin if second_skin in ["default","moe"] else "default"
+	host_skin = first_skin if first_skin in ["default","moe","twilight","aurora","gold"] else "default"
+	guest_skin = second_skin if second_skin in ["default","moe","twilight","aurora","gold"] else "default"
 	match_begins.emit(clampi(f0, 0, 9), clampi(f1, 0, 9))
 	status_changed.emit("1:1 대전 진행 중")
 

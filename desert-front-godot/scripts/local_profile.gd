@@ -2,7 +2,12 @@ extends RefCounted
 ## Local device profile and explicitly UNVERIFIED practice tier.
 ## A player can edit the file; never use rating to award money, prizes or global rank.
 const PATH := "user://desert_front_profile_v1.json"
-const SKINS := ["default", "moe"]
+const SKINS := ["default","moe","twilight","aurora","gold"]
+const SKIN_UNLOCK_LEVELS := [1,1,3,6,10]
+
+static func skin_unlocked(skin: String, level: int) -> bool:
+	var index := SKINS.find(skin)
+	return index >= 0 and level >= int(SKIN_UNLOCK_LEVELS[index])
 const MAX_NAME := 16
 const LEVEL_CAP := 100
 
