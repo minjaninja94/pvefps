@@ -358,7 +358,7 @@ func _on_lane_selected(index: int) -> void:
 
 func _update_lane_options() -> void:
 	_lane_picker.clear()
-	var n := match_game.lanes if match_game != null else 3
+	var n: int = int(match_game.lanes) if match_game != null else 3
 	for i in range(n):
 		_lane_picker.add_item("라인 %d" % (i+1))
 	_lane_picker.select(0 if n == 1 else 1)
