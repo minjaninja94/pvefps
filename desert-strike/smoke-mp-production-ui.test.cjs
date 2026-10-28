@@ -104,4 +104,26 @@ assert.match(item('mpSelectedLane').textContent,/중앙/,'right swipe returns to
 swipe.dispatch('pointerdown',{button:0,pointerId:3,clientX:100,clientY:140});
 swipe.dispatch('pointerup',{pointerId:3,clientX:102,clientY:250});
 assert.match(item('mpSelectedLane').textContent,/중앙/,'vertical scroll does not switch lines');
+const classicBuildings=[Array(75).fill(null)];
+classicBuildings[0][5]=1;
+const classic={...snapshot,mode:'classic',height:520,lanes:1,coreMaxHP:7200,
+ players:[{...snapshot.players[0],buildings:classicBuildings}],
+ cores:[[7200,7200]],turrets:[[1250,1250]],forwardHP:[[1000,1000]],lanePressure:[.5],fog:[false]};
+window.DesertTriUI.onSnapshot(classic);
+assert.equal(doc.body.dataset.multiArena,'classic','classic mode identifies single-map layout');
+assert.equal(item('mpBattleCanvas').height,520,'classic render uses the solo battlefield height');
+assert.match(item('mpSelectedLane').textContent,/단일 전장/);
+assert.equal(item('mpBuildGrid').children.length,75,'one classic 75-slot board remains intact');
+const classicBefore=calls.length;
+item('mpBuildGrid').dispatch('click',{target:{closest(){return {dataset:{slot:'8'}};}}});
+assert.deepEqual(calls.at(-1),{type:'build',lane:0,slot:8,role:0},'classic purchase sends lane 0');
+const classicSwipe=item('mpBuildSwipe');
+classicSwipe.dispatch('pointerdown',{button:0,pointerId:4,clientX:270,clientY:100});
+classicSwipe.dispatch('pointerup',{pointerId:4,clientX:80,clientY:101});
+assert.match(item('mpSelectedLane').textContent,/단일 전장/,'classic swipe cannot change the only lane');
+assert.equal(calls.length,classicBefore+1,'swipe cannot place extra buildings');
+window.DesertTriUI.setView('battle');
+assert.equal(item('mpBattleView').hidden,false);
+window.DesertTriUI.setView('upgrade');
+assert.match(item('mpRepairInfo').textContent,/단일 전장/,'classic can repair its one turret');
 console.log('Multiplayer production UI passed: embedded lane picker, 75-slot grids, purchase lanes, swipe, click cancellation, vertical scroll.');
