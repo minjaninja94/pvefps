@@ -11,6 +11,8 @@ var id_token := ""
 var refresh_token := ""
 var busy := false
 var last_error := ""
+var account_email := ""
+var is_anonymous := true
 
 func _settings() -> Dictionary:
 	var file := ConfigFile.new()
@@ -57,6 +59,8 @@ func _remember() -> void:
 func _auth_response(data: Dictionary, refreshed: bool = false) -> bool:
 	var token := str(data.get("id_token","")) if refreshed else str(data.get("idToken",""))
 	var refresh := str(data.get("refresh_token","")) if refreshed else str(data.get("refreshToken",""))
+	if refresh.is_empty() and not refreshed:
+		refresh = refresh_token
 	var user_id := str(data.get("user_id","")) if refreshed else str(data.get("localId",""))
 	if token.is_empty() or refresh.is_empty() or user_id.is_empty():
 		return false
@@ -64,8 +68,25 @@ func _auth_response(data: Dictionary, refreshed: bool = false) -> bool:
 	refresh_token = refresh
 	uid = user_id
 	_remember()
-	connection_changed.emit(true,"Firebase 익명 회원 연결 · UID 인증 성공")
+	if not refreshed:
+		account_email = str(data.get("email",""))
+		is_anonymous = account_email.is_empty()
+	connection_changed.emit(true,"Firebase 계정 연결 · UID 인증 성공")
 	return true
+
+func _load_account_info() -> void:
+	if id_token.is_empty():
+		return
+	var settings := _settings()
+	if settings.is_empty():
+		return
+	var url := "https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=" + str(settings["key"])
+	var result: Dictionary = await _http(url,HTTPClient.METHOD_POST,JSON.stringify({"idToken":id_token}))
+	if bool(result.get("ok",false)) and result.get("value") is Dictionary:
+		var users: Array = result["value"].get("users",[])
+		if not users.is_empty() and users[0] is Dictionary:
+			account_email = str(users[0].get("email",""))
+			is_anonymous = account_email.is_empty()
 
 func connect_member() -> bool:
 	if busy:
@@ -84,16 +105,94 @@ func connect_member() -> bool:
 			var renewed: Dictionary = await _http(refresh_url,HTTPClient.METHOD_POST,encoded,false,true)
 			if bool(renewed.get("ok",false)) and renewed["value"] is Dictionary:
 				if _auth_response(renewed["value"],true):
+					await _load_account_info()
 					busy = false
 					return true
 	var url := "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + str(settings["key"])
 	var signed: Dictionary = await _http(url,HTTPClient.METHOD_POST,JSON.stringify({"returnSecureToken":true}))
-	busy = false
 	if bool(signed.get("ok",false)) and signed["value"] is Dictionary and _auth_response(signed["value"]):
+		await _load_account_info()
+		busy = false
+		last_error = ""
 		return true
+	busy = false
 	last_error = str(signed.get("error","Firebase 익명 로그인 실패"))
 	connection_changed.emit(false,last_error)
 	return false
+
+
+static func valid_email(email: String) -> bool:
+	var cleaned := email.strip_edges()
+	return cleaned.length() <= 254 and cleaned.find("@") > 0 and cleaned.get_slice("@",1).find(".") > 0 and not cleaned.contains(" ")
+
+static func link_email_payload(token: String, email: String, password: String) -> Dictionary:
+	return {"idToken":token,"email":email.strip_edges(),"password":password,"returnSecureToken":true}
+
+func register_email(email: String, password: String) -> bool:
+	last_error = ""
+	if busy:
+		last_error = "인증 요청 처리 중입니다."
+		return false
+	if not valid_email(email) or password.length() < 6:
+		last_error = "올바른 이메일과 6자 이상의 비밀번호를 입력하세요."
+		return false
+	if uid.is_empty() or id_token.is_empty():
+		if not await connect_member():
+			return false
+	if not account_email.is_empty():
+		last_error = "이미 이메일이 연결된 계정입니다. 기존 이메일로 로그인하세요."
+		return false
+	var settings := _settings()
+	if settings.is_empty():
+		last_error = "Firebase 공개 설정이 없습니다."
+		return false
+	var previous_uid := uid
+	busy = true
+	var url := "https://identitytoolkit.googleapis.com/v1/accounts:update?key=" + str(settings["key"])
+	var response: Dictionary = await _http(url,HTTPClient.METHOD_POST,JSON.stringify(link_email_payload(id_token,email,password)))
+	busy = false
+	if not bool(response.get("ok",false)) or not response.get("value") is Dictionary:
+		last_error = str(response.get("error","계정 전환 실패"))
+		return false
+	if str(response["value"].get("localId","")) != previous_uid:
+		last_error = "UID가 달라 기존 프로필을 보호하기 위해 전환을 중단했습니다."
+		return false
+	if not _auth_response(response["value"]):
+		last_error = "Firebase 계정 갱신 응답이 올바르지 않습니다."
+		return false
+	account_email = email.strip_edges()
+	is_anonymous = false
+	last_error = ""
+	connection_changed.emit(true,"이메일 계정 전환 완료 · 기존 UID 유지")
+	return true
+
+func login_email(email: String, password: String) -> bool:
+	last_error = ""
+	if busy:
+		last_error = "인증 요청 처리 중입니다."
+		return false
+	if not valid_email(email) or password.is_empty():
+		last_error = "이메일과 비밀번호를 확인하세요."
+		return false
+	var settings := _settings()
+	if settings.is_empty():
+		last_error = "Firebase 공개 설정이 없습니다."
+		return false
+	busy = true
+	var url := "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + str(settings["key"])
+	var response: Dictionary = await _http(url,HTTPClient.METHOD_POST,JSON.stringify({"email":email.strip_edges(),"password":password,"returnSecureToken":true}))
+	busy = false
+	if not bool(response.get("ok",false)) or not response.get("value") is Dictionary:
+		last_error = str(response.get("error","이메일 로그인 실패"))
+		return false
+	if not _auth_response(response["value"]):
+		last_error = "Firebase 로그인 응답이 올바르지 않습니다."
+		return false
+	account_email = email.strip_edges()
+	is_anonymous = false
+	last_error = ""
+	connection_changed.emit(true,"이메일 계정 로그인 완료")
+	return true
 
 static func encode_profile(uid_value: String, profile: Dictionary) -> Dictionary:
 	return {"fields":{
