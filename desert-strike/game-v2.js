@@ -147,6 +147,7 @@ function chirp(hz=420,length=.08){
  }catch(_){}
 }
 function reset(){
+ window.DesertCombatAudio?.stop?.();
  state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:360,eco:0,enemyEco:0,ecoReadyAt:0,enemyEcoReadyAt:0,mineCosts:{},enemyMineCosts:{},weapon:0,armor:0,enemyWeapon:0,enemyArmor:0,incomeClock:0,cameraX:1100,followFront:true,
  wave:0,next:INTERVAL,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],forwardHP:[1000,1000],forwardClaimed:[false,false],
  built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
@@ -244,7 +245,7 @@ function emergency(){
  state.units=state.units.filter(u=>u.hp>0);
  state.shots=state.shots.filter(p=>p.side===0);
  setMessage('긴급 핵폭탄 발동! 아군 영토로 침입한 적 '+invaders.length+'기를 제거했습니다.');
- banner('☢ EMERGENCY STRIKE');chirp(130,.3);updateUI(true);
+ banner('☢ EMERGENCY STRIKE');window.DesertCombatAudio?.cue('explosion');chirp(130,.3);updateUI(true);
 }
 function barrage(){
  if(!state.live||state.ended||state.paused||state.cash<260||state.barrageCd>0)return;
@@ -256,6 +257,7 @@ function barrage(){
   if(score>best){best=score;target=u;}
  }
  state.cash-=260;state.barrageCd=32;
+ window.DesertCombatAudio?.cue('explosion',target.x);
  for(const u of enemies){
   const d=Math.hypot(u.x-target.x,u.y-target.y);
   if(d<118){damage(u,260*(1-.45*d/118),'barrage');pulse(u.x,u.y,'#ffdf91',27);}
@@ -277,6 +279,7 @@ function createUnit(side,slot,role){
   cooldown:random(.1,.7),anim:random(0,16),facing:side===0?1:-1,blink:0,spawnAge:0,hitAge:0,skillAge:0,moving:false,strike:null,
   hitRadius:isBongo?30:faction===4&&role===6?22:faction===6&&role===6?24:faction===7&&role===6?28:role===3?26:role===6?14:role===5?17:role===0?17:15,ramCooldown:0,spawnedAt:state.elapsed,lastDamagedAt:state.elapsed});
  pulse(x,y,COLORS[side],12);
+ window.DesertCombatAudio?.unit(faction,role,side===0?window.DesertLobby?.selectedSkin?.():'default','spawn',x);
 }
 // AI spends the same credits as the player, but actually studies the player's build.
 // Low-cost single-role rushes must trigger counter-production, not extra/free AI income.
@@ -589,7 +592,9 @@ function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
     a!==attacker&&a.hp>0&&a.side===attacker.side&&a.faction===6&&Math.hypot(a.x-attacker.x,a.y-attacker.y)<165))hit*=1.06;
  if(attacker&&(attacker.inkUntil||0)>state.elapsed)hit*=.90;
  const before=u.hp;
- u.hp-=hit;u.blink=.12;u.hitAge=.36;u.lastDamagedAt=state.elapsed;
+ u.hp-=hit;
+ if(u.hp>0){window.DesertCombatAudio?.cue('hit',u.x);window.DesertCombatAudio?.unit(u.faction,u.role,u.side===0?window.DesertLobby?.selectedSkin?.():'default','hit',u.x);}
+ u.blink=.12;u.hitAge=.36;u.lastDamagedAt=state.elapsed;
  if(attacker?.faction===4&&[0,3,6].includes(source)&&!attacker.isHatchling&&attacker.hp>0)
   attacker.hp=Math.min(attacker.maxHP,attacker.hp+Math.min(3*(attacker.heroCount||1),Math.max(0,Math.min(before,hit))*.015));
  if(attacker?.faction===8&&[1,2,4,5].includes(source)&&state.elapsed-(attacker.lastInkCast??-999)>=INK_COOLDOWN){
@@ -597,7 +602,7 @@ function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
   floatText(u.x,u.y-30,'먹물 침식','#d5adff');
  }
  if(Math.random()<.15)floatText(u.x,u.y-25,Math.round(hit),COLORS[u.side===0?1:0]);
- if(u.hp<=0){killUnit(u);marineSpoils(u,attacker,roll);}
+ if(u.hp<=0){window.DesertCombatAudio?.cue('death',u.x);window.DesertCombatAudio?.unit(u.faction,u.role,u.side===0?window.DesertLobby?.selectedSkin?.():'default','death',u.x);killUnit(u);marineSpoils(u,attacker,roll);}
 }
 function heal(u,amount,burst=false,healer=null){
  if(u.isHatchling)return;
@@ -609,6 +614,7 @@ function heal(u,amount,burst=false,healer=null){
  amount=window.DesertGuardian?.healAmount(u,amount,state.elapsed)??amount;
  if(amount<=0)return;
  const recovered=Math.min(amount,u.maxHP-u.hp);
+ if(recovered>0)window.DesertCombatAudio?.cue('heal',u.x);
  u.hp=Math.min(u.maxHP,u.hp+amount);pulse(u.x,u.y,'#94f7a9',11);
  if(healer?.faction===9&&recovered>0&&state.elapsed-(healer.lastPollenAt??-999)>=5){
   const partner=state.units.find(v=>v!==u&&v!==healer&&v.hp>0&&!v.isHatchling&&v.side===healer.side&&v.hp<v.maxHP
@@ -746,6 +752,7 @@ function move(u,x,y,dt){
  window.DesertGuardian?.clampUnit(u);u.facing=dx>=0?1:-1;u.moving=d>1;u.x=clamp(u.x,30,WORLD_W-30);u.y=clamp(u.y,68,452);
 }
 function fire(u,t=null,baseSide=null,structurePart=null){
+ window.DesertCombatAudio?.attack(u.faction,u.role,u.side===0?window.DesertLobby?.selectedSkin?.():'default',u.x);
  const fort=baseSide===null?null:defenseTarget(baseSide,structurePart);
  const def=combatDef(u),x=t?t.x:fort.x,y=t?t.y:260;
  if(def.range<48){
@@ -899,6 +906,7 @@ function tick(dt){
 function endMatch(win){
  if(state.ended)return;
  state.ended=true;
+ window.DesertCombatAudio?.stop?.();
  window.DesertLobbyMusic?.stopBattle?.();
  window.DesertLobby?.completeSolo?.({win,matchedFaction:state.faction,wave:state.wave});
  $('endTitle').textContent=win?'작전 승리':'기지 함락';

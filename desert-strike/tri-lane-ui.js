@@ -234,10 +234,42 @@ function drawOverview(){
   if(l===lane){g.strokeStyle='#efcc9d';g.strokeRect(1,y+1,1098,h-1);}
  }
 }
+function combatAudioSnapshot(v){
+ const audio=global.DesertCombatAudio;
+ if(!audio)return;
+ if(v.ended){audio.stop();return;}
+ if(!snap)return;
+ const oldUnits=new Map(snap.units.map(u=>[u.id,u]));
+ for(const unit of v.units){
+  const before=oldUnits.get(unit.id);
+  if(!before){audio.unit(unit.faction,unit.role,unit.skin,'spawn',unit.x);continue;}
+  if((unit.act==='attack'||unit.role===7&&unit.act==='skill')&&before.act!==unit.act)
+   audio.attack(unit.faction,unit.role,unit.skin,unit.x);
+  if(unit.hp<before.hp&&unit.hp>0&&unit.act==='hit'){
+   audio.cue('hit',unit.x);
+   audio.unit(unit.faction,unit.role,unit.skin,'hit',unit.x);
+  }
+  oldUnits.delete(unit.id);
+ }
+ // Hidden enemy units may disappear from a fog-redacted snapshot without dying.
+ for(const unit of oldUnits.values()){
+  if(unit.hp<=0||unit.team!==v.viewerTeam&&(v.fog||[]).some(Boolean))continue;
+  audio.cue('death',unit.x);
+  audio.unit(unit.faction,unit.role,unit.skin,'death',unit.x);
+ }
+ if(snap.cores?.some((row,l)=>row.some((hp,side)=>hp>0&&v.cores?.[l]?.[side]<=0)))audio.cue('building');
+ const effects=new Set((snap.effects||[]).map(e=>e.kind+':'+Math.round(e.x/20)+':'+Math.round(e.y/20)));
+ for(const effect of v.effects||[]){
+  if(!['barrage','nuke','pollen','huanglong'].includes(effect.kind))continue;
+  const id=effect.kind+':'+Math.round(effect.x/20)+':'+Math.round(effect.y/20);
+  if(!effects.has(id))audio.cue(['pollen','huanglong'].includes(effect.kind)?'heal':'explosion',effect.x);
+ }
+}
 function onSnapshot(v){
- if(!v){snap=null;return;}if(v.width!==3300||![520,1560].includes(v.height)||!Array.isArray(v.players)||(v.lanes!==undefined&&v.lanes!==(v.mode==='classic'?1:3)))return;
+ if(!v){snap=null;global.DesertCombatAudio?.stop?.();return;}if(v.width!==3300||![520,1560].includes(v.height)||!Array.isArray(v.players)||(v.lanes!==undefined&&v.lanes!==(v.mode==='classic'?1:3)))return;
  const fresh=!snap,modeChanged=!snap||snap.mode!==v.mode;
  if(!$('frontLobby').hidden)global.DesertLobby?.enterMatch?.();
+ combatAudioSnapshot(v);
  snap=v;lastSnapshotAt=performance.now();$('mpCommand').hidden=false;$('mpViewTabs').hidden=false;
  document.body.dataset.multiArena=v.mode==='classic'?'classic':'triple';
  if(modeChanged){
