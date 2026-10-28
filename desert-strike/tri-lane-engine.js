@@ -56,15 +56,17 @@ function combatDef(u,players=null){
 }
 function roomPlayers(input){const x=Array.isArray(input)?input:Object.values(input||{});return x.map(p=>({uid:String(p.uid||p.id||''),name:String(p.name||'지휘관').slice(0,16),team:Number(p.team),faction:Number(p.faction),skin:['default','moe','twilight','aurora','gold'].includes(p.skin)?p.skin:'default',bot:!!p.bot}));}
 function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
- if(!['pvp','coop'].includes(mode)||!Number.isInteger(size)||size<1||size>3||(mode==='coop'&&size<2))throw Error('경기 모드/인원 오류');
+ if(!['pvp','coop','classic'].includes(mode)||!Number.isInteger(size)||size<1||size>3||(mode==='coop'&&size<2)||(mode==='classic'&&size!==1))throw Error('경기 모드/인원 오류');
+ // Classic duel reuses the multiplayer combat kernel on the solo-sized world.
+ const LANES=mode==='classic'?1:3,HEIGHT=LANES*LANE_H,CORE_HP=mode==='classic'?7200:2500;
  const humans=roomPlayers(members);
  if(humans.some(p=>!p.uid||p.team<0||p.team>1||p.faction<0||p.faction>9)||new Set(humans.map(p=>p.uid)).size!==humans.length)throw Error('부적절한 참가자 목록');
  if(mode==='coop'&&(humans.length!==size||humans.some(p=>p.team!==0)))throw Error('협동 인원과 팀이 일치하지 않습니다');
- if(mode==='pvp'&&(humans.filter(p=>p.team===0).length!==size||humans.filter(p=>p.team===1).length!==size))throw Error('경쟁 양 팀 인원이 일치하지 않습니다');
+ if(mode!=='coop'&&(humans.filter(p=>p.team===0).length!==size||humans.filter(p=>p.team===1).length!==size))throw Error('경쟁 양 팀 인원이 일치하지 않습니다');
  const players=humans.concat(mode==='coop'?Array.from({length:size},(_,i)=>({uid:'AI_'+i,name:'적 AI '+(i+1),team:1,faction:(i+3)%10,bot:true})):[]);
  const state={mode,size,aiDifficulty:aiDifficulty==='hard'?'hard':'normal',seconds:0,wave:0,next:24,ended:false,winner:null,
   width:WIDTH,height:HEIGHT,lanes:LANES,
-  cores:Array.from({length:LANES},()=>[2500,2500]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),forwardHP:Array.from({length:LANES},()=>[1000,1000]),forwardClaimed:Array.from({length:LANES},()=>[false,false]),forwardCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,nextConsolidation:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,cash:360,eco:0,ecoReadyAt:0,weapon:0,armor:0,nukes:1,barrageCd:0,mineCosts:{},buildings:Array.from({length:3},()=>Array(SLOTS).fill(null))})),lanePressure:[.5,.5,.5]};
+  cores:Array.from({length:LANES},()=>[CORE_HP,CORE_HP]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),forwardHP:Array.from({length:LANES},()=>[1000,1000]),forwardClaimed:Array.from({length:LANES},()=>[false,false]),forwardCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,nextConsolidation:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,cash:360,eco:0,ecoReadyAt:0,weapon:0,armor:0,nukes:1,barrageCd:0,mineCosts:{},buildings:Array.from({length:LANES},()=>Array(SLOTS).fill(null))})),lanePressure:Array(LANES).fill(.5)};
  const byUid=uid=>state.players.find(p=>p.uid===uid);
  function marineRecord(uid,key,amount=1){
   const v=state.marineStatsByUid.get(uid)||{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0};
@@ -143,7 +145,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
   }
   if(kind==='nuke'){
    if(!p.nukes)return {ok:false,reason:'핵폭탄 사용 완료'};
-   const endangered=state.cores.some(row=>row[p.team]<=1750);
+   const endangered=state.cores.some(row=>row[p.team]<=CORE_HP*.7);
    const intrusion=state.units.some(u=>u.hp>0&&u.team!==p.team&&(p.team===0?u.x<370:u.x>WIDTH-370));
    const targets=state.units.filter(u=>u.hp>0&&u.team!==p.team&&(p.team===0?u.x<=550:u.x>=WIDTH-550));
    if((!endangered&&!intrusion)||!targets.length)return {ok:false,reason:'기지 위기 시 침공한 적에게만 사용 가능'};
@@ -226,15 +228,15 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
   const air=known.filter(u=>definition(u.faction,u.role).kind==='air').reduce((n,u)=>n+(u.heroCount===20?20:1),0);
   const armor=known.filter(u=>u.role===3||(u.role===6&&definition(u.faction,u.role).kind!=='air')).reduce((n,u)=>n+(u.heroCount===20?20:1),0);
   const roles=Array(8).fill(0);for(const u of known)if(!u.guardian)roles[u.role]+=u.heroCount===20?20:1;
-  const lanePressure=Array(3).fill(0);for(const u of known)if(!u.guardian)lanePressure[Math.floor(u.y/LANE_H)]+=u.heroCount===20?20:1;
+  const lanePressure=Array(LANES).fill(0);for(const u of known)if(!u.guardian)lanePressure[Math.floor(u.y/LANE_H)]+=u.heroCount===20?20:1;
   const pressureTotal=lanePressure.reduce((n,v)=>n+v,0);
   const urgent=known.filter(u=>bot.team===1?u.x>WIDTH-580:u.x<580),invaded=urgent.length>0;
   for(let purchase=0;purchase<12;purchase++){
    const counts=Array(8).fill(0);for(const row of bot.buildings)for(const r of row)if(r!==null&&r!==EXTRACTOR)counts[r]++;
    const action=ai.choose(brain,{cash:bot.cash,counts,eco:bot.eco,readyAt:bot.ecoReadyAt,seconds:state.seconds,costs:COST.slice(0,8),ecoCost:ecoPrice(bot.eco),intel:{air,armor,invaded,roles}});
    if(!action)break;
-   const sizes=bot.buildings.map(row=>row.filter(r=>r!==null&&r!==EXTRACTOR).length),focus=brain.plan%3;
-   const lanes=[0,1,2].filter(l=>bot.buildings[l].some(x=>x===null)).sort((a,b)=>{
+   const sizes=bot.buildings.map(row=>row.filter(r=>r!==null&&r!==EXTRACTOR).length),focus=brain.plan%LANES;
+   const lanes=Array.from({length:LANES},(_,i)=>i).filter(l=>bot.buildings[l].some(x=>x===null)).sort((a,b)=>{
     const capacity=sizes.reduce((n,v)=>n+v,0)+1;
     const score=l=>sizes[l]-(pressureTotal?capacity*(.7*lanePressure[l]/pressureTotal+.1):(l===focus?2:0));
     return score(a)-score(b);
@@ -250,7 +252,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
   if(state.aiDifficulty==='hard'){hardBotPurchase(bot);return;}
 
   // A paid early army deters players from investing everything in economy.
-  for(let lane=0;lane<3;lane++){
+  for(let lane=0;lane<LANES;lane++){
    const existing=bot.buildings[lane].filter(x=>x!==null).length;
    const desired=Math.min(12,1+Math.floor((state.wave+1)/3)+Math.floor(Math.max(0,state.wave-7)/3));
    let count=Math.max(0,desired-existing);
@@ -526,7 +528,8 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
   }
   let lost=[0,0];
   for(const cores of state.cores){if(cores[0]<=0)lost[0]++;if(cores[1]<=0)lost[1]++;}
-  if(lost[0]>=2||lost[1]>=2){state.ended=true;state.winner=lost[1]>=2?0:1;}
+  const required=LANES===1?1:2;
+  if(lost[0]>=required||lost[1]>=required){state.ended=true;state.winner=lost[1]>=required?0:1;}
  }
  function tick(dt){
   if(state.ended)return;
@@ -560,7 +563,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
    &&(viewer.team===0?x>=WIDTH-FOG_WIDTH:x<=FOG_WIDTH);
   const allied=p=>!viewer||p.team===viewer.team;
   const isAllowed=p=>!viewer||p.team===viewer.team||visible.every(Boolean);
-  return {mode:state.mode,size:state.size,aiDifficulty:state.aiDifficulty,width:WIDTH,height:HEIGHT,seconds:Math.round(state.seconds*10)/10,wave:state.wave,next:Math.ceil(state.next*10)/10,
+  return {mode:state.mode,size:state.size,aiDifficulty:state.aiDifficulty,width:WIDTH,height:HEIGHT,lanes:LANES,coreMaxHP:CORE_HP,seconds:Math.round(state.seconds*10)/10,wave:state.wave,next:Math.ceil(state.next*10)/10,
    ended:state.ended,winner:state.winner,cores:state.cores,turrets:state.turrets,forwardHP:state.forwardHP,lanePressure:state.lanePressure.map(x=>Math.round(x*100)/100),
    fog:visible.map(s=>!s),viewerTeam:viewer?.team??null,
    factionTraits:state.players.filter(p=>!viewer||p.team===viewer.team).map(p=>({uid:p.uid,faction:p.faction,births:state.broodBirthsByUid.get(p.uid)||0,totalBirths:state.broodTotalByUid.get(p.uid)||0})),
