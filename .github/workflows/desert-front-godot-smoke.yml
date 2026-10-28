@@ -24,6 +24,10 @@ jobs:
         run: godot --headless --path desert-front-godot --editor --quit
       - name: Run isolated simulation smoke test
         run: godot --headless --path desert-front-godot --script res://tests/smoke.gd
+      - name: Configure Godot Windows export templates
+        run: |
+          mkdir -p "$HOME/.local/share/godot/export_templates"
+          cp -a /root/.local/share/godot/export_templates/4.3.stable "$HOME/.local/share/godot/export_templates/"
       - name: Export Windows preview build
         run: |
           mkdir -p desert-front-godot/build
