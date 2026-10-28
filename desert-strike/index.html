@@ -87,13 +87,13 @@
  <section class="panel mp-lobby" id="mpLobby">
   <div class="mp-lobby-grid">
    <label>지휘관 이름<input id="mpName" maxlength="16" placeholder="지휘관" value="지휘관"></label>
-   <label>경기 방식<select id="mpMode"><option value="pvp">팀 경쟁 PvP</option><option value="coop">협동 대 AI</option></select></label>
+   <label>경기 방식<select id="mpMode"><option value="pvp">3라인 팀 경쟁 PvP</option><option value="classic">클래식 1:1 · 싱글 전장</option><option value="coop">3라인 협동 대 AI</option></select></label>
    <label>팀당 인원<select id="mpSize"><option value="1">1명 (1:1)</option><option value="2">2명 (2:2)</option><option value="3">3명 (3:3)</option></select></label>
    <label>사용 종족<select id="mpFaction"><option value="0">철갑연합</option><option value="1">심연군체</option><option value="2">성운결사</option><option value="3">해병성채</option><option value="4">월영 수인족</option><option value="5">은월 엘프족</option><option value="6">야월 퍼리족</option><option value="7">크롬 로보족</option><option value="8">옥토퍼 군체</option><option value="9">농농 페어리족</option></select></label>
    <label>선호 팀<select id="mpTeam"><option value="0">아군 (왼쪽)</option><option value="1">상대팀 (오른쪽)</option></select></label>
    <label>방 코드<input id="mpRoomCode" maxlength="12" placeholder="예: ABC123"></label>
   </div>
-  <div class="actions mp-actions"><button id="mpPractice" class="btn outline">오프라인 3라인 연습</button><button id="mpCreate" class="btn accent">방 만들기</button><button id="mpJoin" class="btn outline">방 코드로 참가</button><button id="mpReady" class="btn outline" disabled>준비하기</button><button id="mpLaunch" class="btn accent" disabled>경기 시작</button><button id="mpLeave" class="btn outline" disabled>방 나가기</button></div>
+  <div class="actions mp-actions"><button id="mpPractice" class="btn outline">오프라인 연습</button><button id="mpCreate" class="btn accent">방 만들기</button><button id="mpJoin" class="btn outline">방 코드로 참가</button><button id="mpReady" class="btn outline" disabled>준비하기</button><button id="mpLaunch" class="btn accent" disabled>경기 시작</button><button id="mpLeave" class="btn outline" disabled>방 나가기</button></div>
   <div id="mpStatus" role="status" class="mp-status">Firebase 익명 로그인과 Firestore 방 규칙을 사용합니다. 실제 인터넷 대전은 설정된 규칙 및 P2P 연결이 필요합니다.</div>
   <div id="mpMembers" class="mp-members">아직 참가한 방이 없습니다.</div>
  </section>
