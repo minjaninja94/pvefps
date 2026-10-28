@@ -72,7 +72,16 @@ async function create(opts){
  roomId=code();host=true;
  room={version:1,host:uid,mode:opts.mode,size:Number(opts.size),ruleset:validateRuleset(opts.ruleset),seed:crypto.getRandomValues(new Uint32Array(1))[0]||1,publicRoom:opts.publicRoom!==false,status:'lobby',created:Date.now(),expires:Date.now()+7200000,
   players:{[uid]:{name:validateName(opts.name),faction:Number(opts.faction),skin:validateSkin(opts.skin),team:0,ready:false}}};
- await fs.setDoc(path(),room);
+ try{await fs.setDoc(path(),room);}
+ catch(e){
+  // Until the updated Firestore rules are published, legacy standard PvP/co-op
+  // should keep working. Never silently downgrade an augment match.
+  if(e?.code==='permission-denied'&&room.ruleset==='standard'&&room.mode!=='classic'){
+   const legacy={...room};delete legacy.ruleset;delete legacy.seed;delete legacy.publicRoom;
+   await fs.setDoc(path(),legacy);room=legacy;
+   status('기존 Firebase 규칙으로 초대방을 개설했습니다. 공개방 기능은 규칙 게시 후 활성화됩니다.');
+  }else throw e;
+ }
  if(room.publicRoom){try{await fs.setDoc(publicPath(roomId),{owner:uid,created:room.created,expires:room.expires});}
   catch(e){status('공개방 목록 등록 실패: '+msg(e)+' · 초대 코드 참가만 가능합니다.');}}
  listenRoom();status('방 코드 '+roomId+' · 상대에게 코드를 공유하세요.');

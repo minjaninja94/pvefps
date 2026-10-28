@@ -37,3 +37,20 @@ Firestore에는 초대 코드 방, 참가자의 익명 사용자 ID/이름/팀/�
 검증 명령: node desert-strike/smoke-trilane.test.cjs
 
 실제 다른 기기 간 접속과 Firebase 배포 규칙은 코드 자동 테스트만으로 검증할 수 없습니다. 관리자 설정 적용 후 휴대전화/PC의 별도 브라우저에서 실제 연결 확인이 필요합니다.
+
+
+## Godot 300-card augment + web account/community updates (2026-10-29)
+
+- **증강전**: `desert-strike/assets/augments.json` holds 300 native Godot cards. 1/10/20/30/40 wave choices, 3 cards, one reroll per card, 30-second selection limit, server/host validates all orders and synchronizes one viewer's draft per packet.
+- **최근 40경기**: `career-profile.js` stores battle results in browser localStorage; game progress, RP and win counts are client-side unverified, never authoritative for prize money, payouts, or official ranks.
+- **이메일 계정**: In Firebase Console, enable **Email/Password** as well as Anonymous Auth. Anonymous accounts are upgraded via Firebase Auth `linkWithCredential` (same UID), or existing accounts sign in using email/password. Passwords are not saved by web source code.
+- **비공식 커뮤니티 순위**: Publishing is opt-in and saves the current client-reported rating to `desertCommunityBoard`. This is not a verified leaderboard.
+- **공개방 검색**: `desertPublicRooms` contains only room owner/TTL metadata. Actual room data continues in `desertRooms`, which remains GET-only (no collection listing). Private invite-code rooms do not appear in the public directory.
+- **오디오**: music, Japanese voice and effects volumes are adjusted and persisted separately via browser localStorage; the previous user-provided lobby/battle BGM files remain unchanged.
+
+**Required backend activation:** Committing `firestore.rules` to GitHub does NOT deploy it to Firebase. The project owner must publish the updated rules in the Firebase Console, or run `firebase deploy --only firestore:rules --project pvefps` in an authenticated Firebase CLI. This is essential for new augment room fields, public room browsing and community board. Standard PvP/co-op rooms attempt the legacy Firestore document shape if updated rules are not yet deployed; augment rooms never silently downgrade to standard.
+
+FireStore Rules console: https://console.firebase.google.com/project/pvefps/firestore/rules
+Firebase Email/Password auth: https://console.firebase.google.com/project/pvefps/authentication/providers
+
+Browser-only, automated Node simulations cannot validate deployed Firebase security rules, real network traversal or actual sign-in. Test on separate real accounts after publishing the rules.

@@ -175,7 +175,10 @@ service cloud.firestore {
       }
       allow get: if signed();
       allow list: if signed() && request.query.limit <= 60;
-      allow create: if signed() && valid(request.resource.data) && request.resource.data.owner == request.auth.uid;
+      allow create: if signed() && valid(request.resource.data) && request.resource.data.owner == request.auth.uid
+        && exists(/databases/$(database)/documents/desertRooms/$(code))
+        && get(/databases/$(database)/documents/desertRooms/$(code)).data.host == request.auth.uid
+        && get(/databases/$(database)/documents/desertRooms/$(code)).data.publicRoom == true;
       allow update: if false;
       allow delete: if signed() && resource.data.owner == request.auth.uid;
     }
