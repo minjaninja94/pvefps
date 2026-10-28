@@ -97,7 +97,7 @@ click('buildGrid',{cell:'1'});
 assert.match(el('econInfo').textContent,/자원채취 1 \/ 7/,'paid extractor construction works');
 click('demolishButton');
 click('buildGrid',{cell:'0'});
-assert.match(el('builtCount').textContent,/0 \/ 75/,'building demolition works');
+assert.match(el('builtCount').textContent,/1 \/ 75/,'demolition removes the combat building but preserves the extractor');
 click('restartButton');
 assert.equal(el('cash').textContent,'360','reset restores cash');
 assert.equal(el('wave').textContent,'00','reset restores wave');
