@@ -234,8 +234,7 @@ async function start(){
  if(room.ruleset==='augment')await global.DesertAugments.load();
  engine=global.DesertTriEngine.create({mode:room.mode,size:room.size,members:members(),ruleset:validateRuleset(room.ruleset),seed:room.seed||1});
  const registered=await global.DesertMember?.startMatch?.();
- if(registered&&!registered.ok&&global.DesertMember?.isMember?.())throw Error('탈주 판정 서버가 경기를 시작하지 못했습니다: '+registered.reason);
- if(registered&&!registered.ok)status('게스트 비공식 게임: 서버 탈주 기록 미적용');
+ if(registered&&!registered.ok)status('비공식 게임 진행 · 서버 탈주 기록 미적용: '+registered.reason);
  await fs.updateDoc(path(),{status:'playing'});
  global.DesertMember?.markPlaying?.(roomId);beginServerHeartbeat();
  if(room.publicRoom)try{await fs.deleteDoc(publicPath());}catch(_){}

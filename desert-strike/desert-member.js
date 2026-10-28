@@ -36,7 +36,7 @@ async function loadMember(user,importGuest=false){
  if(member){
   if(importGuest){
    const old=global.DesertLobby?.exportProgress?.();
-   if(old)await saveProgress(old,true);
+   if(old){const merged={...old,nickname:member.nickname};await saveProgress(merged,true);global.DesertLobby?.importProgress?.(merged);}
   }else global.DesertLobby?.importProgress?.({
    xp:member.xp,wins:member.wins,losses:member.losses,mpWins:member.mp_wins,mpLosses:member.mp_losses,
    nickname:member.nickname,selectedFaction:member.selected_faction,selectedSkin:member.selected_skin,

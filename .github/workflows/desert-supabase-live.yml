@@ -1,0 +1,16 @@
+name: One-time Desert Front Supabase live QA
+on:
+  push:
+    paths:
+      - "desert-strike/supabase-live.test.cjs"
+      - ".github/workflows/desert-supabase-live.yml"
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Live username signup and SQL-backed leaver adjudication
+        run: node desert-strike/supabase-live.test.cjs
