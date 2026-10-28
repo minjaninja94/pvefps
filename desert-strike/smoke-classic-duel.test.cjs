@@ -13,7 +13,7 @@ assert.equal(state.width,3300);
 assert.equal(state.height,520,'classic match must use exactly the solo map height');
 assert.equal(state.lanes,1);
 assert.equal(state.players.length,2);
-assert.deepEqual(Array.from(state.cores),[[7200,7200]],'classic core HP mirrors solo');
+assert.equal(JSON.stringify(state.cores),'[[7200,7200]]','classic core HP mirrors solo');
 for(const p of state.players){
  assert.equal(p.buildings.length,1,'one 75-slot factory per human');
  assert.equal(p.buildings[0].length,75);
