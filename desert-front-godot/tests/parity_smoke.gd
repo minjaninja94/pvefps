@@ -26,6 +26,9 @@ func _run() -> void:
 	check(Sprites.frame_region(4,6,3,"moe") == Rect2(288,576,96,96),"moe row is correctly selected")
 	var snap: Dictionary = game.snapshot("a")
 	check(snap["units"][0]["skin"] == "moe","network viewer receives correct skin")
+	check(int(snap.get("protocol",0)) == 2,"multiplayer compact state protocol version")
+	check(not snap["units"][0].has("stats"),"authoritative unit stats not redundantly sent over relay")
+	check(float(snap["players"][1]["cash"]) == -1.0,"opponent economy redacted from network packets")
 	var guardian = game.units[0]
 	guardian["guardian"] = true
 	guardian["hp"] = 1000.0
