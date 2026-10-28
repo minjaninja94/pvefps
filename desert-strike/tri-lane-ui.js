@@ -323,8 +323,18 @@ function init(){
   pickLane(Math.floor((e.clientY-r.top)/r.height*3),true);
  });
  $('mpBattleCanvas').addEventListener('click',e=>{
+  if(!snap)return;
   const r=e.currentTarget.getBoundingClientRect();
-  pickLane(Math.floor((e.clientY-r.top)/r.height*3),true);
+  const x=(e.clientX-r.left)/r.width*1100,y=(e.clientY-r.top)/r.height*660;
+  pickLane(Math.floor(y/220));
+  const closest=snap.units.map(u=>({unit:u,distance:Math.hypot(x-u.x/3,y-u.y/1560*660)}))
+   .filter(x=>x.distance<28).sort((a,b)=>a.distance-b.distance)[0]?.unit;
+  if(closest){
+   const name=global.DesertRoster?.FACTIONS?.[closest.faction]?.units?.[closest.role]||E.NAMES[closest.role];
+   $('mpInspect').textContent=(closest.team===my()?.team?'아군':'적군')+' · '+name+
+    ' · HP '+Math.ceil(closest.hp)+' / '+Math.ceil(closest.maxHP)+
+    ' · '+LANES[Math.max(0,Math.min(2,closest.lane))]+' 라인'+(closest.guardian?' · 가디언':'');
+  }else $('mpInspect').textContent=LANES[lane]+' 라인 전장 선택 · 전투 병력을 누르면 상세 정보가 표시됩니다.';
  });
  // Horizontal swipes change only the production line. Vertical swipes keep scrolling
  // the 75-slot board. A completed swipe must not accidentally order a building.
