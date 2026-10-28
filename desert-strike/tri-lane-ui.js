@@ -139,8 +139,8 @@ function buildGrid(){
 function draw(){
  if(!snap)return;
  const ctx=$('mpBattleCanvas').getContext('2d');if(!ctx)return;
- const W=1100,H=660,iso=global.IsoWorld;
- const wy=y=>y/1560*H;
+ const W=1100,H=battleHeight(),iso=global.IsoWorld;
+ const wy=y=>y/snap.height*H;
  ctx.clearRect(0,0,W,H);
  const bg=ctx.createLinearGradient(0,0,0,H);
  bg.addColorStop(0,'#263e42');bg.addColorStop(.48,'#233943');bg.addColorStop(1,'#142e3b');
@@ -150,14 +150,14 @@ function draw(){
   const y=wy(l*520),cy=wy((l+.5)*520);
   ctx.strokeStyle=l===lane?'#d3aa7150':'#8faaa626';
   if(l){ctx.setLineDash([8,12]);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();ctx.setLineDash([]);}
-  ctx.font='700 11px monospace';ctx.fillStyle='#b2c7c5a9';ctx.textAlign='left';ctx.fillText(LANES[l]+' 생산 구역',12,y+15);
+  ctx.font='700 11px monospace';ctx.fillStyle='#b2c7c5a9';ctx.textAlign='left';ctx.fillText(laneCount()===1?'단일 전장':LANES[l]+' 생산 구역',12,y+15);
   for(let side=0;side<2;side++){
    const coreX=side===0?24:1076,towerX=side===0?69:1031;
    const hp=snap.cores[l][side]||0,thp=snap.turrets?.[l]?.[side]||0;
    ctx.fillStyle=side===0?'#80d5d4':'#e19580';ctx.fillRect(coreX-11,cy-21,22,42);
    ctx.fillStyle=side===0?'#3a9792':'#a86658';ctx.fillRect(towerX-8,cy-16,16,32);
    ctx.fillStyle='#0a1b28';ctx.fillRect(coreX-12,cy-29,24,5);ctx.fillRect(towerX-10,cy-23,20,4);
-   ctx.fillStyle='#fbd293';ctx.fillRect(coreX-12,cy-29,24*hp/2500,5);ctx.fillRect(towerX-10,cy-23,20*thp/1250,4);
+   ctx.fillStyle='#fbd293';ctx.fillRect(coreX-12,cy-29,24*hp/(snap.coreMaxHP||2500),5);ctx.fillRect(towerX-10,cy-23,20*thp/1250,4);
    if(snap.forwardHP){const fx=(side===0?E.WIDTH/4:E.WIDTH*3/4)/3,fhp=snap.forwardHP[l][side];
    if(fhp>0&&iso?.structure){
     const owners=snap.players.filter(p=>p.team===side),fac=owners[l%Math.max(1,owners.length)]?.faction??0;
@@ -206,7 +206,7 @@ function draw(){
   if(label){ctx.fillStyle=e.kind==='huanglong'?'#ffe69b':'#ffe0b0';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText(label,e.x/3,wy(e.y)-23);}
  }
  if(snap.fog?.length){
-  for(let l=0;l<3;l++)if(snap.fog[l]){
+  for(let l=0;l<laneCount();l++)if(snap.fog[l]){
    const x=snap.viewerTeam===0?(3300-770)/3:0,top=wy(l*520),hh=wy(520);
    ctx.fillStyle='#091720ed';ctx.fillRect(x,top,770/3,hh);
    ctx.font='700 11px monospace';ctx.fillStyle='#bad1d2';ctx.textAlign='center';
@@ -221,17 +221,17 @@ function drawOverview(){
  const cv=$('mpOverviewCanvas'),g=cv.getContext('2d');if(!g)return;
  g.fillStyle='#0b1b23';g.fillRect(0,0,1100,96);
  for(let l=0;l<laneCount();l++){
-  const y=3+l*31,p=snap.lanePressure[l]??.5;
-  g.fillStyle=l===lane?'#314748':'#20303a';g.fillRect(0,y,1100,29);
-  g.fillStyle='#86deda';g.fillRect(0,y+22,1100*p,5);
-  g.fillStyle='#e28c77';g.fillRect(1100*p,y+22,1100*(1-p),5);
+  const band=96/laneCount(),y=3+l*band,p=snap.lanePressure[l]??.5,h=band-2;
+  g.fillStyle=l===lane?'#314748':'#20303a';g.fillRect(0,y,1100,h);
+  g.fillStyle='#86deda';g.fillRect(0,y+h-7,1100*p,5);
+  g.fillStyle='#e28c77';g.fillRect(1100*p,y+h-7,1100*(1-p),5);
   g.font='bold 12px monospace';g.textAlign='left';g.fillStyle='#f5e2c7';
-  g.fillText((l===lane?'▶ ':'')+LANES[l]+' 전선',13,y+16);
+  g.fillText((l===lane?'▶ ':'')+laneName(l)+' 전선',13,y+16);
   for(const u of snap.units)if(u.lane===l){
-   g.fillStyle=u.team===0?'#86dedc':'#f5a28a';g.fillRect(u.x/3,y+8,3,9);
+   g.fillStyle=u.team===0?'#86dedc':'#f5a28a';g.fillRect(u.x/3,y+h/2,3,Math.min(12,h/3));
   }
-  if(snap.fog?.[l]){g.fillStyle='#071521e9';g.fillRect(snap.viewerTeam===0?1100-770/3:0,y,770/3,29);}
-  if(l===lane){g.strokeStyle='#efcc9d';g.strokeRect(1,y+1,1098,28);}
+  if(snap.fog?.[l]){g.fillStyle='#071521e9';g.fillRect(snap.viewerTeam===0?1100-770/3:0,y,770/3,h);}
+  if(l===lane){g.strokeStyle='#efcc9d';g.strokeRect(1,y+1,1098,h-1);}
  }
 }
 function onSnapshot(v){
@@ -333,16 +333,16 @@ function init(){
  $('mpBattleCanvas').addEventListener('click',e=>{
   if(!snap)return;
   const r=e.currentTarget.getBoundingClientRect();
-  const x=(e.clientX-r.left)/r.width*1100,y=(e.clientY-r.top)/r.height*660;
-  pickLane(Math.floor(y/220));
-  const closest=snap.units.map(u=>({unit:u,distance:Math.hypot(x-u.x/3,y-u.y/1560*660)}))
+  const x=(e.clientX-r.left)/r.width*1100,y=(e.clientY-r.top)/r.height*battleHeight();
+  pickLane(Math.floor(y/battleHeight()*laneCount()));
+  const closest=snap.units.map(u=>({unit:u,distance:Math.hypot(x-u.x/3,y-u.y/snap.height*battleHeight())}))
    .filter(x=>x.distance<28).sort((a,b)=>a.distance-b.distance)[0]?.unit;
   if(closest){
    const name=global.DesertRoster?.FACTIONS?.[closest.faction]?.units?.[closest.role]||E.NAMES[closest.role];
    $('mpInspect').textContent=(closest.team===my()?.team?'아군':'적군')+' · '+name+
     ' · HP '+Math.ceil(closest.hp)+' / '+Math.ceil(closest.maxHP)+
-    ' · '+LANES[Math.max(0,Math.min(2,closest.lane))]+' 라인'+(closest.guardian?' · 가디언':'');
-  }else $('mpInspect').textContent=LANES[lane]+' 라인 전장 선택 · 전투 병력을 누르면 상세 정보가 표시됩니다.';
+    ' · '+laneName(Math.max(0,Math.min(laneCount()-1,closest.lane)))+(closest.guardian?' · 가디언':'');
+  }else $('mpInspect').textContent=laneName(lane)+' 전장 선택 · 전투 병력을 누르면 상세 정보가 표시됩니다.';
  });
  // Horizontal swipes change only the production line. Vertical swipes keep scrolling
  // the 75-slot board. A completed swipe must not accidentally order a building.
