@@ -238,6 +238,7 @@ function combatAudioSnapshot(v){
  const audio=global.DesertCombatAudio;
  if(!audio)return;
  if(v.ended){audio.stop();return;}
+ if(v.players?.some(p=>p.uid===myId&&v.cores?.some(c=>c[p.team]<(v.coreMaxHP||2500)*.38)))audio.cue('alarm');
  if(!snap)return;
  const oldUnits=new Map(snap.units.map(u=>[u.id,u]));
  for(const unit of v.units){

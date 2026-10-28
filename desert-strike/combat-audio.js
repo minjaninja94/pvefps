@@ -69,7 +69,7 @@
   return atlases.get(name);
  }
  function cue(kind, x=1650) {
-  if (!CUES.has(kind) || activeEffects.size >= 7 || !canPlay('sfx:'+kind, kind==='hit'?115:kind==='rifle'?95:kind==='heal'?300:180)) return;
+  if (!CUES.has(kind) || activeEffects.size >= 7 || !canPlay('sfx:'+kind, kind==='alarm'?9000:kind==='hit'?115:kind==='rifle'?95:kind==='heal'?300:180)) return;
   let audio;
   try {
    audio = new Audio(ROOT+'sfx/'+kind+'.wav');

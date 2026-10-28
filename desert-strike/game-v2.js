@@ -628,6 +628,7 @@ function defenseTarget(side,part=null){
 }
 function forwardDown(side){
  if(state.forwardClaimed[side])return;state.forwardClaimed[side]=true;
+ window.DesertCombatAudio?.cue('building');
  state[side===0?'enemyCash':'cash']+=150;
  createUnit(side,0,window.DesertGuardian?.ROLE??0);const u=state.units[state.units.length-1];
  window.DesertGuardian?.mark(u,side); // Same faction, skin and 20× assault stats as its defending side.
@@ -649,6 +650,7 @@ function structureHit(side,amount,part=null){
   state.structureFX.push({side,part:'turret',mode:state.turretHP[side]<=0?'ruin':'hit',age:0,duration:state.turretHP[side]<=0?1:.5});
   pulse(side===0?188:WORLD_W-188,260,'#fcb78b',23);
   if(state.turretHP[side]===0){
+   window.DesertCombatAudio?.cue('building');
    floatText(side===0?188:WORLD_W-188,190,'DEFENSE DOWN','#ffad82');
    setMessage(side===0?'아군 방어 포탑 파괴! 핵심 기지를 방어하세요.':'적군 방어 포탑 파괴! 핵심 기지를 공격합니다.');
   }
@@ -1407,7 +1409,9 @@ function drawProductionMinimap(){
 }
 function frame(now){
  const delta=Math.min((now-lastFrame)/1000||0,.045);lastFrame=now;
- if(state&&activeView!=='multiplayer'&&!document.body?.classList?.contains('lobby-active')&&!document.hidden){tick(delta);if(now-lastRenderAt>=40){lastRenderAt=now;if(activeView==='battle'){drawBattle();drawMinimap();}else if(activeView==='base'){drawBase();}drawProductionMinimap();}}
+ if(state&&activeView!=='multiplayer'&&!document.body?.classList?.contains('lobby-active')&&!document.hidden){
+  if(state.live&&!state.ended&&state.baseHP[0]<MAX_BASE*.38)window.DesertCombatAudio?.cue('alarm');
+  tick(delta);if(now-lastRenderAt>=40){lastRenderAt=now;if(activeView==='battle'){drawBattle();drawMinimap();}else if(activeView==='base'){drawBase();}drawProductionMinimap();}}
  requestAnimationFrame(frame);
 }
 function inspectBattle(event){
