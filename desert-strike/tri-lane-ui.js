@@ -4,7 +4,7 @@
 const $=id=>document.getElementById(id);
 const NET=global.DesertTriNetwork,E=global.DesertTriEngine;
 if(!NET||!E)return;
-let snap=null,lane=0,role=0,demolish=false,practice=null,practiceTimer=null;
+let snap=null,lane=1,role=0,demolish=false,practice=null,practiceTimer=null;
 let myId='',lobby=null,host=false,gridKey='',cardsKey='',lastSnapshotAt=0,lastDrawAt=0;
 const LANES=['상단','중앙','하단'],ICONS=['⚔','⌖','◆','▣','✣','✹','♞','✚'];
 function message(msg){$('mpStatus').textContent=msg;}
@@ -57,9 +57,29 @@ function unitCards(){
  }
  $('mpUnitCards').querySelectorAll('[data-role]').forEach(b=>b.classList.toggle('unaffordable',!!me&&me.cash<(Number(b.dataset.role)===8?E.ecoPrice(me.eco):E.COST[Number(b.dataset.role)])));
 }
+function updateLanePicker(p){
+ $('mpSelectedLane').textContent=LANES[lane]+' 라인';
+ $('mpLaneHint').textContent=LANES[lane]+' 라인 · 좌우로 밀어 라인 전환';
+ for(const b of $('mpLaneTabs').querySelectorAll('[data-lane]')){
+  const index=Number(b.dataset.lane),selected=index===lane;
+  b.classList.toggle('active',selected);
+  b.setAttribute('aria-pressed',String(selected));
+  const counter=b.querySelector('[data-lane-count]');
+  if(counter){
+   const filled=p.buildings[index]?.filter(x=>x!==null).length||0;
+   const label=filled+' / '+E.SLOTS;
+   if(counter.textContent!==label)counter.textContent=label;
+  }
+ }
+ $('mpPrevLane').disabled=lane===0;
+ $('mpNextLane').disabled=lane===2;
+ $('mpDemolish').classList.toggle('selected',demolish);
+ $('mpDemolish').setAttribute('aria-pressed',String(demolish));
+ $('mpBuildGrid').setAttribute('aria-label',LANES[lane]+' 라인의 생산 시설 '+E.SLOTS+'칸');
+}
 function buildGrid(){
  const p=my();if(!p)return;
- $('mpSelectedLane').textContent=LANES[lane]+' 라인';
+ updateLanePicker(p);
  const cells=p.buildings[lane]||[];
  const key=myId+':'+lane+':'+demolish+':'+cells.join(',');
  if(key===gridKey)return;gridKey=key;
@@ -232,21 +252,59 @@ function practiceStart(){
 async function leave(){
  if(practice){clearInterval(practiceTimer);practiceTimer=null;practice=null;myId='';snap=null;$('mpCommand').hidden=true;$('mpStateTag').textContent='연결 전';message('연습 종료');}
  else{await NET.leave();snap=null;$('mpCommand').hidden=true;}
+ lane=1;role=0;demolish=false;gridKey='';cardsKey='';
  uiButtons();
 }
 function runClick(fn){return ()=>Promise.resolve().then(fn).catch(e=>message(global.IronFirebase?.message?.(e)||e.message||String(e)));}
 function init(){
- $('mpLaneTabs').querySelectorAll('[data-lane]').forEach(b=>b.addEventListener('click',()=>pickLane(Number(b.dataset.lane))));
- function pickLane(id){
-  lane=id;$('mpLaneTabs').querySelectorAll('[data-lane]').forEach(b=>b.classList.toggle('active',Number(b.dataset.lane)===lane));
-  gridKey='';buildGrid();draw();drawOverview();
-  // Lane tabs now pick a building deployment band without moving the world camera.
+ function pickLane(id,scrollToBuild=false){
+  const next=Math.max(0,Math.min(2,Math.trunc(id)));
+  if(next!==lane){
+   lane=next;gridKey='';
+   const viewport=$('mpBuildSwipe').querySelector('.mp-grid-viewport');
+   if(viewport)viewport.scrollTop=0;
+  }
+  buildGrid();if(snap){draw();drawOverview();}
+  if(scrollToBuild)$('mpDeploymentPanel').scrollIntoView?.({block:'start',behavior:'smooth'});
  }
- $('mpOverviewCanvas').addEventListener('click',e=>{const r=e.currentTarget.getBoundingClientRect();pickLane(Math.min(2,Math.max(0,Math.floor((e.clientY-r.top)/r.height*3))));});
- $('mpBattleCanvas').addEventListener('click',e=>{const r=e.currentTarget.getBoundingClientRect();pickLane(Math.min(2,Math.max(0,Math.floor((e.clientY-r.top)/r.height*3))));});
+ $('mpLaneTabs').addEventListener('click',e=>{
+  const button=e.target.closest('[data-lane]');
+  if(button)pickLane(Number(button.dataset.lane));
+ });
+ $('mpPrevLane').addEventListener('click',()=>pickLane(lane-1));
+ $('mpNextLane').addEventListener('click',()=>pickLane(lane+1));
+ $('mpOverviewCanvas').addEventListener('click',e=>{
+  const r=e.currentTarget.getBoundingClientRect();
+  pickLane(Math.floor((e.clientY-r.top)/r.height*3),true);
+ });
+ $('mpBattleCanvas').addEventListener('click',e=>{
+  const r=e.currentTarget.getBoundingClientRect();
+  pickLane(Math.floor((e.clientY-r.top)/r.height*3),true);
+ });
+ // Horizontal swipes change only the production line. Vertical swipes keep scrolling
+ // the 75-slot board. A completed swipe must not accidentally order a building.
+ const swipeArea=$('mpBuildSwipe');
+ let start=null,suppressClickUntil=0;
+ swipeArea.addEventListener('pointerdown',e=>{
+  if(e.button!==undefined&&e.button!==0)return;
+  start={id:e.pointerId,x:e.clientX,y:e.clientY};
+ });
+ swipeArea.addEventListener('pointercancel',()=>{start=null;});
+ swipeArea.addEventListener('pointerup',e=>{
+  if(!start||e.pointerId!==start.id)return;
+  const dx=e.clientX-start.x,dy=e.clientY-start.y;
+  start=null;
+  if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.3)return;
+  suppressClickUntil=performance.now()+500;
+  pickLane(lane+(dx<0?1:-1));
+ });
+ swipeArea.addEventListener('click',e=>{
+  if(performance.now()>=suppressClickUntil)return;
+  suppressClickUntil=0;e.preventDefault();e.stopPropagation();
+ },true);
  $('mpUnitCards').addEventListener('click',e=>{const b=e.target.closest('[data-role]');if(!b)return;role=Number(b.dataset.role);demolish=false;gridKey='';unitCards();buildGrid();});
  $('mpExitBattle').addEventListener('click',()=>global.DesertLobby?.returnToLobby?.());
- document.addEventListener('keydown',e=>{if(document.body.dataset.playMode!=='multi'||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;if(/^[1-8]$/.test(e.key)){role=Number(e.key)-1;demolish=false;cardsKey='';unitCards();}if(e.key==='Escape'){demolish=false;gridKey='';buildGrid();}});
+ document.addEventListener('keydown',e=>{if(document.body.dataset.playMode!=='multi'||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;if(/^[1-8]$/.test(e.key)){role=Number(e.key)-1;demolish=false;cardsKey='';unitCards();}if(e.key==='['||e.key==='PageUp'){e.preventDefault();pickLane(lane-1);}else if(e.key===']'||e.key==='PageDown'){e.preventDefault();pickLane(lane+1);}if(e.key==='Escape'){demolish=false;gridKey='';buildGrid();}});
  global.addEventListener?.('desert-real-sprites-ready',()=>{cardsKey='';gridKey='';if(snap){unitCards();buildGrid();}});
  $('mpDemolish').addEventListener('click',()=>{demolish=!demolish;gridKey='';buildGrid();});
  $('mpBuildGrid').addEventListener('click',e=>{const b=e.target.closest('[data-slot]');if(b)order({type:'build',lane,slot:Number(b.dataset.slot),role:demolish?null:role});});
