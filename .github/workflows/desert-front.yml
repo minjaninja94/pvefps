@@ -25,10 +25,13 @@ jobs:
           node --check desert-strike/heroine-factions.js
           node --check desert-strike/expansion-art.js
           node --check desert-strike/front-lobby.js
+          node --check desert-strike/lobby-music.js
           node --check desert-strike/tri-lane-engine.js
           node --check desert-strike/tri-lane-network.js
           node --check desert-strike/tri-lane-ui.js
           node --check desert-strike/balance-sim.cjs
+      - name: Lobby and battle BGM transitions
+        run: node --test desert-strike/smoke-bgm.test.cjs
       - name: Fairy healing and beastkin ranged defense parity
         run: node desert-strike/smoke-faction-tuning.test.cjs
       - name: Gameplay regression V1
