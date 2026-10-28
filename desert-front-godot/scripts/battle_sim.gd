@@ -22,6 +22,7 @@ var winner := -1
 var message := "생산 슬롯을 선택해 유닛을 배치하세요."
 var _income_tick := 0.0
 var _ai_tick := 0.0
+var versus_player := false
 var _elapsed_wave := 0.0
 
 func _init(faction: int = 0, rival: int = 1) -> void:
@@ -39,61 +40,106 @@ func cost_for(team: int, role: int) -> int:
 	return int(Roster.COST[role])
 
 func purchase(slot: int, role: int) -> bool:
-	if ended or slot < 0 or slot >= SLOTS or role < -1 or role > 8:
+	return purchase_for_team(0, slot, role)
+
+## All orders are validated by the authority, never by the remote client.
+func purchase_for_team(team: int, slot: int, role: int) -> bool:
+	if team < 0 or team > 1 or ended or slot < 0 or slot >= SLOTS or role < -1 or role > 8:
 		message = "잘못된 건설 명령입니다."
 		return false
-	if role != -1 and int(builds[0][slot]) >= 0:
+	if role != -1 and int(builds[team][slot]) >= 0:
 		message = "기존 시설을 먼저 철거하세요."
 		return false
 	if role == -1:
-		var old_role: int = builds[0][slot]
+		var old_role: int = builds[team][slot]
 		if old_role < 0:
 			message = "이 슬롯은 비어 있습니다."
 			return false
 		var refund := roundi(float(Roster.COST[old_role]) * 0.55)
-		cash[0] += refund
+		cash[team] += refund
 		if old_role == 8:
-			eco[0] -= 1
-		builds[0][slot] = -1
+			eco[team] -= 1
+		builds[team][slot] = -1
 		message = "시설 철거 완료 (+%d CR)" % refund
 		return true
-	if role == 8 and eco[0] >= 7:
+	if role == 8 and eco[team] >= 7:
 		message = "자원채취 시설은 최대 7개입니다."
 		return false
-	var price := cost_for(0, role)
-	if cash[0] < price:
+	var price := cost_for(team, role)
+	if cash[team] < price:
 		message = "자원이 부족합니다. (%d CR 필요)" % price
 		return false
-	cash[0] -= price
-	builds[0][slot] = role
+	cash[team] -= price
+	builds[team][slot] = role
 	if role == 8:
-		eco[0] += 1
+		eco[team] += 1
 	message = "%s 건설 완료" % Roster.ROLE_NAMES[role]
 	return true
 
 func upgrade(kind: String) -> bool:
-	if ended:
+	return upgrade_for_team(0, kind)
+
+func upgrade_for_team(team: int, kind: String) -> bool:
+	if team < 0 or team > 1 or ended or kind not in ["weapon", "armor"]:
+		message = "잘못된 강화 명령입니다."
 		return false
-	var level: int = weapons[0] if kind == "weapon" else armor_levels[0]
+	var level: int = weapons[team] if kind == "weapon" else armor_levels[team]
 	if level >= 5:
 		message = "최대 강화 단계입니다."
 		return false
 	var cost := roundi((200.0 if kind == "weapon" else 190.0) * pow(1.65 if kind == "weapon" else 1.63, level))
-	if cash[0] < cost:
+	if cash[team] < cost:
 		message = "강화 비용 %d CR이 부족합니다." % cost
 		return false
-	cash[0] -= cost
+	cash[team] -= cost
 	if kind == "weapon":
-		weapons[0] += 1
+		weapons[team] += 1
 	else:
-		armor_levels[0] += 1
+		armor_levels[team] += 1
 		for u in units:
-			if u["team"] == 0:
+			if u["team"] == team:
 				var increase: float = float(u["max_hp"]) * 0.09 / (1.0 + level * 0.09)
 				u["max_hp"] += increase
 				u["hp"] += increase
 	message = "%s 강화 성공" % ("무기" if kind == "weapon" else "장갑")
 	return true
+
+## Serializable, read-only match snapshot; no scripts or arbitrary nodes are sent.
+func snapshot() -> Dictionary:
+	return {
+		"seconds": seconds, "wave": wave, "cash": cash.duplicate(),
+		"cores": cores.duplicate(), "towers": towers.duplicate(),
+		"eco": eco.duplicate(), "weapons": weapons.duplicate(),
+		"armor_levels": armor_levels.duplicate(),
+		"builds": [builds[0].duplicate(), builds[1].duplicate()],
+		"units": units.duplicate(true), "ended": ended, "winner": winner,
+		"message": message, "faction0": player_faction, "faction1": enemy_faction,
+		"elapsed_wave": _elapsed_wave
+	}
+
+func load_snapshot(data: Dictionary) -> void:
+	seconds = float(data.get("seconds", seconds))
+	wave = int(data.get("wave", wave))
+	cash = data.get("cash", cash).duplicate()
+	cores = data.get("cores", cores).duplicate()
+	towers = data.get("towers", towers).duplicate()
+	eco = data.get("eco", eco).duplicate()
+	weapons = data.get("weapons", weapons).duplicate()
+	armor_levels = data.get("armor_levels", armor_levels).duplicate()
+	var incoming: Array = data.get("builds", [])
+	if incoming.size() == 2:
+		builds[0] = incoming[0].duplicate()
+		builds[1] = incoming[1].duplicate()
+	units.clear()
+	for item in data.get("units", []):
+		if typeof(item) == TYPE_DICTIONARY:
+			units.append(item)
+	ended = bool(data.get("ended", ended))
+	winner = int(data.get("winner", winner))
+	message = str(data.get("message", message))
+	player_faction = int(data.get("faction0", player_faction))
+	enemy_faction = int(data.get("faction1", enemy_faction))
+	_elapsed_wave = float(data.get("elapsed_wave", _elapsed_wave))
 
 func advance(dt: float) -> void:
 	if ended:
@@ -108,7 +154,8 @@ func advance(dt: float) -> void:
 			cash[side] += 1.0 + float(eco[side])
 	if _ai_tick >= 2.0:
 		_ai_tick -= 2.0
-		_ai_action()
+		if not versus_player:
+			_ai_action()
 	if _elapsed_wave >= Roster.WAVE_PERIOD:
 		_elapsed_wave -= Roster.WAVE_PERIOD
 		wave += 1

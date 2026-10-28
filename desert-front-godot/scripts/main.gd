@@ -3,7 +3,13 @@ extends Control
 const Roster = preload("res://scripts/roster.gd")
 const BattleSim = preload("res://scripts/battle_sim.gd")
 const BattleView = preload("res://scripts/battlefield.gd")
+const NetworkSession = preload("res://scripts/network_session.gd")
 var simulation
+var _network
+var _address_input: LineEdit
+var _net_status: Label
+var _start_btn: Button
+var _ready_btn: Button
 var _view: Control
 var _faction_picker: OptionButton
 var _role_picker: OptionButton
@@ -17,18 +23,27 @@ var _ui_tick := 0.0
 var _demolish := false
 
 func _ready() -> void:
+	_network = NetworkSession.new()
+	_network.name = "NetworkSession"
+	add_child(_network)
+	_network.status_changed.connect(_on_network_status)
+	_network.lobby_changed.connect(_on_lobby_changed)
+	_network.match_begins.connect(_on_match_begins)
+	_network.snapshot_received.connect(_on_network_snapshot)
+	_network.session_closed.connect(_on_session_closed)
 	_build_interface()
 	_new_match()
 
 func _process(dt: float) -> void:
 	if simulation == null:
 		return
-	_time_bank += minf(dt, 0.25)
-	var cycles := 0
-	while _time_bank >= BattleSim.STEP and cycles < 6:
-		simulation.advance(BattleSim.STEP)
-		_time_bank -= BattleSim.STEP
-		cycles += 1
+	if _network.mode != "client":
+		_time_bank += minf(dt, 0.25)
+		var cycles := 0
+		while _time_bank >= BattleSim.STEP and cycles < 6:
+			simulation.advance(BattleSim.STEP)
+			_time_bank -= BattleSim.STEP
+			cycles += 1
 	_ui_tick += dt
 	if _ui_tick >= 0.2:
 		_ui_tick = 0.0
@@ -67,6 +82,40 @@ func _build_interface() -> void:
 	restart.custom_minimum_size = Vector2(115, 40)
 	restart.pressed.connect(_new_match)
 	header.add_child(restart)
+	var network_bar := HBoxContainer.new()
+	network_bar.add_theme_constant_override("separation", 8)
+	shell.add_child(network_bar)
+	var host_btn := Button.new()
+	host_btn.text = "1:1 방 만들기"
+	host_btn.pressed.connect(_host_game)
+	network_bar.add_child(host_btn)
+	_address_input = LineEdit.new()
+	_address_input.custom_minimum_size = Vector2(165, 36)
+	_address_input.placeholder_text = "호스트 IP (LAN)"
+	_address_input.text = "127.0.0.1"
+	network_bar.add_child(_address_input)
+	var join_btn := Button.new()
+	join_btn.text = "방 참가"
+	join_btn.pressed.connect(_join_game)
+	network_bar.add_child(join_btn)
+	_ready_btn = Button.new()
+	_ready_btn.text = "준비 완료"
+	_ready_btn.disabled = true
+	_ready_btn.pressed.connect(_toggle_ready)
+	network_bar.add_child(_ready_btn)
+	_start_btn = Button.new()
+	_start_btn.text = "경기 시작"
+	_start_btn.disabled = true
+	_start_btn.pressed.connect(_start_network_match)
+	network_bar.add_child(_start_btn)
+	var leave_btn := Button.new()
+	leave_btn.text = "로비 나가기"
+	leave_btn.pressed.connect(_leave_lobby)
+	network_bar.add_child(leave_btn)
+	_net_status = Label.new()
+	_net_status.text = "오프라인 싱글 | LAN 멀티: UDP 28765"
+	_net_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	shell.add_child(_net_status)
 	var content := HBoxContainer.new()
 	content.add_theme_constant_override("separation", 12)
 	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -133,7 +182,7 @@ func _build_interface() -> void:
 	_armor_btn.pressed.connect(_on_upgrade.bind("armor"))
 	upgrades.add_child(_armor_btn)
 	var note := Label.new()
-	note.text = "1차 이식: 기본 싱글 전투·건설·경제·AI\n스프라이트·종족 고유 패시브·3라인·스팀 온라인은 추후 이식"
+	note.text = "현재 버전: 기본 싱글 + LAN 1:1 동기화\n종족 고유 스킬·3라인·Steamworks 로비는 추후 이식"
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(note)
 	var footer := Label.new()
@@ -141,36 +190,112 @@ func _build_interface() -> void:
 	shell.add_child(footer)
 
 func _new_match() -> void:
+	_network.leave()
 	var faction: int = _faction_picker.selected
 	simulation = BattleSim.new(faction, (faction + 1) % 10)
 	_view.simulation = simulation
 	_time_bank = 0.0
+	_faction_picker.disabled = false
+	_net_status.text = "오프라인 싱글 | LAN 멀티: UDP 28765"
 	_refresh()
 
+func _host_game() -> void:
+	var selected: int = _faction_picker.selected
+	if _network.host_game(selected):
+		_clear_match()
+		_faction_picker.disabled = true
+
+func _join_game() -> void:
+	var selected: int = _faction_picker.selected
+	if _network.join_game(_address_input.text, selected):
+		_clear_match()
+		_faction_picker.disabled = true
+
+func _toggle_ready() -> void:
+	_network.set_ready(not _network.guest_ready)
+	_ready_btn.text = "준비 취소" if _network.guest_ready else "준비 완료"
+
+func _start_network_match() -> void:
+	_network.start_match()
+
+func _leave_lobby() -> void:
+	_new_match()
+
+func _clear_match() -> void:
+	simulation = null
+	_view.simulation = null
+	_info.text = "접속 대기 중"
+	_status.text = "온라인 방 준비 중입니다."
+	_start_btn.disabled = true
+
+func _on_network_status(text: String) -> void:
+	if _net_status != null:
+		_net_status.text = text
+
+func _on_lobby_changed(can_start: bool, connected: bool) -> void:
+	if _start_btn == null:
+		return
+	_start_btn.disabled = _network.mode != "host" or not can_start or _network.phase != "lobby"
+	_ready_btn.disabled = _network.mode != "client" or not connected or _network.phase != "lobby"
+	_ready_btn.text = "준비 취소" if _network.guest_ready else "준비 완료"
+
+func _on_match_begins(f0: int, f1: int) -> void:
+	simulation = BattleSim.new(f0, f1)
+	simulation.versus_player = true
+	_view.simulation = simulation
+	_network.bind_simulation(simulation)
+	_time_bank = 0.0
+	_start_btn.disabled = true
+	_ready_btn.disabled = true
+	_refresh()
+
+func _on_network_snapshot(data: Dictionary) -> void:
+	if simulation != null and _network.mode == "client":
+		simulation.load_snapshot(data)
+		_refresh()
+
+func _on_session_closed(_reason: String) -> void:
+	_clear_match()
+	_faction_picker.disabled = false
+
 func _on_slot(slot: int) -> void:
+	if simulation == null:
+		return
 	var role: int = -1 if _demolish else _role_picker.selected
-	simulation.purchase(slot, role)
+	if _network.mode == "offline":
+		simulation.purchase(slot, role)
+	else:
+		_network.submit_build(slot, role)
 	_refresh()
 
 func _on_upgrade(kind: String) -> void:
-	simulation.upgrade(kind)
+	if simulation == null:
+		return
+	if _network.mode == "offline":
+		simulation.upgrade(kind)
+	else:
+		_network.submit_upgrade(kind)
 	_refresh()
 
 func _refresh() -> void:
 	if simulation == null:
 		return
+	var side := 1 if _network.mode == "client" else 0
+	var opponent := 1 - side
 	_info.text = "WAVE %d / 22     다음 출격 %d초     크레딧 %d CR      아군 기지 %.0f HP     적 기지 %.0f HP" % [
-		simulation.wave, simulation.seconds_to_next_wave(), int(simulation.cash[0]),
-		maxf(simulation.cores[0], 0.0), maxf(simulation.cores[1], 0.0)
+		simulation.wave, simulation.seconds_to_next_wave(), int(simulation.cash[side]),
+		maxf(simulation.cores[side], 0.0), maxf(simulation.cores[opponent], 0.0)
 	]
 	_status.text = "상태: %s" % simulation.message
+	if simulation.ended and _network.mode != "offline":
+		_status.text = "승리!" if simulation.winner == side else ("무승부" if simulation.winner < 0 else "패배")
 	for slot in range(_grid.size()):
-		var role: int = simulation.builds[0][slot]
+		var role: int = simulation.builds[side][slot]
 		var button: Button = _grid[slot]
 		button.text = "·" if role == -1 else str(role + 1)
 		button.tooltip_text = "슬롯 %d — %s" % [slot + 1, "빈칸" if role == -1 else Roster.ROLE_NAMES[role]]
-	var weapon_level: int = simulation.weapons[0]
-	var armor_level: int = simulation.armor_levels[0]
+	var weapon_level: int = simulation.weapons[side]
+	var armor_level: int = simulation.armor_levels[side]
 	_weapon_btn.text = "무기 Lv.%d / 5" % weapon_level
 	_armor_btn.text = "장갑 Lv.%d / 5" % armor_level
 	_weapon_btn.disabled = simulation.ended or weapon_level >= 5

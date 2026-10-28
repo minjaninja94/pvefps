@@ -24,6 +24,16 @@ jobs:
         run: godot --headless --path desert-front-godot --editor --quit
       - name: Run isolated simulation smoke test
         run: godot --headless --path desert-front-godot --script res://tests/smoke.gd
+      - name: Run two-process LAN host/guest integration
+        run: |
+          set -eu
+          godot --headless --path desert-front-godot --script res://tests/net_host.gd > /tmp/df-host.log 2>&1 &
+          host_pid=$!
+          trap 'kill "$host_pid" 2>/dev/null || true' EXIT
+          sleep 2
+          godot --headless --path desert-front-godot --script res://tests/net_client.gd > /tmp/df-client.log 2>&1 || { cat /tmp/df-host.log /tmp/df-client.log; exit 1; }
+          wait "$host_pid" || { cat /tmp/df-host.log /tmp/df-client.log; exit 1; }
+          cat /tmp/df-host.log /tmp/df-client.log
       - name: Configure Godot Windows export templates
         run: |
           mkdir -p "$HOME/.local/share/godot/export_templates"
