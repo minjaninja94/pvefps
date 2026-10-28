@@ -26,7 +26,7 @@ const FACTIONS=[
  {id:'forge',name:'철갑연합',tag:'FORGE UNION',logo:'▦',color:'#79ddea',bonus:'전열 방어 특화 · 전 병종 체력 5.5% 증가 · 장갑·대공병이 받는 피해 6% 감소',mut:{hp:1.055,dmg:1,speed:.96},units:['진격 보병','기관총병','관통 로켓','철갑 전차','복합 대공포','궤도 자주포','추적 비행기','전장 구호병'],slogan:'높은 체력과 장갑 방어로 전열 유지',secondary:'#224956'},
  {id:'brood',name:'심연군체',tag:'DUSK BROOD',logo:'♜',color:'#b9df8d',bonus:'기동·증원 특화 · 전 병종 이동속도 12% 증가 · 전투병 공격 시 20% 확률로 공생충 소환(개체당 11초 간격)',mut:{hp:.995,dmg:1,speed:1.12},units:['송곳 발톱','산성 침벌','부식 포자충','거대 갑각수','가시 포자탑','폭식 투석충','비행 포식자','치유 공생충'],slogan:'빠른 진격과 공생충 증원',secondary:'#344d2b'},
  {id:'astral',name:'성운결사',tag:'ASTRAL ORDER',logo:'✧',color:'#d6b8ff',bonus:'공격·치유 특화 · 전 병종 공격력·치유량 9% 증가 · 10초마다 1회 받는 피해 18% 감소',mut:{hp:.99,dmg:1.09,speed:1},units:['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],slogan:'공격과 치유를 강화하는 비전 방벽',secondary:'#443257'},
- {id:'marine',name:'해병성채',tag:'MARINE FORTRESS',logo:'★',color:'#dba77c',bonus:'보병·지원 특화 · 돌격·사격병 체력 9%·공격력 6% 증가 · 황룡은 웨이브당 3회, 8초 간격 출격',mut:{hp:1.09,dmg:1.06,speed:1.01},units:['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],	slogan:'튼튼한 병력과 황룡의 광역 회복',secondary:'#58412f'},
+ {id:'marine',name:'해병성채',tag:'MARINE FORTRESS',logo:'★',color:'#dba77c',bonus:'전군 생존·지원 특화 · 전 병종 체력 9%·공격력 6% 증가 · 황룡은 웨이브당 3회, 8초 간격 출격',mut:{hp:1.09,dmg:1.06,speed:1.01},units:['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],	slogan:'튼튼한 병력과 황룡의 광역 회복',secondary:'#58412f'},
  {id:'beastkin',name:'월영 수인족',tag:'MOONFANG CLAN',logo:'♞',color:'#f0b4a6',bonus:'근접전 특화 · 돌격·장갑병 공격력 8% 증가 · 장갑병 체력 5% 증가',mut:{hp:1,dmg:1,speed:1.02},units:['백랑 검사','여우족 단검투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],slogan:'강한 근접 공격과 튼튼한 장갑병',secondary:'#603d46'},
  {id:'elf',name:'은월 엘프족',tag:'SILVERWOOD ELVES',logo:'✦',color:'#b2e6cf',bonus:'원거리 정밀사격 특화 · 사격·대장갑·대공·포격·비행: 사거리 10% 증가, 12% 확률로 피해 25% 증가',mut:{hp:.94,dmg:1,speed:.99},units:['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사'],slogan:'긴 사거리와 확률 추가 피해',secondary:'#375c52'},
  {id:'furry',name:'야월 퍼리족',tag:'WILDFUR PACK',logo:'♣',color:'#e8c392',bonus:'근접 협공 특화 · 돌격·장갑병 공격력 10% 증가 · 아군 퍼리가 165거리 안에 있으면 돌격·장갑·늑대기수 피해 6% 증가',mut:{hp:1.02,dmg:1,speed:1.07},units:['늑대 추적자','여우총 사냥꾼','송곳니 분쇄자','곰 털갑옷 수호자','하울 창투사','들소 포격수','알파 늑대 기수','달빛 무리치유사'],slogan:'아군과 함께 싸우는 근접 협공',secondary:'#634634'},
@@ -482,7 +482,7 @@ function structureDamage(role,amount){
 function calcDamage(attacker,target,amount,unit=null,volley=null){
  let out=amount;
  if(attacker!==null){
-  const role=ROLE[attacker];
+  const role=unit&&Number.isInteger(unit.faction)?getDef(attacker,unit.faction):ROLE[attacker];
   if(target.role===6&&[3,4,6,7].includes(target.faction)){if(attacker===2)out*=1.65;else if(attacker===0)out*=.68;else if(attacker===4)out*=.78;}
   else{if(role.good.includes(target.role))out*=1.55;if(role.bad.includes(target.role))out*=.7;}
  }
