@@ -411,7 +411,7 @@ func _ai_buy(p: Dictionary) -> void:
 			var counters: Array = [[1,3],[3,5],[0,1],[2,6],[2,3],[0,6],[4,1],[0,5]][dominant]
 			if dominant == 3 and int(p["faction"]) in [3,4,6,7]:
 				counters = [2,3]
-			var threat_key := "%d:%d:%d:%d" % [air>=2, armored>=2, dominant if concentrated else -1, threats[dominant] if concentrated else 0]
+			var threat_key := "%d:%d:%d:%d" % [int(air >= 2), int(armored >= 2), dominant if concentrated else -1, threats[dominant] if concentrated else 0]
 			if str(p.get("ai_last_threat","")) != threat_key:
 				p["ai_last_threat"] = threat_key
 				p["ai_target_role"] = -1
