@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const root=__dirname,read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const html=read('index.html'),game=read('game-v2.js'),css=read('style-v2.css');
-for(const id of ['frontLobby','lobbySolo','lobbyMulti','lobbyPractice','lobbyFactions','lobbySkins','lobbyGoogle','lobbyGuest','lobbyLevel','lobbyRank','backToLobby'])assert.ok(html.includes('id="'+id+'"'),'lobby must include '+id);
+for(const id of ['frontLobby','lobbySolo','lobbyMulti','lobbyPractice','lobbyFactions','lobbySkins','lobbyDeviceLogin','lobbyAccountStatus','lobbyLevel','lobbyRank','backToLobby'])assert.ok(html.includes('id="'+id+'"'),'lobby must include '+id);
 assert.ok(html.indexOf('expansion-art.js')<html.indexOf('isometric-world.js'),'expansion sprite rigs load before isometric renderer');
 assert.ok(html.indexOf('game-v2.js')<html.indexOf('front-lobby.js'),'roster loads before lobby startup');
 assert.match(css,/\.lobby-factions/);
@@ -25,9 +25,9 @@ vm.runInNewContext(game.replace('initFactions();wire();reset();',''),{
  window:engineWin,document:{getElementById(){return {}},querySelectorAll(){return []},querySelector(){return null}},
  requestAnimationFrame(){},console,Math,Array,Object,Number,Map,Set,Date
 },{timeout:10000});
-assert.equal(engineWin.DesertRoster.FACTIONS.length,9);
-assert.equal(engineWin.DesertRoster.FACTIONS.map(f=>f.units.length).reduce((a,b)=>a+b),72);
-for(let f=0;f<9;f++)for(let r=0;r<8;r++){
+assert.equal(engineWin.DesertRoster.FACTIONS.length,10);
+assert.equal(engineWin.DesertRoster.FACTIONS.map(f=>f.units.length).reduce((a,b)=>a+b),80);
+for(let f=0;f<10;f++)for(let r=0;r<8;r++){
  const u=engineWin.DesertRoster.getDef(r,f);
  for(const k of ['hp','damage','range','rate','speed'])assert.ok(Number.isFinite(u[k]),'finite '+f+'/'+r+'/'+k);
  assert.ok(u.hp>0&&u.range>0&&u.rate>0);
@@ -59,4 +59,4 @@ assert.match(fakeEl('lobbyRecord').textContent,/온라인 1승/,'duplicate repor
 assert.ok(store.has('desert-front-training-v2'),'guest progression saved locally');
 assert.match(read('front-lobby.js'),/async function restoreAccount\(/,'Google persistence restores on reload');
 assert.match(fs.readFileSync(path.join(root,'..','firebase-network.js'),'utf8'),/uid:auth\.currentUser\.uid/,'network identity follows changed Firebase sessions');
-console.log('Nine-faction test passed: 72 unique units, 1,920 generated 2.5D frames, 3 structures, lobby mode/UI, XP ranks, unlockable cosmetics.');
+console.log('Ten-faction test passed: 80 unique units, 1,920 generated 2.5D frames, 3 structures, lobby mode/UI, XP ranks, unlockable cosmetics.');
