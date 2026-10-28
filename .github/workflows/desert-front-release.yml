@@ -1,3 +1,4 @@
+# Publication checks: native art, 3-line 1v1/2v2/3v3/co-op simulation, UI and real 4-process LAN 2v2.
 name: Desert Front Windows public preview release
 on:
   push:
