@@ -4,14 +4,17 @@ The browser game under desert-strike/ is READ ONLY. This new project stays on fe
 
 ## Ported into Godot source
 
-- 80 original WebP unit sprite strips (8 frames each) plus 10 faction banners imported via a separate read-only copy process.
+- 80 original WebP unit sprite strips (8 frames each), 10 faction banners, 10 original moe action sheets and 10 moe portraits imported via a separate read-only copy process.
 - Classic one-line battles plus a continuous 3-band battlefield for 1v1, 2v2, 3v3 and 2/3-person co-op.
 - Per-player credits, owned production slots by lane, extractors, 5-level weapon/armor upgrades, repair, nuke and targeted barrage.
 - 20-soldier hero aggregation, forward defense towers, 150-credit attacker reward and one defensive no-cross-midline guardian per fallen forward tower.
 - Faction combat mechanics: brood hatchlings, Marine spoils/conscripts/support heal, Fairy chain heal, Octoper ink, Robot regeneration, Beastkin ranged mitigation, Astral ward, Elf criticals, Furry pack synergy and Forge armor.
-- Native 3-band pixel battlefield with life bars, guardian aura and animations, click-to-select lanes and production/upgrades/tactics panels.
+- Native 3-band pixel battlefield with life bars, guardian aura and animations, click-to-select lanes, independent production/upgrades tabs, exact cost displays and tactical actions.
 - NodeTunnel online room/ready/host-authoritative order flow; 2v2/3v3 and co-op team sizes represented in native match code.
-- Hard-mode weighted AI with economic production and threat response.
+- Hard-mode weighted AI with planned purchases (banking credits for armor/siege instead of spamming low-cost infantry), scouting and counterplay.
+- Original basic pixel and moe costumes selectable in classic, 3-lane, PvP and co-op, carried in authoritative network snapshots.
+- Compact, fog-redacted network unit packets (version 2) and bounded client action rate; adaptive snapshot interval.
+- Local saved match history in user:// for classic, multi-lane PvP and co-op (NOT a centralized leaderboard).
 
 ## Run
 
@@ -22,6 +25,6 @@ Windows distribution is published to GitHub Releases as DesertFront-Preview-Wind
 
 ## Still not completed or validated
 
-This is a partial migration, not feature parity. Exact browser combat timing/AI/consolidation behavior, all unique graphics/skins/effect animations, production performance, user account & ranking, reconnection, and web UI polish need further work.
+This is a partial migration, not feature parity. Exact browser combat timing/AI/consolidation behavior, all original alternate skin palettes and effect animations, performance profiling, online account & centralized ranking, reconnection, and web UI polish need further work.
 Local headless LAN 1v1 tests and automated tri-lane simulation/scene tests do not prove actual online 2v2/3v3 or co-op connectivity across networks. The relay service is third-party beta.
 Do not market this as a stable complete release; it is an alpha preview.
