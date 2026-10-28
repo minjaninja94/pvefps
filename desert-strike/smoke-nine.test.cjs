@@ -38,13 +38,13 @@ assert.ok(engineWin.DesertRoster.getDef(0,6).damage>engineWin.DesertRoster.getDe
 const elements=new Map(),store=new Map(),listeners={};
 const fakeEl=id=>{
  if(!elements.has(id)){elements.set(id,{id,style:{},dataset:{},hidden:false,value:'',textContent:'',innerHTML:'',disabled:false,handlers:{},
-  addEventListener(k,fn){this.handlers[k]=fn;},querySelectorAll(){return []},getContext(){return {clearRect(){},drawImage(){},filter:'none'}},
+  addEventListener(k,fn){this.handlers[k]=fn;},append(){},querySelectorAll(){return []},getContext(){return {clearRect(){},drawImage(){},filter:'none'}},
   click(){this.handlers.click?.({target:this})},classList:{add(){},remove(){}}});}
  return elements.get(id);
 };
 const fakeDoc={readyState:'complete',body:{classList:{add(){},remove(){}}},getElementById:fakeEl,querySelectorAll(){return []},querySelector(){return null}};
 const modelWindow={DesertRoster:engineWin.DesertRoster,IsoWorld:{portrait(){return {}},frame(){return {}}},addEventListener(k,fn){listeners[k]=fn;}};
-vm.runInNewContext(read('front-lobby.js'),{window:modelWindow,document:fakeDoc,localStorage:{getItem(k){return store.get(k)||null},setItem(k,v){store.set(k,v)}},console,Math,Number,String,Object,Array,Map,Set,JSON},{timeout:10000});
+vm.runInNewContext(read('front-lobby.js'),{window:modelWindow,document:fakeDoc,localStorage:{getItem(k){return store.get(k)||null},setItem(k,v){store.set(k,v)}},console,Math,Number,String,Object,Array,Map,Set,JSON,performance:{now:()=>0}},{timeout:10000});
 const lobby=modelWindow.DesertLobby;
 assert.equal(lobby.levelFromXP(0).level,1);
 assert.equal(lobby.selectedSkin(),'default');
