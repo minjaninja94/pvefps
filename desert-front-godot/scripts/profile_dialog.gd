@@ -9,16 +9,18 @@ var _cloud
 var _cloud_status: Label
 var _leaderboard_dialog: AcceptDialog
 var _cloud_buttons: Array[Button] = []
+var _email: LineEdit
+var _password: LineEdit
 
 func _ready() -> void:
 	title = "Desert Front · 회원 프로필 / 비공식 티어"
 	exclusive = false
 	var content := VBoxContainer.new()
-	content.custom_minimum_size = Vector2(620,390)
+	content.custom_minimum_size = Vector2(620,520)
 	add_child(content)
 	_info = Label.new()
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_info.custom_minimum_size.y = 155
+	_info.custom_minimum_size.y = 120
 	content.add_child(_info)
 	var name_label := Label.new()
 	name_label.text = "지휘관 닉네임 (최대 16자)"
@@ -54,6 +56,30 @@ func _ready() -> void:
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		cloud_actions.add_child(button)
 		_cloud_buttons.append(button)
+	var email_title := Label.new()
+	email_title.text = "이메일 계정 · 기존 익명 UID 그대로 전환"
+	content.add_child(email_title)
+	_email = LineEdit.new()
+	_email.placeholder_text = "이메일 주소"
+	_email.max_length = 254
+	content.add_child(_email)
+	_password = LineEdit.new()
+	_password.placeholder_text = "비밀번호 (6자 이상)"
+	_password.secret = true
+	_password.max_length = 128
+	content.add_child(_password)
+	var email_actions := HBoxContainer.new()
+	content.add_child(email_actions)
+	var signup_button := Button.new()
+	signup_button.text = "이메일 계정 생성 / 전환"
+	signup_button.pressed.connect(_register_email)
+	email_actions.add_child(signup_button)
+	_cloud_buttons.append(signup_button)
+	var signin_button := Button.new()
+	signin_button.text = "기존 이메일 계정 로그인"
+	signin_button.pressed.connect(_login_email)
+	email_actions.add_child(signin_button)
+	_cloud_buttons.append(signin_button)
 	_cloud_status = Label.new()
 	_cloud_status.text = "연결되지 않음 · 온라인 랭킹은 비공식 자체신고 RP입니다."
 	_cloud_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -72,6 +98,22 @@ func _connect_firebase() -> void:
 	_cloud_status.text = "기존 Firebase 프로젝트 인증 중..."
 	var success: bool = await _cloud.connect_member()
 	_cloud_status.text = "Firebase 회원 연결 완료" if success else "연결 실패: " + _cloud.last_error
+	_set_busy(false)
+
+func _register_email() -> void:
+	_set_busy(true)
+	_cloud_status.text = "익명 회원을 이메일 계정으로 전환 중..."
+	var success: bool = await _cloud.register_email(_email.text,_password.text)
+	_password.clear()
+	_cloud_status.text = ("계정 생성 완료 · 동일한 Firebase UID 유지 · " + _cloud.account_email) if success else ("계정 생성 실패: " + _cloud.last_error)
+	_set_busy(false)
+
+func _login_email() -> void:
+	_set_busy(true)
+	_cloud_status.text = "기존 이메일 계정 로그인 중..."
+	var success: bool = await _cloud.login_email(_email.text,_password.text)
+	_password.clear()
+	_cloud_status.text = ("이메일 로그인 완료 · " + _cloud.account_email) if success else ("로그인 실패: " + _cloud.last_error)
 	_set_busy(false)
 
 func _upload_profile() -> void:
@@ -98,7 +140,7 @@ func _show_cloud_board() -> void:
 
 func open_profile() -> void:
 	_refresh()
-	popup_centered(Vector2i(750,510))
+	popup_centered(Vector2i(750,650))
 
 func _refresh() -> void:
 	if _info == null or _name == null:
