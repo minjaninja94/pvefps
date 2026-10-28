@@ -23,6 +23,7 @@ var _state: Label
 var _role_picker: OptionButton
 var _lane_picker: OptionButton
 var _grid: Array[Button] = []
+var _upgrade_details: Label
 var _ready_button: Button
 var _start: Button
 var _view: Control
@@ -193,13 +194,25 @@ func _build_ui() -> void:
 	_lane_picker.select(1)
 	_lane_picker.item_selected.connect(_on_lane_selected)
 	side.add_child(_lane_picker)
+	var tabs := TabContainer.new()
+	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	side.add_child(tabs)
+	var build_tab := VBoxContainer.new()
+	build_tab.name = "전장 · 생산"
+	build_tab.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	tabs.add_child(build_tab)
+	var upgrade_tab := VBoxContainer.new()
+	upgrade_tab.name = "강화 · 전술"
+	upgrade_tab.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	tabs.add_child(upgrade_tab)
 	_role_picker = OptionButton.new()
 	for i in range(Roster.ROLE_NAMES.size()):
 		_role_picker.add_item("%s  ·  %d CR" % [Roster.ROLE_NAMES[i],Roster.COST[i]])
-	side.add_child(_role_picker)
+	build_tab.add_child(_role_picker)
 	var illustrations := HBoxContainer.new()
 	illustrations.custom_minimum_size = Vector2(400, 78)
-	side.add_child(illustrations)
+	build_tab.add_child(illustrations)
 	_skin_banner = TextureRect.new()
 	_skin_banner.custom_minimum_size = Vector2(146, 76)
 	_skin_banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -223,10 +236,10 @@ func _build_ui() -> void:
 	var demolition := CheckButton.new()
 	demolition.text = "철거 모드 (55% 환급)"
 	demolition.toggled.connect(func(value: bool)->void:_demolition=value)
-	side.add_child(demolition)
+	build_tab.add_child(demolition)
 	var grid_scroll := ScrollContainer.new()
 	grid_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	side.add_child(grid_scroll)
+	build_tab.add_child(grid_scroll)
 	var grid := GridContainer.new()
 	grid.columns = 15
 	grid.add_theme_constant_override("h_separation",1)
@@ -240,7 +253,11 @@ func _build_ui() -> void:
 		grid.add_child(cell)
 		_grid.append(cell)
 	var upgrades := HBoxContainer.new()
-	side.add_child(upgrades)
+	upgrade_tab.add_child(upgrades)
+	_upgrade_details = Label.new()
+	_upgrade_details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_upgrade_details.text = "무기·장갑 강화 비용과 현재 상태"
+	upgrade_tab.add_child(_upgrade_details)
 	for spec in [{"label":"공격 강화","kind":"weapon"},{"label":"방어 강화","kind":"armor"}]:
 		var button := Button.new()
 		button.text = spec["label"]
@@ -248,7 +265,7 @@ func _build_ui() -> void:
 		button.pressed.connect(_issue.bind({"type":"upgrade","kind":spec["kind"]}))
 		upgrades.add_child(button)
 	var tactics := HBoxContainer.new()
-	side.add_child(tactics)
+	upgrade_tab.add_child(tactics)
 	for spec in [{"label":"포탑 수리","kind":"repair"},{"label":"궤도 폭격","kind":"barrage"},{"label":"긴급 핵","kind":"nuke"}]:
 		var button := Button.new()
 		button.text = spec["label"]
@@ -258,7 +275,7 @@ func _build_ui() -> void:
 	var note := Label.new()
 	note.text = "원본 80종 유닛 도트 · 3라인 · 가디언 · 영웅 ×20\n실험적 릴레이 로비 · AI 연습 모드"
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	side.add_child(note)
+	upgrade_tab.add_child(note)
 
 func _selected_skin() -> String:
 	return "moe" if _skins.selected == 1 else "default"
@@ -452,6 +469,17 @@ func _refresh_ui() -> void:
 		int(p["cash"]),left if team==0 else right,right if team==0 else left,
 		int(p["weapon"]),int(p["armor"])
 	]
+	if _upgrade_details != null:
+		var w_level := int(p["weapon"])
+		var a_level := int(p["armor"])
+		var w_cost := roundi(200.0 * pow(1.65,w_level))
+		var a_cost := roundi(190.0 * pow(1.63,a_level))
+		var repair_hp := float(match_game.turrets[lane][team])
+		_upgrade_details.text = "무기 강화  %s  ·  +8%% 공격력/회복량\n장갑 강화  %s  ·  +9%% 최대 HP\n라인 %d 수리: 180 CR (현재 포탑 %d / 1250)\n궤도 폭격: 260 CR · 남은 쿨타임 %.1f초\n긴급 핵: %d회 남음 · 기지 침입/위기 시" % [
+			"MAX" if w_level >= 5 else "Lv.%d → %d CR" % [w_level,w_cost],
+			"MAX" if a_level >= 5 else "Lv.%d → %d CR" % [a_level,a_cost],
+			lane+1,int(repair_hp),float(p.get("barrage_cd",0.0)),int(p.get("nukes",0))
+		]
 	for slot in range(_grid.size()):
 		var role: int = p["buildings"][lane][slot]
 		_grid[slot].text = "·" if role < 0 else str(role+1)
