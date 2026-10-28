@@ -7,9 +7,22 @@
 const ICE=[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}];
 let events={},scope=null,db=null,fs=null,uid=null,roomId=null,room=null,host=false,localPeer=null;
 let roomUnsub=null,peerSubs=new Map(),channels=new Map(),pcs=new Map(),clock=null,engine=null,seq=0,lastFrame=0;
-let active=false,answering=false,hostPeerOpen=new Set(),snapshotSeq=0;
+let active=false,answering=false,hostPeerOpen=new Set(),snapshotSeq=0,serverTimer=null,gameEndedLocally=false;
 const msg=e=>global.IronFirebase?.message?.(e)||e?.message||String(e);
 function notify(key,data){try{events[key]?.(data);}catch(e){console.error('멀티 UI 갱신 오류',e);}}
+function beginServerHeartbeat(){
+ if(serverTimer)return;
+ serverTimer=setInterval(()=>{const pending=global.DesertMember?.poll?.();
+ if(pending)void pending.then(data=>{
+  if(data?.state==='done'&&data.winner_team!==null&&!gameEndedLocally){gameEndedLocally=true;notify('forcedResult',data);}
+ }).catch(()=>{});},8000);
+}
+async function reportWinner(winner){
+ if(gameEndedLocally)return;
+ gameEndedLocally=true;
+ await global.DesertMember?.reportResult?.(winner);
+}
+
 function status(s){notify('status',s);}
 function validateName(s){return String(s||'지휘관').trim().replace(/[<>]/g,'').slice(0,16)||'지휘관';}
 function validateRuleset(s){return s==='augment'?'augment':'standard';}
@@ -31,6 +44,8 @@ function everyoneReady(r){
 }
 function resetLocal(){
  if(clock){clearInterval(clock);clock=null;}
+ if(serverTimer){clearInterval(serverTimer);serverTimer=null;}
+ global.DesertMember?.endMatch?.();gameEndedLocally=false;
  if(roomUnsub){roomUnsub();roomUnsub=null;}
  for(const stop of peerSubs.values())stop();peerSubs.clear();
  for(const ch of channels.values())try{ch.close();}catch(e){}
@@ -40,6 +55,10 @@ function resetLocal(){
 }
 async function leave(){
  if(!roomId)return resetLocal();
+ if(room?.status==='playing'&&!gameEndedLocally){
+  const result=await global.DesertMember?.forfeit?.();
+  if(result?.forfeit)status('경기 중 이탈 · 서버에 패배로 기록되었습니다.');
+ }
  const id=roomId,currentUid=uid,isHost=host;
  try{
   if(isHost){
@@ -61,6 +80,7 @@ function listenRoom(){
  roomUnsub=fs.onSnapshot(path(),snap=>{
   if(!snap.exists()){status('방이 닫혔습니다.');resetLocal();notify('room',null);return;}
   room=snap.data();notify('room',{id:roomId,room,uid,host,ready:everyoneReady(room)});
+  if(room.status==='playing'){global.DesertMember?.markPlaying?.(roomId);beginServerHeartbeat();}
   if(host&&room.status==='lobby')for(const m of members())if(m.uid!==uid&&!pcs.has(m.uid))void makeOffer(m.uid).catch(e=>status('연결 제안 오류: '+msg(e)));
   if(!host&&!pcs.size&&room.status==='lobby')listenGuest();
  },e=>status('대기실 수신 오류: '+msg(e)));
@@ -84,7 +104,8 @@ async function create(opts){
  }
  if(room.publicRoom){try{await fs.setDoc(publicPath(roomId),{owner:uid,created:room.created,expires:room.expires});}
   catch(e){status('공개방 목록 등록 실패: '+msg(e)+' · 초대 코드 참가만 가능합니다.');}}
- listenRoom();status('방 코드 '+roomId+' · 상대에게 코드를 공유하세요.');
+ const ledger=await global.DesertMember?.joinMatch?.({code:roomId,mode:room.mode,size:room.size,team:0,host:true});
+ listenRoom();status('방 코드 '+roomId+' · '+(ledger?.ok?'서버 경기 참가 등록 완료':'서버 탈주 판정 비활성: '+(ledger?.reason||'Supabase 인증 필요')));
  return roomId;
 }
 async function join(opts){
@@ -93,6 +114,7 @@ async function join(opts){
  roomId=String(opts.code||'').trim().toUpperCase();
  if(!/^[A-HJ-NP-Z2-9]{6}$/.test(roomId))throw Error('6자리 방 코드가 필요합니다.');
  host=false;
+ let joined=null;
  await fs.runTransaction(db,async tx=>{
   const ref=path(),snap=await tx.get(ref);
   if(!snap.exists())throw Error('존재하지 않는 방입니다.');
@@ -109,10 +131,12 @@ async function join(opts){
   }
   if(Object.keys(players).length>=r.size*(r.mode==='coop'?1:2))throw Error('방 정원이 가득 찼습니다.');
   players[uid]={name:validateName(opts.name),team,faction:Number(opts.faction),skin:validateSkin(opts.skin),ready:false};
+  joined={code:roomId,mode:r.mode,size:r.size,team,host:false};
   if(players[uid].faction<0||players[uid].faction>9)throw Error('종족 선택 오류');
   tx.update(ref,{players});
  });
- listenRoom();status('방 '+roomId+' 참가 완료 · 연결과 준비 상태를 확인하세요.');
+ const ledger=await global.DesertMember?.joinMatch?.(joined);
+ listenRoom();status('방 '+roomId+' 참가 · '+(ledger?.ok?'서버 참가 등록 완료':'서버 판정 비활성: '+(ledger?.reason||'계정 인증 필요')));
  return roomId;
 }
 async function ready(value){
@@ -209,7 +233,11 @@ async function start(){
  if(!global.DesertTriEngine)throw Error('3라인 전투 엔진이 준비되지 않았습니다.');
  if(room.ruleset==='augment')await global.DesertAugments.load();
  engine=global.DesertTriEngine.create({mode:room.mode,size:room.size,members:members(),ruleset:validateRuleset(room.ruleset),seed:room.seed||1});
+ const registered=await global.DesertMember?.startMatch?.();
+ if(registered&&!registered.ok&&global.DesertMember?.isMember?.())throw Error('탈주 판정 서버가 경기를 시작하지 못했습니다: '+registered.reason);
+ if(registered&&!registered.ok)status('게스트 비공식 게임: 서버 탈주 기록 미적용');
  await fs.updateDoc(path(),{status:'playing'});
+ global.DesertMember?.markPlaying?.(roomId);beginServerHeartbeat();
  if(room.publicRoom)try{await fs.deleteDoc(publicPath());}catch(_){}
  let last=performance.now();
  clock=setInterval(()=>{
@@ -245,5 +273,5 @@ async function browse(){
  return rooms.filter(x=>x&&x.members<x.capacity).sort((a,b)=>a.members-b.members);
 }
 function current(){return {roomId,room,uid,host,peers:new Set(hostPeerOpen),active};}
-global.DesertTriNetwork=Object.freeze({configure,identity,create,join,browse,ready,start,leave,sendOrder,current,validateName});
+global.DesertTriNetwork=Object.freeze({configure,identity,create,join,browse,ready,start,leave,sendOrder,reportWinner,current,validateName});
 })(window);

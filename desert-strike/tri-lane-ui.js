@@ -332,6 +332,7 @@ function onSnapshot(v){
  }
  $('mpLaneSummary').replaceChildren(f);
  if(v.ended){global.DesertLobbyMusic?.stopBattle?.();
+  if(!practice)void NET.reportWinner?.(v.winner);
   if(practice&&!practiceRecorded){practiceRecorded=true;global.DesertCareer?.record?.({mode:'practice',size:1,side:0,winner:v.winner,faction:me?.faction??faction(),wave:v.wave,seconds:v.seconds,online:false});}
   $('mpStateTag').textContent=v.winner===null?'무승부':v.winner===side?'승리':'패배';if(!practice)global.DesertLobby?.completeMultiplayer?.({winner:v.winner,side,matchId:lobby?.id||'unknown',mode:v.mode,size:v.size,wave:v.wave,seconds:v.seconds,faction:me?.faction??faction()});}
  renderAugment();unitCards();buildGrid();upgradeInfo();drawOverview();
@@ -472,7 +473,11 @@ function init(){
  $('mpJoinPublic').addEventListener('click',()=>{const code=$('mpPublicList').value;if(!code){message('참가할 공개방을 선택하세요.');return;}
   $('mpRoomCode').value=code;$('mpJoin').click();});
  $('mpLeave').addEventListener('click',runClick(leave));
- NET.configure({status:message,room:onRoom,snapshot:onSnapshot,peers:uiButtons});
+ NET.configure({status:message,room:onRoom,snapshot:onSnapshot,peers:uiButtons,forcedResult:data=>{
+   if(!snap||snap.ended)return;
+   onSnapshot({...snap,ended:true,winner:data.winner_team});
+   message('서버 판정: 상대 연결 종료 · '+(data.winner_team===my()?.team?'승리':'패배')+' 처리');
+  }});
  uiButtons();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();

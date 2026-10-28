@@ -13,15 +13,17 @@ const KEY='desert-front-training-v2',empty=()=>({xp:0,wins:0,losses:0,mpWins:0,m
 let progress=empty(),uid=null,active=false,lastMultiplayer='',authBusy=false;
 let selectedUnit=0,selectedAction='idle',animationStart=0,animationTick=0,onlineOpen=false;
 function safeName(v){return String(v||'지휘관').trim().replace(/[<>\u0000-\u001f]/g,'').slice(0,16)||'지휘관';}
+function storageKey(){const uid=global.DesertMember?.account?.()?.userId;return uid?'desert-front-training-member-'+uid:KEY;}
 function load(){
- try{const v=JSON.parse(localStorage.getItem(KEY)||'{}');const p=empty();
+ try{const v=JSON.parse(localStorage.getItem(storageKey())||'{}');const p=empty();
   p.xp=Math.max(0,Math.min(10000000,Number(v.xp)||0));for(const k of ['wins','losses','mpWins','mpLosses'])p[k]=Math.max(0,Math.min(999999,Math.floor(Number(v[k])||0)));
   p.selectedFaction=Number.isInteger(v.selectedFaction)&&v.selectedFaction>=0&&v.selectedFaction<FACTIONS.length?v.selectedFaction:0;
   p.aiDifficulty=v.aiDifficulty==='hard'?'hard':'normal';
   p.nickname=safeName(v.nickname);p.selectedSkin=SKINS.some(x=>x.id===v.selectedSkin)?v.selectedSkin:'default';return p;
  }catch(_){return empty();}
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(progress));}catch(_){}}
+function save(){try{localStorage.setItem(storageKey(),JSON.stringify(progress));}catch(_){}
+ global.DesertMember?.saveProgress?.(progress);}
 function levelFromXP(xp){let level=1,left=xp;while(level<100&&left>=100+level*70){left-=100+level*70;level++;}return {level,within:left,needed:100+level*70};}
 function rank(){const score=progress.mpWins*3+progress.wins*.5;return score>=100?'플래티넘 연습생':score>=55?'골드 연습생':score>=24?'실버 연습생':score>=7?'브론즈 연습생':'훈련병';}
 function currentSkin(){const lv=levelFromXP(progress.xp).level;return SKINS.find(x=>x.id===progress.selectedSkin&&lv>=x.level)||SKINS[0];}
@@ -79,7 +81,7 @@ function render(){
  $('lobbyDifficulty')?.querySelectorAll('[data-difficulty]').forEach(b=>{const chosen=b.dataset.difficulty===progress.aiDifficulty;b.classList.toggle('selected',chosen);b.setAttribute('aria-pressed',String(chosen));});
  $('lobbySolo').querySelector('span').textContent=(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 22웨이브 전투';
  const account=global.DesertDeviceAccount?.status?.();
- $('lobbyAccountStatus').textContent=account?(uid?'기기 인증 연결':'기기 계정 · 오프라인'):'게스트 · 이 기기';
+ $('lobbyAccountStatus').textContent=global.DesertMember?.account?.()?('회원 · '+global.DesertMember.account().nickname):'게스트 · 이 기기';
  if(account){$('lobbyUserId').value=account.accountId;$('lobbyDeviceId').value=account.deviceId;}
  $('lobbyLevel').textContent='LV. '+l.level;$('lobbyXP').textContent=l.within+' / '+l.needed+' XP';$('lobbyXPFill').style.width=Math.min(100,l.within/l.needed*100)+'%';
  $('lobbyRank').textContent=rank();$('lobbyRecord').textContent='싱글 '+progress.wins+'승 '+progress.losses+'패 · 온라인 '+progress.mpWins+'승 '+progress.mpLosses+'패 · 비공식 훈련 랭크';
@@ -100,6 +102,15 @@ function chooseFaction(i){
  progress.selectedFaction=i;selectedUnit=0;selectedAction='idle';animationStart=performance.now();stateChange();
 }
 function chooseSkin(id){const sk=SKINS.find(x=>x.id===id),l=levelFromXP(progress.xp).level;if(!sk||l<sk.level)return false;progress.selectedSkin=id;global.DesertRoster?.refreshChoices?.();stateChange();return true;}
+function exportProgress(){return {...progress};}
+function importProgress(v){if(!v||typeof v!=='object')return;const next=empty();
+ next.xp=Math.max(0,Math.min(10000000,Number(v.xp)||0));
+ for(const key of ['wins','losses','mpWins','mpLosses'])next[key]=Math.max(0,Math.floor(Number(v[key])||0));
+ next.nickname=safeName(v.nickname);
+ next.selectedFaction=Number.isInteger(v.selectedFaction)&&v.selectedFaction>=0&&v.selectedFaction<FACTIONS.length?v.selectedFaction:0;
+ next.selectedSkin=SKINS.some(sk=>sk.id===v.selectedSkin)?v.selectedSkin:'default';
+ next.aiDifficulty=v.aiDifficulty==='hard'?'hard':'normal';progress=next;save();render();}
+function useGuestProfile(){progress=load();render();}
 function grantXP(amount){progress.xp=Math.min(10000000,progress.xp+Math.max(0,Math.floor(amount)));stateChange();}
 function completeSolo({win,wave,seconds}){if(win)progress.wins++;else progress.losses++;global.DesertCareer?.record?.({mode:'solo',size:1,side:0,winner:win?0:1,faction:progress.selectedFaction,wave,seconds,online:false});grantXP((win?120:45)+Math.min(80,Math.floor((wave||0)*3)));}
 function completeMultiplayer({winner,side,matchId,mode='pvp',size=1,wave=0,seconds=0,faction=progress.selectedFaction}){if(!matchId||lastMultiplayer===matchId)return;lastMultiplayer=matchId;if(winner===side)progress.mpWins++;else if(winner!==null)progress.mpLosses++;global.DesertCareer?.record?.({mode,size,side,winner,faction,wave,seconds,online:mode==='pvp'||mode==='classic'});grantXP(winner===side?165:75);}
@@ -201,8 +212,8 @@ function initialize(){
  $('lobbySaveName').addEventListener('click',()=>{progress.nickname=safeName($('lobbyNickname').value);stateChange();});
  $('lobbyDeviceLogin').addEventListener('click',()=>{void deviceLogin();});$('lobbyCopyIds').addEventListener('click',()=>{void copyIds();});
  global.addEventListener?.('maiden-art-ready',renderCovers);global.addEventListener?.('isometric-art-ready',renderCovers);global.addEventListener?.('desert-real-sprites-ready',renderCovers);global.addEventListener?.('desert-moe-ready',renderCovers);
- show();void restoreAccount();
+ show();void restoreAccount().finally(()=>global.DesertMember?.restore?.());
 }
-global.DesertLobby=Object.freeze({careerStats:()=>({nickname:progress.nickname,level:levelFromXP(progress.xp).level,mpWins:progress.mpWins,mpLosses:progress.mpLosses,faction:progress.selectedFaction}),levelFromXP,filterForSkin,skinFilter:()=>currentSkin().filter,selectedSkin:()=>currentSkin().id,selectedFaction:()=>progress.selectedFaction,selectedUnit:()=>selectedUnit,aiDifficulty:()=>progress.aiDifficulty,chooseDifficulty,chooseFaction,chooseSkin,chooseUnit,chooseAction,completeSolo,completeMultiplayer,grantXP,show,hide,enterMatch,openMultiplayer,returnToLobby});
+global.DesertLobby=Object.freeze({exportProgress,importProgress,useGuestProfile,careerStats:()=>({nickname:progress.nickname,level:levelFromXP(progress.xp).level,mpWins:progress.mpWins,mpLosses:progress.mpLosses,faction:progress.selectedFaction}),levelFromXP,filterForSkin,skinFilter:()=>currentSkin().filter,selectedSkin:()=>currentSkin().id,selectedFaction:()=>progress.selectedFaction,selectedUnit:()=>selectedUnit,aiDifficulty:()=>progress.aiDifficulty,chooseDifficulty,chooseFaction,chooseSkin,chooseUnit,chooseAction,completeSolo,completeMultiplayer,grantXP,show,hide,enterMatch,openMultiplayer,returnToLobby});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize);else initialize();
 })(window);
