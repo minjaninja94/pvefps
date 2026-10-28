@@ -12,6 +12,7 @@ const msg=e=>global.IronFirebase?.message?.(e)||e?.message||String(e);
 function notify(key,data){try{events[key]?.(data);}catch(e){console.error('멀티 UI 갱신 오류',e);}}
 function status(s){notify('status',s);}
 function validateName(s){return String(s||'지휘관').trim().replace(/[<>]/g,'').slice(0,16)||'지휘관';}
+function validateRuleset(s){return s==='augment'?'augment':'standard';}
 function validateSkin(s){return ['default','moe','twilight','aurora','gold'].includes(s)?s:'default';}
 function code(){const bytes=new Uint8Array(6);crypto.getRandomValues(bytes);return Array.from(bytes,n=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[n%32]).join('');}
 const path=()=>fs.doc(db,'desertRooms',roomId);
@@ -67,7 +68,7 @@ async function create(opts){
  await identity();
  if(!['pvp','coop','classic'].includes(opts.mode)||![1,2,3].includes(Number(opts.size))||opts.mode==='coop'&&Number(opts.size)<2||opts.mode==='classic'&&Number(opts.size)!==1)throw Error('잘못된 인원/모드');
  roomId=code();host=true;
- room={version:1,host:uid,mode:opts.mode,size:Number(opts.size),status:'lobby',created:Date.now(),expires:Date.now()+7200000,
+ room={version:1,host:uid,mode:opts.mode,size:Number(opts.size),ruleset:validateRuleset(opts.ruleset),seed:global.crypto.getRandomValues(new Uint32Array(1))[0]||1,publicRoom:opts.publicRoom!==false,status:'lobby',created:Date.now(),expires:Date.now()+7200000,
   players:{[uid]:{name:validateName(opts.name),faction:Number(opts.faction),skin:validateSkin(opts.skin),team:0,ready:false}}};
  await fs.setDoc(path(),room);
  listenRoom();status('방 코드 '+roomId+' · 상대에게 코드를 공유하세요.');
@@ -193,7 +194,8 @@ async function start(){
  const guests=members().filter(m=>m.uid!==uid);
  if(guests.some(g=>channels.get(g.uid)?.readyState!=='open'))throw Error('모든 참가자의 P2P 연결이 완료되지 않았습니다.');
  if(!global.DesertTriEngine)throw Error('3라인 전투 엔진이 준비되지 않았습니다.');
- engine=global.DesertTriEngine.create({mode:room.mode,size:room.size,members:members()});
+ if(room.ruleset==='augment')await global.DesertAugments.load();
+ engine=global.DesertTriEngine.create({mode:room.mode,size:room.size,members:members(),ruleset:validateRuleset(room.ruleset),seed:room.seed||1});
  await fs.updateDoc(path(),{status:'playing'});
  let last=performance.now();
  clock=setInterval(()=>{
@@ -211,6 +213,17 @@ function sendOrder(order){
  send(ch,{type:'order',seq:++seq,order});return {ok:true,pending:true};
 }
 function configure(callbacks){events={...callbacks};}
+async function browse(){
+ await identity();
+ // Firestore rules must explicitly allow this query for signed-in visitors.
+ const q=fs.query(fs.collection(db,'desertRooms'),fs.where('publicRoom','==',true),fs.limit(60));
+ const now=Date.now(),response=await fs.getDocs(q);
+ return response.docs.filter(doc=>{const room=doc.data();return room.status==='lobby'&&room.expires>now;})
+  .map(doc=>{const data=doc.data(),players=Object.values(data.players||{});
+   return {code:doc.id,mode:data.mode,size:data.size,ruleset:validateRuleset(data.ruleset),
+    members:players.length,capacity:data.size*(data.mode==='coop'?1:2)};
+  }).filter(x=>x.members<x.capacity).sort((a,b)=>a.members-b.members);
+}
 function current(){return {roomId,room,uid,host,peers:new Set(hostPeerOpen),active};}
-global.DesertTriNetwork=Object.freeze({configure,identity,create,join,ready,start,leave,sendOrder,current,validateName});
+global.DesertTriNetwork=Object.freeze({configure,identity,create,join,browse,ready,start,leave,sendOrder,current,validateName});
 })(window);

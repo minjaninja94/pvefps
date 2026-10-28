@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id);
 const NET=global.DesertTriNetwork,E=global.DesertTriEngine;
 if(!NET||!E)return;
 let snap=null,lane=1,role=0,demolish=false,practice=null,practiceTimer=null,view='base',repairLane=1;
-let myId='',lobby=null,host=false,gridKey='',cardsKey='',lastSnapshotAt=0,lastDrawAt=0;
+let myId='',lobby=null,host=false,gridKey='',cardsKey='',augmentKey='',lastSnapshotAt=0,lastDrawAt=0;
 const LANES=['상단','중앙','하단'],ICONS=['⚔','⌖','◆','▣','✣','✹','♞','✚'];
 function message(msg){$('mpStatus').textContent=msg;}
 function laneCount(){return snap?.lanes??3;}
@@ -54,14 +54,14 @@ function countNeeded(r){return r.size*(r.mode==='coop'?1:2);}
 function fullReady(r){const p=Object.values(r.players||{});return p.length===countNeeded(r)&&p.every(x=>x.ready)&& (r.mode==='coop'?p.every(x=>x.team===0):[0,1].every(t=>p.filter(x=>x.team===t).length===r.size));}
 function uiButtons(){
  const r=lobby?.room,me=r?.players?.[myId];
- if(r){$('mpMode').value=r.mode;$('mpSize').value=String(r.size);}
+ if(r){$('mpMode').value=r.mode;$('mpSize').value=String(r.size);$('mpRuleset').value=r.ruleset||'standard';}
  $('mpReady').disabled=!me||r?.status!=='lobby';
  $('mpReady').textContent=me?.ready?'준비 취소':'준비하기';
  $('mpLaunch').disabled=!host||!r||r.status!=='lobby'||!fullReady(r);
  $('mpLeave').disabled=!r&&!practice;
  $('mpCreate').disabled=!!r||!!practice;$('mpJoin').disabled=!!r||!!practice;
  $('mpPractice').disabled=!!r||!!practice;
- $('mpMode').disabled=!!r;$('mpSize').disabled=!!r;
+ $('mpMode').disabled=!!r;$('mpSize').disabled=!!r;$('mpRuleset').disabled=!!r;
  if(lobby?.id)$('mpRoomCode').value=lobby.id;
 }
 function onRoom(v){
@@ -266,6 +266,29 @@ function combatAudioSnapshot(v){
   if(!effects.has(id))audio.cue(['pollen','huanglong'].includes(effect.kind)?'heal':'explosion',effect.x);
  }
 }
+function renderAugment(){
+ const panel=$('mpAugmentPanel'),choice=snap?.augmentChoice;
+ if(!panel)return;
+ if(!choice||choice.selected){panel.hidden=true;augmentKey='';return;}
+ const key=JSON.stringify([choice.cards,choice.rerolls,Math.ceil(choice.remaining),choice.tier]);
+ if(key===augmentKey)return;augmentKey=key;
+ panel.hidden=false;panel.replaceChildren();
+ const heading=document.createElement('h3');
+ heading.textContent='ROUND '+choice.round+' · '+({silver:'실버',gold:'골드',prismatic:'프리즘'}[choice.tier]||choice.tier)+' 증강 · '+Math.ceil(choice.remaining)+'초';
+ const description=document.createElement('p');description.textContent='셋 중 하나를 선택하세요. 각 카드 칸은 1회 리롤 가능합니다. 미선택 시 자동 선택됩니다.';
+ const cards=document.createElement('div');cards.className='mp-augment-cards';
+ for(let i=0;i<3;i++){
+  const card=global.DesertAugments?.card(choice.cards[i]),slot=document.createElement('div');slot.className='mp-augment-card';
+  const name=document.createElement('strong');name.textContent=card?.name||'증강 카드';
+  const detail=document.createElement('p');detail.textContent=card?.description||'증강 데이터를 불러오는 중입니다.';
+  const pick=document.createElement('button');pick.type='button';pick.className='btn accent';pick.textContent='선택';pick.disabled=!card;
+  pick.addEventListener('click',()=>order({type:'augment_pick',slot:i}));
+  const reroll=document.createElement('button');reroll.type='button';reroll.className='btn outline';reroll.textContent=choice.rerolls[i]?'리롤 완료':'리롤 1회';
+  reroll.disabled=!card||!!choice.rerolls[i];reroll.addEventListener('click',()=>order({type:'augment_reroll',slot:i}));
+  slot.append(name,detail,pick,reroll);cards.append(slot);
+ }
+ panel.append(heading,description,cards);
+}
 function onSnapshot(v){
  if(!v){snap=null;global.DesertCombatAudio?.stop?.();return;}if(v.width!==3300||![520,1560].includes(v.height)||!Array.isArray(v.players)||(v.lanes!==undefined&&v.lanes!==(v.mode==='classic'?1:3)))return;
  const fresh=!snap,modeChanged=!snap||snap.mode!==v.mode;
@@ -309,7 +332,7 @@ function onSnapshot(v){
  }
  $('mpLaneSummary').replaceChildren(f);
  if(v.ended){global.DesertLobbyMusic?.stopBattle?.();$('mpStateTag').textContent=v.winner===null?'무승부':v.winner===side?'승리':'패배';if(!practice)global.DesertLobby?.completeMultiplayer?.({winner:v.winner,side,matchId:lobby?.id||'unknown'});}
- unitCards();buildGrid();upgradeInfo();drawOverview();
+ renderAugment();unitCards();buildGrid();upgradeInfo();drawOverview();
 }
 function order(cmd){
  if(!snap||snap.ended)return message('진행 중인 경기가 없습니다.');
@@ -321,12 +344,13 @@ function order(cmd){
  else if(practice)onSnapshot(practice.snapshot('local'));
  else message('명령 전달 완료 · 호스트 판정 대기');
 }
-function practiceStart(){
+async function practiceStart(){
+ if($('mpRuleset').value==='augment')await global.DesertAugments.load();
  if(lobby)return message('온라인 방에서 나간 뒤 연습할 수 있습니다.');
  myId='local';
  const hard=global.DesertLobby?.aiDifficulty?.()==='hard';
  const mode=$('mpMode').value==='classic'?'classic':'pvp';
- practice=E.create({mode,size:1,aiDifficulty:hard?'hard':'normal',members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%10,bot:true}]});
+ practice=E.create({mode,size:1,aiDifficulty:hard?'hard':'normal',ruleset:$('mpRuleset').value,seed:Date.now()>>>0,members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%10,bot:true}]});
  if(!hard){const row=mode==='classic'?0:1;practice.state.players[1].buildings[row][1]=0;practice.state.players[1].buildings[row][17]=1;practice.state.players[1].cash-=160;}
  $('mpStateTag').textContent=hard?'하드 AI 연습':'오프라인 연습';message((mode==='classic'?'클래식 1:1':'3라인')+' 오프라인 연습 · Firebase 연결 없이 작동합니다.');
  let last=performance.now();
@@ -337,7 +361,7 @@ async function leave(){
  if(practice){clearInterval(practiceTimer);practiceTimer=null;practice=null;myId='';snap=null;$('mpCommand').hidden=true;$('mpStateTag').textContent='연결 전';message('연습 종료');}
  else{await NET.leave();snap=null;$('mpCommand').hidden=true;}
  $('mpViewTabs').hidden=true;setView('base');
- lane=1;repairLane=1;role=0;demolish=false;gridKey='';cardsKey='';
+ lane=1;repairLane=1;role=0;demolish=false;gridKey='';cardsKey='';augmentKey='';$('mpAugmentPanel').hidden=true;
  delete document.body.dataset.multiArena;
  uiButtons();
 }
@@ -420,10 +444,11 @@ function init(){
   $('mpTeam').disabled=coop;if(coop)$('mpTeam').value='0';
   $('mpPractice').textContent=classic?'클래식 1:1 AI 연습':'오프라인 3라인 연습';
  });
- $('mpPractice').addEventListener('click',practiceStart);
+ $('mpPractice').addEventListener('click',runClick(practiceStart));
  $('mpCreate').addEventListener('click',runClick(async()=>{
   message('Firebase 방을 생성합니다…');
-  await NET.create({mode:$('mpMode').value,size:Number($('mpSize').value),name:$('mpName').value,faction:faction(),skin:skin()});
+  if($('mpRuleset').value==='augment')await global.DesertAugments.load();
+  await NET.create({mode:$('mpMode').value,size:Number($('mpSize').value),ruleset:$('mpRuleset').value,publicRoom:true,name:$('mpName').value,faction:faction(),skin:skin()});
  }));
  $('mpJoin').addEventListener('click',runClick(async()=>{
   message('방에 참가하는 중입니다…');
@@ -431,6 +456,18 @@ function init(){
  }));
  $('mpReady').addEventListener('click',runClick(()=>NET.ready(!lobby?.room?.players?.[myId]?.ready)));
  $('mpLaunch').addEventListener('click',runClick(()=>NET.start()));
+ $('mpBrowse').addEventListener('click',runClick(async()=>{
+  $('mpBrowseStatus').textContent='공개방 검색 중…';
+  const rooms=await NET.browse(),select=$('mpPublicList');select.replaceChildren();
+  const empty=document.createElement('option');empty.value='';empty.textContent=rooms.length?'참가할 공개방 선택':'대기 중인 공개방 없음';select.append(empty);
+  for(const room of rooms){const opt=document.createElement('option');opt.value=room.code;
+   opt.textContent=room.code+' · '+(room.mode==='classic'?'클래식':room.mode==='coop'?'협동':'3라인 PvP')+' · '+(room.ruleset==='augment'?'증강전':'일반전')+' · '+room.members+'/'+room.capacity;
+   select.append(opt);
+  }
+  $('mpBrowseStatus').textContent=rooms.length+'개 공개방 검색 완료';
+ }));
+ $('mpJoinPublic').addEventListener('click',()=>{const code=$('mpPublicList').value;if(!code){message('참가할 공개방을 선택하세요.');return;}
+  $('mpRoomCode').value=code;$('mpJoin').click();});
  $('mpLeave').addEventListener('click',runClick(leave));
  NET.configure({status:message,room:onRoom,snapshot:onSnapshot,peers:uiButtons});
  uiButtons();
