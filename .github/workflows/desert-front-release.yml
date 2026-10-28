@@ -32,11 +32,16 @@ jobs:
           test -s desert-front-godot/addons/nodetunnel/bin/nodetunnel.dll
       - name: Copy original sprite assets into new Godot project
         run: python3 desert-front-godot/tools/sync_web_art.py
+      - name: Install Node.js for original browser/native stat parity
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq nodejs
       - name: Validate Godot project and smoke tests
         run: |
           set -eu
           godot --headless --path desert-front-godot --editor --quit
           timeout 60s godot --headless --path desert-front-godot --script res://tests/art_smoke.gd
+          python3 desert-front-godot/tools/verify_stat_parity.py
           timeout 60s godot --headless --path desert-front-godot --script res://tests/smoke.gd
           timeout 90s godot --headless --path desert-front-godot --script res://tests/tri_match_smoke.gd
           timeout 90s godot --headless --path desert-front-godot --script res://tests/tri_scene_smoke.gd

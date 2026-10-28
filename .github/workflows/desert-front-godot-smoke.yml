@@ -23,7 +23,7 @@ jobs:
       - name: Download pinned NodeTunnel relay plugin
         run: |
           apt-get update -qq
-          apt-get install -y -qq curl unzip ca-certificates python3
+          apt-get install -y -qq curl unzip ca-certificates python3 nodejs
           mkdir -p desert-front-godot/addons
           curl --retry 3 -fsSL \
             https://github.com/NodeTunnel/godot-plugin/releases/download/v1.1.1_beta/nodetunnel.zip \
@@ -36,6 +36,8 @@ jobs:
         run: godot --headless --path desert-front-godot --editor --quit
       - name: Validate 80 native sprite resources and 10 banners
         run: timeout 60s godot --headless --path desert-front-godot --script res://tests/art_smoke.gd
+      - name: Compare all original 80 unit stats to the native roster
+        run: python3 desert-front-godot/tools/verify_stat_parity.py
       - name: Run isolated simulation smoke test
         run: timeout 60s godot --headless --path desert-front-godot --script res://tests/smoke.gd
       - name: Verify classic, 3-line, 2v2, and AI co-op battle simulation
