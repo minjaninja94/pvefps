@@ -40,6 +40,7 @@ jobs:
           godot --headless --path desert-front-godot --script res://tests/smoke.gd
           timeout 90s godot --headless --path desert-front-godot --script res://tests/tri_match_smoke.gd
           timeout 90s godot --headless --path desert-front-godot --script res://tests/tri_scene_smoke.gd
+          timeout 60s godot --headless --path desert-front-godot --script res://tests/parity_smoke.gd
       - name: Test local LAN host/guest connection
         run: |
           set -eu

@@ -17,6 +17,9 @@ func _run() -> void:
 	root.add_child(node)
 	await process_frame
 	check(node.match_game != null)
+	node._skins.select(1)
+	node._practice()
+	check(node.match_game.player_for("local")["skin"] == "moe")
 	check(node.match_game.lanes == 3)
 	check(node._view.simulation != null)
 	check(node._grid.size() == 75)
