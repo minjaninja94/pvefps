@@ -61,6 +61,36 @@ func _run() -> void:
 	check(Roster.definition(3,6)["kind"] == "ground","marine bongo does not fly")
 	check(Roster.definition(6,6)["kind"] == "ground","furry rider does not fly")
 	check(Roster.definition(7,6)["kind"] == "ground","robot special is ground")
+	# Special roles override default good/bad matchup tables.
+	check(Roster.definition(3,6)["good"] == [0,7],"bongo crushes charge and healers")
+	check(Roster.definition(4,6)["bad"] == [2,3],"beastkin cavalry weak against armor counters")
+	check(Roster.definition(6,6)["good"] == [0,7],"furry cavalry faction special counters")
+	check(Roster.definition(7,6)["bad"] == [2,5],"robot mech weak against breaker and siege")
+	var ranged := Match.new("classic",1,[
+		{"uid":"a","team":0,"faction":0},{"uid":"b","team":1,"faction":4}
+	])
+	ranged._spawn(ranged.player_for("a"),0,0,1)
+	ranged._spawn(ranged.player_for("b"),0,0,0)
+	var attacker: Dictionary = ranged.units[0]
+	var defender: Dictionary = ranged.units[1]
+	defender["hero_count"] = 20
+	defender["hp"] = 5000.0
+	defender["max_hp"] = 5000.0
+	var health_before: float = defender["hp"]
+	ranged._damage(defender, 100.0,attacker)
+	var expected := maxf(3.0,100.0*1.55-float(defender["stats"]["armor"])/20.0*0.66)*0.94
+	check(absf(health_before-float(defender["hp"])-expected)<0.01,"hero target preserves beastkin ranged mitigation")
+	var at_capacity := Match.new("pvp",1,[
+		{"uid":"a","team":0,"faction":0},{"uid":"b","team":1,"faction":1}
+	])
+	for i in range(at_capacity.MAX_GLOBAL_UNITS):
+		at_capacity._spawn(at_capacity.player_for("a"),0,i%75,0)
+	var last_regular_id: int = at_capacity.units.back()["id"]
+	at_capacity.spawn_guardian(0,1)
+	check(at_capacity.units.size()==at_capacity.MAX_GLOBAL_UNITS+1,"critical guardian spawn is not blocked by normal cap")
+	check(int(at_capacity.units[at_capacity.MAX_GLOBAL_UNITS-1]["id"])==last_regular_id,"full population cannot mutate existing soldier")
+	check(bool(at_capacity.units.back()["guardian"]),"new defensive guardian is spawned as separate unit")
+
 	check(failures == 0,"all parity checks")
 	print("DESERT FRONT PARITY: skins, guardians, hero fusion, hard AI purchase commitment, ground special units. Failures: %d" % failures)
 	quit(0 if failures == 0 else 1)
