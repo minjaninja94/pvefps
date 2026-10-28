@@ -4,10 +4,45 @@
 const $=id=>document.getElementById(id);
 const NET=global.DesertTriNetwork,E=global.DesertTriEngine;
 if(!NET||!E)return;
-let snap=null,lane=1,role=0,demolish=false,practice=null,practiceTimer=null;
+let snap=null,lane=1,role=0,demolish=false,practice=null,practiceTimer=null,view='base',repairLane=1;
 let myId='',lobby=null,host=false,gridKey='',cardsKey='',lastSnapshotAt=0,lastDrawAt=0;
 const LANES=['상단','중앙','하단'],ICONS=['⚔','⌖','◆','▣','✣','✹','♞','✚'];
 function message(msg){$('mpStatus').textContent=msg;}
+function setView(id){
+ if(!['base','battle','upgrade'].includes(id))return;
+ view=id;
+ for(const [name,element] of [['base','mpBaseView'],['battle','mpBattleView'],['upgrade','mpUpgradeView']]){
+  const screen=$(element);screen.hidden=name!==view;screen.classList.toggle('active',name===view);
+ }
+ $('mpViewTabs').querySelectorAll('[data-mp-view]').forEach(button=>{
+  const selected=button.dataset.mpView===view;
+  button.classList.toggle('active',selected);
+  if(selected)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
+ });
+ if(view==='battle'&&snap)draw();
+}
+function upgradeInfo(){
+ const me=my();if(!me)return;
+ const weapon=me.weapon||0,armor=me.armor||0,side=me.team;
+ const weaponPrice=E.WEAPON_COST(weapon),armorPrice=E.ARMOR_COST(armor),cd=me.barrageCd||0;
+ $('mpWeaponInfo').textContent='레벨 '+weapon+' / 5 · 공격·치유 +'+weapon*8+'%';
+ $('mpArmorInfo').textContent='레벨 '+armor+' / 5 · 최대 HP +'+armor*9+'%';
+ $('mpWeaponButton').textContent=weapon===5?'최대 강화 완료':'무기 강화 · '+weaponPrice+' CR';
+ $('mpArmorButton').textContent=armor===5?'최대 강화 완료':'장갑 강화 · '+armorPrice+' CR';
+ $('mpWeaponButton').disabled=snap.ended||weapon>=5||me.cash<weaponPrice;
+ $('mpArmorButton').disabled=snap.ended||armor>=5||me.cash<armorPrice;
+ const hp=snap.turrets?.[repairLane]?.[side]??1250;
+ $('mpRepairInfo').textContent=LANES[repairLane]+' 라인 본진 포탑 '+Math.ceil(hp)+' / 1250';
+ $('mpRepairButton').disabled=snap.ended||me.cash<180||hp>=1250;
+ $('mpBarrageInfo').textContent=cd>0?'재충전 '+Math.ceil(cd)+'초':'260 CR · 정찰된 적에게 사용 가능';
+ $('mpBarrageButton').disabled=snap.ended||cd>0||me.cash<260;
+ const invaded=snap.units.some(u=>u.hp>0&&u.team!==side&&(side===0?u.x<370:u.x>3300-370));
+ const targets=snap.units.some(u=>u.hp>0&&u.team!==side&&(side===0?u.x<=550:u.x>=3300-550));
+ const endangered=snap.cores.some(core=>core[side]<=1750),nukeReady=!!me.nukes&&(invaded||endangered)&&targets;
+ $('mpNukeInfo').textContent=me.nukes?(nukeReady?'침공 경보 · 발동 가능':'1회 남음 · 침공/기지 위기 시 사용 가능'):'사용 완료';
+ $('mpNukeButton').disabled=snap.ended||!nukeReady;
+ $('mpRepairLanes').querySelectorAll('[data-repair-lane]').forEach(button=>button.classList.toggle('active',Number(button.dataset.repairLane)===repairLane));
+}
 function faction(){return Number($('mpFaction').value)||0;}
 function skin(){return global.DesertLobby?.selectedSkin?.()||'default';}
 function my(){return snap?.players?.find(p=>p.uid===myId);}
@@ -197,7 +232,7 @@ function drawOverview(){
 function onSnapshot(v){
  if(!v){snap=null;return;}if(v.width!==3300||v.height!==1560||!Array.isArray(v.players))return;
  if(!$('frontLobby').hidden)global.DesertLobby?.enterMatch?.();
- snap=v;lastSnapshotAt=performance.now();$('mpCommand').hidden=false;
+ snap=v;lastSnapshotAt=performance.now();$('mpCommand').hidden=false;$('mpViewTabs').hidden=false;
  const me=my(),side=me?.team??0;
  if(me){
   $('mpMyResources').textContent=me.cash+' CR';
@@ -226,7 +261,7 @@ function onSnapshot(v){
  }
  $('mpLaneSummary').replaceChildren(f);
  if(v.ended){$('mpStateTag').textContent=v.winner===null?'무승부':v.winner===side?'승리':'패배';if(!practice)global.DesertLobby?.completeMultiplayer?.({winner:v.winner,side,matchId:lobby?.id||'unknown'});}
- unitCards();buildGrid();drawOverview();
+ unitCards();buildGrid();upgradeInfo();drawOverview();
 }
 function order(cmd){
  if(!snap||snap.ended)return message('진행 중인 경기가 없습니다.');
@@ -252,11 +287,18 @@ function practiceStart(){
 async function leave(){
  if(practice){clearInterval(practiceTimer);practiceTimer=null;practice=null;myId='';snap=null;$('mpCommand').hidden=true;$('mpStateTag').textContent='연결 전';message('연습 종료');}
  else{await NET.leave();snap=null;$('mpCommand').hidden=true;}
- lane=1;role=0;demolish=false;gridKey='';cardsKey='';
+ $('mpViewTabs').hidden=true;setView('base');
+ lane=1;repairLane=1;role=0;demolish=false;gridKey='';cardsKey='';
  uiButtons();
 }
 function runClick(fn){return ()=>Promise.resolve().then(fn).catch(e=>message(global.IronFirebase?.message?.(e)||e.message||String(e)));}
 function init(){
+ $('mpViewTabs').addEventListener('click',e=>{const target=e.target.closest('[data-mp-view]');if(target)setView(target.dataset.mpView);});
+ $('mpCommand').addEventListener('click',e=>{const target=e.target.closest('[data-mp-jump]');if(target)setView(target.dataset.mpJump);});
+ for(const [id,kind,type] of [['mpWeaponButton','weapon','upgrade'],['mpArmorButton','armor','upgrade'],['mpNukeButton','nuke','tactic'],['mpBarrageButton','barrage','tactic']])
+  $(id).addEventListener('click',()=>order({type,kind}));
+ $('mpRepairButton').addEventListener('click',()=>order({type:'tactic',kind:'repair',lane:repairLane}));
+ $('mpRepairLanes').addEventListener('click',e=>{const button=e.target.closest('[data-repair-lane]');if(!button)return;repairLane=Number(button.dataset.repairLane);upgradeInfo();});
  function pickLane(id,scrollToBuild=false){
   const next=Math.max(0,Math.min(2,Math.trunc(id)));
   if(next!==lane){
@@ -265,7 +307,7 @@ function init(){
    if(viewport)viewport.scrollTop=0;
   }
   buildGrid();if(snap){draw();drawOverview();}
-  if(scrollToBuild)$('mpDeploymentPanel').scrollIntoView?.({block:'start',behavior:'smooth'});
+  if(scrollToBuild)setView('base');
  }
  $('mpLaneTabs').addEventListener('click',e=>{
   const button=e.target.closest('[data-lane]');
@@ -304,11 +346,11 @@ function init(){
  },true);
  $('mpUnitCards').addEventListener('click',e=>{const b=e.target.closest('[data-role]');if(!b)return;role=Number(b.dataset.role);demolish=false;gridKey='';unitCards();buildGrid();});
  $('mpExitBattle').addEventListener('click',()=>global.DesertLobby?.returnToLobby?.());
- document.addEventListener('keydown',e=>{if(document.body.dataset.playMode!=='multi'||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;if(/^[1-8]$/.test(e.key)){role=Number(e.key)-1;demolish=false;cardsKey='';unitCards();}if(e.key==='['||e.key==='PageUp'){e.preventDefault();pickLane(lane-1);}else if(e.key===']'||e.key==='PageDown'){e.preventDefault();pickLane(lane+1);}if(e.key==='Escape'){demolish=false;gridKey='';buildGrid();}});
+ document.addEventListener('keydown',e=>{if(document.body.dataset.playMode!=='multi'||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;if(/^[1-8]$/.test(e.key)){role=Number(e.key)-1;demolish=false;cardsKey='';unitCards();}if(e.altKey&&['1','2','3'].includes(e.key)){e.preventDefault();setView(['base','battle','upgrade'][Number(e.key)-1]);return;}if(e.key==='['||e.key==='PageUp'){e.preventDefault();pickLane(lane-1);}else if(e.key===']'||e.key==='PageDown'){e.preventDefault();pickLane(lane+1);}if(e.key==='Escape'){demolish=false;gridKey='';buildGrid();}});
  global.addEventListener?.('desert-real-sprites-ready',()=>{cardsKey='';gridKey='';if(snap){unitCards();buildGrid();}});
  $('mpDemolish').addEventListener('click',()=>{demolish=!demolish;gridKey='';buildGrid();});
  $('mpBuildGrid').addEventListener('click',e=>{const b=e.target.closest('[data-slot]');if(b)order({type:'build',lane,slot:Number(b.dataset.slot),role:demolish?null:role});});
- $('mpEco').addEventListener('click',()=>{role=8;demolish=false;cardsKey='';unitCards();$('mpUnitCards').scrollIntoView?.({block:'nearest',behavior:'smooth'});});
+ $('mpEco').addEventListener('click',()=>{setView('base');role=8;demolish=false;cardsKey='';unitCards();$('mpUnitCards').scrollIntoView?.({block:'nearest',behavior:'smooth'});});
  $('mpMode').addEventListener('change',()=>{
   const coop=$('mpMode').value==='coop';$('mpSize').querySelector('option[value="1"]').disabled=coop;
   if(coop&&$('mpSize').value==='1')$('mpSize').value='2';
@@ -333,12 +375,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 // Smooth 12-FPS character motion between 5-Hz authoritative snapshots.
 // This is visual-only; no client combat prediction or client-authoritative hits.
 function renderMotion(ts){
- if(ts-lastDrawAt>=78&&snap&&!document.hidden&&$('view-multiplayer').classList.contains('active')){
+ if(ts-lastDrawAt>=78&&snap&&view==='battle'&&!document.hidden&&$('view-multiplayer').classList.contains('active')){
   lastDrawAt=ts;draw();
  }
  requestAnimationFrame(renderMotion);
 }
 requestAnimationFrame(renderMotion);
 
-global.DesertTriUI=Object.freeze({draw,onSnapshot,leave,practiceStart});
+global.DesertTriUI=Object.freeze({draw,onSnapshot,leave,practiceStart,setView});
 })(window);
