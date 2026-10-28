@@ -60,6 +60,11 @@
  </section>
   <div class="mp-overview"><canvas id="mpOverviewCanvas" width="1100" height="96" aria-label="3라인 전황 미니맵. 원하는 라인을 눌러 이동합니다."></canvas></div>
   <div class="mp-command-bar"><div><span class="eyebrow">PERSONAL COMMAND</span><strong id="mpMyResources">360 CR</strong> <span id="mpMyIncome">+1 / 0.5초</span></div><div><b id="mpWave">웨이브 0</b> · <span id="mpCountdown">24초</span></div><button id="mpEco" class="btn outline">경제 강화</button></div>
+  <nav class="mp-main-tabs" id="mpViewTabs" aria-label="멀티플레이 화면 전환">
+   <button type="button" class="tab active" data-mp-view="base" aria-current="page"><span class="tab-no">01</span><span>내 기지 · 건설<small>BASE & PRODUCTION</small></span></button>
+   <button type="button" class="tab" data-mp-view="battle"><span class="tab-no">02</span><span>전장<small>LIVE BATTLE</small></span></button>
+   <button type="button" class="tab" data-mp-view="upgrade"><span class="tab-no">03</span><span>업그레이드<small>UPGRADE & ABILITY</small></span></button>
+  </nav>
 </div>
 <div class="base-health"><div class="health-entry"><div><span class="color-point blue">●</span> 아군 핵심 기지 <b id="myHealth">7200 / 7200</b></div><div class="healthbar"><i id="myHealthFill"></i></div></div><div class="health-entry"><div><span class="color-point red">●</span> 적 핵심 기지 <b id="enemyHealth">7200 / 7200</b></div><div class="healthbar redbar"><i id="enemyHealthFill"></i></div></div></div>
 <div class="screen active" id="view-base">
@@ -93,7 +98,8 @@
   <div id="mpMembers" class="mp-members">아직 참가한 방이 없습니다.</div>
  </section>
  <section class="panel mp-command" id="mpCommand" hidden>
-  <div class="mp-production-title"><div><span class="eyebrow">BASE DEVELOPMENT / THREE PRODUCTION LINES</span><h2>멀티 생산 기지</h2><p>싱글과 같은 방식으로 유닛을 선택하고 빈 칸에 건설하세요. 배치판에서 상·중·하 라인을 바로 전환할 수 있습니다.</p></div><a class="btn outline mp-jump" href="#mpBattleSection">전장 보기 ↓</a></div>
+  <div class="mp-tab-screen active" id="mpBaseView">
+  <div class="mp-production-title"><div><span class="eyebrow">BASE DEVELOPMENT / THREE PRODUCTION LINES</span><h2>멀티 생산 기지</h2><p>싱글과 같은 방식으로 유닛을 선택하고 빈 칸에 건설하세요. 배치판에서 상·중·하 라인을 바로 전환할 수 있습니다.</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="battle">전장 보기 →</button></div>
   <div id="mpFactionTraits" class="marine-ops faction-trait-banner" hidden role="status" aria-live="off"></div>
   <div id="mpMarineAbilities" class="marine-ops" hidden role="status" aria-live="off"></div>
   <div class="mp-formation-layout">
@@ -113,12 +119,24 @@
     <p class="mp-build-tip">빈 칸을 눌러 건설 · 철거 모드에서 건물 선택 · 좌우 드래그로 라인 전환</p>
    </section>
   </div>
-  <div class="mp-battle-section" id="mpBattleSection">
-   <div class="mp-production-title"><div><span class="eyebrow">LIVE BATTLE / THREE FRONTLINES</span><h2>실시간 전장</h2><p>세 라인은 하나로 연결된 전장입니다. 미니맵 또는 전장을 눌러 해당 라인에 배치할 수 있습니다.</p></div><a class="btn outline mp-jump" href="#mpDeploymentPanel">생산 배치 ↑</a></div>
+  <p class="subtext">건물은 각 라인에서 24초마다 생산합니다. 병력은 라인 경계를 넘어 이동하며, 아군과 자원을 공유하지 않습니다. 자신이 건설한 건물만 철거할 수 있습니다.</p>
+  </div>
+  <section class="mp-tab-screen mp-battle-section" id="mpBattleView" hidden>
+   <div class="mp-production-title"><div><span class="eyebrow">LIVE BATTLE / THREE FRONTLINES</span><h2>실시간 전장</h2><p>세 라인은 하나로 연결된 전장입니다. 미니맵 또는 전장을 눌러 해당 라인에 배치할 수 있습니다.</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="base">생산 배치 →</button></div>
    <div class="mp-battle-wrap"><canvas id="mpBattleCanvas" width="1100" height="660" aria-label="하나로 연결된 3300×1560 전장. 누른 구역의 생산 라인이 선택됩니다."></canvas><div class="mp-help">통합 전장 · 좌측 아군 / 우측 적군 · 전장 터치 시 해당 라인 선택</div></div>
    <div class="mp-lane-summary" id="mpLaneSummary"></div>
-  </div>
-  <p class="subtext">건물은 각 라인에서 24초마다 생산합니다. 병력은 라인 경계를 넘어 이동하며, 아군과 자원을 공유하지 않습니다. 자신이 건설한 건물만 철거할 수 있습니다.</p>
+  </section>
+  <section class="mp-tab-screen mp-upgrade-section" id="mpUpgradeView" hidden>
+   <div class="mp-production-title"><div><span class="eyebrow">HIGH COMMAND / MULTIPLAYER</span><h2>업그레이드 · 전술 지원</h2><p>싱글과 같은 무기·장갑 강화 및 전술 지원입니다. 자원은 본인 계정에서 차감되며 전투는 계속 진행됩니다.</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="base">생산 배치 →</button></div>
+   <div class="special-grid mp-upgrade-grid">
+    <section class="feature-card orange"><span class="eyebrow">SPECIAL / ONE USE</span><span class="feat-symbol">☢</span><h2>비상 핵폭탄</h2><p>아군 기지가 위기에 빠졌을 때, 아군 본진 근처로 침공한 적군을 제거합니다. 각 지휘관은 경기당 한 번만 사용할 수 있습니다.</p><div class="feature-status" id="mpNukeInfo">사용 가능 · 위기 시 발동</div><button type="button" id="mpNukeButton" class="btn accent">☢ 비상 핵폭탄</button></section>
+    <section class="feature-card cyan"><span class="eyebrow">SPECIAL / RECHARGE</span><span class="feat-symbol">✷</span><h2>궤도 폭격</h2><p>정찰된 적군의 밀집 지역에 범위 피해를 가합니다. 260 CR · 재사용 32초.</p><div class="feature-status" id="mpBarrageInfo">260 CR · 재사용 32초</div><button type="button" id="mpBarrageButton" class="btn blueaccent">✷ 폭격 요청</button></section>
+    <section class="feature-card purple"><span class="eyebrow">UPGRADE / PERMANENT</span><span class="feat-symbol">✦</span><h2>무기 강화</h2><p>내가 생산한 모든 병력의 공격력과 치유량이 단계마다 8% 증가합니다. 기존 병력에도 적용됩니다.</p><div class="feature-status" id="mpWeaponInfo">레벨 0 / 5</div><button type="button" id="mpWeaponButton" class="btn purpleaccent">무기 강화</button></section>
+    <section class="feature-card steel"><span class="eyebrow">UPGRADE / PERMANENT</span><span class="feat-symbol">⬟</span><h2>장갑 강화</h2><p>내 병력의 최대 체력이 단계마다 9% 증가합니다. 이미 전장에 있는 병력에도 적용됩니다.</p><div class="feature-status" id="mpArmorInfo">레벨 0 / 5</div><button type="button" id="mpArmorButton" class="btn outline">장갑 강화</button></section>
+    <section class="feature-card steel"><span class="eyebrow">HEADQUARTERS</span><span class="feat-symbol">▥</span><h2>기지 방어 보수</h2><p>선택한 라인의 아군 본진 포탑을 310 HP 수리합니다. 중간 타워는 수리되지 않습니다.</p><div class="mp-repair-lanes" id="mpRepairLanes" role="group" aria-label="포탑 수리 라인 선택"><button type="button" data-repair-lane="0">상단</button><button type="button" data-repair-lane="1" class="active">중앙</button><button type="button" data-repair-lane="2">하단</button></div><div class="feature-status" id="mpRepairInfo">포탑 HP / 1250</div><button type="button" id="mpRepairButton" class="btn outline">포탑 수리 · 180 CR</button></section>
+   </div>
+   <p class="subtext">강화는 지휘관별로 적용됩니다. 상대 팀의 연구 단계와 자원은 안개가 걷히기 전 공개되지 않습니다.</p>
+  </section>
  </section>
 </div>
 <section id="upgradePanel" class="upgrade-layer" hidden role="dialog" aria-modal="false" aria-labelledby="upgradeTitle"><div id="view-special" class="upgrade-content">
