@@ -13,6 +13,7 @@ var busy := false
 var last_error := ""
 var account_email := ""
 var is_anonymous := true
+var account_checked := false
 
 func _settings() -> Dictionary:
 	var file := ConfigFile.new()
@@ -71,10 +72,12 @@ func _auth_response(data: Dictionary, refreshed: bool = false) -> bool:
 	if not refreshed:
 		account_email = str(data.get("email",""))
 		is_anonymous = account_email.is_empty()
+		account_checked = not account_email.is_empty()
 	connection_changed.emit(true,"Firebase 계정 연결 · UID 인증 성공")
 	return true
 
 func _load_account_info() -> void:
+	account_checked = false
 	if id_token.is_empty():
 		return
 	var settings := _settings()
@@ -87,6 +90,7 @@ func _load_account_info() -> void:
 		if not users.is_empty() and users[0] is Dictionary:
 			account_email = str(users[0].get("email",""))
 			is_anonymous = account_email.is_empty()
+			account_checked = true
 
 func connect_member() -> bool:
 	if busy:
@@ -108,6 +112,10 @@ func connect_member() -> bool:
 					await _load_account_info()
 					busy = false
 					return true
+			busy = false
+			last_error = "기존 인증 정보를 갱신하지 못했습니다: " + str(renewed.get("error","갱신 실패")) + " · 이메일 계정이라면 이메일 로그인으로 복구하세요."
+			connection_changed.emit(false,last_error)
+			return false
 	var url := "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + str(settings["key"])
 	var signed: Dictionary = await _http(url,HTTPClient.METHOD_POST,JSON.stringify({"returnSecureToken":true}))
 	if bool(signed.get("ok",false)) and signed["value"] is Dictionary and _auth_response(signed["value"]):
@@ -139,6 +147,11 @@ func register_email(email: String, password: String) -> bool:
 	if uid.is_empty() or id_token.is_empty():
 		if not await connect_member():
 			return false
+	if not account_checked:
+		await _load_account_info()
+		if not account_checked:
+			last_error = "기존 계정 종류를 확인하지 못해 UID 보호를 위해 전환을 중단했습니다."
+			return false
 	if not account_email.is_empty():
 		last_error = "이미 이메일이 연결된 계정입니다. 기존 이메일로 로그인하세요."
 		return false
@@ -162,6 +175,7 @@ func register_email(email: String, password: String) -> bool:
 		return false
 	account_email = email.strip_edges()
 	is_anonymous = false
+	account_checked = true
 	last_error = ""
 	connection_changed.emit(true,"이메일 계정 전환 완료 · 기존 UID 유지")
 	return true
@@ -190,6 +204,7 @@ func login_email(email: String, password: String) -> bool:
 		return false
 	account_email = email.strip_edges()
 	is_anonymous = false
+	account_checked = true
 	last_error = ""
 	connection_changed.emit(true,"이메일 계정 로그인 완료")
 	return true
