@@ -32,10 +32,10 @@ jobs:
           test -s desert-front-godot/addons/nodetunnel/bin/nodetunnel.dll
       - name: Copy original sprite assets into new Godot project
         run: python3 desert-front-godot/tools/sync_web_art.py
-      - name: Install Node.js for original browser/native stat parity
-        run: |
-          apt-get update -qq
-          apt-get install -y -qq nodejs
+      - name: Set up modern Node.js for web engine stat comparison
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - name: Validate Godot project and smoke tests
         run: |
           set -eu

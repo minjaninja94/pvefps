@@ -20,10 +20,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Set up modern Node.js for web engine stat comparison
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - name: Download pinned NodeTunnel relay plugin
         run: |
           apt-get update -qq
-          apt-get install -y -qq curl unzip ca-certificates python3 nodejs
+          apt-get install -y -qq curl unzip ca-certificates python3
           mkdir -p desert-front-godot/addons
           curl --retry 3 -fsSL \
             https://github.com/NodeTunnel/godot-plugin/releases/download/v1.1.1_beta/nodetunnel.zip \
