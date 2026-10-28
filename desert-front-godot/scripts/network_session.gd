@@ -218,7 +218,7 @@ func _send_snapshot() -> void:
 	if mode == "host" and phase == "playing" and _sim != null and guest_id != 0:
 		remote_snapshot.rpc_id(guest_id, _sim.snapshot())
 
-@rpc("authority", "call_remote", "unreliable_ordered")
+@rpc("authority", "call_remote", "reliable")
 func remote_snapshot(data: Dictionary) -> void:
 	if mode != "client" or phase != "playing":
 		return
