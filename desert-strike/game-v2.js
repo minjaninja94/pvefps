@@ -899,6 +899,7 @@ function tick(dt){
 function endMatch(win){
  if(state.ended)return;
  state.ended=true;
+ window.DesertLobbyMusic?.stopBattle?.();
  window.DesertLobby?.completeSolo?.({win,matchedFaction:state.faction,wave:state.wave});
  $('endTitle').textContent=win?'작전 승리':'기지 함락';
  $('endTitle').style.color=win?'#fbd89b':'#f69a8e';

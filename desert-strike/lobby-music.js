@@ -1,10 +1,14 @@
-/* Desert Front lobby-only background music. Browser autoplay is resumed by the first user gesture. */
+/* Desert Front soundtrack: lobby and battle tracks share one persistent BGM setting. */
 (function (global) {
  'use strict';
  const KEY = 'desert-front-lobby-music-enabled';
- const MUSIC_URL = './assets/audio/lobby-theme.mp3';
- let player = null;
- let inLobby = false;
+ const SOURCES = {
+  lobby: './assets/audio/lobby-theme.mp3',
+  battle: './assets/audio/battle-theme.mp3'
+ };
+ const VOLUMES = {lobby: 0.3, battle: 0.35};
+ const players = Object.create(null);
+ let scene = 'none';
  let enabled = true;
  try { enabled = global.localStorage.getItem(KEY) !== 'false'; } catch (_) {}
 
@@ -14,61 +18,66 @@
   if (!button) return;
   button.textContent = enabled ? '♫ BGM 끄기' : '♫ BGM 켜기';
   button.setAttribute('aria-pressed', String(enabled));
-  button.title = '로비 배경음악 켜기 / 끄기';
+  button.title = '로비 및 전투 배경음악 켜기 / 끄기';
  }
- function getPlayer() {
-  if (!player) {
-   player = new Audio(MUSIC_URL);
-   player.loop = true;
-   player.preload = 'auto';
-   player.volume = 0.3;
+ function getPlayer(kind) {
+  if (!players[kind]) {
+   const audio = new Audio(SOURCES[kind]);
+   audio.loop = true;
+   audio.preload = 'auto';
+   audio.volume = VOLUMES[kind];
+   players[kind] = audio;
   }
-  return player;
+  return players[kind];
  }
- function pause() {
-  if (player && !player.paused) player.pause();
+ function pauseAll() {
+  for (const audio of Object.values(players)) if (!audio.paused) audio.pause();
  }
  function tryPlay() {
-  if (!inLobby || !enabled || document.hidden) return;
-  const audio = getPlayer();
+  if (!enabled || scene === 'none' || document.hidden) return;
+  const audio = getPlayer(scene);
   if (!audio.paused) return;
   try {
    const pending = audio.play();
    if (pending && typeof pending.catch === 'function') pending.catch(() => {
-    // Autoplay is normally blocked until a pointer or keyboard interaction.
+    // Browsers can require a pointer or keyboard gesture to enable audio.
    });
   } catch (_) {}
  }
- function enterLobby() {
-  inLobby = true;
+ function setScene(next) {
+  if (scene === next) { tryPlay(); return; }
+  pauseAll();
+  scene = next;
+  if (next === 'battle') {
+   const audio = getPlayer('battle');
+   try { audio.currentTime = 0; } catch (_) {}
+  }
   tryPlay();
  }
- function exitLobby() {
-  inLobby = false;
-  pause();
- }
+ function enterLobby() { setScene('lobby'); }
+ function exitLobby() { setScene('battle'); }
+ function stopBattle() { if (scene === 'battle') setScene('none'); }
  function setEnabled(value) {
   enabled = Boolean(value);
   try { global.localStorage.setItem(KEY, String(enabled)); } catch (_) {}
   renderButton();
   if (enabled) tryPlay();
-  else pause();
+  else pauseAll();
  }
  function init() {
   const button = toggleButton();
   if (button) button.addEventListener('click', () => setEnabled(!enabled));
-  // Mobile and desktop browsers require a gesture before starting audio.
   document.addEventListener('pointerdown', tryPlay, {passive:true});
   document.addEventListener('keydown', tryPlay);
   document.addEventListener('visibilitychange', () => {
-   if (document.hidden) pause();
+   if (document.hidden) pauseAll();
    else tryPlay();
   });
-  global.addEventListener('pagehide', pause);
+  global.addEventListener('pagehide', pauseAll);
   renderButton();
   if (document.body.classList.contains('lobby-active')) enterLobby();
  }
- global.DesertLobbyMusic = Object.freeze({enterLobby, exitLobby, setEnabled});
+ global.DesertLobbyMusic = Object.freeze({enterLobby, exitLobby, stopBattle, setEnabled});
  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
  else init();
 })(window);

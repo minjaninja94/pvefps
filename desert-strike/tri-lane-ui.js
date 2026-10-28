@@ -275,7 +275,7 @@ function onSnapshot(v){
   f.append(el);
  }
  $('mpLaneSummary').replaceChildren(f);
- if(v.ended){$('mpStateTag').textContent=v.winner===null?'무승부':v.winner===side?'승리':'패배';if(!practice)global.DesertLobby?.completeMultiplayer?.({winner:v.winner,side,matchId:lobby?.id||'unknown'});}
+ if(v.ended){global.DesertLobbyMusic?.stopBattle?.();$('mpStateTag').textContent=v.winner===null?'무승부':v.winner===side?'승리':'패배';if(!practice)global.DesertLobby?.completeMultiplayer?.({winner:v.winner,side,matchId:lobby?.id||'unknown'});}
  unitCards();buildGrid();upgradeInfo();drawOverview();
 }
 function order(cmd){
