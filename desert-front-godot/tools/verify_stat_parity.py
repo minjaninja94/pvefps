@@ -23,8 +23,10 @@ console.log(JSON.stringify(arr));
 """
 web = subprocess.run(
     ["node", "-e", node_script],
-    cwd=ROOT, check=True, capture_output=True, text=True, timeout=30
+    cwd=ROOT, check=False, capture_output=True, text=True, timeout=30
 )
+if web.returncode != 0:
+    raise RuntimeError(f"Browser JS extraction exited {web.returncode}:\n{web.stderr}\n{web.stdout}")
 native = subprocess.run(
     ["godot", "--headless", "--path", str(ROOT / "desert-front-godot"),
      "--script", "res://tests/stat_dump.gd"],
