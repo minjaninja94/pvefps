@@ -42,7 +42,7 @@ const fakeEl=id=>{
   click(){this.handlers.click?.({target:this})},classList:{add(){},remove(){}}});}
  return elements.get(id);
 };
-const fakeDoc={readyState:'complete',body:{classList:{add(){},remove(){}}},getElementById:fakeEl,querySelectorAll(){return []},querySelector(){return null}};
+const fakeDoc={readyState:'complete',body:{dataset:{},classList:{add(){},remove(){}}},getElementById:fakeEl,querySelectorAll(){return []},querySelector(){return null}};
 const modelWindow={DesertRoster:engineWin.DesertRoster,IsoWorld:{portrait(){return {}},frame(){return {}}},addEventListener(k,fn){listeners[k]=fn;}};
 vm.runInNewContext(read('front-lobby.js'),{window:modelWindow,document:fakeDoc,localStorage:{getItem(k){return store.get(k)||null},setItem(k,v){store.set(k,v)}},console,Math,Number,String,Object,Array,Map,Set,JSON,performance:{now:()=>0}},{timeout:10000});
 const lobby=modelWindow.DesertLobby;
