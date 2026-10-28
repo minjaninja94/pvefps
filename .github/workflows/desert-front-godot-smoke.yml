@@ -53,11 +53,19 @@ jobs:
           mkdir -p desert-front-godot/build
           cd desert-front-godot
           godot --headless --export-release "Windows Desktop" build/DesertFront.exe
+      - name: Include Windows relay extension DLL
+        run: |
+          set -eu
+          expected="desert-front-godot/build/addons/nodetunnel/bin/nodetunnel.dll"
+          if [ ! -f "$expected" ]; then
+            mkdir -p "$(dirname "$expected")"
+            cp desert-front-godot/addons/nodetunnel/bin/nodetunnel.dll "$expected"
+          fi
+          test -s "$expected"
+          find desert-front-godot/build -type f -maxdepth 6 | sort
       - name: Upload Windows preview
         uses: actions/upload-artifact@v4
         with:
           name: desert-front-godot-windows-preview
-          path: |
-            desert-front-godot/build/DesertFront.exe
-            desert-front-godot/build/DesertFront.pck
+          path: desert-front-godot/build/**
           if-no-files-found: error
