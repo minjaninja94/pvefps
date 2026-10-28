@@ -7,6 +7,10 @@ const NetworkSession = preload("res://scripts/network_session.gd")
 var simulation
 var _network
 var _address_input: LineEdit
+var _online_room_input: LineEdit
+var _online_room_list: OptionButton
+var _online_room_code: Label
+var _public_rooms: Array = []
 var _net_status: Label
 var _start_btn: Button
 var _ready_btn: Button
@@ -31,6 +35,8 @@ func _ready() -> void:
 	_network.match_begins.connect(_on_match_begins)
 	_network.snapshot_received.connect(_on_network_snapshot)
 	_network.session_closed.connect(_on_session_closed)
+	_network.rooms_found.connect(_on_online_rooms_found)
+	_network.room_code_available.connect(_on_online_room_code)
 	_build_interface()
 	_new_match()
 
@@ -82,11 +88,45 @@ func _build_interface() -> void:
 	restart.custom_minimum_size = Vector2(115, 40)
 	restart.pressed.connect(_new_match)
 	header.add_child(restart)
+	var online_bar := HBoxContainer.new()
+	online_bar.add_theme_constant_override("separation", 8)
+	shell.add_child(online_bar)
+	var public_btn := Button.new()
+	public_btn.text = "온라인 공개방 만들기"
+	public_btn.pressed.connect(_host_public_online)
+	online_bar.add_child(public_btn)
+	var private_btn := Button.new()
+	private_btn.text = "비공개방 만들기"
+	private_btn.pressed.connect(_host_private_online)
+	online_bar.add_child(private_btn)
+	var browse_btn := Button.new()
+	browse_btn.text = "공개방 검색"
+	browse_btn.pressed.connect(_browse_online)
+	online_bar.add_child(browse_btn)
+	_online_room_list = OptionButton.new()
+	_online_room_list.custom_minimum_size = Vector2(160, 36)
+	_online_room_list.add_item("방 검색 후 선택")
+	online_bar.add_child(_online_room_list)
+	var public_join := Button.new()
+	public_join.text = "선택 방 참가"
+	public_join.pressed.connect(_join_selected_online)
+	online_bar.add_child(public_join)
+	_online_room_input = LineEdit.new()
+	_online_room_input.custom_minimum_size = Vector2(145, 36)
+	_online_room_input.placeholder_text = "초대 코드"
+	online_bar.add_child(_online_room_input)
+	var code_join := Button.new()
+	code_join.text = "코드 참가"
+	code_join.pressed.connect(_join_code_online)
+	online_bar.add_child(code_join)
+	_online_room_code = Label.new()
+	_online_room_code.text = ""
+	shell.add_child(_online_room_code)
 	var network_bar := HBoxContainer.new()
 	network_bar.add_theme_constant_override("separation", 8)
 	shell.add_child(network_bar)
 	var host_btn := Button.new()
-	host_btn.text = "1:1 방 만들기"
+	host_btn.text = "LAN 방 만들기"
 	host_btn.pressed.connect(_host_game)
 	network_bar.add_child(host_btn)
 	_address_input = LineEdit.new()
@@ -113,7 +153,7 @@ func _build_interface() -> void:
 	leave_btn.pressed.connect(_leave_lobby)
 	network_bar.add_child(leave_btn)
 	_net_status = Label.new()
-	_net_status.text = "오프라인 싱글 | LAN 멀티: UDP 28765"
+	_net_status.text = "오프라인 싱글 | 공개방/초대 코드 접속은 온라인 릴레이 플러그인 필요"
 	_net_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	shell.add_child(_net_status)
 	var content := HBoxContainer.new()
@@ -182,7 +222,7 @@ func _build_interface() -> void:
 	_armor_btn.pressed.connect(_on_upgrade.bind("armor"))
 	upgrades.add_child(_armor_btn)
 	var note := Label.new()
-	note.text = "현재 버전: 기본 싱글 + LAN 1:1 동기화\n종족 고유 스킬·3라인·Steamworks 로비는 추후 이식"
+	note.text = "현재 버전: 기본 싱글 + LAN 1:1 + 온라인 릴레이 연결 기능\n온라인 접속은 릴레이 앱 ID와 NodeTunnel 플러그인 설정 필요"
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(note)
 	var footer := Label.new()
@@ -191,6 +231,8 @@ func _build_interface() -> void:
 
 func _new_match() -> void:
 	_network.leave()
+	if _online_room_code != null:
+		_online_room_code.text = ""
 	var faction: int = _faction_picker.selected
 	simulation = BattleSim.new(faction, (faction + 1) % 10)
 	_view.simulation = simulation
@@ -198,6 +240,50 @@ func _new_match() -> void:
 	_faction_picker.disabled = false
 	_net_status.text = "오프라인 싱글 | LAN 멀티: UDP 28765"
 	_refresh()
+
+func _host_public_online() -> void:
+	if _network.host_online(_faction_picker.selected, true):
+		_clear_match()
+		_faction_picker.disabled = true
+
+func _host_private_online() -> void:
+	if _network.host_online(_faction_picker.selected, false):
+		_clear_match()
+		_faction_picker.disabled = true
+
+func _browse_online() -> void:
+	if _network.browse_online():
+		_clear_match()
+		_faction_picker.disabled = false
+		_online_room_list.clear()
+		_online_room_list.add_item("검색 중...")
+
+func _join_selected_online() -> void:
+	var index := _online_room_list.selected
+	if index < 0 or index >= _public_rooms.size():
+		_on_network_status("온라인 목록에서 참가할 방을 선택하세요.")
+		return
+	_join_online_room(str(_public_rooms[index]["id"]))
+
+func _join_code_online() -> void:
+	_join_online_room(_online_room_input.text)
+
+func _join_online_room(code: String) -> void:
+	if _network.join_online(code, _faction_picker.selected):
+		_clear_match()
+		_faction_picker.disabled = true
+
+func _on_online_rooms_found(found: Array) -> void:
+	_public_rooms = found
+	_online_room_list.clear()
+	if found.is_empty():
+		_online_room_list.add_item("공개 방이 없습니다.")
+	else:
+		for info in found:
+			_online_room_list.add_item(str(info["name"]))
+
+func _on_online_room_code(code: String) -> void:
+	_online_room_code.text = "온라인 방 코드: %s  (친구에게 이 코드만 전달)" % code
 
 func _host_game() -> void:
 	var selected: int = _faction_picker.selected

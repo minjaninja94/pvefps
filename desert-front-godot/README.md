@@ -1,37 +1,33 @@
-# DESERT FRONT — Godot 4 migration (checkpoint 2: LAN 1v1)
+# Desert Front — Godot Migration (Online Lobby Prototype)
 
-**Isolation guarantee:** The original browser game in \`desert-strike/\` and the \`main\` branch remain untouched. Changes are isolated to \`desert-front-godot/\` and its dedicated GitHub Actions workflow, in branch \`feature/desert-front-godot-port\`.
+**Original browser code untouched.** Work only occurs in \`desert-front-godot/\` on \`feature/desert-front-godot-port\`; neither \`desert-strike/\` nor \`main\` changes.
 
-## Run
+## Current gameplay
 
-1. Import \`desert-front-godot/project.godot\` into Godot 4.3+.
-2. Run the game.
-3. Offline: choose your faction and click "새 경기 시작".
-4. LAN 1:1: host presses **1:1 방 만들기**. Guest chooses their faction, types the host's local IP (or \`127.0.0.1\` if testing on the same computer), presses **방 참가**, then **준비 완료**. Host starts the match using **경기 시작**.
-5. The host must permit incoming UDP **28765** through the firewall. Internet play using ENet also requires public reachability / UDP port forwarding, which may be impossible through carrier-grade NAT.
+Native Godot 4 Windows prototype: 10-faction / 80-unit base stats, single-lane production, basic combat, credits, upgrades, basic AI, LAN 1:1 authoritative room. Still **not feature-complete** versus browser Desert Front.
 
-## Implemented so far
+## Online without Steam, public IP, or router port forwarding
 
-- Native Godot 2D battleground, controls, 10-faction/80-unit basic roster data, 75 production slots, economy, combat, simple enemy AI, upgrade and tower prototype.
-- **LAN 1:1 foundation**: one peer hosts a room; another joins via IP; guest selects a faction and marks ready; host alone starts, simulates combat and validates both players' unit construction and upgrade orders.
-- Both players receive periodic snapshots and use the same visualized battleground with their own cash, production grid, and upgrades.
-- Godot headless smoke test, two-process ENet host/guest integration test, Windows preview build job.
-- Native multiplayer uses **ENet for LAN testing**, **NOT** Steamworks. There is currently no Steam public lobby, invite list, NAT relay, or cross-platform matchmaking.
+This checkpoint adds **NodeTunnel** GDExtension integration:
 
-## Important migration limitations
+1. Developer registers an app ID on https://www.nodetunnel.io/ . This is a one-time product owner setup, NOT something players do.
+2. Developer configures \`[relay] app_id="..."\` in \`desert-front-godot/online_relay.cfg\` **before building** the game.
+3. The GitHub Actions Windows build job downloads NodeTunnel v1.1.1_beta into \`addons/nodetunnel\` and exports it with the game. For local Godot editor, install the plugin manually from https://github.com/NodeTunnel/godot-plugin/releases/tag/v1.1.1_beta and enable it in Project Settings.
+4. In the game, players may use **온라인 공개방 만들기**, **공개방 검색 → 선택 방 참가**, or **비공개방 만들기 → 코드 참가**. The relay transmits game data; the lobby host alone validates construction and upgrade orders and simulates combat. No Steam, user IPs, inbound port forwarding, or developer-owned game server is required.
+5. **Important:** The default \`app_id\` is intentionally blank. Until the product owner registers one and rebuilds, the online actions show a configuration message instead of claiming to connect. GitHub CI checks only the build and two-process **LAN** integration; no public relay round-trip was performed. The NodeTunnel public relay is third-party beta infrastructure, **not a guaranteed SLA** or unlimited production hosting.
 
-This remains a **limited native prototype**, not feature parity with Desert Front Web. Graphics are temporary circular markers, not the original animated WebP sprites. Web version's full combat balancing, special skills, rich AI, air rules, guardian, hero, 3-lane PvP and co-op have not yet been ported. LAN host/guest networking does not confer Steamworks integration.
+For LAN testing: host clicks **LAN 방 만들기** and client connects to host IP on UDP 28765. Online relay users do **not** need that LAN workflow.
 
-## Source mapping
+## Test and build
 
-| Browser source (read-only) | Godot module |
-| --- | --- |
-| \`desert-strike/game-v2.js\` definitions | \`scripts/roster.gd\` |
-| \`desert-strike/tri-lane-engine.js\` design | \`scripts/battle_sim.gd\` |
-| WebRTC+Firebase network concept | \`scripts/network_session.gd\` |
-| \`desert-strike/index.html\` UI | \`scripts/main.gd\` |
-| Canvas 2D renderer | \`scripts/battlefield.gd\` |
+- Run editor: import \`desert-front-godot/project.godot\` in Godot 4.3+ and press F5.
+- Headless smoke: \`godot --headless --path desert-front-godot --script res://tests/smoke.gd\`
+- GitHub Actions \`Desert Front Godot smoke\` imports project, runs smoke and LAN host/client integration, then exports and uploads Windows artifact.
 
-## Next checkpoint
+## Current limits and next tasks
 
-Finish native combat parity and sprite atlas, then move Steam transport behind the same authoritative match protocol using GodotSteam's SteamMultiplayerPeer, with Steamworks AppID, full-room matchmaking, overlay invites, and connection testing on two Steam accounts. Leave the ENet LAN option for local testing.
+- **Only 1:1 classic prototype** is supported; 2v2, 3v3, co-op, original 3-lane gameplay have yet to be ported.
+- Native artwork is still placeholder vector markers; source animated sprite atlases have not been transferred.
+- Unique race passives, guardian, heroic units, high-level AI, weapon effects and strict game rules parity with original web build need porting.
+- Current match snapshots are full-state messages every 0.2 seconds. Before public launch, switch to compressed/delta snapshots and measure real bandwidth/latency. Room-browser and online reconnect also require human two-network end-to-end testing after app ID registration.
+- NodeTunnel uses third-party relays. As a long-term alternative, Epic Online Services P2P also supports NAT traversal and relay fallback, but requires separate account/app configuration and integration.

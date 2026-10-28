@@ -20,6 +20,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Download pinned NodeTunnel relay plugin
+        run: |
+          mkdir -p desert-front-godot/addons
+          curl --retry 3 -fsSL \
+            https://github.com/NodeTunnel/godot-plugin/releases/download/v1.1.1_beta/nodetunnel.zip \
+            -o /tmp/nodetunnel.zip
+          unzip -oq /tmp/nodetunnel.zip -d desert-front-godot/addons/
+          test -f desert-front-godot/addons/nodetunnel/NodeTunnel.gdextension
       - name: Import Godot project and check scripts
         run: godot --headless --path desert-front-godot --editor --quit
       - name: Run isolated simulation smoke test

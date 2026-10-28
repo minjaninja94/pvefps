@@ -47,5 +47,10 @@ func _run_test() -> void:
 	assert(copied.weapons[0] == 1)
 	assert(copied.armor_levels[1] == 1)
 
+	var online_node := preload("res://scripts/network_session.gd").new()
+	root.add_child(online_node)
+	assert(not online_node.host_online(0), "Unconfigured relay must fail closed")
+	online_node.leave()
+	online_node.queue_free()
 	print("Desert Front Godot data + single lane smoke OK")
 	quit(0)
