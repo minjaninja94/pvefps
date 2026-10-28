@@ -95,7 +95,8 @@ func _draw_unit(u: Dictionary) -> void:
 	var pos := _p(float(u["x"]),float(u["y"]))
 	var scale := (1.55 if role == 3 else 1.0) * (1.95 if is_hero else 1.0)
 	var sprite_size := clampf(size.y/float(simulation.lanes)*0.31*scale,21.0,78.0)
-	var src := Sprites.atlas(faction,role)
+	var skin := str(u.get("skin","default"))
+	var src := Sprites.skin_atlas(faction,role,skin)
 	draw_set_transform(pos+Vector2(0,sprite_size*0.25),0,Vector2(1.0,0.35))
 	draw_circle(Vector2.ZERO,sprite_size*0.35,Color(0,0,0,0.28))
 	draw_set_transform(Vector2.ZERO,0,Vector2.ONE)
@@ -106,7 +107,7 @@ func _draw_unit(u: Dictionary) -> void:
 			action = "idle"
 		var index := Sprites.pose(action,phase)
 		draw_set_transform(pos,0,Vector2(-1,1) if team==1 else Vector2.ONE)
-		draw_texture_rect_region(src,Rect2(-sprite_size*.5,-sprite_size*.72,sprite_size,sprite_size),Rect2(index*96,0,96,96),Color.WHITE)
+		draw_texture_rect_region(src,Rect2(-sprite_size*.5,-sprite_size*.72,sprite_size,sprite_size),Sprites.frame_region(faction,role,index,skin),Color.WHITE)
 		draw_set_transform(Vector2.ZERO,0,Vector2.ONE)
 	else:
 		draw_circle(pos,sprite_size*0.24,Color(Roster.FACTION_COLORS[faction]))
@@ -122,10 +123,10 @@ func _draw_effect(effect: Dictionary) -> void:
 	var kind: String = effect["kind"]
 	var fraction := clampf(float(effect["time"])/maxf(0.01,float(effect.get("max_time",1.0))),0,1)
 	if kind == "death" and int(effect["faction"]) >= 0:
-		var tex := Sprites.atlas(int(effect["faction"]),int(effect["role"]))
+		var tex := Sprites.skin_atlas(int(effect["faction"]),int(effect["role"]),str(effect.get("skin","default")))
 		if tex != null:
 			var sprite_size := clampf(size.y/float(simulation.lanes)*0.34,20.0,54.0)
-			draw_texture_rect_region(tex,Rect2(pos.x-sprite_size*.5,pos.y-sprite_size*.6,sprite_size,sprite_size),Rect2(672,0,96,96),Color(1,1,1,fraction))
+			draw_texture_rect_region(tex,Rect2(pos.x-sprite_size*.5,pos.y-sprite_size*.6,sprite_size,sprite_size),Sprites.frame_region(int(effect["faction"]),int(effect["role"]),7,str(effect.get("skin","default"))),Color(1,1,1,fraction))
 		return
 	var color := Color("#9cfac7") if kind in ["repair","pollen","guardian"] else Color("#ffbb71")
 	if kind == "nuke":

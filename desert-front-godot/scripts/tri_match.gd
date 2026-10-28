@@ -86,6 +86,7 @@ func _init(match_mode: String = "classic", match_size: int = 1, members: Array =
 		p["name"] = str(p.get("name","지휘관")).left(16)
 		p["team"] = clampi(int(p.get("team",0)),0,1)
 		p["faction"] = clampi(int(p.get("faction",0)),0,9)
+		p["skin"] = str(p.get("skin","default")) if str(p.get("skin","default")) in ["default","moe"] else "default"
 		p["bot"] = bool(p.get("bot",false))
 		p["cash"] = 360.0
 		p["eco"] = 0
@@ -110,7 +111,7 @@ func _init(match_mode: String = "classic", match_size: int = 1, members: Array =
 				buildings.append(slots)
 			players.append({
 				"uid":"AI_%d" % i, "name":"적 AI %d" % (i + 1), "team":1,
-				"faction":faction, "bot":true, "cash":360.0, "eco":0,
+				"faction":faction, "skin":"default", "bot":true, "cash":360.0, "eco":0,
 				"eco_ready_at":0.0, "weapon":0, "armor":0, "nukes":1,
 				"barrage_cd":0.0, "mine_costs":{}, "buildings":buildings,
 				"ai_plan":i % 4, "ai_opening":0
@@ -270,7 +271,7 @@ func _spawn(p: Dictionary, lane: int, slot: int, role: int) -> void:
 	var y: float = lane * LANE_HEIGHT + 265.0 + float((int(slot / 15) * 11 + (slot % 15) * 21) % 196) - 98.0
 	var u := {
 		"id":next_unit_id, "uid":p["uid"], "team":team,
-		"faction":f, "role":role, "lane":lane, "x":x,"y":y,
+		"faction":f, "role":role, "skin":p.get("skin","default"), "lane":lane, "x":x,"y":y,
 		"hp":hp, "max_hp":hp, "cool":0.1,
 		"stats":stats, "action":"spawn","action_ttl":0.35,
 		"ink_until":0.0, "last_ink":-999.0,"last_ward":-999.0,
@@ -517,6 +518,7 @@ func _marine_spoils(a: Dictionary,v: Dictionary) -> void:
 		copy["id"] = next_unit_id
 		copy["uid"] = a["uid"]
 		copy["team"] = a["team"]
+		copy["skin"] = a.get("skin","default")
 		copy["hp"] = maxf(1.0,float(v["max_hp"]) * 0.1)
 		copy["conscripted"] = true
 		copy["hero_count"] = 1
@@ -781,13 +783,13 @@ func _remove_dead() -> void:
 		if float(u["hp"]) > 0.0:
 			surviving.append(u)
 		else:
-			_effect("death",u["x"],u["y"],int(u["team"]),0.72,int(u["faction"]),int(u["role"]))
+			_effect("death",u["x"],u["y"],int(u["team"]),0.72,int(u["faction"]),int(u["role"]),str(u.get("skin","default")))
 	units = surviving
 
-func _effect(kind: String, x: float, y: float, team: int, duration: float = 0.5, faction: int = -1, role: int = -1) -> void:
+func _effect(kind: String, x: float, y: float, team: int, duration: float = 0.5, faction: int = -1, role: int = -1, skin: String = "default") -> void:
 	if effects.size() > 150:
 		effects.pop_front()
-	effects.append({"kind":kind,"x":x,"y":y,"lane":clampi(int(y/LANE_HEIGHT),0,lanes-1),"team":team,"time":duration,"max_time":duration,"faction":faction,"role":role})
+	effects.append({"kind":kind,"x":x,"y":y,"lane":clampi(int(y/LANE_HEIGHT),0,lanes-1),"team":team,"time":duration,"max_time":duration,"faction":faction,"role":role,"skin":skin})
 
 func _compact_heroes() -> void:
 	var groups: Dictionary = {}

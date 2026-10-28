@@ -17,6 +17,7 @@ var match_mode := "pvp"
 var team_size := 1
 var members: Dictionary = {}
 var local_faction := 0
+var local_skin := "default"
 var preferred_team := 1
 var game
 var _peer: MultiplayerPeer
@@ -74,10 +75,10 @@ func _relay_credentials() -> bool:
 		return false
 	return true
 
-func host_online(p_mode: String, p_size: int, faction: int, public: bool) -> bool:
+func host_online(p_mode: String, p_size: int, faction: int, public: bool, skin: String = "default") -> bool:
 	if not _relay_credentials():
 		return false
-	if not _prepare_host(p_mode,p_size,faction):
+	if not _prepare_host(p_mode,p_size,faction,skin):
 		return false
 	_public = public
 	_pending = "host"
@@ -106,12 +107,13 @@ func search_online() -> bool:
 	status_changed.emit("공개방 검색 중...")
 	return true
 
-func join_online(code: String, faction: int, team: int) -> bool:
+func join_online(code: String, faction: int, team: int, skin: String = "default") -> bool:
 	var value := code.strip_edges()
 	if value.is_empty() or value.length() > 128:
 		status_changed.emit("방 코드가 올바르지 않습니다.")
 		return false
 	local_faction = clampi(faction,0,9)
+	local_skin = skin if skin in ["default","moe"] else "default"
 	preferred_team = clampi(team,0,1)
 	if mode == "browse" and _peer != null:
 		mode = "client"
@@ -133,8 +135,8 @@ func join_online(code: String, faction: int, team: int) -> bool:
 	status_changed.emit("온라인 방 참가 중...")
 	return true
 
-func host_lan(p_mode: String,p_size: int,faction: int) -> bool:
-	if not _prepare_host(p_mode,p_size,faction):
+func host_lan(p_mode: String,p_size: int,faction: int,skin: String = "default") -> bool:
+	if not _prepare_host(p_mode,p_size,faction,skin):
 		return false
 	var enet := ENetMultiplayerPeer.new()
 	if enet.create_server(LAN_PORT,5) != OK:
@@ -146,9 +148,10 @@ func host_lan(p_mode: String,p_size: int,faction: int) -> bool:
 	_refresh_roster()
 	return true
 
-func join_lan(address: String,faction: int,team: int) -> bool:
+func join_lan(address: String,faction: int,team: int,skin: String = "default") -> bool:
 	leave()
 	local_faction = clampi(faction,0,9)
+	local_skin = skin if skin in ["default","moe"] else "default"
 	preferred_team = clampi(team,0,1)
 	mode = "client"
 	phase = "lobby"
@@ -160,7 +163,7 @@ func join_lan(address: String,faction: int,team: int) -> bool:
 	multiplayer.multiplayer_peer = _peer
 	return true
 
-func _prepare_host(p_mode: String,p_size: int,faction: int) -> bool:
+func _prepare_host(p_mode: String,p_size: int,faction: int,skin: String = "default") -> bool:
 	if p_mode not in ["classic","pvp","coop"]:
 		return false
 	if p_mode == "classic" and p_size != 1:
@@ -175,7 +178,8 @@ func _prepare_host(p_mode: String,p_size: int,faction: int) -> bool:
 	match_mode = p_mode
 	team_size = p_size
 	local_faction = clampi(faction,0,9)
-	members = {"1":{"uid":"1","id":1,"name":"방장","team":0,"faction":local_faction,"ready":true}}
+	local_skin = skin if skin in ["default","moe"] else "default"
+	members = {"1":{"uid":"1","id":1,"name":"방장","team":0,"faction":local_faction,"skin":local_skin,"ready":true}}
 	return true
 
 func _wire_relay() -> void:
@@ -251,12 +255,14 @@ func _on_failed() -> void:
 
 func _hello_host() -> void:
 	if mode == "client" and phase == "lobby":
-		client_hello.rpc_id(1,local_faction,preferred_team)
+		client_hello.rpc_id(1,local_faction,preferred_team,local_skin)
 
 @rpc("any_peer","call_remote","reliable")
-func client_hello(faction: int,team: int) -> void:
+func client_hello(faction: int,team: int,skin: String = "default") -> void:
 	var sender := multiplayer.get_remote_sender_id()
-	if mode != "host" or phase != "lobby" or faction < 0 or faction > 9 or sender <= 1:
+	if mode != "host" or phase != "lobby" or faction < 0 or faction > 9 or sender <= 1 or skin not in ["default","moe"]:
+		return
+	if members.has(str(sender)) or members.size() >= _expected_count():
 		return
 	var chosen := 0 if match_mode == "coop" else clampi(team,0,1)
 	var occupied := 0
@@ -272,7 +278,7 @@ func client_hello(faction: int,team: int) -> void:
 	if occupied >= team_size:
 		feedback.rpc_id(sender,"선택한 팀 정원이 가득 찼습니다.")
 		return
-	members[str(sender)] = {"uid":str(sender),"id":sender,"name":"플레이어 %d" % sender,"team":chosen,"faction":faction,"ready":false}
+	members[str(sender)] = {"uid":str(sender),"id":sender,"name":"플레이어 %d" % sender,"team":chosen,"faction":faction,"skin":skin,"ready":false}
 	_refresh_roster()
 	status_changed.emit("참가자 등록: %d / %d" % [members.size(),_expected_count()])
 
@@ -342,7 +348,7 @@ func start_match() -> bool:
 		return false
 	var roster: Array = []
 	for p in members.values():
-		roster.append({"uid":p["uid"],"name":p["name"],"team":p["team"],"faction":p["faction"],"bot":false})
+		roster.append({"uid":p["uid"],"name":p["name"],"team":p["team"],"faction":p["faction"],"skin":p.get("skin","default"),"bot":false})
 	roster.sort_custom(func(a: Dictionary,b: Dictionary)->bool:return str(a["uid"])<str(b["uid"]))
 	game = Match.new(match_mode,team_size,roster,"hard" if match_mode == "coop" else "normal")
 	phase = "playing"
