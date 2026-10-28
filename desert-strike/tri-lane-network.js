@@ -65,7 +65,7 @@ function listenRoom(){
 async function create(opts){
  if(roomId)await leave();
  await identity();
- if(!['pvp','coop'].includes(opts.mode)||![1,2,3].includes(Number(opts.size))||opts.mode==='coop'&&Number(opts.size)<2)throw Error('잘못된 인원/모드');
+ if(!['pvp','coop','classic'].includes(opts.mode)||![1,2,3].includes(Number(opts.size))||opts.mode==='coop'&&Number(opts.size)<2||opts.mode==='classic'&&Number(opts.size)!==1)throw Error('잘못된 인원/모드');
  roomId=code();host=true;
  room={version:1,host:uid,mode:opts.mode,size:Number(opts.size),status:'lobby',created:Date.now(),expires:Date.now()+7200000,
   players:{[uid]:{name:validateName(opts.name),faction:Number(opts.faction),skin:validateSkin(opts.skin),team:0,ready:false}}};
@@ -90,10 +90,10 @@ async function join(opts){
   if(![0,1].includes(team))throw Error('잘못된 팀');
   const cap=r.size;
   if(Object.values(players).filter(p=>p.team===team).length>=cap){
-   if(r.mode==='pvp'&&Object.values(players).filter(p=>p.team===1-team).length<cap)team=1-team;
+   if(r.mode!=='coop'&&Object.values(players).filter(p=>p.team===1-team).length<cap)team=1-team;
    else throw Error('두 팀 모두 정원이 가득 찼습니다.');
   }
-  if(Object.keys(players).length>=r.size*(r.mode==='pvp'?2:1))throw Error('방 정원이 가득 찼습니다.');
+  if(Object.keys(players).length>=r.size*(r.mode==='coop'?1:2))throw Error('방 정원이 가득 찼습니다.');
   players[uid]={name:validateName(opts.name),team,faction:Number(opts.faction),skin:validateSkin(opts.skin),ready:false};
   if(players[uid].faction<0||players[uid].faction>9)throw Error('종족 선택 오류');
   tx.update(ref,{players});
@@ -149,7 +149,7 @@ function handleChannel(guest,ch){
    if(result.ok)broadcast(true);
   }else if(data?.type==='snapshot'){
    if(typeof data.seq==='number'&&data.seq<=(ch._snapshotSeq||0))return;ch._snapshotSeq=data.seq||0;
-   if(data.state?.lanes!==3&&data.state?.width!==3300)return;
+   if(data.state?.width!==3300||![520,1560].includes(data.state.height)||!['pvp','coop','classic'].includes(data.state.mode)||data.state.lanes!==(data.state.mode==='classic'?1:3))return;
    notify('snapshot',data.state);
   }else if(data?.type==='ack'&&!data.result.ok){status(data.result.reason);}
  };
