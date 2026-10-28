@@ -192,8 +192,8 @@ function onSnapshot(v){
  $('mpCountdown').textContent=Math.max(0,v.next).toFixed(1)+'초';
  const traitHud=$('mpFactionTraits');
  if(traitHud){const myTrait=(v.factionTraits||[]).find(x=>x.uid===myId),faction=global.DesertRoster?.FACTIONS?.[me?.faction];
-  traitHud.hidden=!faction||me?.faction===3;
-  if(faction&&me?.faction!==3)traitHud.textContent='◆ '+faction.name+' | '+faction.bonus+(myTrait&&myTrait.faction===1?' · 공생충 '+myTrait.births+'/10 · 누적 '+myTrait.totalBirths+'기':'');}
+  traitHud.hidden=!faction;
+  if(faction)traitHud.textContent='◆ '+faction.name+' | '+faction.bonus+(myTrait&&myTrait.faction===1?' · 공생충 '+myTrait.births+'/10 · 누적 '+myTrait.totalBirths+'기':'');}
  const marineHud=$('mpMarineAbilities');
  if(marineHud){const info=(v.marineOps||[]).find(o=>o.uid===myId);marineHud.hidden=!info;
   if(info)marineHud.textContent='★ 해병 특성 | 긴빠이 '+info.loot+'회 (+'+info.lootedCR+' CR) | 자진입대 '+info.recruits+'회 · 이번 웨이브 '+info.waveRecruits+'/2 | 황룡 '+info.huangSpawns+'기 | 오도봉고 '+info.bongoCharges+'회';}

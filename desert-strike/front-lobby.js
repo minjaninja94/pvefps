@@ -84,7 +84,7 @@ function render(){
  $('lobbyLevel').textContent='LV. '+l.level;$('lobbyXP').textContent=l.within+' / '+l.needed+' XP';$('lobbyXPFill').style.width=Math.min(100,l.within/l.needed*100)+'%';
  $('lobbyRank').textContent=rank();$('lobbyRecord').textContent='싱글 '+progress.wins+'승 '+progress.losses+'패 · 온라인 '+progress.mpWins+'승 '+progress.mpLosses+'패 · 비공식 훈련 랭크';
  $('lobbyNickname').value=progress.nickname;
- $('lobbyFactionName').textContent=fac.name;$('lobbyFactionTrait').textContent=fac.bonus+' · '+fac.slogan;
+ $('lobbyFactionName').textContent=fac.name;$('lobbyFactionTrait').textContent=fac.bonus;
 
  $('lobbyFactions').innerHTML=FACTIONS.map((f,i)=>'<button class="lobby-faction'+(i===progress.selectedFaction?' selected':'')+'" data-faction="'+i+'" style="--fac:'+f.color+'"><span class="lobby-icon">'+f.logo+'</span><canvas width="160" height="114" data-cover="'+i+'" aria-label="'+f.name+' 사령부와 대표 병력"></canvas><strong>'+f.name+'</strong><small>'+f.tag+'</small></button>').join('');
  $('lobbySkins').innerHTML=SKINS.map(x=>'<button class="lobby-skin'+(s.id===x.id?' selected':'')+'" data-skin="'+x.id+'" style="--skin:'+x.tone+'" '+(l.level<x.level?'disabled':'')+'><span class="skin-swatch">✦</span><strong>'+x.name+'</strong><small>'+(l.level<x.level?'LV.'+x.level+' 해금':x.desc)+'</small></button>').join('');
