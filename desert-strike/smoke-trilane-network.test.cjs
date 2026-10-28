@@ -64,7 +64,7 @@ class FakePeer {
  addEventListener(){}removeEventListener(){}close(){}
 }
 function buildClient(uid){
- const w={addEventListener(){}},env={
+ const w={addEventListener(){},DesertGuardian:require('./defense-guardian.js'),DesertConsolidation:require('./unit-consolidation.js')},env={
   window:w,crypto:webcrypto,RTCPeerConnection:FakePeer,
   setInterval,clearInterval,setTimeout,clearTimeout,performance,Date,Math,Number,String,Object,Array,Map,Set,console
  };

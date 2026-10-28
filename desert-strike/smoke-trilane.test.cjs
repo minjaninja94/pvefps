@@ -18,7 +18,7 @@ let seed=17;const random=Object.create(Math);
 random.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
 let forceMarineRoll=null;
 random.random=()=>forceMarineRoll===null?((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296):forceMarineRoll;
-const win={};vm.runInNewContext(src,{window:win,Math:random,Array,Number,Object,Map,Set,console},{timeout:10000});
+const win={DesertGuardian:require('./defense-guardian.js'),DesertConsolidation:require('./unit-consolidation.js')};vm.runInNewContext(src,{window:win,Math:random,Array,Number,Object,Map,Set,console},{timeout:10000});
 const E=win.DesertTriEngine;
 assert.equal(E.WIDTH*E.HEIGHT,3300*520*3,'triple area from the one-lane world');
 assert.equal(E.LANES,3);assert.equal(E.SLOTS,75);

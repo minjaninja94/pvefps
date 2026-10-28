@@ -4,7 +4,7 @@ const read=f=>fs.readFileSync(path.join(__dirname,f),'utf8');
 const elements=new Map(),noop=()=>{};
 const g=new Proxy({createLinearGradient:()=>({addColorStop:noop})},{get:(o,k)=>o[k]||noop,set:(o,k,v)=>(o[k]=v,true)});
 function el(id){if(!elements.has(id))elements.set(id,{style:{},dataset:{},classList:{add:noop,remove:noop,toggle:noop},getContext:()=>g,querySelectorAll:()=>[],addEventListener:noop});return elements.get(id);}
-const w={},document={getElementById:el,querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>({getContext:()=>g})};
+const w={DesertGuardian:require('./defense-guardian.js'),DesertConsolidation:require('./unit-consolidation.js')},document={getElementById:el,querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>({getContext:()=>g})};
 const env={window:w,document,requestAnimationFrame:noop,console,Map,Set,Math,Object,Number,Array,String,Date};
 let solo=read('game-v2.js').replace('initFactions();wire();reset();','window.test={reset,state:()=>state,selectRole,place,constructExtractor,ecoStabilize,ecoCostFor,tick,wave,upgrade,demolish:i=>{demolition=true;place(i);demolition=false;}};reset();');
 vm.runInNewContext(solo,env);const S=w.test;
@@ -18,7 +18,7 @@ S.wave();assert.ok(s.units.every(u=>u.role<8),'extractors never spawn combat uni
 S.reset();s=S.state();s.live=true;s.next=.1;S.selectRole(8);S.place(0);const stopped=s.cash;advanceSolo(.2);assert.equal(s.cash,stopped,'wave stipend is paused too');
 S.demolish(0);assert.equal(s.eco,0);assert.equal(s.cash,stopped+38);assert.equal(s.ecoReadyAt,6,'selling must not bypass the blackout');S.place(1);assert.equal(s.built[1],null);
 S.reset();s=S.state();s.live=true;const before=s.cash;S.upgrade('econ');assert.equal(s.eco,0);assert.equal(s.cash,before,'legacy upgrade entry selects a building without free income');
-const m={};vm.runInNewContext(read('tri-lane-engine.js'),{window:m,console,Map,Set,Math,Object,Number,Array,String});const E=m.DesertTriEngine;
+const m={DesertGuardian:require('./defense-guardian.js'),DesertConsolidation:require('./unit-consolidation.js')};vm.runInNewContext(read('tri-lane-engine.js'),{window:m,console,Map,Set,Math,Object,Number,Array,String});const E=m.DesertTriEngine;
 function create(){return E.create({mode:'pvp',size:1,members:[{uid:'a',team:0,faction:0},{uid:'b',team:1,faction:1}]});}
 function advance(e,seconds){let left=seconds;while(left>1e-8){const n=Math.min(.1,left);e.tick(n);left-=n;}}
 let e=create(),p=e.state.players[0],op=e.state.players[1];

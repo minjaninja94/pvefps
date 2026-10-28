@@ -94,7 +94,7 @@ function combatDef(u){
  return u.isHatchling?{...d,hp:1,damage:5,range:24,rate:1.28,speed:108,armor:0,airTarget:false,kind:'ground'}:d;
 }
 function broodLay(parent,target,roll=Math.random){
- if(parent.faction!==1||parent.isHatchling||parent.conscripted||parent.role===7||parent.hp<=0
+ if(parent.guardian||parent.faction!==1||parent.isHatchling||parent.conscripted||parent.role===7||parent.hp<=0
    ||!target||target.side===parent.side||state.broodBirths[parent.side]>=BROOD_BIRTH_CAP
    ||state.units.filter(v=>v.hp>0&&v.side===parent.side&&v.isHatchling).length>=BROOD_ALIVE_CAP
    ||armyPopulation(parent.side)>=SIDE_SUPPLY
@@ -138,7 +138,7 @@ function chirp(hz=420,length=.08){
 }
 function reset(){
  state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:360,eco:0,enemyEco:0,ecoReadyAt:0,enemyEcoReadyAt:0,mineCosts:{},enemyMineCosts:{},weapon:0,armor:0,incomeClock:0,cameraX:1100,followFront:true,
- wave:0,next:INTERVAL,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],
+ wave:0,next:INTERVAL,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],forwardHP:[1000,1000],forwardClaimed:[false,false],
  built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},
  broodBirths:[0,0],broodBirthsTotal:[0,0],
@@ -499,7 +499,7 @@ function beginStrike(u,target=null,baseSide=null,healing=false){
  if(u.strike)return;
  const def=combatDef(u);
  const duration=clamp(def.rate*.75,.5,.83);
- u.strike={mode:baseSide!==null?'siege':'attack',target,baseSide,healing,age:0,duration,hit:false};
+ u.strike={mode:baseSide!==null?'siege':'attack',target,baseSide,structurePart:baseSide===null?null:defenseTarget(baseSide).part,healing,age:0,duration,hit:false};
  if(healing)u.skillAge=.62;
  u.cooldown=def.rate*random(.92,1.07);
 }
@@ -528,7 +528,7 @@ function resolveStrike(u,hit){
   }else if(hit.target&&hit.target.hp>0&&hit.target.hp<hit.target.maxHP)
    heal(hit.target,combatDef(u).heal*(u.side===0?1+.08*state.weapon:1),false,u);
  }else if(hit.baseSide!==null){
-  fire(u,null,hit.baseSide);
+  fire(u,null,hit.baseSide,hit.structurePart);
  }else if(hit.target&&hit.target.hp>0){
   fire(u,hit.target);
  }else {
@@ -538,7 +538,7 @@ function resolveStrike(u,hit){
 // Kills by living, non-conscripted Marine units can trigger one-time logistics effects.
 // No credit for defensive turrets, nukes, artillery buttons or already captured conscripts.
 function marineSpoils(v,attacker,roll=Math.random){
- if(!attacker||attacker.faction!==3||attacker.side===v.side||attacker.conscripted||v.conscripted||v.isHatchling)return;
+ if(!attacker||attacker.faction!==3||attacker.side===v.side||attacker.conscripted||v.conscripted||v.isHatchling||v.guardian)return;
  if(roll()<MARINE_LOOT_CHANCE){
   const amount=Math.min(24,Math.floor(ROLE[v.role].cost*.12));
   const key=v.side===0?'cash':'enemyCash',to=attacker.side===0?'cash':'enemyCash';
@@ -589,8 +589,29 @@ function heal(u,amount,burst=false,healer=null){
   if(partner){healer.lastPollenAt=state.elapsed;partner.hp=Math.min(partner.maxHP,partner.hp+recovered*.03);pulse(partner.x,partner.y,'#ffbce2',9);}
  }
 }
-function structureHit(side,amount){
- if(state.turretHP[side]>0){
+function defenseTarget(side,part=null){
+ const current=part||(state.forwardHP[side]>0?'forward':state.turretHP[side]>0?'turret':'core');
+ return {part:current,x:current==='forward'?(side===0?WORLD_W/4:WORLD_W*3/4):side===0?(current==='turret'?190:90):(current==='turret'?WORLD_W-190:WORLD_W-90),y:260};
+}
+function forwardDown(side){
+ if(state.forwardClaimed[side])return;state.forwardClaimed[side]=true;
+ state[side===0?'enemyCash':'cash']+=150;
+ createUnit(side,0,5);const u=state.units[state.units.length-1];
+ window.DesertGuardian?.mark(u,side); // Same faction, skin and 20× artillery stats as its defending side.
+ floatText(u.x,u.y-65,'가디언 소환','#69ff9c');
+ setMessage((side===0?'아군':'적군')+' 중간 타워 파괴 · 상대 보너스 150 CR · 수비 가디언 소환');
+}
+function structureHit(side,amount,part=null){
+ const target=defenseTarget(side,part);
+ if(target.part==='forward'){
+  if(state.forwardHP[side]<=0)return;
+  state.forwardHP[side]=Math.max(0,state.forwardHP[side]-amount);
+  state.structureFX.push({side,part:'forward',mode:state.forwardHP[side]===0?'ruin':'hit',age:0,duration:.7});
+  if(state.forwardHP[side]===0)forwardDown(side);return;
+ }
+ if(target.part==='turret'&&state.turretHP[side]<=0)return;
+ if(target.part==='core'&&state.baseHP[side]<=0)return;
+ if(target.part==='turret'){
   state.turretHP[side]=Math.max(0,state.turretHP[side]-amount);
   state.structureFX.push({side,part:'turret',mode:state.turretHP[side]<=0?'ruin':'hit',age:0,duration:state.turretHP[side]<=0?1:.5});
   pulse(side===0?188:WORLD_W-188,260,'#fcb78b',23);
@@ -618,7 +639,7 @@ function nearestUnit(u,def){
   const next=Math.min(dxA,dxB);
   if(candidate&&next>(score+175))break;
   const v=dxA<=dxB?targets[a--]:targets[b++];
-  if(v.hp<=0||v.side===u.side||(!def.airTarget&&getDef(v.role,v.faction).kind==='air'))continue;
+  if(v.hp<=0||v.side===u.side||(u.guardian&&!window.DesertGuardian?.canTarget(u,v,def.range))||(!def.airTarget&&getDef(v.role,v.faction).kind==='air'))continue;
   const dy=Math.abs(u.y-v.y);
   const d=Math.hypot(next,dy);
   const bonus=(u.role===4&&getDef(v.role,v.faction).kind==='air'?175:0)+(def.good.includes(v.role)?Math.min(35,def.range*.2):0);
@@ -695,10 +716,11 @@ function move(u,x,y,dt){
  const dx=x-u.x,dy=y-u.y,d=Math.hypot(dx,dy)||1,def=getDef(u.role,u.faction);
  const step=combatDef(u).speed*dt*((u.inkUntil||0)>state.elapsed?.80:1);
  u.x+=dx/d*Math.min(step,d);u.y+=dy/d*Math.min(step,d);
- u.facing=dx>=0?1:-1;u.moving=d>1;u.x=clamp(u.x,30,WORLD_W-30);u.y=clamp(u.y,68,452);
+ window.DesertGuardian?.clampUnit(u);u.facing=dx>=0?1:-1;u.moving=d>1;u.x=clamp(u.x,30,WORLD_W-30);u.y=clamp(u.y,68,452);
 }
-function fire(u,t=null,baseSide=null){
- const def=combatDef(u),x=t?t.x:baseSide===0?(state.turretHP[0]>0?190:90):(state.turretHP[1]>0?WORLD_W-190:WORLD_W-90),y=t?t.y:260;
+function fire(u,t=null,baseSide=null,structurePart=null){
+ const fort=baseSide===null?null:defenseTarget(baseSide,structurePart);
+ const def=combatDef(u),x=t?t.x:fort.x,y=t?t.y:260;
  if(def.range<48){
   if(t && u.faction===3&&u.role===6){
    // Armored bumper: splash up to three clustered ground enemies, not flying units.
@@ -712,11 +734,11 @@ function fire(u,t=null,baseSide=null){
    pulse(t.x,t.y,'#f1af72',23);
   }
   else if(t)damage(t,def.damage*(u.side===0?1+.08*state.weapon:1),u.role,u);
-  else structureHit(baseSide,structureDamage(u.role,def.damage*(u.side===0?1+.08*state.weapon:1)));
+  else structureHit(baseSide,structureDamage(u.role,def.damage*(u.side===0?1+.08*state.weapon:1)),fort.part);
   pulse(x,y,'#ffdbae',6);
  }else{
   state.shots.push({side:u.side,faction:u.faction,conscripted:!!u.conscripted,source:u.role,x:u.x,y:u.y,tx:x,ty:y,
-   target:t,baseSide,sourceUnit:u.uid,damage:def.damage*(u.side===0?1+.08*state.weapon:1),
+   target:t,baseSide,structurePart:fort?.part,sourceUnit:u.uid,damage:def.damage*(u.side===0?1+.08*state.weapon:1),
    speed:200+(def.range<200?205:120),blast:def.blast||0,ttl:3.5});
  }
  if(t)broodLay(u,t);
@@ -726,7 +748,7 @@ function projectileImpact(p){
  const x=p.tx,y=p.ty;
  const shooter=state.units.find(u=>u.uid===p.sourceUnit)||p;
  pulse(x,y,p.source===4?'#8cebf4':'#ffc88d',p.blast?45:12);
- if(p.baseSide!==null){structureHit(p.baseSide,structureDamage(p.source,p.damage));return;}
+ if(p.baseSide!==null){structureHit(p.baseSide,structureDamage(p.source,p.damage),p.structurePart);return;}
  if(p.blast){
   for(const v of state.units)if(v.hp>0&&v.side!==p.side){
    if(getDef(v.role,v.faction).kind==='air'&&!ROLE[p.source].airTarget)continue;
@@ -792,13 +814,15 @@ function tick(dt){
    if(distance(u,target)>reach)move(u,target.x,target.y,ds);
    else if(u.cooldown<=0)beginStrike(u,target);
   }else{
-   const side=1-u.side,tx=side===0?(state.turretHP[0]>0?190:90):(state.turretHP[1]>0?WORLD_W-190:WORLD_W-90);
+   if(u.guardian){move(u,u.guardianHomeX,260,ds);continue;}
+   const side=1-u.side,tx=defenseTarget(side).x;
    const d=Math.hypot(u.x-tx,u.y-260);
    if(d>def.range+15)move(u,tx,260,ds);
    else if(u.cooldown<=0)beginStrike(u,null,side);
   }
  }
  separateUnits();
+ for(const u of state.units)window.DesertGuardian?.clampUnit(u);
  for(const u of state.units)if((u.faction===3||u.faction===4)&&u.role===6&&u.hp>0)bongoImpact(u,ds);
  for(let i=state.shots.length-1;i>=0;i--){
   const p=state.shots[i];p.ttl-=ds;
@@ -806,6 +830,15 @@ function tick(dt){
   const dx=p.tx-p.x,dy=p.ty-p.y,d=Math.hypot(dx,dy),step=p.speed*ds;
   if(d<step+6||p.ttl<=0){projectileImpact(p);state.shots.splice(i,1);}
   else{p.x+=dx/d*step;p.y+=dy/d*step;}
+ }
+ // Paid-destruction forward objective: same targeting rules, its own cooldown.
+ for(let side=0;side<2;side++){
+  if(state.forwardHP[side]<=0)continue;
+  const x=side===0?WORLD_W/4:WORLD_W*3/4;
+  state['forwardCool'+side]=Math.max(0,(state['forwardCool'+side]||0)-ds);
+  if(state['forwardCool'+side]>0)continue;
+  const foe=state.units.filter(u=>u.hp>0&&u.side!==side&&Math.hypot(u.x-x,u.y-260)<=TOWER_RANGE).sort((a,b)=>Math.hypot(a.x-x,a.y-260)-Math.hypot(b.x-x,b.y-260))[0];
+  if(foe){damage(foe,TOWER_DAMAGE*.75,'turret');state['forwardCool'+side]=TOWER_PERIOD;state.towerShots.push({side,x,y:260,tx:foe.x,ty:foe.y,time:.14});}
  }
  // Rapid defensive single-target turret, per side; targets air and armor as well.
  for(let side=0;side<=1;side++){
@@ -1023,7 +1056,7 @@ function drawUnit(g,u,scale=1){
  const w=(iso?(u.role===3?78:u.role===6?77:68):(u.role===3?55:u.role===6?52:47))*scale;
  const h=(iso?(u.role===3?78:u.role===6?77:68):(u.role===3?55:u.role===6?52:47))*scale;
  const baseMode=['idle','move','attack','siege','death'].includes(mode)?mode:'idle';
- if(u.heroCount===20)window.DesertConsolidation?.aura(g,at.x,at.y+12*scale,w,performance.now()/1000);
+ if(u.heroCount===20)window.DesertConsolidation?.aura(g,at.x,at.y+12*scale,w,performance.now()/1000,!!u.guardian);
  const artwork=iso?.frame(u.faction,u.role,baseMode,frame)||window.DesertSprites?.frame(u.faction,u.role,baseMode,frame)||sprite(u.faction,u.role,frame%2);
  g.fillStyle='#05141c88';g.beginPath();g.ellipse(at.x,at.y+13*scale,17*scale,4*scale,0,0,Math.PI*2);g.fill();
  g.save();g.translate(at.x,at.y);
@@ -1040,7 +1073,7 @@ function drawUnit(g,u,scale=1){
  g.fillStyle='#07161cd8';g.fillRect(at.x-10*scale,y-8*scale,20*scale,16*scale);
  g.strokeStyle=u.side===0?'#85e9fa':'#fdad92';g.lineWidth=1;g.strokeRect(at.x-10*scale,y-8*scale,20*scale,16*scale);
  g.fillStyle=u.side===0?'#d0f9ff':'#ffe4d0';g.textAlign='center';g.font='900 '+Math.round(13*scale)+'px monospace';
- g.fillText(u.heroCount===20?'★ ×20':getDef(u.role,u.faction).mark,at.x,y+4*scale);
+ g.fillText(u.guardian?'가디언 ×20':u.heroCount===20?'★ ×20':getDef(u.role,u.faction).mark,at.x,y+4*scale);
  if(u.hp<u.maxHP){
   g.fillStyle='#06171c';g.fillRect(at.x-16*scale,y-12*scale,32*scale,4*scale);
   g.fillStyle=COLORS[u.side];g.fillRect(at.x-16*scale,y-12*scale,32*scale*Math.max(0,u.hp/u.maxHP),4*scale);
@@ -1171,12 +1204,20 @@ function drawBattle(){
  g.clearRect(0,0,CW,CH);
  g.save();g.beginPath();g.rect(0,0,CW,CH);g.clip();g.translate(-state.cameraX,0);
  ground(g,WORLD_W,CH);
+ const centerTop=window.IsoWorld?.project(WORLD_W/2,35)||{x:WORLD_W/2,y:35},centerBottom=window.IsoWorld?.project(WORLD_W/2,485)||{x:WORLD_W/2,y:485};
+ g.strokeStyle='#e6d7a36e';g.lineWidth=2;g.setLineDash([8,10]);g.beginPath();g.moveTo(centerTop.x,centerTop.y);g.lineTo(centerBottom.x,centerBottom.y);g.stroke();g.setLineDash([]);
+ g.fillStyle='#e6d7a3';g.font='bold 12px sans-serif';g.textAlign='center';g.fillText('중앙선',centerTop.x,centerTop.y-8);
  structure(g,90,260,0,false,state.baseHP[0]);structure(g,WORLD_W-90,260,1,false,state.baseHP[1]);
  structure(g,190,260,0,true,state.turretHP[0]);structure(g,WORLD_W-190,260,1,true,state.turretHP[1]);
+ for(let side=0;side<2;side++){
+  const x=side===0?WORLD_W/4:WORLD_W*3/4;
+  structure(g,x,260,side,true,state.forwardHP[side]/1000*MAX_TURRET);
+  const at=window.IsoWorld?window.IsoWorld.project(x,260):{x,y:260};g.fillStyle='#efdfab';g.font='bold 12px sans-serif';g.textAlign='center';g.fillText(state.forwardHP[side]>0?'중간 타워 · 파괴 보너스 150':'중간 타워 파괴',at.x,at.y-100);
+ }
  for(const u of [...state.units,...state.deadUnits].filter(u=>u.x>=state.cameraX-85&&u.x<=state.cameraX+CW+85&&enemyUnitVisible(u)).sort((a,b)=>a.y-b.y))drawUnit(g,u,1);
  if(window.DesertSprites){
   for(const impact of state.structureFX){
-   const x=impact.side===0?(impact.part==='turret'?190:90):(impact.part==='turret'?WORLD_W-190:WORLD_W-90);
+   const x=defenseTarget(impact.side,impact.part).x;
    if(window.IsoWorld)window.IsoWorld.effect(g,x,260,60,impact.mode,impact.age/impact.duration);
    else window.DesertSprites.structureImpact(g,x,260,impact.side===0?state.faction:state.enemyFaction,impact.mode,impact.age/impact.duration);
   }
@@ -1285,10 +1326,11 @@ function drawMinimap(){
  }
  for(const u of state.units){
   if(!enemyUnitVisible(u))continue;
-  g.fillStyle=u.side===0?'#78dde8':'#ff896b';
+  g.fillStyle=u.guardian?'#55ff91':u.side===0?'#78dde8':'#ff896b';
   g.fillRect(Math.floor(u.x/WORLD_W*1100),Math.floor(u.y/CH*82),u.role===3?4:3,u.role===3?4:3);
  }
  if(!enemyBaseVisible()){g.fillStyle='#091621e8';g.fillRect(ENEMY_FOG_X/WORLD_W*1100,0,1100*(WORLD_W-ENEMY_FOG_X)/WORLD_W,82);}
+ for(let side=0;side<2;side++){if(side===1&&!enemyBaseVisible())continue;g.fillStyle=state.forwardHP[side]>0?'#f3d48c':'#59696d';g.fillRect((side===0?.25:.75)*1100-4,34,8,14);}
  for(const side of [0,1]){
   if(side===1&&!enemyBaseVisible())continue;
   g.fillStyle=side===0?'#72ddea':'#f18c72';
@@ -1305,9 +1347,10 @@ function drawProductionMinimap(){
  const w=c.width,h=c.height;
  g.clearRect(0,0,w,h);g.fillStyle='#10212c';g.fillRect(0,0,w,h);
  for(const y of LANES){g.fillStyle='#b2c4b422';g.fillRect(0,y/CH*h-3,w,6);}
+ for(let side=0;side<2;side++){g.fillStyle=state.forwardHP[side]>0?'#f0d58c':'#59696d';g.fillRect((side===0?.25:.75)*w-3,h/2-5,6,10);}
  const friendly=state.units.filter(u=>u.side===0&&u.hp>0),enemy=state.units.filter(u=>u.side===1&&u.hp>0);
  let frontline=0;
- for(const u of state.units)if(u.hp>0&&enemyUnitVisible(u)){g.fillStyle=u.side===0?'#74e4e2':'#ff8e7d';g.fillRect(Math.floor(u.x/WORLD_W*w),Math.floor(u.y/CH*h),u.role===3?5:3,3);}
+ for(const u of state.units)if(u.hp>0&&enemyUnitVisible(u)){g.fillStyle=u.guardian?'#55ff91':u.side===0?'#74e4e2':'#ff8e7d';g.fillRect(Math.floor(u.x/WORLD_W*w),Math.floor(u.y/CH*h),u.role===3?5:3,3);}
  if(friendly.length&&enemy.length){
   const mine=Math.max(...friendly.map(u=>u.x)),theirs=Math.min(...enemy.map(u=>u.x));
   frontline=(mine+theirs)/2;
@@ -1339,7 +1382,7 @@ function inspectBattle(event){
  for(const u of state.units){const d=Math.hypot(u.x-x,u.y-y);if(d<best){best=d;picked=u;}}
  if(!picked)return;
  const def=combatDef(picked);
- $('inspect').innerHTML='<b>'+FACTIONS[picked.faction].name+' · '+def.unitName+(picked.heroCount===20?' ★ 영웅 ×20':'')+' '+def.mark+'</b> | HP '+
+ $('inspect').innerHTML='<b>'+FACTIONS[picked.faction].name+' · '+def.unitName+(picked.guardian?' 🟢 가디언 · 자기 진영 방어':picked.heroCount===20?' ★ 영웅 ×20':'')+' '+def.mark+'</b> | HP '+
  Math.ceil(picked.hp)+' / '+Math.ceil(picked.maxHP)+' · '+(picked.side===0?'아군':'적군')+
  '<br><span class="matchups">'+roleMatchupHtml(picked.role,picked.faction)+'</span>';
 }

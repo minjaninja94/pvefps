@@ -6,7 +6,7 @@ function definition(base,u){if(u.heroCount!==COUNT)return base;const d={...base}
 function compact(units,{now=0,multiplayer=false,radius=180}={}){
  const buckets=new Map(),removed=new Set(),redirects=new Map(),heroes=[];
  for(const u of units){
-  if(u.hp<=0||u.killed||u.heroCount||u.isHatchling||u.conscripted||u.hp<u.maxHP-1e-6||(u.inkUntil||0)>now)continue;
+  if(u.hp<=0||u.killed||u.guardian||u.heroCount||u.isHatchling||u.conscripted||u.hp<u.maxHP-1e-6||(u.inkUntil||0)>now)continue;
   const owner=multiplayer?u.uid:u.side,lane=multiplayer?Math.floor(u.y/520):0;
   const key=[owner,u.team??u.side,u.faction,u.role,u.skin||'default',u.maxHP,lane].join(':');
   if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(u);
@@ -28,8 +28,8 @@ function compact(units,{now=0,multiplayer=false,radius=180}={}){
  }
  return {heroes,redirects,removed:removed.size};
 }
-function aura(g,x,y,size,time=0){
- g.save();g.strokeStyle='#ff4055';g.fillStyle='#e8243940';g.lineWidth=Math.max(1,size*.025);g.globalAlpha=.68+.18*Math.sin(time*4);
+function aura(g,x,y,size,time=0,guardian=false){
+ g.save();g.strokeStyle=guardian?'#52ff89':'#ff4055';g.fillStyle=guardian?'#26d66a40':'#e8243940';g.lineWidth=Math.max(1,size*.025);g.globalAlpha=.68+.18*Math.sin(time*4);
  g.beginPath();g.ellipse(x,y,size*.46,size*.15,0,0,Math.PI*2);g.fill();g.stroke();
  for(let i=0;i<6;i++){const phase=(time*.55+i/6)%1,px=x+Math.sin(time*2+i)*size*.39,py=y-phase*size*.9;g.globalAlpha=(1-phase)*.7;g.fillRect(px,py,Math.max(1,size*.025),size*.075);}
  g.globalAlpha=.65;g.beginPath();g.ellipse(x,y-size*.24,size*.43,size*.43,0,Math.PI*1.12,Math.PI*1.88);g.stroke();g.restore();

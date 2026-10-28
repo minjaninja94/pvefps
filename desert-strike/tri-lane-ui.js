@@ -98,8 +98,17 @@ function draw(){
    ctx.fillStyle=side===0?'#3a9792':'#a86658';ctx.fillRect(towerX-8,cy-16,16,32);
    ctx.fillStyle='#0a1b28';ctx.fillRect(coreX-12,cy-29,24,5);ctx.fillRect(towerX-10,cy-23,20,4);
    ctx.fillStyle='#fbd293';ctx.fillRect(coreX-12,cy-29,24*hp/2500,5);ctx.fillRect(towerX-10,cy-23,20*thp/1250,4);
+   if(snap.forwardHP){const fx=(side===0?E.WIDTH/4:E.WIDTH*3/4)/3,fhp=snap.forwardHP[l][side];
+   if(fhp>0&&iso?.structure){
+    const owners=snap.players.filter(p=>p.team===side),fac=owners[l%Math.max(1,owners.length)]?.faction??0;
+    ctx.save();ctx.translate(fx,cy);ctx.scale(.55,.55);ctx.translate(0,-260);iso.structure(ctx,0,260,fac,true,fhp/1000);ctx.restore();
+   }else if(fhp>0){ctx.fillStyle=side===0?'#65b9b0':'#bd8674';ctx.fillRect(fx-12,cy-18,24,36);}
+   else{ctx.fillStyle='#445457';ctx.fillRect(fx-18,cy+5,15,7);ctx.fillRect(fx+2,cy+1,18,11);ctx.fillStyle='#ba7751';ctx.fillRect(fx-2,cy+3,7,4);}
+   ctx.fillStyle='#10232b';ctx.fillRect(fx-15,cy-55,30,5);ctx.fillStyle='#f5d28c';ctx.fillRect(fx-15,cy-55,30*fhp/1000,5);
+   ctx.fillStyle='#efdfab';ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillText(fhp>0?'중간 타워':'타워 파괴',fx,cy+30);}
   }
  }
+ ctx.strokeStyle='#ead9a56e';ctx.lineWidth=2;ctx.setLineDash([6,9]);ctx.beginPath();ctx.moveTo(W/2,15);ctx.lineTo(W/2,H-10);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#ead9a5';ctx.textAlign='center';ctx.font='bold 11px sans-serif';ctx.fillText('중앙선',W/2,12);
  // Every faction shares a single global depth order, including fighters from other spawn lanes.
  const units=[...snap.units].sort((a,b)=>a.y-b.y);
  for(const u of units){
@@ -113,7 +122,7 @@ function draw(){
   const frame=u.act==='death'?Math.min(15,(u.frame||0)+phase):((u.frame||0)+phase)%16;
   const baseAction=['idle','move','attack','siege','death'].includes(u.act)?u.act:'move';
   const sprite=iso?.frame(u.faction,u.role,baseAction,frame),d=(u.role===3||u.role===6?53:46)*(u.isHatchling?.55:1)*(u.heroCount===20?2:1);
-  if(u.heroCount===20){global.DesertConsolidation?.aura(ctx,x,y,d,performance.now()/1000);ctx.fillStyle='#ff7687';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText('★ ×20',x,y-d*.95);}
+  if(u.heroCount===20){global.DesertConsolidation?.aura(ctx,x,y,d,performance.now()/1000,!!u.guardian);ctx.fillStyle=u.guardian?'#83ffa8':'#ff7687';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText(u.guardian?'가디언 ×20':'★ ×20',x,y-d*.95);}
   if(sprite){
    ctx.imageSmoothingEnabled=false;
    const filter=global.DesertLobby?.filterForSkin?.(u.skin)||'none';
@@ -133,7 +142,7 @@ function draw(){
  for(const e of snap.effects||[]){
   ctx.strokeStyle=e.kind==='tower'?'#fff0ac':e.kind==='conscript'?'#ffcf55':e.kind==='ginppai'?'#91e2b6':'#f6dba8';
   ctx.lineWidth=e.kind==='tower'?3:2;ctx.beginPath();ctx.ellipse(e.x/3,wy(e.y),e.kind==='huanglong'?28:13,e.kind==='huanglong'?15:6,0,0,Math.PI*2);ctx.stroke();
-  const label={ginppai:'긴빠이 +CR',conscript:'자진입대!',huanglong:'황룡 · 해병수육!',bongo:'오도봉고 돌진!',broodling:'공생충 출생!',pollen:'꽃가루 치유',ink:'먹물 침식!'}[e.kind];
+  const label={guardian:'중간 타워 파괴 · 상대 +150 CR · 가디언 소환',ginppai:'긴빠이 +CR',conscript:'자진입대!',huanglong:'황룡 · 해병수육!',bongo:'오도봉고 돌진!',broodling:'공생충 출생!',pollen:'꽃가루 치유',ink:'먹물 침식!'}[e.kind];
   if(label){ctx.fillStyle=e.kind==='huanglong'?'#ffe69b':'#ffe0b0';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText(label,e.x/3,wy(e.y)-23);}
  }
  if(snap.fog?.length){

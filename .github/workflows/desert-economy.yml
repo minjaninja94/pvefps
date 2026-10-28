@@ -25,6 +25,8 @@ jobs:
           node --check desert-strike/resource-art.js
       - name: Device account authentication boundaries
         run: node desert-strike/smoke-device-account.test.cjs
+      - name: Forward towers, guardian boundaries and offensive artillery heroes
+        run: node desert-strike/smoke-guardian.test.cjs
       - name: Hero consolidation and exact aggregate stats
         run: node desert-strike/smoke-consolidation.test.cjs
       - name: Paid proactive hard AI and income parity

@@ -60,14 +60,14 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
  const players=humans.concat(mode==='coop'?Array.from({length:size},(_,i)=>({uid:'AI_'+i,name:'적 AI '+(i+1),team:1,faction:(i+3)%10,bot:true})):[]);
  const state={mode,size,aiDifficulty:aiDifficulty==='hard'?'hard':'normal',seconds:0,wave:0,next:24,ended:false,winner:null,
   width:WIDTH,height:HEIGHT,lanes:LANES,
-  cores:Array.from({length:LANES},()=>[2500,2500]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,nextConsolidation:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,cash:360,eco:0,ecoReadyAt:0,mineCosts:{},buildings:Array.from({length:3},()=>Array(SLOTS).fill(null))})),lanePressure:[.5,.5,.5]};
+  cores:Array.from({length:LANES},()=>[2500,2500]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),forwardHP:Array.from({length:LANES},()=>[1000,1000]),forwardClaimed:Array.from({length:LANES},()=>[false,false]),forwardCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,nextConsolidation:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,cash:360,eco:0,ecoReadyAt:0,mineCosts:{},buildings:Array.from({length:3},()=>Array(SLOTS).fill(null))})),lanePressure:[.5,.5,.5]};
  const byUid=uid=>state.players.find(p=>p.uid===uid);
  function marineRecord(uid,key,amount=1){
   const v=state.marineStatsByUid.get(uid)||{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0};
   v[key]=(v[key]||0)+amount;state.marineStatsByUid.set(uid,v);
  }
  function broodLay(parent,target,roll=Math.random){
-  if(parent.faction!==1||parent.isHatchling||parent.conscripted||parent.role===7||parent.hp<=0
+  if(parent.guardian||parent.faction!==1||parent.isHatchling||parent.conscripted||parent.role===7||parent.hp<=0
    ||!target||target.team===parent.team)return;
   const uid=parent.uid,used=state.broodBirthsByUid.get(uid)||0;
   if(used>=BROOD_BIRTH_CAP||state.seconds-(parent.lastBroodBirth??-999)<BROOD_BIRTH_COOLDOWN
@@ -113,6 +113,26 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
   if(p.faction===3&&role===7){state.marineStats.huangSpawns++;marineRecord(p.uid,'huangSpawns');}
   state.units.push({id:state.nextUnit++,uid:p.uid,team:p.team,faction:p.faction,role,lane,spawnLane:lane,x,y,hp:d.hp,maxHP:d.hp,skin:p.skin,cool:Math.random()*.6,
     radius,frame:Math.floor(Math.random()*16),act:'move',attackAge:0,spawnAge:0,hitAge:0,skillAge:0,spawnedAt:state.seconds,lastDamagedAt:state.seconds});
+ }
+ function fort(lane,team){
+  const part=state.forwardHP[lane][team]>0?'forward':state.turrets[lane][team]>0?'turret':'core';
+  return {part,x:part==='forward'?(team===0?WIDTH/4:WIDTH*3/4):team===0?(part==='turret'?215:110):(part==='turret'?WIDTH-215:WIDTH-110),y:(lane+.5)*LANE_H};
+ }
+ function hitFort(lane,team,amount,part=fort(lane,team).part){
+  if(part==='forward'){
+   if(state.forwardHP[lane][team]<=0)return;
+   state.forwardHP[lane][team]=Math.max(0,state.forwardHP[lane][team]-amount);
+   if(state.forwardHP[lane][team]===0&&!state.forwardClaimed[lane][team]){
+    state.forwardClaimed[lane][team]=true;
+    const guardian=global.DesertGuardian;
+    guardian?.reward(state.players,1-team);
+    const defenders=state.players.filter(p=>p.team===team).sort((a,b)=>a.uid.localeCompare(b.uid));
+    const owner=defenders[lane%defenders.length];
+    if(owner){spawn(owner,lane,0,5);guardian?.mark(state.units[state.units.length-1],team,lane);}
+    state.effects.push({x:team===0?WIDTH/4:WIDTH*3/4,y:(lane+.5)*LANE_H,lane,team,kind:'guardian',time:1.4});
+   }
+  }else if(part==='turret')state.turrets[lane][team]=Math.max(0,state.turrets[lane][team]-amount);
+  else state.cores[lane][team]=Math.max(0,state.cores[lane][team]-amount);
  }
  function selectCounter(lane,bot){
   // Observed frontline units only: AI must not inspect unscouted human facilities.
@@ -204,7 +224,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
   });
  }
  function marineSpoils(a,v,roll=Math.random){
-  if(a.faction!==3||a.team===v.team||a.conscripted||v.conscripted||v.isHatchling)return;
+  if(a.faction!==3||a.team===v.team||a.conscripted||v.conscripted||v.isHatchling||v.guardian)return;
   const owner=byUid(a.uid),enemy=byUid(v.uid);
   if(!owner||!enemy)return;
   if(roll()<MARINE_LOOT_CHANCE){
@@ -319,7 +339,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
    u.spawnAge=Math.min(5,(u.spawnAge||0)+dt);u.hitAge=Math.max(0,(u.hitAge||0)-dt);u.skillAge=Math.max(0,(u.skillAge||0)-dt);
    const valid=v=>v&&v.hp>0&&v.id!==u.id&&(support?
      v.team===u.team&&!v.isHatchling&&v.hp<v.maxHP-10:
-     v.team!==u.team&&(d.airTarget||definition(v.faction,v.role).kind!=='air'));
+     v.team!==u.team&&(d.airTarget||definition(v.faction,v.role).kind!=='air')&&(!u.guardian||global.DesertGuardian?.canTarget(u,v,d.range,{multiplayer:true})));
    let target=byId.get(u.targetId),best=target?Math.hypot(target.x-u.x,target.y-u.y):Infinity;
    if(!valid(target)||best>(support?SUPPORT_RADIUS:AGGRO_LEASH)){target=null;best=Infinity;}
    for(const v of nearby(support?u.team:1-u.team,u.x,u.y,r)){
@@ -348,19 +368,21 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
       const move=Math.min(moveSpeed*dt,dist-105);
       u.x+=(friend.x-u.x)/dist*move;u.y+=(friend.y-u.y)/dist*move;u.act='move';
      }
+    }else if(u.guardian){
+     const x=u.guardianHomeX,y=(u.guardianLane+.5)*LANE_H,dist=Math.hypot(x-u.x,y-u.y),move=Math.min(moveSpeed*dt,dist);
+     if(dist>1){u.x+=(x-u.x)/dist*move;u.y+=(y-u.y)/dist*move;u.act='move';}else u.act='idle';
     }else{
      // Choose an enemy defense based on *current* position after cross-band aggro.
      const lane=clamp(Math.floor(u.y/LANE_H),0,LANES-1),defender=1-u.team;
-     const tx=state.turrets[lane][defender]>0?(defender===0?215:WIDTH-215):(defender===0?110:WIDTH-110);
-     const ty=(lane+.5)*LANE_H,dist=Math.hypot(tx-u.x,ty-u.y);
+     const targetFort=fort(lane,defender),tx=targetFort.x;
+     const ty=targetFort.y,dist=Math.hypot(tx-u.x,ty-u.y);
      if(state.cores[lane][defender]>0){
       if(dist>Math.max(48,d.range*.85)){
        const step=Math.min(moveSpeed*dt,dist);
        u.x+=(tx-u.x)/Math.max(dist,1)*step;u.y+=(ty-u.y)/Math.max(dist,1)*step;u.act='move';
       }else if(u.cool<=0){
        const damage=d.damage*([.52,.88,1.12,1.08,.82,1.55,.87,.4][u.role]||1);
-       if(state.turrets[lane][defender]>0)state.turrets[lane][defender]=Math.max(0,state.turrets[lane][defender]-damage);
-       else state.cores[lane][defender]=Math.max(0,state.cores[lane][defender]-damage);
+       hitFort(lane,defender,damage,targetFort.part);
        u.cool=d.rate;u.act='attack';u.attackAge=.28;
       }
      }else{
@@ -374,6 +396,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
     }
    }
    u.x=clamp(u.x,35,WIDTH-35);u.y=clamp(u.y,35,HEIGHT-35);
+   global.DesertGuardian?.clampUnit(u,{multiplayer:true});
    u.lane=clamp(Math.floor(u.y/LANE_H),0,LANES-1);
   }
   // Collision cells are global; two units straddling the old line now repel.
@@ -396,23 +419,24 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
     }
    }
   }
-  for(const u of state.units)if(u.hp>0)u.lane=clamp(Math.floor(u.y/LANE_H),0,LANES-1);
+  for(const u of state.units)if(u.hp>0){global.DesertGuardian?.clampUnit(u,{multiplayer:true});u.lane=clamp(Math.floor(u.y/LANE_H),0,LANES-1);}
   // Independent anti-snowball towers in all three lanes for both teams.
-  for(let lane=0;lane<LANES;lane++)for(let team=0;team<2;team++){
-   if(state.turrets[lane][team]<=0)continue;
-   const x=team===0?215:WIDTH-215,y=(lane+.5)*LANE_H;
-   state.towerCooldown[lane][team]=Math.max(0,state.towerCooldown[lane][team]-dt);
-   if(state.towerCooldown[lane][team]>0)continue;
+  for(let lane=0;lane<LANES;lane++)for(let team=0;team<2;team++)for(const forward of [false,true]){
+   const hp=forward?state.forwardHP:state.turrets,cool=forward?state.forwardCooldown:state.towerCooldown;
+   if(hp[lane][team]<=0)continue;
+   const x=forward?(team===0?WIDTH/4:WIDTH*3/4):team===0?215:WIDTH-215,y=(lane+.5)*LANE_H;
+   cool[lane][team]=Math.max(0,cool[lane][team]-dt);
+   if(cool[lane][team]>0)continue;
    const hostile=state.units.filter(u=>u.hp>0&&u.team!==team&&Math.hypot(u.x-x,u.y-y)<=TOWER_RANGE);
    if(!hostile.length)continue;
    hostile.sort((a,b)=>(Math.hypot(a.x-x,a.y-y)*.55+a.hp/a.maxHP*42-(a.role===7?35:0))
     -(Math.hypot(b.x-x,b.y-y)*.55+b.hp/b.maxHP*42-(b.role===7?35:0)));
-   const v=hostile[0],f=combatDef(v),dmg=TOWER_DAMAGE*(f.kind==='air'?1.25:v.role===3?1.12:1);
+   const v=hostile[0],f=combatDef(v),dmg=TOWER_DAMAGE*(forward?.75:1)*(f.kind==='air'?1.25:v.role===3?1.12:1);
    let hit=Math.max(3,dmg-f.armor*.66);
    if(v.faction===0&&[3,4].includes(v.role))hit*=.94;
    if(v.faction===2&&state.seconds-(v.lastWardAt??-999)>=10){v.lastWardAt=state.seconds;hit*=.82;}
    v.hp-=hit;v.lastDamagedAt=state.seconds;
-   state.towerCooldown[lane][team]=TOWER_PERIOD;
+   cool[lane][team]=TOWER_PERIOD;
    state.effects.push({x:v.x,y:v.y,lane,kind:'tower',time:.16,team});
   }
   state.units=state.units.filter(u=>u.hp>0);
@@ -461,14 +485,14 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
   const allied=p=>!viewer||p.team===viewer.team;
   const isAllowed=p=>!viewer||p.team===viewer.team||visible.every(Boolean);
   return {mode:state.mode,size:state.size,aiDifficulty:state.aiDifficulty,width:WIDTH,height:HEIGHT,seconds:Math.round(state.seconds*10)/10,wave:state.wave,next:Math.ceil(state.next*10)/10,
-   ended:state.ended,winner:state.winner,cores:state.cores,turrets:state.turrets,lanePressure:state.lanePressure.map(x=>Math.round(x*100)/100),
+   ended:state.ended,winner:state.winner,cores:state.cores,turrets:state.turrets,forwardHP:state.forwardHP,lanePressure:state.lanePressure.map(x=>Math.round(x*100)/100),
    fog:visible.map(s=>!s),viewerTeam:viewer?.team??null,
    factionTraits:state.players.filter(p=>!viewer||p.team===viewer.team).map(p=>({uid:p.uid,faction:p.faction,births:state.broodBirthsByUid.get(p.uid)||0,totalBirths:state.broodTotalByUid.get(p.uid)||0})),
    marineOps:state.players.filter(p=>p.faction===3&&(!viewer||p.team===viewer.team)).map(p=>({uid:p.uid,team:p.team,...(state.marineStatsByUid.get(p.uid)||{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0}),waveRecruits:state.marineRecruitCount.get(p.uid)||0})),
    players:state.players.map(p=>({uid:p.uid,name:p.name,faction:p.faction,skin:p.skin,team:p.team,bot:p.bot,
     cash:allied(p)?Math.floor(p.cash):null,eco:allied(p)?p.eco:null,ecoReadyAt:allied(p)?p.ecoReadyAt:null,
     buildings:p.buildings.map((slots,lane)=>allied(p)||visible[lane]?slots:Array(SLOTS).fill(null))})),
-   units:state.units.filter(u=>!isHidden(u.team,u.lane,u.x)).map(u=>({id:u.id,uid:u.uid,team:u.team,faction:u.faction,skin:u.skin||'default',role:u.role,lane:u.lane,x:Math.round(u.x),y:Math.round(u.y),hp:Math.ceil(u.hp),maxHP:Math.ceil(u.maxHP),heroCount:u.heroCount===20?20:1,conscripted:!!u.conscripted,isHatchling:!!u.isHatchling,frame:Math.floor(u.frame),act:u.hitAge>0?'hit':u.spawnAge<.42?'spawn':u.skillAge>0?'skill':u.attackAge>0?'attack':u.act})),
+   units:state.units.filter(u=>!isHidden(u.team,u.lane,u.x)).map(u=>({id:u.id,uid:u.uid,team:u.team,faction:u.faction,skin:u.skin||'default',role:u.role,lane:u.lane,x:Math.round(u.x),y:Math.round(u.y),hp:Math.ceil(u.hp),maxHP:Math.ceil(u.maxHP),heroCount:u.heroCount===20?20:1,guardian:!!u.guardian,guardianLane:u.guardian?u.guardianLane:null,conscripted:!!u.conscripted,isHatchling:!!u.isHatchling,frame:Math.floor(u.frame),act:u.hitAge>0?'hit':u.spawnAge<.42?'spawn':u.skillAge>0?'skill':u.attackAge>0?'attack':u.act})),
    effects:state.effects.filter(e=>!isHidden(e.team,e.lane,e.x)).map(e=>({...e,x:Math.round(e.x),y:Math.round(e.y)}))};
  }
  if(state.aiDifficulty==='hard')for(const bot of state.players.filter(p=>p.bot))hardBotPurchase(bot);

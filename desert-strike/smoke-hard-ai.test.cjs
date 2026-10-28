@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const read=f=>fs.readFileSync(path.join(__dirname,f),'utf8');
 const cost=[65,95,150,205,165,245,205,145];
-function environment(roll){const w={},math=Object.create(Math);math.random=()=>roll;const ctx={window:w,Math:math,console,Map,Set,Array,Number,Object,String};vm.runInNewContext(read('hard-ai.js'),ctx);vm.runInNewContext(read('tri-lane-engine.js'),ctx);return {w,ctx};}
+function environment(roll){const w={},math=Object.create(Math);math.random=()=>roll;const ctx={window:w,Math:math,console,Map,Set,Array,Number,Object,String};vm.runInNewContext(read('defense-guardian.js'),ctx);vm.runInNewContext(read('unit-consolidation.js'),ctx);vm.runInNewContext(read('hard-ai.js'),ctx);vm.runInNewContext(read('tri-lane-engine.js'),ctx);return {w,ctx};}
 const results=[];
 for(const roll of [.01,.26,.51,.76])for(const faction of [0,3,4,7,9]){
  const {w}=environment(roll),E=w.DesertTriEngine;
