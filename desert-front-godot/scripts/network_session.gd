@@ -84,8 +84,16 @@ func join_game(address: String, selected_faction: int) -> bool:
 ## Developer must register a relay app_id, install the signed plugin package and rebuild.
 func _relay_settings() -> Dictionary:
 	var config := ConfigFile.new()
-	if config.load("res://online_relay.cfg") != OK:
-		status_changed.emit("온라인 설정 파일이 없습니다.")
+	# Read an optional deployment-local config. The app ID is not committed to GitHub.
+	# Placing online_relay.cfg beside DesertFront.exe lets players connect with no setup.
+	var deploy_path := OS.get_executable_path().get_base_dir().path_join("online_relay.cfg")
+	var load_result := ERR_FILE_NOT_FOUND
+	if FileAccess.file_exists(deploy_path):
+		load_result = config.load(deploy_path)
+	else:
+		load_result = config.load("res://online_relay.cfg")
+	if load_result != OK:
+		status_changed.emit("온라인 설정 파일을 읽지 못했습니다.")
 		return {}
 	var app_id := str(config.get_value("relay", "app_id", "")).strip_edges()
 	var address := str(config.get_value("relay", "address", "us-east.nodetunnel.io:8080")).strip_edges()
