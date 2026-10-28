@@ -8,6 +8,7 @@ const Sprites = preload("res://scripts/sprite_assets.gd")
 const Records = preload("res://scripts/match_records.gd")
 const Profile = preload("res://scripts/local_profile.gd")
 const ProfileDialog = preload("res://scripts/profile_dialog.gd")
+const Icons = preload("res://scripts/ui_icons.gd")
 var session
 var match_game
 var _offline := true
@@ -99,10 +100,12 @@ func _build_ui() -> void:
 	top.add_child(back)
 	var history_btn := Button.new()
 	history_btn.text = "로컬 전적"
+	history_btn.icon = Icons.named("achievement")
 	history_btn.pressed.connect(_show_local_records)
 	top.add_child(history_btn)
 	var profile_btn := Button.new()
 	profile_btn.text = "회원·티어"
+	profile_btn.icon = Icons.named("members")
 	profile_btn.pressed.connect(_show_profile)
 	top.add_child(profile_btn)
 	_profile_dialog = ProfileDialog.new()
@@ -143,10 +146,12 @@ func _build_ui() -> void:
 	toolbar.add_child(_team_picker)
 	var practice := Button.new()
 	practice.text = "AI 연습 시작"
+	practice.icon = Icons.named("barracks")
 	practice.pressed.connect(_practice)
 	toolbar.add_child(practice)
 	var create := Button.new()
 	create.text = "공개방 생성"
+	create.icon = Icons.named("members")
 	create.pressed.connect(func()->void:_host_online(true))
 	toolbar.add_child(create)
 	var private := Button.new()
@@ -292,6 +297,7 @@ func _build_ui() -> void:
 	upgrade_tab.add_child(_upgrade_details)
 	for spec in [{"label":"공격 강화","kind":"weapon"},{"label":"방어 강화","kind":"armor"}]:
 		var button := Button.new()
+		button.icon = Icons.named("upgrade")
 		button.text = spec["label"]
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.pressed.connect(_issue.bind({"type":"upgrade","kind":spec["kind"]}))

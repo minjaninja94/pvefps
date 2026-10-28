@@ -8,6 +8,7 @@ const NetworkSession = preload("res://scripts/network_session.gd")
 const Records = preload("res://scripts/match_records.gd")
 const Profile = preload("res://scripts/local_profile.gd")
 const ProfileDialog = preload("res://scripts/profile_dialog.gd")
+const Icons = preload("res://scripts/ui_icons.gd")
 var simulation
 var _network
 var _address_input: LineEdit
@@ -119,19 +120,23 @@ func _build_interface() -> void:
 	header.add_child(_skin_picker)
 	var history_btn := Button.new()
 	history_btn.text = "로컬 전적"
+	history_btn.icon = Icons.named("achievement")
 	history_btn.pressed.connect(_show_local_records)
 	header.add_child(history_btn)
 	var profile_btn := Button.new()
 	profile_btn.text = "회원·티어"
+	profile_btn.icon = Icons.named("members")
 	profile_btn.pressed.connect(_show_profile)
 	header.add_child(profile_btn)
 	var restart := Button.new()
 	restart.text = "새 경기 시작"
+	restart.icon = Icons.named("barracks")
 	restart.custom_minimum_size = Vector2(115, 40)
 	restart.pressed.connect(_new_match)
 	header.add_child(restart)
 	var multi := Button.new()
 	multi.text = "3라인 · 2:2 · 3:3 · 협동"
+	multi.icon = Icons.named("guardian")
 	multi.pressed.connect(func() -> void: get_tree().change_scene_to_file("res://scenes/tri_front.tscn"))
 	header.add_child(multi)
 	var options := HBoxContainer.new()
@@ -157,6 +162,7 @@ func _build_interface() -> void:
 	shell.add_child(online_bar)
 	var public_btn := Button.new()
 	public_btn.text = "온라인 공개방 만들기"
+	public_btn.icon = Icons.named("members")
 	public_btn.pressed.connect(_host_public_online)
 	online_bar.add_child(public_btn)
 	var private_btn := Button.new()
@@ -165,6 +171,7 @@ func _build_interface() -> void:
 	online_bar.add_child(private_btn)
 	var browse_btn := Button.new()
 	browse_btn.text = "공개방 검색"
+	browse_btn.icon = Icons.named("messages")
 	browse_btn.pressed.connect(_browse_online)
 	online_bar.add_child(browse_btn)
 	_online_room_list = OptionButton.new()
@@ -303,11 +310,13 @@ func _build_interface() -> void:
 	sidebar.add_child(upgrades)
 	_weapon_btn = Button.new()
 	_weapon_btn.text = "무기 강화"
+	_weapon_btn.icon = Icons.named("upgrade")
 	_weapon_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_weapon_btn.pressed.connect(_on_upgrade.bind("weapon"))
 	upgrades.add_child(_weapon_btn)
 	_armor_btn = Button.new()
 	_armor_btn.text = "장갑 강화"
+	_armor_btn.icon = Icons.named("guardian")
 	_armor_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_armor_btn.pressed.connect(_on_upgrade.bind("armor"))
 	upgrades.add_child(_armor_btn)
@@ -316,6 +325,7 @@ func _build_interface() -> void:
 	for item in [{"name":"포탑 수리","key":"repair"},{"name":"궤도 폭격","key":"barrage"},{"name":"긴급 핵","key":"nuke"}]:
 		var tactic_button := Button.new()
 		tactic_button.text = item["name"]
+		tactic_button.icon = Icons.named("repair" if item["key"] == "repair" else ("barrage" if item["key"] == "barrage" else "nuke"))
 		tactic_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		tactic_button.pressed.connect(_on_tactic.bind(str(item["key"])))
 		tactics.add_child(tactic_button)
