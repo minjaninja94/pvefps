@@ -21,6 +21,8 @@ def main() -> None:
     DEST.mkdir(parents=True, exist_ok=True)
     names = [f"uniform-{f}-{role}.webp" for f in FACTIONS for role in range(8)]
     names += [f"{f}-banner.webp" for f in FACTIONS]
+    names += [f"moe-{f}-actions.webp" for f in FACTIONS]
+    names += [f"moe-{f}-portrait.webp" for f in FACTIONS]
     for name in names:
         source = SOURCE / name
         if not source.is_file():
