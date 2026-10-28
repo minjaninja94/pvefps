@@ -23,6 +23,7 @@ const clamp=(v,l,r)=>Math.max(l,Math.min(r,v));
 const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=2,HUANGLONG_INTERVAL=8;
 const BROOD_BIRTH_CHANCE=.20,BROOD_BIRTH_COOLDOWN=11,BROOD_BIRTH_CAP=10,BROOD_ALIVE_CAP=14;
 const OCTOPER_REGEN=.0006,ROBOT_REPAIR=.0015;
+const BEAST_RANGED_DAMAGE_REDUCTION=.06,FAIRY_CHAIN_HEAL_RATIO=.05,FAIRY_HEAL_MULTIPLIER=1.08;
 const INK_DURATION=2.5,INK_COOLDOWN=5;
 const GOODS=[[5,7],[0,7],[3,4],[1,4],[6],[1,4],[0,3],[3,1]];
 const BADS=[[3,1],[3,5],[0,1],[2,6],[3,2],[0,6],[4,1],[0,5]];
@@ -41,7 +42,7 @@ function definition(faction,role){
   speed:bongo?77:prowler?90:t[5]*mut[2]*.84*(melee?1.05:1),
   airTarget:groundSpecial&&!robot?false:t[6],
   kind:groundSpecial?'ground':t[7],
-  heal:(role===7?36:0)*mut[1]*1.5*(robot?.85:fairy?.90:1),
+  heal:(role===7?36:0)*mut[1]*1.5*(robot?.85:fairy?FAIRY_HEAL_MULTIPLIER:1),
   blast:role===5?(octo?58*1.15:58):0,
   good:bongo||prowler?[0,7]:groundSpecial&&furry?[0,7]:groundSpecial&&robot?[0,3]:GOODS[role],bad:bongo||prowler?[2,3]:groundSpecial&&furry?[2,3]:groundSpecial&&robot?[2,5]:BADS[role]
  };
@@ -261,6 +262,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
   }
   if(v.hp<=0)return;
   let hit=global.DesertConsolidation?.hit(damage*mult,defender.armor,v,a)??Math.max(3,damage*mult-defender.armor*.66);
+  if(v.faction===4&&attacker.range>=48)hit*=1-BEAST_RANGED_DAMAGE_REDUCTION;
   if(v.faction===0&&[3,4].includes(v.role))hit*=.94;
   if(v.faction===2&&state.seconds-(v.lastWardAt??-999)>=10){v.lastWardAt=state.seconds;hit*=.82;}
   if(a.faction===5&&[1,2,4,5,6].includes(a.role)&&Math.random()<.12)hit*=1.25;
@@ -301,7 +303,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
     if(a.faction===9&&recovered>0&&state.seconds-(a.lastPollenAt??-999)>=5){
      const partner=state.units.find(u=>u.id!==a.id&&u.id!==v.id&&u.hp>0&&!u.isHatchling
       &&u.team===a.team&&u.hp<u.maxHP&&Math.hypot(u.x-v.x,u.y-v.y)<145);
-     if(partner){a.lastPollenAt=state.seconds;partner.hp=Math.min(partner.maxHP,partner.hp+(global.DesertGuardian?.healAmount(partner,recovered*.03,state.seconds)??recovered*.03));
+     if(partner){a.lastPollenAt=state.seconds;partner.hp=Math.min(partner.maxHP,partner.hp+(global.DesertGuardian?.healAmount(partner,recovered*FAIRY_CHAIN_HEAL_RATIO,state.seconds)??recovered*FAIRY_CHAIN_HEAL_RATIO));
       state.effects.push({x:partner.x,y:partner.y,lane:partner.lane,kind:'pollen',time:.45,team:a.team});}
     }
    }
