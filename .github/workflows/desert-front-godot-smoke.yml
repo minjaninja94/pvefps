@@ -38,6 +38,8 @@ jobs:
         run: godot --headless --path desert-front-godot --script res://tests/art_smoke.gd
       - name: Run isolated simulation smoke test
         run: godot --headless --path desert-front-godot --script res://tests/smoke.gd
+      - name: Verify classic, 3-line, 2v2, and AI co-op battle simulation
+        run: godot --headless --path desert-front-godot --script res://tests/tri_match_smoke.gd
       - name: Run two-process LAN host/guest integration
         run: |
           set -eu

@@ -37,6 +37,7 @@ jobs:
           godot --headless --path desert-front-godot --editor --quit
           godot --headless --path desert-front-godot --script res://tests/art_smoke.gd
           godot --headless --path desert-front-godot --script res://tests/smoke.gd
+          godot --headless --path desert-front-godot --script res://tests/tri_match_smoke.gd
       - name: Test local LAN host/guest connection
         run: |
           set -eu
