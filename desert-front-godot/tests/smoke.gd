@@ -38,7 +38,11 @@ func _run_test() -> void:
 	game.engine._hit_fort(0,0,1000.0,"forward")
 	game.advance(0.05)
 	assert(game.forward_hp[0] <= 0.0)
-	assert(game.engine.units.any(func(u: Dictionary) -> bool: return bool(u.get("guardian",false))))
+	var guardian_found := false
+	for guardian_unit in game.engine.units:
+		if bool(guardian_unit.get("guardian",false)):
+			guardian_found = true
+	assert(guardian_found)
 	print("CLASSIC WAVE/GUARDIAN OK")
 	var skins = BattleSim.new(2, 3, "moe", "default")
 	skins._spawn(0, 0, 0)
