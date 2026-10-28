@@ -26,6 +26,7 @@ var winner := -1
 var message := "전투 준비 완료"
 var versus_player := false
 var difficulty := "normal"
+var _initial_ai_bought := false
 
 func _init(faction: int = 0, rival: int = 1, first_skin: String = "default", second_skin: String = "default") -> void:
 	player_faction = clampi(faction,0,9)
@@ -36,7 +37,6 @@ func _init(faction: int = 0, rival: int = 1, first_skin: String = "default", sec
 		{"uid":"classic-home","name":"지휘관","team":0,"faction":player_faction,"skin":player_skin},
 		{"uid":"classic-away","name":"상대","team":1,"faction":enemy_faction,"skin":enemy_skin,"bot":true}
 	])
-	engine._ai_buy(engine.players[1])
 	_sync()
 
 func _owner(team: int) -> Dictionary:
@@ -116,6 +116,9 @@ func advance(dt: float) -> void:
 	if engine == null or ended:
 		return
 	engine.players[1]["bot"] = not versus_player
+	if not versus_player and not _initial_ai_bought:
+		_initial_ai_bought = true
+		engine._ai_buy(engine.players[1])
 	engine.difficulty = difficulty if difficulty in ["normal","hard"] else "normal"
 	engine.advance(dt)
 	_sync()
