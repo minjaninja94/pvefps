@@ -79,8 +79,8 @@ for(const age of [0,2.999,3,3.001,10])for(const guarded of [false,true]){
  const burst=soloHealing(guarded,age);burst.medic.faction=3;api.resolveStrike(burst.medic,{healing:true,target:burst.target});close(burst.target.hp-1000,3200*factor,'solo banquet');assert.equal(burst.medic.hp,0);
  const mburst=multiHealing(guarded,age);mburst.medic.faction=3;mburst.e.attack(mburst.medic,mburst.target);close(mburst.target.hp-1000,3200*factor,'multiplayer banquet');assert.equal(mburst.medic.hp,0);
  // Fairy pollen checks the recipient, not only the primary healing target.
- const pollen=soloHealing(guarded,age);pollen.medic.faction=9;api.createUnit(0,2,0);const primary=pollen.s.units[2];Object.assign(primary,{x:900,y:260,hp:100,maxHP:1000});api.heal(primary,100,false,pollen.medic);close(pollen.target.hp-1000,85*.03*factor,'solo pollen');
- const mpollen=multiHealing(guarded,age);mpollen.medic.faction=9;mpollen.e.spawn(mpollen.e.state.players[0],0,2,0);const mp=mpollen.e.state.units[2];Object.assign(mp,{x:900,y:260,hp:100,maxHP:1000});mpollen.e.attack(mpollen.medic,mp);close(mpollen.target.hp-1000,E.definition(9,7).heal*.03*factor,'multiplayer pollen');
+ const pollen=soloHealing(guarded,age);pollen.medic.faction=9;api.createUnit(0,2,0);const primary=pollen.s.units[2];Object.assign(primary,{x:900,y:260,hp:100,maxHP:1000});api.heal(primary,100,false,pollen.medic);close(pollen.target.hp-1000,85*.05*factor,'solo pollen');
+ const mpollen=multiHealing(guarded,age);mpollen.medic.faction=9;mpollen.e.spawn(mpollen.e.state.players[0],0,2,0);const mp=mpollen.e.state.units[2];Object.assign(mp,{x:900,y:260,hp:100,maxHP:1000});mpollen.e.attack(mpollen.medic,mp);close(mpollen.target.hp-1000,E.definition(9,7).heal*.05*factor,'multiplayer pollen');
 }
 for(const age of [1,4]){
  const factor=age<3?.1:.25,solo=soloHealing(true,age),multi=multiHealing(true,age);
