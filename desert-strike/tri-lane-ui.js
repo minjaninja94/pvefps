@@ -8,7 +8,7 @@ let snap=null,lane=1,role=0,demolish=false,practice=null,practiceTimer=null,view
 let myId='',lobby=null,host=false,gridKey='',cardsKey='',lastSnapshotAt=0,lastDrawAt=0;
 const LANES=['상단','중앙','하단'],ICONS=['⚔','⌖','◆','▣','✣','✹','♞','✚'];
 function message(msg){$('mpStatus').textContent=msg;}
-function setView(id){
+function setView(id,scrollToTop=false){
  if(!['base','battle','upgrade'].includes(id))return;
  view=id;
  for(const [name,element] of [['base','mpBaseView'],['battle','mpBattleView'],['upgrade','mpUpgradeView']]){
@@ -20,6 +20,7 @@ function setView(id){
   if(selected)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
  });
  if(view==='battle'&&snap)draw();
+ if(scrollToTop)$('view-multiplayer').scrollIntoView?.({behavior:'auto',block:'start'});
 }
 function upgradeInfo(){
  const me=my();if(!me)return;
@@ -295,8 +296,8 @@ async function leave(){
 }
 function runClick(fn){return ()=>Promise.resolve().then(fn).catch(e=>message(global.IronFirebase?.message?.(e)||e.message||String(e)));}
 function init(){
- $('mpViewTabs').addEventListener('click',e=>{const target=e.target.closest('[data-mp-view]');if(target)setView(target.dataset.mpView);});
- $('mpCommand').addEventListener('click',e=>{const target=e.target.closest('[data-mp-jump]');if(target)setView(target.dataset.mpJump);});
+ $('mpViewTabs').addEventListener('click',e=>{const target=e.target.closest('[data-mp-view]');if(target)setView(target.dataset.mpView,true);});
+ $('mpCommand').addEventListener('click',e=>{const target=e.target.closest('[data-mp-jump]');if(target)setView(target.dataset.mpJump,true);});
  for(const [id,kind,type] of [['mpWeaponButton','weapon','upgrade'],['mpArmorButton','armor','upgrade'],['mpNukeButton','nuke','tactic'],['mpBarrageButton','barrage','tactic']])
   $(id).addEventListener('click',()=>order({type,kind}));
  $('mpRepairButton').addEventListener('click',()=>order({type:'tactic',kind:'repair',lane:repairLane}));
@@ -309,7 +310,7 @@ function init(){
    if(viewport)viewport.scrollTop=0;
   }
   buildGrid();if(snap){draw();drawOverview();}
-  if(scrollToBuild)setView('base');
+  if(scrollToBuild)setView('base',true);
  }
  $('mpLaneTabs').addEventListener('click',e=>{
   const button=e.target.closest('[data-lane]');
@@ -352,7 +353,7 @@ function init(){
  global.addEventListener?.('desert-real-sprites-ready',()=>{cardsKey='';gridKey='';if(snap){unitCards();buildGrid();}});
  $('mpDemolish').addEventListener('click',()=>{demolish=!demolish;gridKey='';buildGrid();});
  $('mpBuildGrid').addEventListener('click',e=>{const b=e.target.closest('[data-slot]');if(b)order({type:'build',lane,slot:Number(b.dataset.slot),role:demolish?null:role});});
- $('mpEco').addEventListener('click',()=>{setView('base');role=8;demolish=false;cardsKey='';unitCards();$('mpUnitCards').scrollIntoView?.({block:'nearest',behavior:'smooth'});});
+ $('mpEco').addEventListener('click',()=>{setView('base',true);role=8;demolish=false;cardsKey='';unitCards();$('mpUnitCards').scrollIntoView?.({block:'nearest',behavior:'smooth'});});
  $('mpMode').addEventListener('change',()=>{
   const coop=$('mpMode').value==='coop';$('mpSize').querySelector('option[value="1"]').disabled=coop;
   if(coop&&$('mpSize').value==='1')$('mpSize').value='2';
