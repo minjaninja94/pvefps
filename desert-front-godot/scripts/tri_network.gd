@@ -21,6 +21,7 @@ var local_faction := 0
 var local_skin := "default"
 var local_name := "지휘관"
 var local_tier := "브론즈"
+var local_rating := 1000
 var preferred_team := 1
 var game
 var _peer: MultiplayerPeer
@@ -188,7 +189,8 @@ func _prepare_host(p_mode: String,p_size: int,faction: int,skin: String = "defau
 	var profile := Profile.load_profile()
 	local_name = str(profile["nickname"])
 	local_tier = Profile.tier(int(profile["rating"]))
-	members = {"1":{"uid":"1","id":1,"name":local_name,"team":0,"faction":local_faction,"skin":local_skin,"tier":local_tier,"ready":true}}
+	local_rating = int(profile["rating"])
+	members = {"1":{"uid":"1","id":1,"name":local_name,"team":0,"faction":local_faction,"skin":local_skin,"tier":local_tier,"rating":local_rating,"ready":true}}
 	return true
 
 func _wire_relay() -> void:
@@ -265,10 +267,10 @@ func _on_failed() -> void:
 func _hello_host() -> void:
 	if mode == "client" and phase == "lobby":
 		var profile := Profile.load_profile()
-		client_hello.rpc_id(1,local_faction,preferred_team,local_skin,str(profile["nickname"]),Profile.tier(int(profile["rating"])))
+		client_hello.rpc_id(1,local_faction,preferred_team,local_skin,str(profile["nickname"]),Profile.tier(int(profile["rating"])),int(profile["rating"]))
 
 @rpc("any_peer","call_remote","reliable")
-func client_hello(faction: int,team: int,skin: String = "default",nickname: String = "지휘관",tier: String = "브론즈") -> void:
+func client_hello(faction: int,team: int,skin: String = "default",nickname: String = "지휘관",tier: String = "브론즈",rating: int = 1000) -> void:
 	var sender := multiplayer.get_remote_sender_id()
 	if mode != "host" or phase != "lobby" or faction < 0 or faction > 9 or sender <= 1 or skin not in ["default","moe","twilight","aurora","gold"]:
 		return
@@ -289,7 +291,7 @@ func client_hello(faction: int,team: int,skin: String = "default",nickname: Stri
 		feedback.rpc_id(sender,"선택한 팀 정원이 가득 찼습니다.")
 		return
 	var display_tier := tier if tier in ["브론즈","실버","골드","플래티넘","다이아몬드","마스터"] else "브론즈"
-	members[str(sender)] = {"uid":str(sender),"id":sender,"name":Profile.sanitize_name(nickname),"team":chosen,"faction":faction,"skin":skin,"tier":display_tier,"ready":false}
+	members[str(sender)] = {"uid":str(sender),"id":sender,"name":Profile.sanitize_name(nickname),"team":chosen,"faction":faction,"skin":skin,"tier":display_tier,"rating":clampi(rating,100,3000),"ready":false}
 	_refresh_roster()
 	status_changed.emit("참가자 등록: %d / %d" % [members.size(),_expected_count()])
 

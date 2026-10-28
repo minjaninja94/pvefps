@@ -409,14 +409,21 @@ func _join_code(code: String) -> void:
 
 func _roster_changed(members: Array, mode: String, size: int) -> void:
 	var text_parts: Array[String] = []
-	for p in members:
-		text_parts.append("%s · %s · %s · %s" % [
+	# Only a same-room, self-reported comparison. Never claim verified global ranking.
+	var ranked := members.duplicate(true)
+	ranked.sort_custom(func(a: Dictionary,b: Dictionary) -> bool:
+		return int(a.get("rating",1000)) > int(b.get("rating",1000))
+	)
+	for p in ranked:
+		text_parts.append("#%d %s · %s · %s · %s (%d RP)" % [
+			text_parts.size()+1,
 			str(p["name"]),
 			"청팀" if int(p["team"]) == 0 else "적팀",
 			"준비" if bool(p["ready"]) else "대기",
-			"비공식 "+str(p.get("tier","브론즈"))
+			"비공식 "+str(p.get("tier","브론즈")),
+			int(p.get("rating",1000))
 		])
-	_roster.text = "%s %d명 / %d명: %s" % [
+	_roster.text = "동일 방 자체신고 순위 · %s %d명 / %d명: %s" % [
 		mode,members.size(),size if mode == "coop" else size*2,
 		"  |  ".join(text_parts)
 	]
