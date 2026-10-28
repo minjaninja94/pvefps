@@ -15,6 +15,7 @@ signal left_room()
 var mode := "idle" # idle, host, client, browse
 var phase := "idle" # idle, lobby, playing
 var match_mode := "pvp"
+var match_ruleset := "standard"
 var team_size := 1
 var members: Dictionary = {}
 var local_faction := 0
@@ -82,10 +83,10 @@ func _relay_credentials() -> bool:
 		return false
 	return true
 
-func host_online(p_mode: String, p_size: int, faction: int, public: bool, skin: String = "default") -> bool:
+func host_online(p_mode: String, p_size: int, faction: int, public: bool, skin: String = "default", p_ruleset: String = "standard") -> bool:
 	if not _relay_credentials():
 		return false
-	if not _prepare_host(p_mode,p_size,faction,skin):
+	if not _prepare_host(p_mode,p_size,faction,skin,p_ruleset):
 		return false
 	_public = public
 	_pending = "host"
@@ -142,8 +143,8 @@ func join_online(code: String, faction: int, team: int, skin: String = "default"
 	status_changed.emit("온라인 방 참가 중...")
 	return true
 
-func host_lan(p_mode: String,p_size: int,faction: int,skin: String = "default") -> bool:
-	if not _prepare_host(p_mode,p_size,faction,skin):
+func host_lan(p_mode: String,p_size: int,faction: int,skin: String = "default",p_ruleset: String = "standard") -> bool:
+	if not _prepare_host(p_mode,p_size,faction,skin,p_ruleset):
 		return false
 	var enet := ENetMultiplayerPeer.new()
 	if enet.create_server(LAN_PORT,5) != OK:
@@ -170,7 +171,7 @@ func join_lan(address: String,faction: int,team: int,skin: String = "default") -
 	multiplayer.multiplayer_peer = _peer
 	return true
 
-func _prepare_host(p_mode: String,p_size: int,faction: int,skin: String = "default") -> bool:
+func _prepare_host(p_mode: String,p_size: int,faction: int,skin: String = "default",p_ruleset: String = "standard") -> bool:
 	if p_mode not in ["classic","pvp","coop"]:
 		return false
 	if p_mode == "classic" and p_size != 1:
@@ -183,6 +184,7 @@ func _prepare_host(p_mode: String,p_size: int,faction: int,skin: String = "defau
 	mode = "host"
 	phase = "lobby"
 	match_mode = p_mode
+	match_ruleset = "augment" if p_ruleset == "augment" else "standard"
 	team_size = p_size
 	local_faction = clampi(faction,0,9)
 	local_skin = skin if skin in ["default","moe","twilight","aurora","gold"] else "default"
@@ -202,7 +204,7 @@ func _wire_relay() -> void:
 
 func _on_authenticated() -> void:
 	if _pending == "host":
-		var data := "DF_NATIVE|%s|%d" % [match_mode,team_size]
+		var data := "DF_NATIVE|%s|%d|%s" % [match_mode,team_size,match_ruleset]
 		var err: int = _peer.call("host_room",_public,data)
 		if err != OK:
 			_on_relay_error("방 개설에 실패했습니다.")
@@ -307,12 +309,13 @@ func _refresh_roster() -> void:
 	for peer_id in members.keys():
 		var id := int(peer_id)
 		if id != 1:
-			roster_update.rpc_id(id,all,match_mode,team_size)
+			roster_update.rpc_id(id,all,match_mode,team_size,match_ruleset)
 
 @rpc("authority","call_remote","reliable")
-func roster_update(data: Array,p_mode: String,p_size: int) -> void:
+func roster_update(data: Array,p_mode: String,p_size: int,p_ruleset: String = "standard") -> void:
 	if mode != "client" or phase != "lobby":
 		return
+	match_ruleset = p_ruleset
 	match_mode = p_mode
 	team_size = p_size
 	members.clear()
@@ -363,21 +366,21 @@ func start_match() -> bool:
 	for p in members.values():
 		roster.append({"uid":p["uid"],"name":p["name"],"team":p["team"],"faction":p["faction"],"skin":p.get("skin","default"),"bot":false})
 	roster.sort_custom(func(a: Dictionary,b: Dictionary)->bool:return str(a["uid"])<str(b["uid"]))
-	game = Match.new(match_mode,team_size,roster,"hard" if match_mode == "coop" else "normal")
+	game = Match.new(match_mode,team_size,roster,"hard" if match_mode == "coop" else "normal",match_ruleset,Time.get_ticks_msec())
 	phase = "playing"
 	for member in members.values():
 		var id: int = member["id"]
 		if id != 1:
-			game_begin.rpc_id(id,match_mode,team_size,roster)
+			game_begin.rpc_id(id,match_mode,team_size,roster,match_ruleset)
 	match_started.emit()
 	_broadcast_state()
 	return true
 
 @rpc("authority","call_remote","reliable")
-func game_begin(p_mode: String,p_size: int,data: Array) -> void:
+func game_begin(p_mode: String,p_size: int,data: Array,p_ruleset: String = "standard") -> void:
 	if mode != "client" or phase != "lobby":
 		return
-	game = Match.new(p_mode,p_size,data,"hard" if p_mode == "coop" else "normal")
+	game = Match.new(p_mode,p_size,data,"hard" if p_mode == "coop" else "normal",p_ruleset)
 	match_mode = p_mode
 	team_size = p_size
 	phase = "playing"
@@ -400,7 +403,7 @@ func client_order(command: Dictionary) -> void:
 	var sender := multiplayer.get_remote_sender_id()
 	if not members.has(str(sender)):
 		return
-	if str(command.get("type","")) not in ["build","upgrade","tactic"]:
+	if str(command.get("type","")) not in ["build","upgrade","tactic","augment_pick","augment_reroll"]:
 		return
 	# Limit untrusted client command floods; the host remains authoritative.
 	var now := Time.get_ticks_msec()

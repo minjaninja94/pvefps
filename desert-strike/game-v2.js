@@ -244,7 +244,7 @@ function emergency(){
  state.units=state.units.filter(u=>u.hp>0);
  state.shots=state.shots.filter(p=>p.side===0);
  setMessage('긴급 핵폭탄 발동! 아군 영토로 침입한 적 '+invaders.length+'기를 제거했습니다.');
- banner('☢ EMERGENCY STRIKE');chirp(130,.3);updateUI(true);
+ banner('☢ EMERGENCY STRIKE');window.DesertAudio?.cue('explosion');chirp(130,.3);updateUI(true);
 }
 function barrage(){
  if(!state.live||state.ended||state.paused||state.cash<260||state.barrageCd>0)return;
@@ -277,6 +277,7 @@ function createUnit(side,slot,role){
   cooldown:random(.1,.7),anim:random(0,16),facing:side===0?1:-1,blink:0,spawnAge:0,hitAge:0,skillAge:0,moving:false,strike:null,
   hitRadius:isBongo?30:faction===4&&role===6?22:faction===6&&role===6?24:faction===7&&role===6?28:role===3?26:role===6?14:role===5?17:role===0?17:15,ramCooldown:0,spawnedAt:state.elapsed,lastDamagedAt:state.elapsed});
  pulse(x,y,COLORS[side],12);
+ window.DesertAudio?.unit(faction,role,side===0?window.DesertLobby?.selectedSkin?.():'default','spawn',x);
 }
 // AI spends the same credits as the player, but actually studies the player's build.
 // Low-cost single-role rushes must trigger counter-production, not extra/free AI income.
@@ -589,7 +590,9 @@ function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
     a!==attacker&&a.hp>0&&a.side===attacker.side&&a.faction===6&&Math.hypot(a.x-attacker.x,a.y-attacker.y)<165))hit*=1.06;
  if(attacker&&(attacker.inkUntil||0)>state.elapsed)hit*=.90;
  const before=u.hp;
- u.hp-=hit;u.blink=.12;u.hitAge=.36;u.lastDamagedAt=state.elapsed;
+ u.hp-=hit;window.DesertAudio?.cue('hit',u.x);
+ window.DesertAudio?.unit(u.faction,u.role,u.side===0?window.DesertLobby?.selectedSkin?.():'default','hit',u.x);
+ u.blink=.12;u.hitAge=.36;u.lastDamagedAt=state.elapsed;
  if(attacker?.faction===4&&[0,3,6].includes(source)&&!attacker.isHatchling&&attacker.hp>0)
   attacker.hp=Math.min(attacker.maxHP,attacker.hp+Math.min(3*(attacker.heroCount||1),Math.max(0,Math.min(before,hit))*.015));
  if(attacker?.faction===8&&[1,2,4,5].includes(source)&&state.elapsed-(attacker.lastInkCast??-999)>=INK_COOLDOWN){
@@ -597,9 +600,10 @@ function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
   floatText(u.x,u.y-30,'먹물 침식','#d5adff');
  }
  if(Math.random()<.15)floatText(u.x,u.y-25,Math.round(hit),COLORS[u.side===0?1:0]);
- if(u.hp<=0){killUnit(u);marineSpoils(u,attacker,roll);}
+ if(u.hp<=0){window.DesertAudio?.cue('death',u.x);window.DesertAudio?.unit(u.faction,u.role,u.side===0?window.DesertLobby?.selectedSkin?.():'default','death',u.x);killUnit(u);marineSpoils(u,attacker,roll);}
 }
 function heal(u,amount,burst=false,healer=null){
+ window.DesertAudio?.cue('heal',u.x);
  if(u.isHatchling)return;
  if(!burst){
   if(u.healWindowStart===undefined||state.elapsed-u.healWindowStart>=HEAL_WINDOW){u.healWindowStart=state.elapsed;u.healWindowUsed=0;}
@@ -746,6 +750,8 @@ function move(u,x,y,dt){
  window.DesertGuardian?.clampUnit(u);u.facing=dx>=0?1:-1;u.moving=d>1;u.x=clamp(u.x,30,WORLD_W-30);u.y=clamp(u.y,68,452);
 }
 function fire(u,t=null,baseSide=null,structurePart=null){
+ window.DesertAudio?.cue(['blade','rifle','breaker','armor','antiair','siege','flyer','heal'][u.role],u.x);
+ window.DesertAudio?.unit(u.faction,u.role,u.side===0?window.DesertLobby?.selectedSkin?.():'default','attack',u.x);
  const fort=baseSide===null?null:defenseTarget(baseSide,structurePart);
  const def=combatDef(u),x=t?t.x:fort.x,y=t?t.y:260;
  if(def.range<48){

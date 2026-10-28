@@ -9,7 +9,9 @@ const Records = preload("res://scripts/match_records.gd")
 const Profile = preload("res://scripts/local_profile.gd")
 const ProfileDialog = preload("res://scripts/profile_dialog.gd")
 const Icons = preload("res://scripts/ui_icons.gd")
+const AudioManager = preload("res://scripts/audio_manager.gd")
 var simulation
+var _audio
 var _network
 var _address_input: LineEdit
 var _online_room_input: LineEdit
@@ -44,6 +46,8 @@ var _history_dialog: AcceptDialog
 var _profile_dialog: AcceptDialog
 
 func _ready() -> void:
+	_audio = AudioManager.new()
+	add_child(_audio)
 	DisplayServer.window_set_title("Desert Front")
 	_network = NetworkSession.new()
 	_network.name = "NetworkSession"
@@ -76,6 +80,7 @@ func _process(dt: float) -> void:
 	_ui_tick += dt
 	if _ui_tick >= 0.2:
 		_ui_tick = 0.0
+		_audio.observe(simulation.engine.snapshot("classic-home"))
 		_refresh()
 
 func _build_interface() -> void:
@@ -98,6 +103,7 @@ func _build_interface() -> void:
 	title.add_theme_font_size_override("font_size", 26)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
+	header.add_child(_audio.settings_button(self))
 	var faction_label := Label.new()
 	faction_label.text = "아군 종족"
 	header.add_child(faction_label)
@@ -471,6 +477,7 @@ func _leave_lobby() -> void:
 	_new_match()
 
 func _clear_match() -> void:
+	_audio.observe({})
 	simulation = null
 	_view.simulation = null
 	_info.text = "접속 대기 중"

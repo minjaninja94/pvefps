@@ -18,7 +18,7 @@ jobs:
     container:
       image: barichello/godot-ci:4.3
     env:
-      RELEASE_TAG: desert-front-v0.4.0-alpha.1
+      RELEASE_TAG: desert-front-v0.5.0-alpha.1
       RELEASE_FILENAME: DesertFront-Preview-Windows.zip
       # NodeTunnel app ID is a public CLIENT identifier, not a credential.
       NODETUNNEL_APP_ID: "0j7l88abdzanueq"
@@ -47,6 +47,9 @@ jobs:
           timeout 60s godot --headless --path desert-front-godot --script res://tests/icons_smoke.gd
           python3 desert-front-godot/tools/verify_stat_parity.py
           python3 desert-front-godot/tools/verify_combat_parity.py
+          python3 desert-front-godot/tools/verify_audio.py
+          node desert-strike/augments.test.cjs
+          timeout 60s godot --headless --path desert-front-godot --script res://tests/augment_smoke.gd
           timeout 60s godot --headless --path desert-front-godot --script res://tests/smoke.gd
           timeout 90s godot --headless --path desert-front-godot --script res://tests/tri_match_smoke.gd
           timeout 90s godot --headless --path desert-front-godot --script res://tests/tri_scene_smoke.gd
@@ -84,6 +87,26 @@ jobs:
           wait "$c3" || err=1
           cat /tmp/tri-2v2-*.log
           exit "$err"
+      - name: Test four-player augment choice over LAN
+        run: |
+          set -eu
+          timeout 60s godot --headless --path desert-front-godot --script res://tests/tri_aug_net_host.gd >/tmp/aug-host.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          sleep 2
+          timeout 60s godot --headless --path desert-front-godot --script res://tests/tri_aug_net_client.gd -- 1 >/tmp/aug-guest1.log 2>&1 &
+          c1=$!
+          timeout 60s godot --headless --path desert-front-godot --script res://tests/tri_aug_net_client.gd -- 1 >/tmp/aug-guest2.log 2>&1 &
+          c2=$!
+          timeout 60s godot --headless --path desert-front-godot --script res://tests/tri_aug_net_client.gd -- 0 >/tmp/aug-guest3.log 2>&1 &
+          c3=$!
+          err=0
+          wait "$pid" || err=1
+          wait "$c1" || err=1
+          wait "$c2" || err=1
+          wait "$c3" || err=1
+          cat /tmp/aug-*.log
+          exit "$err"
       - name: Export Windows 64-bit preview
         run: |
           set -eu
@@ -110,7 +133,7 @@ jobs:
     needs: test-and-export
     runs-on: windows-2022
     env:
-      RELEASE_TAG: desert-front-v0.4.0-alpha.1
+      RELEASE_TAG: desert-front-v0.5.0-alpha.1
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4

@@ -9,10 +9,15 @@ const Records = preload("res://scripts/match_records.gd")
 const Profile = preload("res://scripts/local_profile.gd")
 const ProfileDialog = preload("res://scripts/profile_dialog.gd")
 const Icons = preload("res://scripts/ui_icons.gd")
+const AudioManager = preload("res://scripts/audio_manager.gd")
 var session
+var _audio
 var match_game
 var _offline := true
 var _modes: OptionButton
+var _ruleset: OptionButton
+var _augment_panel: VBoxContainer
+var _augment_catalogue
 var _factions: OptionButton
 var _skins: OptionButton
 var _skin_banner: TextureRect
@@ -42,6 +47,8 @@ var _history_dialog: AcceptDialog
 var _profile_dialog: AcceptDialog
 
 func _ready() -> void:
+	_audio = AudioManager.new()
+	add_child(_audio)
 	session = Net.new()
 	session.name = "TriNetwork"
 	add_child(session)
@@ -98,6 +105,7 @@ func _build_ui() -> void:
 	back.text = "← 클래식 전장"
 	back.pressed.connect(func()->void:get_tree().change_scene_to_file("res://scenes/main.tscn"))
 	top.add_child(back)
+	top.add_child(_audio.settings_button(self))
 	var history_btn := Button.new()
 	history_btn.text = "로컬 전적"
 	history_btn.icon = Icons.named("achievement")
@@ -121,6 +129,10 @@ func _build_ui() -> void:
 		_modes.add_item(caption)
 	_modes.select(1)
 	toolbar.add_child(_modes)
+	_ruleset = OptionButton.new()
+	_ruleset.add_item("일반전")
+	_ruleset.add_item("증강전")
+	toolbar.add_child(_ruleset)
 	_factions = OptionButton.new()
 	_factions.custom_minimum_size = Vector2(155,37)
 	for name in Roster.FACTION_NAMES:
@@ -162,6 +174,9 @@ func _build_ui() -> void:
 	search.text = "방 검색"
 	search.pressed.connect(_search)
 	toolbar.add_child(search)
+	_augment_panel = VBoxContainer.new()
+	_augment_panel.visible = false
+	shell.add_child(_augment_panel)
 	var room_row := HBoxContainer.new()
 	shell.add_child(room_row)
 	_room_picker = OptionButton.new()
@@ -366,7 +381,7 @@ func _practice() -> void:
 	if spec["mode"] != "coop":
 		for i in range(int(spec["size"])):
 			roster.append({"uid":"enemy_ai_%d" % i,"team":1,"faction":(i+3)%10,"name":"연습 적군","bot":true})
-	match_game = Match.new(spec["mode"],spec["size"],roster,"hard")
+	match_game = Match.new(spec["mode"],spec["size"],roster,"hard","augment" if _ruleset.selected == 1 else "standard",Time.get_ticks_msec())
 	_view.simulation = match_game
 	_offline = true
 	_time_bank = 0
@@ -379,7 +394,7 @@ func _host_online(public: bool) -> void:
 	_offline = false
 	match_game = null
 	_view.simulation = null
-	if session.host_online(str(spec["mode"]),int(spec["size"]),_factions.selected,public,_selected_skin()):
+	if session.host_online(str(spec["mode"]),int(spec["size"]),_factions.selected,public,_selected_skin(),"augment" if _ruleset.selected == 1 else "standard"):
 		_ready_button.disabled = false
 		_start.disabled = true
 		_ready_flag = true
@@ -414,6 +429,7 @@ func _join_code(code: String) -> void:
 		_ready_flag = false
 
 func _roster_changed(members: Array, mode: String, size: int) -> void:
+	_ruleset.select(1 if session.match_ruleset == "augment" else 0)
 	var text_parts: Array[String] = []
 	# Only a same-room, self-reported comparison. Never claim verified global ranking.
 	var ranked := members.duplicate(true)
@@ -511,7 +527,54 @@ func _build_slot(slot: int) -> void:
 func _tactic(kind: String) -> void:
 	_issue({"type":"tactic","lane":_lane_picker.selected,"kind":kind})
 
+func _render_augment() -> void:
+	if _augment_panel == null:
+		return
+	if _augment_catalogue == null:
+		_augment_catalogue = preload("res://scripts/augment_rules.gd").new()
+	for child in _augment_panel.get_children():
+		child.queue_free()
+	if match_game == null or match_game.augment_choice.is_empty():
+		_augment_panel.visible = false
+		return
+	var choice: Dictionary = match_game.augment_choice
+	var entry: Dictionary = choice.get("offers",{}).get(_local_uid(),{}) if _offline or session.mode == "host" else choice
+	_augment_panel.visible = true
+	var heading := Label.new()
+	heading.text = "ROUND %d · %s 증강 · %d초" % [int(choice.get("round",0)),str(choice.get("tier","")).to_upper(),ceili(float(choice.get("remaining",0.0)))]
+	_augment_panel.add_child(heading)
+	if entry.is_empty():
+		return
+	var row := HBoxContainer.new()
+	_augment_panel.add_child(row)
+	var selected: String = str(entry.get("selected",""))
+	for i in range(3):
+		var slot := i
+		var id: String = str(entry.get("cards",[])[i])
+		var card: Dictionary = match_game.augment_rules.by_id.get(id,{}) if match_game.augment_rules != null else {}
+		if card.is_empty():
+			card = _augment_catalogue.by_id.get(id,{})
+		var column := VBoxContainer.new()
+		column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(column)
+		var label := Label.new()
+		label.text = str(card.get("name",id)) + " · " + str(card.get("description",""))
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		column.add_child(label)
+		var pick := Button.new()
+		pick.text = "선택"
+		pick.disabled = selected != ""
+		pick.pressed.connect(func()->void:_issue({"type":"augment_pick","slot":slot}))
+		column.add_child(pick)
+		var reroll := Button.new()
+		reroll.text = "이 칸 리롤"
+		reroll.disabled = selected != "" or bool(entry.get("rerolls",[true,true,true])[i])
+		reroll.pressed.connect(func()->void:_issue({"type":"augment_reroll","slot":slot}))
+		column.add_child(reroll)
+
 func _refresh_ui() -> void:
+	_audio.observe(match_game.snapshot(_local_uid()) if match_game != null else {})
+	_render_augment()
 	if match_game == null:
 		_state.text = "온라인 대기실: 상대 플레이어를 기다리는 중"
 		return

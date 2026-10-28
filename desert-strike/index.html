@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="icon" type="image/png" href="./assets/desert-front-favicon.png"><link rel="stylesheet" href="./style-v2.css?v=icons1"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="icon" type="image/png" href="./assets/desert-front-favicon.png"><link rel="stylesheet" href="./style-v2.css?v=icons1"><link rel="stylesheet" href="./augment.css?v=1">
+<link rel="stylesheet" href="./audio.css?v=1">
+</head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -88,6 +90,7 @@
   <div class="mp-lobby-grid">
    <label>지휘관 이름<input id="mpName" maxlength="16" placeholder="지휘관" value="지휘관"></label>
    <label>경기 방식<select id="mpMode"><option value="pvp">3라인 팀 경쟁 PvP</option><option value="classic">클래식 1:1 · 싱글 전장</option><option value="coop">3라인 협동 대 AI</option></select></label>
+   <label>규칙<select id="mpRuleset"><option value="standard">일반전</option><option value="augment">증강전</option></select></label>
    <label>팀당 인원<select id="mpSize"><option value="1">1명 (1:1)</option><option value="2">2명 (2:2)</option><option value="3">3명 (3:3)</option></select></label>
    <label>사용 종족<select id="mpFaction"><option value="0">철갑연합</option><option value="1">심연군체</option><option value="2">성운결사</option><option value="3">해병성채</option><option value="4">월영 수인족</option><option value="5">은월 엘프족</option><option value="6">야월 퍼리족</option><option value="7">크롬 로보족</option><option value="8">옥토퍼 군체</option><option value="9">농농 페어리족</option></select></label>
    <label>선호 팀<select id="mpTeam"><option value="0">아군 (왼쪽)</option><option value="1">상대팀 (오른쪽)</option></select></label>
@@ -97,6 +100,7 @@
   <div id="mpStatus" role="status" class="mp-status">Firebase 익명 로그인과 Firestore 방 규칙을 사용합니다. 실제 인터넷 대전은 설정된 규칙 및 P2P 연결이 필요합니다.</div>
   <div id="mpMembers" class="mp-members">아직 참가한 방이 없습니다.</div>
  </section>
+ <section class="panel mp-augment" id="mpAugment" hidden><h2 id="mpAugmentTitle">증강 선택</h2><p id="mpAugmentTime"></p><div id="mpAugmentCards" class="mp-augment-cards"></div></section>
  <section class="panel mp-command" id="mpCommand" hidden>
   <div class="mp-tab-screen active" id="mpBaseView">
   <div class="mp-production-title"><div><span class="eyebrow">BASE DEVELOPMENT / THREE PRODUCTION LINES</span><h2>멀티 생산 기지</h2><p id="mpBaseDescription">싱글과 같은 방식으로 유닛을 선택하고 빈 칸에 건설하세요. 배치판에서 상·중·하 라인을 바로 전환할 수 있습니다.</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="battle">전장 보기 →</button></div>
@@ -174,7 +178,10 @@
 <script src="./unit-consolidation.js?v=balance2" defer></script>
 <script src="./defense-guardian.js?v=guardianheal1" defer></script>
 <script src="./hard-ai.js?v=balance2" defer></script>
-<script src="./tri-lane-engine.js?v=guardianheal1" defer></script>
+<script src="./audio-manager.js?v=1" defer></script>
+<script src="./augment-rules.js?v=1" defer></script>
+<script src="./augment-catalogue.js?v=1" defer></script>
+<script src="./tri-lane-engine.js?v=aug1" defer></script>
 <script src="./device-account.js?v=uniform7" defer></script>
 <script src="./tri-lane-network.js?v=uniform7" defer></script>
 <script src="./tri-lane-ui.js?v=factiontraits1" defer></script>
@@ -182,4 +189,5 @@
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./front-lobby.js?v=factiontraits1" defer></script>
+<details class="audio-settings"><summary>소리 설정</summary><label>음악 <input id="audio-music" type="range" min="0" max="100" value="22"></label><label>음성 <input id="audio-voice" type="range" min="0" max="100" value="50"></label><label>효과음 <input id="audio-effects" type="range" min="0" max="100" value="30"></label><label><input id="audio-mute" type="checkbox"> 전체 음소거</label><small>음악: SRG774 (CC0) · 음성: VOICEVOX Nemo</small></details>
 </body></html>

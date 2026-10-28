@@ -18,16 +18,16 @@ for(const document of [html,gallery]){
 }
 assert.match(css,/assets\/maiden-atlas\.webp/,'faction cards and unit cards load real binary file');
 assert.match(css,/maiden-unit-portrait/,'16 real illustrated card portraits');
-assert.match(game,/class="maiden-unit-portrait"/);
+assert.match(game,/DesertMoeArt\?\.frame/,"unit cards use current illustrated skin sprites");
 assert.match(game,/faction-hero-/);
 assert.match(game,/maiden-art-ready/);
-assert.match(iso,/MaidenArt\?\.overlay/);
+assert.match(iso,/MaidenArt\?\.drawStandalone/);
 assert.match(gallery,/maiden-art-ready/);
 const pics=fs.readFileSync(path.join(root,'maiden-illustrations.js'),'utf8');
 const calls={draw:0,fill:0};
 const fakeContext={
  drawImage(){calls.draw++;},fillRect(){calls.fill++;},clearRect(){},save(){},restore(){},
- translate(){},rotate(){},getImageData(){return {data:new Uint8ClampedArray(64*80*4)};},putImageData(){},
+ translate(){},rotate(){},beginPath(){},moveTo(){},quadraticCurveTo(){},stroke(){},getImageData(){return {data:new Uint8ClampedArray(64*80*4)};},putImageData(){},
 };
 const doc={createElement(t){assert.equal(t,'canvas');return {width:0,height:0,getContext:()=>fakeContext};}};
 class FakeImage{

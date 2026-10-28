@@ -54,14 +54,14 @@ function countNeeded(r){return r.size*(r.mode==='coop'?1:2);}
 function fullReady(r){const p=Object.values(r.players||{});return p.length===countNeeded(r)&&p.every(x=>x.ready)&& (r.mode==='coop'?p.every(x=>x.team===0):[0,1].every(t=>p.filter(x=>x.team===t).length===r.size));}
 function uiButtons(){
  const r=lobby?.room,me=r?.players?.[myId];
- if(r){$('mpMode').value=r.mode;$('mpSize').value=String(r.size);}
+ if(r){$('mpMode').value=r.mode;$('mpSize').value=String(r.size);$('mpRuleset').value=r.ruleset||'standard';}
  $('mpReady').disabled=!me||r?.status!=='lobby';
  $('mpReady').textContent=me?.ready?'준비 취소':'준비하기';
  $('mpLaunch').disabled=!host||!r||r.status!=='lobby'||!fullReady(r);
  $('mpLeave').disabled=!r&&!practice;
  $('mpCreate').disabled=!!r||!!practice;$('mpJoin').disabled=!!r||!!practice;
  $('mpPractice').disabled=!!r||!!practice;
- $('mpMode').disabled=!!r;$('mpSize').disabled=!!r;
+ $('mpMode').disabled=!!r;$('mpSize').disabled=!!r;$('mpRuleset').disabled=!!r;
  if(lobby?.id)$('mpRoomCode').value=lobby.id;
 }
 function onRoom(v){
@@ -234,11 +234,32 @@ function drawOverview(){
   if(l===lane){g.strokeStyle='#efcc9d';g.strokeRect(1,y+1,1098,h-1);}
  }
 }
+function audioSnapshot(v){
+ const sound=global.DesertAudio;if(!sound)return;
+ if(v.ended){sound.music('result');return;}
+ const mine=v.players?.find(p=>p.uid===myId);
+ const threat=mine&&v.cores?.some(c=>c[mine.team]<(v.coreMaxHP||2500)*.38);
+ sound.music(threat?'urgent':'battle');
+ if(threat)sound.alarm();
+ if(!snap)return;
+ const before=new Map(snap.units.map(u=>[u.id,u]));
+ for(const u of v.units){
+  const old=before.get(u.id);
+  if(!old){sound.unit(u.faction,u.role,u.skin,'spawn',u.x);continue;}
+  if((u.act==='attack'||u.role===7&&u.act==='skill')&&old.act!==u.act){sound.cue(['blade','rifle','breaker','armor','antiair','siege','flyer','heal'][u.role],u.x);sound.unit(u.faction,u.role,u.skin,'attack',u.x);}
+  if(u.hp<old.hp&&u.act==='hit'){sound.cue('hit',u.x);sound.unit(u.faction,u.role,u.skin,'hit',u.x);}
+  before.delete(u.id);
+ }
+ for(const u of before.values())if(u.hp>0){sound.cue('death',u.x);sound.unit(u.faction,u.role,u.skin,'death',u.x);}
+ if(snap.cores?.some((row,lane)=>row.some((hp,team)=>hp>0&&v.cores?.[lane]?.[team]<=0)))sound.cue('building');
+ for(const effect of v.effects||[])if(['barrage','nuke','pollen','huanglong'].includes(effect.kind))
+  sound.cue(effect.kind==='pollen'||effect.kind==='huanglong'?'heal':'explosion',effect.x);
+}
 function onSnapshot(v){
  if(!v){snap=null;return;}if(v.width!==3300||![520,1560].includes(v.height)||!Array.isArray(v.players)||(v.lanes!==undefined&&v.lanes!==(v.mode==='classic'?1:3)))return;
  const fresh=!snap,modeChanged=!snap||snap.mode!==v.mode;
  if(!$('frontLobby').hidden)global.DesertLobby?.enterMatch?.();
- snap=v;lastSnapshotAt=performance.now();$('mpCommand').hidden=false;$('mpViewTabs').hidden=false;
+ audioSnapshot(v);snap=v;renderAugment();lastSnapshotAt=performance.now();$('mpCommand').hidden=false;$('mpViewTabs').hidden=false;
  document.body.dataset.multiArena=v.mode==='classic'?'classic':'triple';
  if(modeChanged){
   const classic=v.mode==='classic';
@@ -288,12 +309,31 @@ function order(cmd){
  else if(practice)onSnapshot(practice.snapshot('local'));
  else message('명령 전달 완료 · 호스트 판정 대기');
 }
+function renderAugment(){
+ const panel=$('mpAugment'),choice=snap?.augmentChoice;
+ panel.hidden=!choice;
+ if(!choice)return;
+ $('mpAugmentTitle').textContent='ROUND '+choice.round+' · '+({silver:'실버',gold:'골드',prismatic:'프리즘'}[choice.tier]||choice.tier)+' 증강';
+ $('mpAugmentTime').textContent=choice.selected?'다른 플레이어 선택 대기 · '+choice.remaining+'초':'카드 1장을 선택하세요 · '+choice.remaining+'초';
+ const holder=$('mpAugmentCards');holder.replaceChildren();
+ choice.cards.forEach((id,slot)=>{
+  const card=global.DesertAugments.get(id);if(!card)return;
+  const box=document.createElement('div');box.className='mp-augment-card';
+  const title=document.createElement('strong');title.textContent=card.name;
+  const desc=document.createElement('p');desc.textContent=card.description;
+  const pick=document.createElement('button');pick.type='button';pick.className='btn accent';pick.textContent='선택';
+  pick.disabled=!!choice.selected;pick.addEventListener('click',()=>order({type:'augment_pick',slot}));
+  const reroll=document.createElement('button');reroll.type='button';reroll.className='btn outline';reroll.textContent='이 칸 리롤';
+  reroll.disabled=!!choice.selected||choice.rerolls[slot];reroll.addEventListener('click',()=>order({type:'augment_reroll',slot}));
+  box.append(title,desc,pick,reroll);holder.append(box);
+ });
+}
 function practiceStart(){
  if(lobby)return message('온라인 방에서 나간 뒤 연습할 수 있습니다.');
  myId='local';
  const hard=global.DesertLobby?.aiDifficulty?.()==='hard';
  const mode=$('mpMode').value==='classic'?'classic':'pvp';
- practice=E.create({mode,size:1,aiDifficulty:hard?'hard':'normal',members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%10,bot:true}]});
+ practice=E.create({mode,size:1,ruleset:$('mpRuleset').value,aiDifficulty:hard?'hard':'normal',members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%10,bot:true}]});
  if(!hard){const row=mode==='classic'?0:1;practice.state.players[1].buildings[row][1]=0;practice.state.players[1].buildings[row][17]=1;practice.state.players[1].cash-=160;}
  $('mpStateTag').textContent=hard?'하드 AI 연습':'오프라인 연습';message((mode==='classic'?'클래식 1:1':'3라인')+' 오프라인 연습 · Firebase 연결 없이 작동합니다.');
  let last=performance.now();
@@ -390,7 +430,7 @@ function init(){
  $('mpPractice').addEventListener('click',practiceStart);
  $('mpCreate').addEventListener('click',runClick(async()=>{
   message('Firebase 방을 생성합니다…');
-  await NET.create({mode:$('mpMode').value,size:Number($('mpSize').value),name:$('mpName').value,faction:faction(),skin:skin()});
+  await NET.create({mode:$('mpMode').value,ruleset:$('mpRuleset').value,size:Number($('mpSize').value),name:$('mpName').value,faction:faction(),skin:skin()});
  }));
  $('mpJoin').addEventListener('click',runClick(async()=>{
   message('방에 참가하는 중입니다…');

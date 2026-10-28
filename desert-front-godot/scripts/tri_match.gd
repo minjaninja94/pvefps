@@ -2,6 +2,7 @@ extends RefCounted
 ## Native 1-lane classic / 3-lane PvP or co-op authoritative Desert Front match.
 ## Port of the web tri-lane kernel. No browser JavaScript is executed by this game.
 const Roster = preload("res://scripts/roster.gd")
+const AugmentRules = preload("res://scripts/augment_rules.gd")
 const WIDTH := 3300.0
 const LANE_HEIGHT := 520.0
 const SLOTS := 75
@@ -22,6 +23,11 @@ const AI_PLANS := [
 	{"opening": [0,1,0], "weights": [5,4,2,2,1,2,2,1]},
 	{"opening": [3,2], "weights": [1,3,3,4,1,5,1,2]}
 ]
+var ruleset := "standard"
+var augment_rules
+var augment_schedule: Array = []
+var augment_stage := -1
+var augment_choice: Dictionary = {}
 var mode := "classic"
 var size := 1
 var lanes := 1
@@ -49,11 +55,15 @@ var _brood_total: Dictionary = {}
 var _brood_per_wave: Dictionary = {}
 var _recruits_per_wave: Dictionary = {}
 
-func _init(match_mode: String = "classic", match_size: int = 1, members: Array = [], ai: String = "normal") -> void:
+func _init(match_mode: String = "classic", match_size: int = 1, members: Array = [], ai: String = "normal", match_ruleset: String = "standard", seed: int = 1) -> void:
 	if match_mode not in ["classic", "pvp", "coop"]:
 		push_error("Unsupported Desert Front match mode")
 		match_mode = "classic"
 	mode = match_mode
+	ruleset = "augment" if match_ruleset == "augment" else "standard"
+	if ruleset == "augment":
+		augment_rules = AugmentRules.new(seed)
+		augment_schedule = augment_rules.schedule(seed)
 	size = 1 if mode == "classic" else clampi(match_size, 1, 3)
 	if mode == "coop":
 		size = clampi(match_size, 2, 3)
@@ -89,6 +99,7 @@ func _init(match_mode: String = "classic", match_size: int = 1, members: Array =
 		p["faction"] = clampi(int(p.get("faction",0)),0,9)
 		p["skin"] = str(p.get("skin","default")) if str(p.get("skin","default")) in ["default","moe","twilight","aurora","gold"] else "default"
 		p["bot"] = bool(p.get("bot",false))
+		p["augments"] = []
 		p["cash"] = 360.0
 		p["eco"] = 0
 		p["eco_ready_at"] = 0.0
@@ -114,11 +125,53 @@ func _init(match_mode: String = "classic", match_size: int = 1, members: Array =
 				buildings.append(slots)
 			players.append({
 				"uid":"AI_%d" % i, "name":"적 AI %d" % (i + 1), "team":1,
-				"faction":faction, "skin":"default", "bot":true, "cash":360.0, "eco":0,
+				"faction":faction, "skin":"default", "bot":true, "augments":[], "cash":360.0, "eco":0,
 				"eco_ready_at":0.0, "weapon":0, "armor":0, "nukes":1,
 				"barrage_cd":0.0, "mine_costs":{}, "buildings":buildings,
 				"ai_plan":i % 4, "ai_opening":0, "ai_target_role":-1, "ai_last_threat":""
 			})
+
+	if ruleset == "augment":
+		_begin_augment(0)
+
+func _begin_augment(index: int) -> void:
+	var tier: String = augment_schedule[index]
+	var offered := {}
+	for p in players:
+		offered[str(p["uid"])] = {"cards":augment_rules.offer(tier,int(p["faction"]),p["augments"]),"rerolls":[false,false,false],"selected":""}
+	augment_stage = index
+	augment_choice = {"round":AugmentRules.STAGES[index],"tier":tier,"remaining":30.0,"offers":offered}
+	for p in players:
+		if bool(p["bot"]):
+			_choose_augment(p,augment_rules.roll_int(3))
+
+func _choose_augment(p: Dictionary, slot: int) -> Dictionary:
+	if augment_choice.is_empty() or slot < 0 or slot > 2:
+		return {"ok":false,"reason":"증강을 선택할 수 없습니다."}
+	var entry: Dictionary = augment_choice["offers"].get(str(p["uid"]),{})
+	if entry.is_empty() or str(entry["selected"]) != "":
+		return {"ok":false,"reason":"이미 선택했습니다."}
+	var id: String = entry["cards"][slot]
+	var prior: Array = p["augments"].duplicate()
+	entry["selected"] = id
+	p["augments"].append(id)
+	for unit in units:
+		if str(unit["uid"]) != str(p["uid"]) or bool(unit.get("hatchling",false)):
+			continue
+		var base: Dictionary = Roster.definition(int(unit["faction"]),int(unit["role"]))
+		var before: float = float(augment_rules.apply(base,prior,int(unit["role"]))["hp"])
+		var after: float = float(augment_rules.apply(base,p["augments"],int(unit["role"]))["hp"])
+		var ratio := after / before
+		unit["max_hp"] = float(unit["max_hp"]) * ratio
+		unit["hp"] = float(unit["hp"]) * ratio
+		unit["stats"] = augment_rules.apply(base,p["augments"],int(unit["role"]))
+	var all_done := true
+	for offer in augment_choice["offers"].values():
+		if str(offer["selected"]) == "":
+			all_done = false
+	if all_done:
+		augment_choice = {}
+	return {"ok":true,"id":id}
 
 func player_for(uid: String) -> Dictionary:
 	for p in players:
@@ -137,6 +190,21 @@ func order(uid: String, data: Dictionary) -> Dictionary:
 	if p.is_empty() or bool(p["bot"]) or ended:
 		return {"ok":false,"reason":"조작 권한이 없습니다."}
 	var command := str(data.get("type",""))
+	if command == "augment_pick":
+		return _choose_augment(p,int(data.get("slot",-1)))
+	if command == "augment_reroll":
+		var entry: Dictionary = augment_choice.get("offers",{}).get(uid,{})
+		var slot := int(data.get("slot",-1))
+		if entry.is_empty() or str(entry["selected"]) != "" or slot < 0 or slot > 2 or entry["rerolls"][slot]:
+			return {"ok":false,"reason":"리롤할 수 없습니다."}
+		var id: String = augment_rules.reroll(str(augment_choice["tier"]),p["augments"],entry["cards"],slot)
+		if id.is_empty():
+			return {"ok":false,"reason":"남은 증강이 없습니다."}
+		entry["cards"][slot] = id
+		entry["rerolls"][slot] = true
+		return {"ok":true,"id":id}
+	if not augment_choice.is_empty():
+		return {"ok":false,"reason":"증강을 먼저 선택하세요."}
 	if command == "build":
 		return _build(p, int(data.get("lane",-1)),int(data.get("slot",-1)),int(data.get("role",-2)))
 	if command == "upgrade":
@@ -269,6 +337,8 @@ func _spawn(p: Dictionary, lane: int, slot: int, role: int, guardian_spawn: bool
 	var f: int = p["faction"]
 	var team: int = p["team"]
 	var stats: Dictionary = Roster.definition(f,role)
+	if ruleset == "augment":
+		stats = augment_rules.apply(stats,p["augments"],role)
 	var hp: float = float(stats["hp"]) * (1.0 + 0.09 * int(p["armor"]))
 	var x: float = (235.0 + (slot % 15) * 4.0) if team == 0 else (WIDTH - 235.0 - (slot % 15) * 4.0)
 	var y: float = lane * LANE_HEIGHT + 265.0 + float((int(slot / 15) * 11 + (slot % 15) * 21) % 196) - 98.0
@@ -354,6 +424,11 @@ func _wave() -> void:
 						if not _spawn(p,lane,slot,role):
 							break
 						count += 1
+						if ruleset == "augment":
+							for _extra in range(augment_rules.extra(p["augments"],role)):
+								if count >= (220 if lanes == 1 else MAX_UNIT_POP) or not _spawn(p,lane,slot,role):
+									break
+								count += 1
 						if int(p["faction"]) == 3 and role == 7:
 							for time_step in [1,2]:
 								_marine_jobs.append({"uid":p["uid"],"lane":lane,"slot":slot,"wave":wave,"due":seconds+8.0*time_step})
@@ -730,6 +805,8 @@ func _tick_units(dt: float) -> void:
 			u["hp"] = minf(float(u["max_hp"]),float(u["hp"])+float(u["max_hp"])*0.0006*dt)
 		elif faction == 7 and not bool(u.get("hatchling",false)):
 			u["hp"] = minf(float(u["max_hp"]),float(u["hp"])+float(u["max_hp"])*0.0015*dt)
+		if float(u["stats"].get("regen",0.0)) > 0.0:
+			u["hp"] = minf(float(u["max_hp"]),float(u["hp"])+float(u["max_hp"])*float(u["stats"]["regen"])*dt)
 		u["cool"] = maxf(0.0,float(u["cool"])-dt)
 		u["action_ttl"] = maxf(0.0,float(u.get("action_ttl",0.0))-dt)
 		var supporting := int(u["role"]) == 7
@@ -971,6 +1048,16 @@ func advance(dt: float) -> void:
 	if ended:
 		return
 	dt = clampf(dt,0.0,0.2)
+	if not augment_choice.is_empty():
+		augment_choice["remaining"] = float(augment_choice["remaining"])-dt
+		if float(augment_choice["remaining"]) <= 0.0:
+			for p in players:
+				if not augment_choice.is_empty() and str(augment_choice["offers"][str(p["uid"])]["selected"]) == "":
+					_choose_augment(p,augment_rules.roll_int(3))
+		return
+	if ruleset == "augment" and augment_stage < 4 and wave == AugmentRules.STAGES[augment_stage+1]-1 and next_wave <= dt:
+		_begin_augment(augment_stage+1)
+		return
 	seconds += dt
 	next_wave -= dt
 	_ai_timer += dt
@@ -1037,7 +1124,7 @@ func snapshot(viewer_uid: String = "") -> Dictionary:
 		var entry: Dictionary = {
 			"uid":p["uid"],"name":p["name"],"team":p["team"],
 			"faction":p["faction"],"skin":p.get("skin","default"),
-			"bot":p["bot"],"cash":p["cash"],"eco":p["eco"],
+			"bot":p["bot"],"augments":p["augments"].duplicate() if viewer.is_empty() or int(p["team"]) == int(viewer["team"]) else [],"cash":p["cash"],"eco":p["eco"],
 			"eco_ready_at":p["eco_ready_at"],"weapon":p["weapon"],
 			"armor":p["armor"],"nukes":p["nukes"],
 			"barrage_cd":p["barrage_cd"],
@@ -1076,7 +1163,10 @@ func snapshot(viewer_uid: String = "") -> Dictionary:
 			"conscripted":u.get("conscripted",false),
 			"hatchling":u.get("hatchling",false)
 		})
+	var personal: Dictionary = augment_choice.get("offers",{}).get(viewer_uid,{})
 	return {
+		"ruleset":ruleset,"augment_choice":{"round":augment_choice["round"],"tier":augment_choice["tier"],"remaining":ceilf(float(augment_choice["remaining"])),"cards":personal.get("cards",[]).duplicate(),"rerolls":personal.get("rerolls",[]).duplicate(),"selected":personal.get("selected","")} if not augment_choice.is_empty() else {},
+		"viewer_team":int(viewer.get("team",0)),"core_max_hp":CORE_CLASSIC if lanes == 1 else CORE_TRI,
 		"protocol":2, "mode":mode, "size":size, "lanes":lanes, "width":WIDTH,
 		"height":LANE_HEIGHT*lanes, "seconds":seconds, "wave":wave,
 		"next_wave":next_wave,"ended":ended,"winner":winner,
@@ -1088,6 +1178,8 @@ func snapshot(viewer_uid: String = "") -> Dictionary:
 	}
 
 func load_snapshot(state: Dictionary) -> void:
+	ruleset = str(state.get("ruleset",ruleset))
+	augment_choice = state.get("augment_choice",{}).duplicate(true)
 	mode = str(state.get("mode",mode))
 	size = int(state.get("size",size))
 	lanes = int(state.get("lanes",lanes))

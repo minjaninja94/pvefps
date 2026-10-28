@@ -8,6 +8,7 @@ const ICE=[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:
 let events={},scope=null,db=null,fs=null,uid=null,roomId=null,room=null,host=false,localPeer=null;
 let roomUnsub=null,peerSubs=new Map(),channels=new Map(),pcs=new Map(),clock=null,engine=null,seq=0,lastFrame=0;
 let active=false,answering=false,hostPeerOpen=new Set(),snapshotSeq=0;
+const RESUME_KEY='desert-front-active-room';
 const msg=e=>global.IronFirebase?.message?.(e)||e?.message||String(e);
 function notify(key,data){try{events[key]?.(data);}catch(e){console.error('멀티 UI 갱신 오류',e);}}
 function status(s){notify('status',s);}
@@ -52,22 +53,22 @@ async function leave(){
    tx.update(path(),{players});
   });
  }catch(e){status('방 나가기 처리: '+msg(e));}
- resetLocal();notify('room',null);notify('snapshot',null);status('방에서 나왔습니다.');
+ global.sessionStorage?.removeItem(RESUME_KEY);resetLocal();notify('room',null);notify('snapshot',null);status('방에서 나왔습니다.');
 }
 function listenRoom(){
  roomUnsub=fs.onSnapshot(path(),snap=>{
   if(!snap.exists()){status('방이 닫혔습니다.');resetLocal();notify('room',null);return;}
   room=snap.data();notify('room',{id:roomId,room,uid,host,ready:everyoneReady(room)});
-  if(host&&room.status==='lobby')for(const m of members())if(m.uid!==uid&&!pcs.has(m.uid))void makeOffer(m.uid).catch(e=>status('연결 제안 오류: '+msg(e)));
-  if(!host&&!pcs.size&&room.status==='lobby')listenGuest();
+  if(host&&engine&&room.status==='playing'||host&&room.status==='lobby')for(const m of members())if(m.uid!==uid&&!pcs.has(m.uid))void makeOffer(m.uid).catch(e=>status('연결 제안 오류: '+msg(e)));
+  if(!host&&!pcs.size&&['lobby','playing'].includes(room.status))listenGuest();
  },e=>status('대기실 수신 오류: '+msg(e)));
 }
 async function create(opts){
  if(roomId)await leave();
  await identity();
  if(!['pvp','coop','classic'].includes(opts.mode)||![1,2,3].includes(Number(opts.size))||opts.mode==='coop'&&Number(opts.size)<2||opts.mode==='classic'&&Number(opts.size)!==1)throw Error('잘못된 인원/모드');
- roomId=code();host=true;
- room={version:1,host:uid,mode:opts.mode,size:Number(opts.size),status:'lobby',created:Date.now(),expires:Date.now()+7200000,
+ roomId=code();host=true;global.sessionStorage?.setItem(RESUME_KEY,roomId);
+ room={version:1,host:uid,mode:opts.mode,ruleset:opts.ruleset==='augment'?'augment':'standard',size:Number(opts.size),status:'lobby',created:Date.now(),expires:Date.now()+7200000,
   players:{[uid]:{name:validateName(opts.name),faction:Number(opts.faction),skin:validateSkin(opts.skin),team:0,ready:false}}};
  await fs.setDoc(path(),room);
  listenRoom();status('방 코드 '+roomId+' · 상대에게 코드를 공유하세요.');
@@ -98,7 +99,7 @@ async function join(opts){
   if(players[uid].faction<0||players[uid].faction>9)throw Error('종족 선택 오류');
   tx.update(ref,{players});
  });
- listenRoom();status('방 '+roomId+' 참가 완료 · 연결과 준비 상태를 확인하세요.');
+ global.sessionStorage?.setItem(RESUME_KEY,roomId);listenRoom();status('방 '+roomId+' 참가 완료 · 연결과 준비 상태를 확인하세요.');
  return roomId;
 }
 async function ready(value){
@@ -136,7 +137,15 @@ function handleChannel(guest,ch){
   notify('peers',new Set(hostPeerOpen));
   if(host&&engine)send(ch,{type:'snapshot',state:engine.snapshot(guest)});
  };
- ch.onclose=()=>{hostPeerOpen.delete(guest);notify('peers',new Set(hostPeerOpen));status('연결 종료: '+guest.slice(0,6));};
+ ch.onclose=()=>{
+  hostPeerOpen.delete(guest);notify('peers',new Set(hostPeerOpen));
+  const key=host?guest:uid;const pc=pcs.get(key);if(pc){pc.close();pcs.delete(key);}
+  channels.delete(guest);
+  if(host){const stop=peerSubs.get(guest);if(stop)stop();peerSubs.delete(guest);
+   if(engine&&room?.players?.[guest])setTimeout(()=>void makeOffer(guest).catch(e=>status(msg(e))),500);}
+  else answering=false;
+  status('연결 종료: '+guest.slice(0,6));
+ };
  ch.onerror=()=>status('P2P 연결 오류. 일부 네트워크는 TURN 릴레이 없이는 연결되지 않습니다.');
  ch.onmessage=e=>{
   let data;try{data=JSON.parse(e.data);}catch(err){return;}
@@ -193,7 +202,7 @@ async function start(){
  const guests=members().filter(m=>m.uid!==uid);
  if(guests.some(g=>channels.get(g.uid)?.readyState!=='open'))throw Error('모든 참가자의 P2P 연결이 완료되지 않았습니다.');
  if(!global.DesertTriEngine)throw Error('3라인 전투 엔진이 준비되지 않았습니다.');
- engine=global.DesertTriEngine.create({mode:room.mode,size:room.size,members:members()});
+ engine=global.DesertTriEngine.create({mode:room.mode,ruleset:room.ruleset,size:room.size,members:members()});
  await fs.updateDoc(path(),{status:'playing'});
  let last=performance.now();
  clock=setInterval(()=>{
@@ -210,7 +219,21 @@ function sendOrder(order){
  const ch=channels.get(room?.host);if(ch?.readyState!=='open')return {ok:false,reason:'호스트 연결 끊김'};
  send(ch,{type:'order',seq:++seq,order});return {ok:true,pending:true};
 }
-function configure(callbacks){events={...callbacks};}
+async function restore(){
+ const saved=global.sessionStorage?.getItem(RESUME_KEY);
+ if(!saved||roomId)return;
+ try{
+  await identity();
+  const doc=await fs.getDoc(fs.doc(db,'desertRooms',saved));
+  const candidate=doc.data();
+  if(!candidate?.players?.[uid]||candidate.host===uid||!['lobby','playing'].includes(candidate.status)){
+   global.sessionStorage?.removeItem(RESUME_KEY);return;
+  }
+  roomId=saved;room=candidate;host=false;listenRoom();listenGuest();
+  status('이전 방에 다시 연결하는 중');
+ }catch(e){status('방 복귀 실패: '+msg(e));}
+}
+function configure(callbacks){events={...callbacks};void restore();}
 function current(){return {roomId,room,uid,host,peers:new Set(hostPeerOpen),active};}
 global.DesertTriNetwork=Object.freeze({configure,identity,create,join,ready,start,leave,sendOrder,current,validateName});
 })(window);

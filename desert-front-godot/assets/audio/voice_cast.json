@@ -1,0 +1,725 @@
+{
+  "schema": 1,
+  "units": [
+    {
+      "faction": 0,
+      "role": 0,
+      "name": "진격 보병",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10001,
+      "moe_speaker": 10004
+    },
+    {
+      "faction": 0,
+      "role": 1,
+      "name": "기관총병",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10000,
+      "moe_speaker": 10003
+    },
+    {
+      "faction": 0,
+      "role": 2,
+      "name": "관통 로켓",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10002,
+      "moe_speaker": 10008
+    },
+    {
+      "faction": 0,
+      "role": 3,
+      "name": "철갑 전차",
+      "default": "machine",
+      "moe": "female",
+      "default_speaker": null,
+      "moe_speaker": 10006
+    },
+    {
+      "faction": 0,
+      "role": 4,
+      "name": "복합 대공포",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10000,
+      "moe_speaker": 10005
+    },
+    {
+      "faction": 0,
+      "role": 5,
+      "name": "궤도 자주포",
+      "default": "machine",
+      "moe": "female",
+      "default_speaker": null,
+      "moe_speaker": 10007
+    },
+    {
+      "faction": 0,
+      "role": 6,
+      "name": "추적 비행기",
+      "default": "machine",
+      "moe": "female",
+      "default_speaker": null,
+      "moe_speaker": 10004
+    },
+    {
+      "faction": 0,
+      "role": 7,
+      "name": "전장 구호병",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10000,
+      "moe_speaker": 10003
+    },
+    {
+      "faction": 1,
+      "role": 0,
+      "name": "송곳 발톱",
+      "default": "monster",
+      "moe": "monster",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 1,
+      "role": 1,
+      "name": "산성 침벌",
+      "default": "monster",
+      "moe": "monster",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 1,
+      "role": 2,
+      "name": "부식 포자충",
+      "default": "monster",
+      "moe": "monster",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 1,
+      "role": 3,
+      "name": "거대 갑각수",
+      "default": "monster",
+      "moe": "monster",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 1,
+      "role": 4,
+      "name": "가시 포자탑",
+      "default": "monster",
+      "moe": "monster",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 1,
+      "role": 5,
+      "name": "폭식 투석충",
+      "default": "monster",
+      "moe": "monster",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 1,
+      "role": 6,
+      "name": "비행 포식자",
+      "default": "monster",
+      "moe": "monster",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 1,
+      "role": 7,
+      "name": "치유 공생충",
+      "default": "monster",
+      "moe": "monster",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 2,
+      "role": 0,
+      "name": "수호 창병",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10000,
+      "moe_speaker": 10005
+    },
+    {
+      "faction": 2,
+      "role": 1,
+      "name": "광자 사수",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10002,
+      "moe_speaker": 10007
+    },
+    {
+      "faction": 2,
+      "role": 2,
+      "name": "균열 파괴자",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10001,
+      "moe_speaker": 10004
+    },
+    {
+      "faction": 2,
+      "role": 3,
+      "name": "수정 방패병",
+      "default": "machine",
+      "moe": "female",
+      "default_speaker": null,
+      "moe_speaker": 10003
+    },
+    {
+      "faction": 2,
+      "role": 4,
+      "name": "영점 수호기",
+      "default": "machine",
+      "moe": "female",
+      "default_speaker": null,
+      "moe_speaker": 10008
+    },
+    {
+      "faction": 2,
+      "role": 5,
+      "name": "공명 투창대",
+      "default": "machine",
+      "moe": "female",
+      "default_speaker": null,
+      "moe_speaker": 10006
+    },
+    {
+      "faction": 2,
+      "role": 6,
+      "name": "섬광 비행체",
+      "default": "machine",
+      "moe": "female",
+      "default_speaker": null,
+      "moe_speaker": 10005
+    },
+    {
+      "faction": 2,
+      "role": 7,
+      "name": "생명 융합사",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10006,
+      "moe_speaker": 10007
+    },
+    {
+      "faction": 3,
+      "role": 0,
+      "name": "무모칠 · 오도돌격",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10001,
+      "moe_speaker": 10004
+    },
+    {
+      "faction": 3,
+      "role": 1,
+      "name": "박철곤 · 중기관총",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10000,
+      "moe_speaker": 10003
+    },
+    {
+      "faction": 3,
+      "role": 2,
+      "name": "조조팔 · 대장갑포",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10002,
+      "moe_speaker": 10008
+    },
+    {
+      "faction": 3,
+      "role": 3,
+      "name": "황근출 · 배틀액스",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10001,
+      "moe_speaker": 10006
+    },
+    {
+      "faction": 3,
+      "role": 4,
+      "name": "톤톤정 · 대공 난사",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10000,
+      "moe_speaker": 10005
+    },
+    {
+      "faction": 3,
+      "role": 5,
+      "name": "마철두 · 포격특공",
+      "default": "machine",
+      "moe": "female",
+      "default_speaker": null,
+      "moe_speaker": 10007
+    },
+    {
+      "faction": 3,
+      "role": 6,
+      "name": "오도봉고 · 전우애 돌격",
+      "default": "machine",
+      "moe": "female",
+      "default_speaker": null,
+      "moe_speaker": 10004
+    },
+    {
+      "faction": 3,
+      "role": 7,
+      "name": "황룡 · 해병수육",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10000,
+      "moe_speaker": 10003
+    },
+    {
+      "faction": 4,
+      "role": 0,
+      "name": "백랑 검사",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10004,
+      "moe_speaker": 10008
+    },
+    {
+      "faction": 4,
+      "role": 1,
+      "name": "여우족 단검투척수",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10003,
+      "moe_speaker": 10006
+    },
+    {
+      "faction": 4,
+      "role": 2,
+      "name": "스라소니 창투사",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10008,
+      "moe_speaker": 10005
+    },
+    {
+      "faction": 4,
+      "role": 3,
+      "name": "맹호 방패기사",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10006,
+      "moe_speaker": 10007
+    },
+    {
+      "faction": 4,
+      "role": 4,
+      "name": "매의눈 사냥꾼",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10005,
+      "moe_speaker": 10004
+    },
+    {
+      "faction": 4,
+      "role": 5,
+      "name": "설표 돌도끼병",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10007,
+      "moe_speaker": 10003
+    },
+    {
+      "faction": 4,
+      "role": 6,
+      "name": "흑표 돌격기수",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10004,
+      "moe_speaker": 10008
+    },
+    {
+      "faction": 4,
+      "role": 7,
+      "name": "토끼족 치유사",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10003,
+      "moe_speaker": 10006
+    },
+    {
+      "faction": 5,
+      "role": 0,
+      "name": "달빛 검호",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10008,
+      "moe_speaker": 10005
+    },
+    {
+      "faction": 5,
+      "role": 1,
+      "name": "실바람 궁수",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10006,
+      "moe_speaker": 10007
+    },
+    {
+      "faction": 5,
+      "role": 2,
+      "name": "별무리 관통궁",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10005,
+      "moe_speaker": 10004
+    },
+    {
+      "faction": 5,
+      "role": 3,
+      "name": "고목 수호기사",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10007,
+      "moe_speaker": 10003
+    },
+    {
+      "faction": 5,
+      "role": 4,
+      "name": "별빛 대공궁",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10004,
+      "moe_speaker": 10008
+    },
+    {
+      "faction": 5,
+      "role": 5,
+      "name": "숲의 대마법사",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10003,
+      "moe_speaker": 10006
+    },
+    {
+      "faction": 5,
+      "role": 6,
+      "name": "초승달 비행마녀",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10008,
+      "moe_speaker": 10005
+    },
+    {
+      "faction": 5,
+      "role": 7,
+      "name": "샘물 치유사",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10006,
+      "moe_speaker": 10007
+    },
+    {
+      "faction": 6,
+      "role": 0,
+      "name": "늑대 추적자",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10001,
+      "moe_speaker": 10004
+    },
+    {
+      "faction": 6,
+      "role": 1,
+      "name": "여우총 사냥꾼",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10000,
+      "moe_speaker": 10003
+    },
+    {
+      "faction": 6,
+      "role": 2,
+      "name": "송곳니 분쇄자",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10002,
+      "moe_speaker": 10008
+    },
+    {
+      "faction": 6,
+      "role": 3,
+      "name": "곰 털갑옷 수호자",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10001,
+      "moe_speaker": 10006
+    },
+    {
+      "faction": 6,
+      "role": 4,
+      "name": "하울 창투사",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10000,
+      "moe_speaker": 10005
+    },
+    {
+      "faction": 6,
+      "role": 5,
+      "name": "들소 포격수",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10002,
+      "moe_speaker": 10007
+    },
+    {
+      "faction": 6,
+      "role": 6,
+      "name": "알파 늑대 기수",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10001,
+      "moe_speaker": 10004
+    },
+    {
+      "faction": 6,
+      "role": 7,
+      "name": "달빛 무리치유사",
+      "default": "male",
+      "moe": "female",
+      "default_speaker": 10000,
+      "moe_speaker": 10003
+    },
+    {
+      "faction": 7,
+      "role": 0,
+      "name": "블레이드 오토마타",
+      "default": "machine",
+      "moe": "machine",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 7,
+      "role": 1,
+      "name": "레이저 정찰기",
+      "default": "machine",
+      "moe": "machine",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 7,
+      "role": 2,
+      "name": "레일 관통병기",
+      "default": "machine",
+      "moe": "machine",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 7,
+      "role": 3,
+      "name": "티탄 실드 워커",
+      "default": "machine",
+      "moe": "machine",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 7,
+      "role": 4,
+      "name": "플랙 대공드론",
+      "default": "machine",
+      "moe": "machine",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 7,
+      "role": 5,
+      "name": "공성 캐논",
+      "default": "machine",
+      "moe": "machine",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 7,
+      "role": 6,
+      "name": "전술 변형 메카",
+      "default": "machine",
+      "moe": "machine",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 7,
+      "role": 7,
+      "name": "나노 정비유닛",
+      "default": "machine",
+      "moe": "machine",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 8,
+      "role": 0,
+      "name": "팔완 돌격체",
+      "default": "monster",
+      "moe": "monster",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 8,
+      "role": 1,
+      "name": "먹물 주술사",
+      "default": "monster",
+      "moe": "monster",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 8,
+      "role": 2,
+      "name": "심해 관통술사",
+      "default": "monster",
+      "moe": "monster",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 8,
+      "role": 3,
+      "name": "갑각 문어수호자",
+      "default": "monster",
+      "moe": "monster",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 8,
+      "role": 4,
+      "name": "팔완 대공술사",
+      "default": "monster",
+      "moe": "monster",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 8,
+      "role": 5,
+      "name": "심연 의식술사",
+      "default": "monster",
+      "moe": "monster",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 8,
+      "role": 6,
+      "name": "마력 비행수",
+      "default": "monster",
+      "moe": "monster",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 8,
+      "role": 7,
+      "name": "군체 사제",
+      "default": "monster",
+      "moe": "monster",
+      "default_speaker": null,
+      "moe_speaker": null
+    },
+    {
+      "faction": 9,
+      "role": 0,
+      "name": "꽃잎 소검사",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10005,
+      "moe_speaker": 10004
+    },
+    {
+      "faction": 9,
+      "role": 1,
+      "name": "이슬 마도사",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10007,
+      "moe_speaker": 10003
+    },
+    {
+      "faction": 9,
+      "role": 2,
+      "name": "씨앗 관통술사",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10004,
+      "moe_speaker": 10008
+    },
+    {
+      "faction": 9,
+      "role": 3,
+      "name": "버섯껍질 방패수",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10003,
+      "moe_speaker": 10006
+    },
+    {
+      "faction": 9,
+      "role": 4,
+      "name": "반딧불 대공술사",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10008,
+      "moe_speaker": 10005
+    },
+    {
+      "faction": 9,
+      "role": 5,
+      "name": "꽃가루 폭격사",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10006,
+      "moe_speaker": 10007
+    },
+    {
+      "faction": 9,
+      "role": 6,
+      "name": "별빛 나비정령",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10005,
+      "moe_speaker": 10004
+    },
+    {
+      "faction": 9,
+      "role": 7,
+      "name": "꽃샘 치유사",
+      "default": "female",
+      "moe": "female",
+      "default_speaker": 10007,
+      "moe_speaker": 10003
+    }
+  ]
+}
