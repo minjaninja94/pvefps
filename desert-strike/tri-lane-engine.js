@@ -79,7 +79,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
   state.broodTotalByUid.set(uid,(state.broodTotalByUid.get(uid)||0)+1);
   const x=clamp(parent.x+(parent.team===0?18:-18),35,WIDTH-35),y=clamp(parent.y+(roll()-.5)*35,35,HEIGHT-35);
   const lane=clamp(Math.floor(y/LANE_H),0,LANES-1);
-  state.units.push({...parent,id:state.nextUnit++,role:0,lane,x,y,hp:1,maxHP:1,radius:8,
+  state.units.push({...parent,id:state.nextUnit++,role:0,lane,x,y,hp:1,maxHP:1,radius:8,heroCount:1,
     isHatchling:true,conscripted:false,killed:false,cool:.85,act:'spawn',attackAge:0,
     spawnAge:0,hitAge:0,skillAge:0,targetId:null,spawnedAt:state.seconds,lastDamagedAt:state.seconds});
   state.effects.push({x,y,lane,kind:'broodling',time:.65,team:parent.team});
@@ -244,7 +244,9 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
   if(state.units.filter(x=>x.hp>0&&x.lane===v.lane&&x.team===a.team).length>=75)return;
   state.marineRecruitCount.set(a.uid,recruits+1);
   state.marineStats.recruits++;marineRecord(a.uid,'recruits');
-  state.units.push({...v,id:state.nextUnit++,uid:a.uid,team:a.team,hp:Math.max(1,Math.floor(v.maxHP*MARINE_RECRUIT_HP)),
+  const capturedHP=v.maxHP/(v.heroCount===20?20:1);
+  state.units.push({...v,id:state.nextUnit++,uid:a.uid,team:a.team,heroCount:1,maxHP:capturedHP,hp:Math.max(1,Math.floor(capturedHP*MARINE_RECRUIT_HP)),
+   radius:v.heroCount===20?v.radius/2:v.radius,targetId:null,inkUntil:0,lastInkCast:null,lastBroodBirth:null,lastDamagedAt:state.seconds,
    cool:1.5,conscripted:true,killed:false,spawnAge:0,hitAge:0,skillAge:0,attackAge:.4,act:'move'});
   state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'conscript',time:.7,team:a.team});
  }
