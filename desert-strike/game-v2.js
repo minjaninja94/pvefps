@@ -1474,7 +1474,7 @@ function wire(){
  $('helpButton').addEventListener('click',()=>$('helpDialog').showModal());
  $('helpClose').addEventListener('click',()=>$('helpDialog').close());
  document.addEventListener('keydown',e=>{
-  if($('helpDialog').open)return;
+  if(document.body?.dataset?.playMode==='multi'||$('helpDialog').open)return;
   if(e.altKey&&['1','2','3'].includes(e.key)){e.preventDefault();changeView(['base','battle','special'][Number(e.key)-1]);return;}
   if(e.target&&['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;
   if(e.key>='1'&&e.key<='8')selectRole(Number(e.key)-1);
