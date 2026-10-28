@@ -77,7 +77,8 @@ jobs:
               "2. Run DesertFront.exe. No Steam login required.\n"
               "3. Select Online Public Room or Private Room, or search/join.\n"
               "4. Online service is beta and may be unavailable.\n"
-              "5. This is an INCOMPLETE playable prototype, not the complete web game.\n"
+              "5. New 3-lane 1v1, 2v2, 3v3 and co-op modes are in ALPHA.\n"
+              "   Complete web parity and Internet reliability are NOT confirmed.\n"
               "6. Online Internet P2P test with two remote PCs is NOT yet verified.\n"
               "7. This unsigned test EXE may show a Windows SmartScreen warning.\n",
               encoding="utf-8"
@@ -125,7 +126,7 @@ jobs:
             "DESERT FRONT Windows preview (Godot 4) - open public/private relay lobby, room codes, host-authoritative basic 1v1.\n\n"
             "Download ZIP, extract completely, and run DesertFront.exe; no Steam account or player IP/port forwarding.\n\n"
             "Experimental: Online relay uses NodeTunnel third-party beta and has not been tested between two remote PCs. "
-            "Original 80 unit pixel sprite strips and 10 faction banners are included. Core gameplay is incomplete: unique skills, web balance, and 3-line PvP/co-op not yet ported."
+            "Original 80 unit pixel sprite strips and 10 faction banners are included. Native code now has 3-line PvP 1v1/2v2/3v3 and 2/3-person co-op, hero aggregation, guardian and faction passives, but full web parity and remote Internet multiplayer are not yet verified."
           )
           try:
               release=api(base+"/releases/tags/"+tag)

@@ -1,25 +1,27 @@
-# Desert Front: Native Godot 4 PC Port
+# Desert Front native Godot port — 3-lane and multiplayer checkpoint
 
-**Status: partial gameplay port with the ORIGINAL pixel sprites applied.**
+The browser game under desert-strike/ is READ ONLY. This new project stays on feature/desert-front-godot-port under desert-front-godot/.
 
-The web game stays intact in desert-strike/. This new Godot project is isolated to desert-front-godot/.
+## Ported into Godot source
 
-## Original graphics
+- 80 original WebP unit sprite strips (8 frames each) plus 10 faction banners imported via a separate read-only copy process.
+- Classic one-line battles plus a continuous 3-band battlefield for 1v1, 2v2, 3v3 and 2/3-person co-op.
+- Per-player credits, owned production slots by lane, extractors, 5-level weapon/armor upgrades, repair, nuke and targeted barrage.
+- 20-soldier hero aggregation, forward defense towers, 150-credit attacker reward and one defensive no-cross-midline guardian per fallen forward tower.
+- Faction combat mechanics: brood hatchlings, Marine spoils/conscripts/support heal, Fairy chain heal, Octoper ink, Robot regeneration, Beastkin ranged mitigation, Astral ward, Elf criticals, Furry pack synergy and Forge armor.
+- Native 3-band pixel battlefield with life bars, guardian aura and animations, click-to-select lanes and production/upgrades/tactics panels.
+- NodeTunnel online room/ready/host-authoritative order flow; 2v2/3v3 and co-op team sizes represented in native match code.
+- Hard-mode weighted AI with economic production and threat response.
 
-From the repository root run:
+## Run
 
-    python3 desert-front-godot/tools/sync_web_art.py
+From the repository root run: python3 desert-front-godot/tools/sync_web_art.py
+Open desert-front-godot/project.godot in Godot 4.3+, and press F5.
+On the original native screen click '3라인 · 2:2 · 3:3 · 협동' for the new battle and lobby UI.
+Windows distribution is published to GitHub Releases as DesertFront-Preview-Windows.zip with native WebP imports and the NodeTunnel DLL.
 
-Then open desert-front-godot/project.godot in Godot 4.3+ and press F5.
+## Still not completed or validated
 
-The sync copies exactly 80 transparent 8-pose 96px WebP uniform character strips and 10 original faction banners from the existing desert-strike/assets/sprites folder into the Godot asset directory, without modifying original files. The Godot render maps pose indices 0-7 to idle/move/attack/skill/death and mirrors opposing units. It also displays faction banner and selected unit portrait in the sidebar.
-
-GitHub Actions runs sprite sync and a dedicated Godot asset test before Windows packaging. Generated Godot art copies are ignored by Git; the canonical art remains in the existing web folder.
-
-## Windows distribution
-
-Download DesertFront-Preview-Windows.zip from the public Releases section and extract all files. The build includes the imported sprites, PCK, third-party NodeTunnel DLL, and relay configuration.
-
-## Remaining limitations
-
-The gameplay is still a limited prototype: unique race passives, precise web balance, hero/guardian mechanics, 3-line competitive/co-op, and full web UI are NOT yet ported. A successful art test is not proof of game rule parity. Relay multiplayer between two remote networks also needs human validation.
+This is a partial migration, not feature parity. Exact browser combat timing/AI/consolidation behavior, all unique graphics/skins/effect animations, production performance, user account & ranking, reconnection, and web UI polish need further work.
+Local headless LAN 1v1 tests and automated tri-lane simulation/scene tests do not prove actual online 2v2/3v3 or co-op connectivity across networks. The relay service is third-party beta.
+Do not market this as a stable complete release; it is an alpha preview.
