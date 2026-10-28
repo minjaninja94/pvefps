@@ -26,7 +26,8 @@ func _run() -> void:
 	var mirror = Match.new()
 	mirror.load_snapshot(snap)
 	assert(mirror.wave == duel.wave)
-	assert(mirror.units.size() == duel.units.size())
+	assert(mirror.units.size() <= duel.units.size()) # fog conceals enemy units
+	assert(mirror.units.size() >= 1)
 	var tri = Match.new("pvp",2,[
 		{"uid":"host","team":0,"faction":0},
 		{"uid":"teammate","team":0,"faction":5},

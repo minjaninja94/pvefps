@@ -19,7 +19,7 @@ var _state: Label
 var _role_picker: OptionButton
 var _lane_picker: OptionButton
 var _grid: Array[Button] = []
-var _ready: Button
+var _ready_button: Button
 var _start: Button
 var _view: Control
 var _left_panel: VBoxContainer
@@ -133,11 +133,11 @@ func _build_ui() -> void:
 	join_code.text = "코드 참가"
 	join_code.pressed.connect(func()->void:_join_code(_room_input.text))
 	room_row.add_child(join_code)
-	_ready = Button.new()
-	_ready.text = "준비 완료"
-	_ready.disabled = true
-	_ready.pressed.connect(_toggle_ready)
-	room_row.add_child(_ready)
+	_ready_button = Button.new()
+	_ready_button.text = "준비 완료"
+	_ready_button.disabled = true
+	_ready_button.pressed.connect(_toggle_ready)
+	room_row.add_child(_ready_button)
 	_start = Button.new()
 	_start.text = "경기 시작"
 	_start.disabled = true
@@ -242,7 +242,7 @@ func _chosen() -> Dictionary:
 func _practice() -> void:
 	session.leave()
 	_offline = true
-	_ready.disabled = true
+	_ready_button.disabled = true
 	_start.disabled = true
 	_ready_flag = false
 	var spec: Dictionary = _chosen()
@@ -267,7 +267,7 @@ func _host_online(public: bool) -> void:
 	match_game = null
 	_view.simulation = null
 	if session.host_online(str(spec["mode"]),int(spec["size"]),_factions.selected,public):
-		_ready.disabled = false
+		_ready_button.disabled = false
 		_start.disabled = true
 		_ready_flag = true
 
@@ -297,7 +297,7 @@ func _join_code(code: String) -> void:
 	match_game = null
 	_view.simulation = null
 	if session.join_online(code,_factions.selected,_team_picker.selected):
-		_ready.disabled = false
+		_ready_button.disabled = false
 		_ready_flag = false
 
 func _roster_changed(members: Array, mode: String, size: int) -> void:
@@ -322,7 +322,7 @@ func _match_started() -> void:
 	_offline = false
 	match_game = session.game
 	_view.simulation = match_game
-	_ready.disabled = true
+	_ready_button.disabled = true
 	_start.disabled = true
 	_update_lane_options()
 	_set_status("대전 시작 · 방장 권한 전투 판정 중")
@@ -333,14 +333,14 @@ func _state_received(_data: Dictionary) -> void:
 	_refresh_ui()
 
 func _room_left() -> void:
-	_ready.disabled = true
+	_ready_button.disabled = true
 	_start.disabled = true
 	_roster.text = "방에서 나왔습니다."
 
 func _toggle_ready() -> void:
 	_ready_flag = not _ready_flag
 	session.set_ready(_ready_flag)
-	_ready.text = "준비 취소" if _ready_flag else "준비 완료"
+	_ready_button.text = "준비 취소" if _ready_flag else "준비 완료"
 
 func _set_status(text: String) -> void:
 	if _status != null:

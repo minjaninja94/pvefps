@@ -39,8 +39,8 @@ func _draw() -> void:
 	if simulation == null:
 		return
 	for lane in range(simulation.lanes):
-		var row_height := (size.y-28.0)/simulation.lanes
-		var y := 14.0+lane*row_height
+		var row_height: float = (size.y-28.0)/float(simulation.lanes)
+		var y: float = 14.0+lane*row_height
 		draw_rect(Rect2(0,y,size.x,row_height),Color("#27434b",0.34 if lane == selected_lane else 0.17))
 		if lane == selected_lane:
 			draw_rect(Rect2(1,y+1,size.x-2,row_height-2),Color("#8ae9d1",0.82),false,2.0)
@@ -51,7 +51,7 @@ func _draw() -> void:
 		for team in range(2):
 			var y_mid := (lane+0.5)*LANE_HEIGHT
 			_draw_defense(lane,team,y_mid)
-		var front_y := y+row_height*0.5
+		var front_y: float = y+row_height*0.5
 		draw_line(Vector2(size.x*0.5,y+3),Vector2(size.x*0.5,y+row_height-3),Color("#a8d6b2",0.26),1.0,true)
 		draw_line(Vector2(0,front_y),Vector2(size.x,front_y),Color("#91c2bd",0.12),1.0)
 	var ordered: Array = simulation.units.duplicate()
