@@ -39,6 +39,8 @@ jobs:
         run: node desert-strike/smoke-isometric.test.cjs
       - name: Three-line PvP and cooperative host-authoritative combat
         run: node desert-strike/smoke-trilane.test.cjs
+      - name: Hero offspring and capture balance invariants
+        run: node desert-strike/smoke-hero-inheritance.test.cjs
       - name: WebRTC and Firebase mocked 1v1 handshake and real-time orders
         run: node desert-strike/smoke-trilane-network.test.cjs
       - name: Ten-faction 80-unit art and commander lobby progression
