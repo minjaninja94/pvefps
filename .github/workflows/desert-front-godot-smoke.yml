@@ -1,0 +1,26 @@
+name: Desert Front Godot smoke
+
+on:
+  push:
+    branches:
+      - feature/desert-front-godot-port
+    paths:
+      - "desert-front-godot/**"
+      - ".github/workflows/desert-front-godot-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-godot-port:
+    runs-on: ubuntu-24.04
+    container:
+      image: barichello/godot-ci:4.3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Import Godot project and check scripts
+        run: godot --headless --path desert-front-godot --editor --quit
+      - name: Run isolated simulation smoke test
+        run: godot --headless --path desert-front-godot --script res://tests/smoke.gd
