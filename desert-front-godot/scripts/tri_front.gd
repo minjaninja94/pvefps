@@ -4,11 +4,15 @@ const Roster = preload("res://scripts/roster.gd")
 const Match = preload("res://scripts/tri_match.gd")
 const Net = preload("res://scripts/tri_network.gd")
 const TriView = preload("res://scripts/tri_view.gd")
+const Sprites = preload("res://scripts/sprite_assets.gd")
 var session
 var match_game
 var _offline := true
 var _modes: OptionButton
 var _factions: OptionButton
+var _skins: OptionButton
+var _skin_banner: TextureRect
+var _skin_unit: TextureRect
 var _team_picker: OptionButton
 var _room_input: LineEdit
 var _room_picker: OptionButton
@@ -93,6 +97,11 @@ func _build_ui() -> void:
 	for name in Roster.FACTION_NAMES:
 		_factions.add_item(name)
 	toolbar.add_child(_factions)
+	_skins = OptionButton.new()
+	_skins.add_item("기본 도트")
+	_skins.add_item("모에화")
+	_skins.custom_minimum_size = Vector2(114,37)
+	toolbar.add_child(_skins)
 	_team_picker = OptionButton.new()
 	_team_picker.add_item("청팀")
 	_team_picker.add_item("적팀")
@@ -188,6 +197,29 @@ func _build_ui() -> void:
 	for i in range(Roster.ROLE_NAMES.size()):
 		_role_picker.add_item("%s  ·  %d CR" % [Roster.ROLE_NAMES[i],Roster.COST[i]])
 	side.add_child(_role_picker)
+	var illustrations := HBoxContainer.new()
+	illustrations.custom_minimum_size = Vector2(400, 78)
+	side.add_child(illustrations)
+	_skin_banner = TextureRect.new()
+	_skin_banner.custom_minimum_size = Vector2(146, 76)
+	_skin_banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_skin_banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_skin_banner.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	illustrations.add_child(_skin_banner)
+	_skin_unit = TextureRect.new()
+	_skin_unit.custom_minimum_size = Vector2(88,76)
+	_skin_unit.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_skin_unit.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_skin_unit.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	illustrations.add_child(_skin_unit)
+	var skin_notice := Label.new()
+	skin_notice.text = "스킨은 외형만 변경합니다.\n영웅/가디언 도트에도 적용"
+	skin_notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	illustrations.add_child(skin_notice)
+	_skins.item_selected.connect(func(_i: int) -> void: _update_skin_preview())
+	_factions.item_selected.connect(func(_i: int) -> void: _update_skin_preview())
+	_role_picker.item_selected.connect(func(_i: int) -> void: _update_skin_preview())
+	_update_skin_preview()
 	var demolition := CheckButton.new()
 	demolition.text = "철거 모드 (55% 환급)"
 	demolition.toggled.connect(func(value: bool)->void:_demolition=value)
@@ -228,6 +260,17 @@ func _build_ui() -> void:
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	side.add_child(note)
 
+func _selected_skin() -> String:
+	return "moe" if _skins.selected == 1 else "default"
+
+func _update_skin_preview() -> void:
+	if _skin_unit == null or _skin_banner == null or _factions == null or _role_picker == null:
+		return
+	var faction := maxi(0,_factions.selected)
+	var role := clampi(_role_picker.selected,0,7)
+	_skin_banner.texture = Sprites.skin_banner(faction,_selected_skin())
+	_skin_unit.texture = Sprites.skin_portrait(faction,role,_selected_skin())
+
 func _chosen() -> Dictionary:
 	var index := maxi(0,_modes.selected)
 	return [
@@ -246,7 +289,7 @@ func _practice() -> void:
 	_start.disabled = true
 	_ready_flag = false
 	var spec: Dictionary = _chosen()
-	var roster: Array = [{"uid":"local","team":0,"faction":_factions.selected,"name":"나"}]
+	var roster: Array = [{"uid":"local","team":0,"faction":_factions.selected,"skin":_selected_skin(),"name":"나"}]
 	if spec["mode"] != "classic":
 		for i in range(1,int(spec["size"])):
 			roster.append({"uid":"ally_ai_%d" % i,"team":0,"faction":(i+6)%10,"name":"연습 아군","bot":true})
@@ -266,7 +309,7 @@ func _host_online(public: bool) -> void:
 	_offline = false
 	match_game = null
 	_view.simulation = null
-	if session.host_online(str(spec["mode"]),int(spec["size"]),_factions.selected,public):
+	if session.host_online(str(spec["mode"]),int(spec["size"]),_factions.selected,public,_selected_skin()):
 		_ready_button.disabled = false
 		_start.disabled = true
 		_ready_flag = true
@@ -296,7 +339,7 @@ func _join_code(code: String) -> void:
 	_offline = false
 	match_game = null
 	_view.simulation = null
-	if session.join_online(code,_factions.selected,_team_picker.selected):
+	if session.join_online(code,_factions.selected,_team_picker.selected,_selected_skin()):
 		_ready_button.disabled = false
 		_ready_flag = false
 
