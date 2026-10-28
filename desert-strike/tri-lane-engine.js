@@ -48,10 +48,10 @@ function definition(faction,role){
   good:bongo||prowler?[0,7]:groundSpecial&&furry?[0,7]:groundSpecial&&robot?[0,3]:GOODS[role],bad:bongo||prowler?[2,3]:groundSpecial&&furry?[2,3]:groundSpecial&&robot?[2,5]:BADS[role]
  };
 }
-function combatDef(u){
+function combatDef(u,players=null){
  const base=definition(u.faction,u.role),d=global.DesertConsolidation?.definition(base,u)||base;
  const actual=u.isHatchling?{...d,hp:1,damage:5,range:24,rate:1.28,speed:108,armor:0,airTarget:false,kind:'ground'}:d;
- const level=u.uid?state.players.find(p=>p.uid===u.uid)?.weapon||0:0;
+ const level=u.uid?players?.find(p=>p.uid===u.uid)?.weapon||0:0;
  return level?{...actual,damage:actual.damage*(1+.08*level),heal:actual.heal*(1+.08*level)}:actual;
 }
 function roomPlayers(input){const x=Array.isArray(input)?input:Object.values(input||{});return x.map(p=>({uid:String(p.uid||p.id||''),name:String(p.name||'지휘관').slice(0,16),team:Number(p.team),faction:Number(p.faction),skin:['default','moe','twilight','aurora','gold'].includes(p.skin)?p.skin:'default',bot:!!p.bot}));}
@@ -345,7 +345,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
   if(v.hp<=0&&!v.killed){v.killed=true;marineSpoils(a,v);}
  }
  function attack(a,v){
-  const d=combatDef(a);
+  const d=combatDef(a,state.players);
   a.cool=Math.max(.3,d.rate);a.act='attack';a.attackAge=.33;
   if(a.role===7)a.skillAge=.54;
   const dmg=d.damage*((a.inkUntil||0)>state.seconds?.90:1);
@@ -404,7 +404,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
   }
   for(const u of state.units){
    if(u.hp<=0)continue;
-   const d=combatDef(u),support=u.role===7,r=support?SUPPORT_RADIUS:AGGRO_RADIUS;
+   const d=combatDef(u,state.players),support=u.role===7,r=support?SUPPORT_RADIUS:AGGRO_RADIUS;
    const moveSpeed=d.speed*((u.inkUntil||0)>state.seconds?.80:1);
    if(!u.isHatchling){
     if(u.faction===8)u.hp=Math.min(u.maxHP,u.hp+u.maxHP*OCTOPER_REGEN*dt);
