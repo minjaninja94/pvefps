@@ -8,6 +8,9 @@ let snap=null,lane=1,role=0,demolish=false,practice=null,practiceTimer=null,view
 let myId='',lobby=null,host=false,gridKey='',cardsKey='',lastSnapshotAt=0,lastDrawAt=0;
 const LANES=['상단','중앙','하단'],ICONS=['⚔','⌖','◆','▣','✣','✹','♞','✚'];
 function message(msg){$('mpStatus').textContent=msg;}
+function laneCount(){return snap?.lanes??3;}
+function laneName(i){return laneCount()===1?'단일 전장':LANES[i]+' 라인';}
+function battleHeight(){return laneCount()===1?520:660;}
 function setView(id,scrollToTop=false){
  if(!['base','battle','upgrade'].includes(id))return;
  view=id;
@@ -33,13 +36,13 @@ function upgradeInfo(){
  $('mpWeaponButton').disabled=snap.ended||weapon>=5||me.cash<weaponPrice;
  $('mpArmorButton').disabled=snap.ended||armor>=5||me.cash<armorPrice;
  const hp=snap.turrets?.[repairLane]?.[side]??1250;
- $('mpRepairInfo').textContent=LANES[repairLane]+' 라인 본진 포탑 '+Math.ceil(hp)+' / 1250';
+ $('mpRepairInfo').textContent=laneName(repairLane)+' 본진 포탑 '+Math.ceil(hp)+' / 1250';
  $('mpRepairButton').disabled=snap.ended||me.cash<180||hp>=1250;
  $('mpBarrageInfo').textContent=cd>0?'재충전 '+Math.ceil(cd)+'초':'260 CR · 정찰된 적에게 사용 가능';
  $('mpBarrageButton').disabled=snap.ended||cd>0||me.cash<260;
  const invaded=snap.units.some(u=>u.hp>0&&u.team!==side&&(side===0?u.x<370:u.x>3300-370));
  const targets=snap.units.some(u=>u.hp>0&&u.team!==side&&(side===0?u.x<=550:u.x>=3300-550));
- const endangered=snap.cores.some(core=>core[side]<=1750),nukeReady=!!me.nukes&&(invaded||endangered)&&targets;
+ const endangered=snap.cores.some(core=>core[side]<=(snap.coreMaxHP||2500)*.7),nukeReady=!!me.nukes&&(invaded||endangered)&&targets;
  $('mpNukeInfo').textContent=me.nukes?(nukeReady?'침공 경보 · 발동 가능':'1회 남음 · 침공/기지 위기 시 사용 가능'):'사용 완료';
  $('mpNukeButton').disabled=snap.ended||!nukeReady;
  $('mpRepairLanes').querySelectorAll('[data-repair-lane]').forEach(button=>button.classList.toggle('active',Number(button.dataset.repairLane)===repairLane));
@@ -51,6 +54,7 @@ function countNeeded(r){return r.size*(r.mode==='coop'?1:2);}
 function fullReady(r){const p=Object.values(r.players||{});return p.length===countNeeded(r)&&p.every(x=>x.ready)&& (r.mode==='coop'?p.every(x=>x.team===0):[0,1].every(t=>p.filter(x=>x.team===t).length===r.size));}
 function uiButtons(){
  const r=lobby?.room,me=r?.players?.[myId];
+ if(r){$('mpMode').value=r.mode;$('mpSize').value=String(r.size);}
  $('mpReady').disabled=!me||r?.status!=='lobby';
  $('mpReady').textContent=me?.ready?'준비 취소':'준비하기';
  $('mpLaunch').disabled=!host||!r||r.status!=='lobby'||!fullReady(r);
@@ -94,8 +98,8 @@ function unitCards(){
  $('mpUnitCards').querySelectorAll('[data-role]').forEach(b=>b.classList.toggle('unaffordable',!!me&&me.cash<(Number(b.dataset.role)===8?E.ecoPrice(me.eco):E.COST[Number(b.dataset.role)])));
 }
 function updateLanePicker(p){
- $('mpSelectedLane').textContent=LANES[lane]+' 라인';
- $('mpLaneHint').textContent=LANES[lane]+' 라인 · 좌우로 밀어 라인 전환';
+ $('mpSelectedLane').textContent=laneName(lane);
+ $('mpLaneHint').textContent=laneCount()===1?'단일 전장 · 생산시설 75칸':laneName(lane)+' · 좌우로 밀어 라인 전환';
  for(const b of $('mpLaneTabs').querySelectorAll('[data-lane]')){
   const index=Number(b.dataset.lane),selected=index===lane;
   b.classList.toggle('active',selected);
@@ -108,10 +112,10 @@ function updateLanePicker(p){
   }
  }
  $('mpPrevLane').disabled=lane===0;
- $('mpNextLane').disabled=lane===2;
+ $('mpNextLane').disabled=lane===laneCount()-1;
  $('mpDemolish').classList.toggle('selected',demolish);
  $('mpDemolish').setAttribute('aria-pressed',String(demolish));
- $('mpBuildGrid').setAttribute('aria-label',LANES[lane]+' 라인의 생산 시설 '+E.SLOTS+'칸');
+ $('mpBuildGrid').setAttribute('aria-label',laneName(lane)+' 생산 시설 '+E.SLOTS+'칸');
 }
 function buildGrid(){
  const p=my();if(!p)return;
@@ -127,7 +131,7 @@ function buildGrid(){
   if(r===null)b.textContent='+';else{const cv=document.createElement('canvas');cv.width=cv.height=72;unitIcon(cv,p.faction,r);b.append(cv);}
   b.setAttribute('aria-label',(r===null?'빈 슬롯':global.DesertRoster?.FACTIONS[p.faction]?.units[r]||E.NAMES[r])+' '+(i+1));
   b.setAttribute('aria-pressed',String(demolish&&r!==null));
-  b.title=(r===null?'빈 자리':E.NAMES[r]+' 생산 시설')+' · '+LANES[lane]+' 라인 '+(i+1);
+  b.title=(r===null?'빈 자리':E.NAMES[r]+' 생산 시설')+' · '+laneName(lane)+' '+(i+1);
   f.append(b);
  }
  $('mpBuildGrid').replaceChildren(f);
@@ -142,7 +146,7 @@ function draw(){
  bg.addColorStop(0,'#263e42');bg.addColorStop(.48,'#233943');bg.addColorStop(1,'#142e3b');
  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
  if(iso?.terrain)iso.terrain(ctx,W,H,false,my()?.faction??faction());
- for(let l=0;l<3;l++){
+ for(let l=0;l<laneCount();l++){
   const y=wy(l*520),cy=wy((l+.5)*520);
   ctx.strokeStyle=l===lane?'#d3aa7150':'#8faaa626';
   if(l){ctx.setLineDash([8,12]);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();ctx.setLineDash([]);}
@@ -216,7 +220,7 @@ function drawOverview(){
  if(!snap)return;
  const cv=$('mpOverviewCanvas'),g=cv.getContext('2d');if(!g)return;
  g.fillStyle='#0b1b23';g.fillRect(0,0,1100,96);
- for(let l=0;l<3;l++){
+ for(let l=0;l<laneCount();l++){
   const y=3+l*31,p=snap.lanePressure[l]??.5;
   g.fillStyle=l===lane?'#314748':'#20303a';g.fillRect(0,y,1100,29);
   g.fillStyle='#86deda';g.fillRect(0,y+22,1100*p,5);
@@ -231,11 +235,13 @@ function drawOverview(){
  }
 }
 function onSnapshot(v){
- if(!v){snap=null;return;}if(v.width!==3300||v.height!==1560||!Array.isArray(v.players))return;
+ if(!v){snap=null;return;}if(v.width!==3300||![520,1560].includes(v.height)||!Array.isArray(v.players)||(v.lanes!==undefined&&v.lanes!==(v.mode==='classic'?1:3)))return;
  const fresh=!snap;
  if(!$('frontLobby').hidden)global.DesertLobby?.enterMatch?.();
  snap=v;lastSnapshotAt=performance.now();$('mpCommand').hidden=false;$('mpViewTabs').hidden=false;
- if(fresh)setView('base');
+ document.body.dataset.multiArena=v.mode==='classic'?'classic':'triple';
+ const battle=$('mpBattleCanvas');if(battle.height!==battleHeight())battle.height=battleHeight();
+ if(fresh||lane>=laneCount()){lane=laneCount()===1?0:1;repairLane=lane;gridKey='';setView('base');}
  const me=my(),side=me?.team??0;
  if(me){
   $('mpMyResources').textContent=me.cash+' CR';
@@ -256,10 +262,10 @@ function onSnapshot(v){
  if(marineHud){const info=(v.marineOps||[]).find(o=>o.uid===myId);marineHud.hidden=!info;
   if(info)marineHud.textContent='★ 해병 특성 | 긴빠이 '+info.loot+'회 (+'+info.lootedCR+' CR) | 자진입대 '+info.recruits+'회 · 이번 웨이브 '+info.waveRecruits+'/2 | 황룡 '+info.huangSpawns+'기 | 오도봉고 '+info.bongoCharges+'회';}
  const f=document.createDocumentFragment();
- for(let l=0;l<3;l++){
+ for(let l=0;l<laneCount();l++){
   const status=side===0?v.lanePressure[l]:1-v.lanePressure[l];
   const el=document.createElement('div');el.className=status<.42?'under-pressure':status>.58?'pushing':'';
-  el.textContent=LANES[l]+' · '+(status<.42?'열세':status>.58?'우세':'교착')+' / 아군 '+Math.ceil(v.cores[l][side])+' · 적군 '+Math.ceil(v.cores[l][1-side]);
+  el.textContent=laneName(l)+' · '+(status<.42?'열세':status>.58?'우세':'교착')+' / 아군 '+Math.ceil(v.cores[l][side])+' · 적군 '+Math.ceil(v.cores[l][1-side]);
   f.append(el);
  }
  $('mpLaneSummary').replaceChildren(f);
@@ -280,9 +286,10 @@ function practiceStart(){
  if(lobby)return message('온라인 방에서 나간 뒤 연습할 수 있습니다.');
  myId='local';
  const hard=global.DesertLobby?.aiDifficulty?.()==='hard';
- practice=E.create({mode:'pvp',size:1,aiDifficulty:hard?'hard':'normal',members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%10,bot:true}]});
- if(!hard){practice.state.players[1].buildings[1][1]=0;practice.state.players[1].buildings[1][17]=1;practice.state.players[1].cash-=160;}
- $('mpStateTag').textContent=hard?'하드 AI 연습':'오프라인 연습';message('3라인 오프라인 연습 · Firebase 연결 없이 작동합니다.');
+ const mode=$('mpMode').value==='classic'?'classic':'pvp';
+ practice=E.create({mode,size:1,aiDifficulty:hard?'hard':'normal',members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%10,bot:true}]});
+ if(!hard){const row=mode==='classic'?0:1;practice.state.players[1].buildings[row][1]=0;practice.state.players[1].buildings[row][17]=1;practice.state.players[1].cash-=160;}
+ $('mpStateTag').textContent=hard?'하드 AI 연습':'오프라인 연습';message((mode==='classic'?'클래식 1:1':'3라인')+' 오프라인 연습 · Firebase 연결 없이 작동합니다.');
  let last=performance.now();
  practiceTimer=setInterval(()=>{const now=performance.now();practice.tick(Math.min(.16,(now-last)/1000));last=now;onSnapshot(practice.snapshot('local'));},100);
  onSnapshot(practice.snapshot('local'));uiButtons();
@@ -292,6 +299,7 @@ async function leave(){
  else{await NET.leave();snap=null;$('mpCommand').hidden=true;}
  $('mpViewTabs').hidden=true;setView('base');
  lane=1;repairLane=1;role=0;demolish=false;gridKey='';cardsKey='';
+ delete document.body.dataset.multiArena;
  uiButtons();
 }
 function runClick(fn){return ()=>Promise.resolve().then(fn).catch(e=>message(global.IronFirebase?.message?.(e)||e.message||String(e)));}
@@ -303,7 +311,7 @@ function init(){
  $('mpRepairButton').addEventListener('click',()=>order({type:'tactic',kind:'repair',lane:repairLane}));
  $('mpRepairLanes').addEventListener('click',e=>{const button=e.target.closest('[data-repair-lane]');if(!button)return;repairLane=Number(button.dataset.repairLane);upgradeInfo();});
  function pickLane(id,scrollToBuild=false){
-  const next=Math.max(0,Math.min(2,Math.trunc(id)));
+  const next=Math.max(0,Math.min(laneCount()-1,Math.trunc(id)));
   if(next!==lane){
    lane=next;gridKey='';
    const viewport=$('mpBuildSwipe').querySelector('.mp-grid-viewport');
@@ -320,7 +328,7 @@ function init(){
  $('mpNextLane').addEventListener('click',()=>pickLane(lane+1));
  $('mpOverviewCanvas').addEventListener('click',e=>{
   const r=e.currentTarget.getBoundingClientRect();
-  pickLane(Math.floor((e.clientY-r.top)/r.height*3),true);
+  pickLane(Math.floor((e.clientY-r.top)/r.height*laneCount()),true);
  });
  $('mpBattleCanvas').addEventListener('click',e=>{
   if(!snap)return;
@@ -349,7 +357,7 @@ function init(){
   if(!start||e.pointerId!==start.id)return;
   const dx=e.clientX-start.x,dy=e.clientY-start.y;
   start=null;
-  if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.3)return;
+  if(laneCount()===1||Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.3)return;
   suppressClickUntil=performance.now()+500;
   pickLane(lane+(dx<0?1:-1));
  });
@@ -365,9 +373,13 @@ function init(){
  $('mpBuildGrid').addEventListener('click',e=>{const b=e.target.closest('[data-slot]');if(b)order({type:'build',lane,slot:Number(b.dataset.slot),role:demolish?null:role});});
  $('mpEco').addEventListener('click',()=>{setView('base',true);role=8;demolish=false;cardsKey='';unitCards();$('mpUnitCards').scrollIntoView?.({block:'nearest',behavior:'smooth'});});
  $('mpMode').addEventListener('change',()=>{
-  const coop=$('mpMode').value==='coop';$('mpSize').querySelector('option[value="1"]').disabled=coop;
+  const selected=$('mpMode').value,coop=selected==='coop',classic=selected==='classic';
+  $('mpSize').querySelector('option[value="1"]').disabled=coop;
   if(coop&&$('mpSize').value==='1')$('mpSize').value='2';
+  if(classic)$('mpSize').value='1';
+  $('mpSize').disabled=classic;
   $('mpTeam').disabled=coop;if(coop)$('mpTeam').value='0';
+  $('mpPractice').textContent=classic?'클래식 1:1 AI 연습':'오프라인 3라인 연습';
  });
  $('mpPractice').addEventListener('click',practiceStart);
  $('mpCreate').addEventListener('click',runClick(async()=>{
