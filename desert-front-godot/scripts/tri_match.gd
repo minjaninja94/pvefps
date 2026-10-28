@@ -99,6 +99,8 @@ func _init(match_mode: String = "classic", match_size: int = 1, members: Array =
 		p["buildings"] = building_rows
 		p["ai_plan"] = (players.size() + int(p["faction"])) % AI_PLANS.size()
 		p["ai_opening"] = 0
+		p["ai_target_role"] = -1
+		p["ai_last_threat"] = ""
 		players.append(p)
 	if mode == "coop":
 		for i in range(size):
@@ -114,7 +116,7 @@ func _init(match_mode: String = "classic", match_size: int = 1, members: Array =
 				"faction":faction, "skin":"default", "bot":true, "cash":360.0, "eco":0,
 				"eco_ready_at":0.0, "weapon":0, "armor":0, "nukes":1,
 				"barrage_cd":0.0, "mine_costs":{}, "buildings":buildings,
-				"ai_plan":i % 4, "ai_opening":0
+				"ai_plan":i % 4, "ai_opening":0, "ai_target_role":-1, "ai_last_threat":""
 			})
 
 func player_for(uid: String) -> Dictionary:
@@ -360,71 +362,153 @@ func _population(lane: int, team: int) -> int:
 	return sum
 
 func _ai_buy(p: Dictionary) -> void:
-	var weights: Array = AI_PLANS[int(p["ai_plan"])]["weights"]
-	var opening: Array = AI_PLANS[int(p["ai_plan"])]["opening"]
-	var buys := 0
-	while buys < (12 if difficulty == "hard" else 3):
-		var role := 0
-		var preferred_lane := 0
+	# Balance-compatible version of DesertHardAI: bank for a committed purchase,
+	# scout actual visible enemies, and counter spam without cheating cash.
+	var plan: Dictionary = AI_PLANS[int(p["ai_plan"])]
+	var opening: Array = plan["opening"]
+	for _buy in range(12 if difficulty == "hard" else 3):
+		var counts: Array[int] = [0,0,0,0,0,0,0,0]
+		var existing_per_lane: Array[int] = []
+		for lane in range(lanes):
+			var built := 0
+			for r in p["buildings"][lane]:
+				if int(r) >= 0 and int(r) < 8:
+					counts[int(r)] += 1
+					built += 1
+			existing_per_lane.append(built)
+		var army := _count_builds(p)
+		var visible: Array[Dictionary] = []
+		var threats: Array[int] = [0,0,0,0,0,0,0,0]
+		var air := 0
+		var armored := 0
+		var invaded := false
+		for u in units:
+			if int(u["team"]) == int(p["team"]) or not _scouted(u,int(p["team"])):
+				continue
+			visible.append(u)
+			var role: int = u["role"]
+			var strength := 20 if int(u.get("hero_count",1)) == 20 else 1
+			threats[role] += strength
+			if str(u["stats"]["kind"]) == "air":
+				air += strength
+			if role == 3 or role == 6 and str(u["stats"]["kind"]) == "ground":
+				armored += strength
+			if (float(u["x"]) <= 580.0 if int(p["team"]) == 0 else float(u["x"]) >= WIDTH-580.0):
+				invaded = true
+		var role := -1
+		var pending: int = p.get("ai_target_role",-1)
 		if int(p["ai_opening"]) < opening.size():
 			role = int(opening[int(p["ai_opening"])])
 		else:
-			var threat_air := 0
-			var threat_armor := 0
-			var threat_count: Array = [0,0,0,0,0,0,0,0]
-			for u in units:
-				if int(u["team"]) == int(p["team"]) or not _scouted(u,int(p["team"])):
-					continue
-				threat_count[int(u["role"])] += 1
-				if str(u["stats"]["kind"]) == "air":
-					threat_air += 1
-				if int(u["role"]) == 3:
-					threat_armor += 1
-			var counts: Array = [0,0,0,0,0,0,0,0]
-			for lane in range(lanes):
-				for r in p["buildings"][lane]:
-					if int(r) >= 0 and int(r) < 8:
-						counts[int(r)] += 1
-			var score := -INF
+			var concentrated := false
+			var dominant := 0
+			var seen := 0
 			for i in range(8):
-				var weight := float(weights[i])
-				if i == 4 and threat_air >= 2:
-					weight += threat_air
-				if i == 2 and threat_armor >= 2:
-					weight += threat_armor
-				if difficulty == "hard" and threat_count[i] > 4:
-					weight += 1.0
-				var value := weight / float(counts[i]+2)
-				if value > score:
-					score = value
-					role = i
-			var min_build := 100000
-			for lane in range(lanes):
-				var built := 0
-				for r in p["buildings"][lane]:
-					if int(r) >= 0 and int(r) < 8:
-						built += 1
-				if built < min_build:
-					min_build = built
-					preferred_lane = lane
-		if int(p["eco"]) < mini(7,1+int(seconds/65.0)) and seconds>=float(p["eco_ready_at"]) and _count_builds(p)>=2+int(p["eco"])*2 and not _enemy_invading(int(p["team"])):
-			role = 8
+				seen += threats[i]
+				if threats[i] > threats[dominant]:
+					dominant = i
+			concentrated = seen >= 6 and float(threats[dominant])/float(maxi(1,seen)) >= 0.65
+			var counters: Array = [[1,3],[3,5],[0,1],[2,6],[2,3],[0,6],[4,1],[0,5]][dominant]
+			if dominant == 3 and int(p["faction"]) in [3,4,6,7]:
+				counters = [2,3]
+			var threat_key := "%d:%d:%d:%d" % [air>=2, armored>=2, dominant if concentrated else -1, threats[dominant] if concentrated else 0]
+			if str(p.get("ai_last_threat","")) != threat_key:
+				p["ai_last_threat"] = threat_key
+				p["ai_target_role"] = -1
+				pending = -1
+			var due := int(p["eco"]) < mini(7,1+int(seconds/65.0)) and army >= 2+int(p["eco"])*2 and seconds >= float(p["eco_ready_at"])
+			var uncovered_air := air >= 2 and float(counts[4])+float(counts[1])*0.35 < float(air)*0.4
+			var uncovered_armor := armored >= 2 and float(counts[2]) < float(armored)*0.35
+			var covered := not concentrated or (counts[int(counters[0])]+counts[int(counters[1])] >= ceili(float(army)*0.6))
+			if due and not invaded and not uncovered_air and not uncovered_armor and covered:
+				role = 8
+			else:
+				var weights: Array = plan["weights"].duplicate()
+				if army < 4:
+					weights[7] = 0.0
+				if army < 3:
+					weights[5] = float(weights[5])*0.35
+				if seconds > 120.0:
+					weights[5] += 2.0
+					weights[7] += 1.5
+					weights[3] += 1.0
+				if air >= 2:
+					weights[4] += minf(7.0,float(air)*1.2)
+					weights[1] += 2.0
+				if armored >= 2:
+					weights[2] += minf(6.0,float(armored))
+				if invaded:
+					weights[0] += 2.0
+					weights[1] += 3.0
+					weights[3] += 2.0
+					weights[5] *= 0.5
+				if concentrated:
+					var weight_sum := 0.0
+					for weight in weights:
+						weight_sum += float(weight)
+					for i in range(8):
+						weights[i] = float(weights[i])/maxf(0.001,weight_sum)*0.3
+					weights[int(counters[0])] += 0.45
+					weights[int(counters[1])] += 0.25
+				var total := 0.0
+				for weight in weights:
+					total += float(weight)
+				var options: Array = []
+				for i in range(8):
+					if float(weights[i]) > 0.0:
+						options.append({"role":i,"score":float(weights[i])/maxf(0.001,total)*float(army+2)-float(counts[i])})
+				options.sort_custom(func(a: Dictionary,b: Dictionary)->bool:return float(a["score"])>float(b["score"]))
+				if invaded:
+					# Unlike a normal planned purchase, a live base invasion can buy a cheap emergency counter.
+					for option in options:
+						if float(p["cash"]) >= float(Roster.COST[int(option["role"])]):
+							role = int(option["role"])
+							break
+				else:
+					role = pending if pending >= 0 else (int(options[0]["role"]) if not options.is_empty() else -1)
+					p["ai_target_role"] = role
+		if role < 0:
+			break
 		var price := eco_price(int(p["eco"])) if role == 8 else int(Roster.COST[role])
 		if float(p["cash"]) < price:
+			break # Reserve cash for next planned unit instead of endlessly buying cheap infantry.
+		var preferred_lane := 0
+		var smallest := INF
+		for lane in range(lanes):
+			var free := false
+			for r in p["buildings"][lane]:
+				if int(r) == -1:
+					free = true
+					break
+			if not free:
+				continue
+			# Spread into threatened lines while preserving some momentum on the current front.
+			var pressure := 0
+			for u in visible:
+				if int(u["lane"]) == lane:
+					pressure += 1
+			var value := float(existing_per_lane[lane]) - minf(5.0,pressure*0.4)
+			if value < smallest:
+				smallest = value
+				preferred_lane = lane
+		if smallest == INF:
 			break
-		var available := -1
-		for slot in range(SLOTS):
-			if int(p["buildings"][preferred_lane][slot]) == -1:
-				available = slot
+		var slot := -1
+		for i in range(SLOTS):
+			if int(p["buildings"][preferred_lane][i]) == -1:
+				slot = i
 				break
-		if available < 0:
+		if slot < 0:
 			break
-		var result := _build(p,preferred_lane,available,role)
+		var result := _build(p,preferred_lane,slot,role)
 		if not bool(result["ok"]):
 			break
-		buys += 1
-		if role != 8 and int(p["ai_opening"]) < opening.size():
-			p["ai_opening"] += 1
+		if role == 8:
+			p["ai_target_role"] = -1
+		else:
+			p["ai_target_role"] = -1
+			if int(p["ai_opening"]) < opening.size():
+				p["ai_opening"] += 1
 
 func _count_builds(p: Dictionary) -> int:
 	var count := 0
@@ -444,6 +528,8 @@ func _distance(a: Dictionary,b: Dictionary) -> float:
 	return Vector2(float(a["x"])-float(b["x"]),float(a["y"])-float(b["y"])).length()
 
 func _damage(v: Dictionary, amount: float, attacker) -> void:
+	if float(v.get("hp",0.0)) <= 0.0:
+		return
 	var f: int = v["faction"]
 	var d: Dictionary = v["stats"]
 	var mult := 1.0
@@ -496,8 +582,10 @@ func _damage(v: Dictionary, amount: float, attacker) -> void:
 			a["last_ink"] = seconds
 			v["ink_until"] = maxf(float(v.get("ink_until",0.0)), seconds + 2.5)
 			_effect("ink",v["x"],v["y"],int(a["team"]),0.6)
-		if float(v["hp"]) <= 0.0 and int(a["faction"]) == 3:
-			_marine_spoils(a,v)
+		if float(v["hp"]) <= 0.0 and not bool(v.get("killed",false)):
+			v["killed"] = true
+			if int(a["faction"]) == 3:
+				_marine_spoils(a,v)
 
 func _marine_spoils(a: Dictionary,v: Dictionary) -> void:
 	if bool(a.get("guardian",false)) or bool(a.get("conscripted",false)) or bool(v.get("conscripted",false)) or bool(v.get("hatchling",false)) or bool(v.get("guardian",false)):
@@ -519,7 +607,10 @@ func _marine_spoils(a: Dictionary,v: Dictionary) -> void:
 		copy["uid"] = a["uid"]
 		copy["team"] = a["team"]
 		copy["skin"] = a.get("skin","default")
-		copy["hp"] = maxf(1.0,float(v["max_hp"]) * 0.1)
+		copy["max_hp"] = float(v["max_hp"]) / float(maxi(1,int(v.get("hero_count",1))))
+		copy["hp"] = maxf(1.0,float(copy["max_hp"]) * 0.1)
+		copy["radius"] = float(v["radius"]) * (0.5 if int(v.get("hero_count",1)) == 20 else 1.0)
+		copy["killed"] = false
 		copy["conscripted"] = true
 		copy["hero_count"] = 1
 		copy["action"] = "move"
@@ -594,7 +685,7 @@ func _guardian_heal(u: Dictionary, amount: float) -> float:
 
 func _brood_spawn(a: Dictionary) -> void:
 	var uid := str(a["uid"])
-	if int(_brood_per_wave.get(uid,0)) >= 10 or int(_brood_total.get(uid,0)) >= 150 or seconds - float(a["last_brood"]) < 11.0:
+	if int(_brood_per_wave.get(uid,0)) >= 10 or seconds - float(a["last_brood"]) < 11.0:
 		return
 	var brood_count := 0
 	for u in units:
@@ -628,9 +719,9 @@ func _tick_units(dt: float) -> void:
 		if float(u["hp"]) <= 0.0:
 			continue
 		var faction: int = u["faction"]
-		if faction == 8:
+		if faction == 8 and not bool(u.get("hatchling",false)):
 			u["hp"] = minf(float(u["max_hp"]),float(u["hp"])+float(u["max_hp"])*0.0006*dt)
-		elif faction == 7:
+		elif faction == 7 and not bool(u.get("hatchling",false)):
 			u["hp"] = minf(float(u["max_hp"]),float(u["hp"])+float(u["max_hp"])*0.0015*dt)
 		u["cool"] = maxf(0.0,float(u["cool"])-dt)
 		u["action_ttl"] = maxf(0.0,float(u.get("action_ttl",0.0))-dt)
