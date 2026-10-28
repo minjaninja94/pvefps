@@ -43,7 +43,7 @@ const fakeEl=id=>{
  return elements.get(id);
 };
 const fakeDoc={readyState:'complete',body:{dataset:{},classList:{add(){},remove(){}}},getElementById:fakeEl,querySelectorAll(){return []},querySelector(){return null}};
-const modelWindow={DesertRoster:engineWin.DesertRoster,IsoWorld:{portrait(){return {}},frame(){return {}}},addEventListener(k,fn){listeners[k]=fn;}};
+const modelWindow={DesertRoster:{...engineWin.DesertRoster,refreshChoices(){}},IsoWorld:{portrait(){return {}},frame(){return {}}},addEventListener(k,fn){listeners[k]=fn;}};
 vm.runInNewContext(read('front-lobby.js'),{window:modelWindow,document:fakeDoc,localStorage:{getItem(k){return store.get(k)||null},setItem(k,v){store.set(k,v)}},console,Math,Number,String,Object,Array,Map,Set,JSON,performance:{now:()=>0}},{timeout:10000});
 const lobby=modelWindow.DesertLobby;
 assert.equal(lobby.levelFromXP(0).level,1);
