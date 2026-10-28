@@ -14,7 +14,7 @@ const fakeMath=Object.create(Math);fakeMath.random=rand;
 const sandbox={document,window:{addEventListener(){}},requestAnimationFrame(fn){queue.push(fn);},console:{log(){}},Math:fakeMath,Number,String,Object,Array,Map,Set,Date};
 for(const name of ['unit-consolidation.js','defense-guardian.js','hard-ai.js'])
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,name),'utf8'),sandbox,{timeout:10000,filename:name});
-vm.runInNewContext(source.replace('initFactions();wire();reset();','window.__sim={state:()=>state,reset,tick,wave,getDef,aiInitialBuild,createUnit,calcDamage,broodLay,marineSpoils,armyPopulation,FACTIONS};initFactions();wire();reset();'),sandbox,{timeout:10000,filename:'game-v2.js'});
+vm.runInNewContext(source.replace('initFactions();wire();reset();','window.__sim={state:()=>state,reset,tick,wave,getDef,aiInitialBuild,createUnit,calcDamage,broodLay,marineSpoils,armyPopulation,hardResearch,sideWeaponMultiplier,FACTIONS};initFactions();wire();reset();'),sandbox,{timeout:10000,filename:'game-v2.js'});
 const game=sandbox.window.__sim;
 assert.equal(game.getDef(2,0).cost,150,'benchmark must use live armor breaker cost');
 assert.equal(game.getDef(5,0).cost,245,'benchmark must use live artillery cost');
@@ -46,6 +46,20 @@ assert.equal(captive.heroCount,1,'conscript must not retain defeated hero count'
 assert.equal(captive.maxHP,300,'capture restores the individual soldier maximum health');
 assert.equal(captive.hitRadius,26,'capture restores the individual soldier hitbox');
 assert.ok(captive.hp<=30,'capture still starts at ten-percent health');
+// Hard AI must research using actual credits and the same +8%/+9% effects as the player.
+game.reset();
+test=game.state();test.faction=1;test.enemyFaction=0;test.aiDifficulty='hard';test.wave=5;test.enemyCash=400;
+for(let i=0;i<6;i++)test.enemyBuilt[i]=0;
+game.createUnit(1,0,3);
+const defender=test.units[0],priorHP=defender.maxHP;
+assert.equal(game.hardResearch(),true);
+assert.equal(test.enemyWeapon,1);
+assert.equal(test.enemyCash,200,'hard AI weapon research costs exactly 200 CR');
+assert.ok(Math.abs(game.sideWeaponMultiplier(1)-1.08)<1e-9,'hard AI weapon research grants +8%');
+assert.equal(game.hardResearch(),true);
+assert.equal(test.enemyArmor,1);
+assert.equal(test.enemyCash,10,'hard AI armor research costs exactly 190 CR');
+assert.ok(Math.abs(defender.maxHP/priorHP-1.09)<1e-9,'hard AI armor research applies +9% HP to existing units');
 const combos=[
  [0,1,2,3,4,5,6,7],[0,0,1,2,3,4,5,7],[0,1,1,2,3,5,6,7],
  [0,1,2,2,3,4,5,7],[0,1,2,3,3,4,6,7],[0,1,2,3,4,5,5,7]
