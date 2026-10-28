@@ -74,14 +74,15 @@ func _draw_unit(u: Dictionary) -> void:
 	var art_size := _sprite_size(role)
 	var tint := Color(Roster.FACTION_COLORS[faction])
 	draw_ellipse_shadow(pos, art_size)
-	var tex := Sprites.atlas(faction, role)
+	var skin := str(u.get("skin","default"))
+	var tex := Sprites.skin_atlas(faction, role, skin)
 	if tex:
 		var action := str(u.get("action", "move"))
 		var phase := _anim_seconds + float(int(u["id"]) % 8) * 0.067
 		if float(u.get("action_ttl", 0.0)) > 0:
 			phase = _anim_seconds
 		var frame: int = Sprites.pose(action, phase)
-		_draw_sprite_frame(tex, pos, art_size, frame, team == 1, Color.WHITE)
+		_draw_sprite_frame(tex, pos, art_size, frame, team == 1, Color.WHITE, Sprites.frame_region(faction,role,frame,skin))
 	else:
 		_draw_marker_fallback(pos, art_size, role, tint, team)
 	var hp_ratio: float = clampf(float(u["hp"]) / maxf(1.0, float(u["max_hp"])), 0.0, 1.0)
@@ -97,8 +98,7 @@ func draw_ellipse_shadow(pos: Vector2, art_size: float) -> void:
 	draw_circle(Vector2.ZERO, art_size * 0.36, Color(0.0, 0.0, 0.0, 0.28))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-func _draw_sprite_frame(tex: Texture2D, pos: Vector2, art_size: float, frame: int, enemy: bool, modulate: Color) -> void:
-	var src := Rect2(frame * Sprites.CELL, 0, Sprites.CELL, Sprites.CELL)
+func _draw_sprite_frame(tex: Texture2D, pos: Vector2, art_size: float, frame: int, enemy: bool, modulate: Color, src: Rect2) -> void:
 	# Right-side forces look toward the left; do not mirror the original atlas itself.
 	draw_set_transform(pos, 0.0, Vector2(-1, 1) if enemy else Vector2.ONE)
 	draw_texture_rect_region(
@@ -119,10 +119,13 @@ func _draw_marker_fallback(pos: Vector2, art_size: float, role: int, tint: Color
 
 func _draw_death(dead: Dictionary) -> void:
 	var pos := _screen_position(float(dead["x"]), float(dead["y"]))
-	var tex := Sprites.atlas(int(dead["faction"]), int(dead["role"]))
+	var f: int = int(dead["faction"])
+	var r: int = int(dead["role"])
+	var skin := str(dead.get("skin","default"))
+	var tex := Sprites.skin_atlas(f,r,skin)
 	var duration: float = clampf(float(dead.get("time", 0.0)), 0.0, 0.75)
 	if tex:
-		_draw_sprite_frame(tex, pos, _sprite_size(int(dead["role"])), 7, int(dead["team"]) == 1, Color(1, 1, 1, duration / 0.75))
+		_draw_sprite_frame(tex, pos, _sprite_size(r), 7, int(dead["team"]) == 1, Color(1, 1, 1, duration / 0.75), Sprites.frame_region(f,r,7,skin))
 
 func _draw_core(pos: Vector2, tint: Color, side: int) -> void:
 	draw_rect(Rect2(pos - Vector2(19, 28), Vector2(38, 56)), tint.darkened(0.65), true)

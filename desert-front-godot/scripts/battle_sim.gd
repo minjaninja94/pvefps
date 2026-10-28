@@ -18,6 +18,8 @@ var death_effects: Array[Dictionary] = []
 var next_id := 1
 var player_faction := 0
 var enemy_faction := 1
+var player_skin := "default"
+var enemy_skin := "default"
 var ended := false
 var winner := -1
 var message := "생산 슬롯을 선택해 유닛을 배치하세요."
@@ -26,9 +28,11 @@ var _ai_tick := 0.0
 var versus_player := false
 var _elapsed_wave := 0.0
 
-func _init(faction: int = 0, rival: int = 1) -> void:
+func _init(faction: int = 0, rival: int = 1, first_skin: String = "default", second_skin: String = "default") -> void:
 	player_faction = clampi(faction, 0, 9)
 	enemy_faction = clampi(rival, 0, 9)
+	player_skin = first_skin if first_skin in ["default","moe"] else "default"
+	enemy_skin = second_skin if second_skin in ["default","moe"] else "default"
 	for side in range(2):
 		var slots: Array[int] = []
 		slots.resize(SLOTS)
@@ -115,6 +119,7 @@ func snapshot() -> Dictionary:
 		"builds": [builds[0].duplicate(), builds[1].duplicate()],
 		"units": units.duplicate(true), "death_effects": death_effects.duplicate(true), "ended": ended, "winner": winner,
 		"message": message, "faction0": player_faction, "faction1": enemy_faction,
+		"skin0": player_skin, "skin1": enemy_skin,
 		"elapsed_wave": _elapsed_wave
 	}
 
@@ -144,6 +149,8 @@ func load_snapshot(data: Dictionary) -> void:
 	message = str(data.get("message", message))
 	player_faction = int(data.get("faction0", player_faction))
 	enemy_faction = int(data.get("faction1", enemy_faction))
+	player_skin = str(data.get("skin0", player_skin))
+	enemy_skin = str(data.get("skin1", enemy_skin))
 	_elapsed_wave = float(data.get("elapsed_wave", _elapsed_wave))
 
 func advance(dt: float) -> void:
@@ -190,6 +197,7 @@ func _spawn(team: int, slot: int, role: int) -> void:
 	var y: float = 265.0 + float((int(slot / 15) * 11 + (slot % 15) * 21) % 196) - 98.0
 	units.append({
 		"id": next_id, "team": team, "role": role, "faction": faction,
+		"skin": player_skin if team == 0 else enemy_skin,
 		"x": x, "y": y, "hp": hp, "max_hp": hp, "cool": 0.15 * float(slot % 4),
 		"stats": stats, "action": "spawn", "action_ttl": 0.3
 	})
@@ -315,7 +323,7 @@ func _remove_dead() -> void:
 			alive.append(u)
 		else:
 			death_effects.append({
-				"faction": int(u["faction"]), "role": int(u["role"]),
+				"faction": int(u["faction"]), "role": int(u["role"]), "skin": u.get("skin","default"),
 				"team": int(u["team"]), "x": float(u["x"]),
 				"y": float(u["y"]), "time": 0.75
 			})

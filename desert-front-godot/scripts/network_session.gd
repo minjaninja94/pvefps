@@ -15,6 +15,9 @@ var phase := "idle" # idle, lobby, playing
 var faction := 0
 var host_faction := 0
 var guest_faction := 1
+var host_skin := "default"
+var guest_skin := "default"
+var skin := "default"
 var guest_ready := false
 var guest_id := 0
 var _sim
@@ -43,7 +46,7 @@ func _process(dt: float) -> void:
 		_snapshot_timer = 0.0
 		_send_snapshot()
 
-func host_game(selected_faction: int) -> bool:
+func host_game(selected_faction: int, selected_skin: String = "default") -> bool:
 	leave()
 	var peer := ENetMultiplayerPeer.new()
 	var err := peer.create_server(PORT, 1)
@@ -55,13 +58,16 @@ func host_game(selected_faction: int) -> bool:
 	faction = clampi(selected_faction, 0, 9)
 	host_faction = faction
 	guest_faction = (faction + 1) % 10
+	skin = selected_skin if selected_skin in ["default","moe"] else "default"
+	host_skin = skin
+	guest_skin = "default"
 	_server = peer
 	multiplayer.multiplayer_peer = peer
 	status_changed.emit("방 개설: UDP %d · 참가자 연결 대기" % PORT)
 	lobby_changed.emit(false, false)
 	return true
 
-func join_game(address: String, selected_faction: int) -> bool:
+func join_game(address: String, selected_faction: int, selected_skin: String = "default") -> bool:
 	leave()
 	var ip := address.strip_edges()
 	if ip.is_empty():
@@ -75,6 +81,8 @@ func join_game(address: String, selected_faction: int) -> bool:
 	phase = "lobby"
 	faction = clampi(selected_faction, 0, 9)
 	guest_faction = faction
+	skin = selected_skin if selected_skin in ["default","moe"] else "default"
+	guest_skin = skin
 	_server = peer
 	multiplayer.multiplayer_peer = peer
 	status_changed.emit("접속 시도: %s:%d" % [ip, PORT])
@@ -107,7 +115,7 @@ func _relay_settings() -> Dictionary:
 		return {}
 	return {"app_id": app_id, "address": address}
 
-func _open_relay(intent: String, code: String, public: bool, chosen_faction: int) -> bool:
+func _open_relay(intent: String, code: String, public: bool, chosen_faction: int, selected_skin: String = "default") -> bool:
 	var settings := _relay_settings()
 	if settings.is_empty():
 		return false
@@ -117,6 +125,10 @@ func _open_relay(intent: String, code: String, public: bool, chosen_faction: int
 	_relay_public = public
 	faction = clampi(chosen_faction, 0, 9)
 	host_faction = faction
+	guest_faction = faction
+	skin = selected_skin if selected_skin in ["default","moe"] else "default"
+	host_skin = skin if intent == "host" else "default"
+	guest_skin = skin if intent == "join" else "default"
 	mode = "browse" if intent == "browse" else ("host" if intent == "host" else "client")
 	phase = "lobby"
 	_relay_peer = ClassDB.instantiate("NodeTunnelPeer")
@@ -132,13 +144,13 @@ func _open_relay(intent: String, code: String, public: bool, chosen_faction: int
 	status_changed.emit("온라인 릴레이 접속 중 (IP/포트 설정 불필요)")
 	return true
 
-func host_online(selected_faction: int, public: bool = true) -> bool:
-	return _open_relay("host", "", public, selected_faction)
+func host_online(selected_faction: int, public: bool = true, selected_skin: String = "default") -> bool:
+	return _open_relay("host", "", public, selected_faction, selected_skin)
 
 func browse_online() -> bool:
 	return _open_relay("browse", "", true, 0)
 
-func join_online(room_code: String, selected_faction: int) -> bool:
+func join_online(room_code: String, selected_faction: int, selected_skin: String = "default") -> bool:
 	var code := room_code.strip_edges()
 	if code.is_empty() or code.length() > 128:
 		status_changed.emit("유효한 방 코드를 입력하세요.")
@@ -148,9 +160,11 @@ func join_online(room_code: String, selected_faction: int) -> bool:
 		_relay_join_code = code
 		mode = "client"
 		faction = clampi(selected_faction, 0, 9)
+		skin = selected_skin if selected_skin in ["default","moe"] else "default"
+		guest_skin = skin
 		status_changed.emit("온라인 방 참가 중: %s" % code)
 		return _relay_peer.call("join_room", code) == OK
-	return _open_relay("join", code, false, selected_faction)
+	return _open_relay("join", code, false, selected_faction, selected_skin)
 
 func _relay_authenticated() -> void:
 	if _relay_peer == null:
@@ -201,7 +215,7 @@ func _relay_room_connected() -> void:
 
 func _send_online_hello() -> void:
 	if mode == "client" and phase == "lobby":
-		remote_client_hello.rpc_id(1, faction)
+		remote_client_hello.rpc_id(1, faction, skin)
 
 func _relay_error(message: String) -> void:
 	status_changed.emit("온라인 접속 오류: %s" % message.left(180))
@@ -253,7 +267,7 @@ func _peer_disconnected(id: int) -> void:
 
 func _connected_to_server() -> void:
 	if mode == "client":
-		remote_client_hello.rpc_id(1, faction)
+		remote_client_hello.rpc_id(1, faction, skin)
 		status_changed.emit("연결 성공. 방장이 참가를 확인하는 중입니다.")
 		lobby_changed.emit(false, true)
 
@@ -269,22 +283,25 @@ func _server_disconnected() -> void:
 		status_changed.emit("방장과 연결이 끊어졌습니다.")
 
 @rpc("any_peer", "call_remote", "reliable")
-func remote_client_hello(selected_faction: int) -> void:
+func remote_client_hello(selected_faction: int, selected_skin: String = "default") -> void:
 	if mode != "host" or phase != "lobby":
 		return
-	if multiplayer.get_remote_sender_id() != guest_id or selected_faction < 0 or selected_faction >= 10:
+	if multiplayer.get_remote_sender_id() != guest_id or selected_faction < 0 or selected_faction >= 10 or selected_skin not in ["default","moe"]:
 		return
 	guest_faction = selected_faction
+	guest_skin = selected_skin
 	guest_ready = false
-	remote_lobby.rpc_id(guest_id, host_faction, guest_faction, false)
+	remote_lobby.rpc_id(guest_id, host_faction, guest_faction, false, host_skin, guest_skin)
 	lobby_changed.emit(false, true)
 
 @rpc("authority", "call_remote", "reliable")
-func remote_lobby(f0: int, f1: int, ready: bool) -> void:
+func remote_lobby(f0: int, f1: int, ready: bool, first_skin: String = "default", second_skin: String = "default") -> void:
 	if mode != "client" or phase != "lobby":
 		return
 	host_faction = clampi(f0, 0, 9)
 	guest_faction = clampi(f1, 0, 9)
+	host_skin = first_skin if first_skin in ["default","moe"] else "default"
+	guest_skin = second_skin if second_skin in ["default","moe"] else "default"
 	guest_ready = ready
 	status_changed.emit("방 참가 완료. 준비 완료를 선택하세요.")
 
@@ -307,16 +324,18 @@ func start_match() -> bool:
 		status_changed.emit("참가자 연결 및 준비 완료가 필요합니다.")
 		return false
 	phase = "playing"
-	remote_start.rpc_id(guest_id, host_faction, guest_faction)
+	remote_start.rpc_id(guest_id, host_faction, guest_faction, host_skin, guest_skin)
 	match_begins.emit(host_faction, guest_faction)
 	status_changed.emit("1:1 대전 시작 — 방장 권한 전투 처리")
 	return true
 
 @rpc("authority", "call_remote", "reliable")
-func remote_start(f0: int, f1: int) -> void:
+func remote_start(f0: int, f1: int, first_skin: String = "default", second_skin: String = "default") -> void:
 	if mode != "client" or phase != "lobby":
 		return
 	phase = "playing"
+	host_skin = first_skin if first_skin in ["default","moe"] else "default"
+	guest_skin = second_skin if second_skin in ["default","moe"] else "default"
 	match_begins.emit(clampi(f0, 0, 9), clampi(f1, 0, 9))
 	status_changed.emit("1:1 대전 진행 중")
 
