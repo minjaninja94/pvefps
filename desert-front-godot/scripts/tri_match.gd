@@ -9,6 +9,7 @@ const WAVE_SECONDS := 24.0
 const CORE_CLASSIC := 7200.0
 const CORE_TRI := 2500.0
 const TOWER_HP := 1250.0
+const TOWER_CLASSIC_HP := 1700.0
 const FORWARD_HP := 1000.0
 const GUARDIAN_REWARD := 150
 const MAX_UNIT_POP := 75
@@ -61,7 +62,7 @@ func _init(match_mode: String = "classic", match_size: int = 1, members: Array =
 	difficulty = "hard" if ai == "hard" else "normal"
 	for _i in range(lanes):
 		cores.append([CORE_CLASSIC, CORE_CLASSIC] if lanes == 1 else [CORE_TRI, CORE_TRI])
-		turrets.append([TOWER_HP, TOWER_HP])
+		turrets.append([TOWER_CLASSIC_HP,TOWER_CLASSIC_HP] if lanes == 1 else [TOWER_HP,TOWER_HP])
 		forward_hp.append([FORWARD_HP, FORWARD_HP])
 		forward_claimed.append([false, false])
 		turret_cool.append([0.0, 0.0])
@@ -195,10 +196,10 @@ func _upgrade(p: Dictionary, kind: String) -> Dictionary:
 func _tactic(p: Dictionary, kind: String, lane: int) -> Dictionary:
 	var team: int = p["team"]
 	if kind == "repair":
-		if lane < 0 or lane >= lanes or float(turrets[lane][team]) >= TOWER_HP or float(p["cash"]) < 180.0:
+		if lane < 0 or lane >= lanes or float(turrets[lane][team]) >= (TOWER_CLASSIC_HP if lanes == 1 else TOWER_HP) or float(p["cash"]) < 180.0:
 			return {"ok":false,"reason":"수리 불가 / 180 CR 필요"}
 		p["cash"] -= 180.0
-		turrets[lane][team] = minf(TOWER_HP,float(turrets[lane][team]) + 310.0)
+		turrets[lane][team] = minf(TOWER_CLASSIC_HP if lanes == 1 else TOWER_HP,float(turrets[lane][team]) + 310.0)
 		_effect("repair",215.0 if team == 0 else WIDTH-215.0,(lane + 0.5) * LANE_HEIGHT,team,0.9)
 		return {"ok":true}
 	if kind == "nuke":
@@ -347,7 +348,7 @@ func _wave() -> void:
 				if int(p["team"]) != team:
 					continue
 				for slot in range(SLOTS):
-					if count >= MAX_UNIT_POP:
+					if count >= (220 if lanes == 1 else MAX_UNIT_POP):
 						break
 					var role: int = p["buildings"][lane][slot]
 					if role >= 0 and role < 8:
