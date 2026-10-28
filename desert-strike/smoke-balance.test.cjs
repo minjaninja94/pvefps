@@ -12,7 +12,9 @@ const document={getElementById:el,createElement(){return {width:0,height:0,getCo
 let seed=1;function rand(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;}
 const fakeMath=Object.create(Math);fakeMath.random=rand;
 const sandbox={document,window:{addEventListener(){}},requestAnimationFrame(fn){queue.push(fn);},console:{log(){}},Math:fakeMath,Number,String,Object,Array,Map,Set,Date};
-vm.runInNewContext(source.replace('initFactions();wire();reset();','window.__sim={state:()=>state,reset,tick,wave,getDef,aiInitialBuild,createUnit,calcDamage,FACTIONS};initFactions();wire();reset();'),sandbox,{timeout:10000,filename:'game-v2.js'});
+for(const name of ['unit-consolidation.js','defense-guardian.js','hard-ai.js'])
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,name),'utf8'),sandbox,{timeout:10000,filename:name});
+vm.runInNewContext(source.replace('initFactions();wire();reset();','window.__sim={state:()=>state,reset,tick,wave,getDef,aiInitialBuild,createUnit,calcDamage,broodLay,marineSpoils,armyPopulation,FACTIONS};initFactions();wire();reset();'),sandbox,{timeout:10000,filename:'game-v2.js'});
 const game=sandbox.window.__sim;
 assert.equal(game.getDef(2,0).cost,150,'benchmark must use live armor breaker cost');
 assert.equal(game.getDef(5,0).cost,245,'benchmark must use live artillery cost');
@@ -20,6 +22,30 @@ assert.equal(game.FACTIONS.length,10,'full faction roster must participate');
 const specialAttacker={role:6,faction:4,heroCount:1};
 const normalTank={role:3,faction:0,hp:1000,maxHP:1000};
 assert.ok(game.calcDamage(6,normalTank,100,specialAttacker)<75,'ground cavalry must not inherit the flyer anti-tank bonus');
+// A compacted hero is twenty troops, but its offspring and captives must be single, fragile soldiers.
+game.reset();
+let test=game.state();
+test.faction=1;test.enemyFaction=0;test.elapsed=30;
+const hero={uid:1,side:0,faction:1,role:0,hp:4600,maxHP:4600,heroCount:20,x:800,y:200,hitRadius:34};
+const target={uid:2,side:1,faction:0,role:3,hp:400,maxHP:400,x:830,y:200};
+test.units.push(hero,target);
+game.broodLay(hero,target,()=>0);
+const baby=test.units.find(u=>u.isHatchling);
+assert.ok(baby,'hero must still reproduce');
+assert.equal(baby.heroCount,1,'offspring must not inherit twenty-unit hero count');
+assert.equal(game.armyPopulation(0),21,'20-unit parent plus one single offspring costs 21 supply');
+game.reset();
+test=game.state();test.faction=0;test.enemyFaction=3;test.elapsed=30;
+const attacker={uid:3,side:1,faction:3,role:0,hp:250,maxHP:250,x:900,y:200};
+const defeated={uid:4,side:0,faction:0,role:3,hp:0,maxHP:6000,heroCount:20,hitRadius:52,x:915,y:200};
+test.units.push(attacker,defeated);
+game.marineSpoils(defeated,attacker,()=>0);
+const captive=test.units.find(u=>u.conscripted);
+assert.ok(captive,'marine captures defeated aggregate');
+assert.equal(captive.heroCount,1,'conscript must not retain defeated hero count');
+assert.equal(captive.maxHP,300,'capture restores the individual soldier maximum health');
+assert.equal(captive.hitRadius,26,'capture restores the individual soldier hitbox');
+assert.ok(captive.hp<=30,'capture still starts at ten-percent health');
 const combos=[
  [0,1,2,3,4,5,6,7],[0,0,1,2,3,4,5,7],[0,1,1,2,3,5,6,7],
  [0,1,2,2,3,4,5,7],[0,1,2,3,3,4,6,7],[0,1,2,3,4,5,5,7]
