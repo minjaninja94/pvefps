@@ -236,10 +236,16 @@ function drawOverview(){
 }
 function onSnapshot(v){
  if(!v){snap=null;return;}if(v.width!==3300||![520,1560].includes(v.height)||!Array.isArray(v.players)||(v.lanes!==undefined&&v.lanes!==(v.mode==='classic'?1:3)))return;
- const fresh=!snap;
+ const fresh=!snap,modeChanged=!snap||snap.mode!==v.mode;
  if(!$('frontLobby').hidden)global.DesertLobby?.enterMatch?.();
  snap=v;lastSnapshotAt=performance.now();$('mpCommand').hidden=false;$('mpViewTabs').hidden=false;
  document.body.dataset.multiArena=v.mode==='classic'?'classic':'triple';
+ if(modeChanged){
+  const classic=v.mode==='classic';
+  $('mpBaseDescription').textContent=classic?'싱글 전장 규칙과 동일하게 75칸 생산 시설을 건설하세요. 상·중·하 구분 없이 한 전장에서 1:1로 교전합니다.':'싱글과 같은 방식으로 유닛을 선택하고 빈 칸에 건설하세요. 배치판에서 상·중·하 라인을 바로 전환할 수 있습니다.';
+  $('mpBattleDescription').textContent=classic?'3300×520 크기의 원래 싱글 전장입니다. 양쪽 플레이어가 생산 시설을 건설하고 단일 전선에서 실시간 1:1로 싸웁니다.':'세 라인은 하나로 연결된 전장입니다. 미니맵 또는 전장을 눌러 해당 라인에 배치할 수 있습니다.';
+ }
+ if(!v.ended)$('mpStateTag').textContent=v.mode==='classic'?(practice?'클래식 1:1 AI 연습':'클래식 1:1 진행 중'):(practice?'3라인 AI 연습':'3라인 전투 중');
  const battle=$('mpBattleCanvas');if(battle.height!==battleHeight())battle.height=battleHeight();
  if(fresh||lane>=laneCount()){lane=laneCount()===1?0:1;repairLane=lane;gridKey='';setView('base');}
  const me=my(),side=me?.team??0;
