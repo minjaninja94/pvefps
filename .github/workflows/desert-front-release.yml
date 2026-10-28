@@ -24,7 +24,7 @@ jobs:
         run: |
           set -eu
           apt-get update -qq
-          apt-get install -y -qq curl unzip ca-certificates
+          apt-get install -y -qq curl unzip ca-certificates python3
           mkdir -p desert-front-godot/addons
           curl --retry 3 -fsSL https://github.com/NodeTunnel/godot-plugin/releases/download/v1.1.1_beta/nodetunnel.zip -o /tmp/nodetunnel.zip
           unzip -oq /tmp/nodetunnel.zip -d desert-front-godot/addons/
