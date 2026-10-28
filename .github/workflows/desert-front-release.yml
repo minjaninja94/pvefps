@@ -29,10 +29,13 @@ jobs:
           curl --retry 3 -fsSL https://github.com/NodeTunnel/godot-plugin/releases/download/v1.1.1_beta/nodetunnel.zip -o /tmp/nodetunnel.zip
           unzip -oq /tmp/nodetunnel.zip -d desert-front-godot/addons/
           test -s desert-front-godot/addons/nodetunnel/bin/nodetunnel.dll
+      - name: Copy original sprite assets into new Godot project
+        run: python3 desert-front-godot/tools/sync_web_art.py
       - name: Validate Godot project and smoke tests
         run: |
           set -eu
           godot --headless --path desert-front-godot --editor --quit
+          godot --headless --path desert-front-godot --script res://tests/art_smoke.gd
           godot --headless --path desert-front-godot --script res://tests/smoke.gd
       - name: Test local LAN host/guest connection
         run: |
@@ -120,7 +123,7 @@ jobs:
             "DESERT FRONT Windows preview (Godot 4) - open public/private relay lobby, room codes, host-authoritative basic 1v1.\n\n"
             "Download ZIP, extract completely, and run DesertFront.exe; no Steam account or player IP/port forwarding.\n\n"
             "Experimental: Online relay uses NodeTunnel third-party beta and has not been tested between two remote PCs. "
-            "Core game is an incomplete native prototype and does not yet match the original web edition (sprites, racial skills, and 3-line co-op/PvP)."
+            "Original 80 unit pixel sprite strips and 10 faction banners are included. Core gameplay is incomplete: unique skills, web balance, and 3-line PvP/co-op not yet ported."
           )
           try:
               release=api(base+"/releases/tags/"+tag)

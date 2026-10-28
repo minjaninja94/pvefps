@@ -14,6 +14,7 @@ var weapons := [0, 0]
 var armor_levels := [0, 0]
 var builds := [[], []]
 var units: Array[Dictionary] = []
+var death_effects: Array[Dictionary] = []
 var next_id := 1
 var player_faction := 0
 var enemy_faction := 1
@@ -112,7 +113,7 @@ func snapshot() -> Dictionary:
 		"eco": eco.duplicate(), "weapons": weapons.duplicate(),
 		"armor_levels": armor_levels.duplicate(),
 		"builds": [builds[0].duplicate(), builds[1].duplicate()],
-		"units": units.duplicate(true), "ended": ended, "winner": winner,
+		"units": units.duplicate(true), "death_effects": death_effects.duplicate(true), "ended": ended, "winner": winner,
 		"message": message, "faction0": player_faction, "faction1": enemy_faction,
 		"elapsed_wave": _elapsed_wave
 	}
@@ -134,6 +135,10 @@ func load_snapshot(data: Dictionary) -> void:
 	for item in data.get("units", []):
 		if typeof(item) == TYPE_DICTIONARY:
 			units.append(item)
+	death_effects.clear()
+	for item in data.get("death_effects", []):
+		if typeof(item) == TYPE_DICTIONARY:
+			death_effects.append(item)
 	ended = bool(data.get("ended", ended))
 	winner = int(data.get("winner", winner))
 	message = str(data.get("message", message))
@@ -171,6 +176,7 @@ func advance(dt: float) -> void:
 	_run_units(dt)
 	_run_towers(dt)
 	_remove_dead()
+	_age_deaths(dt)
 	if cores[0] <= 0:
 		_finish(1)
 	elif cores[1] <= 0:
@@ -185,7 +191,7 @@ func _spawn(team: int, slot: int, role: int) -> void:
 	units.append({
 		"id": next_id, "team": team, "role": role, "faction": faction,
 		"x": x, "y": y, "hp": hp, "max_hp": hp, "cool": 0.15 * float(slot % 4),
-		"stats": stats
+		"stats": stats, "action": "spawn", "action_ttl": 0.3
 	})
 	next_id += 1
 
@@ -212,6 +218,7 @@ func _run_units(dt: float) -> void:
 			continue
 		var stats: Dictionary = u["stats"]
 		u["cool"] = maxf(0.0, float(u["cool"]) - dt)
+		u["action_ttl"] = maxf(0.0, float(u.get("action_ttl", 0.0)) - dt)
 		if int(u["role"]) == 7:
 			_heal_ally(u)
 			continue
@@ -230,6 +237,8 @@ func _run_units(dt: float) -> void:
 				target = v
 		if not target.is_empty():
 			if float(u["cool"]) <= 0.0:
+				u["action"] = "skill" if float(stats["blast"]) > 0.0 else "attack"
+				u["action_ttl"] = 0.45
 				var dmg: float = float(stats["damage"]) * (1.0 + float(weapons[int(u["team"])]) * 0.08)
 				_damage(target, dmg)
 				u["cool"] = stats["rate"]
@@ -238,14 +247,19 @@ func _run_units(dt: float) -> void:
 						if v != target and int(v["team"]) != int(u["team"]) and float(v["hp"]) > 0.0 and str(v["stats"]["kind"]) != "air":
 							if absf(float(v["x"]) - float(target["x"])) < float(stats["blast"]) and absf(float(v["y"]) - float(target["y"])) < float(stats["blast"]):
 								_damage(v, dmg * 0.40)
+			if float(u["action_ttl"]) <= 0.0:
+				u["action"] = "idle"
 			continue
 		var team: int = u["team"]
 		var at_core: bool = float(u["x"]) <= 140.0 if team == 1 else float(u["x"]) >= Roster.WORLD_WIDTH - 140.0
 		if at_core:
 			if float(u["cool"]) <= 0.0:
+				u["action"] = "attack"
+				u["action_ttl"] = 0.4
 				cores[1 - team] -= maxf(3.0, float(stats["damage"]) - 5.0)
 				u["cool"] = stats["rate"]
 		else:
+			u["action"] = "move"
 			var direction := 1.0 if team == 0 else -1.0
 			u["x"] = clampf(float(u["x"]) + direction * float(stats["speed"]) * dt, 130.0, Roster.WORLD_WIDTH - 130.0)
 
@@ -265,7 +279,10 @@ func _heal_ally(healer: Dictionary) -> void:
 	if not chosen.is_empty():
 		chosen["hp"] = minf(float(chosen["max_hp"]), float(chosen["hp"]) + float(stats["heal"]))
 		healer["cool"] = stats["rate"]
+		healer["action"] = "skill"
+		healer["action_ttl"] = 0.55
 	else:
+		healer["action"] = "move"
 		var direction := 1.0 if int(healer["team"]) == 0 else -1.0
 		healer["x"] = clampf(float(healer["x"]) + direction * float(stats["speed"]) * STEP * 0.3, 130.0, Roster.WORLD_WIDTH - 130.0)
 
@@ -296,7 +313,21 @@ func _remove_dead() -> void:
 	for u in units:
 		if float(u["hp"]) > 0.0:
 			alive.append(u)
+		else:
+			death_effects.append({
+				"faction": int(u["faction"]), "role": int(u["role"]),
+				"team": int(u["team"]), "x": float(u["x"]),
+				"y": float(u["y"]), "time": 0.75
+			})
 	units = alive
+
+func _age_deaths(dt: float) -> void:
+	var active: Array[Dictionary] = []
+	for effect in death_effects:
+		effect["time"] = float(effect["time"]) - dt
+		if float(effect["time"]) > 0.0:
+			active.append(effect)
+	death_effects = active
 
 func _finish(side: int) -> void:
 	ended = true

@@ -23,15 +23,19 @@ jobs:
       - name: Download pinned NodeTunnel relay plugin
         run: |
           apt-get update -qq
-          apt-get install -y -qq curl unzip ca-certificates
+          apt-get install -y -qq curl unzip ca-certificates python3
           mkdir -p desert-front-godot/addons
           curl --retry 3 -fsSL \
             https://github.com/NodeTunnel/godot-plugin/releases/download/v1.1.1_beta/nodetunnel.zip \
             -o /tmp/nodetunnel.zip
           unzip -oq /tmp/nodetunnel.zip -d desert-front-godot/addons/
           test -f desert-front-godot/addons/nodetunnel/NodeTunnel.gdextension
+      - name: Synchronize original unit sprite strips (read-only source)
+        run: python3 desert-front-godot/tools/sync_web_art.py
       - name: Import Godot project and check scripts
         run: godot --headless --path desert-front-godot --editor --quit
+      - name: Validate 80 native sprite resources and 10 banners
+        run: godot --headless --path desert-front-godot --script res://tests/art_smoke.gd
       - name: Run isolated simulation smoke test
         run: godot --headless --path desert-front-godot --script res://tests/smoke.gd
       - name: Run two-process LAN host/guest integration

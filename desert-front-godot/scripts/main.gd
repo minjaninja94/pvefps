@@ -3,6 +3,7 @@ extends Control
 const Roster = preload("res://scripts/roster.gd")
 const BattleSim = preload("res://scripts/battle_sim.gd")
 const BattleView = preload("res://scripts/battlefield.gd")
+const Sprites = preload("res://scripts/sprite_assets.gd")
 const NetworkSession = preload("res://scripts/network_session.gd")
 var simulation
 var _network
@@ -17,6 +18,9 @@ var _ready_btn: Button
 var _view: Control
 var _faction_picker: OptionButton
 var _role_picker: OptionButton
+var _banner_preview: TextureRect
+var _unit_preview: TextureRect
+var _preview_label: Label
 var _info: Label
 var _status: Label
 var _grid: Array[Button] = []
@@ -182,11 +186,37 @@ func _build_interface() -> void:
 	build_title.text = "생산시설 건설 — 유닛 선택 후 빈 슬롯 클릭"
 	build_title.add_theme_font_size_override("font_size", 17)
 	sidebar.add_child(build_title)
+	var preview_panel := PanelContainer.new()
+	preview_panel.custom_minimum_size = Vector2(450, 118)
+	sidebar.add_child(preview_panel)
+	var preview_box := HBoxContainer.new()
+	preview_box.add_theme_constant_override("separation", 10)
+	preview_panel.add_child(preview_box)
+	_banner_preview = TextureRect.new()
+	_banner_preview.custom_minimum_size = Vector2(190, 108)
+	_banner_preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_banner_preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_banner_preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_banner_preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	preview_box.add_child(_banner_preview)
+	_unit_preview = TextureRect.new()
+	_unit_preview.custom_minimum_size = Vector2(96, 96)
+	_unit_preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_unit_preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_unit_preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	preview_box.add_child(_unit_preview)
+	_preview_label = Label.new()
+	_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_preview_label.custom_minimum_size = Vector2(108, 50)
+	_preview_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	preview_box.add_child(_preview_label)
+	_faction_picker.item_selected.connect(func(_i: int) -> void: _update_art_preview())
 	_role_picker = OptionButton.new()
 	_role_picker.custom_minimum_size = Vector2(440, 42)
 	for i in range(Roster.ROLE_NAMES.size()):
 		_role_picker.add_item("%s · %d CR" % [Roster.ROLE_NAMES[i], Roster.COST[i]])
 	sidebar.add_child(_role_picker)
+	_role_picker.item_selected.connect(func(_i: int) -> void: _update_art_preview())
 	var demolish := CheckButton.new()
 	demolish.text = "철거 모드 (철거 시 비용 일부 환급)"
 	demolish.toggled.connect(func(value: bool) -> void: _demolish = value)
@@ -222,12 +252,26 @@ func _build_interface() -> void:
 	_armor_btn.pressed.connect(_on_upgrade.bind("armor"))
 	upgrades.add_child(_armor_btn)
 	var note := Label.new()
-	note.text = "현재 버전: 기본 싱글 + LAN 1:1 + 온라인 릴레이 연결 기능\n온라인 접속은 릴레이 앱 ID와 NodeTunnel 플러그인 설정 필요"
+	note.text = "원본 도트 스프라이트 10종족 × 8병종 적용\n전투 이동·공격·스킬·사망 포즈 / 싱글 및 1:1 전장 공유\n종족 고유 능력·3라인·협동전은 추가 이식 필요"
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(note)
 	var footer := Label.new()
 	footer.text = "Standalone Godot build  ·  original browser game untouched"
 	shell.add_child(footer)
+
+func _update_art_preview() -> void:
+	if _banner_preview == null or _unit_preview == null:
+		return
+	var faction := maxi(0, _faction_picker.selected)
+	var role := maxi(0, _role_picker.selected)
+	_banner_preview.texture = Sprites.banner(faction)
+	_unit_preview.texture = Sprites.portrait(faction, role)
+	if role < 8:
+		_preview_label.text = "%s\n%s" % [
+			Roster.FACTION_NAMES[faction], Roster.UNIT_NAMES[faction][role]
+		]
+	else:
+		_preview_label.text = "%s\n자원채취 건물" % Roster.FACTION_NAMES[faction]
 
 func _new_match() -> void:
 	_network.leave()
@@ -239,6 +283,7 @@ func _new_match() -> void:
 	_time_bank = 0.0
 	_faction_picker.disabled = false
 	_net_status.text = "오프라인 싱글 | LAN 멀티: UDP 28765"
+	_update_art_preview()
 	_refresh()
 
 func _host_public_online() -> void:
