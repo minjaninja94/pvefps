@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const read=f=>fs.readFileSync(path.join(__dirname,f),'utf8');
 const cost=[65,95,150,205,165,245,205,145];
-function environment(roll){const w={},math=Object.create(Math);math.random=()=>roll;const ctx={window:w,Math:math,console,Map,Set,Array,Number,Object,String};vm.runInNewContext(read('defense-guardian.js'),ctx);vm.runInNewContext(read('unit-consolidation.js'),ctx);vm.runInNewContext(read('hard-ai.js'),ctx);vm.runInNewContext(read('tri-lane-engine.js'),ctx);return {w,ctx};}
+function environment(roll){const w={},math=Object.create(Math);math.random=()=>roll;const ctx={window:w,Math:math,console,Map,Set,Array,Number,Object,String};vm.runInNewContext(read('defense-guardian.js'),ctx);vm.runInNewContext(read('unit-consolidation.js'),ctx);vm.runInNewContext(read('hard-ai.js'),ctx);vm.runInNewContext(read('tri-lane-engine.js').replace('return {state,order,tick,wave,snapshot,definition};','return {state,order,tick,wave,snapshot,definition,hardBotPurchase};'),ctx);return {w,ctx};}
 const results=[];
 for(const roll of [.01,.26,.51,.76])for(const faction of [0,3,4,7,9]){
  const {w}=environment(roll),E=w.DesertTriEngine;
@@ -34,6 +34,25 @@ const normal=ai.choose({...brain},base),air=ai.choose({...brain},{...base,intel:
 assert.notEqual(normal.role,air.role);assert.equal(air.role,4,'observed aircraft receive genuine anti-air support');
 const queued={...brain,nextRole:3,lastThreat:''};assert.equal(ai.choose(queued,{...base,intel:{air:9}}).role,4,'new scouting revises a queued purchase');
 assert.equal(ai.choose({...brain},{...base,eco:0,ecoCost:70}).kind,'econ');assert.equal(ai.choose({...brain},{...base,eco:0,ecoCost:70,intel:{air:9}}).kind,'unit','delay greed when air defense is missing');
+// Every proactive plan must pivot paid construction when it scouts one-role hero spam.
+for(let plan=0;plan<4;plan++)for(let major=0;major<8;major++){
+ const brain={...ai.create(0,()=>plan/4+.01),opening:99,nextRole:7,lastThreat:''};
+ const counts=Array(8).fill(2),roles=Array(8).fill(0);roles[major]=20;
+ const counters=[[1,3],[3,5],[0,1],[2,6],[2,3],[0,6],[2,3],[0,5]][major];
+ const action=ai.choose(brain,{...base,counts,intel:{roles}});assert.ok(counters.includes(action.role),`plan ${plan} must counter observed role ${major}`);
+ assert.equal(ai.choose({...brain},{...base,cash:0,counts,intel:{roles}}),null,'counter units still require real money');
+}
+const flierRoles=[0,0,0,0,0,0,20,0];assert.equal(ai.choose({...brain},{...base,counts:Array(8).fill(2),intel:{roles:flierRoles,air:20}}).role,4,'actual flying special spam receives anti-air, ground specials do not');
+assert.equal(ai.choose({...brain},{...base,eco:0,ecoCost:70,counts:[0,6,0,4,0,0,0,0],intel:{roles:[20,0,0,0,0,0,0,0]}}).kind,'econ','resume income development once real counter production is ready');
+// Integration: one visible aggregate means twenty troops, and production follows its band.
+const probe=environment(.01),pe=probe.w.DesertTriEngine.create({aiDifficulty:'hard',members:[{uid:'human',team:0,faction:0},{uid:'bot',team:1,faction:0,bot:true}]}),bot=pe.state.players[1];
+bot.buildings.forEach(row=>row.fill(null));bot.hardBrain.opening=99;bot.cash=2000;
+pe.state.units.push({id:900,team:0,faction:0,role:0,lane:2,x:2000,y:1300,hp:2000,maxHP:2000,heroCount:20});
+let scouted;const original=probe.w.DesertHardAI;
+probe.w.DesertHardAI={...original,choose:(b,data)=>{scouted=data.intel;return original.choose(b,data);}};
+pe.hardBotPurchase(bot);assert.equal(scouted.roles[0],20);
+const bands=bot.buildings.map(row=>row.filter(r=>r!==null).length);assert.ok(bands[2]>bands[0]&&bands[2]>bands[1],'reinforce the observed hero lane instead of spreading evenly');
+assert.ok(bot.buildings.flat().filter(r=>[1,3].includes(r)).length>=bot.buildings.flat().filter(r=>r!==null).length*.6,'paid counter production dominates against a scouted assault hero');
 // Real solo integration: paid opening, blackout, one-second think cadence and HUD.
 const elements=new Map(),noop=()=>{},g=new Proxy({createLinearGradient:()=>({addColorStop:noop})},{get:(o,k)=>o[k]||noop});
 const el=id=>{if(!elements.has(id))elements.set(id,{style:{},dataset:{},classList:{add:noop,remove:noop,toggle:noop},getContext:()=>g,querySelectorAll:()=>[],addEventListener:noop});return elements.get(id);};
@@ -49,5 +68,8 @@ assert.equal(s.enemyEco,1);assert.ok(s.enemyEcoReadyAt>s.elapsed);const before=s
 for(let n=0;n<75;n++)api.tick(.04);
 assert.equal(s.enemyCash+s.hardBrain.spent,before+spent,'solo hard AI pays the same stabilization penalty');
 assert.ok(elements.get('enemyFactionLabel').textContent.includes('하드 AI'));
-console.log('Hard AI passed: 20 four-minute ledgers, four proactive openings, ground special factions, regular paid economy, zero resource bonuses, actual slot/blackout costs, bounded next-purchase reserves, scouted support, solo and three-line integration.');
+const soloAI=sw.DesertHardAI;let soloIntel;sw.DesertHardAI={...soloAI,choose:(b,data)=>{soloIntel=data.intel;return soloAI.choose(b,data);}};
+s.units=[{side:0,faction:0,role:0,x:2000,y:260,hp:2000,maxHP:2000,heroCount:20}];api.hardInvest();assert.equal(soloIntel.roles[0],20,'solo scouts count an observed aggregate as twenty soldiers');
+
+console.log('Hard AI passed: 20 four-minute ledgers, four proactive openings, ground special factions, regular paid economy, zero resource bonuses, actual slot/blackout costs, bounded next-purchase reserves, 32 scouted concentration responses, ground/air distinction, economy resumption, observed hero lane reinforcement, solo and three-line integration.');
 console.log(JSON.stringify(results.filter(x=>x.faction===0)));

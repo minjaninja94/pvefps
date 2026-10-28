@@ -1,6 +1,6 @@
-/* One defensive artillery hero per destroyed forward tower. */
+/* One defensive single-target assault hero per destroyed forward tower. */
 (function(global){'use strict';
-const HP=1000,BONUS=150,ROLE=5,COUNT=20;
+const HP=1000,BONUS=150,ROLE=0,COUNT=20;
 const towerX=(side,width=3300)=>side===0?width/4:width*3/4;
 function mark(u,side,lane=0,width=3300){
  u.guardian=true;u.guardianSide=side;u.guardianLane=lane;u.guardianHomeX=towerX(side,width)+(side===0?-40:40);

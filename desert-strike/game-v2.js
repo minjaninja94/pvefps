@@ -363,11 +363,12 @@ function hardInvest(){
  const amount=u=>u.heroCount===20?20:1;
  const air=seen.filter(u=>getDef(u.role,u.faction).kind==='air').reduce((n,u)=>n+amount(u),0);
  const armor=seen.filter(u=>u.role===3||(u.role===6&&getDef(u.role,u.faction).kind!=='air')).reduce((n,u)=>n+amount(u),0);
+ const roles=Array(8).fill(0);for(const u of seen)if(!u.guardian)roles[u.role]+=amount(u);
  const invaded=seen.some(u=>u.x>WORLD_W-580);
  for(let purchase=0;purchase<12;purchase++){
   const counts=Array(8).fill(0);for(const role of state.enemyBuilt)if(role!==null&&role!==EXTRACTOR)counts[role]++;
   const slot=state.enemyBuilt.findIndex(v=>v===null);if(slot<0)break;
-  const action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,costs:ROLE.map(x=>x.cost),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded}});
+  const action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,costs:ROLE.map(x=>x.cost),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded,roles}});
   if(!action)break;
   const cost=action.kind==='econ'?ecoCostFor(state.enemyEco):ROLE[action.role].cost;
   if(action.kind==='econ'){if(!constructExtractor(1,slot))break;}
@@ -478,7 +479,7 @@ function structureDamage(role,amount){
  const factor=[.52,.88,1.12,1.08,.82,1.55,.87,.4][role]??1;
  return amount*factor;
 }
-function calcDamage(attacker,target,amount){
+function calcDamage(attacker,target,amount,unit=null,volley=null){
  let out=amount;
  if(attacker!==null){
   const role=ROLE[attacker];
@@ -486,7 +487,7 @@ function calcDamage(attacker,target,amount){
   else{if(role.good.includes(target.role))out*=1.55;if(role.bad.includes(target.role))out*=.7;}
  }
  const armor=combatDef(target).armor;
- return Math.max(3,out-armor*.66);
+ return window.DesertConsolidation?.hit(out,armor,target,unit,volley)??Math.max(3,out-armor*.66);
 }
 function killUnit(u){
  if(u.hp<=0 && u.killed)return;
@@ -553,9 +554,9 @@ function marineSpoils(v,attacker,roll=Math.random){
   cooldown:1.5,blink:.4,spawnAge:0,hitAge:0,skillAge:0,ramCooldown:1.8,moving:false,facing:attacker.side===0?1:-1});
  floatText(v.x,v.y-43,'자진입대!','#f7e0ac');
 }
-function damage(u,amount,source,attacker=null,roll=Math.random){
+function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
  if(u.hp<=0)return;
- let hit=calcDamage(typeof source==='number'?source:null,u,amount);
+ let hit=calcDamage(typeof source==='number'?source:null,u,amount,attacker,volley);
  if(u.faction===0&&[3,4].includes(u.role))hit*=.94;
  if(u.faction===2&&state.elapsed-(u.lastWardAt??-999)>=10){u.lastWardAt=state.elapsed;hit*=.82;}
  if(attacker?.faction===5&&[1,2,4,5,6].includes(source)&&Math.random()<.12)hit*=1.25;
@@ -596,8 +597,8 @@ function defenseTarget(side,part=null){
 function forwardDown(side){
  if(state.forwardClaimed[side])return;state.forwardClaimed[side]=true;
  state[side===0?'enemyCash':'cash']+=150;
- createUnit(side,0,5);const u=state.units[state.units.length-1];
- window.DesertGuardian?.mark(u,side); // Same faction, skin and 20× artillery stats as its defending side.
+ createUnit(side,0,window.DesertGuardian?.ROLE??0);const u=state.units[state.units.length-1];
+ window.DesertGuardian?.mark(u,side); // Same faction, skin and 20× assault stats as its defending side.
  floatText(u.x,u.y-65,'가디언 소환','#69ff9c');
  setMessage((side===0?'아군':'적군')+' 중간 타워 파괴 · 상대 보너스 150 CR · 수비 가디언 소환');
 }
@@ -705,7 +706,7 @@ function bongoImpact(u,dt){
  for(const v of candidates.slice(0,3)){
   // Drive-by anti-melee, reduced against true heavy armor; no building bonus.
   const antiMelee=v.role===0?1.45:v.role===3?.38:1;
-  damage(v,(u.faction===4?30:42)*(u.heroCount||1)*mods*antiMelee,null,u);
+  damage(v,(u.faction===4?30:42)*(window.DesertConsolidation?.strength(u)||1)*mods*antiMelee,null,u);
   v.x=clamp(v.x+u.facing*13,30,WORLD_W-30);
   pulse(v.x,v.y,'#edb46c',14);
  }
@@ -739,7 +740,7 @@ function fire(u,t=null,baseSide=null,structurePart=null){
  }else{
   state.shots.push({side:u.side,faction:u.faction,conscripted:!!u.conscripted,source:u.role,x:u.x,y:u.y,tx:x,ty:y,
    target:t,baseSide,structurePart:fort?.part,sourceUnit:u.uid,damage:def.damage*(u.side===0?1+.08*state.weapon:1),
-   speed:200+(def.range<200?205:120),blast:def.blast||0,ttl:3.5});
+   speed:200+(def.range<200?205:120),blast:def.blast||0,volley:window.DesertConsolidation?.strength(u)||1,ttl:3.5});
  }
  if(t)broodLay(u,t);
  u.blink=.13;
@@ -753,10 +754,10 @@ function projectileImpact(p){
   for(const v of state.units)if(v.hp>0&&v.side!==p.side){
    if(getDef(v.role,v.faction).kind==='air'&&!ROLE[p.source].airTarget)continue;
    const d=Math.hypot(v.x-x,v.y-y);
-   if(d<=p.blast+10)damage(v,p.damage*(1-.48*d/(p.blast+10)),p.source,shooter);
+   if(d<=p.blast+10)damage(v,p.damage*(1-.48*d/(p.blast+10)),p.source,shooter,Math.random,p.volley);
   }
  }else if(p.target&&p.target.hp>0&&Math.hypot(p.target.x-x,p.target.y-y)<40){
-  damage(p.target,p.damage,p.source,shooter);
+  damage(p.target,p.damage,p.source,shooter,Math.random,p.volley);
  }
 }
 function tick(dt){

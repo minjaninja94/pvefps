@@ -128,7 +128,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
     guardian?.reward(state.players,1-team);
     const defenders=state.players.filter(p=>p.team===team).sort((a,b)=>a.uid.localeCompare(b.uid));
     const owner=defenders[lane%defenders.length];
-    if(owner){spawn(owner,lane,0,5);guardian?.mark(state.units[state.units.length-1],team,lane);}
+    if(owner){spawn(owner,lane,0,guardian?.ROLE??0);guardian?.mark(state.units[state.units.length-1],team,lane);}
     state.effects.push({x:team===0?WIDTH/4:WIDTH*3/4,y:(lane+.5)*LANE_H,lane,team,kind:'guardian',time:1.4});
    }
   }else if(part==='turret')state.turrets[lane][team]=Math.max(0,state.turrets[lane][team]-amount);
@@ -159,15 +159,19 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
   const known=state.units.filter(u=>u.hp>0&&u.team!==bot.team&&((bot.team===1?u.x>=WIDTH*.56:u.x<=WIDTH*.44)||ours.some(v=>Math.hypot(v.x-u.x,v.y-u.y)<340)));
   const air=known.filter(u=>definition(u.faction,u.role).kind==='air').reduce((n,u)=>n+(u.heroCount===20?20:1),0);
   const armor=known.filter(u=>u.role===3||(u.role===6&&definition(u.faction,u.role).kind!=='air')).reduce((n,u)=>n+(u.heroCount===20?20:1),0);
+  const roles=Array(8).fill(0);for(const u of known)if(!u.guardian)roles[u.role]+=u.heroCount===20?20:1;
+  const lanePressure=Array(3).fill(0);for(const u of known)if(!u.guardian)lanePressure[Math.floor(u.y/LANE_H)]+=u.heroCount===20?20:1;
+  const pressureTotal=lanePressure.reduce((n,v)=>n+v,0);
   const urgent=known.filter(u=>bot.team===1?u.x>WIDTH-580:u.x<580),invaded=urgent.length>0;
   for(let purchase=0;purchase<12;purchase++){
    const counts=Array(8).fill(0);for(const row of bot.buildings)for(const r of row)if(r!==null&&r!==EXTRACTOR)counts[r]++;
-   const action=ai.choose(brain,{cash:bot.cash,counts,eco:bot.eco,readyAt:bot.ecoReadyAt,seconds:state.seconds,costs:COST.slice(0,8),ecoCost:ecoPrice(bot.eco),intel:{air,armor,invaded}});
+   const action=ai.choose(brain,{cash:bot.cash,counts,eco:bot.eco,readyAt:bot.ecoReadyAt,seconds:state.seconds,costs:COST.slice(0,8),ecoCost:ecoPrice(bot.eco),intel:{air,armor,invaded,roles}});
    if(!action)break;
    const sizes=bot.buildings.map(row=>row.filter(r=>r!==null&&r!==EXTRACTOR).length),focus=brain.plan%3;
    const lanes=[0,1,2].filter(l=>bot.buildings[l].some(x=>x===null)).sort((a,b)=>{
-    const threat=l=>urgent.filter(u=>u.lane===l).length*4;
-    return (sizes[a]-(a===focus?2:0)-threat(a))-(sizes[b]-(b===focus?2:0)-threat(b));
+    const capacity=sizes.reduce((n,v)=>n+v,0)+1;
+    const score=l=>sizes[l]-(pressureTotal?capacity*(.7*lanePressure[l]/pressureTotal+.1):(l===focus?2:0));
+    return score(a)-score(b);
    });
    if(!lanes.length)break;const lane=lanes[0],slot=bot.buildings[lane].findIndex(v=>v===null);
    const r=action.kind==='econ'?EXTRACTOR:action.role,cost=r===EXTRACTOR?ecoPrice(bot.eco):COST[r];
@@ -254,7 +258,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
    if(attacker.bad.includes(v.role))mult*=.7;
   }
   if(v.hp<=0)return;
-  let hit=Math.max(3,damage*mult-defender.armor*.66);
+  let hit=global.DesertConsolidation?.hit(damage*mult,defender.armor,v,a)??Math.max(3,damage*mult-defender.armor*.66);
   if(v.faction===0&&[3,4].includes(v.role))hit*=.94;
   if(v.faction===2&&state.seconds-(v.lastWardAt??-999)>=10){v.lastWardAt=state.seconds;hit*=.82;}
   if(a.faction===5&&[1,2,4,5,6].includes(a.role)&&Math.random()<.12)hit*=1.25;
@@ -432,7 +436,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal'}={}){
    hostile.sort((a,b)=>(Math.hypot(a.x-x,a.y-y)*.55+a.hp/a.maxHP*42-(a.role===7?35:0))
     -(Math.hypot(b.x-x,b.y-y)*.55+b.hp/b.maxHP*42-(b.role===7?35:0)));
    const v=hostile[0],f=combatDef(v),dmg=TOWER_DAMAGE*(forward?.75:1)*(f.kind==='air'?1.25:v.role===3?1.12:1);
-   let hit=Math.max(3,dmg-f.armor*.66);
+   let hit=global.DesertConsolidation?.hit(dmg,f.armor,v,null)??Math.max(3,dmg-f.armor*.66);
    if(v.faction===0&&[3,4].includes(v.role))hit*=.94;
    if(v.faction===2&&state.seconds-(v.lastWardAt??-999)>=10){v.lastWardAt=state.seconds;hit*=.82;}
    v.hp-=hit;v.lastDamagedAt=state.seconds;
