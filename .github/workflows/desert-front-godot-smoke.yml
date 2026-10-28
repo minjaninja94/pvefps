@@ -24,3 +24,16 @@ jobs:
         run: godot --headless --path desert-front-godot --editor --quit
       - name: Run isolated simulation smoke test
         run: godot --headless --path desert-front-godot --script res://tests/smoke.gd
+      - name: Export Windows preview build
+        run: |
+          mkdir -p desert-front-godot/build
+          cd desert-front-godot
+          godot --headless --export-release "Windows Desktop" build/DesertFront.exe
+      - name: Upload Windows preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: desert-front-godot-windows-preview
+          path: |
+            desert-front-godot/build/DesertFront.exe
+            desert-front-godot/build/DesertFront.pck
+          if-no-files-found: error
