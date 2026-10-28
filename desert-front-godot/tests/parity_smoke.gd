@@ -48,7 +48,7 @@ func _run() -> void:
 	var enemy: Dictionary = hero.player_for("b")
 	enemy["ai_opening"] = 3
 	enemy["ai_target_role"] = 5
-	enemy["ai_last_threat"] = "0:0:-1:0"
+	enemy["ai_last_threat"] = "0:0:-1"
 	enemy["cash"] = 200.0
 	hero.units.clear()
 	hero._ai_buy(enemy)

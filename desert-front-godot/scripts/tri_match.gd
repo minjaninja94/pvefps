@@ -411,7 +411,7 @@ func _ai_buy(p: Dictionary) -> void:
 			var counters: Array = [[1,3],[3,5],[0,1],[2,6],[2,3],[0,6],[4,1],[0,5]][dominant]
 			if dominant == 3 and int(p["faction"]) in [3,4,6,7]:
 				counters = [2,3]
-			var threat_key := "%d:%d:%d:%d" % [int(air >= 2), int(armored >= 2), dominant if concentrated else -1, threats[dominant] if concentrated else 0]
+			var threat_key := "%d:%d:%d" % [int(air >= 2), int(armored >= 2), dominant if concentrated else -1]
 			if str(p.get("ai_last_threat","")) != threat_key:
 				p["ai_last_threat"] = threat_key
 				p["ai_target_role"] = -1
@@ -770,7 +770,24 @@ func _tick_units(dt: float) -> void:
 			u["y"] += move.y
 			u["action"] = "move" if d.length()>2.0 else "idle"
 		elif supporting:
-			u["action"] = "idle"
+			# Web supports must follow the active army across all three bands,
+			# otherwise the healer remains at spawn and never contributes.
+			var escort: Dictionary = {}
+			var closest := INF
+			for ally in units:
+				if ally == u or float(ally["hp"]) <= 0.0 or int(ally["team"]) != int(u["team"]) or int(ally["role"]) == 7:
+					continue
+				var distance := _distance(u,ally)
+				if distance < closest:
+					closest = distance
+					escort = ally
+			if not escort.is_empty() and closest > 115.0:
+				var step := minf(speed*dt,closest-105.0)
+				u["x"] += (float(escort["x"])-float(u["x"]))/maxf(1.0,closest)*step
+				u["y"] += (float(escort["y"])-float(u["y"]))/maxf(1.0,closest)*step
+				u["action"] = "move"
+			else:
+				u["action"] = "idle"
 		else:
 			var side: int = u["team"]
 			var lane := clampi(int(float(u["y"]) / LANE_HEIGHT),0,lanes-1)
