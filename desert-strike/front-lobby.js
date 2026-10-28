@@ -93,8 +93,8 @@ function render(){
  renderCovers();
  $('mpFaction').value=String(progress.selectedFaction);$('mpName').value=progress.nickname;
 }
-function show(){global.DesertCommandHud?.closeUpgrades?.();delete document.body.dataset.playMode;active=true;$('frontLobby').hidden=false;document.body.classList.add('lobby-active');render();}
-function hide(){active=false;$('frontLobby').hidden=true;document.body.classList.remove('lobby-active');}
+function show(){global.DesertCommandHud?.closeUpgrades?.();delete document.body.dataset.playMode;active=true;$('frontLobby').hidden=false;document.body.classList.add('lobby-active');global.DesertLobbyMusic?.enterLobby?.();render();}
+function hide(){active=false;$('frontLobby').hidden=true;document.body.classList.remove('lobby-active');global.DesertLobbyMusic?.exitLobby?.();}
 function chooseFaction(i){
  if(!Number.isInteger(i)||i<0||i>=FACTIONS.length)return;
  progress.selectedFaction=i;selectedUnit=0;selectedAction='idle';animationStart=performance.now();stateChange();

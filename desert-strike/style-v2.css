@@ -500,3 +500,8 @@ body[data-multi-arena="classic"] #mpBattleView .mp-production-title p{max-width:
 body[data-multi-arena="classic"] #mpDeploymentPanel .mp-build-controls{margin:14px 0}
 body[data-multi-arena="classic"] #mpDeploymentPanel #mpSelectedLane{font-size:15px}
 body[data-multi-arena="classic"] .mp-grid-viewport{max-height:620px}
+
+/* Lobby soundtrack control */
+.lobby-music-toggle{border:1px solid #718b9f;background:#18313c;color:#e0edf6;border-radius:999px;padding:8px 13px;white-space:nowrap;font:inherit;font-size:12px;cursor:pointer}
+.lobby-music-toggle:hover,.lobby-music-toggle:focus-visible{border-color:#c2e2ec;background:#285061;outline-offset:3px}
+@media(max-width:720px){.lobby-header{flex-wrap:wrap}.lobby-music-toggle{font-size:11px;padding:7px 10px}}
