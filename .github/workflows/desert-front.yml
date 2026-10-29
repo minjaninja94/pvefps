@@ -71,6 +71,8 @@ jobs:
         run: node desert-strike/smoke-faction-tuning.test.cjs
       - name: Gameplay regression V1
         run: node desert-strike/smoke.test.cjs
+      - name: Fifty-wave construction income and core parity across all game modes
+        run: node desert-strike/smoke-50-wave-rules.test.cjs
       - name: Gameplay V2
         run: node desert-strike/smoke-v2.test.cjs
       - name: Legacy 16-frame sprite regression (24 original units)
