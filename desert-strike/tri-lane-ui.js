@@ -40,10 +40,10 @@ function upgradeInfo(){
  $('mpRepairButton').disabled=snap.ended||me.cash<180||hp>=1250;
  $('mpBarrageInfo').textContent=cd>0?'재충전 '+Math.ceil(cd)+'초':'260 CR · 정찰된 적에게 사용 가능';
  $('mpBarrageButton').disabled=snap.ended||cd>0||me.cash<260;
- const invaded=snap.units.some(u=>u.hp>0&&u.team!==side&&(side===0?u.x<370:u.x>3300-370));
- const targets=snap.units.some(u=>u.hp>0&&u.team!==side&&(side===0?u.x<=550:u.x>=3300-550));
- const endangered=snap.cores.some(core=>core[side]<=(snap.coreMaxHP||2500)*.7),nukeReady=!!me.nukes&&(invaded||endangered)&&targets;
- $('mpNukeInfo').textContent=me.nukes?(nukeReady?'침공 경보 · 발동 가능':'1회 남음 · 침공/기지 위기 시 사용 가능'):'사용 완료';
+ // Do not inspect fog-redacted enemy units here: the authoritative host
+ // decides whether any opponents exist when the order arrives.
+ const nukeReady=!!me.nukes;
+ $('mpNukeInfo').textContent=me.nukes?'1회 남음 · 상대 팀 전 병력 제거':'사용 완료';
  $('mpNukeButton').disabled=snap.ended||!nukeReady;
  $('mpRepairLanes').querySelectorAll('[data-repair-lane]').forEach(button=>button.classList.toggle('active',Number(button.dataset.repairLane)===repairLane));
 }
