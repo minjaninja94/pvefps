@@ -156,7 +156,7 @@
   global.addEventListener('pagehide', stop);
   renderToggle();
  }
- global.DesertCombatAudio = Object.freeze({cue,unit,attack,stop,setEnabled,setVolume,volume,loadIndex});
+ global.DesertCombatAudio = Object.freeze({cue,unit,attack,stop,setEnabled,setVolume,volume,isEnabled:()=>enabled,loadIndex});
  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
  else init();
 })(window);
