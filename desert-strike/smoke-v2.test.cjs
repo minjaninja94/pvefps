@@ -68,7 +68,7 @@ assert.equal(el('factionLabel').textContent,'심연군체');
 assert.equal(el('startOverlay').classList.contains('hidden'),true);
 const matchStart=sandbox.window.__gameTest.state();
 assert.equal(matchStart.cash,360,'player starting cash 360');
-assert.equal(matchStart.enemyCash,200,'AI spent 160 from the same 360 starting capital on two real structures');
+assert.equal(matchStart.enemyCash,195,'AI spent 165 from the same 360 starting capital on two real structures');
 assert.equal(matchStart.enemyBuilt.filter(v=>v!==null).length,2,'AI starts with 2 paid buildings, not 3 gifted buildings');
 assert.deepEqual([0,1,2,3].map(sandbox.window.__gameTest.ecoCostFor),[70,95,129,176],
  'both parties use the same economic upgrade costs');
@@ -270,18 +270,20 @@ for(const scenario of spamCases)for(const rngSeed of [17,61]){
  game.built.fill(null);
  game.units.length=0;game.deadUnits.length=0;game.shots.length=0;
  // Entire opening bankroll goes toward only the tested troop type.
- while(game.cash>=205 && game.built.some(v=>v===null)){
+ const unitCost=g.getDef(scenario.role,scenario.player).cost;
+ while(game.cash>=unitCost && game.built.some(v=>v===null)){
   const i=game.built.findIndex(v=>v===null);
-  game.built[i]=scenario.role;game.cash-=205;
+  game.built[i]=scenario.role;game.buildReadyAt[i]=game.elapsed+24;game.cash-=unitCost;
  }
  game.enemyBuilt.fill(null);game.enemyCash=360;
  game.enemyEco=0;game.enemyBuilt[1]=0;game.enemyCash-=65;
- game.enemyBuilt[17]=1;game.enemyCash-=95;
+ game.enemyBuilt[17]=1;game.enemyCash-=g.getDef(1,scenario.enemy).cost;
+ game.enemyBuildReadyAt[1]=game.enemyBuildReadyAt[17]=game.elapsed+24;
  game.wave=0;game.next=24;
  for(let i=0;i<4000&&!game.ended;i++){
-  if(game.cash>=205){
+  if(game.cash>=unitCost){
    const free=game.built.findIndex(v=>v===null);
-   if(free>=0){game.built[free]=scenario.role;game.cash-=205;}
+   if(free>=0){game.built[free]=scenario.role;game.buildReadyAt[free]=game.elapsed+24;game.cash-=unitCost;}
   }
   g.tick(.12);
  }

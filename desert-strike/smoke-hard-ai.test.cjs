@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const read=f=>fs.readFileSync(path.join(__dirname,f),'utf8');
-const cost=[65,95,150,205,165,245,205,145];
+const cost=[65,100,185,285,185,360,300,220];
 function environment(roll){const w={},math=Object.create(Math);math.random=()=>roll;const ctx={window:w,Math:math,console,Map,Set,Array,Number,Object,String};vm.runInNewContext(read('defense-guardian.js'),ctx);vm.runInNewContext(read('unit-consolidation.js'),ctx);vm.runInNewContext(read('hard-ai.js'),ctx);vm.runInNewContext(read('tri-lane-engine.js').replace('return {state,order,tick,wave,snapshot,definition};','return {state,order,tick,wave,snapshot,definition,hardBotPurchase};'),ctx);return {w,ctx};}
 const results=[];
 for(const roll of [.01,.26,.51,.76])for(const faction of [0,3,4,7,9]){
@@ -22,7 +22,7 @@ for(const roll of [.01,.26,.51,.76])for(const faction of [0,3,4,7,9]){
   assert.equal(p.buildings.flat().filter(r=>r===8).length,p.eco,'every income upgrade consumes a real slot');
  }
  assert.ok(p.eco>=3,'regular paid economy development');
- assert.ok(p.cash<Math.max(E.ecoPrice(p.eco),245),'bank only the next actual construction cost');
+ assert.ok(p.cash<Math.max(E.ecoPrice(p.eco),...E.COST.slice(0,8)),'bank only the next actual construction cost');
  assert.ok(new Set(p.buildings.flat().filter(r=>r!==null&&r!==8)).size>=4,'develop a planned combined army instead of only cheap units');
  results.push({plan:w.DesertHardAI.plans[p.hardBrain.plan].id,faction,eco:p.eco,cash:p.cash,army:p.buildings.flat().filter(r=>r!==null&&r!==8).length});
  assert.equal(e.snapshot('human').aiDifficulty,'hard');assert.equal(e.snapshot('human').players[1].cash,null,'hard mode does not reveal enemy resources');
@@ -62,8 +62,9 @@ const api=sw.testHard;api.aiInitialBuild();
 const first=Array.from(api.state().enemyBuilt),cashOpening=api.state().enemyCash;api.reset();api.state().built.fill(6);api.aiInitialBuild();assert.deepEqual(Array.from(api.state().enemyBuilt),first,'hidden aircraft factories cannot alter the proactive opening');assert.equal(api.state().enemyCash,cashOpening);
 const s=api.state();s.live=true;s.next=100000;
 assert.equal(s.aiDifficulty,'hard');assert.equal(s.enemyCash+s.hardBrain.spent,360);assert.ok(s.enemyBuilt.includes(3));
-// At 5s the first paid extractor is affordable; all its income stops for 6s.
-for(let n=0;n<150;n++)api.tick(.04);
+// Buy the paid opening army first, then wait for an affordable extractor.
+// Higher-tier prices must delay that investment rather than grant free CR.
+for(let n=0;n<3000&&s.enemyEco===0;n++)api.tick(.04);
 assert.equal(s.enemyEco,1);assert.ok(s.enemyEcoReadyAt>s.elapsed);const before=s.enemyCash,spent=s.hardBrain.spent;
 for(let n=0;n<75;n++)api.tick(.04);
 assert.equal(s.enemyCash+s.hardBrain.spent,before+spent,'solo hard AI pays the same stabilization penalty');

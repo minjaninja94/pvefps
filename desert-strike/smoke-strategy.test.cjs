@@ -15,7 +15,7 @@ for(let i=0;i<5;i++)s.built[i]=6;
 assert.equal(e.aiReadOpponent().total,0,'AI must not peek into unseen air production');
 s.enemyCash=360;s.wave=1;e.aiInvest();
 assert.ok(s.enemyBuilt.filter(x=>x!==null).length>=2,'normal AI opens with two paid production facilities, rather than free units');
-assert.equal(s.enemyCash+ s.enemyBuilt.filter(x=>x!==null).reduce((a,r)=>a+([65,95,150,205,165,245,205,145][r]),0),360,'AI cannot mint opening buildings');
+assert.equal(s.enemyCash+ s.enemyBuilt.filter(x=>x!==null).reduce((a,r)=>a+(global.window.DesertRoster.ROLE[r].cost),0),360,'AI cannot mint opening buildings');
 s.units.length=0;
 for(let i=0;i<3;i++){e.createUnit(0,i,6);const u=s.units.at(-1);u.x=2300;u.y=245+i*4;}
 assert.equal(e.aiReadOpponent().dominant,6);

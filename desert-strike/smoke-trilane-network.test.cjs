@@ -97,7 +97,7 @@ async function main(){
  assert.equal(result.ok,true,'guest sends validated order');
  await until(()=>guest.events.snap.some(s=>s?.players?.find(p=>p.uid==='guestUser')?.buildings[2][8]===1));
  const received=guest.events.snap.find(s=>s?.players?.find(p=>p.uid==='guestUser')?.buildings[2][8]===1);
- assert.equal(received.players.find(p=>p.uid==='guestUser').cash,265);
+ assert.equal(received.players.find(p=>p.uid==='guestUser').cash,260);
  assert.equal(received.players.find(p=>p.uid==='hostUser').cash,null,'unscouted opponent cash must not leak over WebRTC');
  assert.equal(host.events.snap.at(-1).players.find(p=>p.uid==='guestUser').cash,null,'host UI also receives per-viewer redaction');
  assert.ok(received.players.find(p=>p.uid==='hostUser').buildings.every(l=>l.every(x=>x===null)),'opponent facilities hidden from guest data packets');
