@@ -382,7 +382,7 @@ function aiReadOpponent(){
  const total=counts.reduce((a,b)=>a+b,0);
  let major=0;
  for(let i=1;i<counts.length;i++)if(counts[i]>counts[major])major=i;
- const dominant=total>=4&&counts[major]/total>=.65?major:null;
+ const dominant=total>=3&&counts[major]/total>=.65?major:null;
  const air=airCount.reduce((a,b)=>a+b,0),armor=armorCount.reduce((a,b)=>a+b,0);
  if(air)memory.air=air;if(armor)memory.armor=armor;
  return {counts,total,dominant,major,air:air||((now-memory.lastSeen[6]<=INTERVAL*3)?memory.air:0),armor:armor||((now-memory.lastSeen[3]<=INTERVAL*3)?memory.armor:0),
