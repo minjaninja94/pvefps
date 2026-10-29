@@ -89,7 +89,7 @@ for(const ruleset of ['standard','augment'])for(const mode of ['pvp','classic'])
  const before=st.cores[0][1];match.__test.hitFort(0,1,1000,'core');
  near(st.cores[0][1],before-850,ruleset+' '+mode+' -15% core damage');
  p.eco=7;p.ecoReadyAt=0;p.cash=0;st.next=999999;
- st.seconds=100;match.tick(.5);
+ st.seconds=100.3;match.tick(.2); // multiplayer clamps dt to .2 and income ticks at .5s boundaries
  near(p.cash,7.55,ruleset+' '+mode+' late income per half-second');
 }
 for(const ruleset of ['standard','augment'])for(const difficulty of ['normal','hard']){
