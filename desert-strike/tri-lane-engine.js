@@ -811,5 +811,5 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  if(state.aiDifficulty==='hard')for(const bot of state.players.filter(p=>p.bot))hardBotPurchase(bot);
  return {state,order,tick,wave,snapshot,definition};
 }
-global.DesertTriEngine=Object.freeze({create,definition,WIDTH,HEIGHT,LANE_H,LANES,COLS,ROWS,SLOTS,COST,NAMES,EXTRACTOR,ecoPrice,ecoStabilize,WEAPON_COST,ARMOR_COST});
+global.DesertTriEngine=Object.freeze({create,definition,WIDTH,HEIGHT,LANE_H,LANES,COLS,ROWS,SLOTS,COST,NAMES,EXTRACTOR,ecoPrice,ecoStabilize,incomePerTick,FACTORY_BUILD_SECONDS,WEAPON_COST,ARMOR_COST});
 })(typeof window==='undefined'?globalThis:window);
