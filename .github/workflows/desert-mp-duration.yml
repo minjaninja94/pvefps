@@ -3,6 +3,8 @@ on:
   push:
     paths:
       - "desert-strike/benchmark-mp-duration.cjs"
+      - "desert-strike/tri-lane-engine.js"
+      - "desert-strike/augment-rules.js"
       - ".github/workflows/desert-mp-duration.yml"
   workflow_dispatch:
 jobs:
