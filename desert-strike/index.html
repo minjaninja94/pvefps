@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=battlestats2"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=nukegear1"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -77,7 +77,26 @@
 <div id="commandHud" class="command-hud">
 <header class="top">
  <a class="logo" href="../"><span class="logo-badge">D<span>///</span>F</span><span>DESERT <strong>FRONT</strong><small>ISOMETRIC PIXEL BATTLE / V3</small></span></a>
- <div class="top-side"><button id="backToLobby" class="btn outline" type="button">⌂ 로비</button><span id="factionLabel" class="faction-pill">진영 미선택</span><button id="helpButton" class="btn outline">? 도움말</button></div>
+ <div class="top-side"><button id="backToLobby" class="btn outline" type="button">⌂ 로비</button>
+ <div class="battle-audio-anchor">
+  <button id="battleAudioSettingsButton" class="btn outline battle-audio-gear" type="button"
+   aria-label="인게임 오디오 설정" aria-haspopup="dialog" aria-controls="battleAudioSettingsPanel" aria-expanded="false"
+   title="음악·음성·효과음 설정">⚙</button>
+  <section id="battleAudioSettingsPanel" class="battle-audio-panel" role="dialog"
+   aria-label="인게임 오디오 설정" hidden>
+   <div class="battle-audio-heading"><strong>⚙ 사운드 설정</strong><button id="battleAudioClose" type="button" aria-label="설정 닫기">✕</button></div>
+   <div class="battle-audio-toggles">
+    <button id="battleMusicToggle" type="button" aria-pressed="true">♫ 배경음악 켜짐</button>
+    <button id="battleEffectsToggle" type="button" aria-pressed="true">🔊 음성·효과음 켜짐</button>
+   </div>
+   <div class="audio-mixer-controls battle-audio-controls">
+    <label>배경음악 <input id="battleMusicVolume" type="range" min="0" max="100" value="30" aria-label="배경음악 볼륨"><output id="battleMusicValue">30%</output></label>
+    <label>유닛 음성 <input id="battleVoiceVolume" type="range" min="0" max="100" value="50" aria-label="유닛 음성 볼륨"><output id="battleVoiceValue">50%</output></label>
+    <label>전투 효과음 <input id="battleEffectsVolume" type="range" min="0" max="100" value="32" aria-label="전투 효과음 볼륨"><output id="battleEffectsValue">32%</output></label>
+   </div>
+   <small>변경 사항은 로비와 싱글·멀티 전투에 즉시 적용됩니다.</small>
+  </section>
+ </div><span id="factionLabel" class="faction-pill">진영 미선택</span><button id="helpButton" class="btn outline">? 도움말</button></div>
 </header>
 <div class="stats"><div><small>자원</small><strong id="cash">360</strong><em>CR</em></div><div><small>자원 수입</small><strong id="income">+1</strong><em>/ 0.5초</em></div><div><small>웨이브</small><strong id="wave">00</strong></div><div><small>다음 출격</small><strong id="timer">24.0</strong><em>초</em></div><div class="compact-status"><span id="battleStatus">작전 대기</span><span id="enemyFactionLabel"></span></div></div>
 <div id="factionTraitStatus" class="marine-ops faction-trait-banner" hidden role="status" aria-live="off"></div>
@@ -168,7 +187,7 @@
   <section class="mp-tab-screen mp-upgrade-section" id="mpUpgradeView" hidden>
    <div class="mp-production-title"><div><span class="eyebrow">HIGH COMMAND / MULTIPLAYER</span><h2>업그레이드 · 전술 지원</h2><p>싱글과 같은 무기·장갑 강화 및 전술 지원입니다. 자원은 본인 계정에서 차감되며 전투는 계속 진행됩니다.</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="base">생산 배치 →</button></div>
    <div class="special-grid mp-upgrade-grid">
-    <section class="feature-card orange"><span class="eyebrow">SPECIAL / ONE USE</span><span class="feat-symbol">☢</span><h2>비상 핵폭탄</h2><p>아군 기지가 위기에 빠졌을 때, 아군 본진 근처로 침공한 적군을 제거합니다. 각 지휘관은 경기당 한 번만 사용할 수 있습니다.</p><div class="feature-status" id="mpNukeInfo">사용 가능 · 위기 시 발동</div><button type="button" id="mpNukeButton" class="btn accent">☢ 비상 핵폭탄</button></section>
+    <section class="feature-card orange"><span class="eyebrow">SPECIAL / ONE USE</span><span class="feat-symbol">☢</span><h2>비상 핵폭탄</h2><p>모든 라인의 상대 팀 생존 유닛과 영웅을 전부 제거합니다. 건물에는 피해가 없으며 지휘관당 경기 1회 사용 가능합니다.</p><div class="feature-status" id="mpNukeInfo">사용 가능 · 상대 팀 전 병력 제거</div><button type="button" id="mpNukeButton" class="btn accent">☢ 비상 핵폭탄</button></section>
     <section class="feature-card cyan"><span class="eyebrow">SPECIAL / RECHARGE</span><span class="feat-symbol">✷</span><h2>궤도 폭격</h2><p>정찰된 적군의 밀집 지역에 범위 피해를 가합니다. 260 CR · 재사용 32초.</p><div class="feature-status" id="mpBarrageInfo">260 CR · 재사용 32초</div><button type="button" id="mpBarrageButton" class="btn blueaccent">✷ 폭격 요청</button></section>
     <section class="feature-card purple"><span class="eyebrow">UPGRADE / PERMANENT</span><span class="feat-symbol">✦</span><h2>무기 강화</h2><p>내가 생산한 모든 병력의 공격력과 치유량이 단계마다 8% 증가합니다. 기존 병력에도 적용됩니다.</p><div class="feature-status" id="mpWeaponInfo">레벨 0 / 5</div><button type="button" id="mpWeaponButton" class="btn purpleaccent">무기 강화</button></section>
     <section class="feature-card steel"><span class="eyebrow">UPGRADE / PERMANENT</span><span class="feat-symbol">⬟</span><h2>장갑 강화</h2><p>내 병력의 최대 체력이 단계마다 9% 증가합니다. 이미 전장에 있는 병력에도 적용됩니다.</p><div class="feature-status" id="mpArmorInfo">레벨 0 / 5</div><button type="button" id="mpArmorButton" class="btn outline">장갑 강화</button></section>
@@ -181,7 +200,7 @@
 <section id="upgradePanel" class="upgrade-layer" hidden role="dialog" aria-modal="false" aria-labelledby="upgradeTitle"><div id="view-special" class="upgrade-content">
  <div class="upgrade-toolbar"><div><span class="eyebrow">HIGH COMMAND</span><h2 id="upgradeTitle">업그레이드 · 전술 지원</h2><small>전투는 계속 진행됩니다. 전황과 자원은 상단에서 확인하세요.</small></div><button id="closeUpgrades" type="button" class="btn outline" aria-label="업그레이드 닫기">닫기 ✕</button></div>
  <div class="special-grid">
- <section class="feature-card orange"><span class="eyebrow">SPECIAL / ONE USE</span><span class="feat-symbol">☢</span><h2>비상 핵폭탄</h2><p>아군 진영(x ≤ 중앙선)으로 넘어온 적 병력을 전멸시킵니다. 한 게임에 단 한 번, 아군 기지 HP가 70% 이하이거나 적이 침공 중일 때 사용 가능합니다.</p><div class="feature-status" id="nukeInfo">준비 완료 · 위기 시 활성화</div><button id="nukeButton" class="btn accent">☢ 핵폭탄 발동</button></section>
+ <section class="feature-card orange"><span class="eyebrow">SPECIAL / ONE USE</span><span class="feat-symbol">☢</span><h2>비상 핵폭탄</h2><p>상대 진영의 현재 살아있는 모든 유닛과 영웅을 전장 어디에 있든 전멸시킵니다. 건물에는 피해가 없으며 경기당 단 한 번 사용할 수 있습니다.</p><div class="feature-status" id="nukeInfo">준비 완료 · 상대 병력 전체 제거</div><button id="nukeButton" class="btn accent">☢ 핵폭탄 발동</button></section>
  <section class="feature-card cyan"><span class="eyebrow">SPECIAL / RECHARGE</span><span class="feat-symbol">✷</span><h2>궤도 폭격</h2><p>적군이 가장 많이 모인 지역에 범위 피해를 줍니다. 기갑이나 포병 덩어리를 무너뜨리는 반격 기술입니다.</p><div class="feature-status" id="barrageInfo">비용 260 CR · 재사용 32초</div><button id="barrageButton" class="btn blueaccent">✷ 폭격 요청 · 260 CR</button></section>
 
  <section class="feature-card purple"><span class="eyebrow">UPGRADE / PERMANENT</span><span class="feat-symbol">✦</span><h2>무기 강화</h2><p>모든 아군 유닛의 공격력과 회복량이 단계당 8% 증가합니다. 기존 전투 중 유닛에도 적용됩니다.</p><div class="feature-status" id="weaponInfo">레벨 0 / 5</div><button id="weaponButton" class="btn purpleaccent">무기 강화</button></section>
@@ -237,7 +256,7 @@
   <button id="mpResultLobby" type="button" class="btn start-cta">통계 확인 완료 · 로비로 가기</button>
  </div>
 </div>
-<dialog id="helpDialog"><div class="help-inner"><h2>데저트 프런트 조작법</h2><p>① 내 기지: 유닛 카드를 선택하고 15×5 생산 슬롯을 눌러 생산 시설 설치 / 철거는 비용의 55% 환급</p><p>② 전장: 확장 전장 · 미니맵/전선 추적 · 자동 전투 관전 / 역할 마크로 상성 파악 / 유닛을 눌러 능력 확인 / 배속과 일시정지</p><p>③ 병력 편성 위 업그레이드: 핵폭탄 / 궤도 폭격 / 무기·장갑 강화 / 포탑 보수. 자원채취 건물은 생산 슬롯에 설치하며, 안정화 중에는 인컴이 중단됩니다.</p><p>중간 타워를 파괴하면 공격 팀 합계 150 CR과 수비 측 스플래시 없는 돌격 가디언 1기가 발생합니다. 초록 오라 가디언의 외부 치유량은 평소 25%, 최근 3초 내 피격 시 10%입니다. 가디언만 자기 진영·해당 라인 안에서 방어하며, 붉은 오라의 일반 포격 영웅은 중앙을 넘어 진격·공격할 수 있습니다. 생산 건물은 보호되고 방어 포탑이 적을 막습니다. 기지 본체가 파괴되면 패배합니다. 초반 360 CR로 시작하고, 기본 수입 0.5초당 1 CR에서 경제 강화 시 주기당 +1 CR씩 증가합니다. 24초마다 출격합니다.</p><p>동일 풀피 병력 20기는 영웅 1기로 합쳐집니다. 최대 체력은 20명분이며, 공격·회복량은 남은 체력에 해당하는 생존 병력 수에 따라 감소합니다. 장갑의 피해 감소는 병사 1명·공격 1발 기준으로 계산됩니다.</p><p>키보드: 1–8 유닛 선택, 1·2·3 화면 전환은 Alt+숫자, Space 일시정지, Esc 선택 해제.</p><button class="btn start-cta" id="helpClose">확인</button></div></dialog>
+<dialog id="helpDialog"><div class="help-inner"><h2>데저트 프런트 조작법</h2><p>① 내 기지: 유닛 카드를 선택하고 15×5 생산 슬롯을 눌러 생산 시설 설치 / 철거는 비용의 55% 환급</p><p>② 전장: 확장 전장 · 미니맵/전선 추적 · 자동 전투 관전 / 역할 마크로 상성 파악 / 유닛을 눌러 능력 확인 / 배속과 일시정지</p><p>③ 병력 편성 위 업그레이드: 핵폭탄(상대 생존 유닛 전체 제거, 1회) / 궤도 폭격 / 무기·장갑 강화 / 포탑 보수. 자원채취 건물은 생산 슬롯에 설치하며, 안정화 중에는 인컴이 중단됩니다.</p><p>중간 타워를 파괴하면 공격 팀 합계 150 CR과 수비 측 스플래시 없는 돌격 가디언 1기가 발생합니다. 초록 오라 가디언의 외부 치유량은 평소 25%, 최근 3초 내 피격 시 10%입니다. 가디언만 자기 진영·해당 라인 안에서 방어하며, 붉은 오라의 일반 포격 영웅은 중앙을 넘어 진격·공격할 수 있습니다. 생산 건물은 보호되고 방어 포탑이 적을 막습니다. 기지 본체가 파괴되면 패배합니다. 초반 360 CR로 시작하고, 기본 수입 0.5초당 1 CR에서 경제 강화 시 주기당 +1 CR씩 증가합니다. 24초마다 출격합니다.</p><p>동일 풀피 병력 20기는 영웅 1기로 합쳐집니다. 최대 체력은 20명분이며, 공격·회복량은 남은 체력에 해당하는 생존 병력 수에 따라 감소합니다. 장갑의 피해 감소는 병사 1명·공격 1발 기준으로 계산됩니다.</p><p>키보드: 1–8 유닛 선택, 1·2·3 화면 전환은 Alt+숫자, Space 일시정지, Esc 선택 해제.</p><button class="btn start-cta" id="helpClose">확인</button></div></dialog>
 <script src="./marine-art-data.js" defer></script>
 <script src="./sprite-animations.js" defer></script>
 <script src="./iso-real-atlas-data.js?v=iso3" defer></script>
@@ -259,18 +278,18 @@
 <script src="./augment-rules.js?v=prism100a" defer></script>
 <script src="./augment-history.js?v=history1" defer></script>
 <script src="./augment-codex.js?v=prism100a" defer></script>
-<script src="./tri-lane-engine.js?v=battlestats3" defer></script>
+<script src="./tri-lane-engine.js?v=nukegear1" defer></script>
 <script src="./device-account.js?v=uniform7" defer></script>
 <script src="./tri-lane-network.js?v=augmented1" defer></script>
-<script src="./combat-audio.js?v=godotvoice1" defer></script>
+<script src="./combat-audio.js?v=nukegear1" defer></script>
 <script src="./tri-lane-ui.js?v=augment-history1" defer></script>
 <script src="./battle-report.js?v=battlestats2" defer></script>
-<script src="./game-v2.js?v=battlestats3" defer></script>
+<script src="./game-v2.js?v=nukegear1" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
-<script src="./lobby-music.js?v=battlebgm1" defer></script>
+<script src="./lobby-music.js?v=nukegear1" defer></script>
 <script src="./desert-member.js?v=auth-layer2" defer></script>
 <script src="./career-profile.js?v=rank-badges2" defer></script>
-<script src="./audio-settings.js?v=mixerv1" defer></script>
+<script src="./audio-settings.js?v=nukegear1" defer></script>
 <script src="./front-lobby.js?v=prism100b" defer></script>
 </body></html>
