@@ -71,8 +71,26 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  const players=humans.concat(mode==='coop'?Array.from({length:size},(_,i)=>({uid:'AI_'+i,name:'적 AI '+(i+1),team:1,faction:(i+3)%10,bot:true})):[]);
  const state={mode,size,ruleset:augmented?'augment':'standard',augmentStage:-1,augmentChoice:null,augmentSchedule:aug?.schedule||[],aiDifficulty:aiDifficulty==='hard'?'hard':'normal',seconds:0,wave:0,next:24,ended:false,winner:null,
   width:WIDTH,height:HEIGHT,lanes:LANES,
-  cores:Array.from({length:LANES},()=>[CORE_HP,CORE_HP]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),forwardHP:Array.from({length:LANES},()=>[1000,1000]),forwardClaimed:Array.from({length:LANES},()=>[false,false]),forwardCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,nextConsolidation:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,augments:[],produced:Array(8).fill(0),cash:360,eco:0,ecoReadyAt:0,weapon:0,armor:0,nukes:1,barrageCd:0,mineCosts:{},buildings:Array.from({length:LANES},()=>Array(SLOTS).fill(null))})),lanePressure:Array(LANES).fill(.5)};
+  cores:Array.from({length:LANES},()=>[CORE_HP,CORE_HP]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),forwardHP:Array.from({length:LANES},()=>[1000,1000]),forwardClaimed:Array.from({length:LANES},()=>[false,false]),forwardCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,nextConsolidation:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,augments:[],produced:Array(8).fill(0),combatStats:{damage:Array(8).fill(0),kills:Array(8).fill(0),
+  losses:Array(8).fill(0),heroDamage:Array(8).fill(0),heroes:Array(8).fill(0)},cash:360,eco:0,ecoReadyAt:0,weapon:0,armor:0,nukes:1,barrageCd:0,mineCosts:{},buildings:Array.from({length:LANES},()=>Array(SLOTS).fill(null))})),lanePressure:Array(LANES).fill(.5)};
  const byUid=uid=>state.players.find(p=>p.uid===uid);
+ function combatLife(u){return u.heroCount===20?Math.max(0,Math.min(20,Math.ceil(Math.max(0,u.hp)/(u.maxHP/20)-1e-9))):(u.hp>0?1:0);}
+ function combatHit(v,before,a=null){
+  if(!v||!Number.isInteger(v.role)||v.role<0||v.role>=8)return;
+  const previous=v._combatLife??(v.heroCount===20?20:(before>0?1:0)),remaining=combatLife(v);
+  v._combatLife=remaining;
+  const casualties=Math.max(0,previous-remaining),eligible=!v.guardian&&!v.conscripted&&!v.isHatchling;
+  const defender=byUid(v.uid);
+  if(defender&&eligible)defender.combatStats.losses[v.role]+=casualties;
+  const attacker=byUid(a?.uid);
+  if(a?.team!==undefined&&attacker&&a.team!==v.team&&Number.isInteger(a.role)&&a.role>=0&&a.role<8){
+   const dealt=Math.max(0,Math.min(before,before-Math.max(0,v.hp)));
+   attacker.combatStats.damage[a.role]+=dealt;
+   if(a.heroCount===20)attacker.combatStats.heroDamage[a.role]+=dealt;
+   if(eligible)attacker.combatStats.kills[a.role]+=casualties;
+  }
+ }
+
  const laneCap=team=>Math.max(75,...state.players.filter(p=>p.team===team).map(p=>global.DesertPrism?.populationLimit?.(p.augments,75,true)||75));
  const chosenOf=u=>byUid(u?.uid)?.augments||[];
  function beginAugment(index){
@@ -159,7 +177,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   const y=lane*LANE_H+265+((Math.floor(slot/15)*11+(slot%15)*21)%196)-98;
   const radius=role===3?23:role===6&&[3,7].includes(p.faction)?28:role===6&&[4,6].includes(p.faction)?24:role===6?15:15;
   if(p.faction===3&&role===7){state.marineStats.huangSpawns++;marineRecord(p.uid,'huangSpawns');}
-  state.units.push({id:state.nextUnit++,uid:p.uid,team:p.team,faction:p.faction,role,lane,spawnLane:lane,x,y,hp,maxHP:hp,skin:p.skin,augments:p.augments,cool:Math.random()*.6,
+  state.units.push({id:state.nextUnit++,uid:p.uid,team:p.team,faction:p.faction,role,lane,spawnLane:lane,x,y,hp,maxHP:hp,_combatLife:1,skin:p.skin,augments:p.augments,cool:Math.random()*.6,
     radius,frame:Math.floor(Math.random()*16),act:'move',attackAge:0,spawnAge:0,hitAge:0,skillAge:0,spawnedAt:state.seconds,lastDamagedAt:state.seconds,prismTime:state.seconds,prismWaveAt:p.prismWaveAt??-Infinity});
  }
  function research(p,kind){
@@ -190,7 +208,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    const targets=state.units.filter(u=>u.hp>0&&u.team!==p.team&&(p.team===0?u.x<=550:u.x>=WIDTH-550));
    if((!endangered&&!intrusion)||!targets.length)return {ok:false,reason:'기지 위기 시 침공한 적에게만 사용 가능'};
    p.nukes=0;
-   for(const u of targets){u.hp=0;u.killed=true;state.effects.push({x:u.x,y:u.y,lane:u.lane,kind:'nuke',time:.9,team:p.team});}
+   for(const u of targets){const before=u.hp;u.hp=0;combatHit(u,before);u.killed=true;state.effects.push({x:u.x,y:u.y,lane:u.lane,kind:'nuke',time:.9,team:p.team});}
    state.units=state.units.filter(u=>u.hp>0);
    return {ok:true,removed:targets.length};
   }
@@ -212,7 +230,9 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     const d=Math.hypot(u.x-target.x,u.y-target.y);
     if(d<118){
      const raw=260*(1-.45*d/118),armor=combatDef(u).armor;
+     const before=u.hp;
      u.hp-=global.DesertConsolidation?.hit(raw,armor,u,null)??Math.max(3,raw-armor*.66);
+     combatHit(u,before);
      u.lastDamagedAt=state.seconds;u.hitAge=.4;
     }
    }
@@ -464,13 +484,14 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    if(prism.heal>0&&a.hp>0)a.hp=Math.min(a.maxHP,a.hp+prism.heal);
    if(prism.marked)v.inkUntil=Math.max(v.inkUntil||0,state.seconds+prism.marked);
    for(const other of prism.secondary)if(other.target.hp>0){
-    other.target.hp-=other.damage;if(other.target.hp<=0)other.target.killed=true;
+    const previous=other.target.hp;other.target.hp-=other.damage;combatHit(other.target,previous,a);
+    if(other.target.hp<=0)other.target.killed=true;
     state.effects.push({x:other.target.x,y:other.target.y,lane:other.target.lane,kind:'blast',time:.4,team:a.team});
    }
   }
   if(v.team!==a.team&&!v.guardian){
    const reflected=global.DesertPrism?.reflectEffects?.(chosenOf(v),v,a,hit)||0;
-   if(reflected>0&&a.hp>0){a.hp-=reflected;if(a.hp<=0)a.killed=true;}
+   if(reflected>0&&a.hp>0){const previous=a.hp;a.hp-=reflected;combatHit(a,previous,v);if(a.hp<=0)a.killed=true;}
   }
   if(a.faction===4&&[0,3,6].includes(a.role)&&!a.isHatchling&&a.hp>0)
    a.hp=Math.min(a.maxHP,a.hp+Math.min(3*(a.heroCount||1),Math.max(0,Math.min(before,hit))*.015));
@@ -478,6 +499,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    a.lastInkCast=state.seconds;v.inkUntil=Math.max(v.inkUntil||0,state.seconds+INK_DURATION);
    state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'ink',time:.6,team:a.team});
   }
+  combatHit(v,before,a);
   if(v.hp<=0&&!v.killed){
    v.killed=true;marineSpoils(a,v);
    const owner=byUid(a.uid);
@@ -693,7 +715,12 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   }
   state.next-=dt;
   for(const p of state.players)p.barrageCd=Math.max(0,p.barrageCd-dt);
-  if(state.seconds>=state.nextConsolidation){state.nextConsolidation=state.seconds+1;global.DesertConsolidation?.compact(state.units,{now:state.seconds,multiplayer:true});}
+  if(state.seconds>=state.nextConsolidation){state.nextConsolidation=state.seconds+1;
+   const outcome=global.DesertConsolidation?.compact(state.units,{now:state.seconds,multiplayer:true});
+   for(const hero of outcome?.heroes||[]){
+    hero._combatLife=20;
+    if(!hero.guardian&&!hero.conscripted){const owner=byUid(hero.uid);if(owner)owner.combatStats.heroes[hero.role]++;}
+   }}
   // Correct fixed income for every *owner*, not pooled by team.
   const before=Math.floor((state.seconds-dt)*2),now=Math.floor(state.seconds*2);
   if(now>before)for(let slice=before+1;slice<=now;slice++)for(const p of state.players)if(slice*.5+1e-6>=p.ecoReadyAt)p.cash+=1+p.eco;
@@ -701,6 +728,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   while(state.next<=0){state.next+=24;wave();}
   deployMarineSupports();
   stepUnits(dt);
+  for(const u of state.units)if(u.hp<=0&&(u._combatLife??0)>0)combatHit(u,Math.max(0,u.hp));
  }
  function snapshot(viewerUid=null){
   // Host keeps full state internally. Guest packets are redacted per viewer, not
@@ -726,6 +754,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    marineOps:state.players.filter(p=>p.faction===3&&(!viewer||p.team===viewer.team)).map(p=>({uid:p.uid,team:p.team,...(state.marineStatsByUid.get(p.uid)||{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0}),waveRecruits:state.marineRecruitCount.get(p.uid)||0})),
    players:state.players.map(p=>({uid:p.uid,name:p.name,faction:p.faction,skin:p.skin,team:p.team,bot:p.bot,
     produced:state.ended||allied(p)?p.produced.slice():null,
+    combatStats:state.ended||allied(p)?Object.fromEntries(Object.entries(p.combatStats).map(([k,v])=>[k,v.slice()])):null,
     augments:allied(p)?p.augments.slice():[],cash:allied(p)?Math.floor(p.cash):null,eco:allied(p)?p.eco:null,ecoReadyAt:allied(p)?p.ecoReadyAt:null,weapon:allied(p)?p.weapon:null,armor:allied(p)?p.armor:null,
     nukes:allied(p)?p.nukes:null,barrageCd:allied(p)?Math.ceil(p.barrageCd*10)/10:null,
     buildings:p.buildings.map((slots,lane)=>allied(p)||visible[lane]?slots:Array(SLOTS).fill(null))})),
