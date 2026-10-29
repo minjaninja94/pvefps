@@ -143,8 +143,8 @@ eq.enemyEco=1;eq.enemyCash=291;
 // The income suspension is a real cost; compare completed extractor stabilization on both sides.
 eq.ecoReadyAt=eq.elapsed;eq.enemyEcoReadyAt=eq.elapsed;
 econGame.tick(.5);
-assert.ok(Math.abs(eq.cash-292.8)<1e-6,'player level 1 adds +1.8 per half second');
-assert.ok(Math.abs(eq.enemyCash-292.8)<1e-6,'AI at the same level adds the same +1.8 per half second');
+assert.ok(Math.abs(eq.cash-293.2)<1e-6,'player level 1 adds +2.2 per half second');
+assert.ok(Math.abs(eq.enemyCash-293.2)<1e-6,'AI at the same level adds the same +2.2 per half second');
 eq.cash=0;eq.enemyCash=0;eq.wave=0;eq.built.fill(null);eq.enemyBuilt.fill(null);
 econGame.wave();
 assert.equal(eq.cash,24,'player wave payout');
