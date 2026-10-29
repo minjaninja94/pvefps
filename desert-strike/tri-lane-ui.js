@@ -305,15 +305,26 @@ function combatAudioSnapshot(v){
  }
 }
 function renderAugmentRoster(){
- const panel=$('mpAugmentRoster');if(!panel)return;
- if(!snap||snap.ruleset!=='augment'){panel.hidden=true;augmentRosterKey='';return;}
- const key=JSON.stringify(snap.players.map(p=>[p.uid,p.team,p.name,p.augments]));
+ const panel=$('mpAugmentRoster'),trigger=$('mpAugmentOpen'),dialog=$('mpAugmentDialog');
+ if(!panel||!trigger)return;
+ const enabled=!!snap&&snap.ruleset==='augment';
+ trigger.hidden=!enabled;
+ if(!enabled){
+  panel.hidden=true;augmentRosterKey='';
+  if(dialog?.open)dialog.close();
+  return;
+ }
+ const ownSide=my()?.team??0,own=snap.players.filter(p=>p.team===ownSide),enemy=snap.players.filter(p=>p.team!==ownSide);
+ const ownCount=own.reduce((n,p)=>n+(p.augments?.length||0),0);
+ const enemyCount=enemy.reduce((n,p)=>n+(p.augments?.length||0),0);
+ $('mpAugmentCounts').textContent='아군 '+ownCount+' · 상대 '+enemyCount;
+ trigger.setAttribute('aria-label','선택한 양측 증강 보기. 아군 '+ownCount+'개, 상대 '+enemyCount+'개');
+ const key=JSON.stringify([snap.players.map(p=>[p.uid,p.team,p.name,p.augments]),!!global.DesertAugments?.ready?.()]);
  if(key===augmentRosterKey)return;
  augmentRosterKey=key;panel.hidden=false;panel.replaceChildren();
  const heading=document.createElement('h3');heading.textContent='양측 증강 현황';
  const note=document.createElement('p');note.textContent='선택 완료된 프리즘을 모두 공개합니다. 카드명을 누르면 효과를 확인할 수 있습니다.';
  const teams=document.createElement('div');teams.className='mp-augment-teams';
- const ownSide=my()?.team??0;
  for(const side of [ownSide,1-ownSide]){
   const group=document.createElement('section');group.className='mp-augment-side';
   const h=document.createElement('h4');h.textContent=side===ownSide?'아군 증강':'상대 증강';group.append(h);
@@ -322,11 +333,12 @@ function renderAugmentRoster(){
    const name=document.createElement('strong');name.textContent=p.name||'지휘관';
    who.append(name);
    const cards=document.createElement('div');cards.className='mp-augment-picks';
-   for(const id of p.augments||[]){
+   for(const [index,id] of (p.augments||[]).entries()){
     const card=global.DesertAugments?.card(id);
     const details=document.createElement('details'),summary=document.createElement('summary'),body=document.createElement('p');
-    summary.textContent=card?.name||'증강 데이터 확인 중';
-    body.textContent=card?.description||'카드 설명이 준비되지 않았습니다.';
+    const wave=[1,18,36,54,72][index];
+    summary.textContent=(wave?'W'+wave+' · ':'')+(card?.name||'증강 정보 불러오는 중');
+    body.textContent=card?.description||'증강 카드 설명을 불러오는 중입니다.';
     details.title=body.textContent;details.append(summary,body);cards.append(details);
    }
    if(!cards.childElementCount){const empty=document.createElement('span');empty.textContent='선택 전';cards.append(empty);}
@@ -370,7 +382,7 @@ function renderAugment(){
  panel.append(history);
 }
 function onSnapshot(v){
- if(!v){snap=null;global.DesertCombatAudio?.stop?.();return;}if(v.width!==3300||![520,1560].includes(v.height)||!Array.isArray(v.players)||(v.lanes!==undefined&&v.lanes!==(v.mode==='classic'?1:3)))return;
+ if(!v){snap=null;renderAugmentRoster();global.DesertCombatAudio?.stop?.();return;}if(v.width!==3300||![520,1560].includes(v.height)||!Array.isArray(v.players)||(v.lanes!==undefined&&v.lanes!==(v.mode==='classic'?1:3)))return;
  const fresh=!snap,modeChanged=!snap||snap.mode!==v.mode;
  if(!$('frontLobby').hidden)global.DesertLobby?.enterMatch?.();
  combatAudioSnapshot(v);
@@ -460,12 +472,24 @@ async function leave(){
  else{await NET.leave();snap=null;$('mpCommand').hidden=true;}
  $('mpViewTabs').hidden=true;setView('base');
  lane=1;cameraX=1100;repairLane=1;role=0;demolish=false;gridKey='';cardsKey='';counterKey='';augmentKey='';augmentRosterKey='';$('mpAugmentPanel').hidden=true;
+ renderAugmentRoster();
  delete document.body.dataset.multiArena;
  uiButtons();
 }
 function runClick(fn){return ()=>Promise.resolve().then(fn).catch(e=>message(global.IronFirebase?.message?.(e)||e.message||String(e)));}
 function init(){
  $('mpViewTabs').addEventListener('click',e=>{const target=e.target.closest('[data-mp-view]');if(target)setView(target.dataset.mpView,true);});
+ $('mpAugmentOpen')?.addEventListener('click',()=>{
+  if(snap?.ruleset!=='augment')return;
+  renderAugmentRoster();
+  const dialog=$('mpAugmentDialog');
+  if(dialog&&!dialog.open)dialog.showModal();
+ });
+ $('mpAugmentClose')?.addEventListener('click',()=>$('mpAugmentDialog')?.close());
+ $('mpAugmentDialog')?.addEventListener('click',e=>{
+  if(e.target===e.currentTarget)e.currentTarget.close();
+ });
+
  $('mpCommand').addEventListener('click',e=>{const target=e.target.closest('[data-mp-jump]');if(target)setView(target.dataset.mpJump,true);});
  for(const [id,kind,type] of [['mpWeaponButton','weapon','upgrade'],['mpArmorButton','armor','upgrade'],['mpNukeButton','nuke','tactic'],['mpBarrageButton','barrage','tactic']])
   $(id).addEventListener('click',()=>order({type,kind}));
