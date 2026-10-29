@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=copy-clean1"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=mp20min1"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -142,7 +142,7 @@
  <section class="panel mp-lobby" id="mpLobby">
   <div class="mp-lobby-grid">
    <label>지휘관 이름<input id="mpName" maxlength="16" placeholder="지휘관" value="지휘관"></label>
-   <label class="mp-public-option"><input type="checkbox" id="mpPublicCheck" checked> 공개방으로 등록 (체크 해제 시 초대 코드 전용)</label><label>경기 규칙<select id="mpRuleset"><option value="standard">일반전</option><option value="augment">증강전</option></select></label>
+   <label class="mp-public-option"><input type="checkbox" id="mpPublicCheck" checked> 공개방으로 등록 (체크 해제 시 초대 코드 전용)</label><label>경기 규칙<select id="mpRuleset"><option value="standard">일반전</option><option value="augment">증강전 · 프리즘 5회</option></select></label>
    <label>경기 방식<select id="mpMode"><option value="pvp">3라인 팀 경쟁 PvP</option><option value="classic">클래식 1:1 · 싱글 전장</option><option value="coop">3라인 협동 대 AI</option></select></label>
    <label>팀당 인원<select id="mpSize"><option value="1">1명 (1:1)</option><option value="2">2명 (2:2)</option><option value="3">3명 (3:3)</option></select></label>
    <label>사용 종족<select id="mpFaction"><option value="0">철갑연합</option><option value="1">심연군체</option><option value="2">성운결사</option><option value="3">해병성채</option><option value="4">월영 수인족</option><option value="5">은월 엘프족</option><option value="6">야월 퍼리족</option><option value="7">크롬 로보족</option><option value="8">옥토퍼 군체</option><option value="9">농농 페어리족</option></select></label>
@@ -154,7 +154,7 @@
   <div id="mpStatus" role="status" class="mp-status">방을 만들거나 방 코드를 입력하세요.</div>
   <div id="mpMembers" class="mp-members">아직 참가한 방이 없습니다.</div>
  </section>
- <section class="panel mp-command" id="mpCommand" hidden><section id="mpAugmentPanel" class="mp-augment-panel" hidden aria-label="증강 카드 선택"></section>
+ <section class="panel mp-command" id="mpCommand" hidden><section id="mpAugmentPanel" class="mp-augment-panel" hidden aria-label="증강 카드 선택"></section><section id="mpAugmentRoster" class="mp-augment-roster" hidden aria-label="아군 및 상대 지휘관의 선택된 증강"></section>
   <div class="mp-tab-screen active" id="mpBaseView">
   <div class="mp-production-title"><div><h2>멀티 생산 기지</h2><p id="mpBaseDescription">라인 선택 → 유닛 선택 → 빈 칸에 건설</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="battle">전장 보기 →</button></div>
   <div id="mpFactionTraits" class="marine-ops faction-trait-banner" hidden role="status" aria-live="off"></div>
@@ -180,7 +180,7 @@
   </div>
   <section class="mp-tab-screen mp-battle-section" id="mpBattleView" hidden>
    <div class="mp-production-title"><div><h2>실시간 전장</h2><p id="mpBattleDescription">미니맵을 눌러 라인을 선택하세요.</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="base">생산 배치 →</button></div>
-   <div class="mp-battle-wrap"><canvas id="mpBattleCanvas" width="1100" height="660" aria-label="하나로 연결된 3300×1560 전장. 누른 구역의 생산 라인이 선택됩니다."></canvas><div id="mpOpening" class="opening-countdown" role="status" aria-label="초기 배치 카운트다운" hidden><span>초기 배치 시간</span><div><strong id="mpOpeningSeconds">10</strong><b>초 뒤 첫 웨이브</b></div><small>지금 배치한 병력 시설은 준비 종료와 함께 첫 출격합니다.</small></div></div>
+   <nav class="mp-battle-navigation" aria-label="멀티 전장 카메라 조작"><div id="mpBattleLaneSelect" class="mp-battle-lane-select" role="group" aria-label="보는 라인"><button type="button" data-mp-lane="0">상단</button><button type="button" data-mp-lane="1" class="active">중앙</button><button type="button" data-mp-lane="2">하단</button></div><div class="mp-battle-camera"><button id="mpPanLeft" type="button" class="btn outline" aria-label="전장 왼쪽으로 이동">◀</button><span id="mpBattleCurrentLane">중앙 라인</span><button id="mpPanCenter" type="button" class="btn outline">중앙</button><button id="mpPanRight" type="button" class="btn outline" aria-label="전장 오른쪽으로 이동">▶</button></div></nav><div class="mp-battle-wrap"><canvas id="mpBattleCanvas" width="1100" height="520" aria-label="싱글플레이와 같은 크기의 선택된 생산 라인 전장. 좌우 드래그로 시점을 이동합니다."></canvas><div id="mpOpening" class="opening-countdown" role="status" aria-label="초기 배치 카운트다운" hidden><span>초기 배치 시간</span><div><strong id="mpOpeningSeconds">10</strong><b>초 뒤 첫 웨이브</b></div><small>지금 배치한 병력 시설은 준비 종료와 함께 첫 출격합니다.</small></div></div>
    <div class="mp-lane-summary" id="mpLaneSummary"></div>
    <div id="mpInspect" class="inspect" aria-live="polite">전장 유닛을 누르면 병종과 체력을 확인할 수 있습니다. 빈 공간을 누르면 해당 라인이 선택됩니다.</div>
   </section>
@@ -281,14 +281,14 @@
 <script src="./defense-guardian.js?v=guardianheal1" defer></script>
 <script src="./hard-ai.js?v=battlestats3" defer></script>
 <script src="./prism-experiments.js?v=experimental1" defer></script>
-<script src="./augment-rules.js?v=prism100a" defer></script>
+<script src="./augment-rules.js?v=mp20min1" defer></script>
 <script src="./augment-history.js?v=history1" defer></script>
 <script src="./augment-codex.js?v=copy-clean1-prism100a" defer></script>
-<script src="./tri-lane-engine.js?v=copy-clean1" defer></script>
+<script src="./tri-lane-engine.js?v=mp20min1" defer></script>
 <script src="./device-account.js?v=externalroom1" defer></script>
 <script src="./tri-lane-network.js?v=externalroom1" defer></script>
 <script src="./combat-audio.js?v=nukegear1" defer></script>
-<script src="./tri-lane-ui.js?v=copy-clean1" defer></script>
+<script src="./tri-lane-ui.js?v=mp20min1" defer></script>
 <script src="./battle-report.js?v=battlestats2" defer></script>
 <script src="./game-v2.js?v=copy-clean1" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
