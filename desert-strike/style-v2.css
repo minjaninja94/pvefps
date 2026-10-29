@@ -514,3 +514,67 @@ body[data-multi-arena="classic"] .mp-grid-viewport{max-height:620px}
 
 /* Match completion remains visible until the player chooses the lobby. */
 .result-panel,.end-panel{max-width:min(94vw,820px);max-height:92dvh;overflow-y:auto;padding:clamp(16px,3vw,28px);text-align:center}.result-panel h2,.end-panel #endTitle{font-size:clamp(29px,5vw,43px);letter-spacing:.08em;margin:10px 0;color:#fbd89b}.result-panel h2[data-outcome='lose']{color:#f49e94}.result-panel h2[data-outcome='draw']{color:#c5d1e6}.result-summary{color:#e6d4af}.result-production{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;text-align:left;margin:18px 0}.result-production-team{background:#152832;border:1px solid #506b78;border-radius:9px;padding:12px;min-width:0}.result-team-title{font-weight:800;color:#f3d59d;margin-bottom:11px;overflow-wrap:anywhere}.result-production-grid{display:grid;gap:5px}.result-production-row{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:5px 2px;border-bottom:1px solid #2c4651}.result-production-row.empty{opacity:.45}.result-unit-role{overflow-wrap:anywhere}.result-unit-count{white-space:nowrap;font-variant-numeric:tabular-nums}.result-production-heading{color:#f3d59d;margin:13px 0 5px}.result-detail-hint{color:#aebdc5;font-size:13px;margin:0;line-height:1.4}.result-server-status{color:#a7dcd2;background:#192f37;border:1px solid #46616b;border-radius:7px;padding:10px;font-size:13px}.result-panel .start-cta,.end-panel .start-cta{margin-top:12px;min-width:min(100%,240px)}body.result-visible{overflow:hidden}@media(max-width:650px){.result-production{grid-template-columns:1fr}.result-panel,.end-panel{max-width:96vw;max-height:94dvh}.result-production-team{padding:10px}}
+
+/* Commander's inline RP dossier and six illustrated competitive emblems */
+.lobby-rank-card{display:grid;grid-template-columns:116px minmax(0,1fr);align-items:center;gap:11px;margin:13px 0;padding:11px;border-radius:13px;background:radial-gradient(ellipse at 30% 10%,#364c55,#102334 72%);border:1px solid #5f7a90}
+.lobby-rank-badge{display:block;width:112px;height:108px;object-fit:contain;filter:drop-shadow(0 6px 10px #0009)}
+.lobby-rank-overview{display:grid;gap:5px;min-width:0}
+.lobby-rank-overview small{font-size:11px;color:#afcad1;overflow-wrap:anywhere}
+.lobby-rank-overview .lobby-rank{font-size:clamp(21px,2.7vw,29px);line-height:1.1;margin:1px 0;color:#ffe1ac}
+.lobby-rp{font-size:19px;color:#f7d79e;font-variant-numeric:tabular-nums}
+.lobby-rank-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.lobby-rank-stats>div{display:grid;gap:4px;padding:11px;background:#0e2535;border:1px solid #456479;border-radius:9px}
+.lobby-rank-stats span{font-size:11px;color:#a6c4cf}.lobby-rank-stats strong{font-size:17px;color:#f7f7ed;font-variant-numeric:tabular-nums}
+.lobby-recent-head{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid #415c6a;padding-top:12px;margin-top:14px}
+.lobby-recent-head strong{color:#f5e1bf;font-size:13px}
+.lobby-recent-head .btn{font-size:11px;min-height:30px;padding:5px 9px}
+.lobby-recent-matches{display:grid;gap:5px;margin-top:8px;font-size:12px;color:#adc6cf}
+.lobby-recent-game{display:flex;align-items:center;gap:9px;padding:6px 7px;background:#142b37;border-radius:6px}
+.lobby-recent-game>span:nth-child(2){flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lobby-recent-game small{font-size:10px;color:#91aebc}
+.lobby-result-mark{display:grid;place-items:center;width:22px;height:22px;border-radius:5px;font-weight:900;color:#eee;background:#506878}
+.lobby-result-mark.win{background:#206d57;color:#d9ffeb}.lobby-result-mark.lose{background:#814342;color:#ffe4de}
+.lobby-login-button{width:100%;min-height:42px;margin-top:10px;font-weight:800}
+.lobby-device-details{margin-top:12px;font-size:11px;color:#aec9d2;border-top:1px solid #3a5666;padding-top:9px}
+.lobby-device-details summary{cursor:pointer;user-select:none}
+.lobby-device-details .lobby-auth{margin-top:8px}
+.lobby-actions #lobbyMulti.expanded{border-color:#f1cf8d;background:linear-gradient(135deg,#4a4a3f,#264557);box-shadow:inset 0 0 0 1px #e9d2a555}
+.lobby-inline-multiplayer{margin-top:10px;padding:16px;background:linear-gradient(165deg,#193744,#102231);border:1px solid #b49465;border-radius:13px;box-shadow:inset 0 3px 0 #d3b17f55}
+.lobby-inline-multiplayer[hidden]{display:none!important}
+.lobby-inline-multiplayer .lobby-section-title{align-items:center}
+.lobby-inline-multiplayer .lobby-section-title h2{font-size:16px}
+.lobby-inline-multiplayer .mp-lobby{padding:12px;border-radius:10px;border:1px solid #496579;box-shadow:none;background:#132d39}
+.lobby-inline-multiplayer .mp-lobby-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.lobby-inline-multiplayer .mp-lobby-grid label{min-width:0}
+.lobby-inline-multiplayer .mp-actions{display:flex;flex-wrap:wrap;gap:7px}
+.lobby-inline-multiplayer .mp-actions .btn{min-height:37px;flex:1 1 130px;padding:8px 9px}
+.lobby-inline-multiplayer .mp-public-search{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.lobby-inline-multiplayer .mp-public-search>select{min-width:0;width:100%}
+.lobby-inline-multiplayer .mp-public-search>small{grid-column:1/-1}
+.lobby-inline-multiplayer .mp-members{display:flex;flex-wrap:wrap;gap:5px}
+.lobby-inline-multiplayer .mp-status{font-size:12px}
+.career-layer{position:fixed;inset:0;z-index:1400;background:#030b13dd;display:grid;place-items:center;padding:16px;overflow-y:auto;overscroll-behavior:contain;backdrop-filter:blur(8px)}
+.career-layer[hidden]{display:none!important}
+.career-modal-open{overflow:hidden}
+.career-layer .career-panel{width:min(100%,520px);max-height:min(90dvh,760px);overflow-y:auto;overscroll-behavior:contain;margin:0;padding:clamp(16px,3vw,26px);box-shadow:0 32px 80px #000b;border:1px solid #b5a07a;background:linear-gradient(150deg,#203745,#131f30)}
+.career-layer .career-panel h2{font-size:21px}
+.career-layer .career-panel>p{font-size:12px;line-height:1.55}
+.career-mode-tabs{display:flex;gap:7px;margin:12px 0 15px}
+.career-mode-tabs button{flex:1;cursor:pointer;background:#1b3949;border:1px solid #4d7181;border-radius:8px;color:#d4e7ef;padding:11px 9px;font:inherit;font-weight:700}
+.career-mode-tabs button.active{background:linear-gradient(135deg,#b8dfd9,#d3c48d);color:#19313b;border-color:#f7e9ba}
+.career-panel[data-auth-mode="login"] #careerNicknameLabel,.career-panel[data-auth-mode="login"] #careerRegister{display:none!important}
+.career-panel[data-auth-mode="signup"] #careerLogin{display:none!important}
+.career-panel[data-auth-mode="member"] .career-mode-tabs,.career-panel[data-auth-mode="member"] .career-auth-form,.career-panel[data-auth-mode="member"] #careerRegister,.career-panel[data-auth-mode="member"] #careerLogin{display:none!important}
+.career-layer .career-auth-form{grid-template-columns:1fr}
+.career-layer .career-auth-form input{font-size:16px}
+.career-layer .career-actions .btn{min-height:40px;flex:1 1 140px}
+.career-layer #careerStatus{border-radius:7px;padding:10px 12px;background:#0d2431;border:1px solid #435d69;line-height:1.6}
+@media(max-width:820px){.lobby-hero-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:720px){
+ .lobby-rank-card{grid-template-columns:100px minmax(0,1fr)}
+ .lobby-rank-badge{width:96px;height:96px}
+ .lobby-inline-multiplayer{padding:10px}
+ .lobby-inline-multiplayer .mp-lobby-grid{grid-template-columns:1fr}
+ .career-layer{padding:8px}
+ .career-layer .career-panel{max-height:94dvh}
+}

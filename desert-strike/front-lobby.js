@@ -84,7 +84,9 @@ function render(){
  $('lobbyAccountStatus').textContent=global.DesertMember?.account?.()?('회원 · '+global.DesertMember.account().nickname):'게스트 · 이 기기';
  if(account){$('lobbyUserId').value=account.accountId;$('lobbyDeviceId').value=account.deviceId;}
  $('lobbyLevel').textContent='LV. '+l.level;$('lobbyXP').textContent=l.within+' / '+l.needed+' XP';$('lobbyXPFill').style.width=Math.min(100,l.within/l.needed*100)+'%';
- $('lobbyRank').textContent=rank();$('lobbyRecord').textContent='싱글 '+progress.wins+'승 '+progress.losses+'패 · 온라인 '+progress.mpWins+'승 '+progress.mpLosses+'패 · 비공식 훈련 랭크';
+ $('lobbyRank').textContent=global.DesertCareer?.tier?.(global.DesertCareer?.rating?.()||1000)||'브론즈';
+ $('lobbyRecord').textContent='싱글 '+progress.wins+'승 '+progress.losses+'패 · 온라인 '+progress.mpWins+'승 '+progress.mpLosses+'패';
+ global.DesertCareer?.render?.();
  $('lobbyNickname').value=progress.nickname;
  $('lobbyFactionName').textContent=fac.name;$('lobbyFactionTrait').textContent=fac.bonus;
 
@@ -157,18 +159,24 @@ function single(){
   $('mpStatus').textContent='먼저 참여 중인 방에서 나가야 싱글플레이를 시작할 수 있습니다.';
   return;
  }
- document.body.dataset.playMode='solo';prepare();onlineOpen=false;$('lobbyMultiplayerConfig').hidden=true;
+ document.body.dataset.playMode='solo';prepare();setMultiplayerExpanded(false);
  hide();$('startButton').click();
  $('startOverlay').classList.add('hidden');
 }
+function setMultiplayerExpanded(open){
+ onlineOpen=!!open;$('lobbyMultiplayerConfig').hidden=!onlineOpen;
+ $('lobbyMulti').setAttribute('aria-expanded',String(onlineOpen));
+ $('lobbyMulti').classList.toggle('expanded',onlineOpen);
+}
 function openMultiplayer(){
- prepare();onlineOpen=true;$('lobbyMultiplayerConfig').hidden=false;
- $('lobbyMultiplayerConfig').scrollIntoView?.({behavior:'smooth',block:'start'});
+ prepare();
+ if(onlineOpen&&!global.DesertTriNetwork?.current()?.roomId){setMultiplayerExpanded(false);return;}
+ setMultiplayerExpanded(true);
+ $('lobbyMultiplayerConfig').scrollIntoView?.({behavior:'smooth',block:'nearest'});
 }
 function enterMatch(){
  global.DesertCommandHud?.closeUpgrades?.();document.body.dataset.playMode='multi';
- prepare();onlineOpen=false;
- $('lobbyMultiplayerConfig').hidden=true;
+ prepare();setMultiplayerExpanded(false);
  $('startOverlay').classList.add('hidden');
  hide();
  const tab=document.querySelector('[data-view="multiplayer"]');
@@ -183,7 +191,7 @@ async function returnToLobby(){
  try{await global.DesertTriUI?.leave?.();}catch(e){$('lobbyAuthMessage').textContent='방 종료 오류: '+(e.message||String(e));}
  $('restartButton').click();
  $('startOverlay').classList.add('hidden');$('endOverlay').classList.add('hidden');
- onlineOpen=false;$('lobbyMultiplayerConfig').hidden=true;
+ setMultiplayerExpanded(false);
  show();
 }
 function initialize(){
@@ -200,7 +208,7 @@ function initialize(){
  }
  $('lobbyUnitGrid').addEventListener('click',e=>{const b=e.target.closest('[data-unit]');if(b)chooseUnit(Number(b.dataset.unit));});
  $('lobbyUnitActions').addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(b)chooseAction(b.dataset.action);});
- $('lobbyCloseMulti').addEventListener('click',()=>{if(global.DesertTriNetwork?.current()?.roomId)return;$('lobbyMultiplayerConfig').hidden=true;onlineOpen=false;});
+ $('lobbyCloseMulti').addEventListener('click',()=>{if(global.DesertTriNetwork?.current()?.roomId)return;setMultiplayerExpanded(false);});
  global.requestAnimationFrame?.(drawUnitAnimations);
  $('lobbyFactions').addEventListener('click',e=>{const b=e.target.closest('[data-faction]');if(b)chooseFaction(Number(b.dataset.faction));});
  $('lobbySkins').addEventListener('click',e=>{const b=e.target.closest('[data-skin]');if(b)chooseSkin(b.dataset.skin);});

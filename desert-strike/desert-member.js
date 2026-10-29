@@ -25,6 +25,9 @@ function show(){
  $('careerLogout')?.toggleAttribute('hidden',!a);
  $('careerRegister')?.toggleAttribute('hidden',!!a);
  $('careerLogin')?.toggleAttribute('hidden',!!a);
+ const open=$('careerOpen');if(open)open.textContent=a?'내 계정 · 전적':'로그인 / 회원가입';
+ if(a)global.DesertCareer?.setMode?.('member');
+ else if($('careerPanel')?.dataset.authMode==='member')global.DesertCareer?.setMode?.('login');
  global.DesertCareer?.render?.();
 }
 async function loadMember(user,importGuest=false){
@@ -177,14 +180,14 @@ function fastForfeit(){
 function init(){
  const btn=(id,handler)=>$(id)?.addEventListener('click',async()=>{
   if(processing)return;processing=true;
-  try{status('계정을 처리하고 있습니다…');await handler();status('완료 · 계정 진행도를 이어서 플레이할 수 있습니다.');}
+  try{status('계정을 처리하고 있습니다…');await handler();status('완료 · 계정 진행도를 이어서 플레이할 수 있습니다.');if(['careerRegister','careerLogin','careerGuest'].includes(id))global.DesertCareer?.close?.();}
   catch(e){status('처리 실패: '+(e.message||e));}
   finally{processing=false;const pw=$('careerPassword');if(pw)pw.value='';show();}
  });
  btn('careerRegister',()=>signup($('careerEmail').value,$('careerPassword').value,$('careerNickname').value));
  btn('careerLogin',()=>login($('careerEmail').value,$('careerPassword').value));
  btn('careerLogout',logout);
- btn('careerGuest',async()=>{if(member)await logout();$('careerPanel').hidden=true;});
+ btn('careerGuest',async()=>{if(member)await logout();global.DesertCareer?.close?.();});
  global.addEventListener('pagehide',fastForfeit);
  global.addEventListener('beforeunload',fastForfeit);
  show();
