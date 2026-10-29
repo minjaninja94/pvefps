@@ -5,12 +5,13 @@ const CW=1100,CH=520,WORLD_W=3300,HOME_H=340,MAX_BASE=8640,MAX_TURRET=1700,INTER
 const COLORS=['#79dfee','#ff9a79'],LANES=[110,180,260,340,410];
 const EXTRACTOR=8;
 const initialIncome=1,WAVE_STIPEND=24,MAX_ECONOMY=7;
-const FACTORY_BUILD_SECONDS=12,LATE_ECON_STEP_MULTIPLIER=.85,CORE_DAMAGE_MULTIPLIER=.85;
+const OPENING_PREP_SECONDS=10,FACTORY_BUILD_SECONDS=12,LATE_ECON_STEP_MULTIPLIER=.85,CORE_DAMAGE_MULTIPLIER=.85;
 function incomePerTick(eco){return (initialIncome+eco)*(eco>=5?LATE_ECON_STEP_MULTIPLIER:1);}
 function showIncome(eco){return Number(incomePerTick(eco).toFixed(2)).toString();}
 function factoryReadyAt(side,slot){return (side===0?state.buildReadyAt:state.enemyBuildReadyAt)?.[slot]??0;}
 function factoryReady(side,slot){return state.elapsed+1e-6>=factoryReadyAt(side,slot);}
-function setFactoryReady(side,slot){(side===0?state.buildReadyAt:state.enemyBuildReadyAt)[slot]=state.elapsed+FACTORY_BUILD_SECONDS;}
+function productionReadyAt(){return state.elapsed<OPENING_PREP_SECONDS?OPENING_PREP_SECONDS:state.elapsed+FACTORY_BUILD_SECONDS;}
+function setFactoryReady(side,slot){(side===0?state.buildReadyAt:state.enemyBuildReadyAt)[slot]=productionReadyAt();}
 
 const TOWER_RANGE=285,TOWER_PERIOD=.31,TOWER_DAMAGE=28,FOG_END_WAVE=6,ENEMY_FOG_X=WORLD_W-770;
 const HEAL_WINDOW=1,HEAL_BUDGET=80;
@@ -209,7 +210,7 @@ function reset(){
  soloAug=null;enemyAug=null;
  $('soloAugmentOverlay')?.classList.add('hidden');
  state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:360,eco:0,enemyEco:0,ecoReadyAt:0,enemyEcoReadyAt:0,mineCosts:{},enemyMineCosts:{},mineTimings:{},enemyMineTimings:{},weapon:0,armor:0,enemyWeapon:0,enemyArmor:0,incomeClock:0,cameraX:1100,followFront:true,
- wave:0,next:INTERVAL,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],forwardHP:[1000,1000],forwardClaimed:[false,false],
+ wave:0,next:OPENING_PREP_SECONDS,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],forwardHP:[1000,1000],forwardClaimed:[false,false],
  built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),buildReadyAt:Array(SLOTS).fill(0),enemyBuildReadyAt:Array(SLOTS).fill(0),produced:[Array(8).fill(0),Array(8).fill(0)],combatStats:[combatRows(),combatRows()],units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},
  broodBirths:[0,0],broodBirthsTotal:[0,0],
@@ -242,7 +243,7 @@ function start(){
  aiInitialBuild();
  $('startOverlay').classList.add('hidden');
  changeView('base');
- setMessage((state.aiDifficulty==='hard'?'하드 AI · 추가 자원 보너스 없음. ':'')+'전투 시작! 12초 이내에 생산 시설을 배치하세요.');
+ setMessage((state.aiDifficulty==='hard'?'하드 AI · 추가 자원 보너스 없음. ':'')+'초기 배치 시간 10초 · 10초 뒤 첫 웨이브가 출격합니다. 준비 중 배치한 병력 시설은 첫 출격에 참여합니다.');
  updateUI(true);chirp(530,.16);
  if(ruleset==='augment')beginSoloAugment(0);
 }
@@ -289,7 +290,7 @@ function place(index){
  const price=ROLE[selectedRole].cost;
  if(price>state.cash){setMessage('자원 부족 · '+Math.ceil(price-state.cash)+' CR이 더 필요합니다.');return;}
  state.cash-=price;state.built[index]=selectedRole;setFactoryReady(0,index);
- setMessage(FACTIONS[state.faction].units[selectedRole]+' 건설 시작 · '+FACTORY_BUILD_SECONDS+'초 후 출격 가능');
+ setMessage(FACTIONS[state.faction].units[selectedRole]+(state.elapsed<OPENING_PREP_SECONDS?' 초기 배치 · '+Math.ceil(OPENING_PREP_SECONDS-state.elapsed)+'초 뒤 첫 출격':' 건설 시작 · '+FACTORY_BUILD_SECONDS+'초 후 출격 가능'));
  chirp(540,.07);updateUI(true);
 }
 function upgrade(kind){
@@ -1370,13 +1371,19 @@ function constructionBar(slot){
  const mine=state.mineTimings[slot],at=factoryReadyAt(0,slot),now=state.elapsed;
  const building=at>now+1e-6,stabilizing=!building&&(mine?.readyAt||0)>now+1e-6;
  if(!building&&!stabilizing)return '';
- const end=building?at:mine.readyAt,start=building?(mine?.startedAt??at-FACTORY_BUILD_SECONDS):at;
+ const opening=!mine&&at===OPENING_PREP_SECONDS;
+ const end=building?at:mine.readyAt,start=building?(mine?.startedAt??(opening?0:at-FACTORY_BUILD_SECONDS)):at;
  const progress=Math.max(0,Math.min(100,100*(now-start)/(end-start)));
- const label=(building?'건설 ':'안정화 ')+Math.ceil(end-now-1e-6)+'초';
+ const label=(building?(opening?'배치 준비 ':'건설 '):'안정화 ')+Math.ceil(end-now-1e-6)+'초';
  return '<span class="build-progress'+(stabilizing?' stabilizing':'')+'" role="progressbar" aria-label="'+label+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.floor(progress)+'"><span class="build-progress-fill" style="width:'+progress+'%"></span><span class="build-progress-label">'+label+'</span></span>';
 }
 function updateUI(full=false){
  if(!state)return;
+ const preparation=state.live&&!state.ended&&state.wave===0?Math.max(0,OPENING_PREP_SECONDS-state.elapsed):0;
+ for(const id of ['soloBaseOpening','soloBattleOpening']){
+  const overlay=$(id);if(overlay)overlay.hidden=preparation<=1e-6;
+  const number=$(id+'Seconds');if(number)number.textContent=String(Math.max(0,Math.ceil(preparation-1e-6)));
+ }
  const cameraStatus=$('cameraStatus');if(cameraStatus)cameraStatus.textContent=state.followFront?'전선 자동 추적':'수동 이동 · '+Math.round((state.cameraX+CW/2)/WORLD_W*100)+'%';
  $('cash').textContent=money(state.cash);
  $('income').textContent=ecoRemaining()>0?'중단 '+Math.ceil(ecoRemaining())+'초':'+'+showIncome(state.eco);
@@ -1408,7 +1415,7 @@ function updateUI(full=false){
  $('friendlyCount').textContent=state.units.filter(x=>x.side===0).length;
  $('hostileCount').textContent=state.units.filter(x=>x.side===1).length;
  $('frontStatus').textContent=inv?'⚠ 아군 기지 침공':state.units.some(x=>x.side===0&&x.x>WORLD_W-490)?'적 기지 압박':'중앙 전선';
- $('battleStatus').textContent=state.ended?'전투 종료':!state.live?'작전 대기':state.paused?'일시정지':inv?'⚠ 본진 침공':'전투 진행 중';
+ $('battleStatus').textContent=state.ended?'전투 종료':!state.live?'작전 대기':state.paused?'일시정지':preparation>0?'초기 배치 · '+Math.ceil(preparation-1e-6)+'초 뒤 첫 출격':inv?'⚠ 본진 침공':'전투 진행 중';
  const nukeTargets=state.units.filter(u=>u.side===1&&u.hp>0);
  const nukeAllowed=nukeTargets.length>0;
  $('nukeInfo').textContent=state.nukes?'1회 남음 · '+(nukeAllowed?'상대 전 병력 제거 가능':'상대 병력 대기 중'):'사용 완료';
@@ -1979,7 +1986,7 @@ function wire(){
    $('pauseButton').textContent=state.paused?'▶ 계속하기':'Ⅱ 일시정지';updateUI(true);}}
  });
 }
-window.DesertRoster=Object.freeze({WAVE_INTERVAL:INTERVAL,FACTORY_BUILD_SECONDS,FACTIONS,ROLE,getDef,refreshChoices:initFactions,cost:(role)=>ROLE[role]?.cost??Infinity});
+window.DesertRoster=Object.freeze({OPENING_PREP_SECONDS,WAVE_INTERVAL:INTERVAL,FACTORY_BUILD_SECONDS,FACTIONS,ROLE,getDef,refreshChoices:initFactions,cost:(role)=>ROLE[role]?.cost??Infinity});
 for(const readyEvent of ['desert-moe-ready','desert-real-sprites-ready'])window.addEventListener?.(readyEvent,()=>{if(state){state.lastCards=undefined;updateUI(true);}});initFactions();wire();reset();
 if(typeof window.addEventListener==='function')window.addEventListener('marine-art-ready',()=>updateUI(true));
 if(typeof window.addEventListener==='function')window.addEventListener('isometric-art-ready',()=>updateUI(true));

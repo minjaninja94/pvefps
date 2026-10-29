@@ -140,10 +140,11 @@ function buildGrid(){
    const building=at>snap.seconds+1e-6,stabilizing=!building&&(timing?.readyAt||0)>snap.seconds+1e-6;
    if(building||stabilizing){
     b.classList.add('constructing');
-    const end=building?at:timing.readyAt,start=building?(timing?.startedAt??at-E.FACTORY_BUILD_SECONDS):at;
+    const opening=!timing&&at===(E.OPENING_PREP_SECONDS??10);
+    const end=building?at:timing.readyAt,start=building?(timing?.startedAt??(opening?0:at-E.FACTORY_BUILD_SECONDS)):at;
     const progress=Math.max(0,Math.min(100,100*(snap.seconds-start)/(end-start)));
     const bar=document.createElement('span');bar.className='build-progress'+(stabilizing?' stabilizing':'');
-    const label=(building?'건설 ':'안정화 ')+Math.ceil(end-snap.seconds-1e-6)+'초';
+    const label=(building?(opening?'배치 준비 ':'건설 '):'안정화 ')+Math.ceil(end-snap.seconds-1e-6)+'초';
     bar.setAttribute('role','progressbar');bar.setAttribute('aria-label',label);
     bar.setAttribute('aria-valuemin','0');bar.setAttribute('aria-valuemax','100');bar.setAttribute('aria-valuenow',String(Math.floor(progress)));
     const fill=document.createElement('span');fill.className='build-progress-fill';fill.style.width=progress+'%';
@@ -335,7 +336,10 @@ function onSnapshot(v){
   $('mpBaseDescription').textContent=classic?'싱글 전장 규칙과 동일하게 75칸 생산 시설을 건설하세요. 상·중·하 구분 없이 한 전장에서 1:1로 교전합니다.':'싱글과 같은 방식으로 유닛을 선택하고 빈 칸에 건설하세요. 배치판에서 상·중·하 라인을 바로 전환할 수 있습니다.';
   $('mpBattleDescription').textContent=classic?'3300×520 크기의 원래 싱글 전장입니다. 양쪽 플레이어가 생산 시설을 건설하고 단일 전선에서 실시간 1:1로 싸웁니다.':'세 라인은 하나로 연결된 전장입니다. 미니맵 또는 전장을 눌러 해당 라인에 배치할 수 있습니다.';
  }
- if(!v.ended)$('mpStateTag').textContent=v.mode==='classic'?(practice?'클래식 1:1 AI 연습':'클래식 1:1 진행 중'):(practice?'3라인 AI 연습':'3라인 전투 중');
+ const preparation=!v.ended&&v.wave===0?Math.max(0,(v.preparationEndsAt??E.OPENING_PREP_SECONDS??10)-v.seconds):0;
+ const opening=$('mpOpening');if(opening)opening.hidden=preparation<=1e-6;
+ const openingNumber=$('mpOpeningSeconds');if(openingNumber)openingNumber.textContent=String(Math.max(0,Math.ceil(preparation-1e-6)));
+ if(!v.ended)$('mpStateTag').textContent=preparation>0?'초기 배치 · '+Math.ceil(preparation-1e-6)+'초 뒤 첫 출격':v.mode==='classic'?(practice?'클래식 1:1 AI 연습':'클래식 1:1 진행 중'):(practice?'3라인 AI 연습':'3라인 전투 중');
  const battle=$('mpBattleCanvas');if(battle.height!==battleHeight())battle.height=battleHeight();
  if(fresh||lane>=laneCount()){lane=laneCount()===1?0:1;repairLane=lane;gridKey='';setView('base');}
  const me=my(),side=me?.team??0;

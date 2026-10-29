@@ -49,7 +49,7 @@ const doc={readyState:'complete',hidden:false,body:{dataset:{playMode:'multi'}},
  },createDocumentFragment(){return {children:[],append(x){this.children.push(x);}};}};
 const network={configure(handlers){this.handlers=handlers;},sendOrder(cmd){calls.push({...cmd});return {ok:true};}};
 const cost=[65,100,185,285,185,360,300,220],unitNames=['돌격','사격','대장갑','장갑','대공','포격','기동','지원'];
-const engine={SLOTS:75,COST:cost,NAMES:unitNames,EXTRACTOR:8,FACTORY_BUILD_SECONDS:12,incomePerTick:level=>(1+level)*(level>=5?.85:1),ecoBuildSeconds:level=>12+4*(level-1),ecoPrice(){return 70;},ecoStabilize(){return 8;},WEAPON_COST(n){return Math.round(200*Math.pow(1.65,n));},ARMOR_COST(n){return Math.round(190*Math.pow(1.63,n));}};
+const engine={SLOTS:75,COST:cost,NAMES:unitNames,EXTRACTOR:8,OPENING_PREP_SECONDS:10,FACTORY_BUILD_SECONDS:12,incomePerTick:level=>(1+level)*(level>=5?.85:1),ecoBuildSeconds:level=>12+4*(level-1),ecoPrice(){return 70;},ecoStabilize(){return 8;},WEAPON_COST(n){return Math.round(200*Math.pow(1.65,n));},ARMOR_COST(n){return Math.round(190*Math.pow(1.63,n));}};
 const window={DesertTriEngine:engine,DesertTriNetwork:network,addEventListener:no,
  DesertRoster:{FACTIONS:[{name:'철갑연합',units:unitNames}],getDef(){return {kind:'ground',tips:'테스트 병력'};}},};
 vm.runInNewContext(src,{window,document:doc,performance:{now:()=>1000},requestAnimationFrame:no,console,Math,Number,Array,Object,Promise,setInterval:no,clearInterval:no},{filename:'tri-lane-ui.js',timeout:10000});
@@ -141,4 +141,16 @@ assert.equal(cells[6].children[2].className,'build-progress stabilizing');
 assert.equal(cells[6].children[2].children[1].textContent,'안정화 2초');
 window.DesertTriUI.onSnapshot({...timed,seconds:15});
 assert.equal(item('mpBuildGrid').children[6].children.length,2,'extractor timer clears after stabilization');
+const openingReady=[Array(75).fill(0)];openingReady[0][5]=10;
+const opening={...classic,wave:0,seconds:0,next:10,preparationEndsAt:10,players:[{...classic.players[0],buildingReadyAt:openingReady}]};
+window.DesertTriUI.onSnapshot(opening);
+assert.equal(item('mpOpening').hidden,false);assert.equal(item('mpOpeningSeconds').textContent,'10');
+assert.match(item('mpStateTag').textContent,/10초 뒤 첫 출격/);
+let openingCell=item('mpBuildGrid').children[5];
+assert.equal(openingCell.children[2].attrs['aria-valuenow'],'0','opening bar starts at zero');
+assert.equal(openingCell.children[2].children[1].textContent,'배치 준비 10초');
+window.DesertTriUI.onSnapshot({...opening,seconds:9.8,next:.2});
+assert.equal(item('mpOpeningSeconds').textContent,'1');
+window.DesertTriUI.onSnapshot({...opening,seconds:10,wave:1,next:12});
+assert.equal(item('mpOpening').hidden,true,'countdown clears on first wave');
 console.log('Multiplayer production UI passed: embedded lane picker, 75-slot grids, purchase lanes, swipe, click cancellation, vertical scroll.');
