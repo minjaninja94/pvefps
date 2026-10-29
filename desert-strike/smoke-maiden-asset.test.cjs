@@ -21,13 +21,15 @@ assert.match(css,/maiden-unit-portrait/,'16 real illustrated card portraits');
 assert.match(game,/class="faction-hero-new"/,'current web unit/faction art uses new portrait cards');
 assert.match(game,/faction-hero-/);
 assert.match(game,/maiden-art-ready/);
-assert.match(iso,/MaidenArt\?\.overlay/);
+assert.match(iso,/MaidenArt\?\.drawStandalone/,'the 2.5D renderer now draws complete illustrated unit cutouts');
+assert.match(iso,/HeroineFactions\?\.draw/,'maintain the heroine fallback if an asset fails to decode');
 assert.match(gallery,/maiden-art-ready/);
 const pics=fs.readFileSync(path.join(root,'maiden-illustrations.js'),'utf8');
 const calls={draw:0,fill:0};
 const fakeContext={
  drawImage(){calls.draw++;},fillRect(){calls.fill++;},clearRect(){},save(){},restore(){},
- translate(){},rotate(){},getImageData(){return {data:new Uint8ClampedArray(64*80*4)};},putImageData(){},
+ translate(){},rotate(){},beginPath(){},moveTo(){},lineTo(){},quadraticCurveTo(){},stroke(){},
+ getImageData(){return {data:new Uint8ClampedArray(64*80*4)};},putImageData(){},
 };
 const doc={createElement(t){assert.equal(t,'canvas');return {width:0,height:0,getContext:()=>fakeContext};}};
 class FakeImage{
@@ -47,9 +49,10 @@ for(const faction of [4,5]){
   assert.equal(box[2],64);assert.equal(box[3],80);
   for(const mode of ['idle','move','attack','siege','death'])for(let frame=0;frame<16;frame++){
    assert.equal(art.overlay(fakeContext,faction,role,mode,frame),true);
+   assert.equal(art.drawStandalone(fakeContext,faction,role,mode,frame),true,'active isometric renderer uses this asset path');
   }
  }
 }
-assert.ok(calls.draw>=1280,'16 illustrated units render 16 frames across 5 motions');
+assert.ok(calls.draw>=2560,'16 illustrated units render 16 frames across 5 motions via both legacy and live paths');
 assert.equal(art.portraitBox(1,1),null,'other factions unaffected');
-console.log('True WebP artwork + six-faction UI + 16 illustration sources + 1,280 overlaid animation frames verified.');
+console.log('True WebP atlas + 16 unit images + 1,280 standalone and 1,280 legacy frames verified.');
