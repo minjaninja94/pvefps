@@ -7,9 +7,13 @@ function strength(u){return u?.heroCount===COUNT?Math.max(0,Math.min(COUNT,Math.
 function definition(base,u){if(u.heroCount!==COUNT)return base;const d={...base};for(const key of STATS)if(Number.isFinite(d[key]))d[key]*=(key==='damage'||key==='heal'?strength(u):COUNT);return d;}
 // Packed heroes represent up to twenty adjacent soldiers: a splash hit must
 // cover more than one soldier, but not automatically all twenty in a small blast.
-function splashWeight(target){
+function splashWeight(target,attackerVolley=1){
  if(target?.heroCount!==COUNT)return 1;
- return Math.min(8,1+.37*Math.max(0,strength(target)-1));
+ // Packed targets stand for several troops inside the blast radius. An attacking
+ // hero's 20x damage already stands for twenty projectiles, so adding the full
+ // target splash bonus again would turn 20v20 hero combat into ~160x damage.
+ const shots=Math.max(1,Number(attackerVolley)||1);
+ return Math.min(4.5,1+.18*Math.max(0,strength(target)-1)/shots);
 }
 function hit(amount,armor,target,attacker,volley=null){
  const shots=Math.max(1,volley??strength(attacker));
