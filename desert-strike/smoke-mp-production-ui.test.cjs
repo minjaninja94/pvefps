@@ -153,4 +153,12 @@ window.DesertTriUI.onSnapshot({...opening,seconds:9.8,next:.2});
 assert.equal(item('mpOpeningSeconds').textContent,'1');
 window.DesertTriUI.onSnapshot({...opening,seconds:10,wave:1,next:12});
 assert.equal(item('mpOpening').hidden,true,'countdown clears on first wave');
+item('mpUnitCards').dispatch('click',{target:{closest(){return {dataset:{role:'8'}};}}});
+for(const [eco,income] of [[4,5.1],[5,5.95],[6,6.8],[7,6.8]]){
+ const economy={...classic,seconds:240,wave:20,players:[{...classic.players[0],eco,ecoReadyAt:0}]};
+ window.DesertTriUI.onSnapshot(economy);
+ assert.ok(item('mpUnitDetails').textContent.includes('+'+income+' CR / 0.5초'));
+ assert.equal(item('mpUnitCards').children[8].title,item('mpUnitDetails').textContent,'card and selected tooltip use the same live calculation');
+ if(eco===7)assert.doesNotMatch(item('mpUnitDetails').textContent,/건설|안정화/);
+}
 console.log('Multiplayer production UI passed: embedded lane picker, 75-slot grids, purchase lanes, swipe, click cancellation, vertical scroll.');

@@ -139,5 +139,5 @@ test('solo and authoritative multiplayer engines integrate limit and special com
  for(const name of ['waveEffects','hitEffects','reflectEffects','deathEffects','populationLimit','survival','healEcho'])
   assert.ok(multi.includes('DesertPrism?.'+name),'missing multiplayer '+name);
  assert.ok(html.indexOf('prism-experiments.js')<html.indexOf('augment-rules.js'));
- assert.match(html,/400종 카드/);
+ assert.match(html,/웨이브별 증강 선택/);
 });

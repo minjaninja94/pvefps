@@ -1,33 +1,33 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=opening10a"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=copy-clean1"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
-  <header class="lobby-header"><span class="lobby-mark">D<span>///</span>F</span><div><strong>DESERT FRONT</strong><small>TACTICAL COMMAND CENTER / TEN FACTIONS</small></div><span id="lobbyAccountStatus" class="lobby-account-status">게스트 지휘관</span><button id="lobbyMusicToggle" class="lobby-music-toggle" type="button" aria-pressed="true">♫ BGM 끄기</button><button id="combatAudioToggle" class="lobby-music-toggle" type="button" aria-pressed="true">🔊 전투음 ON</button></header>
+  <header class="lobby-header"><span class="lobby-mark">D<span>///</span>F</span><div><strong>DESERT FRONT</strong></div><span id="lobbyAccountStatus" class="lobby-account-status">게스트 지휘관</span><button id="lobbyMusicToggle" class="lobby-music-toggle" type="button" aria-pressed="true">♫ BGM 끄기</button><button id="combatAudioToggle" class="lobby-music-toggle" type="button" aria-pressed="true">🔊 전투음 ON</button></header>
   <div class="lobby-hero-grid">
    <main class="lobby-panel lobby-main">
-    <div class="lobby-eyebrow">OPERATION CONTROL • SEASON 00</div>
-    <h1>지휘관 사령부</h1><p class="lobby-subtitle">종족을 고르고 부대를 편성하세요. 영웅의 외형은 전투 성능에 영향을 주지 않습니다.</p>
+
+    <h1>지휘관 사령부</h1>
     <div class="lobby-stage"><div class="lobby-stage-glow"></div><canvas id="lobbyHero" width="320" height="210" aria-label="선택한 종족 사령부와 대표 유닛"></canvas><div class="lobby-stage-label"><span id="lobbyFactionName">철갑연합</span><small id="lobbyFactionTrait">다목적 장갑·전열</small></div></div>
-    <div class="lobby-difficulty" id="lobbyDifficulty" role="group" aria-label="싱글·3라인 연습 AI 난이도"><span>AI 전투 난이도 <small>싱글 · 3라인 연습</small></span><div><button type="button" data-difficulty="normal" aria-pressed="true" class="selected"><strong>일반</strong><small>기본 전술 AI</small></button><button type="button" data-difficulty="hard" aria-pressed="false"><strong>하드</strong><small>선제 빌드 · 적극적인 인컴 투자</small></button></div><p>하드도 같은 시작 자원과 수입 규칙을 사용합니다. 추가 자원 보너스는 없습니다.</p></div>
+    <div class="lobby-difficulty" id="lobbyDifficulty" role="group" aria-label="싱글·3라인 연습 AI 난이도"><span>AI 전투 난이도 <small>싱글 · 3라인 연습</small></span><div><button type="button" data-difficulty="normal" aria-pressed="true" class="selected"><strong>일반</strong><small>기본 전술 AI</small></button><button type="button" data-difficulty="hard" aria-pressed="false"><strong>하드</strong><small>적극적인 병력 운용</small></button></div></div>
     <div id="lobbyRulesetPicker" class="lobby-ruleset-picker" role="group" aria-label="싱글, 멀티플레이 및 3라인 연습 전투 규칙">
-     <div class="lobby-ruleset-heading"><strong>전투 규칙 선택</strong><span class="lobby-ruleset-heading-tools"><small>싱글 · 멀티플레이 · 3라인 연습 모두 적용</small><button id="augmentCodexOpen" type="button" class="augment-codex-trigger" aria-haspopup="dialog" aria-controls="augmentCodexDialog" title="공통·종족별 증강 300종 도감 열기">? 증강 도감</button></span></div>
+     <div class="lobby-ruleset-heading"><strong>전투 규칙 선택</strong><span class="lobby-ruleset-heading-tools"><button id="augmentCodexOpen" type="button" class="augment-codex-trigger" aria-haspopup="dialog" aria-controls="augmentCodexDialog" title="증강 효과 보기">? 증강 도감</button></span></div>
      <div class="lobby-ruleset-options">
       <button type="button" id="lobbyRulesetStandard" data-ruleset="standard" class="selected" aria-pressed="true"><strong>일반전</strong><small>기본 규칙으로 전투</small></button>
-      <button type="button" id="lobbyRulesetAugment" data-ruleset="augment" aria-pressed="false"><strong>✦ 증강전</strong><small>400종 카드 · 프리즘 특수 100종 포함</small></button>
+      <button type="button" id="lobbyRulesetAugment" data-ruleset="augment" aria-pressed="false"><strong>✦ 증강전</strong><small>웨이브별 증강 선택</small></button>
      </div>
-     <p id="lobbyRulesetDescription" aria-live="polite">일반전 선택 중 · 기존 전투 규칙을 사용합니다.</p>
+     <p id="lobbyRulesetDescription" aria-live="polite">핵심 기지 파괴로 승리 · 웨이브 무제한</p>
     </div>
     <div class="lobby-actions"><button id="lobbySolo" class="lobby-primary" type="button"><strong>싱글 출격</strong><span>무제한 웨이브 · 핵심 기지 파괴 시 종료</span></button><button id="lobbyMulti" type="button" aria-expanded="false" aria-controls="lobbyMultiplayerConfig"><strong>멀티플레이</strong><span>무제한 웨이브 · 핵심 기지 파괴 시 종료</span></button><button id="lobbyPractice" type="button"><strong>3라인 연습</strong><span>무제한 웨이브 · AI 전투 연습</span></button></div>
     <section id="lobbyMultiplayerConfig" class="lobby-online-setup lobby-inline-multiplayer" hidden aria-label="멀티플레이 방 만들기 및 참가">
-     <div class="lobby-section-title"><div><div class="lobby-eyebrow">MULTIPLAYER COMMAND</div><h2>멀티플레이 방 만들기 · 참가</h2></div><button type="button" id="lobbyCloseMulti" class="btn outline">접기</button></div>
-     <p class="lobby-online-tip">웨이브 제한 없이 본진을 파괴할 때까지 대전합니다. 방 설정과 공개방 검색을 바로 이용하세요.</p>
+     <div class="lobby-section-title"><div><h2>멀티플레이 방 만들기 · 참가</h2></div><button type="button" id="lobbyCloseMulti" class="btn outline">접기</button></div>
+
      <div id="lobbyMultiMount"></div>
     </section>
    </main>
    <aside class="lobby-panel lobby-profile">
-    <div class="lobby-eyebrow">COMMANDER PROFILE / RANKED DOSSIER</div>
+
     <div class="lobby-rank-card"><img id="lobbyRankBadge" class="lobby-rank-badge" src="./assets/ranks/bronze.svg" width="112" height="108" alt="브론즈 랭크 엠블럼">
      <div class="lobby-rank-overview"><small id="lobbyRankIdentity">게스트 지휘관 · 비공식 기록</small><div id="lobbyRank" class="lobby-rank">브론즈</div><strong id="lobbyRankRP" class="lobby-rp">1,000 RP</strong><small id="lobbyRankNote">게스트 기록</small></div>
     </div>
@@ -37,17 +37,17 @@
     <div class="lobby-profile-options"><label>지휘관 이름<input id="lobbyNickname" maxlength="16" value="지휘관" autocomplete="nickname"></label><button id="lobbySaveName" type="button">프로필 저장</button></div>
     <button type="button" id="careerOpen" class="btn accent lobby-login-button">로그인 / 회원가입</button>
     <details class="lobby-device-details"><summary>기기 연결 정보 (게스트)</summary>
-    <div class="lobby-auth"><button id="lobbyDeviceLogin" type="button">이 기기로 간편 접속</button><button id="lobbyCopyIds" type="button">접속 ID 복사</button><label>유저 고유 ID<input id="lobbyUserId" readonly autocomplete="off" aria-label="유저 고유 ID"></label><label>기기 접속 ID<input id="lobbyDeviceId" readonly autocomplete="off" aria-label="기기 접속 ID"></label><p>비밀번호 없이 같은 브라우저에서 자동 접속합니다. ID는 식별용이며 실제 인증 정보는 이 기기에 보관됩니다. 브라우저 데이터를 삭제하거나 다른 기기로 바꾸면 새 계정이 됩니다.</p><small id="lobbyAuthMessage" role="status">기기 계정을 준비하고 있습니다.</small></div>
+    <div class="lobby-auth"><button id="lobbyDeviceLogin" type="button">이 기기로 간편 접속</button><button id="lobbyCopyIds" type="button">접속 ID 복사</button><label>유저 고유 ID<input id="lobbyUserId" readonly autocomplete="off" aria-label="유저 고유 ID"></label><label>기기 접속 ID<input id="lobbyDeviceId" readonly autocomplete="off" aria-label="기기 접속 ID"></label><p>게스트 기록은 이 브라우저에 저장됩니다. 브라우저 데이터를 삭제하면 기록이 사라집니다.</p><small id="lobbyAuthMessage" role="status">기기 계정을 준비하고 있습니다.</small></div>
     </details>
    </aside>
   </div>
   <div id="careerLayer" class="career-layer" hidden role="dialog" aria-modal="true" aria-labelledby="careerDialogTitle">
    <section id="careerPanel" class="lobby-panel career-panel" data-auth-mode="login" tabindex="-1">
-   <div class="lobby-section-title"><div><div class="lobby-eyebrow">COMMANDER ACCOUNT</div><h2 id="careerDialogTitle">지휘관 로그인</h2></div><button type="button" id="careerClose" class="btn outline" aria-label="팝업 닫기">✕ 닫기</button></div>
+   <div class="lobby-section-title"><div><h2 id="careerDialogTitle">지휘관 로그인</h2></div><button type="button" id="careerClose" class="btn outline" aria-label="팝업 닫기">✕ 닫기</button></div>
    <div class="career-mode-tabs" role="group" aria-label="로그인 방식"><button id="careerTabLogin" type="button" class="active" aria-pressed="true">로그인</button><button id="careerTabSignup" type="button" aria-pressed="false">회원가입</button></div>
-   <p class="career-short-note">이메일 없이 아이디·비밀번호로 접속합니다. 회원 진행도와 비공식 랭크는 Supabase에 저장됩니다.</p>
+   <p class="career-short-note">이메일 없이 아이디·비밀번호로 접속합니다. 회원 기록은 계정에 저장됩니다.</p>
    <strong id="careerRating">비공식 브론즈 · 1000 RP</strong>
-   <div id="careerAccount" class="career-account">Firebase 연결 전</div>
+   <div id="careerAccount" class="career-account">접속 대기</div>
    <div class="career-auth-form"><label>아이디 <input id="careerEmail" type="text" autocomplete="username" maxlength="20" minlength="4" placeholder="영문·숫자·_ 4~20자"></label><label id="careerNicknameLabel">닉네임 <input id="careerNickname" type="text" maxlength="16" placeholder="게임 내 표시 이름"></label><label>비밀번호 <input id="careerPassword" type="password" autocomplete="current-password" minlength="8" maxlength="72" placeholder="8자 이상"></label></div>
    <div class="career-actions"><button type="button" id="careerRegister" class="btn accent">회원가입</button><button type="button" id="careerLogin" class="btn outline">로그인</button><button type="button" id="careerGuest" class="btn outline">게스트 플레이</button><button type="button" id="careerLogout" class="btn outline" hidden>로그아웃</button></div>
    <div id="careerStatus" role="status">이메일 없이 아이디·비밀번호·닉네임으로 가입할 수 있습니다. 로그인 상태는 이 기기에서 유지됩니다. 비밀번호 분실 시 자동 복구는 제공되지 않습니다.</div>
@@ -59,8 +59,8 @@
    <label>유닛 음성 <input id="audioVoiceVolume" type="range" min="0" max="100" value="50"><output id="audioVoiceValue">50%</output></label>
    <label>전투 효과음 <input id="audioEffectsVolume" type="range" min="0" max="100" value="32"><output id="audioEffectsValue">32%</output></label>
    </div></details>
-  <section class="lobby-panel lobby-loadout"><div class="lobby-section-title"><div><div class="lobby-eyebrow">FACTION ROSTER</div><h2>10종족 선택</h2></div><span>80개 전투 유닛</span></div><div id="lobbyFactions" class="lobby-factions"></div>
-   <div class="lobby-section-title"><div><div class="lobby-eyebrow">UNIT MOTION ROSTER / 80 UNITS</div><h2>유닛별 애니메이션 도감</h2></div><span>병종 선택 · 동작 확인 · 능력치</span></div>
+  <section class="lobby-panel lobby-loadout"><div class="lobby-section-title"><div><h2>10종족 선택</h2></div><span>80개 전투 유닛</span></div><div id="lobbyFactions" class="lobby-factions"></div>
+   <div class="lobby-section-title"><div><h2>유닛별 애니메이션 도감</h2></div><span>병종 선택 · 동작 확인 · 능력치</span></div>
    <div class="lobby-unit-layout"><div id="lobbyUnitGrid" class="lobby-unit-grid" aria-label="유닛 8종 애니메이션"></div>
     <div class="lobby-unit-inspector"><div class="lobby-unit-stage"><canvas id="lobbyUnitPreview" width="192" height="192"></canvas><span id="lobbyUnitAnimBadge">대기</span></div>
      <strong id="lobbyUnitTitle">유닛 선택</strong><div id="lobbyUnitStats"></div>
@@ -68,15 +68,15 @@
       <button type="button" data-action="idle" class="active">대기</button><button type="button" data-action="move">이동</button><button type="button" data-action="attack">공격</button><button type="button" data-action="siege">공성</button>
       <button type="button" data-action="hit">피격</button><button type="button" data-action="skill">스킬</button><button type="button" data-action="spawn">소환</button><button type="button" data-action="death">사망</button>
      </div></div></div>
-   <div class="lobby-section-title"><div><div class="lobby-eyebrow">APPEARANCE ONLY</div><h2>지휘관 스킨</h2></div><span id="lobbySkinMessage">레벨을 올려 해금</span></div><div id="lobbySkins" class="lobby-skins"></div>
+   <div class="lobby-section-title"><div><h2>지휘관 스킨</h2></div><span id="lobbySkinMessage">레벨을 올려 해금</span></div><div id="lobbySkins" class="lobby-skins"></div>
   </section>
-  <footer class="lobby-footer">회원 RP는 Supabase 서버가 저장하는 비공식 등급입니다. 게스트 RP와 최근 전적은 이 기기에 저장됩니다. · 유닛 음성: <a href="https://voicevox.hiroshiba.jp/nemo/term/" target="_blank" rel="noopener noreferrer">VOICEVOX Nemo</a></footer>
+  <footer class="lobby-footer">유닛 음성: <a href="https://voicevox.hiroshiba.jp/nemo/term/" target="_blank" rel="noopener noreferrer">VOICEVOX Nemo</a></footer>
  </div>
 </section>
 <div class="app">
 <div id="commandHud" class="command-hud">
 <header class="top">
- <a class="logo" href="../"><span class="logo-badge">D<span>///</span>F</span><span>DESERT <strong>FRONT</strong><small>ISOMETRIC PIXEL BATTLE / V3</small></span></a>
+ <a class="logo" href="../"><span class="logo-badge">D<span>///</span>F</span><span>DESERT <strong>FRONT</strong></span></a>
  <div class="top-side"><button id="backToLobby" class="btn outline" type="button">⌂ 로비</button>
  <div class="battle-audio-anchor">
   <button id="battleAudioSettingsButton" class="btn outline battle-audio-gear" type="button"
@@ -94,7 +94,7 @@
     <label>유닛 음성 <input id="battleVoiceVolume" type="range" min="0" max="100" value="50" aria-label="유닛 음성 볼륨"><output id="battleVoiceValue">50%</output></label>
     <label>전투 효과음 <input id="battleEffectsVolume" type="range" min="0" max="100" value="32" aria-label="전투 효과음 볼륨"><output id="battleEffectsValue">32%</output></label>
    </div>
-   <small>변경 사항은 로비와 싱글·멀티 전투에 즉시 적용됩니다.</small>
+
   </section>
  </div><span id="factionLabel" class="faction-pill">진영 미선택</span><button id="helpButton" class="btn outline">? 도움말</button></div>
 </header>
@@ -103,46 +103,46 @@
 <div id="soloAugmentStatus" class="solo-augment-status" hidden role="status" aria-live="off">✦ 싱글 증강전 · 첫 증강 선택 대기</div>
 <div id="marineAbilityStatus" class="marine-ops" hidden role="status" aria-live="off">★ 해병성채 · 긴빠이 · 자진입대 · 황룡 · 오도봉고</div>
 <nav class="tabs" aria-label="게임 화면 전환">
- <button class="tab active" data-view="base" aria-current="page"><span class="tab-no">01</span><span>내 기지 · 건설<small>BASE & PRODUCTION</small></span><span id="warningDot" class="danger-dot" hidden>!</span></button>
- <button class="tab" data-view="battle"><span class="tab-no">02</span><span>전장<small>LIVE BATTLE</small></span></button>
- <button class="tab" data-view="multiplayer"><span class="tab-no">04</span><span>멀티플레이<small>1:1 – 3:3 · CO-OP</small></span></button>
- <button class="tab" type="button" data-open-upgrades><span class="tab-no">↗</span><span>업그레이드<small>UPGRADE & ABILITY</small></span></button>
+ <button class="tab active" data-view="base" aria-current="page"><span class="tab-no">01</span><span>내 기지 · 건설</span><span id="warningDot" class="danger-dot" hidden>!</span></button>
+ <button class="tab" data-view="battle"><span class="tab-no">02</span><span>전장</span></button>
+ <button class="tab" data-view="multiplayer"><span class="tab-no">04</span><span>멀티플레이</span></button>
+ <button class="tab" type="button" data-open-upgrades><span class="tab-no">↗</span><span>업그레이드</span></button>
 </nav>
  <section class="production-intel panel" aria-label="생산 중 전장 상황">
-  <div class="intel-top"><strong>전장 전황 · 생산 중 실시간 미니맵</strong><span id="productionFrontStatus" data-tendency="even">전선 분석 대기</span></div>
+  <div class="intel-top"><strong>전황</strong><span id="productionFrontStatus" data-tendency="even">전선 분석 대기</span></div>
   <canvas id="productionMinimap" width="1100" height="88" aria-label="아군과 적군의 현재 전선. 누르면 전장으로 이동합니다." role="button" tabindex="0"></canvas>
-  <small>청록색 아군 · 주황색 적군 · 하단 전선 비율 / 미니맵을 누르면 해당 전장으로 이동</small>
+
  </section>
   <div class="mp-overview"><canvas id="mpOverviewCanvas" width="1100" height="96" aria-label="3라인 전황 미니맵. 원하는 라인을 눌러 이동합니다."></canvas></div>
-  <div class="mp-command-bar"><div><span class="eyebrow">PERSONAL COMMAND</span><strong id="mpMyResources">360 CR</strong> <span id="mpMyIncome">+1 / 0.5초</span></div><div><b id="mpWave">웨이브 0</b> · <span id="mpCountdown">10초</span></div><button id="mpEco" class="btn outline">경제 강화</button></div>
+  <div class="mp-command-bar"><div><strong id="mpMyResources">360 CR</strong> <span id="mpMyIncome">+1 / 0.5초</span></div><div><b id="mpWave">웨이브 0</b> · <span id="mpCountdown">10초</span></div><button id="mpEco" class="btn outline">경제 강화</button></div>
   <nav class="mp-main-tabs" id="mpViewTabs" aria-label="멀티플레이 화면 전환" hidden>
-   <button type="button" class="tab active" data-mp-view="base" aria-current="page"><span class="tab-no">01</span><span>내 기지 · 건설<small>BASE & PRODUCTION</small></span></button>
-   <button type="button" class="tab" data-mp-view="battle"><span class="tab-no">02</span><span>전장<small>LIVE BATTLE</small></span></button>
-   <button type="button" class="tab" data-mp-view="upgrade"><span class="tab-no">03</span><span>업그레이드<small>UPGRADE & ABILITY</small></span></button>
+   <button type="button" class="tab active" data-mp-view="base" aria-current="page"><span class="tab-no">01</span><span>내 기지 · 건설</span></button>
+   <button type="button" class="tab" data-mp-view="battle"><span class="tab-no">02</span><span>전장</span></button>
+   <button type="button" class="tab" data-mp-view="upgrade"><span class="tab-no">03</span><span>업그레이드</span></button>
   </nav>
 </div>
 <div class="base-health"><div class="health-entry"><div><span class="color-point blue">●</span> 아군 핵심 기지 <b id="myHealth">8640 / 8640</b></div><div class="healthbar"><i id="myHealthFill"></i></div></div><div class="health-entry"><div><span class="color-point red">●</span> 적 핵심 기지 <b id="enemyHealth">8640 / 8640</b></div><div class="healthbar redbar"><i id="enemyHealthFill"></i></div></div></div>
 <div class="screen active" id="view-base">
- <div class="section-head"><div><span class="eyebrow">BASE DEVELOPMENT / PRODUCTION ZONE</span><h1>생산 기지</h1><p>진영을 선택하고 유닛 생산 시설을 건설하세요. 적이 방어선을 뚫으면 이곳에 침공 병력이 표시됩니다.</p></div><span id="baseAlert" class="alert-chip">기지 안전</span></div>
+ <div class="section-head"><div><h1>생산 기지</h1></div><span id="baseAlert" class="alert-chip">기지 안전</span></div>
 
- <div class="canvas-wrap base-canvas"><canvas id="baseCanvas" width="1100" height="340" aria-label="아군 기지, 방어 포탑과 침공 병력"></canvas><div id="soloBaseOpening" class="opening-countdown" role="status" aria-label="초기 배치 카운트다운" hidden><span>초기 배치 시간</span><div><strong id="soloBaseOpeningSeconds">10</strong><b>초 뒤 첫 웨이브</b></div><small>지금 배치한 병력 시설은 준비 종료와 함께 첫 출격합니다.</small></div><div class="canvas-note">● CORE & DEFENSE — 생산 시설은 보호 구역에 있습니다.</div></div>
+ <div class="canvas-wrap base-canvas"><canvas id="baseCanvas" width="1100" height="340" aria-label="아군 기지, 방어 포탑과 침공 병력"></canvas><div id="soloBaseOpening" class="opening-countdown" role="status" aria-label="초기 배치 카운트다운" hidden><span>초기 배치 시간</span><div><strong id="soloBaseOpeningSeconds">10</strong><b>초 뒤 첫 웨이브</b></div><small>지금 배치한 병력 시설은 준비 종료와 함께 첫 출격합니다.</small></div></div>
  <div class="base-content">
- <section class="panel cards-panel"><div class="panel-heading"><div><span class="eyebrow">RECRUIT UNITS</span><h2>병력 편성</h2></div><button type="button" class="btn accent" data-open-upgrades>✦ 업그레이드</button><span class="shortcut">1–8 단축키</span><a class="sprite-gallery-link" href="./sprite-gallery.html" target="_blank" rel="noopener">2.5D 도트 모션 도감 ↗</a></div><p class="subtext">유닛을 고르면 <b>강점·약점·공격 대상</b>이 보입니다. 선택한 유닛을 아래 빈 슬롯에 설치하세요.</p><div id="econInfo" class="economy-status" role="status" aria-live="off"></div><div id="unitCards" class="unit-cards"></div><div id="unitDetails" class="unit-details">유닛을 선택하면 여기에서 상성 정보를 볼 수 있습니다.</div></section>
- <section class="panel build-panel"><div class="panel-heading"><div><span class="eyebrow">UNIT FORMATION</span><h2>생산 건물 · 15 × 5</h2></div><span id="builtCount" class="shortcut">0 / 75</span></div><p class="subtext">앞쪽 배치일수록 먼저 교전합니다. <b>웨이브마다 각 건물에서 1기씩 소환</b>됩니다.</p><div class="build-grid-viewport" aria-label="75개 생산 슬롯 가로 스크롤"><div id="buildGrid" class="build-grid" aria-label="기지 건설 슬롯"></div></div><div class="actions"><button id="demolishButton" class="btn outline">▤ 철거 모드</button><button id="clearButton" class="btn outline">✕ 선택 해제</button></div><div class="protection-note"><b>기지 방어 규칙</b><p>원작의 후대형 방식처럼 생산 시설은 직접 파괴되지 않습니다. 중간 타워 파괴 시 공격 팀에 150 CR을 지급하고 수비 측에 초록 오라의 돌격 가디언 1기를 소환합니다. 가디언은 중앙선을 넘지 않고 해당 라인을 지킵니다. 가디언이 받는 외부 치유는 25%, 최근 3초 내 피격 시 10%입니다. 이후 본진 포탑과 핵심 기지를 공격합니다.</p></div></section>
+ <section class="panel cards-panel"><div class="panel-heading"><div><h2>병력 편성</h2></div><button type="button" class="btn accent" data-open-upgrades>✦ 업그레이드</button><span class="shortcut">1–8 단축키</span></div><div id="econInfo" class="economy-status" role="status" aria-live="off"></div><div id="unitCards" class="unit-cards"></div><div id="unitDetails" class="unit-details">유닛을 선택하세요.</div></section>
+ <section class="panel build-panel"><div class="panel-heading"><div><h2>생산 건물 · 15 × 5</h2></div><span id="builtCount" class="shortcut">0 / 75</span></div><div class="build-grid-viewport" aria-label="75개 생산 슬롯 가로 스크롤"><div id="buildGrid" class="build-grid" aria-label="기지 건설 슬롯"></div></div><div class="actions"><button id="demolishButton" class="btn outline">▤ 철거 모드</button><button id="clearButton" class="btn outline">✕ 선택 해제</button></div><details class="protection-note"><summary>방어 시설 도움말</summary><p>중간 타워를 파괴하면 공격 팀이 150 CR을 받고 수비 팀에 가디언이 소환됩니다. 가디언은 자기 진영에서만 싸웁니다. 본진 포탑 다음에는 핵심 기지가 공격받습니다.</p></details></section>
  </div>
 </div>
 <div class="screen" id="view-battle">
- <div class="section-head"><div><span class="eyebrow">NO-MAN'S LAND / ACTIVE FRONT</span><h1>실시간 전장</h1><p>비스듬히 내려다보는 2.5D 전장에서 유닛들이 교전합니다. 실시간 전투 판정과 역할 상성은 유지됩니다.</p></div><div class="controls"><button class="btn outline" id="pauseButton">Ⅱ 일시정지</button><button class="btn outline" id="speedButton">▶ 1×</button></div></div>
- <div class="battle-nav"><button id="panLeft" class="btn outline" type="button">◀ 내 기지</button><span id="cameraStatus">전선 자동 추적</span><button id="followFront" class="btn outline" type="button">◎ 전선 추적</button><button id="panRight" class="btn outline" type="button">적 기지 ▶</button></div><div class="canvas-wrap battlefield"><canvas id="battleCanvas" width="1100" height="520" aria-label="확장된 자동 전투 전장. 드래그로 이동할 수 있습니다."></canvas><div id="soloBattleOpening" class="opening-countdown" role="status" aria-label="초기 배치 카운트다운" hidden><span>초기 배치 시간</span><div><strong id="soloBattleOpeningSeconds">10</strong><b>초 뒤 첫 웨이브</b></div><small>지금 배치한 병력 시설은 준비 종료와 함께 첫 출격합니다.</small></div><div class="battle-top"><span>ALLIED FORCE <b id="friendlyCount">0</b></span><span id="frontStatus">전선 중앙</span><span>ENEMY FORCE <b id="hostileCount">0</b></span></div><div id="waveBanner" class="wave-banner"></div></div>
- <div class="mini-wrap"><div class="mini-heading"><b>WORLD MAP · EXTENDED FRONT</b><span>미니맵을 누르면 해당 위치로 이동합니다</span></div><canvas id="battleMinimap" width="1100" height="82" aria-label="전장 미니맵, 클릭해서 시야 이동"></canvas></div><div class="battle-bottom"><div class="legend"><span>위 아이콘: ⚔ 돌격</span><span>⌖ 사격</span><span>◆ 대장갑</span><span>▣ 장갑</span><span>✣ 대공</span><span>✹ 포격</span><span>◇ 비행</span><span>✚ 지원</span></div><div id="inspect" class="inspect">전장 유닛을 클릭하면 능력과 상성을 볼 수 있습니다.</div></div>
+ <div class="section-head"><div><h1>실시간 전장</h1></div><div class="controls"><button class="btn outline" id="pauseButton">Ⅱ 일시정지</button><button class="btn outline" id="speedButton">▶ 1×</button></div></div>
+ <div class="battle-nav"><button id="panLeft" class="btn outline" type="button">◀ 내 기지</button><span id="cameraStatus">전선 자동 추적</span><button id="followFront" class="btn outline" type="button">◎ 전선 추적</button><button id="panRight" class="btn outline" type="button">적 기지 ▶</button></div><div class="canvas-wrap battlefield"><canvas id="battleCanvas" width="1100" height="520" aria-label="확장된 자동 전투 전장. 드래그로 이동할 수 있습니다."></canvas><div id="soloBattleOpening" class="opening-countdown" role="status" aria-label="초기 배치 카운트다운" hidden><span>초기 배치 시간</span><div><strong id="soloBattleOpeningSeconds">10</strong><b>초 뒤 첫 웨이브</b></div><small>지금 배치한 병력 시설은 준비 종료와 함께 첫 출격합니다.</small></div><div class="battle-top"><span>아군 병력 <b id="friendlyCount">0</b></span><span id="frontStatus">전선 중앙</span><span>적 병력 <b id="hostileCount">0</b></span></div><div id="waveBanner" class="wave-banner"></div></div>
+ <div class="mini-wrap"><div class="mini-heading"><b title="누르면 해당 위치로 이동합니다">전장 미니맵</b></div><canvas id="battleMinimap" width="1100" height="82" aria-label="전장 미니맵, 클릭해서 시야 이동"></canvas></div><div class="battle-bottom"><div class="legend"><span>⚔ 돌격</span><span>⌖ 사격</span><span>◆ 대장갑</span><span>▣ 장갑</span><span>✣ 대공</span><span>✹ 포격</span><span>◇ 비행</span><span>✚ 지원</span></div><div id="inspect" class="inspect">전장 유닛을 클릭하면 능력과 상성을 볼 수 있습니다.</div></div>
 </div>
 
 <div class="screen" id="view-multiplayer">
- <div class="section-head"><div><span class="eyebrow">TRI-FRONT / MULTIPLAYER OPERATIONS</span><h1>3라인 멀티플레이</h1><p>전장 면적 3배 · 웨이브 무제한 · 한쪽 팀의 핵심 기지 2개 파괴 시 승패 확정 (클래식은 1개). 참가자마다 자원·병력 생산 시설을 소유합니다.</p></div><button id="mpExitBattle" class="btn outline" type="button">경기 종료 · 로비</button><span id="mpStateTag" class="alert-chip">연결 전</span></div>
+ <div class="section-head"><div><h1 title="3라인: 핵심 기지 2개 파괴 시 승리 · 클래식: 1개">멀티플레이</h1></div><button id="mpExitBattle" class="btn outline" type="button">경기 종료 · 로비</button><span id="mpStateTag" class="alert-chip">연결 전</span></div>
  <section class="panel mp-lobby" id="mpLobby">
   <div class="mp-lobby-grid">
    <label>지휘관 이름<input id="mpName" maxlength="16" placeholder="지휘관" value="지휘관"></label>
-   <label class="mp-public-option"><input type="checkbox" id="mpPublicCheck" checked> 공개방으로 등록 (체크 해제 시 초대 코드 전용)</label><label>경기 규칙<select id="mpRuleset"><option value="standard">일반전</option><option value="augment">증강전 · 300종 카드</option></select></label>
+   <label class="mp-public-option"><input type="checkbox" id="mpPublicCheck" checked> 공개방으로 등록 (체크 해제 시 초대 코드 전용)</label><label>경기 규칙<select id="mpRuleset"><option value="standard">일반전</option><option value="augment">증강전</option></select></label>
    <label>경기 방식<select id="mpMode"><option value="pvp">3라인 팀 경쟁 PvP</option><option value="classic">클래식 1:1 · 싱글 전장</option><option value="coop">3라인 협동 대 AI</option></select></label>
    <label>팀당 인원<select id="mpSize"><option value="1">1명 (1:1)</option><option value="2">2명 (2:2)</option><option value="3">3명 (3:3)</option></select></label>
    <label>사용 종족<select id="mpFaction"><option value="0">철갑연합</option><option value="1">심연군체</option><option value="2">성운결사</option><option value="3">해병성채</option><option value="4">월영 수인족</option><option value="5">은월 엘프족</option><option value="6">야월 퍼리족</option><option value="7">크롬 로보족</option><option value="8">옥토퍼 군체</option><option value="9">농농 페어리족</option></select></label>
@@ -151,20 +151,20 @@
   </div>
   <div class="mp-public-search"><button type="button" class="btn outline" id="mpBrowse">공개방 검색</button><select id="mpPublicList" aria-label="공개방 목록"><option value="">공개방 목록 보기</option></select><button type="button" class="btn outline" id="mpJoinPublic">선택한 방 참가</button><small id="mpBrowseStatus" role="status">대기 중인 공개방을 찾을 수 있습니다.</small></div>
   <div class="actions mp-actions"><button id="mpPractice" class="btn outline">오프라인 연습</button><button id="mpCreate" class="btn accent">방 만들기</button><button id="mpJoin" class="btn outline">방 코드로 참가</button><button id="mpReady" class="btn outline" disabled>준비하기</button><button id="mpLaunch" class="btn accent" disabled>경기 시작</button><button id="mpLeave" class="btn outline" disabled>방 나가기</button></div>
-  <div id="mpStatus" role="status" class="mp-status">Firebase 익명 로그인과 Firestore 방 규칙을 사용합니다. 실제 인터넷 대전은 설정된 규칙 및 P2P 연결이 필요합니다.</div>
+  <div id="mpStatus" role="status" class="mp-status">방을 만들거나 방 코드를 입력하세요.</div>
   <div id="mpMembers" class="mp-members">아직 참가한 방이 없습니다.</div>
  </section>
  <section class="panel mp-command" id="mpCommand" hidden><section id="mpAugmentPanel" class="mp-augment-panel" hidden aria-label="증강 카드 선택"></section>
   <div class="mp-tab-screen active" id="mpBaseView">
-  <div class="mp-production-title"><div><span class="eyebrow">BASE DEVELOPMENT / THREE PRODUCTION LINES</span><h2>멀티 생산 기지</h2><p id="mpBaseDescription">싱글과 같은 방식으로 유닛을 선택하고 빈 칸에 건설하세요. 배치판에서 상·중·하 라인을 바로 전환할 수 있습니다.</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="battle">전장 보기 →</button></div>
+  <div class="mp-production-title"><div><h2>멀티 생산 기지</h2><p id="mpBaseDescription">라인 선택 → 유닛 선택 → 빈 칸에 건설</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="battle">전장 보기 →</button></div>
   <div id="mpFactionTraits" class="marine-ops faction-trait-banner" hidden role="status" aria-live="off"></div>
   <div id="mpMarineAbilities" class="marine-ops" hidden role="status" aria-live="off"></div>
   <div class="mp-formation-layout">
-   <section class="mp-roster-panel" aria-label="멀티 병력 편성"><div class="panel-heading"><div><span class="eyebrow">RECRUIT UNITS</span><h2>병력 편성</h2></div><span class="shortcut">1–8 단축키</span></div>
-    <p class="subtext">생산할 유닛을 고른 뒤 오른쪽 배치판의 빈 슬롯을 선택하세요. 자원채취 건물도 동일하게 배치합니다.</p>
+   <section class="mp-roster-panel" aria-label="멀티 병력 편성"><div class="panel-heading"><div><h2>병력 편성</h2></div><span class="shortcut">1–8 단축키</span></div>
+
     <div id="mpUnitCards" class="unit-cards" role="group" aria-label="생산할 유닛 선택"></div><div id="mpUnitDetails" class="unit-details" aria-live="polite"></div>
    </section>
-   <section class="mp-deployment-panel" id="mpDeploymentPanel" aria-label="3라인 생산 건물 배치"><div class="panel-heading"><div><span class="eyebrow">UNIT FORMATION / 15 × 5</span><h2>생산 건물 배치</h2></div><span id="mpBuiltCount" class="shortcut">0개 건설</span></div>
+   <section class="mp-deployment-panel" id="mpDeploymentPanel" aria-label="3라인 생산 건물 배치"><div class="panel-heading"><div><h2>생산 건물 배치</h2></div><span id="mpBuiltCount" class="shortcut">0개 건설</span></div>
     <div class="mp-build-controls"><strong id="mpSelectedLane">중앙 라인</strong><button id="mpDemolish" type="button" class="btn outline" aria-pressed="false">▤ 철거 모드</button></div>
     <div class="mp-lane-tabs" id="mpLaneTabs" role="group" aria-label="건설할 라인 선택">
      <button type="button" data-lane="0" aria-pressed="false"><strong>상단 라인</strong><small data-lane-count="0">0 / 75</small></button>
@@ -173,50 +173,50 @@
     </div>
     <div class="mp-lane-switch"><button type="button" id="mpPrevLane" aria-label="이전 생산 라인">◀</button><span id="mpLaneHint" role="status" aria-live="polite">중앙 라인 · 좌우로 밀어 라인 전환</span><button type="button" id="mpNextLane" aria-label="다음 생산 라인">▶</button></div>
     <div id="mpBuildSwipe" class="mp-build-swipe" aria-label="생산 건물 배치 영역. 좌우로 드래그하면 라인이 전환됩니다."><div class="build-grid-viewport mp-grid-viewport"><div id="mpBuildGrid" class="mp-build-grid" aria-label="중앙 라인의 생산 시설 75칸"></div></div></div>
-    <p class="mp-build-tip">빈 칸을 눌러 건설 · 철거 모드에서 건물 선택 · 좌우 드래그로 라인 전환</p>
+
    </section>
   </div>
-  <p class="subtext">시작 후 10초는 초기 배치 시간이며 준비 중 배치한 병력 시설은 첫 출격에 참여합니다. 이후 병력 생산시설은 건설 후 12초가 지나야 출격할 수 있으며, 완성 후에는 매 12초마다 병력을 생산합니다. 건설 중 슬롯에 남은 시간이 표시됩니다. 병력은 라인 경계를 넘어 이동하며, 아군과 자원을 공유하지 않습니다. 자신이 건설한 건물만 철거할 수 있습니다.</p>
+
   </div>
   <section class="mp-tab-screen mp-battle-section" id="mpBattleView" hidden>
-   <div class="mp-production-title"><div><span class="eyebrow">LIVE BATTLE / THREE FRONTLINES</span><h2>실시간 전장</h2><p id="mpBattleDescription">세 라인은 하나로 연결된 전장입니다. 미니맵 또는 전장을 눌러 해당 라인에 배치할 수 있습니다.</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="base">생산 배치 →</button></div>
-   <div class="mp-battle-wrap"><canvas id="mpBattleCanvas" width="1100" height="660" aria-label="하나로 연결된 3300×1560 전장. 누른 구역의 생산 라인이 선택됩니다."></canvas><div id="mpOpening" class="opening-countdown" role="status" aria-label="초기 배치 카운트다운" hidden><span>초기 배치 시간</span><div><strong id="mpOpeningSeconds">10</strong><b>초 뒤 첫 웨이브</b></div><small>지금 배치한 병력 시설은 준비 종료와 함께 첫 출격합니다.</small></div><div class="mp-help">통합 전장 · 좌측 아군 / 우측 적군 · 전장 터치 시 해당 라인 선택</div></div>
+   <div class="mp-production-title"><div><h2>실시간 전장</h2><p id="mpBattleDescription">미니맵을 눌러 라인을 선택하세요.</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="base">생산 배치 →</button></div>
+   <div class="mp-battle-wrap"><canvas id="mpBattleCanvas" width="1100" height="660" aria-label="하나로 연결된 3300×1560 전장. 누른 구역의 생산 라인이 선택됩니다."></canvas><div id="mpOpening" class="opening-countdown" role="status" aria-label="초기 배치 카운트다운" hidden><span>초기 배치 시간</span><div><strong id="mpOpeningSeconds">10</strong><b>초 뒤 첫 웨이브</b></div><small>지금 배치한 병력 시설은 준비 종료와 함께 첫 출격합니다.</small></div></div>
    <div class="mp-lane-summary" id="mpLaneSummary"></div>
    <div id="mpInspect" class="inspect" aria-live="polite">전장 유닛을 누르면 병종과 체력을 확인할 수 있습니다. 빈 공간을 누르면 해당 라인이 선택됩니다.</div>
   </section>
   <section class="mp-tab-screen mp-upgrade-section" id="mpUpgradeView" hidden>
-   <div class="mp-production-title"><div><span class="eyebrow">HIGH COMMAND / MULTIPLAYER</span><h2>업그레이드 · 전술 지원</h2><p>싱글과 같은 무기·장갑 강화 및 전술 지원입니다. 자원은 본인 계정에서 차감되며 전투는 계속 진행됩니다.</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="base">생산 배치 →</button></div>
+   <div class="mp-production-title"><div><h2>업그레이드 · 전술 지원</h2></div><button type="button" class="btn outline mp-jump" data-mp-jump="base">생산 배치 →</button></div>
    <div class="special-grid mp-upgrade-grid">
-    <section class="feature-card orange"><span class="eyebrow">SPECIAL / ONE USE</span><span class="feat-symbol">☢</span><h2>비상 핵폭탄</h2><p>모든 라인의 상대 팀 생존 유닛과 영웅을 전부 제거합니다. 건물에는 피해가 없으며 지휘관당 경기 1회 사용 가능합니다.</p><div class="feature-status" id="mpNukeInfo">사용 가능 · 상대 팀 전 병력 제거</div><button type="button" id="mpNukeButton" class="btn accent">☢ 비상 핵폭탄</button></section>
-    <section class="feature-card cyan"><span class="eyebrow">SPECIAL / RECHARGE</span><span class="feat-symbol">✷</span><h2>궤도 폭격</h2><p>정찰된 적군의 밀집 지역에 범위 피해를 가합니다. 260 CR · 재사용 32초.</p><div class="feature-status" id="mpBarrageInfo">260 CR · 재사용 32초</div><button type="button" id="mpBarrageButton" class="btn blueaccent">✷ 폭격 요청</button></section>
-    <section class="feature-card purple"><span class="eyebrow">UPGRADE / PERMANENT</span><span class="feat-symbol">✦</span><h2>무기 강화</h2><p>내가 생산한 모든 병력의 공격력과 치유량이 단계마다 8% 증가합니다. 기존 병력에도 적용됩니다.</p><div class="feature-status" id="mpWeaponInfo">레벨 0 / 5</div><button type="button" id="mpWeaponButton" class="btn purpleaccent">무기 강화</button></section>
-    <section class="feature-card steel"><span class="eyebrow">UPGRADE / PERMANENT</span><span class="feat-symbol">⬟</span><h2>장갑 강화</h2><p>내 병력의 최대 체력이 단계마다 9% 증가합니다. 이미 전장에 있는 병력에도 적용됩니다.</p><div class="feature-status" id="mpArmorInfo">레벨 0 / 5</div><button type="button" id="mpArmorButton" class="btn outline">장갑 강화</button></section>
-    <section class="feature-card steel"><span class="eyebrow">HEADQUARTERS</span><span class="feat-symbol">▥</span><h2>기지 방어 보수</h2><p>선택한 라인의 아군 본진 포탑을 310 HP 수리합니다. 중간 타워는 수리되지 않습니다.</p><div class="mp-repair-lanes" id="mpRepairLanes" role="group" aria-label="포탑 수리 라인 선택"><button type="button" data-repair-lane="0">상단</button><button type="button" data-repair-lane="1" class="active">중앙</button><button type="button" data-repair-lane="2">하단</button></div><div class="feature-status" id="mpRepairInfo">포탑 HP / 1250</div><button type="button" id="mpRepairButton" class="btn outline">포탑 수리 · 180 CR</button></section>
+    <section class="feature-card orange"><span class="feat-symbol">☢</span><h2>비상 핵폭탄</h2><p>상대 팀 전 유닛 제거 · 지휘관당 1회 · 건물 제외</p><div class="feature-status" id="mpNukeInfo">사용 가능 · 상대 팀 전 병력 제거</div><button type="button" id="mpNukeButton" class="btn accent">☢ 비상 핵폭탄</button></section>
+    <section class="feature-card cyan"><span class="feat-symbol">✷</span><h2>궤도 폭격</h2><p>정찰된 적 밀집 지역에 범위 피해 · 260 CR · 재사용 32초</p><div class="feature-status" id="mpBarrageInfo">260 CR · 재사용 32초</div><button type="button" id="mpBarrageButton" class="btn blueaccent">✷ 폭격 요청</button></section>
+    <section class="feature-card purple"><span class="feat-symbol">✦</span><h2>무기 강화</h2><p>내 병력 공격력·치유량 단계당 +8% · 최대 5단계</p><div class="feature-status" id="mpWeaponInfo">레벨 0 / 5</div><button type="button" id="mpWeaponButton" class="btn purpleaccent">무기 강화</button></section>
+    <section class="feature-card steel"><span class="feat-symbol">⬟</span><h2>장갑 강화</h2><p>내 병력 최대 체력 단계당 +9% · 최대 5단계</p><div class="feature-status" id="mpArmorInfo">레벨 0 / 5</div><button type="button" id="mpArmorButton" class="btn outline">장갑 강화</button></section>
+    <section class="feature-card steel"><span class="feat-symbol">▥</span><h2>기지 방어 보수</h2><p>선택한 라인의 본진 포탑 310 HP 수리 · 180 CR</p><div class="mp-repair-lanes" id="mpRepairLanes" role="group" aria-label="포탑 수리 라인 선택"><button type="button" data-repair-lane="0">상단</button><button type="button" data-repair-lane="1" class="active">중앙</button><button type="button" data-repair-lane="2">하단</button></div><div class="feature-status" id="mpRepairInfo">포탑 HP / 1250</div><button type="button" id="mpRepairButton" class="btn outline">포탑 수리 · 180 CR</button></section>
    </div>
-   <p class="subtext">강화는 지휘관별로 적용됩니다. 상대 팀의 연구 단계와 자원은 안개가 걷히기 전 공개되지 않습니다.</p>
+
   </section>
  </section>
 </div>
 <section id="upgradePanel" class="upgrade-layer" hidden role="dialog" aria-modal="false" aria-labelledby="upgradeTitle"><div id="view-special" class="upgrade-content">
- <div class="upgrade-toolbar"><div><span class="eyebrow">HIGH COMMAND</span><h2 id="upgradeTitle">업그레이드 · 전술 지원</h2><small>전투는 계속 진행됩니다. 전황과 자원은 상단에서 확인하세요.</small></div><button id="closeUpgrades" type="button" class="btn outline" aria-label="업그레이드 닫기">닫기 ✕</button></div>
+ <div class="upgrade-toolbar"><div><h2 id="upgradeTitle">업그레이드 · 전술 지원</h2></div><button id="closeUpgrades" type="button" class="btn outline" aria-label="업그레이드 닫기">닫기 ✕</button></div>
  <div class="special-grid">
- <section class="feature-card orange"><span class="eyebrow">SPECIAL / ONE USE</span><span class="feat-symbol">☢</span><h2>비상 핵폭탄</h2><p>상대 진영의 현재 살아있는 모든 유닛과 영웅을 전장 어디에 있든 전멸시킵니다. 건물에는 피해가 없으며 경기당 단 한 번 사용할 수 있습니다.</p><div class="feature-status" id="nukeInfo">준비 완료 · 상대 병력 전체 제거</div><button id="nukeButton" class="btn accent">☢ 핵폭탄 발동</button></section>
- <section class="feature-card cyan"><span class="eyebrow">SPECIAL / RECHARGE</span><span class="feat-symbol">✷</span><h2>궤도 폭격</h2><p>적군이 가장 많이 모인 지역에 범위 피해를 줍니다. 기갑이나 포병 덩어리를 무너뜨리는 반격 기술입니다.</p><div class="feature-status" id="barrageInfo">비용 260 CR · 재사용 32초</div><button id="barrageButton" class="btn blueaccent">✷ 폭격 요청 · 260 CR</button></section>
+ <section class="feature-card orange"><span class="feat-symbol">☢</span><h2>비상 핵폭탄</h2><p>상대 유닛 전체 제거 · 경기당 1회 · 건물 제외</p><div class="feature-status" id="nukeInfo">준비 완료 · 상대 병력 전체 제거</div><button id="nukeButton" class="btn accent">☢ 핵폭탄 발동</button></section>
+ <section class="feature-card cyan"><span class="feat-symbol">✷</span><h2>궤도 폭격</h2><p>적 밀집 지역에 범위 피해 · 260 CR · 재사용 32초</p><div class="feature-status" id="barrageInfo">비용 260 CR · 재사용 32초</div><button id="barrageButton" class="btn blueaccent">✷ 폭격 요청 · 260 CR</button></section>
 
- <section class="feature-card purple"><span class="eyebrow">UPGRADE / PERMANENT</span><span class="feat-symbol">✦</span><h2>무기 강화</h2><p>모든 아군 유닛의 공격력과 회복량이 단계당 8% 증가합니다. 기존 전투 중 유닛에도 적용됩니다.</p><div class="feature-status" id="weaponInfo">레벨 0 / 5</div><button id="weaponButton" class="btn purpleaccent">무기 강화</button></section>
- <section class="feature-card steel"><span class="eyebrow">UPGRADE / PERMANENT</span><span class="feat-symbol">⬟</span><h2>장갑 강화</h2><p>아군 유닛 HP가 단계당 9% 증가합니다. 방어 시설과 핵심 기지 체력에는 적용되지 않습니다.</p><div class="feature-status" id="armorInfo">레벨 0 / 5</div><button id="armorButton" class="btn outline">장갑 강화</button></section>
- <section class="feature-card steel"><span class="eyebrow">HEADQUARTERS</span><span class="feat-symbol">▥</span><h2>기지 방어 보수</h2><p>본진 방어 포탑을 수리·복구합니다. 중간 타워는 복구되지 않으며, 파괴 보상과 가디언 소환은 타워마다 한 번만 발생합니다.</p><div class="feature-status" id="repairInfo">방어 포탑 수리</div><button id="repairButton" class="btn outline">포탑 수리 · 180 CR</button></section>
+ <section class="feature-card purple"><span class="feat-symbol">✦</span><h2>무기 강화</h2><p>공격력·치유량 단계당 +8% · 최대 5단계</p><div class="feature-status" id="weaponInfo">레벨 0 / 5</div><button id="weaponButton" class="btn purpleaccent">무기 강화</button></section>
+ <section class="feature-card steel"><span class="feat-symbol">⬟</span><h2>장갑 강화</h2><p>병력 최대 체력 단계당 +9% · 최대 5단계</p><div class="feature-status" id="armorInfo">레벨 0 / 5</div><button id="armorButton" class="btn outline">장갑 강화</button></section>
+ <section class="feature-card steel"><span class="feat-symbol">▥</span><h2>기지 방어 보수</h2><p>본진 포탑 310 HP 수리 · 180 CR · 중간 타워 제외</p><div class="feature-status" id="repairInfo">방어 포탑 수리</div><button id="repairButton" class="btn outline">포탑 수리 · 180 CR</button></section>
  </div>
- <section class="panel matrix"><div class="panel-heading"><div><span class="eyebrow">COUNTER MATRIX</span><h2>유닛 역할 상성표</h2></div></div><p class="subtext">진영마다 외형은 다르지만 <b>공통 역할 마크</b>로 상대 병종의 장단점을 즉시 알아볼 수 있습니다.</p><div id="counterMatrix" class="matrix-grid"></div></section>
+ <section class="panel matrix"><div class="panel-heading"><div><h2>유닛 역할 상성표</h2></div></div><div id="counterMatrix" class="matrix-grid"></div></section>
 </div></section>
-<footer><span id="notification" role="status">진영을 선택하고 전투를 시작하세요.</span><span class="footer-tag">DESERT FRONT · ORIGINAL PROTOTYPE</span></footer>
+<footer><span id="notification" role="status">진영을 선택하고 전투를 시작하세요.</span></footer>
 </div>
 <dialog id="augmentCodexDialog" class="augment-codex-dialog" aria-labelledby="augmentCodexTitle">
  <div class="augment-codex-shell">
-  <header class="augment-codex-header"><div><span class="eyebrow">AUGMENT CODEX / 400 CARDS</span><h2 id="augmentCodexTitle">증강 도감 <small>400종</small></h2><p>공통 50종 · 종족별 35종 × 10종족. 그중 초월 프리즘 100종은 실험 증강입니다. 증강전 1·10·20·30·40웨이브에서 선택할 수 있습니다.</p></div><button id="augmentCodexClose" type="button" class="btn outline" aria-label="증강 도감 닫기">✕ 닫기</button></header>
+  <header class="augment-codex-header"><div><h2 id="augmentCodexTitle">증강 도감</h2><p>1·10·20·30·40웨이브에 증강을 선택합니다.</p></div><button id="augmentCodexClose" type="button" class="btn outline" aria-label="증강 도감 닫기">✕ 닫기</button></header>
   <div id="augmentCodexTabs" class="augment-codex-tabs" role="group" aria-label="증강 분류">
-   <button type="button" class="active" data-codex-scope="common" aria-pressed="true">공통 증강 <small>50종</small></button>
-   <button type="button" data-codex-scope="faction" aria-pressed="false">종족별 증강 <small>35종씩</small></button>
+   <button type="button" class="active" data-codex-scope="common" aria-pressed="true">공통 증강</button>
+   <button type="button" data-codex-scope="faction" aria-pressed="false">종족별 증강</button>
   </div>
   <div class="augment-codex-filters">
    <label id="augmentCodexFactionLabel" hidden>종족 선택<select id="augmentCodexFaction" aria-label="종족별 증강을 확인할 종족"></select></label>
@@ -228,35 +228,41 @@
    <button type="button" data-codex-tier="gold" aria-pressed="false">골드</button>
    <button type="button" data-codex-tier="prismatic" aria-pressed="false">프리즘</button>
   </div>
-  <p id="augmentCodexStatus" class="augment-codex-status" role="status">도감 데이터 준비 중…</p>
+  <p id="augmentCodexStatus" class="augment-codex-status" role="status">증강을 불러오는 중…</p>
   <div id="augmentCodexResults" class="augment-codex-results" aria-label="증강 카드 목록"></div>
  </div>
 </dialog>
-<div id="startOverlay" class="modal-backdrop"><div class="modal-panel start-panel"><span class="eyebrow">DEPLOYMENT / CHOOSE YOUR FACTION</span><h2>전투 진영 선택</h2><p>열 종족이 역할 상성을 공유하지만 특성은 다릅니다. 월영 수인족은 근접, 은월 엘프족은 원거리 전투에 특화되어 있습니다. 상대 AI는 다른 진영으로 시작합니다.</p><div id="factionCards" class="faction-cards"></div><button id="startButton" class="btn start-cta">선택한 진영으로 출격 ↗</button></div></div>
+<div id="startOverlay" class="modal-backdrop"><div class="modal-panel start-panel"><h2>전투 진영 선택</h2><p>종족을 선택하세요.</p><div id="factionCards" class="faction-cards"></div><button id="startButton" class="btn start-cta">선택한 진영으로 출격 ↗</button></div></div>
 <div id="soloAugmentOverlay" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="soloAugmentHeading">
  <section class="modal-panel solo-augment-dialog" tabindex="-1">
-  <div class="solo-augment-top"><div><span class="eyebrow">SINGLE PLAYER / AUGMENT DRAFT</span><h2 id="soloAugmentHeading">WAVE 01 · 증강 선택</h2></div><div class="solo-augment-clock"><span>남은 시간</span><strong id="soloAugmentTime">30초</strong></div></div>
-  <p class="solo-augment-explain">증강 카드 3장 중 하나를 선택합니다. 각 카드마다 리롤 1회가 가능하며, 30초가 지나면 자동 선택됩니다. 카드를 고르는 동안 전투가 일시정지됩니다.</p>
+  <div class="solo-augment-top"><div><h2 id="soloAugmentHeading">WAVE 01 · 증강 선택</h2></div><div class="solo-augment-clock"><span>남은 시간</span><strong id="soloAugmentTime">30초</strong></div></div>
+  <p class="solo-augment-explain">카드 1장 선택 · 칸마다 리롤 1회 · 30초 후 자동 선택</p>
   <div id="soloAugmentCards" class="solo-augment-cards" aria-label="선택 가능한 증강 카드"></div>
   <p id="soloAugmentCurrent" class="solo-augment-current" aria-live="polite">획득 증강 0개 · 카드마다 리롤 1회</p>
   <div id="soloAugmentHistory" class="augment-history-mount" aria-label="이전에 획득한 증강 카드 기록"></div>
  </section>
 </div>
-<div id="endOverlay" class="modal-backdrop hidden"><div class="modal-panel end-panel"><span class="eyebrow">BATTLE REPORT</span><h2 id="endTitle">승리</h2><p id="endSummary"></p><div id="soloProductionStats" class="result-production" aria-label="경기 생산 및 전투 통계"></div><button id="restartButton" class="btn start-cta">메인 로비로 돌아가기</button></div></div>
+<div id="endOverlay" class="modal-backdrop hidden"><div class="modal-panel end-panel"><h2 id="endTitle">승리</h2><p id="endSummary"></p><div id="soloProductionStats" class="result-production" aria-label="경기 생산 및 전투 통계"></div><button id="restartButton" class="btn start-cta">메인 로비로 돌아가기</button></div></div>
 <div id="mpResultOverlay" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="mpResultTitle">
  <div class="modal-panel result-panel" tabindex="-1">
-  <span class="eyebrow">AFTER ACTION REPORT / MATCH FINISHED</span>
+
   <h2 id="mpResultTitle" data-outcome="draw">경기 결과</h2>
   <p id="mpResultSummary" class="result-summary"></p>
   <h3 class="result-production-heading">생산·피해·처치·영웅 전투 기록</h3>
-  <p class="result-detail-hint">생산량은 누적 출격 수입니다. 피해는 적 유닛에 실제로 가한 피해이며, 처치·손실은 영웅을 구성하는 병사 수까지 합산합니다. 영웅 생성과 영웅 피해량도 표시합니다.</p>
+  <details class="result-detail-hint"><summary>통계 도움말</summary><p>생산은 누적 출격 수, 피해는 실제로 가한 피해입니다. 처치·손실에는 영웅을 구성하는 병력 수가 포함됩니다.</p></details>
   <div id="mpResultProduction" class="result-production" aria-label="아군 및 상대 생산 통계"></div>
   <p id="mpResultStatus" class="result-server-status" role="status">서버 결과 저장 확인 중…</p>
   <button id="mpResultRetry" type="button" class="btn outline" hidden>서버 기록 다시 시도</button>
-  <button id="mpResultLobby" type="button" class="btn start-cta">통계 확인 완료 · 로비로 가기</button>
+  <button id="mpResultLobby" type="button" class="btn start-cta">로비로 가기</button>
  </div>
 </div>
-<dialog id="helpDialog"><div class="help-inner"><h2>데저트 프런트 조작법</h2><p>① 초기 배치: 시작 후 10초 뒤 첫 웨이브 출격. 준비 중 배치한 병력 시설은 함께 완공됩니다. 이후 내 기지: 유닛 카드를 선택해 생산시설 건설(완료까지 12초), 완료 후 매 웨이브 출격 / 철거는 비용의 55% 환급</p><p>② 전장: 확장 전장 · 미니맵/전선 추적 · 자동 전투 관전 / 역할 마크로 상성 파악 / 유닛을 눌러 능력 확인 / 배속과 일시정지</p><p>③ 병력 편성 위 업그레이드: 핵폭탄(상대 생존 유닛 전체 제거, 1회) / 궤도 폭격 / 무기·장갑 강화 / 포탑 보수. 자원채취 건물은 생산 슬롯에 설치하며, 안정화 중에는 인컴이 중단됩니다.</p><p>중간 타워를 파괴하면 공격 팀 합계 150 CR과 수비 측 스플래시 없는 돌격 가디언 1기가 발생합니다. 초록 오라 가디언의 외부 치유량은 평소 25%, 최근 3초 내 피격 시 10%입니다. 가디언만 자기 진영·해당 라인 안에서 방어하며, 붉은 오라의 일반 포격 영웅은 중앙을 넘어 진격·공격할 수 있습니다. 생산 건물은 보호되고 방어 포탑이 적을 막습니다. 기지 본체가 파괴되면 패배합니다. 초반 360 CR로 시작하고, 기본 수입은 0.5초당 1 CR이며 경제 5~7단계에서는 총수입이 15% 감소합니다. 병력 생산시설은 건설 완료까지 12초가 걸리고 그 후 매 12초마다 출격합니다. 핵심 기지 체력은 20% 증가했으며 기지 본체가 받는 공격 피해는 15% 감소합니다.</p><p>동일 풀피 병력 20기는 영웅 1기로 합쳐집니다. 최대 체력은 20명분이며, 공격·회복량은 남은 체력에 해당하는 생존 병력 수에 따라 감소합니다. 장갑의 피해 감소는 병사 1명·공격 1발 기준으로 계산됩니다.</p><p>키보드: 1–8 유닛 선택, 1·2·3 화면 전환은 Alt+숫자, Space 일시정지, Esc 선택 해제.</p><button class="btn start-cta" id="helpClose">확인</button></div></dialog>
+<dialog id="helpDialog"><div class="help-inner"><h2>도움말</h2>
+<p><b>출격</b> 시작 10초 뒤 첫 출격, 이후 12초 간격입니다. 초기 배치 중 지은 병력 시설은 첫 출격에 참여하며, 이후 건설은 12초가 걸립니다. 철거 시 건설비의 55%를 돌려받습니다.</p>
+<p><b>채취 시설</b> 최대 7개입니다. 건설은 12초부터 증설마다 4초씩 늘고, 완공 후 안정화가 필요합니다. 두 기간 모두 기본·채굴 인컴과 웨이브 지원금이 중단됩니다. 철거해도 남은 중단 시간은 유지됩니다. 5~7단계 총수입에는 15% 감소가 적용되며, 다음 수입과 대기 시간은 채취 시설 툴팁에서 확인할 수 있습니다.</p>
+<p><b>전투</b> 싱글·클래식은 상대 핵심 기지 1개, 3라인은 2개를 파괴하면 승리합니다. 시간·웨이브 제한은 없습니다. 중간 타워 파괴 시 공격 팀에 150 CR, 수비 팀에 가디언이 지급됩니다. 가디언은 자기 진영만 지키며 외부 치유를 25%, 최근 3초 내 피격 시 10%만 받습니다.</p>
+<p><b>영웅</b> 같은 종류의 풀피 병력 20기가 합쳐집니다. 전투력은 남은 병력 수에 따라 감소합니다.</p>
+<p><b>조작</b> 1–8 병종 선택 · Alt+1 건설 · Alt+2 전장 · Alt+3 업그레이드 · Space 일시정지 · Esc 선택 해제. 전장 유닛을 누르면 상세 정보를 봅니다.</p>
+<button class="btn start-cta" id="helpClose">닫기</button></div></dialog>
 <script src="./marine-art-data.js" defer></script>
 <script src="./sprite-animations.js" defer></script>
 <script src="./iso-real-atlas-data.js?v=iso3" defer></script>
@@ -266,7 +272,7 @@
 <script src="./sprite-atlas.js?v=uniform7" defer></script>
 <script src="./special-unit-art.js?v=uniform7" defer></script>
 <script src="./resource-art.js?v=uniform7" defer></script>
-<script src="./isometric-world.js?v=uniform7" defer></script>
+<script src="./isometric-world.js?v=copy-clean1-uniform7" defer></script>
 <script src="../firebase-config.js" defer></script>
 <script src="../firebase-network.js" defer></script>
 <script src="./moe-unit-art.js?v=uniform7" defer></script>
@@ -277,19 +283,19 @@
 <script src="./prism-experiments.js?v=experimental1" defer></script>
 <script src="./augment-rules.js?v=prism100a" defer></script>
 <script src="./augment-history.js?v=history1" defer></script>
-<script src="./augment-codex.js?v=prism100a" defer></script>
-<script src="./tri-lane-engine.js?v=opening10a" defer></script>
+<script src="./augment-codex.js?v=copy-clean1-prism100a" defer></script>
+<script src="./tri-lane-engine.js?v=copy-clean1" defer></script>
 <script src="./device-account.js?v=uniform7" defer></script>
 <script src="./tri-lane-network.js?v=augmented1" defer></script>
 <script src="./combat-audio.js?v=nukegear1" defer></script>
-<script src="./tri-lane-ui.js?v=opening10a" defer></script>
+<script src="./tri-lane-ui.js?v=copy-clean1" defer></script>
 <script src="./battle-report.js?v=battlestats2" defer></script>
-<script src="./game-v2.js?v=opening10a" defer></script>
+<script src="./game-v2.js?v=copy-clean1" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=nukegear1" defer></script>
 <script src="./desert-member.js?v=auth-layer2" defer></script>
-<script src="./career-profile.js?v=rank-badges2" defer></script>
+<script src="./career-profile.js?v=copy-clean1-rank-badges2" defer></script>
 <script src="./audio-settings.js?v=nukegear1" defer></script>
-<script src="./front-lobby.js?v=prism100b" defer></script>
+<script src="./front-lobby.js?v=copy-clean1-prism100b" defer></script>
 </body></html>

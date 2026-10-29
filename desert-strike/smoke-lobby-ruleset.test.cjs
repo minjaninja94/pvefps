@@ -1,14 +1,14 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const read=p=>fs.readFileSync(path.join(__dirname,p),'utf8');
-test('main lobby directly exposes both standard and 300-card augment choices',()=>{
+test('main lobby directly exposes both standard and augment choices',()=>{
  const html=read('index.html'),src=read('front-lobby.js');
  const picker=html.indexOf('id="lobbyRulesetPicker"'),solo=html.indexOf('id="lobbySolo"');
  const expanded=html.indexOf('id="lobbyMultiplayerConfig"');
  assert.ok(picker>0&&picker<solo&&expanded>solo,'rule choices must be visible above multiplayer controls');
  for(const id of ['lobbyRulesetStandard','lobbyRulesetAugment','lobbyRulesetDescription','mpRuleset'])
   assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,'unique control '+id);
- assert.match(html,/증강전.*400종 카드/);
+ assert.match(html,/증강전.*웨이브별 증강 선택/);
  assert.match(src,/RULESET_KEY/);
  assert.match(src,/function chooseRuleset/);
  assert.match(src,/function restoreRuleset/);

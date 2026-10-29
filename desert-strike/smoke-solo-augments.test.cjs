@@ -94,7 +94,7 @@ test('real 300-card draft works inside the original single-player engine without
  assert.equal(st.augmentChoice,null,'wave 41 does not create an unscheduled draft');
  assert.equal(st.augments.length,augmentsAt40,'past wave 40, selected augments persist');
  assert.equal(st.enemyAugments.length,5,'AI also retains all five cards after the final selection wave');
- assert.ok(el('soloAugmentStatus').textContent.includes('AI 증강 5개'),'HUD reveals AI card count without revealing its identities');
+ assert.ok(el('soloAugmentStatus').title.includes('AI 증강 5개'),'tooltip reveals AI card count without revealing its identities');
  // Verify the enemy actually gets live stat bonuses, not merely card IDs.
  const expected=w.DesertAugments.apply(G.getDef(2,st.enemyFaction),st.enemyAugments,2);
  const actual=G.effectiveDef(2,st.enemyFaction,1);
@@ -145,9 +145,9 @@ test('lobby labels single/online/practice choices and loads 300 cards before sin
  assert.match(lobby,/selectedRuleset:\(\)=>selectedRuleset/);
  assert.match(lobby,/DesertAugments\?\.ready/);
  assert.match(lobby,/DesertAugments\.load\(\)/);
- assert.match(lobby,/싱글 증강전/);
+ assert.match(lobby,/증강전 · 웨이브 무제한/);
  for(const id of ['soloAugmentOverlay','soloAugmentHeading','soloAugmentCards','soloAugmentTime','soloAugmentCurrent'])
   assert.ok(html.includes('id="'+id+'"'),'missing single draft element: '+id);
- assert.match(html,/싱글 · 멀티플레이 · 3라인 연습 모두 적용/);
+ assert.match(html,/싱글, 멀티플레이 및 3라인 연습 전투 규칙/);
  assert.match(css,/\.solo-augment-dialog/);
 });

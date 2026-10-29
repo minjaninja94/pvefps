@@ -82,6 +82,11 @@ function unitIcon(canvas,f,r,size=72){
  const g=canvas.getContext('2d');if(!g)return;g.clearRect(0,0,size,size);
  global.DesertUnitMotion?.draw(g,{faction:f,role:r,action:'idle',frame:0,size,skin:skin()});
 }
+function ecoTooltip(level,seconds){
+ const income=eco=>Number((E.incomePerTick?.(eco)??((1+eco)*(eco>=5?.85:1))).toFixed(2));
+ if(level>=7)return '최대 7개 · 수입 +'+income(level)+' CR / 0.5초';
+ return '완료 후 수입 +'+income(level+1)+' CR / 0.5초 · 건설 '+E.ecoBuildSeconds(level+1)+'초 + 안정화 '+E.ecoStabilize(level+1,seconds)+'초. 건설·안정화 동안 기본·채굴 인컴과 웨이브 지원금 중단. 철거해도 남은 중단 시간은 유지됩니다.';
+}
 function unitCards(){
  const me=my(),fac=me?.faction??faction(),key=fac+':'+role+':'+skin()+':'+(me?.eco||0)+':'+((me?.ecoReadyAt||0)>(snap?.seconds||0))+':'+Math.floor((snap?.seconds||0)/120);
  if(cardsKey!==key){cardsKey=key;const out=$('mpUnitCards');out.replaceChildren();
@@ -89,12 +94,13 @@ function unitCards(){
   const d=i===8?null:global.DesertRoster?.getDef(i,fac),b=document.createElement('button');b.type='button';b.dataset.role=i;b.className='mp-unit-card'+(role===i?' active':'');b.setAttribute('aria-pressed',String(role===i));
   const cv=document.createElement('canvas');cv.width=cv.height=72;unitIcon(cv,fac,i);
   const name=document.createElement('strong');name.textContent=i===8?'자원채취 건물':global.DesertRoster?.FACTIONS[fac]?.units[i]||E.NAMES[i];
-  const cost=document.createElement('small');cost.textContent=(i===8?E.ecoPrice(me?.eco||0):E.COST[i])+' CR · '+(i===8?'슬롯 1칸':d?.kind==='air'?'비행':'지상');
+  const cost=document.createElement('small');cost.textContent=(i===8&&(me?.eco||0)>=7?'최대 단계':(i===8?E.ecoPrice(me?.eco||0):E.COST[i])+' CR')+' · '+(i===8?'슬롯 1칸':d?.kind==='air'?'비행':'지상');
+  b.title=i===8?ecoTooltip(me?.eco||0,snap?.seconds||0):d?.tips||'';
   if(i===8)b.disabled=(me?.eco||0)>=7||(me?.ecoReadyAt||0)>(snap?.seconds||0);
   b.append(cv,name,cost);out.append(b);
  }
  const d=role===8?null:global.DesertRoster?.getDef(role,fac);
- $('mpUnitDetails').textContent=(role===8?'자원채취: 건설 '+E.ecoBuildSeconds((me?.eco||0)+1)+'초 + 완공 후 안정화 '+E.ecoStabilize((me?.eco||0)+1,snap?.seconds||0)+'초 동안 기본·추가 인컴과 웨이브 지원금 중단. 최대 7개.':d?.tips||'')+' · 단축키 1–8 · 유닛 선택 후 빈 슬롯 터치';
+ $('mpUnitDetails').textContent=role===8?ecoTooltip(me?.eco||0,snap?.seconds||0):d?.tips||'유닛을 선택하세요.';
  }
  $('mpUnitCards').querySelectorAll('[data-role]').forEach(b=>b.classList.toggle('unaffordable',!!me&&me.cash<(Number(b.dataset.role)===8?E.ecoPrice(me.eco):E.COST[Number(b.dataset.role)])));
 }
@@ -333,8 +339,8 @@ function onSnapshot(v){
  document.body.dataset.multiArena=v.mode==='classic'?'classic':'triple';
  if(modeChanged){
   const classic=v.mode==='classic';
-  $('mpBaseDescription').textContent=classic?'싱글 전장 규칙과 동일하게 75칸 생산 시설을 건설하세요. 상·중·하 구분 없이 한 전장에서 1:1로 교전합니다.':'싱글과 같은 방식으로 유닛을 선택하고 빈 칸에 건설하세요. 배치판에서 상·중·하 라인을 바로 전환할 수 있습니다.';
-  $('mpBattleDescription').textContent=classic?'3300×520 크기의 원래 싱글 전장입니다. 양쪽 플레이어가 생산 시설을 건설하고 단일 전선에서 실시간 1:1로 싸웁니다.':'세 라인은 하나로 연결된 전장입니다. 미니맵 또는 전장을 눌러 해당 라인에 배치할 수 있습니다.';
+  $('mpBaseDescription').textContent=classic?'단일 전장 · 75칸':'라인 선택 → 유닛 선택 → 빈 칸에 건설';
+  $('mpBattleDescription').textContent=classic?'전장 유닛을 누르면 정보를 봅니다.':'미니맵을 눌러 라인을 선택하세요.';
  }
  const preparation=!v.ended&&v.wave===0?Math.max(0,(v.preparationEndsAt??E.OPENING_PREP_SECONDS??10)-v.seconds):0;
  const opening=$('mpOpening');if(opening)opening.hidden=preparation<=1e-6;
@@ -349,7 +355,8 @@ function onSnapshot(v){
   $('mpMyIncome').textContent=remaining>0?'인컴 중단 '+Math.ceil(remaining)+'초':'+'+Number((E.incomePerTick?.(me.eco)??((1+me.eco)*(me.eco>=5?.85:1))).toFixed(2))+' / 0.5초';
   $('mpBuiltCount').textContent=me.buildings.reduce((n,bs)=>n+bs.filter(x=>x!==null).length,0)+'개 건설';
   const cost=E.ecoPrice(me.eco);
-  $('mpEco').textContent=me.eco>=7?'채취 건물 7 / 7':'자원채취 건물 · '+cost+' CR · 건설 '+E.ecoBuildSeconds(me.eco+1)+'초';
+  $('mpEco').textContent=me.eco>=7?'채취 건물 7 / 7':'자원채취 건물 · '+cost+' CR';
+  $('mpEco').title=ecoTooltip(me.eco,v.seconds);
   $('mpEco').disabled=me.eco>=7||me.cash<cost||remaining>0||v.ended;
  }
  $('mpWave').textContent='WAVE '+String(v.wave).padStart(2,'0');
@@ -357,10 +364,10 @@ function onSnapshot(v){
  const traitHud=$('mpFactionTraits');
  if(traitHud){const myTrait=(v.factionTraits||[]).find(x=>x.uid===myId),faction=global.DesertRoster?.FACTIONS?.[me?.faction];
   traitHud.hidden=!faction;
-  if(faction)traitHud.textContent='◆ '+faction.name+' | '+faction.bonus+(myTrait&&myTrait.faction===1?' · 공생충 '+myTrait.births+'/10 · 누적 '+myTrait.totalBirths+'기':'');}
+  if(faction){traitHud.textContent=faction.name;traitHud.title=faction.bonus+(myTrait&&myTrait.faction===1?' · 공생충 '+myTrait.births+'/10':'');}}
  const marineHud=$('mpMarineAbilities');
- if(marineHud){const info=(v.marineOps||[]).find(o=>o.uid===myId);marineHud.hidden=!info;
-  if(info)marineHud.textContent='★ 해병 특성 | 긴빠이 '+info.loot+'회 (+'+info.lootedCR+' CR) | 자진입대 '+info.recruits+'회 · 이번 웨이브 '+info.waveRecruits+'/2 | 황룡 '+info.huangSpawns+'기 | 오도봉고 '+info.bongoCharges+'회';}
+ if(marineHud){const info=(v.marineOps||[]).find(o=>o.uid===myId);marineHud.hidden=true;
+  if(info&&traitHud)traitHud.title+=' · '+'★ 해병 특성 | 긴빠이 '+info.loot+'회 (+'+info.lootedCR+' CR) | 자진입대 '+info.recruits+'회 · 이번 웨이브 '+info.waveRecruits+'/2 | 황룡 '+info.huangSpawns+'기 | 오도봉고 '+info.bongoCharges+'회';}
  const f=document.createDocumentFragment();
  for(let l=0;l<laneCount();l++){
   const status=side===0?v.lanePressure[l]:1-v.lanePressure[l];
@@ -378,7 +385,7 @@ function onSnapshot(v){
    global.DesertCombatAudio?.stop?.();
    if(practice&&!practiceRecorded){practiceRecorded=true;global.DesertCareer?.record?.({mode:'practice',size:1,side:0,winner:v.winner,faction:me?.faction??faction(),wave:v.wave,seconds:v.seconds,online:false});}
    if(!practice)global.DesertLobby?.completeMultiplayer?.({winner:v.winner,side,matchId:lobby?.id||'unknown',mode:v.mode,size:v.size,wave:v.wave,seconds:v.seconds,faction:me?.faction??faction()});
-   global.DesertBattleReport?.showMulti?.(v,myId,{serverStatus:practice?'오프라인 연습 · 이 브라우저에 통계를 저장했습니다.':'Supabase 경기 결과 등록·확인 중…'});
+   global.DesertBattleReport?.showMulti?.(v,myId,{serverStatus:practice?'연습 기록 저장 완료':'경기 결과 저장 중…'});
    if(!practice)void NET.reportWinner?.(v.winner);
   }
  }
@@ -403,7 +410,7 @@ async function practiceStart(){
  const mode=$('mpMode').value==='classic'?'classic':'pvp';
  practice=E.create({mode,size:1,aiDifficulty:hard?'hard':'normal',ruleset:$('mpRuleset').value,seed:Date.now()>>>0,members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%10,bot:true}]});
  if(!hard){const row=mode==='classic'?0:1;practice.state.players[1].buildings[row][1]=0;practice.state.players[1].buildings[row][17]=1;practice.state.players[1].cash-=160;}
- $('mpStateTag').textContent=hard?'하드 AI 연습':'오프라인 연습';message((mode==='classic'?'클래식 1:1':'3라인')+' 오프라인 연습 · Firebase 연결 없이 작동합니다.');
+ $('mpStateTag').textContent=hard?'하드 AI 연습':'오프라인 연습';message((mode==='classic'?'클래식 1:1':'3라인')+' AI 연습 시작');
  let last=performance.now();
  practiceTimer=setInterval(()=>{const now=performance.now();practice.tick(Math.min(.16,(now-last)/1000));last=now;onSnapshot(practice.snapshot('local'));},100);
  onSnapshot(practice.snapshot('local'));uiButtons();
@@ -498,7 +505,7 @@ function init(){
  });
  $('mpPractice').addEventListener('click',runClick(practiceStart));
  $('mpCreate').addEventListener('click',runClick(async()=>{
-  message('Firebase 방을 생성합니다…');
+  message('방을 만드는 중…');
   if($('mpRuleset').value==='augment')await global.DesertAugments.load();
   await NET.create({mode:$('mpMode').value,size:Number($('mpSize').value),ruleset:$('mpRuleset').value,publicRoom:$('mpPublicCheck').checked,name:$('mpName').value,faction:faction(),skin:skin()});
  }));
@@ -525,13 +532,13 @@ function init(){
  $('mpResultRetry').addEventListener('click',runClick(()=>NET.retryResult?.()));
  NET.configure({status:message,room:onRoom,snapshot:onSnapshot,peers:uiButtons,
   serverResult:data=>{
-   const label=data?.state==='done'?'✓ Supabase 서버 승패·RP 기록 완료':data?.state==='abandoned'?'경기 중단 · 서버 기록 확인 필요':data?.state==='error'?'⚠ 서버 결과 전송 실패 · 자동 재시도 중: '+(data.error||'연결을 확인하세요'):data?.waiting_for_other_players?'✓ 내 결과 서버 접수 완료 · 상대 결과 확인 대기':data?.state==='untracked'?'비공식 경기 · 서버 결과 기록 없음':'서버 결과 확인 중…';
+   const label=data?.state==='done'?'승패·RP 기록 완료':data?.state==='abandoned'?'경기 중단 · 서버 기록 확인 필요':data?.state==='error'?'⚠ 서버 결과 전송 실패 · 자동 재시도 중: '+(data.error||'연결을 확인하세요'):data?.waiting_for_other_players?'✓ 내 결과 서버 접수 완료 · 상대 결과 확인 대기':data?.state==='untracked'?'비공식 경기 · 서버 결과 기록 없음':'서버 결과 확인 중…';
    global.DesertBattleReport?.serverStatus?.(label);
    $('mpResultRetry').hidden=data?.state!=='error';
   },forcedResult:data=>{
    if(!snap||snap.ended)return;
    onSnapshot({...snap,ended:true,winner:data.winner_team});
-   global.DesertBattleReport?.serverStatus?.('✓ Supabase 서버 탈주 판정 · 승패·RP 기록 완료');
+   global.DesertBattleReport?.serverStatus?.('탈주 판정 · 승패·RP 기록 완료');
    message('서버 판정: 상대 연결 종료 · '+(data.winner_team===my()?.team?'승리':'패배')+' 처리');
   }});
  uiButtons();

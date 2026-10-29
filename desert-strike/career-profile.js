@@ -43,7 +43,7 @@ function render(){
  const label=$('lobbyRank');if(label)label.textContent=info.tier.name;
  const rp=$('lobbyRankRP');if(rp)rp.textContent=info.rating.toLocaleString('ko-KR')+' RP';
  const type=$('lobbyRankIdentity');if(type)type.textContent=info.nickname+' · '+(info.member?'회원':'게스트');
- const note=$('lobbyRankNote');if(note)note.textContent=info.member?'Supabase 서버 기록 · 비공식':'기기 저장 기록 · 비공식';
+ const note=$('lobbyRankNote');if(note)note.textContent=info.member?'회원 기록 · 비공식':'기기 저장 기록 · 비공식';
  const wl=$('lobbyRankWL');if(wl)wl.textContent=info.wins+'승 '+info.losses+'패';
  const wr=$('lobbyRankWinrate');if(wr)wr.textContent=(info.wins+info.losses?((info.wins/(info.wins+info.losses))*100).toFixed(1):'0.0')+'%';
  const recent=$('lobbyRecentMatches');

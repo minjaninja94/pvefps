@@ -6,7 +6,7 @@ const g=new Proxy({createLinearGradient:()=>({addColorStop:noop})},{get:(o,k)=>o
 function el(id){if(!elements.has(id))elements.set(id,{style:{},dataset:{},classList:{add:noop,remove:noop,toggle:noop},getContext:()=>g,querySelectorAll:()=>[],addEventListener:noop});return elements.get(id);}
 const w={DesertGuardian:require('./defense-guardian.js'),DesertConsolidation:require('./unit-consolidation.js')},document={getElementById:el,querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>({getContext:()=>g})};
 const env={window:w,document,requestAnimationFrame:noop,console,Map,Set,Math,Object,Number,Array,String,Date};
-let solo=read('game-v2.js').replace('initFactions();wire();reset();','window.test={reset,state:()=>state,selectRole,place,constructExtractor,ecoBuildSeconds,constructionBar,updateUI,ecoStabilize,ecoCostFor,tick,wave,upgrade,demolish:i=>{demolition=true;place(i);demolition=false;}};reset();');
+let solo=read('game-v2.js').replace('initFactions();wire();reset();','window.test={reset,state:()=>state,selectRole,place,constructExtractor,ecoBuildSeconds,constructionBar,updateUI,ecoTooltip,ecoStabilize,ecoCostFor,tick,wave,upgrade,demolish:i=>{demolition=true;place(i);demolition=false;}};reset();');
 vm.runInNewContext(solo,env);const S=w.test;
 function advanceSolo(seconds){let left=seconds;while(left>1e-8){const n=Math.min(.04,left);S.tick(n);left-=n;}}
 S.reset();let s=S.state();s.live=true;S.selectRole(8);S.place(0);
@@ -41,4 +41,15 @@ for(const side of [0,1]){
  const timing=(side?st.enemyMineTimings:st.mineTimings)[0];
  assert.equal(timing.buildEndsAt,756);assert.equal(timing.readyAt,768,'seventh extractor: 36s construction + 12s stabilization');
 }
+for(let level=0;level<=7;level++){
+ const income=E.incomePerTick(Math.min(7,level+1));
+ assert.ok(S.ecoTooltip(level,240).includes('+'+Number(income.toFixed(2))+' CR / 0.5초'));
+ if(level<7){assert.ok(S.ecoTooltip(level,240).includes('건설 '+E.ecoBuildSeconds(level+1)+'초'));assert.match(S.ecoTooltip(level,240),/건설·안정화 동안 기본·채굴 인컴과 웨이브 지원금 중단/);}
+ else assert.doesNotMatch(S.ecoTooltip(level,240),/건설|안정화/,'max level must not advertise an eighth building');
+}
+S.reset();s=S.state();s.eco=4;s.live=true;S.selectRole(8);
+assert.match(elements.get('unitCards').innerHTML,/완료 후 \+5\.1 \/ 0\.5초/);
+assert.doesNotMatch(elements.get('unitCards').innerHTML,/인컴 \+1/);
+s.eco=7;S.updateUI(true);assert.match(elements.get('unitCards').innerHTML,/최대 단계/);
+assert.match(elements.get('econInfo').title,/수입 \+6\.8/);
 console.log('Economy regression passed: real slots, paid costs, paused income/stipends, no catch-up, resumption, demolition/refund, no blackout bypass, 7-building global cap, no combat spawns, redaction and solo/multiplayer parity.');

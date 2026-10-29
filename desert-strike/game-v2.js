@@ -163,6 +163,10 @@ function ecoCostFor(level){return Math.round(70*Math.pow(1.36,level));}
 function ecoCost(){return ecoCostFor(state.eco);}
 function ecoBuildSeconds(level){return 12+4*Math.max(0,level-1);}
 function ecoStabilize(level,elapsed){return (4+2*level+Math.min(6,Math.floor(Math.max(0,elapsed)/120)))/2;}
+function ecoTooltip(level,elapsed){
+ if(level>=MAX_ECONOMY)return '최대 7개 · 수입 +'+showIncome(level)+' CR / 0.5초';
+ return '완료 후 수입 +'+showIncome(level+1)+' CR / 0.5초 · 건설 '+ecoBuildSeconds(level+1)+'초 + 안정화 '+ecoStabilize(level+1,elapsed)+'초. 건설·안정화 동안 기본·채굴 인컴과 웨이브 지원금 중단. 철거해도 남은 중단 시간은 유지됩니다.';
+}
 function ecoRemaining(side=0){return Math.max(0,(side===0?state.ecoReadyAt:state.enemyEcoReadyAt)-state.elapsed);}
 function constructExtractor(side,index){
  const mine=side===0?'eco':'enemyEco',cash=side===0?'cash':'enemyCash',ready=side===0?'ecoReadyAt':'enemyEcoReadyAt';
@@ -225,7 +229,7 @@ function reset(){
 function start(){
  const ruleset=window.DesertLobby?.selectedRuleset?.()==='augment'?'augment':'standard';
  if(ruleset==='augment'&&!window.DesertAugments?.ready?.()){
-  setMessage('증강 카드 데이터 300종을 불러오는 중입니다. 로딩 후 다시 출격하세요.');
+  setMessage('증강 카드를 불러오는 중입니다. 잠시 후 출격하세요.');
   return;
  }
  selectedFaction=Number(document.querySelector('[data-faction].selected')?.dataset.faction||selectedFaction);
@@ -243,7 +247,7 @@ function start(){
  aiInitialBuild();
  $('startOverlay').classList.add('hidden');
  changeView('base');
- setMessage((state.aiDifficulty==='hard'?'하드 AI · 추가 자원 보너스 없음. ':'')+'초기 배치 시간 10초 · 10초 뒤 첫 웨이브가 출격합니다. 준비 중 배치한 병력 시설은 첫 출격에 참여합니다.');
+ setMessage('10초 뒤 첫 출격 · 병력을 배치하세요.');
  updateUI(true);chirp(530,.16);
  if(ruleset==='augment')beginSoloAugment(0);
 }
@@ -398,7 +402,7 @@ function hardBarrage(){
  if(brain)window.DesertHardAI?.bought?.(brain,{kind:'barrage'},260);
  window.DesertCombatAudio?.cue?.('explosion',target.x);
  pulse(target.x,target.y,'#ffc68b',90);
- setMessage('하드 AI가 정찰된 밀집 부대에 유료 궤도 포격을 실시했습니다.');
+ setMessage('적 궤도 폭격!');
  return true;
 }
 function barrage(){
@@ -883,7 +887,7 @@ function deployWave(){
   }
  }
  banner('WAVE '+String(state.wave).padStart(2,'0')+' · DEPLOYED');
- setMessage('웨이브 '+state.wave+' 출격 · 아군 '+state.built.filter(v=>v!==null).length+'기 / 상대의 실제 병력은 정찰로 확인');
+ setMessage('웨이브 '+state.wave+' 출격');
  chirp(430,.17);updateUI(true);
 }
 function deployMarineSupports(){
@@ -1073,7 +1077,7 @@ function forwardDown(side){
  createUnit(side,0,window.DesertGuardian?.ROLE??0,false);const u=state.units[state.units.length-1];
  window.DesertGuardian?.mark(u,side); // Same faction, skin and 20× assault stats as its defending side.
  floatText(u.x,u.y-65,'가디언 소환','#69ff9c');
- setMessage((side===0?'아군':'적군')+' 중간 타워 파괴 · 상대 보너스 150 CR · 수비 가디언 소환');
+ setMessage(side===0?'아군 중간 타워 파괴 · 적군 팀 +150 CR · 아군 가디언 소환':'적군 중간 타워 파괴 · 아군 팀 +150 CR · 적군 가디언 소환');
 }
 function structureHit(side,amount,part=null){
  const target=defenseTarget(side,part);
@@ -1091,7 +1095,7 @@ function structureHit(side,amount,part=null){
   pulse(side===0?188:WORLD_W-188,260,'#fcb78b',23);
   if(state.turretHP[side]===0){
    window.DesertCombatAudio?.cue('building');
-   floatText(side===0?188:WORLD_W-188,190,'DEFENSE DOWN','#ffad82');
+   floatText(side===0?188:WORLD_W-188,190,'포탑 파괴','#ffad82');
    setMessage(side===0?'아군 방어 포탑 파괴! 핵심 기지를 방어하세요.':'적군 방어 포탑 파괴! 핵심 기지를 공격합니다.');
   }
  }else{
@@ -1394,18 +1398,18 @@ function updateUI(full=false){
  $('myHealthFill').style.width=100*state.baseHP[0]/MAX_BASE+'%';
  $('enemyHealthFill').style.width=(enemyBaseVisible()?100*state.baseHP[1]/MAX_BASE:0)+'%';
  $('factionLabel').textContent=FACTIONS[state.faction].name;
- const traitStatus=$('factionTraitStatus');if(traitStatus){traitStatus.hidden=false;traitStatus.textContent='◆ '+FACTIONS[state.faction].name+' · '+FACTIONS[state.faction].bonus+(state.faction===1?' · 공생충 '+state.broodBirths[0]+'/'+BROOD_BIRTH_CAP+' (전체 '+state.broodBirthsTotal[0]+'기)':'');}
+ $('factionLabel').title=FACTIONS[state.faction].bonus;
+ const traitStatus=$('factionTraitStatus');if(traitStatus)traitStatus.hidden=true;
  const activeAug=$('soloAugmentStatus');
  if(activeAug){
   activeAug.hidden=state.ruleset!=='augment'||!state.live;
   if(!activeAug.hidden){
    const names=state.augments.map(id=>window.DesertAugments?.card?.(id)?.name||'증강 카드');
-   activeAug.textContent='✦ 싱글 증강전 · 내 증강 '+state.augments.length+'개 · AI 증강 '+state.enemyAugments.length+'개'+
-    (names.length?' · '+names.join(' · '):' · 첫 증강 선택 대기');
+   activeAug.textContent='증강 '+state.augments.length+'개';activeAug.title='AI 증강 '+state.enemyAugments.length+'개'+(names.length?' · '+names.join(' · '):'');
   }
  }
  const marineOps=$('marineAbilityStatus');
- if(marineOps){marineOps.hidden=state.faction!==3; if(state.faction===3)marineOps.textContent='★ 해병성채 | 긴빠이 '+state.marineStats.loot+'회 (+'+state.marineStats.lootedCR+' CR) | 자진입대 '+state.marineStats.recruits+'회 · 이번 웨이브 '+state.marineRecruitCount[0]+'/'+MARINE_RECRUIT_CAP+' | 황룡 '+state.marineStats.huangSpawns+'기 소환 | 오도봉고 '+(state.marineStats.bongoCharges||0)+'회 돌진';}
+ if(marineOps){marineOps.hidden=true; if(state.faction===3)$('factionLabel').title+=' · '+'★ 해병성채 | 긴빠이 '+state.marineStats.loot+'회 (+'+state.marineStats.lootedCR+' CR) | 자진입대 '+state.marineStats.recruits+'회 · 이번 웨이브 '+state.marineRecruitCount[0]+'/'+MARINE_RECRUIT_CAP+' | 황룡 '+state.marineStats.huangSpawns+'기 소환 | 오도봉고 '+(state.marineStats.bongoCharges||0)+'회 돌진';}
  $('enemyFactionLabel').textContent=(state.aiDifficulty==='hard'?'하드 AI · VS ':'VS ')+FACTIONS[state.enemyFaction].name;
  const inv=state.units.filter(u=>u.side===1&&u.x<490).length;
  $('baseAlert').textContent=inv>0?'침공 경보 · '+inv+'기':state.turretHP[0]===0?'방어 포탑 파괴':'기지 안전';
@@ -1423,7 +1427,8 @@ function updateUI(full=false){
  $('barrageInfo').textContent=state.barrageCd>0?'재충전 '+Math.ceil(state.barrageCd)+'초':'비용 260 CR · 적 병력 필수';
  $('barrageButton').disabled=!(state.live&&!state.ended&&!state.paused&&state.barrageCd<=0&&state.cash>=260&&state.units.some(u=>u.side===1));
  const econ=ecoCost(),weapon=weaponCost(),armor=armorCost();
- $('econInfo').textContent='자원채취 '+state.eco+' / 7 · '+(ecoRemaining()>0?'인컴 중단 '+Math.ceil(ecoRemaining())+'초 남음':'0.5초마다 +'+showIncome(state.eco)+' CR')+(state.eco<MAX_ECONOMY?' · 다음 '+ecoCost()+' CR / 건설 '+ecoBuildSeconds(state.eco+1)+'초 + 안정화 '+ecoStabilize(state.eco+1,state.elapsed)+'초':' · 최대 건설');
+ $('econInfo').textContent='자원채취 '+state.eco+' / 7 · '+(ecoRemaining()>0?'인컴 중단 '+Math.ceil(ecoRemaining())+'초 남음':'수입 +'+showIncome(state.eco)+' CR / 0.5초');
+ $('econInfo').title=ecoTooltip(state.eco,state.elapsed);
  $('weaponInfo').textContent='레벨 '+state.weapon+' / 5 · 공격력 +'+state.weapon*8+'%';
  $('armorInfo').textContent='레벨 '+state.armor+' / 5 · HP +'+state.armor*9+'%';
  $('repairInfo').textContent='방어 포탑 '+Math.ceil(state.turretHP[0])+' / '+MAX_TURRET;
@@ -1435,7 +1440,7 @@ function updateUI(full=false){
  $('repairButton').disabled=!(state.live&&!state.paused&&!state.ended&&state.cash>=180&&state.turretHP[0]<MAX_TURRET);
  const ecoKey=[state.eco,ecoRemaining()>0,Math.floor(state.elapsed/120)].join(":");
  if(full||state.lastEcoKey!==ecoKey||state.lastCards===undefined||Math.floor(state.cash/30)!==state.lastCards){state.lastEcoKey=ecoKey;
-  const f=FACTIONS[state.faction];
+  const f=FACTIONS[state.faction],selected=selectedRole!==null&&selectedRole!==EXTRACTOR?effectiveDef(selectedRole,state.faction):null;
   $('unitCards').innerHTML=ROLE.map((r,i)=>{
    const portrait=window.IsoWorld?.portrait(state.faction,i)||window.DesertSprites?.portrait(state.faction,i)||sprite(state.faction,i,0);
    const skin=window.DesertLobby?.selectedSkin?.()||'default';
@@ -1445,14 +1450,14 @@ function updateUI(full=false){
     '"><span class="uc-top">'+getDef(i,state.faction).mark+' '+getDef(i,state.faction).name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
     '</span><span class="uc-name">'+f.units[i]+'</span><span class="uc-role">'+getDef(i,state.faction).name+' · '+(getDef(i,state.faction).kind==='air'?'공중':'지상')+'</span>'+
     '<span class="uc-cost">'+r.cost+' CR</span><span class="good-counter">'+(i===7?'지원':'강점')+': '+getDef(i,state.faction).good.map(x=>ROLE[x].mark).join(' ')+'</span><span class="bad-counter">약점: '+getDef(i,state.faction).bad.map(x=>ROLE[x].mark).join(' ')+'</span></button>';
-  }).join('')+'<button class="unit-card resource-card'+(selectedRole===EXTRACTOR?' selected':'')+'" data-role="8" '+(state.eco>=7||ecoRemaining()>0?'disabled':'')+'><span class="uc-top">경제 · 슬롯 1칸</span><span class="uc-sprite"><img class="pixel-preview" src="./assets/resource-extractor.webp" alt=""></span><span class="uc-name">자원채취 건물</span><span class="uc-role">인컴 +1 / 0.5초 · '+state.eco+'/7</span><span class="uc-cost">'+ecoCost()+' CR</span><span class="bad-counter">건설 '+ecoBuildSeconds(state.eco+1)+'초 + 안정화 '+ecoStabilize(state.eco+1,state.elapsed)+'초 · 전체 인컴 중단</span></button>';
+  }).join('')+'<button class="unit-card resource-card'+(selectedRole===EXTRACTOR?' selected':'')+'" data-role="8" title="'+ecoTooltip(state.eco,state.elapsed)+'" '+(state.eco>=7||ecoRemaining()>0?'disabled':'')+'><span class="uc-top">자원채취 · '+state.eco+'/7</span><span class="uc-sprite"><img class="pixel-preview" src="./assets/resource-extractor.webp" alt=""></span><span class="uc-name">자원채취 건물</span><span class="uc-role">'+(state.eco>=7?'수입 +'+showIncome(state.eco):'완료 후 +'+showIncome(state.eco+1))+' / 0.5초</span><span class="uc-cost">'+(state.eco>=7?'최대 단계':ecoCost()+' CR')+'</span><span class="bad-counter">'+(state.eco>=7?'7 / 7':'건설 '+ecoBuildSeconds(state.eco+1)+'초 · 안정화 '+ecoStabilize(state.eco+1,state.elapsed)+'초')+'</span></button>';
 
   $('demolishButton').classList.toggle('selected',demolition);
-  $('unitDetails').innerHTML=selectedRole===EXTRACTOR?'<b>자원채취 건물</b> · 생산 슬롯 1칸 / 최대 7개<br>건설 1개당 인컴 +1 CR / 0.5초. 건설 '+ecoBuildSeconds(state.eco+1)+'초 + 완공 후 안정화 '+ecoStabilize(state.eco+1,state.elapsed)+'초 동안 기본·채굴 인컴과 웨이브 지원금이 중단됩니다. 단계와 경기 시간이 늘수록 안정화가 길어집니다.':selectedRole!==null?'<b>'+f.units[selectedRole]+'</b> · '+getDef(selectedRole,state.faction).name+
+  $('unitDetails').innerHTML=selectedRole===EXTRACTOR?'<b>자원채취 건물</b> · 슬롯 1칸<br>'+ecoTooltip(state.eco,state.elapsed):selectedRole!==null?'<b>'+f.units[selectedRole]+'</b> · '+getDef(selectedRole,state.faction).name+
     ' / '+ROLE[selectedRole].cost+' CR<br>'+getDef(selectedRole,state.faction).tips+'<div class="matchups">'+roleMatchupHtml(selectedRole,state.faction)+
-    '</div><span>HP '+Math.round(effectiveDef(selectedRole,state.faction).hp)+' · 피해 '+Math.round(effectiveDef(selectedRole,state.faction).damage)+
+    '</div><span>HP '+Math.round(selected.hp*(1+.09*state.armor))+' · '+(selected.heal?'치유 '+Math.round(selected.heal*sideWeaponMultiplier(0)):'공격 '+Math.round(selected.damage*sideWeaponMultiplier(0)))+
     ' · 사거리 '+Math.round(effectiveDef(selectedRole,state.faction).range)+' · '+(effectiveDef(selectedRole,state.faction).airTarget?'대공 가능':'지상 공격')+'</span>':
-    '<b>전술 안내</b> — 역할 마크와 상성표는 진영이 달라도 동일합니다. 유닛을 선택하세요.';
+    '유닛을 선택하세요.';
   state.lastCards=Math.floor(state.cash/30);
  }
  const pendingBuild=state.built.some((r,i)=>r!==null&&(factoryReadyAt(0,i)>state.elapsed||(r===EXTRACTOR&&(state.mineTimings[i]?.readyAt||0)>state.elapsed)));
@@ -1783,7 +1788,7 @@ function drawBase(){
   g.strokeStyle='#eac79a51';g.setLineDash([12,15]);g.lineWidth=3;
   g.beginPath();g.moveTo(220,282);g.lineTo(1060,282);g.stroke();g.setLineDash([]);
  }
- g.fillStyle='#f0dbbc';g.font='900 12px monospace';g.textAlign='left';g.fillText('PROTECTED PRODUCTION ZONE',365,21);
+ g.fillStyle='#f0dbbc';g.font='900 12px monospace';g.textAlign='left';
  // 15 protected production structures are displayed as three rows of five.
  for(let i=0;i<SLOTS;i++){
   const role=state.built[i],row=Math.floor(i/COLS),col=i%COLS;
@@ -1816,8 +1821,8 @@ function drawBase(){
  // Defensive turret is destructible. Production zone itself stays protected.
  structure(g,138,196,0,false,state.baseHP[0]);
  structure(g,260,270,0,true,state.turretHP[0]);
- g.fillStyle='#fbefdb';g.textAlign='center';g.font='900 13px monospace';g.fillText('CORE',138,108);
- g.font='900 11px monospace';g.fillText('DEFENSE',260,227);
+ g.fillStyle='#fbefdb';g.textAlign='center';g.font='900 13px monospace';g.fillText('핵심 기지',138,108);
+ g.font='900 11px monospace';g.fillText('본진 포탑',260,227);
  g.fillStyle='#122631';g.fillRect(91,264,97,10);
  g.fillStyle='#74dbdf';g.fillRect(91,264,97*state.baseHP[0]/MAX_BASE,10);
  g.fillStyle='#11252d';g.fillRect(224,315,72,8);
@@ -1839,7 +1844,7 @@ function drawBase(){
    window.DesertSprites.structureImpact(g,impact.part==='turret'?260:138,impact.part==='turret'?270:196,state.faction,impact.mode,impact.age/impact.duration);
  }
  if(state.turretHP[0]<=0){
-  g.fillStyle='#ffba90';g.font='900 17px monospace';g.textAlign='center';g.fillText('DEFENSE DESTROYED',250,198);
+  g.fillStyle='#ffba90';g.font='900 17px monospace';g.textAlign='center';g.fillText('포탑 파괴',250,198);
  }
 }
 function drawMinimap(){
