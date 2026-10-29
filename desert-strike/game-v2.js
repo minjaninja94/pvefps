@@ -6,7 +6,7 @@ const COLORS=['#79dfee','#ff9a79'],LANES=[110,180,260,340,410];
 const EXTRACTOR=8;
 const initialIncome=1,WAVE_STIPEND=24,MAX_ECONOMY=7;
 const FACTORY_BUILD_SECONDS=24,LATE_ECON_STEP_MULTIPLIER=.85,CORE_DAMAGE_MULTIPLIER=.85;
-function incomePerTick(eco){return initialIncome+Math.min(4,eco)+Math.max(0,eco-4)*LATE_ECON_STEP_MULTIPLIER;}
+function incomePerTick(eco){return (initialIncome+eco)*(eco>=5?LATE_ECON_STEP_MULTIPLIER:1);}
 function showIncome(eco){return Number(incomePerTick(eco).toFixed(2)).toString();}
 function factoryReadyAt(side,slot){return (side===0?state.buildReadyAt:state.enemyBuildReadyAt)?.[slot]??0;}
 function factoryReady(side,slot){return state.elapsed+1e-6>=factoryReadyAt(side,slot);}
