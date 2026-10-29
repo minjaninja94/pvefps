@@ -5,12 +5,13 @@ const $=id=>document.getElementById(id);
 const NET=global.DesertTriNetwork,E=global.DesertTriEngine;
 if(!NET||!E)return;
 let snap=null,lane=1,role=0,demolish=false,practice=null,practiceTimer=null,practiceRecorded=false,view='base',repairLane=1;
-let myId='',lobby=null,host=false,gridKey='',cardsKey='',augmentKey='',lastSnapshotAt=0,lastDrawAt=0,resultKey='';
+let myId='',lobby=null,host=false,gridKey='',cardsKey='',augmentKey='',lastSnapshotAt=0,lastDrawAt=0,resultKey='',augmentRosterKey='',cameraX=1100;
 const LANES=['상단','중앙','하단'],ICONS=['⚔','⌖','◆','▣','✣','✹','♞','✚'];
 function message(msg){$('mpStatus').textContent=msg;}
 function laneCount(){return snap?.lanes??3;}
 function laneName(i){return laneCount()===1?'단일 전장':LANES[i]+' 라인';}
-function battleHeight(){return laneCount()===1?520:660;}
+function battleHeight(){return 520;}
+function panCamera(delta){cameraX=Math.max(0,Math.min(E.WIDTH-1100,cameraX+delta));if(snap)draw();}
 function setView(id,scrollToTop=false){
  if(!['base','battle','upgrade'].includes(id))return;
  view=id;
@@ -169,83 +170,62 @@ function buildGrid(){
 }
 function draw(){
  if(!snap)return;
- const ctx=$('mpBattleCanvas').getContext('2d');if(!ctx)return;
- const W=1100,H=battleHeight(),iso=global.IsoWorld;
- const wy=y=>y/snap.height*H;
- ctx.clearRect(0,0,W,H);
- const bg=ctx.createLinearGradient(0,0,0,H);
- bg.addColorStop(0,'#263e42');bg.addColorStop(.48,'#233943');bg.addColorStop(1,'#142e3b');
- ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
- if(iso?.terrain)iso.terrain(ctx,W,H,false,my()?.faction??faction());
- for(let l=0;l<laneCount();l++){
-  const y=wy(l*520),cy=wy((l+.5)*520);
-  ctx.strokeStyle=l===lane?'#d3aa7150':'#8faaa626';
-  if(l){ctx.setLineDash([8,12]);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();ctx.setLineDash([]);}
-  ctx.font='700 11px monospace';ctx.fillStyle='#b2c7c5a9';ctx.textAlign='left';ctx.fillText(laneCount()===1?'단일 전장':LANES[l]+' 생산 구역',12,y+15);
-  for(let side=0;side<2;side++){
-   const coreX=side===0?24:1076,towerX=side===0?69:1031;
-   const hp=snap.cores[l][side]||0,thp=snap.turrets?.[l]?.[side]||0;
-   ctx.fillStyle=side===0?'#80d5d4':'#e19580';ctx.fillRect(coreX-11,cy-21,22,42);
-   ctx.fillStyle=side===0?'#3a9792':'#a86658';ctx.fillRect(towerX-8,cy-16,16,32);
-   ctx.fillStyle='#0a1b28';ctx.fillRect(coreX-12,cy-29,24,5);ctx.fillRect(towerX-10,cy-23,20,4);
-   ctx.fillStyle='#fbd293';ctx.fillRect(coreX-12,cy-29,24*hp/(snap.coreMaxHP||2500),5);ctx.fillRect(towerX-10,cy-23,20*thp/1250,4);
-   if(snap.forwardHP){const fx=(side===0?E.WIDTH/4:E.WIDTH*3/4)/3,fhp=snap.forwardHP[l][side];
-   if(fhp>0&&iso?.structure){
-    const owners=snap.players.filter(p=>p.team===side),fac=owners[l%Math.max(1,owners.length)]?.faction??0;
-    ctx.save();ctx.translate(fx,cy);ctx.scale(.55,.55);ctx.translate(0,-260);iso.structure(ctx,0,260,fac,true,fhp/1000);ctx.restore();
-   }else if(fhp>0){ctx.fillStyle=side===0?'#65b9b0':'#bd8674';ctx.fillRect(fx-12,cy-18,24,36);}
-   else{ctx.fillStyle='#445457';ctx.fillRect(fx-18,cy+5,15,7);ctx.fillRect(fx+2,cy+1,18,11);ctx.fillStyle='#ba7751';ctx.fillRect(fx-2,cy+3,7,4);}
-   ctx.fillStyle='#10232b';ctx.fillRect(fx-15,cy-55,30,5);ctx.fillStyle='#f5d28c';ctx.fillRect(fx-15,cy-55,30*fhp/1000,5);
-   ctx.fillStyle='#efdfab';ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillText(fhp>0?'중간 타워':'타워 파괴',fx,cy+30);}
-  }
+ const ctx=$('mpBattleCanvas').getContext('2d'),iso=global.IsoWorld,W=1100,H=520;
+ if(!ctx)return;
+ const pos=(x,y)=>iso?.project?.(x,y)||{x,y};
+ ctx.clearRect(0,0,W,H);ctx.save();ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();ctx.translate(-cameraX,0);
+ if(iso?.terrain)iso.terrain(ctx,E.WIDTH,H,false,my()?.faction??faction());
+ else{ctx.fillStyle='#43524a';ctx.fillRect(0,0,E.WIDTH,H);}
+ const a=pos(E.WIDTH/2,35),b=pos(E.WIDTH/2,485);
+ ctx.strokeStyle='#f2d7a777';ctx.lineWidth=2;ctx.setLineDash([8,10]);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);
+ function fort(x,team,tower,hp,max){
+  if(hp<=0)return;
+  const faction=snap.players.find(p=>p.team===team)?.faction??0;
+  if(iso?.structure)iso.structure(ctx,x,260,faction,tower,hp/max);
+  else{ctx.fillStyle=team===0?'#87d7d2':'#e19b83';ctx.fillRect(x-20,225,40,70);}
+  const p=pos(x,260),width=tower?48:68;
+  ctx.fillStyle='#13232a';ctx.fillRect(p.x-width/2,p.y-104,width,6);
+  ctx.fillStyle=team===0?'#8be9e1':'#f7a58d';ctx.fillRect(p.x-width/2,p.y-104,width*Math.max(0,hp/max),6);
  }
- ctx.strokeStyle='#ead9a56e';ctx.lineWidth=2;ctx.setLineDash([6,9]);ctx.beginPath();ctx.moveTo(W/2,15);ctx.lineTo(W/2,H-10);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#ead9a5';ctx.textAlign='center';ctx.font='bold 11px sans-serif';ctx.fillText('중앙선',W/2,12);
- // Every faction shares a single global depth order, including fighters from other spawn lanes.
- const units=[...snap.units].sort((a,b)=>a.y-b.y);
- for(const u of units){
-  const x=u.x/3,y=wy(u.y);
-  if(x<-30||x>1130)continue;
-  ctx.fillStyle=u.team===0?'#4aa5b088':'#da826b88';
-  ctx.beginPath();ctx.ellipse(x,y+3,12,4,0,0,Math.PI*2);ctx.fill();
-  if(u.isHatchling){ctx.strokeStyle='#b5f79a';ctx.lineWidth=1.3;ctx.beginPath();ctx.ellipse(x,y+3,8,3,0,0,Math.PI*2);ctx.stroke();}
-  if(u.conscripted){ctx.strokeStyle='#ffd675';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(x,y+6,13,5,0,0,Math.PI*2);ctx.stroke();}
-  const phase=Math.floor((performance.now()-lastSnapshotAt)/84);
-  const frame=u.act==='death'?Math.min(15,(u.frame||0)+phase):((u.frame||0)+phase)%16;
-  const baseAction=['idle','move','attack','siege','death'].includes(u.act)?u.act:'move';
-  const sprite=iso?.frame(u.faction,u.role,baseAction,frame),d=(u.role===3||u.role===6?53:46)*(u.isHatchling?.55:1)*(u.heroCount===20?2:1);
-  if(u.heroCount===20){global.DesertConsolidation?.aura(ctx,x,y,d,performance.now()/1000,!!u.guardian);ctx.fillStyle=u.guardian?'#83ffa8':'#ff7687';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText(u.guardian?'가디언 ×20':'★ ×20',x,y-d*.95);}
-  if(sprite){
-   ctx.imageSmoothingEnabled=false;
-   const filter=global.DesertLobby?.filterForSkin?.(u.skin)||'none';
-   ctx.save();ctx.translate(x,y);if(u.team===1)ctx.scale(-1,1);
-   if(global.DesertUnitMotion)global.DesertUnitMotion.draw(ctx,{faction:u.faction,role:u.role,action:u.act||'move',frame,x:-d/2,y:-d*.84,size:d,filter,skin:u.skin||'default',isHatchling:!!u.isHatchling});
-   else{ctx.filter=filter;ctx.drawImage(sprite,-d/2,-d*.84,d,d);}
-   ctx.restore();
-  }
-  else{ctx.fillStyle=u.team===0?'#a5ece7':'#ef9e8a';ctx.fillRect(x-5,y-9,10,14);}
-  ctx.fillStyle='#081c25';ctx.fillRect(x-12,y-d*.9,24,3);
-  ctx.fillStyle=u.team===0?'#75ddd6':'#f59479';ctx.fillRect(x-12,y-d*.9,24*Math.max(0,u.hp/u.maxHP),3);
-  if(u.act==='attack'){
-   ctx.strokeStyle=u.team===0?'#80e3d55e':'#f5a4885e';ctx.lineWidth=1.5;
-   ctx.beginPath();ctx.ellipse(x,y,18,11,0,0,Math.PI*2);ctx.stroke();
-  }
+ for(let t=0;t<2;t++){
+  fort(t===0?90:E.WIDTH-90,t,false,snap.cores[lane]?.[t]||0,snap.coreMaxHP||3000);
+  fort(t===0?190:E.WIDTH-190,t,true,snap.turrets?.[lane]?.[t]||0,1250);
+  const x=t===0?E.WIDTH/4:E.WIDTH*3/4,hp=snap.forwardHP?.[lane]?.[t]||0;
+  fort(x,t,true,hp,1000);
+  const p=pos(x,260);ctx.font='bold 12px sans-serif';ctx.fillStyle='#edddac';ctx.textAlign='center';
+  ctx.fillText(hp>0?'중간 타워':'타워 파괴',p.x,p.y-112);
+ }
+ const phase=Math.floor((performance.now()-lastSnapshotAt)/84);
+ for(const u of snap.units.filter(u=>u.lane===lane).sort((x,y)=>x.y-y.y)){
+  const p=pos(u.x,u.y-lane*E.LANE_H);
+  if(p.x<cameraX-110||p.x>cameraX+1210)continue;
+  const factor=(u.isHatchling?.58:1)*(u.heroCount===20?2:1),size=(u.role===3?78:u.role===6?77:68)*factor;
+  ctx.fillStyle='#0617229a';ctx.beginPath();ctx.ellipse(p.x,p.y+13,17*factor,4*factor,0,0,Math.PI*2);ctx.fill();
+  if(u.heroCount===20)global.DesertConsolidation?.aura?.(ctx,p.x,p.y+12,size,performance.now()/1000,!!u.guardian);
+  const act=['idle','move','attack','siege','death'].includes(u.act)?u.act:'idle',frame=((u.frame||0)+phase)%16;
+  const img=iso?.frame?.(u.faction,u.role,act,frame)||global.DesertSprites?.frame?.(u.faction,u.role,act,frame);
+  const skin=u.skin||'default',filter=global.DesertLobby?.filterForSkin?.(skin)||'none';
+  ctx.save();ctx.translate(p.x,p.y);if(u.team===1)ctx.scale(-1,1);ctx.imageSmoothingEnabled=false;
+  if(global.DesertUnitMotion)global.DesertUnitMotion.draw(ctx,{faction:u.faction,role:u.role,action:u.act||'move',frame,x:-size/2,y:-size/2,size,filter,skin,isHatchling:!!u.isHatchling});
+  else if(img){ctx.filter=filter;ctx.drawImage(img,-size/2,-size/2,size,size);}
+  else{ctx.fillStyle='#f3c193';ctx.fillRect(-8,-24,16,29);}
+  ctx.restore();
+  const hpY=p.y-47*factor;
+  if(u.heroCount===20){ctx.fillStyle=u.guardian?'#9affa8':'#ffd197';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText(u.guardian?'가디언 ×20':'★ ×20',p.x,hpY-9);}
+  if(u.hp<u.maxHP){ctx.fillStyle='#0c1b28';ctx.fillRect(p.x-16*factor,hpY-9,32*factor,5);ctx.fillStyle=u.team===0?'#83e4e0':'#f2a08c';ctx.fillRect(p.x-16*factor,hpY-9,32*factor*Math.max(0,u.hp/u.maxHP),5);}
  }
  for(const e of snap.effects||[]){
-  ctx.strokeStyle=e.kind==='tower'?'#fff0ac':e.kind==='conscript'?'#ffcf55':e.kind==='ginppai'?'#91e2b6':'#f6dba8';
-  ctx.lineWidth=e.kind==='tower'?3:2;ctx.beginPath();ctx.ellipse(e.x/3,wy(e.y),e.kind==='huanglong'?28:13,e.kind==='huanglong'?15:6,0,0,Math.PI*2);ctx.stroke();
-  const label={guardian:'중간 타워 파괴 · 상대 +150 CR · 가디언 소환',ginppai:'긴빠이 +CR',conscript:'자진입대!',huanglong:'황룡 · 해병수육!',bongo:'오도봉고 돌진!',broodling:'공생충 출생!',pollen:'꽃가루 치유',ink:'먹물 침식!'}[e.kind];
-  if(label){ctx.fillStyle=e.kind==='huanglong'?'#ffe69b':'#ffe0b0';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText(label,e.x/3,wy(e.y)-23);}
+  if(e.lane!==lane)continue;
+  const p=pos(e.x,e.y-lane*E.LANE_H);
+  if(p.x<cameraX-50||p.x>cameraX+1150)continue;
+  ctx.strokeStyle=e.kind==='nuke'?'#fff2af':'#f7d09c';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,e.kind==='nuke'?50:18,e.kind==='nuke'?26:7,0,0,Math.PI*2);ctx.stroke();
  }
- if(snap.fog?.length){
-  for(let l=0;l<laneCount();l++)if(snap.fog[l]){
-   const x=snap.viewerTeam===0?(3300-770)/3:0,top=wy(l*520),hh=wy(520);
-   ctx.fillStyle='#091720ed';ctx.fillRect(x,top,770/3,hh);
-   ctx.font='700 11px monospace';ctx.fillStyle='#bad1d2';ctx.textAlign='center';
-   ctx.fillText('정찰 전',x+770/6,top+hh/2);
-  }
- }
- ctx.strokeStyle='#e2c38b88';ctx.lineWidth=1.2;
- ctx.strokeRect(1,1,W-2,H-2);
+ if(snap.fog?.[lane]){ctx.fillStyle='#071525ed';ctx.fillRect(snap.viewerTeam===0?E.WIDTH-770:0,0,770,H);}
+ ctx.restore();
+ ctx.fillStyle='#081c27d9';ctx.fillRect(0,0,240,35);ctx.fillStyle='#f4db9e';ctx.font='bold 15px sans-serif';ctx.textAlign='left';ctx.fillText(laneName(lane),13,23);
+ ctx.strokeStyle='#dabb8a88';ctx.strokeRect(1,1,W-2,H-2);
+ const label=$('mpBattleCurrentLane');if(label)label.textContent=laneName(lane);
+ $('mpBattleLaneSelect')?.querySelectorAll('[data-mp-lane]').forEach(b=>{const on=Number(b.dataset.mpLane)===lane;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
 }
 function drawOverview(){
  if(!snap)return;
@@ -347,7 +327,7 @@ function onSnapshot(v){
  const openingNumber=$('mpOpeningSeconds');if(openingNumber)openingNumber.textContent=String(Math.max(0,Math.ceil(preparation-1e-6)));
  if(!v.ended)$('mpStateTag').textContent=preparation>0?'초기 배치 · '+Math.ceil(preparation-1e-6)+'초 뒤 첫 출격':v.mode==='classic'?(practice?'클래식 1:1 AI 연습':'클래식 1:1 진행 중'):(practice?'3라인 AI 연습':'3라인 전투 중');
  const battle=$('mpBattleCanvas');if(battle.height!==battleHeight())battle.height=battleHeight();
- if(fresh||lane>=laneCount()){lane=laneCount()===1?0:1;repairLane=lane;gridKey='';setView('base');}
+ if(fresh||lane>=laneCount()){lane=laneCount()===1?0:1;cameraX=1100;repairLane=lane;gridKey='';setView('base');}
  const me=my(),side=me?.team??0;
  if(me){
   $('mpMyResources').textContent=me.cash+' CR';
@@ -420,7 +400,7 @@ async function leave(){
  if(practice){clearInterval(practiceTimer);practiceTimer=null;practice=null;practiceRecorded=false;myId='';snap=null;$('mpCommand').hidden=true;$('mpStateTag').textContent='연결 전';message('연습 종료');}
  else{await NET.leave();snap=null;$('mpCommand').hidden=true;}
  $('mpViewTabs').hidden=true;setView('base');
- lane=1;repairLane=1;role=0;demolish=false;gridKey='';cardsKey='';augmentKey='';$('mpAugmentPanel').hidden=true;
+ lane=1;cameraX=1100;repairLane=1;role=0;demolish=false;gridKey='';cardsKey='';augmentKey='';augmentRosterKey='';$('mpAugmentPanel').hidden=true;
  delete document.body.dataset.multiArena;
  uiButtons();
 }
