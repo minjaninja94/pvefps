@@ -46,6 +46,8 @@ jobs:
         run: node --test desert-strike/smoke-public-room.test.cjs
       - name: Supabase username account guest and server-forfeit wiring
         run: node --test desert-strike/smoke-supabase-members.test.cjs
+      - name: Commander rank SVG, inline multiplayer and modal login
+        run: node --test desert-strike/smoke-lobby-ranks.test.cjs
       - name: Local 40-match history and unofficial RP safety
         run: node --test desert-strike/smoke-career.test.cjs
       - name: Godot combat voice assets and web event hooks

@@ -86,7 +86,8 @@ function open({history=false}={}){
  layer.hidden=false;document.body.classList.add('career-modal-open');
  setMode(global.DesertMember?.isMember?.()?'member':'login');
  render();
- if(history)$('careerHistory')?.scrollIntoView?.({block:'nearest'});
+ if(history){if($('careerHistoryDetails'))$('careerHistoryDetails').open=true;
+  $('careerHistoryDetails')?.scrollIntoView?.({block:'nearest'});}
  else $('careerEmail')?.focus?.();
  if(global.DesertMember?.isMember?.())$('careerClose')?.focus?.();
 }

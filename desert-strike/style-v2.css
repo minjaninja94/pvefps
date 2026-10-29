@@ -578,3 +578,6 @@ body[data-multi-arena="classic"] .mp-grid-viewport{max-height:620px}
  .career-layer{padding:8px}
  .career-layer .career-panel{max-height:94dvh}
 }
+
+/* Authentication dialog stays concise until history is requested. */
+body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{border-top:1px solid #486574;margin:14px 0 0;padding-top:12px}.career-history-details summary{cursor:pointer;font-size:13px;font-weight:700;color:#e4cfab;list-style-position:inside}.career-history-details>p{color:#acc4ce;font-size:11px;margin:10px 0 8px}.career-layer .career-panel>.career-short-note{margin:7px 0 11px;font-size:12px}.career-layer .career-account{font-weight:700;color:#d9e9e9}

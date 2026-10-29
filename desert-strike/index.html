@@ -37,14 +37,13 @@
    <section id="careerPanel" class="lobby-panel career-panel" data-auth-mode="login" tabindex="-1">
    <div class="lobby-section-title"><div><div class="lobby-eyebrow">COMMANDER ACCOUNT</div><h2 id="careerDialogTitle">지휘관 로그인</h2></div><button type="button" id="careerClose" class="btn outline" aria-label="팝업 닫기">✕ 닫기</button></div>
    <div class="career-mode-tabs" role="group" aria-label="로그인 방식"><button id="careerTabLogin" type="button" class="active" aria-pressed="true">로그인</button><button id="careerTabSignup" type="button" aria-pressed="false">회원가입</button></div>
-   <p>회원의 아이디·비밀번호는 Supabase 인증으로 처리됩니다. 최근 전적은 이 브라우저에, 회원 진행도는 서버에도 저장됩니다. 탈주 패널티는 서버가 처리하되 일반전 전투 결과는 완전한 부정행위 검증을 제공하지 않습니다.</p>
+   <p class="career-short-note">이메일 없이 아이디·비밀번호로 접속합니다. 회원 진행도와 비공식 랭크는 Supabase에 저장됩니다.</p>
    <strong id="careerRating">비공식 브론즈 · 1000 RP</strong>
    <div id="careerAccount" class="career-account">Firebase 연결 전</div>
    <div class="career-auth-form"><label>아이디 <input id="careerEmail" type="text" autocomplete="username" maxlength="20" minlength="4" placeholder="영문·숫자·_ 4~20자"></label><label id="careerNicknameLabel">닉네임 <input id="careerNickname" type="text" maxlength="16" placeholder="게임 내 표시 이름"></label><label>비밀번호 <input id="careerPassword" type="password" autocomplete="current-password" minlength="8" maxlength="72" placeholder="8자 이상"></label></div>
    <div class="career-actions"><button type="button" id="careerRegister" class="btn accent">회원가입</button><button type="button" id="careerLogin" class="btn outline">로그인</button><button type="button" id="careerGuest" class="btn outline">게스트 플레이</button><button type="button" id="careerLogout" class="btn outline" hidden>로그아웃</button></div>
    <div id="careerStatus" role="status">이메일 없이 아이디·비밀번호·닉네임으로 가입할 수 있습니다. 로그인 상태는 이 기기에서 유지됩니다. 비밀번호 분실 시 자동 복구는 제공되지 않습니다.</div>
-   <p>서버 RP는 탈주 및 참가자 전원 동의 결과만 반영합니다. 게스트는 비공식 로컬 기록만 사용합니다.</p>
-   <h3>최근 40경기 (이 브라우저)</h3><div id="careerHistory" class="career-history">아직 기록이 없습니다.</div>
+   <details id="careerHistoryDetails" class="career-history-details"><summary>최근 40경기 상세 전적 보기</summary><p>이 기기에서 진행한 경기 내역입니다. 서버 랭크 통계와 별도로 보관합니다.</p><div id="careerHistory" class="career-history">아직 기록이 없습니다.</div></details>
    </section>
   </div>
   <details class="lobby-panel audio-mixer"><summary>🔊 오디오 설정 · 음악 / 음성 / 효과음 개별 조정</summary><div class="audio-mixer-controls">
@@ -63,7 +62,7 @@
      </div></div></div>
    <div class="lobby-section-title"><div><div class="lobby-eyebrow">APPEARANCE ONLY</div><h2>지휘관 스킨</h2></div><span id="lobbySkinMessage">레벨을 올려 해금</span></div><div id="lobbySkins" class="lobby-skins"></div>
   </section>
-  <footer class="lobby-footer">레벨·훈련 랭크는 현재 로컬 진행도이며 공식 경쟁 랭킹이 아닙니다. 안전한 공식 랭킹에는 서버 판정이 필요합니다. · 유닛 음성: <a href="https://voicevox.hiroshiba.jp/nemo/term/" target="_blank" rel="noopener noreferrer">VOICEVOX Nemo</a></footer>
+  <footer class="lobby-footer">회원 RP는 Supabase 서버가 저장하는 비공식 등급입니다. 게스트 RP와 최근 전적은 이 기기에 저장됩니다. · 유닛 음성: <a href="https://voicevox.hiroshiba.jp/nemo/term/" target="_blank" rel="noopener noreferrer">VOICEVOX Nemo</a></footer>
  </div>
 </section>
 <div class="app">
