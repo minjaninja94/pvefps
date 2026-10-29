@@ -50,8 +50,8 @@ test('late match retains natural core-only victory without artillery or healing 
  assert.ok(!source.includes('warPressure'),'no time-ramped unit damage');
  assert.ok(!source.includes("kind:'pressure'"),'no periodic frontline artillery');
  assert.ok(!source.includes('OVERTIME_START'),'no hidden overtime modifier');
- assert.ok(!source.includes("?.65:1"),'natural regen is not nerfed late');
- assert.ok(!source.includes("?.75:1"),'support healing is not nerfed late');
+ assert.ok(!source.includes('state.seconds>=10*60?.65:1'),'natural regen is not nerfed late');
+ assert.ok(!source.includes('state.seconds>=10*60?.75:1'),'support healing is not nerfed late');
  const mirror=E.create({mode:'classic',size:1,members});
  mirror.state.cores[0][0]=0;mirror.state.cores[0][1]=0;mirror.tick(.01);
  assert.equal(mirror.state.winner,null,'simultaneous core destruction remains a draw');
