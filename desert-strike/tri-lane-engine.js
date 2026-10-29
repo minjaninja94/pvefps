@@ -808,7 +808,10 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    units:state.units.filter(u=>!isHidden(u.team,u.lane,u.x)).map(u=>({id:u.id,uid:u.uid,team:u.team,faction:u.faction,skin:u.skin||'default',role:u.role,lane:u.lane,x:Math.round(u.x),y:Math.round(u.y),hp:Math.ceil(u.hp),maxHP:Math.ceil(u.maxHP),heroCount:u.heroCount===20?20:1,guardian:!!u.guardian,guardianLane:u.guardian?u.guardianLane:null,conscripted:!!u.conscripted,isHatchling:!!u.isHatchling,frame:Math.floor(u.frame),act:u.hitAge>0?'hit':u.spawnAge<.42?'spawn':u.skillAge>0?'skill':u.attackAge>0?'attack':u.act})),
    effects:state.effects.filter(e=>!isHidden(e.team,e.lane,e.x)).map(e=>({...e,x:Math.round(e.x),y:Math.round(e.y)}))};
  }
- if(state.aiDifficulty==='hard')for(const bot of state.players.filter(p=>p.bot))hardBotPurchase(bot);
+ // Both bot difficulties use their real opening cash at second zero, just as
+ // human players can. With 24s construction a bot that first bought at wave 1
+ // would unfairly miss its own first deployment and lose a whole wave.
+ for(const bot of state.players.filter(p=>p.bot))botPurchase(bot);
  return {state,order,tick,wave,snapshot,definition};
 }
 global.DesertTriEngine=Object.freeze({create,definition,WIDTH,HEIGHT,LANE_H,LANES,COLS,ROWS,SLOTS,COST,NAMES,EXTRACTOR,ecoPrice,ecoStabilize,incomePerTick,FACTORY_BUILD_SECONDS,WEAPON_COST,ARMOR_COST});
