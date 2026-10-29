@@ -323,6 +323,15 @@ function hardBarrage(){
   if(clustered*defensive>score){score=clustered*defensive;target=u;}
  }
  if(!target||score<650||state.enemyCash<260+(target.x<WORLD_W*.7?160:0))return false;
+ // A single healthy 20-man hero is not worth a 260-CR shot that barely
+ // scratches it. Estimate soldier-value removed by real applied damage.
+ const expected=visible.reduce((sum,u)=>{
+  const d=Math.hypot(u.x-target.x,u.y-target.y);
+  if(d>=118)return sum;
+  const dealt=260*(1-.45*d/118);
+  return sum+value(u)*Math.min(1,dealt/Math.max(1,u.hp));
+ },0);
+ if(expected<220&&target.x<WORLD_W-450)return false;
  state.enemyCash-=260;state.enemyBarrageCd=32;
  for(const u of visible){
   const d=Math.hypot(u.x-target.x,u.y-target.y);
@@ -523,8 +532,8 @@ function hardInvest(){
  const growTo=Math.min(SLOTS-state.enemyEco,Math.max(8,7+Math.floor(state.elapsed/18),Math.ceil(intel.total*.9)));
  // A researched army still needs enough factories to compete with player scaling.
  // Do not spend the equivalent of several new factories on early upgrades.
- if(!emergencyCounter&&factoryCount>=Math.min(18,Math.max(10,Math.floor(state.elapsed/18)))&&
-  state.enemyCash>=310&&hardResearch())return;
+ if(!emergencyCounter&&factoryCount>=Math.min(13,8+Math.floor(state.elapsed/70))&&
+  state.enemyCash>=320&&hardResearch())return;
  const brain=state.hardBrain||(state.hardBrain=ai.create(state.enemyFaction));
  const roles=intel.counts;
  const air=intel.air,armor=intel.armor,invaded=intel.invaded;
