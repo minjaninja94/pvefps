@@ -493,6 +493,7 @@ function renderSoloAugment(){
  if(name)name.textContent='WAVE '+String(choice.round).padStart(2,'0')+' · '+({silver:'실버',gold:'골드',prismatic:'프리즘'}[choice.tier]||choice.tier)+' 증강 선택';
  if(time)time.textContent=Math.ceil(choice.remaining)+'초';
  if(info)info.textContent='획득 증강 '+state.augments.length+'개 · 카드마다 리롤 1회';
+ window.DesertAugmentHistory?.render?.($('soloAugmentHistory'),state.augments,choice.round);
  if(!cards)return;
  cards.replaceChildren();
  for(let i=0;i<3;i++){

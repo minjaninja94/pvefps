@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=wave-unlimited1"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=augment-history1"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -199,6 +199,7 @@
   <p class="solo-augment-explain">증강 카드 3장 중 하나를 선택합니다. 각 카드마다 리롤 1회가 가능하며, 30초가 지나면 자동 선택됩니다. 카드를 고르는 동안 전투가 일시정지됩니다.</p>
   <div id="soloAugmentCards" class="solo-augment-cards" aria-label="선택 가능한 증강 카드"></div>
   <p id="soloAugmentCurrent" class="solo-augment-current" aria-live="polite">획득 증강 0개 · 카드마다 리롤 1회</p>
+  <div id="soloAugmentHistory" class="augment-history-mount" aria-label="이전에 획득한 증강 카드 기록"></div>
  </section>
 </div>
 <div id="endOverlay" class="modal-backdrop hidden"><div class="modal-panel end-panel"><span class="eyebrow">BATTLE REPORT</span><h2 id="endTitle">승리</h2><p id="endSummary"></p><div id="soloProductionStats" class="result-production" aria-label="경기 유닛 생산 통계"></div><button id="restartButton" class="btn start-cta">메인 로비로 돌아가기</button></div></div>
@@ -234,13 +235,14 @@
 <script src="./defense-guardian.js?v=guardianheal1" defer></script>
 <script src="./hard-ai.js?v=balance2" defer></script>
 <script src="./augment-rules.js?v=godot300a" defer></script>
+<script src="./augment-history.js?v=history1" defer></script>
 <script src="./tri-lane-engine.js?v=endless-waves1" defer></script>
 <script src="./device-account.js?v=uniform7" defer></script>
 <script src="./tri-lane-network.js?v=augmented1" defer></script>
 <script src="./combat-audio.js?v=godotvoice1" defer></script>
-<script src="./tri-lane-ui.js?v=augment-rule-picker2" defer></script>
+<script src="./tri-lane-ui.js?v=augment-history1" defer></script>
 <script src="./battle-report.js?v=results1" defer></script>
-<script src="./game-v2.js?v=solo-augments2" defer></script>
+<script src="./game-v2.js?v=augment-history1" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=battlebgm1" defer></script>

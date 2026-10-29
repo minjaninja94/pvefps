@@ -30,6 +30,7 @@ jobs:
           node --check desert-strike/lobby-music.js
           node --check desert-strike/combat-audio.js
           node --check desert-strike/augment-rules.js
+          node --check desert-strike/augment-history.js
           node --check desert-strike/career-profile.js
           node --check desert-strike/audio-settings.js
           node --check desert-strike/tri-lane-engine.js
@@ -40,6 +41,8 @@ jobs:
         run: node --test desert-strike/smoke-bgm.test.cjs
       - name: Unlimited waves in solo and PvP/co-op with core-only victory
         run: node --test desert-strike/smoke-endless-waves.test.cjs
+      - name: Hoverable round-by-round augment pick history for solo and multi
+        run: node --test desert-strike/smoke-augment-history.test.cjs
       - name: Single-player 300-card augment draft and original-mode isolation
         run: node --test desert-strike/smoke-solo-augments.test.cjs
       - name: Match report, per-unit production totals and server result callbacks

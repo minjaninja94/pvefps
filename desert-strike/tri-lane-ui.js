@@ -271,11 +271,17 @@ function renderAugment(){
  const panel=$('mpAugmentPanel'),choice=snap?.augmentChoice;
  if(!panel)return;
  if(!choice||choice.selected){panel.hidden=true;augmentKey='';return;}
- const key=JSON.stringify([choice.cards,choice.rerolls,Math.ceil(choice.remaining),choice.tier]);
- if(key===augmentKey)return;augmentKey=key;
+ const key=JSON.stringify([choice.cards,choice.rerolls,choice.tier,choice.round,my()?.augments||[]]);
+ const headingText=()=> 'WAVE '+choice.round+' · '+({silver:'실버',gold:'골드',prismatic:'프리즘'}[choice.tier]||choice.tier)+' 증강 · '+Math.ceil(choice.remaining)+'초';
+ if(key===augmentKey){
+  const heading=panel.querySelector('h3');
+  if(heading)heading.textContent=headingText();
+  return;
+ }
+ augmentKey=key;
  panel.hidden=false;panel.replaceChildren();
  const heading=document.createElement('h3');
- heading.textContent='ROUND '+choice.round+' · '+({silver:'실버',gold:'골드',prismatic:'프리즘'}[choice.tier]||choice.tier)+' 증강 · '+Math.ceil(choice.remaining)+'초';
+ heading.textContent=headingText();
  const description=document.createElement('p');description.textContent='셋 중 하나를 선택하세요. 각 카드 칸은 1회 리롤 가능합니다. 미선택 시 자동 선택됩니다.';
  const cards=document.createElement('div');cards.className='mp-augment-cards';
  for(let i=0;i<3;i++){
@@ -289,6 +295,10 @@ function renderAugment(){
   slot.append(name,detail,pick,reroll);cards.append(slot);
  }
  panel.append(heading,description,cards);
+ const history=document.createElement('div');history.className='augment-history-mount';
+ history.setAttribute('aria-label','이번 경기에서 이전 웨이브에 선택한 증강');
+ global.DesertAugmentHistory?.render?.(history,my()?.augments||[],choice.round);
+ panel.append(history);
 }
 function onSnapshot(v){
  if(!v){snap=null;global.DesertCombatAudio?.stop?.();return;}if(v.width!==3300||![520,1560].includes(v.height)||!Array.isArray(v.players)||(v.lanes!==undefined&&v.lanes!==(v.mode==='classic'?1:3)))return;
