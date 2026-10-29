@@ -118,6 +118,23 @@ function listenRoom(){
   if(!host&&!pcs.size&&room.status==='lobby')listenGuest();
  },e=>status('대기실 수신 오류: '+msg(e)));
 }
+function trackServerRegistration(id,details,action){
+ const register=global.DesertMember?.joinMatch;
+ if(!register){
+  if(roomId===id)status('방 '+id+' '+action+' 완료 · 비공식 경기 (서버 전적 서비스 없음)');
+  return;
+ }
+ // Firestore is the multiplayer lobby. A delayed/disabled Supabase guest
+ // session must never block players from creating or joining that lobby.
+ void Promise.resolve().then(()=>register(details)).then(result=>{
+  if(roomId!==id)return;
+  status('방 '+id+' '+action+' 완료 · '+(result?.ok
+   ?'서버 경기 기록 연결 완료'
+   :'비공식 경기 · 서버 승패·탈주·RP 기록 없음 ('+(result?.reason||'계정 인증 필요')+')'));
+ }).catch(e=>{
+  if(roomId===id)status('방 '+id+' '+action+' 완료 · 비공식 경기 (서버 전적 연결 오류: '+msg(e)+')');
+ });
+}
 async function create(opts){
  if(roomId)await leave();
  await identity();
@@ -125,52 +142,65 @@ async function create(opts){
  roomId=code();host=true;
  room={version:1,host:uid,mode:opts.mode,size:Number(opts.size),ruleset:validateRuleset(opts.ruleset),seed:crypto.getRandomValues(new Uint32Array(1))[0]||1,publicRoom:opts.publicRoom!==false,status:'lobby',created:Date.now(),expires:Date.now()+7200000,
   players:{[uid]:{name:validateName(opts.name),faction:Number(opts.faction),skin:validateSkin(opts.skin),team:0,ready:false}}};
- try{await fs.setDoc(path(),room);}
- catch(e){
-  // Until the updated Firestore rules are published, legacy standard PvP/co-op
-  // should keep working. Never silently downgrade an augment match.
-  if(e?.code==='permission-denied'&&room.ruleset==='standard'&&room.mode!=='classic'){
-   const legacy={...room};delete legacy.ruleset;delete legacy.seed;delete legacy.publicRoom;
-   await fs.setDoc(path(),legacy);room=legacy;
-   status('기존 Firebase 규칙으로 초대방을 개설했습니다. 공개방 기능은 규칙 게시 후 활성화됩니다.');
-  }else throw e;
+ const id=roomId;
+ try{
+  try{await fs.setDoc(path(),room);}
+  catch(e){
+   // Legacy Firestore deployments can host standard invitation rooms only.
+   if(e?.code==='permission-denied'&&room.ruleset==='standard'&&room.mode!=='classic'){
+    const legacy={...room};delete legacy.ruleset;delete legacy.seed;delete legacy.publicRoom;
+    await fs.setDoc(path(),legacy);room=legacy;
+   }else throw e;
+  }
+  if(room.publicRoom){
+   try{await fs.setDoc(publicPath(id),{owner:uid,created:room.created,expires:room.expires});}
+   catch(e){status('공개방 목록 등록 실패: '+msg(e)+' · 코드로 초대할 수 있습니다.');}
+  }
+  listenRoom();
+  status('방 '+id+' 생성 완료 · 코드를 공유해 참가할 수 있습니다. 서버 전적 확인 중…');
+  trackServerRegistration(id,{code:id,mode:room.mode,size:room.size,team:0,host:true},'생성');
+  return id;
+ }catch(e){
+  resetLocal();notify('room',null);
+  throw Error('방 생성 실패: '+msg(e));
  }
- if(room.publicRoom){try{await fs.setDoc(publicPath(roomId),{owner:uid,created:room.created,expires:room.expires});}
-  catch(e){status('공개방 목록 등록 실패: '+msg(e)+' · 초대 코드 참가만 가능합니다.');}}
- const ledger=await global.DesertMember?.joinMatch?.({code:roomId,mode:room.mode,size:room.size,team:0,host:true});
- listenRoom();status('방 코드 '+roomId+' · '+(ledger?.ok?'서버 경기 참가 등록 완료':'서버 탈주 판정 비활성: '+(ledger?.reason||'Supabase 인증 필요')));
- return roomId;
 }
 async function join(opts){
  if(roomId)await leave();
  await identity();
  roomId=String(opts.code||'').trim().toUpperCase();
- if(!/^[A-HJ-NP-Z2-9]{6}$/.test(roomId))throw Error('6자리 방 코드가 필요합니다.');
+ if(!/^[A-HJ-NP-Z2-9]{6}$/.test(roomId)){roomId=null;throw Error('6자리 방 코드가 필요합니다.');}
  host=false;
- let joined=null;
- await fs.runTransaction(db,async tx=>{
-  const ref=path(),snap=await tx.get(ref);
-  if(!snap.exists())throw Error('존재하지 않는 방입니다.');
-  const r=snap.data();
-  if(r.status!=='lobby'||r.expires<Date.now())throw Error('대기 중인 방만 참가할 수 있습니다.');
-  const players={...r.players};
-  if(uid in players)throw Error('이미 같은 방에 참가했습니다.');
-  let team=r.mode==='coop'?0:Number(opts.team);
-  if(![0,1].includes(team))throw Error('잘못된 팀');
-  const cap=r.size;
-  if(Object.values(players).filter(p=>p.team===team).length>=cap){
-   if(r.mode!=='coop'&&Object.values(players).filter(p=>p.team===1-team).length<cap)team=1-team;
-   else throw Error('두 팀 모두 정원이 가득 찼습니다.');
-  }
-  if(Object.keys(players).length>=r.size*(r.mode==='coop'?1:2))throw Error('방 정원이 가득 찼습니다.');
-  players[uid]={name:validateName(opts.name),team,faction:Number(opts.faction),skin:validateSkin(opts.skin),ready:false};
-  joined={code:roomId,mode:r.mode,size:r.size,team,host:false};
-  if(players[uid].faction<0||players[uid].faction>9)throw Error('종족 선택 오류');
-  tx.update(ref,{players});
- });
- const ledger=await global.DesertMember?.joinMatch?.(joined);
- listenRoom();status('방 '+roomId+' 참가 · '+(ledger?.ok?'서버 참가 등록 완료':'서버 판정 비활성: '+(ledger?.reason||'계정 인증 필요')));
- return roomId;
+ const id=roomId;let joined=null;
+ try{
+  await fs.runTransaction(db,async tx=>{
+   const ref=path(),snap=await tx.get(ref);
+   if(!snap.exists())throw Error('존재하지 않는 방입니다.');
+   const r=snap.data();
+   if(r.status!=='lobby'||r.expires<Date.now())throw Error('대기 중인 방만 참가할 수 있습니다.');
+   const players={...r.players};
+   if(uid in players)throw Error('이미 같은 방에 참가했습니다.');
+   let team=r.mode==='coop'?0:Number(opts.team);
+   if(![0,1].includes(team))throw Error('잘못된 팀');
+   const cap=r.size;
+   if(Object.values(players).filter(p=>p.team===team).length>=cap){
+    if(r.mode!=='coop'&&Object.values(players).filter(p=>p.team===1-team).length<cap)team=1-team;
+    else throw Error('두 팀 모두 정원이 가득 찼습니다.');
+   }
+   if(Object.keys(players).length>=r.size*(r.mode==='coop'?1:2))throw Error('방 정원이 가득 찼습니다.');
+   players[uid]={name:validateName(opts.name),team,faction:Number(opts.faction),skin:validateSkin(opts.skin),ready:false};
+   joined={code:id,mode:r.mode,size:r.size,team,host:false};
+   if(players[uid].faction<0||players[uid].faction>9)throw Error('종족 선택 오류');
+   tx.update(ref,{players});
+  });
+  listenRoom();
+  status('방 '+id+' 참가 완료 · 서버 전적 확인 중…');
+  trackServerRegistration(id,joined,'참가');
+  return id;
+ }catch(e){
+  resetLocal();notify('room',null);
+  throw Error('방 참가 실패: '+msg(e));
+ }
 }
 async function ready(value){
  if(!roomId)throw Error('방에 먼저 입장해 주세요.');
