@@ -76,6 +76,8 @@ for(const ruleset of ['standard','augment'])for(const mode of ['pvp','classic'])
  const match=E.create({mode,size:1,ruleset,members:[
   {uid:'a',team:0,faction:0},{uid:'b',team:1,faction:2}]});
  const p=match.state.players[0],st=match.state;
+ if(ruleset==='augment')for(const owner of st.players)
+  assert.equal(match.order(owner.uid,{type:'augment_pick',slot:1}).ok,true,'pick initial augment before building');
  const core=mode==='classic'?8640:3000;
  assert.equal(st.cores[0][0],core,ruleset+' '+mode+' core HP');
  assert.equal(match.order('a',{type:'build',lane:0,slot:0,role:0}).ok,true);
@@ -96,6 +98,8 @@ for(const ruleset of ['standard','augment'])for(const difficulty of ['normal','h
  const game=E.create({mode:'coop',size:2,aiDifficulty:difficulty,ruleset,members:[
   {uid:'a',team:0,faction:0},{uid:'b',team:0,faction:1}]});
  const bots=game.state.players.filter(p=>p.bot);
+ if(ruleset==='augment')for(const owner of game.state.players.filter(p=>!p.bot))
+  assert.equal(game.order(owner.uid,{type:'augment_pick',slot:1}).ok,true);
  game.wave();if(difficulty==='hard')game.tick(.2);
  assert.ok(bots.some(p=>p.buildings.flat().some(r=>r!==null&&r!==8)),
   difficulty+' '+ruleset+' AI buys its own combat production');
