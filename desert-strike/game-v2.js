@@ -390,7 +390,7 @@ function aiReadOpponent(){
 function aiCountersFor(role){
  if(role===0){
   // Factions 3/4/6/7 field ground cavalry or robots in slot 6, not aircraft.
-  return [3,4,6,7].includes(state.enemyFaction)?[1,3]:[6,1,3];
+  return state.enemyFaction===3?[6,1,3]:[4,6,7].includes(state.enemyFaction)?[1,3]:[6,1,3];
  }
  if(role===6&&[3,4,6,7].includes(state.faction))return [2,3];
  if(role===3&&[3,4,6,7].includes(state.enemyFaction))return [2];
@@ -418,6 +418,7 @@ function aiChoose(budget=state.enemyCash){
   if(matching.length){
    // Melee-only armies cannot attack aircraft. Buy one air unit once affordable,
    // then mix rifle + armor rather than exploit an unlimited flier swarm.
+   if(intel.dominant===0&&state.enemyFaction===3&&affordable.includes(6)&&myCounts[6]<Math.min(8,Math.max(1,Math.ceil(intel.counts[0]/7))))return 6;
    if(intel.dominant===0&&myCounts[1]<Math.min(2,Math.ceil(intel.counts[0]/4))&&affordable.includes(1))return 1;
    if(intel.dominant===0&&![3,4,6,7].includes(state.enemyFaction)&&affordable.includes(6)&&myCounts[6]<Math.min(16,Math.max(2,Math.ceil(intel.counts[0]/3))))return 6;
    // Dedicated anti-air is essential against air-only forces; rifles alone are insufficient.
