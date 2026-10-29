@@ -34,7 +34,7 @@ function item(id){
   querySelectorAll(q){if(id==='mpLaneTabs'&&q==='[data-lane]')return buttons;
     if(id==='mpViewTabs'&&q==='[data-mp-view]')return nav;
     if(id==='mpRepairLanes'&&q==='[data-repair-lane]')return repair;return [];},
-  getContext(){return g;},getBoundingClientRect(){return {top:0,left:0,width:1000,height:100};},
+  getContext(){return g;},showModal(){this.open=true;},close(){this.open=false;},getBoundingClientRect(){return {top:0,left:0,width:1000,height:100};},
   scrollIntoView(){this.scrolled=true;},setPointerCapture(){},removeAttribute(){}};
  if(id==='frontLobby')el.hidden=true;
  records.set(id,el);return el;
@@ -161,4 +161,36 @@ for(const [eco,income] of [[4,5.1],[5,5.95],[6,6.8],[7,6.8]]){
  assert.equal(item('mpUnitCards').children[8].title,item('mpUnitDetails').textContent,'card and selected tooltip use the same live calculation');
  if(eco===7)assert.doesNotMatch(item('mpUnitDetails').textContent,/건설|안정화/);
 }
+// Regression: shared HUD must always reveal both teams' locked-in cards, even
+// after switching away from the production tab. Pending offers remain secret.
+window.DesertAugments={ready:()=>true,card:id=>({name:'증강 '+id,description:'효과 '+id})};
+const ownPick={...snapshot.players[0],name:'아군',augments:['prism-own-1'],buildingReadyAt:buildings.map(r=>r.map(()=>0))};
+const rivalPick={...snapshot.players[0],uid:'rival',name:'상대',team:1,augments:['prism-rival-1'],cash:null,eco:null,weapon:null,armor:null};
+const picked={...snapshot,ruleset:'augment',players:[ownPick,rivalPick]};
+window.DesertTriUI.onSnapshot(picked);
+const trigger=item('mpAugmentOpen'),counter=item('mpAugmentCounts'),dialog=item('mpAugmentDialog'),roster=item('mpAugmentRoster');
+assert.equal(trigger.hidden,false,'Prism comparison opens in every augmented game');
+assert.match(counter.textContent,/아군 1 · 상대 1/,'both sides selected-count shown on command bar');
+window.DesertTriUI.setView('upgrade');
+trigger.dispatch('click');
+assert.equal(dialog.open,true,'dialog opens from upgrade tab');
+assert.equal(roster.hidden,false,'selected cards are rendered in the dialog');
+assert.equal(roster.children[2].children.length,2,'both teams are in the comparison');
+const friendCards=roster.children[2].children[0].children[1].children[1];
+const rivalCards=roster.children[2].children[1].children[1].children[1];
+assert.match(friendCards.children[0].children[0].textContent,/증강 prism-own-1/,'my picked card displayed');
+assert.match(rivalCards.children[0].children[0].textContent,/증강 prism-rival-1/,'enemy picked card displayed');
+assert.match(rivalCards.children[0].children[1].textContent,/효과 prism-rival-1/,'opponent effect displayed');
+window.DesertTriUI.onSnapshot({...picked,players:[ownPick,{...rivalPick,augments:['prism-rival-1','prism-rival-2']}]});
+assert.match(counter.textContent,/아군 1 · 상대 2/,'a new opponent pick updates while dialog remains open');
+assert.equal(roster.children[2].children[1].children[1].children[1].children.length,2,'new opponent card updates without closing');
+item('mpAugmentClose').dispatch('click');
+assert.equal(dialog.open,false,'close control dismisses comparison');
+window.DesertTriUI.setView('battle');
+trigger.dispatch('click');
+assert.equal(dialog.open,true,'comparison opens from battle tab');
+window.DesertTriUI.onSnapshot({...picked,ruleset:'standard'});
+assert.equal(trigger.hidden,true,'non-augment matches hide the comparison');
+assert.equal(dialog.open,false,'leaving augment mode closes comparison');
+assert.ok(html.includes('id="mpAugmentOpen"')&&html.includes('id="mpAugmentDialog"'),'HUD trigger and dialog exist outside hidden tabs');
 console.log('Multiplayer production UI passed: embedded lane picker, 75-slot grids, purchase lanes, swipe, click cancellation, vertical scroll.');
