@@ -5,6 +5,12 @@ function population(units,predicate=()=>true){let n=0;for(const u of units)if(u.
 // The aggregate represents surviving soldiers, not an invulnerable new species.
 function strength(u){return u?.heroCount===COUNT?Math.max(0,Math.min(COUNT,Math.ceil(u.hp/(u.maxHP/COUNT)-1e-9))):1;}
 function definition(base,u){if(u.heroCount!==COUNT)return base;const d={...base};for(const key of STATS)if(Number.isFinite(d[key]))d[key]*=(key==='damage'||key==='heal'?strength(u):COUNT);return d;}
+// Packed heroes represent up to twenty adjacent soldiers: a splash hit must
+// cover more than one soldier, but not automatically all twenty in a small blast.
+function splashWeight(target){
+ if(target?.heroCount!==COUNT)return 1;
+ return Math.min(8,1+.37*Math.max(0,strength(target)-1));
+}
 function hit(amount,armor,target,attacker,volley=null){
  const shots=Math.max(1,volley??strength(attacker));
  // Armor is per soldier and per projectile, never twenty layers on one body.
@@ -41,6 +47,6 @@ function aura(g,x,y,size,time=0,guardian=false){
  for(let i=0;i<6;i++){const phase=(time*.55+i/6)%1,px=x+Math.sin(time*2+i)*size*.39,py=y-phase*size*.9;g.globalAlpha=(1-phase)*.7;g.fillRect(px,py,Math.max(1,size*.025),size*.075);}
  g.globalAlpha=.65;g.beginPath();g.ellipse(x,y-size*.24,size*.43,size*.43,0,Math.PI*1.12,Math.PI*1.88);g.stroke();g.restore();
 }
-const api=Object.freeze({COUNT,strength,hit,definition,population,compact,aura});
+const api=Object.freeze({COUNT,strength,hit,splashWeight,definition,population,compact,aura});
 global.DesertConsolidation=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);
