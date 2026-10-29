@@ -18,10 +18,11 @@ function el(id){
 const document={body:{dataset:{}},getElementById:el,querySelector:()=>null,querySelectorAll:()=>[],
  createElement:()=>el('generic_'+Math.floor(Math.random()*100000)),addEventListener(){}};
 let seed=1,mode='normal',ruleset='standard';
+class DeterministicDate extends Date{static now(){return seed;}}
 const random=Object.create(Math);
 random.random=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
 const w={DesertLobby:{selectedRuleset:()=>ruleset,aiDifficulty:()=>mode,completeSolo(){}},addEventListener(){}};
-const sandbox={window:w,document,requestAnimationFrame(){},Math:random,console,Map,Set,Array,Object,Date,Number,String,JSON,
+const sandbox={window:w,document,requestAnimationFrame(){},Math:random,console,Map,Set,Array,Object,Date:DeterministicDate,Number,String,JSON,
  fetch:async()=>({ok:true,json:async()=>catalogue})};
 async function run(){
  for(const name of ['unit-consolidation.js','defense-guardian.js','hard-ai.js','augment-rules.js'])
@@ -68,7 +69,7 @@ async function run(){
  }
  // Multiplayer uses the actual authoritative host engine with paid human
  // commands, automatic co-op bots and genuine per-lane unit combat.
- const mSandbox={window:{},Math:random,Map,Set,Array,Object,Number,String,Date,JSON,console,
+ const mSandbox={window:{},Math:random,Map,Set,Array,Object,Number,String,Date:DeterministicDate,JSON,console,
   fetch:async()=>({ok:true,json:async()=>catalogue})};
  for(const name of ['unit-consolidation.js','defense-guardian.js','hard-ai.js','augment-rules.js'])
   vm.runInNewContext(read(name),mSandbox,{filename:name});
