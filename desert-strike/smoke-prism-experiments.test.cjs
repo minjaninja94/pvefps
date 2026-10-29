@@ -117,6 +117,15 @@ test('host engine applies experimental reinforcements and bonus credits, indepen
  const packet=e.snapshot('b');
  assert.deepEqual(Array.from(packet.players[0].augments),[],'enemy experimental card IDs stay hidden');
  assert.equal(e.state.ended,false);
+ left.augments.push('exp-prism-0-0');
+ const unitsBefore=e.state.units.filter(u=>u.uid==='a').length;
+ e.state.cores[0][0]=2500*.49;
+ e.wave();
+ assert.equal(left.prismLastStandUsed,true,'Iron Fortress triggers from health before scheduled repair');
+ assert.ok(e.state.cores[0][0]>2500*.49,'core receives emergency restoration');
+ assert.ok(e.state.units.filter(u=>u.uid==='a').length>=unitsBefore+4,'four emergency armor troops join the endangered lane');
+ const after=e.state.units.filter(u=>u.uid==='a').length;
+ e.wave();assert.equal(e.state.units.filter(u=>u.uid==='a').length,after,'one-time last stand cannot repeat next wave');
 });
 test('solo and authoritative multiplayer engines integrate limit and special combat hooks',()=>{
  const single=read('game-v2.js'),multi=read('tri-lane-engine.js'),html=read('index.html');

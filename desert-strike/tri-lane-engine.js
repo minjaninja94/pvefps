@@ -332,6 +332,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   for(const p of state.players){
    const special=global.DesertPrism?.waveEffects?.(p.augments,state.wave);
    if(!special)continue;
+   const coresBeforeSpecial=state.cores.map(core=>core[p.team]);
    p.cash+=special.cash;
    for(const pct of special.repairs)for(const laneCores of state.cores)laneCores[p.team]=Math.min(CORE_HP,laneCores[p.team]+CORE_HP*pct);
    for(const pct of special.heals)for(const u of state.units)if(u.uid===p.uid&&u.hp>0&&!u.isHatchling&&!u.guardian)
@@ -343,7 +344,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     for(let n=0;n<directive.count&&count<laneCap(p.team);n++,count++)spawn(p,lane,0,directive.role);
    }
    if(!p.prismLastStandUsed)for(const last of special.laststands||[]){
-    const danger=state.cores.map((core,i)=>({lane:i,hp:core[p.team]})).sort((a,b)=>a.hp-b.hp)[0];
+    const danger=coresBeforeSpecial.map((hp,i)=>({lane:i,hp})).sort((a,b)=>a.hp-b.hp)[0];
     if(!danger||danger.hp/CORE_HP>last.pct)continue;
     p.prismLastStandUsed=true;
     for(const core of state.cores)core[p.team]=Math.min(CORE_HP,core[p.team]+CORE_HP*last.repair);

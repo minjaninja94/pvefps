@@ -593,13 +593,14 @@ function deployWave(){
  }
  const special=ownPrism()?.waveEffects?.(state.augments,state.wave);
  if(special){
+  const coreBeforeSpecial=state.baseHP[0];
   state.cash+=special.cash;
   for(const pct of special.repairs)state.baseHP[0]=Math.min(MAX_BASE,state.baseHP[0]+MAX_BASE*pct);
   for(const pct of special.heals)for(const u of state.units)if(u.side===0&&u.hp>0&&!u.isHatchling&&!u.guardian)
    u.hp=Math.min(u.maxHP,u.hp+u.maxHP*pct);
   for(const directive of special.spawns)for(let n=0;n<directive.count&&armyPopulation(0)<supplyCap(0);n++)
    createUnit(0,0,directive.role);
-  if(!state.prismLastStandUsed)for(const directive of special.laststands||[])if(state.baseHP[0]/MAX_BASE<=directive.pct){
+  if(!state.prismLastStandUsed)for(const directive of special.laststands||[])if(coreBeforeSpecial/MAX_BASE<=directive.pct){
    state.prismLastStandUsed=true;
    state.baseHP[0]=Math.min(MAX_BASE,state.baseHP[0]+MAX_BASE*directive.repair);
    for(let n=0;n<directive.count&&armyPopulation(0)<supplyCap(0);n++)createUnit(0,0,directive.role);
