@@ -16,8 +16,8 @@ function rng(seed){
  let state=(seed>>>0)||1;
  return function(){state^=(state<<13);state^=state>>>17;state^=(state<<5);return (state>>>0)/4294967296;};
 }
-function create(seed=1){
- const roll=rng(seed),schedule=WEIGHTS.map(w=>{const n=roll()*100;return TIERS[n<w[0]?0:n<w[0]+w[1]?1:2]});
+function create(seed=1,{prismOnly=false}={}){
+ const roll=rng(seed),schedule=prismOnly?Array(5).fill('prismatic'):WEIGHTS.map(w=>{const n=roll()*100;return TIERS[n<w[0]?0:n<w[0]+w[1]?1:2]});
  function draw(tier,scope,blocked){const pool=cards.filter(c=>c.tier===tier&&c.scope===scope&&!blocked.has(c.id));if(!pool.length)return '';const id=pool[Math.floor(roll()*pool.length)].id;blocked.add(id);return id;}
  function offer(tier,faction,chosen=[]){const blocked=new Set(chosen);return [draw(tier,'faction-'+faction,blocked),draw(tier,'common',blocked),draw(tier,'common',blocked)];}
  function reroll(tier,chosen,offered,slot){const prev=byId.get(offered[slot]);if(!prev)return '';return draw(tier,prev.scope,new Set([...chosen,...offered]));}
