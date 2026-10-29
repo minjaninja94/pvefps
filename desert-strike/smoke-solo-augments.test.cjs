@@ -61,8 +61,8 @@ test('real 300-card draft works inside the original single-player engine without
  const effect=initialCard.effects?.find(x=>x.kind==='stat');
  if(effect){const role=effect.roles?.[0]??0,key=effect.stat;
   const base=G.getDef(role,st.faction),enhanced=G.effectiveDef(role,st.faction,0);
-  if(key==='regen')assert.ok(enhanced.regen>0);
-  else assert.notEqual(enhanced[key],base[key],'stat '+key+' from selected card must apply to allies');
+  const expected=w.DesertAugments.apply(base,st.augments,role);
+  assert.equal(enhanced[key],expected[key],'player '+key+' follows the actual card rule, including zero baseline stats');
  }
  G.tick(.5);assert.ok(st.elapsed>0);
  st.built[0]=0;st.wave=9;const count=st.produced[0][0];
