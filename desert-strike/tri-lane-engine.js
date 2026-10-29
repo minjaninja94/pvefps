@@ -342,6 +342,17 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
      ??state.units.filter(x=>x.hp>0&&x.lane===lane&&x.team===p.team).length);
     for(let n=0;n<directive.count&&count<laneCap(p.team);n++,count++)spawn(p,lane,0,directive.role);
    }
+   if(!p.prismLastStandUsed)for(const last of special.laststands||[]){
+    const danger=state.cores.map((core,i)=>({lane:i,hp:core[p.team]})).sort((a,b)=>a.hp-b.hp)[0];
+    if(!danger||danger.hp/CORE_HP>last.pct)continue;
+    p.prismLastStandUsed=true;
+    for(const core of state.cores)core[p.team]=Math.min(CORE_HP,core[p.team]+CORE_HP*last.repair);
+    let count=(global.DesertConsolidation?.population(state.units,x=>x.lane===danger.lane&&x.team===p.team)
+     ??state.units.filter(x=>x.hp>0&&x.lane===danger.lane&&x.team===p.team).length);
+    for(let n=0;n<last.count&&count<laneCap(p.team);n++,count++)spawn(p,danger.lane,0,last.role);
+    state.effects.push({x:p.team===0?260:WIDTH-260,y:(danger.lane+.5)*LANE_H,lane:danger.lane,kind:'shield',time:1,team:p.team});
+    break;
+   }
   }
  }
  function deployMarineSupports(){
@@ -402,6 +413,13 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    ?global.DesertPrism?.hitEffects?.(chosenOf(a),a,v,hit,state.seconds,state.units.filter(x=>x.hp>0&&x.team!==a.team&&x!==v)):null;
   if(prism)hit+=prism.bonus;
   v.hp-=hit;v.attackAge=.12;v.hitAge=.3;v.lastDamagedAt=state.seconds;
+  if(v.hp<=0){
+   const reboot=global.DesertPrism?.survival?.(chosenOf(v),v,state.seconds,v.hp)||0;
+   if(reboot>0){
+    v.hp=reboot;v.killed=false;
+    state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'shield',time:.8,team:v.team});
+   }
+  }
   if(prism){
    if(prism.heal>0&&a.hp>0)a.hp=Math.min(a.maxHP,a.hp+prism.heal);
    if(prism.marked)v.inkUntil=Math.max(v.inkUntil||0,state.seconds+prism.marked);
@@ -451,6 +469,10 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     v.healWindowUsed+=amount;
     const received=global.DesertGuardian?.healAmount(v,amount,state.seconds)??amount,recovered=Math.min(received,v.maxHP-v.hp);
     v.hp=Math.min(v.maxHP,v.hp+received);
+    if(recovered>0)for(const echo of global.DesertPrism?.healEcho?.(chosenOf(a),a,v,recovered,state.units,state.seconds)||[]){
+     echo.unit.hp=Math.min(echo.unit.maxHP,echo.unit.hp+echo.amount);
+     state.effects.push({x:echo.unit.x,y:echo.unit.y,lane:echo.unit.lane,kind:'pollen',time:.6,team:a.team});
+    }
     if(a.faction===9&&recovered>0&&state.seconds-(a.lastPollenAt??-999)>=5){
      const partner=state.units.find(u=>u.id!==a.id&&u.id!==v.id&&u.hp>0&&!u.isHatchling
       &&u.team===a.team&&u.hp<u.maxHP&&Math.hypot(u.x-v.x,u.y-v.y)<145);

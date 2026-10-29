@@ -9,11 +9,11 @@ const sp=(role,count=1,every=2)=>({kind:'prism_spawn',role,count,every});
 const cash=(amount,every=1)=>({kind:'prism_cash',amount,every});
 const heal=(pct,every=2)=>({kind:'prism_heal',pct,every});
 const repair=(pct,every=2)=>({kind:'prism_repair',pct,every});
-const limit=bonus=>({kind:'prism_limit',bonus});
+const limit=(bonus,multi)=>({kind:'prism_limit',bonus,multi});
 const brood=(extra,alive,proc=0)=>({kind:'prism_brood',extra,alive,proc});
 const recruit=(extra,proc=0)=>({kind:'prism_recruit',extra,proc});
 const burst=(role,mult=1.5,every=4)=>({kind:'prism_burst',role,mult,every});
-const chain=(role,ratio=.35,radius=135,every=5)=>({kind:'prism_chain',role,ratio,radius,every});
+const chain=(role,ratio=.35,radius=135,every=5,targets=1)=>({kind:'prism_chain',role,ratio,radius,every,targets});
 const leech=(role,pct=.2,every=3)=>({kind:'prism_leech',role,pct,every});
 const mark=(role,duration=2,every=4)=>({kind:'prism_mark',role,duration,every});
 const execute=(role,threshold=.3,bonus=.6)=>({kind:'prism_execute',role,threshold,bonus});
@@ -21,13 +21,16 @@ const frenzy=(role,mult=1.4,seconds=10)=>({kind:'prism_frenzy',role,mult,seconds
 const revenge=(role,count=1,every=3)=>({kind:'prism_revenge',role,count,every});
 const reflect=(role,ratio=.32,every=4)=>({kind:'prism_reflect',role,ratio,every});
 const field=(role,pct=.015,every=2)=>({kind:'prism_field',role,pct,every});
+const laststand=(pct=.5,repair=.08,role=3,count=4)=>({kind:'prism_laststand',pct,repair,role,count});
+const reboot=(role=3,pct=.38,cooldown=30)=>({kind:'prism_reboot',role,pct,cooldown});
+const echo=(role=7,pct=.5,count=2,radius=180,cooldown=5)=>({kind:'prism_echo',role,pct,count,radius,cooldown});
 const factionCards=[
  // 0 철갑연합: immovable line, anti-siege retaliation, fortress logistics
  [
- ['이동 요새화','매 2웨이브마다 아군 핵심 기지 최대 체력의 4%를 복구합니다.',repair(.04,2)],
+ ['이동 요새화','매 2웨이브 본진 내구도 4% 복구. 본진 체력이 처음 50% 이하로 떨어지면 장갑병 4기 긴급 출격 + 기지 8% 즉시 복구(경기당 1회).',repair(.04,2),laststand(.5,.08,3,4)],
  ['철갑 예비사단','매 3웨이브마다 장갑병 2기가 추가 출격합니다. 병력 상한 적용.',sp(3,2,3)],
  ['철의 역습','장갑병이 4번째 피격될 때마다 받은 피해의 45%를 공격자에게 반사합니다.',reflect(3,.45,4)],
- ['비상동원령','아군 병력 상한이 220→252(싱글), 라인당 75→87(멀티)로 해제됩니다.',limit(32)],
+ ['비상동원령','아군 병력 상한이 220→252(싱글), 라인당 75→87(멀티)로 해제됩니다.',limit(32,12)],
  ['포성 공명','포격병의 매 4번째 공격이 주변 적 한 명에게 50% 연쇄 피해를 줍니다.',chain(5,.5,145,4)],
  ['강철 심장','매 2웨이브마다 생존 아군 병력이 최대 체력의 9%를 회복합니다.',heal(.09,2)],
  ['최후의 기갑진','장갑병이 적 체력 30% 미만을 공격하면 피해량이 85% 추가됩니다.',execute(3,.30,.85)],
@@ -42,7 +45,7 @@ const factionCards=[
  ['포식의 전염','돌격병의 4번째 타격은 목표에게 2초 먹물 약화 상태를 남깁니다.',mark(0,2,4)],
  ['기생 재생','매 2웨이브마다 생존 군체 병력의 체력 12%를 복구합니다.',heal(.12,2)],
  ['산란 폭주','공생충 상한 +5, 동시 생존 상한 +6, 부화 확률 +18%p.',brood(5,6,.18)],
- ['무저갱 확장','아군 병력 상한을 싱글 +36, 멀티 라인당 +14 확장합니다.',limit(36)],
+ ['무저갱 확장','아군 병력 상한을 싱글 +36, 멀티 라인당 +14 확장합니다.',limit(36,14)],
  ['영양분 회수','돌격병이 3번째 타격을 할 때 피해의 35%를 흡수해 자가 치유합니다.',leech(0,.35,3)],
  ['변이 역류','적 처치 4회마다 돌격병 공생체 1기가 무료 출격합니다. 상한 적용.',revenge(0,1,4)],
  ['폭식의 군집','돌격병의 5번째 공격이 근처 적에게 60% 연쇄 피해를 입힙니다.',chain(0,.6,100,5)],
@@ -59,7 +62,7 @@ const factionCards=[
  ['심판의 별','대장갑병이 적 체력 35% 아래의 적에게 추가 75% 피해를 줍니다.',execute(2,.35,.75)],
  ['차원 증폭','웨이브 시작 후 12초 동안 포격병 공격력이 1.65배가 됩니다.',frenzy(5,1.65,12)],
  ['성운 수호진','장갑병의 매 4번째 피격이 받은 피해의 55%를 반사합니다.',reflect(3,.55,4)],
- ['결사의 확장','아군 병력 제한이 싱글 +28, 멀티 라인당 +10 상승합니다.',limit(28)]
+ ['결사의 확장','아군 병력 제한이 싱글 +28, 멀티 라인당 +10 상승합니다.',limit(28,10)]
  ],
  // 3 해병성채: logistics, looting, conscription, shock infantry
  [
@@ -68,7 +71,7 @@ const factionCards=[
  ['오도봉고 기갑행진','매 3웨이브 돌격 기수 2기가 추가 출격합니다.',sp(6,2,3)],
  ['황룡 무한지원','매 2웨이브 추가 지원병 2기가 출격합니다.',sp(7,2,2)],
  ['악기바리 역공','돌격병은 매 4번째 피격마다 피해의 60%를 반사합니다.',reflect(0,.6,4)],
- ['해병의 재배치','아군 병력 제한을 싱글 +30, 멀티 라인당 +12 상향합니다.',limit(30)],
+ ['해병의 재배치','아군 병력 제한을 싱글 +30, 멀티 라인당 +12 상향합니다.',limit(30,12)],
  ['싸제 포격','포격병의 4번째 타격이 인접한 적 1명에게 65% 연쇄 폭발을 발생시킵니다.',chain(5,.65,135,4)],
  ['부활한 전우','적 처치 4회마다 아군 돌격병 1기를 지원 생산합니다.',revenge(0,1,4)],
  ['해병수육 대잔치','매 2웨이브 생존 해병 전체 체력이 11% 회복됩니다.',heal(.11,2)],
@@ -84,19 +87,19 @@ const factionCards=[
  ['달빛 회복','매 2웨이브 생존 수인 병력이 체력 11%를 회복합니다.',heal(.11,2)],
  ['송곳니 추격','돌격병의 5번째 공격이 적에게 3초 감속을 남깁니다.',mark(0,3,5)],
  ['포식 본능','돌격병이 체력 30% 아래인 적에게 추가 80% 피해를 줍니다.',execute(0,.3,.8)],
- ['짐승왕의 부대','아군 한도를 싱글 +38, 멀티 라인당 +15 확장합니다.',limit(38)],
+ ['짐승왕의 부대','아군 한도를 싱글 +38, 멀티 라인당 +15 확장합니다.',limit(38,15)],
  ['사냥의 전리품','매 웨이브 추가 60 CR을 받습니다.',cash(60)]
  ],
  // 5 은월 엘프족: focus fire, soft control, ranged punishment
  [
- ['달빛 연쇄화살','사격병의 4번째 명중이 주변 적에게 60% 연쇄 피해를 줍니다.',chain(1,.6,175,4)],
+ ['달빛 연쇄화살','사격병의 4번째 명중이 주변 적 최대 3명에게 각각 60% 연쇄 피해를 줍니다.',chain(1,.6,175,4,3)],
  ['은월 저격수','대장갑병이 체력 40% 미만의 적을 추가 75% 피해로 처형합니다.',execute(2,.4,.75)],
  ['시공의 화살','사격병의 4번째 명중이 적을 3초 감속시킵니다.',mark(1,3,4)],
  ['달의 집중','웨이브 시작 후 12초 동안 대장갑병 공격력 1.7배.',frenzy(2,1.7,12)],
  ['별빛 사수','매 3웨이브 사격병 3기 추가 소환합니다.',sp(1,3,3)],
  ['유성분열탄','포격병의 5번째 사격이 주변 적에게 80% 연쇄 피해.',chain(5,.8,185,5)],
  ['월광의 맹세','매 2웨이브 전체 엘프 병력이 8% 회복됩니다.',heal(.08,2)],
- ['끝없는 화살통','아군 인원 상한을 싱글 +32, 멀티 라인당 +12 확장합니다.',limit(32)],
+ ['끝없는 화살통','아군 인원 상한을 싱글 +32, 멀티 라인당 +12 확장합니다.',limit(32,12)],
  ['정령의 반격','대공병이 매 4번째 피격될 때 공격자에게 받은 피해의 55%를 반사합니다.',reflect(4,.55,4)],
  ['숲의 조달','웨이브마다 보급 65 CR을 추가 수급합니다.',cash(65)]
  ],
@@ -108,7 +111,7 @@ const factionCards=[
  ['무리의 치유','매 2웨이브 생존 병력 체력을 10% 복구합니다.',heal(.10,2)],
  ['질풍 추격','돌격 기수의 4번째 공격은 2초 감속을 부여합니다.',mark(6,2,4)],
  ['강철 송곳니','돌격병 체력 흡수: 3번째 공격마다 피해의 38%를 회복합니다.',leech(0,.38,3)],
- ['달의 군단','싱글 병력 상한 +40, 멀티 라인당 +15 확장합니다.',limit(40)],
+ ['달의 군단','싱글 병력 상한 +40, 멀티 라인당 +15 확장합니다.',limit(40,15)],
  ['두 번째 사냥','적 처치 3회마다 돌격 기수 1기가 지원 출격합니다.',revenge(6,1,3)],
  ['발톱의 응징','돌격병이 적 체력 35% 이하일 때 추가 피해 75%.',execute(0,.35,.75)],
  ['질주의 보급','매 웨이브 추가 65 CR 수령.',cash(65)]
@@ -117,11 +120,11 @@ const factionCards=[
  [
  ['나노 재생막','2웨이브마다 기계 병력 전체 체력 12% 복구.',heal(.12,2)],
  ['드론 편대','3웨이브마다 특수 비행기 2기가 지원 출격.',sp(6,2,3)],
- ['재조립 병기','적 처치 4회마다 돌격병 로봇 1기 제조.',revenge(0,1,4)],
+ ['재조립 병기','적 처치 4회마다 돌격병 로봇 1기 제조. 장갑병은 치명적인 피해를 받아도 체력 38%로 재부팅(개체별 35초 재사용).',revenge(0,1,4),reboot(3,.38,35)],
  ['자동 반격 포탑','장갑병의 3번째 피격이 공격자에게 피해 60% 반사.',reflect(3,.6,3)],
  ['대공 방화벽','대공병의 4번째 공격이 인접 적에게 65% 연쇄 피해.',chain(4,.65,160,4)],
  ['CPU 오버클럭','웨이브 시작 13초 동안 사격병 공격력 1.7배.',frenzy(1,1.7,13)],
- ['생산 프로토콜 해제','싱글 한도 +40, 멀티 라인당 +15 확장.',limit(40)],
+ ['생산 프로토콜 해제','싱글 한도 +40, 멀티 라인당 +15 확장.',limit(40,15)],
  ['전자 교란막','사격병 4번째 공격 적에게 3초 감속.',mark(1,3,4)],
  ['재생 코어','매 2웨이브 아군 핵심 기지 내구도 4.5% 복구.',repair(.045,2)],
  ['고철 회수장','웨이브마다 추가 75 CR 생산.',cash(75)]
@@ -136,18 +139,18 @@ const factionCards=[
  ['심연 보급선','매 웨이브 보급 70 CR 확보.',cash(70)],
  ['촉수 증식','매 2웨이브 돌격병 3기 추가 출격.',sp(0,3,2)],
  ['암흑 포식','돌격병이 3번째 타격마다 피해 35% 흡혈.',leech(0,.35,3)],
- ['무저갱 영역','싱글 한도 +35, 멀티 라인당 +13 확장.',limit(35)],
+ ['무저갱 영역','싱글 한도 +35, 멀티 라인당 +13 확장.',limit(35,13)],
  ['해구의 심판','웨이브 시작 12초 동안 포격병 공격력 1.7배.',frenzy(5,1.7,12)]
  ],
  // 9 페어리: bloom-healing, fairy chain, empathy
  [
- ['꽃잎 연쇄','매 2웨이브마다 꽃잎의 축복으로 생존 아군 전원의 체력을 13% 회복합니다.',heal(.13,2)],
+ ['꽃잎 연쇄','매 2웨이브 전군 체력 13% 회복. 지원병의 치유는 주변 부상병 2명에게 회복량 50%씩 추가로 확산(5초 간격).',heal(.13,2),echo(7,.5,2,180,5)],
  ['분홍 꽃가루 폭풍','사격병의 4번째 명중이 주변 적에게 65% 연쇄 피해.',chain(1,.65,145,4)],
  ['생명나무 축복','웨이브당 2회마다 생존 병력 체력 15% 회복.',heal(.15,2)],
  ['요정 여왕의 사절','2웨이브마다 지원병 2기가 추가 출격.',sp(7,2,2)],
  ['봄바람 지원군','3웨이브마다 사격병 3기가 지원 출격.',sp(1,3,3)],
  ['꽃잎 방패','돌격병의 4번째 피격이 공격자에게 피해 50%를 반사.',reflect(0,.5,4)],
- ['요정계 확장','싱글 병력 +28, 멀티 라인당 +10 한도 상승.',limit(28)],
+ ['요정계 확장','싱글 병력 +28, 멀티 라인당 +10 한도 상승.',limit(28,10)],
  ['달콤한 덫','대공병 4번째 타격으로 적 3초 감속.',mark(4,3,4)],
  ['벚꽃의 심판','대장갑병이 체력 35% 아래의 적에게 80% 추가 피해.',execute(2,.35,.8)],
  ['꽃가루 조달','매 웨이브 70 CR 추가 보급.',cash(70)]
@@ -169,7 +172,7 @@ function bonus(selected,kind){
 }
 function populationLimit(selected,standard,multiplayer=false){
  // Existing limits remain intact unless the corresponding card is selected.
- return standard+(multiplayer?Math.min(18,Math.ceil(bonus(selected,'prism_limit')*.38)):Math.min(55,bonus(selected,'prism_limit')));
+ return standard+(multiplayer?Math.min(18,findEffects(selected,'prism_limit').reduce((n,e)=>n+(e.multi||0),0)):Math.min(55,bonus(selected,'prism_limit')));
 }
 function broodLimits(selected,baseCap,baseAlive,baseChance){
  const x=findEffects(selected,'prism_brood');
@@ -189,7 +192,7 @@ function augmentStats(base,selected,role,elapsed=0,waveAt=-Infinity){
  return out;
 }
 function waveEffects(selected,wave){
- const result={cash:0,heals:[],repairs:[],spawns:[]};
+ const result={cash:0,heals:[],repairs:[],spawns:[],laststands:findEffects(selected,'prism_laststand')};
  for(const e of findEffects(selected)){
   if(!e.every||wave%e.every!==0)continue;
   if(e.kind==='prism_cash')result.cash+=e.amount;
@@ -216,12 +219,36 @@ function hitEffects(selected,attacker,victim,damage,now,nearby=[]){
  for(const e of trigger(selected,'prism_burst',role,attacker,now))result.bonus+=damage*(e.mult-1);
  for(const e of findEffects(selected,'prism_execute'))if(e.role===role&&victim.hp<=victim.maxHP*e.threshold)result.bonus+=damage*e.bonus;
  for(const e of trigger(selected,'prism_chain',role,attacker,now)){
-  const target=nearby.find(x=>x!==victim&&x.hp>0&&Math.hypot(x.x-victim.x,x.y-victim.y)<=e.radius);
-  if(target)result.secondary.push({target,damage:Math.min(300,damage*e.ratio)});
+  const targets=nearby.filter(x=>x!==victim&&x.hp>0&&Math.hypot(x.x-victim.x,x.y-victim.y)<=e.radius)
+   .slice(0,Math.max(1,Math.min(3,e.targets||1)));
+  for(const target of targets)result.secondary.push({target,damage:Math.min(300,damage*e.ratio)});
  }
  for(const e of trigger(selected,'prism_leech',role,attacker,now))result.heal+=Math.min(120,damage*e.pct);
  for(const e of trigger(selected,'prism_mark',role,attacker,now))result.marked=Math.max(result.marked||0,e.duration);
  return result;
+}
+function survival(selected,unit,now,afterHp){
+ if(!unit||afterHp>0||unit.isHatchling||unit.guardian)return 0;
+ for(const effect of findEffects(selected,'prism_reboot'))if(effect.role===unit.role
+   &&(!Number.isFinite(unit.prismRebootAt)||now-unit.prismRebootAt>=effect.cooldown)){
+  unit.prismRebootAt=now;return Math.max(1,unit.maxHP*effect.pct);
+ }
+ return 0;
+}
+function healEcho(selected,healer,target,recovered,units,now){
+ if(!healer||!target||recovered<=0)return [];
+ const out=[];
+ for(const e of findEffects(selected,'prism_echo'))if(healer.role===e.role
+    &&(!Number.isFinite(healer.prismEchoAt)||now-healer.prismEchoAt>=e.cooldown)){
+  healer.prismEchoAt=now;
+  for(const ally of units)if(ally!==healer&&ally!==target&&ally.hp>0&&!ally.isHatchling
+   &&(ally.side??ally.team)===(healer.side??healer.team)&&ally.hp<ally.maxHP
+   &&Math.hypot(ally.x-target.x,ally.y-target.y)<=e.radius){
+    out.push({unit:ally,amount:Math.min(recovered*e.pct,ally.maxHP*.1)});
+    if(out.length>=e.count)break;
+  }
+ }
+ return out;
 }
 function reflectEffects(selected,defender,attacker,incoming){
  if(!defender||!attacker||incoming<=0)return 0;
@@ -234,7 +261,7 @@ function deathEffects(selected,attacker){
  for(const e of trigger(selected,'prism_revenge',attacker.role,attacker,0))out.push({role:e.role,count:e.count});
  return out;
 }
-const api=Object.freeze({cards,enabled,populationLimit,broodLimits,recruitLimits,augmentStats,waveEffects,hitEffects,reflectEffects,deathEffects,findEffects});
+const api=Object.freeze({cards,enabled,populationLimit,broodLimits,recruitLimits,augmentStats,waveEffects,hitEffects,reflectEffects,deathEffects,survival,healEcho,findEffects});
 global.DesertPrism=api;
 if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

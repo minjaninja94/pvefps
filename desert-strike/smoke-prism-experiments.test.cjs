@@ -42,7 +42,7 @@ test('100 unique, valid per-faction Prism cards extend original 300 and can be d
 test('new mechanics actually change population, brood, recruits, wave effects and attacks',()=>{
  const {window}=setup(),P=window.DesertPrism;
  assert.equal(P.populationLimit(['exp-prism-0-3'],220),252);
- assert.equal(P.populationLimit(['exp-prism-0-3'],75,true),88,'increases per-lane cap within safety clamp');
+ assert.equal(P.populationLimit(['exp-prism-0-3'],75,true),87,'increases per-lane cap within safety clamp');
  assert.equal(P.populationLimit(['exp-prism-0-3'],220,false),252);
  const brood=P.broodLimits(['exp-prism-1-0'],8,14,.2);
  assert.equal(brood.cap,16);assert.equal(brood.alive,24);assert.equal(brood.chance,.32);
@@ -73,6 +73,31 @@ test('new mechanics actually change population, brood, recruits, wave effects an
  const expired=P.augmentStats(basic,['exp-prism-4-2'],6,25,0);
  assert.equal(expired.damage,15);
 });
+test('faction signatures: one-time fortress defense, triple moonlight arrows, robot reboot and fairy echo',()=>{
+ const {window}=setup(),P=window.DesertPrism;
+ const fortress=P.waveEffects(['exp-prism-0-0'],2);
+ assert.equal(fortress.laststands.length,1);
+ assert.equal(fortress.laststands[0].count,4);
+ const archer={role:1,x:0,y:0,hp:100,maxHP:100};
+ const victim={role:0,x:200,y:0,hp:100,maxHP:100};
+ const enemies=[{x:225,y:0,hp:100,maxHP:100},{x:230,y:5,hp:100,maxHP:100},{x:240,y:-10,hp:100,maxHP:100}];
+ let volley=null;
+ for(let i=0;i<4;i++)volley=P.hitEffects(['exp-prism-5-0'],archer,victim,25,i,enemies);
+ assert.equal(volley.secondary.length,3,'moonlight arrows bounce to three targets');
+ const mech={role:3,hp:-5,maxHP:100,prismWaveAt:0};
+ assert.equal(P.survival(['exp-prism-7-2'],mech,50,mech.hp),38,'robot restarts on a fatal blow');
+ assert.equal(P.survival(['exp-prism-7-2'],mech,55,-1),0,'reboot cannot trigger repeatedly');
+ assert.equal(P.survival(['exp-prism-7-2'],mech,86,-1),38,'reboot recovers after the cooldown');
+ const healer={role:7,side:0,x:0,y:0};
+ const target={role:0,side:0,x:50,y:0,hp:40,maxHP:100};
+ const allies=[target,{role:0,side:0,x:85,y:0,hp:50,maxHP:100},{role:1,side:0,x:105,y:0,hp:50,maxHP:100},
+  {role:0,side:1,x:60,y:0,hp:20,maxHP:100}];
+ const echoes=P.healEcho(['exp-prism-9-0'],healer,target,20,allies,5);
+ assert.equal(echoes.length,2,'fairy heals exactly two nearby allied units');
+ assert.equal(echoes[0].amount,10);
+ assert.equal(P.healEcho(['exp-prism-9-0'],healer,target,20,allies,7).length,0,'echo cooldown is enforced');
+});
+
 test('host engine applies experimental reinforcements and bonus credits, independent by player',async()=>{
  const {window,ctx}=setup();await window.DesertAugments.load();
  window.DesertGuardian=require('./defense-guardian.js');
@@ -88,7 +113,7 @@ test('host engine applies experimental reinforcements and bonus credits, indepen
  assert.equal(left.cash-before,70*3+3*24,'first player gets wave-by-wave bonus credits');
  assert.equal(right.cash-rightCash,3*24,'opponent gets baseline wave income only');
  assert.ok(e.state.units.some(u=>u.uid==='a'&&u.role===3),'free armor reinforcements spawn during qualifying wave');
- assert.equal(window.DesertPrism.populationLimit(left.augments,75,true),88);
+ assert.equal(window.DesertPrism.populationLimit(left.augments,75,true),87);
  const packet=e.snapshot('b');
  assert.deepEqual(Array.from(packet.players[0].augments),[],'enemy experimental card IDs stay hidden');
  assert.equal(e.state.ended,false);
@@ -96,11 +121,13 @@ test('host engine applies experimental reinforcements and bonus credits, indepen
 test('solo and authoritative multiplayer engines integrate limit and special combat hooks',()=>{
  const single=read('game-v2.js'),multi=read('tri-lane-engine.js'),html=read('index.html');
  assert.match(single,/ownPrism\(\)\?\.waveEffects/);
+ assert.match(single,/ownPrism\(\)\?\.survival/);
+ assert.match(single,/ownPrism\(\)\?\.healEcho/);
  assert.match(single,/ownPrism\(\)\?\.hitEffects/);
  assert.match(single,/ownPrism\(\)\?\.reflectEffects/);
  assert.match(single,/ownPrism\(\)\?\.deathEffects/);
  assert.match(single,/DesertPrism\?\.populationLimit/);
- for(const name of ['waveEffects','hitEffects','reflectEffects','deathEffects','populationLimit'])
+ for(const name of ['waveEffects','hitEffects','reflectEffects','deathEffects','populationLimit','survival','healEcho'])
   assert.ok(multi.includes('DesertPrism?.'+name),'missing multiplayer '+name);
  assert.ok(html.indexOf('prism-experiments.js')<html.indexOf('augment-rules.js'));
  assert.match(html,/400종 카드/);

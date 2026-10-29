@@ -599,6 +599,12 @@ function deployWave(){
    u.hp=Math.min(u.maxHP,u.hp+u.maxHP*pct);
   for(const directive of special.spawns)for(let n=0;n<directive.count&&armyPopulation(0)<supplyCap(0);n++)
    createUnit(0,0,directive.role);
+  if(!state.prismLastStandUsed)for(const directive of special.laststands||[])if(state.baseHP[0]/MAX_BASE<=directive.pct){
+   state.prismLastStandUsed=true;
+   state.baseHP[0]=Math.min(MAX_BASE,state.baseHP[0]+MAX_BASE*directive.repair);
+   for(let n=0;n<directive.count&&armyPopulation(0)<supplyCap(0);n++)createUnit(0,0,directive.role);
+   banner('✦ 철갑 최후의 보루');break;
+  }
  }
  banner('WAVE '+String(state.wave).padStart(2,'0')+' · DEPLOYED');
  setMessage('웨이브 '+state.wave+' 출격 · 아군 '+state.built.filter(v=>v!==null).length+'기 / 상대의 실제 병력은 정찰로 확인');
@@ -716,6 +722,10 @@ function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
     state.units.filter(v=>v.hp>0&&v.side!==attacker.side&&v!==u)) : null;
  if(special)hit+=special.bonus;
  u.hp-=hit;
+ if(u.hp<=0&&u.side===0&&state.ruleset==='augment'){
+  const reboot=ownPrism()?.survival?.(state.augments,u,state.elapsed,u.hp)||0;
+  if(reboot>0){u.hp=reboot;pulse(u.x,u.y,'#93dff3',35);floatText(u.x,u.y-25,'자동 재부팅!','#9ff2ff');}
+ }
  if(special){
   if(special.heal>0&&attacker.hp>0)attacker.hp=Math.min(attacker.maxHP,attacker.hp+special.heal);
   if(special.marked)u.inkUntil=Math.max(u.inkUntil||0,state.elapsed+special.marked);
@@ -758,6 +768,11 @@ function heal(u,amount,burst=false,healer=null){
  const recovered=Math.min(amount,u.maxHP-u.hp);
  if(recovered>0)window.DesertCombatAudio?.cue('heal',u.x);
  u.hp=Math.min(u.maxHP,u.hp+amount);pulse(u.x,u.y,'#94f7a9',11);
+ if(healer?.side===0&&recovered>0&&state.ruleset==='augment')
+  for(const echo of ownPrism()?.healEcho?.(state.augments,healer,u,recovered,state.units,state.elapsed)||[]){
+   echo.unit.hp=Math.min(echo.unit.maxHP,echo.unit.hp+echo.amount);
+   pulse(echo.unit.x,echo.unit.y,'#ffc7e8',14);
+  }
  if(healer?.faction===9&&recovered>0&&state.elapsed-(healer.lastPollenAt??-999)>=5){
   const partner=state.units.find(v=>v!==u&&v!==healer&&v.hp>0&&!v.isHatchling&&v.side===healer.side&&v.hp<v.maxHP
    &&Math.hypot(v.x-u.x,v.y-u.y)<145);
