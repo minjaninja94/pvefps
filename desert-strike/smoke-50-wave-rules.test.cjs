@@ -58,13 +58,13 @@ for(const ruleset of ['standard','augment']){
  S.selectRole(0); // toggles selection off
  state.eco=7;state.ecoReadyAt=0;state.enemyEco=7;state.enemyEcoReadyAt=0;
  state.elapsed=50;state.cash=0;state.enemyCash=0;state.incomeClock=0;
- S.tick(.5);near(state.cash,6.8,ruleset+' max eco late tier reduced');
+ S.tick(.5);near(state.cash,6.6,ruleset+' all-stage mining efficiency reduced');
 }
 for(const econ of [0,1,4,5,6,7]){
  S.reset();const st=S.state();st.live=true;st.aiNextThink=Infinity;st.next=999999;
  st.eco=econ;st.enemyEco=econ;st.ecoReadyAt=0;st.enemyEcoReadyAt=0;
  st.cash=0;st.enemyCash=0;S.tick(.5);
- const expected=(1+econ)*(econ>=5?.85:1);
+ const expected=Number((1+econ*.8).toFixed(1));
  near(st.cash,expected,'solo tier '+econ);near(st.enemyCash,expected,'AI tier '+econ);
 }
 for(const d of ['normal','hard']){
@@ -120,7 +120,7 @@ for(const ruleset of ['standard','augment'])for(const mode of ['pvp','classic'])
  near(st.cores[0][1],before-850,ruleset+' '+mode+' -15% core damage');
  p.eco=7;p.ecoReadyAt=0;p.cash=0;st.next=999999;
  st.seconds=100.3;match.tick(.2); // multiplayer clamps dt to .2 and income ticks at .5s boundaries
- near(p.cash,6.8,ruleset+' '+mode+' late income per half-second');
+ near(p.cash,6.6,ruleset+' '+mode+' seventh-step income per half-second');
 }
 for(const ruleset of ['standard','augment'])for(const difficulty of ['normal','hard']){
  const game=E.create({mode:'coop',size:2,aiDifficulty:difficulty,ruleset,members:[
@@ -136,6 +136,6 @@ for(const ruleset of ['standard','augment'])for(const difficulty of ['normal','h
    assert.ok(bot.buildingReadyAt[lane][slot]>=10,
     difficulty+' '+ruleset+' bot obeys the same initial preparation boundary');
 }
-console.log('50-wave rules passed: solo, classic, PvP, co-op, normal and hard AI, both rule sets; real 12s build, +20% core, -15% core damage, -15% income after level 4, protected build timer.');
+console.log('50-wave rules passed: solo, classic, PvP, co-op, normal and hard AI, both rule sets; real 12s build, +20% core, -15% core damage, -20% mining-step returns at all 7 levels, protected build timer.');
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});
