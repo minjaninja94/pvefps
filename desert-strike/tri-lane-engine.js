@@ -5,13 +5,13 @@
 (function(global){
 'use strict';
 const LANES=3,WIDTH=3300,HEIGHT=1560,LANE_H=520,COLS=15,ROWS=5,SLOTS=COLS*ROWS;
-const FACTORY_BUILD_SECONDS=24,CORE_DAMAGE_MULTIPLIER=.85;
+const WAVE_INTERVAL=12,FACTORY_BUILD_SECONDS=12,CORE_DAMAGE_MULTIPLIER=.85;
 const incomePerTick=level=>(1+level)*(level>=5?.85:1);
 
 const TOWER_HP=1250,TOWER_RANGE=285,TOWER_PERIOD=.34,TOWER_DAMAGE=27,FOG_END_WAVE=6,FOG_WIDTH=770;
 const AGGRO_RADIUS=590,AGGRO_LEASH=740,SUPPORT_RADIUS=615,CONTACT_CELL=64;
-const EXTRACTOR=8,ecoPrice=level=>Math.round(70*Math.pow(1.36,level)),ecoStabilize=(level,seconds)=>4+2*level+Math.min(6,Math.floor(Math.max(0,seconds)/120));
-const ecoBuildSeconds=level=>24+8*Math.max(0,level-1);
+const EXTRACTOR=8,ecoPrice=level=>Math.round(70*Math.pow(1.36,level)),ecoStabilize=(level,seconds)=>(4+2*level+Math.min(6,Math.floor(Math.max(0,seconds)/120)))/2;
+const ecoBuildSeconds=level=>12+4*Math.max(0,level-1);
 const WEAPON_COST=n=>Math.round(200*Math.pow(1.65,n)),ARMOR_COST=n=>Math.round(190*Math.pow(1.63,n));
 const COST=[65,100,185,285,185,360,300,220,70], NAMES=['돌격','사격','대장갑','장갑','대공','포격','특수','지원','자원채취'];
 const BASE=[
@@ -25,7 +25,7 @@ const BASE=[
  [136,0,1,139,1.24,61,false,'ground']
 ];
 const clamp=(v,l,r)=>Math.max(l,Math.min(r,v));
-const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=2,HUANGLONG_INTERVAL=8;
+const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=2,HUANGLONG_INTERVAL=WAVE_INTERVAL/3;
 const BROOD_BIRTH_CHANCE=.20,BROOD_BIRTH_COOLDOWN=11,BROOD_BIRTH_CAP=10,BROOD_ALIVE_CAP=14;
 const OCTOPER_REGEN=.0006,ROBOT_REPAIR=.0015;
 const BEAST_RANGED_DAMAGE_REDUCTION=.06,FAIRY_CHAIN_HEAL_RATIO=.05,FAIRY_HEAL_MULTIPLIER=1.08;
@@ -73,7 +73,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  if(mode==='coop'&&(humans.length!==size||humans.some(p=>p.team!==0)))throw Error('협동 인원과 팀이 일치하지 않습니다');
  if(mode!=='coop'&&(humans.filter(p=>p.team===0).length!==size||humans.filter(p=>p.team===1).length!==size))throw Error('경쟁 양 팀 인원이 일치하지 않습니다');
  const players=humans.concat(mode==='coop'?Array.from({length:size},(_,i)=>({uid:'AI_'+i,name:'적 AI '+(i+1),team:1,faction:(i+3)%10,bot:true})):[]);
- const state={mode,size,ruleset:augmented?'augment':'standard',augmentStage:-1,augmentChoice:null,augmentSchedule:aug?.schedule||[],aiDifficulty:aiDifficulty==='hard'?'hard':'normal',seconds:0,wave:0,next:24,ended:false,winner:null,
+ const state={mode,size,ruleset:augmented?'augment':'standard',augmentStage:-1,augmentChoice:null,augmentSchedule:aug?.schedule||[],aiDifficulty:aiDifficulty==='hard'?'hard':'normal',seconds:0,wave:0,next:WAVE_INTERVAL,ended:false,winner:null,
   width:WIDTH,height:HEIGHT,lanes:LANES,
   cores:Array.from({length:LANES},()=>[CORE_HP,CORE_HP]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),forwardHP:Array.from({length:LANES},()=>[1000,1000]),forwardClaimed:Array.from({length:LANES},()=>[false,false]),forwardCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,nextConsolidation:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,augments:[],produced:Array(8).fill(0),combatStats:{damage:Array(8).fill(0),kills:Array(8).fill(0),
   losses:Array(8).fill(0),heroDamage:Array(8).fill(0),heroes:Array(8).fill(0)},cash:360,eco:0,ecoReadyAt:0,weapon:0,armor:0,nukes:1,barrageCd:0,mineCosts:{},mineTimings:{},buildings:Array.from({length:LANES},()=>Array(SLOTS).fill(null)),buildingReadyAt:Array.from({length:LANES},()=>Array(SLOTS).fill(0))})),lanePressure:Array(LANES).fill(.5)};
@@ -779,7 +779,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   const before=Math.floor((state.seconds-dt)*2),now=Math.floor(state.seconds*2);
   if(now>before)for(let slice=before+1;slice<=now;slice++)for(const p of state.players)if(slice*.5+1e-6>=p.ecoReadyAt)p.cash+=incomePerTick(p.eco);
   if(state.aiDifficulty==='hard')for(const bot of state.players.filter(p=>p.bot))if(state.seconds>=(bot.hardBrain?.nextThink||0)){hardBotPurchase(bot);if(bot.hardBrain)bot.hardBrain.nextThink=state.seconds+1;}
-  while(state.next<=0){state.next+=24;wave();}
+  while(state.next<=0){state.next+=WAVE_INTERVAL;wave();}
   deployMarineSupports();
   stepUnits(dt);
   for(const u of state.units)if(u.hp<=0&&(u._combatLife??0)>0)combatHit(u,Math.max(0,u.hp));
@@ -818,10 +818,10 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    effects:state.effects.filter(e=>!isHidden(e.team,e.lane,e.x)).map(e=>({...e,x:Math.round(e.x),y:Math.round(e.y)}))};
  }
  // Both bot difficulties use their real opening cash at second zero, just as
- // human players can. With 24s construction a bot that first bought at wave 1
+ // human players can. With timed construction a bot that first bought at wave 1
  // would unfairly miss its own first deployment and lose a whole wave.
  for(const bot of state.players.filter(p=>p.bot))botPurchase(bot);
  return {state,order,tick,wave,snapshot,definition};
 }
-global.DesertTriEngine=Object.freeze({create,definition,WIDTH,HEIGHT,LANE_H,LANES,COLS,ROWS,SLOTS,COST,NAMES,EXTRACTOR,ecoPrice,ecoBuildSeconds,ecoStabilize,incomePerTick,FACTORY_BUILD_SECONDS,WEAPON_COST,ARMOR_COST});
+global.DesertTriEngine=Object.freeze({create,definition,WIDTH,HEIGHT,LANE_H,LANES,COLS,ROWS,SLOTS,COST,NAMES,EXTRACTOR,ecoPrice,ecoBuildSeconds,ecoStabilize,incomePerTick,WAVE_INTERVAL,FACTORY_BUILD_SECONDS,WEAPON_COST,ARMOR_COST});
 })(typeof window==='undefined'?globalThis:window);

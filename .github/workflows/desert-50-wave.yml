@@ -7,6 +7,7 @@ on:
       - "desert-strike/benchmark-50-wave.cjs"
       - "desert-strike/benchmark-unit-pricing.cjs"
       - "desert-strike/smoke-50-wave-rules.test.cjs"
+      - "desert-strike/smoke-half-time-pacing.test.cjs"
       - ".github/workflows/desert-50-wave.yml"
   workflow_dispatch:
 jobs:
@@ -20,7 +21,9 @@ jobs:
           node-version: "22"
       - name: Verify actual game rules across solo/multi and standard/augment
         run: node desert-strike/smoke-50-wave-rules.test.cjs
-      - name: Simulate eight solo and two cooperative campaigns, up to 72 waves
+      - name: Verify half-time pacing and unchanged unit definitions
+        run: node desert-strike/smoke-half-time-pacing.test.cjs
+      - name: Simulate eight solo and two cooperative campaigns, up to 144 waves
         run: node desert-strike/benchmark-50-wave.cjs | tee /tmp/desert-50-wave.jsonl
       - name: Compare legacy and revised prices in 304 real-engine engagements
         run: |

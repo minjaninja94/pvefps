@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=unit-prices1"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=half-time1"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -98,7 +98,7 @@
   </section>
  </div><span id="factionLabel" class="faction-pill">진영 미선택</span><button id="helpButton" class="btn outline">? 도움말</button></div>
 </header>
-<div class="stats"><div><small>자원</small><strong id="cash">360</strong><em>CR</em></div><div><small>자원 수입</small><strong id="income">+1</strong><em>/ 0.5초</em></div><div><small>웨이브</small><strong id="wave">00</strong></div><div><small>다음 출격</small><strong id="timer">24.0</strong><em>초</em></div><div class="compact-status"><span id="battleStatus">작전 대기</span><span id="enemyFactionLabel"></span></div></div>
+<div class="stats"><div><small>자원</small><strong id="cash">360</strong><em>CR</em></div><div><small>자원 수입</small><strong id="income">+1</strong><em>/ 0.5초</em></div><div><small>웨이브</small><strong id="wave">00</strong></div><div><small>다음 출격</small><strong id="timer">12.0</strong><em>초</em></div><div class="compact-status"><span id="battleStatus">작전 대기</span><span id="enemyFactionLabel"></span></div></div>
 <div id="factionTraitStatus" class="marine-ops faction-trait-banner" hidden role="status" aria-live="off"></div>
 <div id="soloAugmentStatus" class="solo-augment-status" hidden role="status" aria-live="off">✦ 싱글 증강전 · 첫 증강 선택 대기</div>
 <div id="marineAbilityStatus" class="marine-ops" hidden role="status" aria-live="off">★ 해병성채 · 긴빠이 · 자진입대 · 황룡 · 오도봉고</div>
@@ -114,7 +114,7 @@
   <small>청록색 아군 · 주황색 적군 · 하단 전선 비율 / 미니맵을 누르면 해당 전장으로 이동</small>
  </section>
   <div class="mp-overview"><canvas id="mpOverviewCanvas" width="1100" height="96" aria-label="3라인 전황 미니맵. 원하는 라인을 눌러 이동합니다."></canvas></div>
-  <div class="mp-command-bar"><div><span class="eyebrow">PERSONAL COMMAND</span><strong id="mpMyResources">360 CR</strong> <span id="mpMyIncome">+1 / 0.5초</span></div><div><b id="mpWave">웨이브 0</b> · <span id="mpCountdown">24초</span></div><button id="mpEco" class="btn outline">경제 강화</button></div>
+  <div class="mp-command-bar"><div><span class="eyebrow">PERSONAL COMMAND</span><strong id="mpMyResources">360 CR</strong> <span id="mpMyIncome">+1 / 0.5초</span></div><div><b id="mpWave">웨이브 0</b> · <span id="mpCountdown">12초</span></div><button id="mpEco" class="btn outline">경제 강화</button></div>
   <nav class="mp-main-tabs" id="mpViewTabs" aria-label="멀티플레이 화면 전환" hidden>
    <button type="button" class="tab active" data-mp-view="base" aria-current="page"><span class="tab-no">01</span><span>내 기지 · 건설<small>BASE & PRODUCTION</small></span></button>
    <button type="button" class="tab" data-mp-view="battle"><span class="tab-no">02</span><span>전장<small>LIVE BATTLE</small></span></button>
@@ -176,7 +176,7 @@
     <p class="mp-build-tip">빈 칸을 눌러 건설 · 철거 모드에서 건물 선택 · 좌우 드래그로 라인 전환</p>
    </section>
   </div>
-  <p class="subtext">병력 생산시설은 건설 후 24초가 지나야 출격할 수 있으며, 완성 후에는 매 24초마다 병력을 생산합니다. 건설 중 슬롯에 남은 시간이 표시됩니다. 병력은 라인 경계를 넘어 이동하며, 아군과 자원을 공유하지 않습니다. 자신이 건설한 건물만 철거할 수 있습니다.</p>
+  <p class="subtext">병력 생산시설은 건설 후 12초가 지나야 출격할 수 있으며, 완성 후에는 매 12초마다 병력을 생산합니다. 건설 중 슬롯에 남은 시간이 표시됩니다. 병력은 라인 경계를 넘어 이동하며, 아군과 자원을 공유하지 않습니다. 자신이 건설한 건물만 철거할 수 있습니다.</p>
   </div>
   <section class="mp-tab-screen mp-battle-section" id="mpBattleView" hidden>
    <div class="mp-production-title"><div><span class="eyebrow">LIVE BATTLE / THREE FRONTLINES</span><h2>실시간 전장</h2><p id="mpBattleDescription">세 라인은 하나로 연결된 전장입니다. 미니맵 또는 전장을 눌러 해당 라인에 배치할 수 있습니다.</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="base">생산 배치 →</button></div>
@@ -256,7 +256,7 @@
   <button id="mpResultLobby" type="button" class="btn start-cta">통계 확인 완료 · 로비로 가기</button>
  </div>
 </div>
-<dialog id="helpDialog"><div class="help-inner"><h2>데저트 프런트 조작법</h2><p>① 내 기지: 유닛 카드를 선택해 생산시설 건설(완료까지 24초), 완료 후 매 웨이브 출격 / 철거는 비용의 55% 환급</p><p>② 전장: 확장 전장 · 미니맵/전선 추적 · 자동 전투 관전 / 역할 마크로 상성 파악 / 유닛을 눌러 능력 확인 / 배속과 일시정지</p><p>③ 병력 편성 위 업그레이드: 핵폭탄(상대 생존 유닛 전체 제거, 1회) / 궤도 폭격 / 무기·장갑 강화 / 포탑 보수. 자원채취 건물은 생산 슬롯에 설치하며, 안정화 중에는 인컴이 중단됩니다.</p><p>중간 타워를 파괴하면 공격 팀 합계 150 CR과 수비 측 스플래시 없는 돌격 가디언 1기가 발생합니다. 초록 오라 가디언의 외부 치유량은 평소 25%, 최근 3초 내 피격 시 10%입니다. 가디언만 자기 진영·해당 라인 안에서 방어하며, 붉은 오라의 일반 포격 영웅은 중앙을 넘어 진격·공격할 수 있습니다. 생산 건물은 보호되고 방어 포탑이 적을 막습니다. 기지 본체가 파괴되면 패배합니다. 초반 360 CR로 시작하고, 기본 수입은 0.5초당 1 CR이며 경제 5~7단계에서는 총수입이 15% 감소합니다. 병력 생산시설은 건설 완료까지 24초가 걸리고 그 후 매 24초마다 출격합니다. 핵심 기지 체력은 20% 증가했으며 기지 본체가 받는 공격 피해는 15% 감소합니다.</p><p>동일 풀피 병력 20기는 영웅 1기로 합쳐집니다. 최대 체력은 20명분이며, 공격·회복량은 남은 체력에 해당하는 생존 병력 수에 따라 감소합니다. 장갑의 피해 감소는 병사 1명·공격 1발 기준으로 계산됩니다.</p><p>키보드: 1–8 유닛 선택, 1·2·3 화면 전환은 Alt+숫자, Space 일시정지, Esc 선택 해제.</p><button class="btn start-cta" id="helpClose">확인</button></div></dialog>
+<dialog id="helpDialog"><div class="help-inner"><h2>데저트 프런트 조작법</h2><p>① 내 기지: 유닛 카드를 선택해 생산시설 건설(완료까지 12초), 완료 후 매 웨이브 출격 / 철거는 비용의 55% 환급</p><p>② 전장: 확장 전장 · 미니맵/전선 추적 · 자동 전투 관전 / 역할 마크로 상성 파악 / 유닛을 눌러 능력 확인 / 배속과 일시정지</p><p>③ 병력 편성 위 업그레이드: 핵폭탄(상대 생존 유닛 전체 제거, 1회) / 궤도 폭격 / 무기·장갑 강화 / 포탑 보수. 자원채취 건물은 생산 슬롯에 설치하며, 안정화 중에는 인컴이 중단됩니다.</p><p>중간 타워를 파괴하면 공격 팀 합계 150 CR과 수비 측 스플래시 없는 돌격 가디언 1기가 발생합니다. 초록 오라 가디언의 외부 치유량은 평소 25%, 최근 3초 내 피격 시 10%입니다. 가디언만 자기 진영·해당 라인 안에서 방어하며, 붉은 오라의 일반 포격 영웅은 중앙을 넘어 진격·공격할 수 있습니다. 생산 건물은 보호되고 방어 포탑이 적을 막습니다. 기지 본체가 파괴되면 패배합니다. 초반 360 CR로 시작하고, 기본 수입은 0.5초당 1 CR이며 경제 5~7단계에서는 총수입이 15% 감소합니다. 병력 생산시설은 건설 완료까지 12초가 걸리고 그 후 매 12초마다 출격합니다. 핵심 기지 체력은 20% 증가했으며 기지 본체가 받는 공격 피해는 15% 감소합니다.</p><p>동일 풀피 병력 20기는 영웅 1기로 합쳐집니다. 최대 체력은 20명분이며, 공격·회복량은 남은 체력에 해당하는 생존 병력 수에 따라 감소합니다. 장갑의 피해 감소는 병사 1명·공격 1발 기준으로 계산됩니다.</p><p>키보드: 1–8 유닛 선택, 1·2·3 화면 전환은 Alt+숫자, Space 일시정지, Esc 선택 해제.</p><button class="btn start-cta" id="helpClose">확인</button></div></dialog>
 <script src="./marine-art-data.js" defer></script>
 <script src="./sprite-animations.js" defer></script>
 <script src="./iso-real-atlas-data.js?v=iso3" defer></script>
@@ -278,13 +278,13 @@
 <script src="./augment-rules.js?v=prism100a" defer></script>
 <script src="./augment-history.js?v=history1" defer></script>
 <script src="./augment-codex.js?v=prism100a" defer></script>
-<script src="./tri-lane-engine.js?v=unit-prices1" defer></script>
+<script src="./tri-lane-engine.js?v=half-time1" defer></script>
 <script src="./device-account.js?v=uniform7" defer></script>
 <script src="./tri-lane-network.js?v=augmented1" defer></script>
 <script src="./combat-audio.js?v=nukegear1" defer></script>
-<script src="./tri-lane-ui.js?v=unit-prices1" defer></script>
+<script src="./tri-lane-ui.js?v=half-time1" defer></script>
 <script src="./battle-report.js?v=battlestats2" defer></script>
-<script src="./game-v2.js?v=unit-prices1" defer></script>
+<script src="./game-v2.js?v=half-time1" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=nukegear1" defer></script>

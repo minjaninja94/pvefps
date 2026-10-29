@@ -16,7 +16,7 @@ for(const roll of [.01,.26,.51,.76])for(const faction of [0,3,4,7,9]){
   const next=old+.2;
   for(let slice=Math.floor(old*2)+1;slice<=Math.floor(next*2);slice++)if(slice*.5+1e-6>=ready)earned+=E.incomePerTick(level);
   s.units.length=0;e.tick(.2);
-  if(step%120===0){if(s.seconds>=p.ecoReadyAt)earned+=24;e.wave();}
+  if(step%Math.round(E.WAVE_INTERVAL/.2)===0){if(s.seconds>=p.ecoReadyAt)earned+=24;e.wave();}
   assert.ok(p.cash>=0,'no borrowing');
   assert.ok(Math.abs(p.cash+p.hardBrain.spent-earned)<1e-6,'no bonus income, free purchases or stabilization catch-up');
   assert.equal(p.buildings.flat().filter(r=>r===8).length,p.eco,'every income upgrade consumes a real slot');

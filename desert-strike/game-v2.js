@@ -1,11 +1,11 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
-const CW=1100,CH=520,WORLD_W=3300,HOME_H=340,MAX_BASE=8640,MAX_TURRET=1700,INTERVAL=24,COLS=15,ROWS=5,SLOTS=COLS*ROWS,INCOME_PERIOD=.5,SIDE_SUPPLY=220;
+const CW=1100,CH=520,WORLD_W=3300,HOME_H=340,MAX_BASE=8640,MAX_TURRET=1700,INTERVAL=12,COLS=15,ROWS=5,SLOTS=COLS*ROWS,INCOME_PERIOD=.5,SIDE_SUPPLY=220;
 const COLORS=['#79dfee','#ff9a79'],LANES=[110,180,260,340,410];
 const EXTRACTOR=8;
 const initialIncome=1,WAVE_STIPEND=24,MAX_ECONOMY=7;
-const FACTORY_BUILD_SECONDS=24,LATE_ECON_STEP_MULTIPLIER=.85,CORE_DAMAGE_MULTIPLIER=.85;
+const FACTORY_BUILD_SECONDS=12,LATE_ECON_STEP_MULTIPLIER=.85,CORE_DAMAGE_MULTIPLIER=.85;
 function incomePerTick(eco){return (initialIncome+eco)*(eco>=5?LATE_ECON_STEP_MULTIPLIER:1);}
 function showIncome(eco){return Number(incomePerTick(eco).toFixed(2)).toString();}
 function factoryReadyAt(side,slot){return (side===0?state.buildReadyAt:state.enemyBuildReadyAt)?.[slot]??0;}
@@ -19,7 +19,7 @@ const OCTOPER_REGEN=.0006,ROBOT_REPAIR=.0015;
 const BEAST_RANGED_DAMAGE_REDUCTION=.06,FAIRY_CHAIN_HEAL_RATIO=.05,FAIRY_HEAL_MULTIPLIER=1.08;
 const INK_DURATION=2.5,INK_COOLDOWN=5;
 // Marine-only logistics. Low-probability transfer + fragile capture, max two recruits each wave.
-const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=1,HUANGLONG_INTERVAL=8;
+const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=1,HUANGLONG_INTERVAL=INTERVAL/3;
 const ROLE=[
  {key:'charge',name:'돌격',mark:'⚔',token:'⚔',cost:65,hp:115,damage:21,armor:1,range:29,rate:.77,speed:82,airTarget:false,kind:'ground',tips:'적 포병·지원병 후방을 빠르게 찌릅니다. 장갑 기지 공격력은 낮습니다.',good:[5,7],bad:[3,1]},
  {key:'rifle',name:'사격',mark:'⌖',token:'⌖',cost:100,hp:108,damage:17,armor:1,range:164,rate:.8,speed:60,airTarget:true,kind:'ground',tips:'저렴한 범용 원거리 병력. 공중도 공격합니다.',good:[0,7],bad:[3,5]},
@@ -61,7 +61,7 @@ const BASIC_GUIDES=[
 const SPECIAL_GUIDES={
 '3-3':'황근출. 지상 중장갑 도끼 전사로 전열을 지킵니다.',
 '3-6':'오도봉고. 지상 돌격 차량. 최대 3명의 지상 적을 충돌 공격하며 대장갑에 약합니다.',
-'3-7':'황룡. 매 웨이브 0·8·16초에 출격해 주변 아군을 한 번 크게 치료합니다.',
+'3-7':'황룡. 매 웨이브 0·4·8초에 출격해 주변 아군을 한 번 크게 치료합니다.',
 '4-6':'흑표 돌격기수. 지상 기병. 빠른 돌진으로 적 최대 3명을 공격하며 대장갑에 약합니다.',
 '6-6':'알파 늑대 기수. 지상 야수 기병. 빠르게 접근해 적 후방을 압박합니다.',
 '7-6':'전술 변형 메카. 비행하지 않는 지상 중장갑. 지상·공중을 원거리 공격합니다.',
@@ -160,8 +160,8 @@ function broodLay(parent,target,roll=Math.random){
 }
 function ecoCostFor(level){return Math.round(70*Math.pow(1.36,level));}
 function ecoCost(){return ecoCostFor(state.eco);}
-function ecoBuildSeconds(level){return 24+8*Math.max(0,level-1);}
-function ecoStabilize(level,elapsed){return 4+2*level+Math.min(6,Math.floor(Math.max(0,elapsed)/120));}
+function ecoBuildSeconds(level){return 12+4*Math.max(0,level-1);}
+function ecoStabilize(level,elapsed){return (4+2*level+Math.min(6,Math.floor(Math.max(0,elapsed)/120)))/2;}
 function ecoRemaining(side=0){return Math.max(0,(side===0?state.ecoReadyAt:state.enemyEcoReadyAt)-state.elapsed);}
 function constructExtractor(side,index){
  const mine=side===0?'eco':'enemyEco',cash=side===0?'cash':'enemyCash',ready=side===0?'ecoReadyAt':'enemyEcoReadyAt';
@@ -242,7 +242,7 @@ function start(){
  aiInitialBuild();
  $('startOverlay').classList.add('hidden');
  changeView('base');
- setMessage((state.aiDifficulty==='hard'?'하드 AI · 추가 자원 보너스 없음. ':'')+'전투 시작! 24초 이내에 생산 시설을 배치하세요.');
+ setMessage((state.aiDifficulty==='hard'?'하드 AI · 추가 자원 보너스 없음. ':'')+'전투 시작! 12초 이내에 생산 시설을 배치하세요.');
  updateUI(true);chirp(530,.16);
  if(ruleset==='augment')beginSoloAugment(0);
 }
@@ -1979,7 +1979,7 @@ function wire(){
    $('pauseButton').textContent=state.paused?'▶ 계속하기':'Ⅱ 일시정지';updateUI(true);}}
  });
 }
-window.DesertRoster=Object.freeze({FACTIONS,ROLE,getDef,refreshChoices:initFactions,cost:(role)=>ROLE[role]?.cost??Infinity});
+window.DesertRoster=Object.freeze({WAVE_INTERVAL:INTERVAL,FACTORY_BUILD_SECONDS,FACTIONS,ROLE,getDef,refreshChoices:initFactions,cost:(role)=>ROLE[role]?.cost??Infinity});
 for(const readyEvent of ['desert-moe-ready','desert-real-sprites-ready'])window.addEventListener?.(readyEvent,()=>{if(state){state.lastCards=undefined;updateUI(true);}});initFactions();wire();reset();
 if(typeof window.addEventListener==='function')window.addEventListener('marine-art-ready',()=>updateUI(true));
 if(typeof window.addEventListener==='function')window.addEventListener('isometric-art-ready',()=>updateUI(true));

@@ -1,8 +1,8 @@
 'use strict';
 // Shipped-engine, wall-clock-independent 50-wave campaign audit. All production
-// purchases pay CR and observe the 24s build timer. A timeout is NOT a win.
+// purchases pay CR and observe the configured build timer. A timeout is NOT a win.
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),assert=require('node:assert/strict');
-const read=name=>fs.readFileSync(path.join(__dirname,name),'utf8');
+const read=name=>fs.readFileSync(path.join(process.env.DESERT_ENGINE_SOURCE_DIR&&['game-v2.js','tri-lane-engine.js'].includes(name)?process.env.DESERT_ENGINE_SOURCE_DIR:__dirname,name),'utf8');
 const catalogue=JSON.parse(read('assets/augments.json'));
 const fakeContext=new Proxy({createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}})},
  {get:(o,k)=>k in o?o[k]:()=>{}});
@@ -28,7 +28,7 @@ async function run(){
  for(const name of ['unit-consolidation.js','defense-guardian.js','hard-ai.js','augment-rules.js'])
   vm.runInNewContext(read(name),sandbox,{filename:name});
  await w.DesertAugments.load();
- const inject='window.__campaign={start,state:()=>state,place,setRole:r=>{selectedRole=r},setFaction:f=>{selectedFaction=f},tick,chooseSoloAugment,ROLE};reset();';
+ const inject='window.__campaign={start,state:()=>state,place,setRole:r=>{selectedRole=r},setFaction:f=>{selectedFaction=f},tick,chooseSoloAugment,ROLE,INTERVAL};reset();';
  const src=read('game-v2.js').replace('initFactions();wire();reset();',inject);
  assert.ok(src.includes(inject));
  vm.runInNewContext(src,sandbox,{filename:'game-v2.js'});
@@ -38,10 +38,10 @@ async function run(){
   mode=diff;ruleset=rule;seed=(0xa6f01d3+faction*2317+(diff==='hard'?1337:0)+(rule==='augment'?60013:0))>>>0;
   G.setFaction(faction);G.start();
   const s=G.state();s.enemyFaction=(faction+3)%10;s.followFront=false;
-  const maxWave=72,dt=.36;
+  const maxWave=144,dt=.36;
   let lastPurchase=-9999,roleIndex=0,firstBuild=true;
   const styles=faction===0?[0,1,3,1,2,5,4,6,7]:[3,0,1,3,5,0,6,2,7];
-  for(let step=0;!s.ended&&s.wave<maxWave&&step<maxWave*24/dt+500;step++){
+  for(let step=0;!s.ended&&s.wave<maxWave&&step<maxWave*G.INTERVAL/dt+500;step++){
    if(s.augmentChoice){
     if(!G.chooseSoloAugment(1))throw Error('Real augmentation could not be chosen');
     continue;
@@ -62,7 +62,7 @@ async function run(){
    G.tick(dt);
    if(s.cash<-1e-6||s.enemyCash<-1e-6)throw Error('Negative resources in actual campaign');
   }
-  results.push({mode:'solo',difficulty:diff,ruleset:rule,faction,wave:s.wave,ended:s.ended,
+  results.push({mode:'solo',difficulty:diff,ruleset:rule,faction,wave:s.wave,seconds:Number(s.elapsed.toFixed(1)),ended:s.ended,
    victor:s.baseHP[1]<=0?'human':s.baseHP[0]<=0?'AI':'unfinished',
    bases:s.baseHP.map(Math.round),factories:[s.built.filter(r=>r!==null&&r!==8).length,
     s.enemyBuilt.filter(r=>r!==null&&r!==8).length],augments:[s.augments.length,s.enemyAugments.length]});
@@ -82,7 +82,7 @@ async function run(){
    members:[{uid:'player0',team:0,faction:0},{uid:'player1',team:0,faction:4}]});
   const state=match.state,humans=state.players.filter(p=>!p.bot);
   let nextBuild=0,purchases=0;
-  for(let i=0;!state.ended&&state.wave<68&&i<68*24/.2+500;i++){
+  for(let i=0;!state.ended&&state.wave<136&&i<136*(E.WAVE_INTERVAL??24)/.2+500;i++){
    const choice=state.augmentChoice;
    if(choice)for(const p of humans){
     const entry=choice.offers[p.uid];if(entry&&!entry.selected)match.order(p.uid,{type:'augment_pick',slot:1});
@@ -104,7 +104,7 @@ async function run(){
    }
    match.tick(.2);
   }
-  results.push({mode:'coop',difficulty:diff,ruleset:rule,wave:state.wave,ended:state.ended,
+  results.push({mode:'coop',difficulty:diff,ruleset:rule,wave:state.wave,seconds:Number(state.seconds.toFixed(1)),ended:state.ended,
    victor:state.winner===null?'unfinished':state.winner===0?'human':'AI',
    bases:state.cores.map(row=>row.slice())});
  }
@@ -113,9 +113,11 @@ async function run(){
  const summary={goal:[45,55],actualAverageCompleted:average,completed:done.length,
   soloSamples:solo.length,drawOrCensored:solo.length-done.length,
   within45to55:done.filter(x=>x.wave>=45&&x.wave<=55).length,
-  reachedTarget:average!==null&&average>=45&&average<=55,
+  reachedTarget:done.length===solo.length&&average!==null&&average>=45&&average<=55,
   multiplayerSamples:results.filter(x=>x.mode==='coop').length,
-  method:'real game-v2.js and tri-lane-engine.js with true CR purchases, 24s factory timers, normal/hard AI and standard/augment; max 72 solo or 68 multi waves'};
+  actualAverageSecondsCompleted:done.length?Number((done.reduce((sum,x)=>sum+x.seconds,0)/done.length).toFixed(1)):null,
+  waveInterval:G.INTERVAL,
+  method:'real game-v2.js and tri-lane-engine.js with true CR purchases, configured wave/factory timers, normal/hard AI and standard/augment; max 144 solo or 136 multi waves'};
  console.log('FIFTY_WAVE_CAMPAIGN '+JSON.stringify({summary,results}));
  assert.equal(results.length,10);assert.ok(results.every(x=>x.wave>=0));
 }

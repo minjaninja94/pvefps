@@ -1,0 +1,490 @@
+{
+  "baselineCommit": "eaa4020203164399c76c778c8aa15b7971255c7c",
+  "before": {
+    "summary": {
+      "goal": [
+        45,
+        55
+      ],
+      "actualAverageCompleted": 34.4,
+      "completed": 8,
+      "soloSamples": 8,
+      "drawOrCensored": 0,
+      "within45to55": 2,
+      "reachedTarget": false,
+      "multiplayerSamples": 2,
+      "method": "real game-v2.js and tri-lane-engine.js with true CR purchases, 24s factory timers, normal/hard AI and standard/augment; max 72 solo or 68 multi waves"
+    },
+    "results": [
+      {
+        "mode": "solo",
+        "difficulty": "normal",
+        "ruleset": "standard",
+        "faction": 0,
+        "wave": 22,
+        "seconds": 547.9,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          17,
+          38
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "normal",
+        "ruleset": "standard",
+        "faction": 4,
+        "wave": 24,
+        "seconds": 598.3,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          17,
+          43
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "normal",
+        "ruleset": "augment",
+        "faction": 0,
+        "wave": 22,
+        "seconds": 549.7,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          17,
+          37
+        ],
+        "augments": [
+          3,
+          3
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "normal",
+        "ruleset": "augment",
+        "faction": 4,
+        "wave": 23,
+        "seconds": 569.2,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          16,
+          28
+        ],
+        "augments": [
+          3,
+          3
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "hard",
+        "ruleset": "standard",
+        "faction": 0,
+        "wave": 51,
+        "seconds": 1246,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          47,
+          21
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "hard",
+        "ruleset": "standard",
+        "faction": 4,
+        "wave": 40,
+        "seconds": 983.5,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          33,
+          32
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "hard",
+        "ruleset": "augment",
+        "faction": 0,
+        "wave": 49,
+        "seconds": 1176.1,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          6952
+        ],
+        "factories": [
+          45,
+          29
+        ],
+        "augments": [
+          5,
+          5
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "hard",
+        "ruleset": "augment",
+        "faction": 4,
+        "wave": 44,
+        "seconds": 1077.5,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          8640,
+          0
+        ],
+        "factories": [
+          40,
+          46
+        ],
+        "augments": [
+          5,
+          5
+        ]
+      },
+      {
+        "mode": "coop",
+        "difficulty": "normal",
+        "ruleset": "standard",
+        "wave": 30,
+        "seconds": 741,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          [
+            3000,
+            0
+          ],
+          [
+            3000,
+            0
+          ],
+          [
+            3000,
+            3000
+          ]
+        ]
+      },
+      {
+        "mode": "coop",
+        "difficulty": "hard",
+        "ruleset": "augment",
+        "wave": 32,
+        "seconds": 790.8,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          [
+            0,
+            3000
+          ],
+          [
+            0,
+            3000
+          ],
+          [
+            3000,
+            3000
+          ]
+        ]
+      }
+    ]
+  },
+  "after": {
+    "summary": {
+      "goal": [
+        45,
+        55
+      ],
+      "actualAverageCompleted": 46.7,
+      "completed": 6,
+      "soloSamples": 8,
+      "drawOrCensored": 2,
+      "within45to55": 2,
+      "reachedTarget": false,
+      "multiplayerSamples": 2,
+      "actualAverageSecondsCompleted": 568,
+      "waveInterval": 12,
+      "method": "real game-v2.js and tri-lane-engine.js with true CR purchases, configured wave/factory timers, normal/hard AI and standard/augment; max 144 solo or 136 multi waves"
+    },
+    "results": [
+      {
+        "mode": "solo",
+        "difficulty": "normal",
+        "ruleset": "standard",
+        "faction": 0,
+        "wave": 39,
+        "seconds": 476.3,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          8640,
+          0
+        ],
+        "factories": [
+          18,
+          22
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "normal",
+        "ruleset": "standard",
+        "faction": 4,
+        "wave": 45,
+        "seconds": 550.8,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          8640,
+          0
+        ],
+        "factories": [
+          21,
+          32
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "normal",
+        "ruleset": "augment",
+        "faction": 0,
+        "wave": 42,
+        "seconds": 513.4,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          8640,
+          0
+        ],
+        "factories": [
+          18,
+          23
+        ],
+        "augments": [
+          5,
+          5
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "normal",
+        "ruleset": "augment",
+        "faction": 4,
+        "wave": 39,
+        "seconds": 478.4,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          8640,
+          0
+        ],
+        "factories": [
+          19,
+          20
+        ],
+        "augments": [
+          4,
+          4
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "hard",
+        "ruleset": "standard",
+        "faction": 0,
+        "wave": 144,
+        "seconds": 1728.4,
+        "ended": false,
+        "victor": "unfinished",
+        "bases": [
+          8640,
+          8640
+        ],
+        "factories": [
+          69,
+          68
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "hard",
+        "ruleset": "standard",
+        "faction": 4,
+        "wave": 47,
+        "seconds": 564.5,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          21,
+          19
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "hard",
+        "ruleset": "augment",
+        "faction": 0,
+        "wave": 68,
+        "seconds": 824.8,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          28,
+          20
+        ],
+        "augments": [
+          5,
+          5
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "hard",
+        "ruleset": "augment",
+        "faction": 4,
+        "wave": 144,
+        "seconds": 1728.4,
+        "ended": false,
+        "victor": "unfinished",
+        "bases": [
+          8640,
+          2445
+        ],
+        "factories": [
+          69,
+          69
+        ],
+        "augments": [
+          5,
+          5
+        ]
+      },
+      {
+        "mode": "coop",
+        "difficulty": "normal",
+        "ruleset": "standard",
+        "wave": 48,
+        "seconds": 586,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          [
+            3000,
+            0
+          ],
+          [
+            3000,
+            736.5031521999939
+          ],
+          [
+            3000,
+            0
+          ]
+        ]
+      },
+      {
+        "mode": "coop",
+        "difficulty": "hard",
+        "ruleset": "augment",
+        "wave": 55,
+        "seconds": 671.8,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          [
+            0,
+            3000
+          ],
+          [
+            0,
+            3000
+          ],
+          [
+            2949.175469376,
+            3000
+          ]
+        ]
+      }
+    ]
+  },
+  "notes": [
+    "Completed-only mean does not represent all eight revised solo matches: two hard matches are censored at 144 waves.",
+    "Wave interval and construction/blackout timers halved. Passive income remains every 0.5s; each wave stipend remains 24 CR.",
+    "Unchanged combat/movement fingerprints for all 80 definitions in each engine are checked by smoke-half-time-pacing.test.cjs."
+  ]
+}
