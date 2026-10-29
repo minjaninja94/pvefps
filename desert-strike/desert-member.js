@@ -142,8 +142,12 @@ async function startMatch(){
  if(error)return {ok:false,reason:error.message};
  match.playing=true;return {ok:true,data};
 }
-function markPlaying(code){
- if(match?.tracked&&match.code===code)match.playing=true;
+async function markPlaying(code){
+ if(!match?.tracked||match.code!==code||match.ended||match.playing)return;
+ try{
+  const state=await pendingState();
+  if(match?.tracked&&match.code===code&&state?.state==='playing')match.playing=true;
+ }catch(e){status('랭크 경기 상태 동기화 실패: '+(e.message||e));}
 }
 async function poll(){
  if(!match?.tracked||!match.playing||match.ended)return null;
@@ -164,6 +168,7 @@ async function forfeit(){
  }catch(e){match.ended=false;status('탈주 기록 서버 처리 중: '+e.message);return null;}
 }
 async function reportResult(winner){
+ if(match?.tracked&&!match.playing)await markPlaying(match.code);
  if(!match?.tracked||!match.playing)return {state:'untracked'};
  if(match.ended)return {state:'done',winner_team:match.winner};
  if(winner!==null&&![0,1].includes(winner))return {state:'error',error:'올바르지 않은 경기 결과'};
