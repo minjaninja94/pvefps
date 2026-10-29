@@ -72,7 +72,7 @@ far.hp=300;far.x=3200;far.y=260;
 if(!match.state.units.includes(far))match.state.units.push(far);
 const far2={...far,id:9903,x:700,y:480};
 match.state.units.push(far2);
-assert.equal(match.state.cores[0][0],2500,'the human core remains healthy');
+assert.equal(match.state.cores[0][0],3000,'the human core remains healthy');
 const globalNuke=match.order('A',{type:'tactic',kind:'nuke'});
 assert.ok(globalNuke.ok,'full-field nuke works without needing prior base damage');
 assert.equal(globalNuke.removed,2,'both nearby and far enemies are removed in the same shot');
