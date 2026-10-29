@@ -53,8 +53,10 @@ jobs:
         run: node --test desert-strike/smoke-solo-augments.test.cjs
       - name: Match report, per-unit production totals and server result callbacks
         run: node --test desert-strike/smoke-match-results.test.cjs
-      - name: 20-minute multiplayer pressure, public Prisms, and solo-like battlefield
+      - name: No artillery or regen penalty, 30-second Prism, solo-like multiplayer view
         run: node --test desert-strike/smoke-mp-20min.test.cjs
+      - name: Five AI difficulty levels and multiplayer counters
+        run: node --test desert-strike/smoke-five-ai-levels.test.cjs
       - name: Godot 300-card augment parity and sandboxed host decisions
         run: node --test desert-strike/smoke-augments.test.cjs
       - name: Public-only Firestore room discovery and legacy invite safety
