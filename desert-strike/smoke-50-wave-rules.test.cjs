@@ -2,6 +2,9 @@
 // Real-engine parity checks for the proposed ~50-wave Desert Front pacing.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const read=name=>fs.readFileSync(path.join(__dirname,name),'utf8');
+async function main(){
+ const catalogue=JSON.parse(read('assets/augments.json'));
+ const mockFetch=async()=>({ok:true,json:async()=>catalogue});
 const canvas=new Proxy({createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}})},{get:(o,k)=>k in o?o[k]:()=>{}});
 const els=new Map();
 function el(id){
@@ -15,9 +18,10 @@ const document={getElementById:el,querySelector:()=>null,querySelectorAll:()=>[]
  createElement:()=>({getContext(){return canvas}}),addEventListener(){}};
 let difficulty='normal';
 const w={DesertLobby:{aiDifficulty:()=>difficulty,selectedRuleset:()=> 'standard',completeSolo(){}},addEventListener(){}};
-const ctx={window:w,document,requestAnimationFrame(){},console,Map,Set,Array,Object,Number,Date,Math,JSON,String};
+const ctx={window:w,document,requestAnimationFrame(){},fetch:mockFetch,console,Map,Set,Array,Object,Number,Date,Math,JSON,String};
 for(const name of ['unit-consolidation.js','defense-guardian.js','hard-ai.js','augment-rules.js'])
  vm.runInNewContext(read(name),ctx,{filename:name});
+await w.DesertAugments.load();
 const source=read('game-v2.js').replace('initFactions();wire();reset();',
  'window.__pace={reset,state:()=>state,place,selectRole,wave,tick,aiInitialBuild,hardInvest,structureHit};reset();');
 assert.ok(source.includes('window.__pace='),'solo injection succeeded');
@@ -59,9 +63,10 @@ for(const d of ['normal','hard']){
  assert.ok(rows.length>0,d+' AI builds paid factories');
  for(const slot of rows)near(state.enemyBuildReadyAt[slot],24,d+' initial build waits 24 seconds');
 }
-const multiContext={window:{},console,Math,Map,Set,Object,Array,Number,String,Date,JSON};
+const multiContext={window:{},fetch:mockFetch,console,Math,Map,Set,Object,Array,Number,String,Date,JSON};
 for(const name of ['unit-consolidation.js','defense-guardian.js','hard-ai.js','augment-rules.js'])
  vm.runInNewContext(read(name),multiContext,{filename:name});
+await multiContext.window.DesertAugments.load();
 const marker='return {state,order,tick,wave,snapshot,definition};';
 const multiCode=read('tri-lane-engine.js').replace(marker,'return {state,order,tick,wave,snapshot,definition,__test:{hitFort}};');
 assert.ok(multiCode.includes('__test:{hitFort}'));
@@ -100,3 +105,5 @@ for(const ruleset of ['standard','augment'])for(const difficulty of ['normal','h
     difficulty+' '+ruleset+' bot obeys the same 24-second construction');
 }
 console.log('50-wave rules passed: solo, classic, PvP, co-op, normal and hard AI, both rule sets; real 24s build, +20% core, -15% core damage, -15% income after level 4, protected build timer.');
+}
+main().catch(e=>{console.error(e);process.exitCode=1;});
