@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=mp20min1"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=ailevels1"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -10,7 +10,7 @@
 
     <h1>지휘관 사령부</h1>
     <div class="lobby-stage"><div class="lobby-stage-glow"></div><canvas id="lobbyHero" width="320" height="210" aria-label="선택한 종족 사령부와 대표 유닛"></canvas><div class="lobby-stage-label"><span id="lobbyFactionName">철갑연합</span><small id="lobbyFactionTrait">다목적 장갑·전열</small></div></div>
-    <div class="lobby-difficulty" id="lobbyDifficulty" role="group" aria-label="싱글·3라인 연습 AI 난이도"><span>AI 전투 난이도 <small>싱글 · 3라인 연습</small></span><div><button type="button" data-difficulty="normal" aria-pressed="true" class="selected"><strong>일반</strong><small>기본 전술 AI</small></button><button type="button" data-difficulty="hard" aria-pressed="false"><strong>하드</strong><small>적극적인 병력 운용</small></button></div></div>
+    <div class="lobby-difficulty" id="lobbyDifficulty" role="group" aria-label="싱글·3라인 연습 AI 난이도"><span>AI 전투 난이도 <small>싱글 · 3라인 연습 · 협동전</small></span><div><button type="button" data-difficulty="easy" aria-pressed="false"><strong>쉬움</strong><small>느린 배치</small></button><button type="button" data-difficulty="normal" aria-pressed="true" class="selected"><strong>보통</strong><small>기본 전술</small></button><button type="button" data-difficulty="hard" aria-pressed="false"><strong>어려움</strong><small>공세·상성 대응</small></button><button type="button" data-difficulty="veryhard" aria-pressed="false"><strong>아주 어려움</strong><small>전략형 하드 AI</small></button><button type="button" data-difficulty="impossible" aria-pressed="false"><strong>임파서블</strong><small>고속 전술 대응</small></button></div></div>
     <div id="lobbyRulesetPicker" class="lobby-ruleset-picker" role="group" aria-label="싱글, 멀티플레이 및 3라인 연습 전투 규칙">
      <div class="lobby-ruleset-heading"><strong>전투 규칙 선택</strong><span class="lobby-ruleset-heading-tools"><button id="augmentCodexOpen" type="button" class="augment-codex-trigger" aria-haspopup="dialog" aria-controls="augmentCodexDialog" title="증강 효과 보기">? 증강 도감</button></span></div>
      <div class="lobby-ruleset-options">
@@ -284,18 +284,18 @@
 <script src="./augment-rules.js?v=mp20min1" defer></script>
 <script src="./augment-history.js?v=history1" defer></script>
 <script src="./augment-codex.js?v=copy-clean1-prism100a" defer></script>
-<script src="./tri-lane-engine.js?v=mp20min1" defer></script>
+<script src="./tri-lane-engine.js?v=ailevels1" defer></script>
 <script src="./device-account.js?v=externalroom1" defer></script>
 <script src="./tri-lane-network.js?v=externalroom1" defer></script>
 <script src="./combat-audio.js?v=nukegear1" defer></script>
-<script src="./tri-lane-ui.js?v=mp20min1" defer></script>
+<script src="./tri-lane-ui.js?v=ailevels1" defer></script>
 <script src="./battle-report.js?v=battlestats2" defer></script>
-<script src="./game-v2.js?v=copy-clean1" defer></script>
+<script src="./game-v2.js?v=ailevels1" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=nukegear1" defer></script>
 <script src="./desert-member.js?v=externalroom1" defer></script>
 <script src="./career-profile.js?v=copy-clean1-rank-badges2" defer></script>
 <script src="./audio-settings.js?v=nukegear1" defer></script>
-<script src="./front-lobby.js?v=copy-clean1-prism100b" defer></script>
+<script src="./front-lobby.js?v=ailevels1" defer></script>
 </body></html>
