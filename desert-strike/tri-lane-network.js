@@ -7,7 +7,7 @@
 const ICE=[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}];
 let events={},scope=null,db=null,fs=null,uid=null,roomId=null,room=null,host=false,localPeer=null;
 let roomUnsub=null,peerSubs=new Map(),channels=new Map(),pcs=new Map(),clock=null,engine=null,seq=0,lastFrame=0;
-let active=false,answering=false,hostPeerOpen=new Set(),snapshotSeq=0,serverTimer=null,gameEndedLocally=false,resultRetry=null,resultWinner=null,resultAttempts=0;
+let active=false,answering=false,hostPeerOpen=new Set(),snapshotSeq=0,serverTimer=null,gameEndedLocally=false,resultRetry=null,resultWinner=null,resultAttempts=0,serverRegistration=null;
 const msg=e=>global.IronFirebase?.message?.(e)||e?.message||String(e);
 function notify(key,data){try{events[key]?.(data);}catch(e){console.error('멀티 UI 갱신 오류',e);}}
 function beginServerHeartbeat(){
@@ -63,7 +63,7 @@ function resetLocal(){
  if(clock){clearInterval(clock);clock=null;}
  if(serverTimer){clearInterval(serverTimer);serverTimer=null;}
  if(resultRetry){clearTimeout(resultRetry);resultRetry=null;}
- global.DesertMember?.endMatch?.();gameEndedLocally=false;resultWinner=null;resultAttempts=0;
+ global.DesertMember?.endMatch?.();gameEndedLocally=false;resultWinner=null;resultAttempts=0;serverRegistration=null;
  if(roomUnsub){roomUnsub();roomUnsub=null;}
  for(const stop of peerSubs.values())stop();peerSubs.clear();
  for(const ch of channels.values())try{ch.close();}catch(e){}
@@ -126,13 +126,14 @@ function trackServerRegistration(id,details,action){
  }
  // Firestore is the multiplayer lobby. A delayed/disabled Supabase guest
  // session must never block players from creating or joining that lobby.
- void Promise.resolve().then(()=>register(details)).then(result=>{
+ serverRegistration=Promise.resolve().then(()=>register(details)).then(result=>{
   if(roomId!==id)return;
   status('방 '+id+' '+action+' 완료 · '+(result?.ok
    ?'서버 경기 기록 연결 완료'
    :'비공식 경기 · 서버 승패·탈주·RP 기록 없음 ('+(result?.reason||'계정 인증 필요')+')'));
  }).catch(e=>{
   if(roomId===id)status('방 '+id+' '+action+' 완료 · 비공식 경기 (서버 전적 연결 오류: '+msg(e)+')');
+  return {ok:false,reason:msg(e)};
  });
 }
 async function create(opts){
@@ -296,8 +297,17 @@ async function start(){
  if(!global.DesertTriEngine)throw Error('3라인 전투 엔진이 준비되지 않았습니다.');
  if(room.ruleset==='augment')await global.DesertAugments.load();
  engine=global.DesertTriEngine.create({mode:room.mode,size:room.size,members:members(),ruleset:validateRuleset(room.ruleset),seed:room.seed||1,aiDifficulty:global.DesertLobby?.aiDifficulty?.()||'normal'});
- const registered=await global.DesertMember?.startMatch?.();
- if(registered&&!registered.ok)status('비공식 게임 진행 · 서버 탈주 기록 미적용: '+registered.reason);
+ // The guest's Supabase registration can finish after Firebase signaling.
+ // Retry registration before beginning the battle so normal online wins count.
+ if(serverRegistration)await serverRegistration;
+ let registered={ok:false,reason:'서버 기록 시스템이 연결되지 않았습니다'};
+ if(global.DesertMember?.startMatch)for(let attempt=0;attempt<8;attempt++){
+  registered=await global.DesertMember.startMatch();
+  if(registered?.ok||!String(registered?.reason||'').includes('참가자가 서버에 모두 등록되지 않았습니다'))break;
+  await new Promise(resolve=>setTimeout(resolve,650));
+ }
+ if(!registered?.ok)status('경고: 이번 경기는 서버에 등록되지 않아 공식 승패·등급을 반영할 수 없습니다. '+(registered?.reason||''));
+ else status('이번 경기 승패는 서버에서 자동으로 기록됩니다.');
  await fs.updateDoc(path(),{status:'playing'});
  global.DesertMember?.markPlaying?.(roomId);beginServerHeartbeat();
  if(room.publicRoom)try{await fs.deleteDoc(publicPath());}catch(_){}
