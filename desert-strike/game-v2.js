@@ -549,6 +549,45 @@ function hardMirrorEconomy(){
  // Wait for the same stabilization window and earned CR as the human.
  return true;
 }
+// Factory proximity matters: twenty full-HP troops merge only if they
+// physically spawn together. Spend on a tight same-role formation, not
+// randomly scattered production lines. Never relocates paid player slots.
+function aiSlotFor(role){
+ const available=state.enemyBuilt.map((r,i)=>r===null?i:-1).filter(i=>i>=0);
+ if(!available.length)return -1;
+ if(role===EXTRACTOR)return available[0];
+ const xy=i=>({x:WORLD_W-240-(i%COLS)*7,
+  y:LANES[Math.floor(i/COLS)]+((i%COLS)-7)*3});
+ const allies=state.enemyBuilt.map((r,i)=>r===role?xy(i):null).filter(Boolean);
+ let best=available[0],highest=-Infinity;
+ for(const slot of available){
+  const p=xy(slot);
+  const nearby=allies.filter(v=>Math.hypot(v.x-p.x,v.y-p.y)<=125).length;
+  const nearest=allies.length?Math.min(...allies.map(v=>Math.hypot(v.x-p.x,v.y-p.y))):0;
+  const score=nearby*100-nearest*.4-Math.abs(p.y-260)*.08;
+  if(score>highest){highest=score;best=slot;}
+ }
+ return best;
+}
+function aiHeroFocus(counts,intel,brain){
+ const total=counts.reduce((n,v)=>n+v,0);
+ if(total<6||state.wave<3||brain.opening<(window.DesertHardAI?.plans[brain.plan]?.opening?.length||0))return null;
+ const protectedSiege=intel.total>=8&&intel.counts[5]>=intel.total*.38&&intel.counts[0]>=intel.total*.16;
+ let target=protectedSiege?(state.enemyFaction===4?6:([3,4,6,7].includes(state.enemyFaction)?0:6)):
+  intel.air>=5?4:intel.armor>=5?2:intel.dominant===0?([3,4,6,7].includes(state.enemyFaction)?1:6):
+  intel.dominant===5?0:brain.plan===0?3:brain.plan===1?6:brain.plan===2?1:5;
+ if(brain.heroRole===undefined)brain.heroRole=target;
+ // Only abandon a partly funded production group for a genuine new hard
+ // counter; frequent role switching is why AI never consolidated before.
+ if((intel.air>=5||intel.armor>=5)&&counts[brain.heroRole]<8&&brain.heroRole!==target)brain.heroRole=target;
+ const primary=brain.heroRole;
+ if(counts[primary]>=20){
+  if(brain.secondHeroRole===undefined)brain.secondHeroRole=protectedSiege?3:(primary===1?3:1);
+  if(counts[brain.secondHeroRole]>=20)return null;
+  return brain.secondHeroRole;
+ }
+ return primary;
+}
 function hardInvest(){
  const ai=window.DesertHardAI;if(!ai)return;
  const matchingEconomy=hardMirrorEconomy();
@@ -568,13 +607,23 @@ function hardInvest(){
  const air=intel.air,armor=intel.armor,invaded=intel.invaded;
  for(let purchase=0;purchase<12;purchase++){
   const counts=Array(8).fill(0);for(const role of state.enemyBuilt)if(role!==null&&role!==EXTRACTOR)counts[role]++;
-  const slot=state.enemyBuilt.findIndex(v=>v===null);if(slot<0)break;
+  let slot=state.enemyBuilt.findIndex(v=>v===null);if(slot<0)break;
   let action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,costs:ROLE.map(x=>x.cost),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded,roles}});
   // After the planned opener, maintain factory output while waiting for a
   // costly specialist. Respect the extractor reserve and never buy for free.
   const total=counts.reduce((n,v)=>n+v,0);
   const ecoDue=state.enemyEco<Math.min(MAX_ECONOMY,1+Math.floor(state.elapsed/65))&&
    total>=2+state.enemyEco*2&&ecoRemaining(1)<=0;
+  const focus=aiHeroFocus(counts,intel,brain);
+  // Keep crucial anti-air / anti-armor defenses and a paid extractor ahead of
+  // the long-term hero plan. Otherwise complete an actual 20-factory cohort.
+  const urgentDefense=intel.invaded||
+   (intel.air>=3&&counts[4]<Math.max(2,intel.air*.20))||
+   (intel.armor>=3&&counts[2]<Math.max(2,intel.armor*.20));
+  if(focus!==null&&!urgentDefense&&!ecoDue&&counts[focus]<20&&
+   total<Math.min(SLOTS-state.enemyEco,Math.max(growTo,28))){
+   action=state.enemyCash>=ROLE[focus].cost?{kind:'unit',role:focus}:null;
+  }
   if(!action&&total<growTo&&!ecoDue&&brain.opening>=ai.plans[brain.plan].opening.length){
    const candidates=ROLE.map((role,id)=>id).filter(id=>ROLE[id].cost<=state.enemyCash);
    const counters=intel.dominant===null?[]:aiCountersFor(intel.dominant);
@@ -586,7 +635,7 @@ function hardInvest(){
    if(candidates.length)action={kind:'unit',role:candidates[0]};
   }
   if(!action)break;
-  if(emergencyCounter&&!(roles[5]>=intel.total*.38&&roles[0]>=intel.total*.16)&&brain.opening>=((ai.plans[brain.plan]?.opening?.length)||0)){
+  if(emergencyCounter&&!(focus!==null&&!urgentDefense)&&!(roles[5]>=intel.total*.38&&roles[0]>=intel.total*.16)&&brain.opening>=((ai.plans[brain.plan]?.opening?.length)||0)){
    const counters=aiCountersFor(intel.dominant),current=counts.reduce((sum,n,i)=>sum+(counters.includes(i)?n:0),0);
    const total=counts.reduce((sum,n)=>sum+n,0);
    if(current<Math.ceil(total*.75)){
@@ -597,7 +646,7 @@ function hardInvest(){
   }
   const cost=action.kind==='econ'?ecoCostFor(state.enemyEco):ROLE[action.role].cost;
   if(action.kind==='econ'){if(!constructExtractor(1,slot))break;}
-  else {if(state.enemyCash<cost)break;state.enemyBuilt[slot]=action.role;state.enemyCash-=cost;}
+  else {if(state.enemyCash<cost)break;slot=aiSlotFor(action.role);if(slot<0)break;state.enemyBuilt[slot]=action.role;state.enemyCash-=cost;}
   ai.bought(brain,action,cost);
  }
 }
@@ -656,9 +705,17 @@ function aiInvest(){
   Math.ceil(intel.total*1.35),intel.invaded?army.length+7:0));
  const slots=state.enemyBuilt.map((role,i)=>role===null?i:-1).filter(i=>i>=0);
  for(let purchased=0;slots.length&&purchased<8&&army.length+purchased<desired;purchased++){
-  const role=aiChoose(state.enemyCash);
+  let role=aiChoose(state.enemyCash);
   if(role===null)break;
-  const slot=slots.shift();
+  const counts=Array(8).fill(0);for(const r of state.enemyBuilt)if(r!==null&&r!==EXTRACTOR)counts[r]++;
+  if(state.wave>=5&&!intel.invaded&&intel.dominant===null&&army.length>=9){
+   const popular=counts.indexOf(Math.max(...counts));
+   if(counts[popular]>=5&&counts[popular]<20&&
+    counts[popular]<Math.min(20,Math.ceil((army.length+purchased)*.72))&&state.enemyCash>=ROLE[popular].cost)
+    role=popular;
+  }
+  const slot=aiSlotFor(role);
+  if(slot<0)break;
   state.enemyBuilt[slot]=role;state.enemyCash-=ROLE[role].cost;
  }
 }
