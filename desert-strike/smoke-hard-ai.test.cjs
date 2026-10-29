@@ -191,5 +191,20 @@ co.tick(.2);
 assert.equal(firstBot.nukes,0,'hard co-op bot launches its one defensive nuclear strike');
 assert.ok(coopState.units.every(u=>u.id!==99999),'strike clears qualifying intruders');
 
+// The same one-use nuclear defense must remove a real 20-member hero
+// in hard multiplayer, even with a healthy core and no deep-base breach.
+{
+ const fixture=environment(.25),engine=fixture.w.DesertTriEngine.create({mode:'coop',size:2,aiDifficulty:'hard',
+  members:[{uid:'human',team:0,faction:0},{uid:'support',team:0,faction:1}]}),s=engine.state;
+ const bot=s.players.find(p=>p.bot);
+ s.wave=7;s.next=999999;
+ const packed={id:90444,uid:'human',team:0,faction:0,role:5,lane:0,
+  x:s.width*.7,y:260,hp:2600,maxHP:2600,heroCount:20};
+ s.units.push(packed);
+ engine.tick(.2);
+ assert.equal(bot.nukes,0,'multiplayer hard AI fires the one nuke on a concentrated hero push');
+ assert.ok(s.units.every(u=>u.id!==packed.id),'multiplayer nuke removes the hero from authoritative combat');
+ assert.equal(s.players[0].combatStats.losses[5],20,'all packed casualties appear in the multiplayer report');
+}
 console.log('Hard AI passed: 20 four-minute ledgers, four proactive openings, ground special factions, regular paid economy, zero resource bonuses, actual slot/blackout costs, bounded next-purchase reserves, 32 scouted concentration responses, ground/air distinction, economy resumption, observed hero lane reinforcement, solo and three-line integration.');
 console.log(JSON.stringify(results.filter(x=>x.faction===0)));
