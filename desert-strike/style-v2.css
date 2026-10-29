@@ -810,3 +810,12 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
  #view-multiplayer .mp-unit-card .mp-good-counter,
  #view-multiplayer .mp-unit-card .mp-bad-counter{font-size:9px}
 }
+
+.mp-counter-guide{margin-top:12px;padding:9px;border:1px solid #496677;background:#112531;border-radius:9px}
+.mp-counter-guide summary{color:#edcf9a;font-weight:800;cursor:pointer;padding:4px 7px}
+.mp-counter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px}
+.mp-counter-item{display:flex;flex-direction:column;gap:4px;padding:10px 8px;background:#192e39;border:1px solid #395260;border-radius:7px;font-size:11px;line-height:1.4}
+.mp-counter-item strong{color:#e8e8df}
+.mp-counter-good{color:#97e0ba}
+.mp-counter-bad{color:#f2afa0}
+@media(max-width:620px){.mp-counter-grid{grid-template-columns:1fr}}
