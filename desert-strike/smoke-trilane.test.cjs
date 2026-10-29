@@ -73,8 +73,8 @@ for(const size of [2,3]){
  const match=E.create({mode:'coop',size,members:humans});
  assert.equal(match.state.players.filter(p=>p.bot).length,size,'AI opponent count matches human squad size');
  for(const p of humans)for(let line=0;line<3;line++)assert.equal(match.order(p.uid,{type:'build',lane:line,slot:line,role:0}).ok,true);
- for(let i=0;i<125;i++)match.tick(.2);
- assert.ok(match.state.wave>=1);
+ for(let i=0;i<245;i++)match.tick(.2); // wave 2: AI factories bought at wave 1 finish after 24 seconds
+ assert.ok(match.state.wave>=2);
  assert.ok(match.state.units.some(u=>u.team===0&&u.lane===0));
  assert.ok(match.state.units.some(u=>u.team===0&&u.lane===1));
  assert.ok(match.state.units.some(u=>u.team===0&&u.lane===2));
