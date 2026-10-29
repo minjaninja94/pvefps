@@ -158,7 +158,7 @@ econGame.aiInvest();
 assert.equal(eq.enemyEco,2,'AI has paced economy upgrades');
 assert.equal(eq.enemyCash,405,'AI second economy upgrade costs the same 95 CR');
 // Late-game cash overflow must be spent on paid facilities, not left uninvested.
-eq.wave=17;eq.enemyCash=1200;eq.enemyBuilt.fill(null);
+eq.wave=17;eq.enemyCash=1200;eq.elapsed=Math.max(eq.elapsed,eq.enemyEcoReadyAt);eq.enemyBuilt.fill(null);
 for(let i=0;i<3;i++)eq.enemyBuilt[i]=1;
 const facilityCountBefore=eq.enemyBuilt.filter(v=>v!==null).length;
 econGame.aiInvest();
