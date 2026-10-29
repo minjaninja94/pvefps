@@ -91,10 +91,39 @@ function supplyCap(side){
   ?(window.DesertPrism?.populationLimit?.(sideAugments(side),SIDE_SUPPLY,false)??SIDE_SUPPLY):SIDE_SUPPLY;
 }
 function ownPrism(){return state.ruleset==='augment'?window.DesertPrism:null;}
+function combatRows(){
+ return {damage:Array(8).fill(0),kills:Array(8).fill(0),losses:Array(8).fill(0),
+  heroDamage:Array(8).fill(0),heroes:Array(8).fill(0)};
+}
+// A consolidated hero counts as surviving soldier equivalents, not one cheap
+// casualty. Damage is capped at HP actually removed, excluding overkill.
+function combatLife(u){
+ return u.heroCount===20?Math.max(0,Math.min(20,Math.ceil(Math.max(0,u.hp)/(u.maxHP/20)-1e-9))):(u.hp>0?1:0);
+}
+function recordCombatHit(v,before,attacker=null,volley=1){
+ if(!state.combatStats||!v||!Number.isInteger(v.role)||v.role<0||v.role>=8)return;
+ const prior=v._combatLife??(v.heroCount===20?20:(before>0?1:0)),after=combatLife(v);
+ v._combatLife=after;
+ const losses=Math.max(0,prior-after),counted=!v.guardian&&!v.isHatchling&&!v.conscripted;
+ if(counted)state.combatStats[v.side].losses[v.role]+=losses;
+ const role=attacker?.role??attacker?.source;
+ if(attacker&&attacker.side!==v.side&&Number.isInteger(role)&&role>=0&&role<8){
+  const stats=state.combatStats[attacker.side],dealt=Math.max(0,Math.min(before,before-Math.max(0,v.hp)));
+  stats.damage[role]+=dealt;
+  if(attacker.heroCount===20||volley>1)stats.heroDamage[role]+=dealt;
+  if(counted)stats.kills[role]+=losses;
+ }
+}
 function compactArmy(){
  const result=window.DesertConsolidation?.compact(state.units,{now:state.elapsed});if(!result)return;
  for(const shot of state.shots)if(result.redirects.has(shot.target))shot.target=result.redirects.get(shot.target);
- for(const hero of result.heroes)floatText(hero.x,hero.y-35,'영웅 ×20','#ff5968');
+ for(const hero of result.heroes){
+  hero._combatLife=20;
+  if(!hero.guardian&&!hero.conscripted){
+   state.combatStats?.[hero.side].heroes[hero.role]++;
+  }
+  floatText(hero.x,hero.y-35,'영웅 ×20','#ff5968');
+ }
 }
 function effectiveDef(role,faction,side=0){
  const base=getDef(role,faction);
@@ -170,7 +199,7 @@ function reset(){
  $('soloAugmentOverlay')?.classList.add('hidden');
  state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:360,eco:0,enemyEco:0,ecoReadyAt:0,enemyEcoReadyAt:0,mineCosts:{},enemyMineCosts:{},weapon:0,armor:0,enemyWeapon:0,enemyArmor:0,incomeClock:0,cameraX:1100,followFront:true,
  wave:0,next:INTERVAL,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],forwardHP:[1000,1000],forwardClaimed:[false,false],
- built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),produced:[Array(8).fill(0),Array(8).fill(0)],units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
+ built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),produced:[Array(8).fill(0),Array(8).fill(0)],combatStats:[combatRows(),combatRows()],units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},
  broodBirths:[0,0],broodBirthsTotal:[0,0],
  towerShots:[],aiSight:new Set(),nukes:1,enemyNukes:1,barrageCd:0,enemyBarrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
@@ -373,7 +402,7 @@ function createUnit(side,slot,role,fromProduction=true){
  const bonus=1+.09*(side===0?state.armor:state.enemyArmor);
  const isBongo=faction===3&&role===6;
  if(faction===3&&role===7)state.marineStats.huangSpawns++;
- state.units.push({uid:state.nextUnitId++,side,role,faction,x,y,hp:def.hp*bonus,maxHP:def.hp*bonus,
+ state.units.push({uid:state.nextUnitId++,side,role,faction,x,y,hp:def.hp*bonus,maxHP:def.hp*bonus,_combatLife:1,
   cooldown:random(.1,.7),anim:random(0,16),facing:side===0?1:-1,blink:0,spawnAge:0,hitAge:0,skillAge:0,moving:false,strike:null,
   hitRadius:isBongo?30:faction===4&&role===6?22:faction===6&&role===6?24:faction===7&&role===6?28:role===3?26:role===6?14:role===5?17:role===0?17:15,ramCooldown:0,spawnedAt:state.elapsed,lastDamagedAt:state.elapsed});
  pulse(x,y,COLORS[side],12);
@@ -802,8 +831,11 @@ function calcDamage(attacker,target,amount,unit=null,volley=null){
  return window.DesertConsolidation?.hit(out,armor,target,unit,volley)??Math.max(3,out-armor*.66);
 }
 function killUnit(u){
- if(u.hp<=0 && u.killed)return;
- u.hp=0;u.killed=true;u.strike=null;
+ if(u.hp<=0&&u.killed)return;
+ const before=Math.max(0,u.hp);
+ u.hp=0;
+ recordCombatHit(u,before);
+ u.killed=true;u.strike=null;
  u.deathAge=0;state.deadUnits.push(u);
  if(state.deadUnits.length>120)state.deadUnits.shift();
  pulse(u.x,u.y,COLORS[u.side],24);
@@ -893,13 +925,15 @@ function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
   if(special.heal>0&&attacker.hp>0)attacker.hp=Math.min(attacker.maxHP,attacker.hp+special.heal);
   if(special.marked)u.inkUntil=Math.max(u.inkUntil||0,state.elapsed+special.marked);
   for(const secondary of special.secondary){const victim=secondary.target;if(victim.hp<=0)continue;
-   victim.hp-=secondary.damage;if(victim.hp<=0)killUnit(victim);
+   const previous=victim.hp;victim.hp-=secondary.damage;
+   recordCombatHit(victim,previous,attacker);
+   if(victim.hp<=0)killUnit(victim);
    pulse(victim.x,victim.y,'#d28cff',12);
   }
  }
  if(attacker&&attacker.side!==u.side&&!u.guardian&&state.ruleset==='augment'){
   const reflected=ownPrism()?.reflectEffects?.(sideAugments(u.side),u,attacker,hit)||0;
-  if(reflected>0&&attacker.hp>0){attacker.hp-=reflected;if(attacker.hp<=0)killUnit(attacker);}
+  if(reflected>0&&attacker.hp>0){const previous=attacker.hp;attacker.hp-=reflected;recordCombatHit(attacker,previous,u);if(attacker.hp<=0)killUnit(attacker);}
  }
  if(u.hp>0){window.DesertCombatAudio?.cue('hit',u.x);window.DesertCombatAudio?.unit(u.faction,u.role,u.side===0?window.DesertLobby?.selectedSkin?.():'default','hit',u.x);}
  u.blink=.12;u.hitAge=.36;u.lastDamagedAt=state.elapsed;
@@ -909,6 +943,7 @@ function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
   attacker.lastInkCast=state.elapsed;u.inkUntil=Math.max(u.inkUntil||0,state.elapsed+INK_DURATION);
   floatText(u.x,u.y-30,'먹물 침식','#d5adff');
  }
+ recordCombatHit(u,before,attacker,volley??window.DesertConsolidation?.strength?.(attacker)??1);
  if(Math.random()<.15)floatText(u.x,u.y-25,Math.round(hit),COLORS[u.side===0?1:0]);
  if(u.hp<=0){
   window.DesertCombatAudio?.cue('death',u.x);
