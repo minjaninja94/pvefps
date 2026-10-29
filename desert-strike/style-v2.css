@@ -703,3 +703,6 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
  .augment-codex-header p{font-size:11px}
  .augment-codex-card{padding:10px 11px}
 }
+
+/* Experimental 100-card expansion: deliberately identifiable and removable as one module. */
+.augment-codex-card.is-experimental{background:linear-gradient(125deg,#30294c,#202e45);border-left:4px solid #cd8cff}.augment-codex-experiment{display:inline-flex;padding:3px 7px;border:1px solid #b58bf5;border-radius:6px;color:#f5d6ff;background:#573e72;font-size:10px;font-weight:800}.augment-codex-card.is-experimental .augment-codex-card-title{color:#f2d4ff}

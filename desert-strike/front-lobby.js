@@ -44,7 +44,7 @@ function renderRuleset(){
   ?'증강전 선택 중 · 웨이브 무제한 · WAVE 1·10·20·30·40에서 카드 선택, 이후에도 전투 계속'
    :'일반전 선택 중 · 웨이브 무제한 · 상대 핵심 기지를 파괴하면 승리합니다.';
  const solo=$('lobbySolo')?.querySelector('span');
- if(solo)solo.textContent=selected?'✦ 싱글 증강전 · 웨이브 무제한 · 300종 카드':(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 무제한 웨이브 · 기지 파괴 시 종료';
+ if(solo)solo.textContent=selected?'✦ 싱글 증강전 · 웨이브 무제한 · 400종 카드':(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 무제한 웨이브 · 기지 파괴 시 종료';
  const multiplayer=$('lobbyMulti')?.querySelector('span');
  if(multiplayer)multiplayer.textContent=selected?'✦ 증강전 · 웨이브 무제한 · PvP/협동':'웨이브 무제한 · 기지 파괴 시 승패 확정';
  const practice=$('lobbyPractice')?.querySelector('span');

@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=augment-codex1"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=prism100a"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -15,7 +15,7 @@
      <div class="lobby-ruleset-heading"><strong>전투 규칙 선택</strong><span class="lobby-ruleset-heading-tools"><small>싱글 · 멀티플레이 · 3라인 연습 모두 적용</small><button id="augmentCodexOpen" type="button" class="augment-codex-trigger" aria-haspopup="dialog" aria-controls="augmentCodexDialog" title="공통·종족별 증강 300종 도감 열기">? 증강 도감</button></span></div>
      <div class="lobby-ruleset-options">
       <button type="button" id="lobbyRulesetStandard" data-ruleset="standard" class="selected" aria-pressed="true"><strong>일반전</strong><small>기본 규칙으로 전투</small></button>
-      <button type="button" id="lobbyRulesetAugment" data-ruleset="augment" aria-pressed="false"><strong>✦ 증강전</strong><small>300종 카드 · 싱글/멀티 공통</small></button>
+      <button type="button" id="lobbyRulesetAugment" data-ruleset="augment" aria-pressed="false"><strong>✦ 증강전</strong><small>400종 카드 · 프리즘 특수 100종 포함</small></button>
      </div>
      <p id="lobbyRulesetDescription" aria-live="polite">일반전 선택 중 · 기존 전투 규칙을 사용합니다.</p>
     </div>
@@ -194,10 +194,10 @@
 </div>
 <dialog id="augmentCodexDialog" class="augment-codex-dialog" aria-labelledby="augmentCodexTitle">
  <div class="augment-codex-shell">
-  <header class="augment-codex-header"><div><span class="eyebrow">AUGMENT CODEX / 300 CARDS</span><h2 id="augmentCodexTitle">증강 도감 <small>300종</small></h2><p>공통 50종 · 종족별 25종 × 10종족. 증강전 1·10·20·30·40웨이브에서 선택할 수 있습니다.</p></div><button id="augmentCodexClose" type="button" class="btn outline" aria-label="증강 도감 닫기">✕ 닫기</button></header>
+  <header class="augment-codex-header"><div><span class="eyebrow">AUGMENT CODEX / 400 CARDS</span><h2 id="augmentCodexTitle">증강 도감 <small>400종</small></h2><p>공통 50종 · 종족별 35종 × 10종족. 그중 초월 프리즘 100종은 실험 증강입니다. 증강전 1·10·20·30·40웨이브에서 선택할 수 있습니다.</p></div><button id="augmentCodexClose" type="button" class="btn outline" aria-label="증강 도감 닫기">✕ 닫기</button></header>
   <div id="augmentCodexTabs" class="augment-codex-tabs" role="group" aria-label="증강 분류">
    <button type="button" class="active" data-codex-scope="common" aria-pressed="true">공통 증강 <small>50종</small></button>
-   <button type="button" data-codex-scope="faction" aria-pressed="false">종족별 증강 <small>25종씩</small></button>
+   <button type="button" data-codex-scope="faction" aria-pressed="false">종족별 증강 <small>35종씩</small></button>
   </div>
   <div class="augment-codex-filters">
    <label id="augmentCodexFactionLabel" hidden>종족 선택<select id="augmentCodexFaction" aria-label="종족별 증강을 확인할 종족"></select></label>
@@ -255,9 +255,10 @@
 <script src="./unit-consolidation.js?v=balance2" defer></script>
 <script src="./defense-guardian.js?v=guardianheal1" defer></script>
 <script src="./hard-ai.js?v=balance2" defer></script>
-<script src="./augment-rules.js?v=godot300a" defer></script>
+<script src="./prism-experiments.js?v=experimental1" defer></script>
+<script src="./augment-rules.js?v=prism100a" defer></script>
 <script src="./augment-history.js?v=history1" defer></script>
-<script src="./augment-codex.js?v=codex1" defer></script>
+<script src="./augment-codex.js?v=prism100a" defer></script>
 <script src="./tri-lane-engine.js?v=endless-waves1" defer></script>
 <script src="./device-account.js?v=uniform7" defer></script>
 <script src="./tri-lane-network.js?v=augmented1" defer></script>

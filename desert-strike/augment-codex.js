@@ -31,6 +31,7 @@ function formatCard(card){
  const tag=make('span','augment-codex-tier '+card.tier,LABELS[card.tier]||card.tier);
  const origin=make('small','augment-codex-origin',card.scope==='common'?'공통 카드':factionName(card.scope.split('-')[1])+' 전용');
  meta.append(tag,origin);
+ if(card.experimental)item.classList.add('is-experimental'),meta.append(make('small','augment-codex-experiment','✦ 초월 프리즘 · 실험'));
  item.append(meta,make('h4','augment-codex-card-title',card.name),make('p','augment-codex-card-effect',card.description||'효과 설명 없음'));
  return item;
 }
@@ -88,7 +89,7 @@ async function open(){
   await global.DesertAugments.load();
   if(!dialog.open)return;
   cards=global.DesertAugments.list();
-  if(cards.length!==300)throw Error('도감 데이터 300종을 확인할 수 없습니다.');
+  if(cards.length!==(global.DesertPrism?.enabled?.()?400:300))throw Error('증강 도감 데이터 개수가 일치하지 않습니다.');
   ready=true;render();
  }catch(e){
   if(!dialog.open)return;

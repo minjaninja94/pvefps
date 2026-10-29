@@ -30,6 +30,7 @@ jobs:
           node --check desert-strike/lobby-music.js
           node --check desert-strike/combat-audio.js
           node --check desert-strike/augment-rules.js
+          node --check desert-strike/prism-experiments.js
           node --check desert-strike/augment-history.js
           node --check desert-strike/augment-codex.js
           node --check desert-strike/career-profile.js
@@ -42,6 +43,8 @@ jobs:
         run: node --test desert-strike/smoke-bgm.test.cjs
       - name: Unlimited waves in solo and PvP/co-op with core-only victory
         run: node --test desert-strike/smoke-endless-waves.test.cjs
+      - name: Experimental 100 Prism mechanics and 400-card integration
+        run: node --test desert-strike/smoke-prism-experiments.test.cjs
       - name: Lobby 300-card augment codex by common, faction, tier and search
         run: node --test desert-strike/smoke-augment-codex.test.cjs
       - name: Hoverable round-by-round augment pick history for solo and multi
