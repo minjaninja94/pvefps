@@ -295,7 +295,7 @@ async function start(){
  if(guests.some(g=>channels.get(g.uid)?.readyState!=='open'))throw Error('모든 참가자의 P2P 연결이 완료되지 않았습니다.');
  if(!global.DesertTriEngine)throw Error('3라인 전투 엔진이 준비되지 않았습니다.');
  if(room.ruleset==='augment')await global.DesertAugments.load();
- engine=global.DesertTriEngine.create({mode:room.mode,size:room.size,members:members(),ruleset:validateRuleset(room.ruleset),seed:room.seed||1});
+ engine=global.DesertTriEngine.create({mode:room.mode,size:room.size,members:members(),ruleset:validateRuleset(room.ruleset),seed:room.seed||1,aiDifficulty:global.DesertLobby?.aiDifficulty?.()||'normal'});
  const registered=await global.DesertMember?.startMatch?.();
  if(registered&&!registered.ok)status('비공식 게임 진행 · 서버 탈주 기록 미적용: '+registered.reason);
  await fs.updateDoc(path(),{status:'playing'});
