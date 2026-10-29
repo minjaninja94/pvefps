@@ -85,7 +85,7 @@
   renderButton();
   if (document.body.classList.contains('lobby-active')) enterLobby();
  }
- global.DesertLobbyMusic = Object.freeze({enterLobby, exitLobby, stopBattle, setEnabled,setVolume,volume});
+ global.DesertLobbyMusic = Object.freeze({enterLobby, exitLobby, stopBattle, setEnabled,setVolume,volume,isEnabled:()=>enabled});
  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
  else init();
 })(window);
