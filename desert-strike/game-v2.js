@@ -1101,7 +1101,7 @@ function projectileImpact(p){
   for(const v of state.units)if(v.hp>0&&v.side!==p.side){
    if(getDef(v.role,v.faction).kind==='air'&&!ROLE[p.source].airTarget)continue;
    const d=Math.hypot(v.x-x,v.y-y);
-   if(d<=p.blast+10)damage(v,p.damage*(1-.48*d/(p.blast+10))*(window.DesertConsolidation?.splashWeight?.(v)||1),p.source,shooter,Math.random,p.volley);
+   if(d<=p.blast+10)damage(v,p.damage*(1-.48*d/(p.blast+10))*(window.DesertConsolidation?.splashWeight?.(v,p.volley)||1),p.source,shooter,Math.random,p.volley);
   }
  }else if(p.target&&p.target.hp>0&&Math.hypot(p.target.x-x,p.target.y-y)<40){
   damage(p.target,p.damage,p.source,shooter,Math.random,p.volley);
