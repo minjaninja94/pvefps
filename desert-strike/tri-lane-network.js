@@ -14,13 +14,16 @@ function beginServerHeartbeat(){
  if(serverTimer)return;
  serverTimer=setInterval(()=>{const pending=global.DesertMember?.poll?.();
  if(pending)void pending.then(data=>{
+  if(data?.state==='done'||data?.state==='abandoned')notify('serverResult',data);
   if(data?.state==='done'&&data.winner_team!==null&&!gameEndedLocally){gameEndedLocally=true;notify('forcedResult',data);}
  }).catch(()=>{});},8000);
 }
 async function reportWinner(winner){
- if(gameEndedLocally)return;
+ if(gameEndedLocally)return null;
  gameEndedLocally=true;
- await global.DesertMember?.reportResult?.(winner);
+ const result=await global.DesertMember?.reportResult?.(winner);
+ notify('serverResult',result||{state:'untracked'});
+ return result;
 }
 
 function status(s){notify('status',s);}

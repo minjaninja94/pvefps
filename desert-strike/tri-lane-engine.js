@@ -69,7 +69,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  const players=humans.concat(mode==='coop'?Array.from({length:size},(_,i)=>({uid:'AI_'+i,name:'적 AI '+(i+1),team:1,faction:(i+3)%10,bot:true})):[]);
  const state={mode,size,ruleset:augmented?'augment':'standard',augmentStage:-1,augmentChoice:null,augmentSchedule:aug?.schedule||[],aiDifficulty:aiDifficulty==='hard'?'hard':'normal',seconds:0,wave:0,next:24,ended:false,winner:null,
   width:WIDTH,height:HEIGHT,lanes:LANES,
-  cores:Array.from({length:LANES},()=>[CORE_HP,CORE_HP]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),forwardHP:Array.from({length:LANES},()=>[1000,1000]),forwardClaimed:Array.from({length:LANES},()=>[false,false]),forwardCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,nextConsolidation:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,augments:[],cash:360,eco:0,ecoReadyAt:0,weapon:0,armor:0,nukes:1,barrageCd:0,mineCosts:{},buildings:Array.from({length:LANES},()=>Array(SLOTS).fill(null))})),lanePressure:Array(LANES).fill(.5)};
+  cores:Array.from({length:LANES},()=>[CORE_HP,CORE_HP]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),forwardHP:Array.from({length:LANES},()=>[1000,1000]),forwardClaimed:Array.from({length:LANES},()=>[false,false]),forwardCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,nextConsolidation:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,augments:[],produced:Array(8).fill(0),cash:360,eco:0,ecoReadyAt:0,weapon:0,armor:0,nukes:1,barrageCd:0,mineCosts:{},buildings:Array.from({length:LANES},()=>Array(SLOTS).fill(null))})),lanePressure:Array(LANES).fill(.5)};
  const byUid=uid=>state.players.find(p=>p.uid===uid);
  function beginAugment(index){
   if(!aug||index<0||index>=5||state.augmentChoice)return;
@@ -146,7 +146,8 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   if(role===EXTRACTOR){p.mineCosts[key]=payment;p.eco++;p.ecoReadyAt=state.seconds+ecoStabilize(p.eco,state.seconds);}
   return {ok:true,cash:p.cash};
  }
- function spawn(p,lane,slot,role){
+ function spawn(p,lane,slot,role,fromProduction=true){
+  if(fromProduction&&role>=0&&role<8)p.produced[role]++;
   const d=global.DesertAugments?.apply?.(definition(p.faction,role),p.augments,role)||definition(p.faction,role),hp=d.hp*(1+.09*p.armor);
   const x=p.team===0?235+(slot%15)*4:WIDTH-235-(slot%15)*4;
   const y=lane*LANE_H+265+((Math.floor(slot/15)*11+(slot%15)*21)%196)-98;
@@ -229,7 +230,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     guardian?.reward(state.players,1-team);
     const defenders=state.players.filter(p=>p.team===team).sort((a,b)=>a.uid.localeCompare(b.uid));
     const owner=defenders[lane%defenders.length];
-    if(owner){spawn(owner,lane,0,guardian?.ROLE??0);guardian?.mark(state.units[state.units.length-1],team,lane);}
+    if(owner){spawn(owner,lane,0,guardian?.ROLE??0,false);guardian?.mark(state.units[state.units.length-1],team,lane);}
     state.effects.push({x:team===0?WIDTH/4:WIDTH*3/4,y:(lane+.5)*LANE_H,lane,team,kind:'guardian',time:1.4});
    }
   }else if(part==='turret')state.turrets[lane][team]=Math.max(0,state.turrets[lane][team]-amount);
@@ -613,6 +614,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    factionTraits:state.players.filter(p=>!viewer||p.team===viewer.team).map(p=>({uid:p.uid,faction:p.faction,births:state.broodBirthsByUid.get(p.uid)||0,totalBirths:state.broodTotalByUid.get(p.uid)||0})),
    marineOps:state.players.filter(p=>p.faction===3&&(!viewer||p.team===viewer.team)).map(p=>({uid:p.uid,team:p.team,...(state.marineStatsByUid.get(p.uid)||{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0}),waveRecruits:state.marineRecruitCount.get(p.uid)||0})),
    players:state.players.map(p=>({uid:p.uid,name:p.name,faction:p.faction,skin:p.skin,team:p.team,bot:p.bot,
+    produced:state.ended||allied(p)?p.produced.slice():null,
     augments:allied(p)?p.augments.slice():[],cash:allied(p)?Math.floor(p.cash):null,eco:allied(p)?p.eco:null,ecoReadyAt:allied(p)?p.ecoReadyAt:null,weapon:allied(p)?p.weapon:null,armor:allied(p)?p.armor:null,
     nukes:allied(p)?p.nukes:null,barrageCd:allied(p)?Math.ceil(p.barrageCd*10)/10:null,
     buildings:p.buildings.map((slots,lane)=>allied(p)||visible[lane]?slots:Array(SLOTS).fill(null))})),

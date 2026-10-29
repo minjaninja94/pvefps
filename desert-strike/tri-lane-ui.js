@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id);
 const NET=global.DesertTriNetwork,E=global.DesertTriEngine;
 if(!NET||!E)return;
 let snap=null,lane=1,role=0,demolish=false,practice=null,practiceTimer=null,practiceRecorded=false,view='base',repairLane=1;
-let myId='',lobby=null,host=false,gridKey='',cardsKey='',augmentKey='',lastSnapshotAt=0,lastDrawAt=0;
+let myId='',lobby=null,host=false,gridKey='',cardsKey='',augmentKey='',lastSnapshotAt=0,lastDrawAt=0,resultKey='';
 const LANES=['상단','중앙','하단'],ICONS=['⚔','⌖','◆','▣','✣','✹','♞','✚'];
 function message(msg){$('mpStatus').textContent=msg;}
 function laneCount(){return snap?.lanes??3;}
@@ -331,10 +331,19 @@ function onSnapshot(v){
   f.append(el);
  }
  $('mpLaneSummary').replaceChildren(f);
- if(v.ended){global.DesertLobbyMusic?.stopBattle?.();
-  if(!practice)void NET.reportWinner?.(v.winner);
-  if(practice&&!practiceRecorded){practiceRecorded=true;global.DesertCareer?.record?.({mode:'practice',size:1,side:0,winner:v.winner,faction:me?.faction??faction(),wave:v.wave,seconds:v.seconds,online:false});}
-  $('mpStateTag').textContent=v.winner===null?'무승부':v.winner===side?'승리':'패배';if(!practice)global.DesertLobby?.completeMultiplayer?.({winner:v.winner,side,matchId:lobby?.id||'unknown',mode:v.mode,size:v.size,wave:v.wave,seconds:v.seconds,faction:me?.faction??faction()});}
+ if(v.ended){
+  $('mpStateTag').textContent=v.winner===null?'무승부':v.winner===side?'승리':'패배';
+  const key=(practice?'practice':lobby?.id||'unknown')+':'+(v.mode||'')+':'+String(v.winner);
+  if(resultKey!==key){
+   resultKey=key;
+   global.DesertLobbyMusic?.stopBattle?.();
+   global.DesertCombatAudio?.stop?.();
+   if(practice&&!practiceRecorded){practiceRecorded=true;global.DesertCareer?.record?.({mode:'practice',size:1,side:0,winner:v.winner,faction:me?.faction??faction(),wave:v.wave,seconds:v.seconds,online:false});}
+   if(!practice)global.DesertLobby?.completeMultiplayer?.({winner:v.winner,side,matchId:lobby?.id||'unknown',mode:v.mode,size:v.size,wave:v.wave,seconds:v.seconds,faction:me?.faction??faction()});
+   global.DesertBattleReport?.showMulti?.(v,myId,{serverStatus:practice?'오프라인 연습 · 이 브라우저에 통계를 저장했습니다.':'Supabase 경기 결과 등록·확인 중…'});
+   if(!practice)void NET.reportWinner?.(v.winner);
+  }
+ }
  renderAugment();unitCards();buildGrid();upgradeInfo();drawOverview();
 }
 function order(cmd){
@@ -348,7 +357,7 @@ function order(cmd){
  else message('명령 전달 완료 · 호스트 판정 대기');
 }
 async function practiceStart(){
- practiceRecorded=false;
+ practiceRecorded=false;resultKey='';global.DesertBattleReport?.hideMulti?.();
  if($('mpRuleset').value==='augment')await global.DesertAugments.load();
  if(lobby)return message('온라인 방에서 나간 뒤 연습할 수 있습니다.');
  myId='local';
@@ -362,6 +371,7 @@ async function practiceStart(){
  onSnapshot(practice.snapshot('local'));uiButtons();
 }
 async function leave(){
+ global.DesertBattleReport?.hideMulti?.();resultKey='';
  if(practice){clearInterval(practiceTimer);practiceTimer=null;practice=null;practiceRecorded=false;myId='';snap=null;$('mpCommand').hidden=true;$('mpStateTag').textContent='연결 전';message('연습 종료');}
  else{await NET.leave();snap=null;$('mpCommand').hidden=true;}
  $('mpViewTabs').hidden=true;setView('base');
@@ -473,7 +483,12 @@ function init(){
  $('mpJoinPublic').addEventListener('click',()=>{const code=$('mpPublicList').value;if(!code){message('참가할 공개방을 선택하세요.');return;}
   $('mpRoomCode').value=code;$('mpJoin').click();});
  $('mpLeave').addEventListener('click',runClick(leave));
- NET.configure({status:message,room:onRoom,snapshot:onSnapshot,peers:uiButtons,forcedResult:data=>{
+ $('mpResultLobby').addEventListener('click',runClick(()=>global.DesertLobby?.returnToLobby?.()));
+ NET.configure({status:message,room:onRoom,snapshot:onSnapshot,peers:uiButtons,
+  serverResult:data=>{
+   const label=data?.state==='done'?'✓ Supabase 서버 승패·RP 기록 완료':data?.state==='abandoned'?'경기 중단 · 서버 기록 확인 필요':data?.waiting_for_other_players?'내 결과 전송 완료 · 상대 플레이어들의 결과 확인 대기':data?.state==='untracked'?'비공식 경기 · 서버 결과 기록 없음':'서버 결과 확인 중…';
+   global.DesertBattleReport?.serverStatus?.(label);
+  },forcedResult:data=>{
    if(!snap||snap.ended)return;
    onSnapshot({...snap,ended:true,winner:data.winner_team});
    message('서버 판정: 상대 연결 종료 · '+(data.winner_team===my()?.team?'승리':'패배')+' 처리');

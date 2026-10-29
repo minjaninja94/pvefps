@@ -150,7 +150,7 @@ function reset(){
  window.DesertCombatAudio?.stop?.();
  state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:360,eco:0,enemyEco:0,ecoReadyAt:0,enemyEcoReadyAt:0,mineCosts:{},enemyMineCosts:{},weapon:0,armor:0,enemyWeapon:0,enemyArmor:0,incomeClock:0,cameraX:1100,followFront:true,
  wave:0,next:INTERVAL,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],forwardHP:[1000,1000],forwardClaimed:[false,false],
- built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
+ built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),produced:[Array(8).fill(0),Array(8).fill(0)],units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},
  broodBirths:[0,0],broodBirthsTotal:[0,0],
  towerShots:[],aiSight:new Set(),nukes:1,barrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
@@ -267,7 +267,8 @@ function barrage(){
  chirp(180,.23);updateUI(true);
 }
 function banner(t){$('waveBanner').textContent=t;$('waveBanner').classList.add('show');bannerSeconds=2;}
-function createUnit(side,slot,role){
+function createUnit(side,slot,role,fromProduction=true){
+ if(fromProduction&&role>=0&&role<8)state.produced[side][role]++;
  const faction=side===0?state.faction:state.enemyFaction,def=getDef(role,faction);
  const row=Math.floor(slot/COLS),col=slot%COLS;
  const x=side===0?240+col*7:WORLD_W-240-col*7;
@@ -630,7 +631,7 @@ function forwardDown(side){
  if(state.forwardClaimed[side])return;state.forwardClaimed[side]=true;
  window.DesertCombatAudio?.cue('building');
  state[side===0?'enemyCash':'cash']+=150;
- createUnit(side,0,window.DesertGuardian?.ROLE??0);const u=state.units[state.units.length-1];
+ createUnit(side,0,window.DesertGuardian?.ROLE??0,false);const u=state.units[state.units.length-1];
  window.DesertGuardian?.mark(u,side); // Same faction, skin and 20× assault stats as its defending side.
  floatText(u.x,u.y-65,'가디언 소환','#69ff9c');
  setMessage((side===0?'아군':'적군')+' 중간 타워 파괴 · 상대 보너스 150 CR · 수비 가디언 소환');
@@ -915,6 +916,7 @@ function endMatch(win){
  $('endTitle').style.color=win?'#fbd89b':'#f69a8e';
  $('endSummary').textContent=state.wave+'웨이브 · '+state.built.filter(v=>v!==null).length+'개 생산 시설 · 무기 Lv.'+state.weapon+' / 장갑 Lv.'+state.armor;
  $('endOverlay').classList.remove('hidden');
+ window.DesertBattleReport?.showSolo?.(state);
  setMessage(win?'적군 핵심 기지 파괴 · 승리':'아군 핵심 기지 파괴 · 패배');
 }
 function roleMatchupHtml(role,faction=state?.faction??0){
