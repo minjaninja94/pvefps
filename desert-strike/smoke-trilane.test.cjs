@@ -41,7 +41,7 @@ for(const size of [1,2,3]){
  assert.equal(match.state.players[0].buildings.length,3);
  assert.equal(match.state.players[0].buildings.reduce((n,a)=>n+a.length,0),225,'225 build locations per commander');
  assert.equal(match.state.cores.length,3,'three independent lines');
- for(let i=0;i<3;i++)assert.deepEqual([...match.state.cores[i]],[2500,2500]);
+ for(let i=0;i<3;i++)assert.deepEqual([...match.state.cores[i]],[3000,3000]);
  assert.deepEqual(match.order('hacker',{type:'build',lane:0,slot:0,role:0}).ok,false);
  assert.equal(match.order('P0',{type:'build',lane:0,slot:0,role:0}).ok,true);
  assert.equal(match.state.players[0].cash,295,'65 CR real purchase');
