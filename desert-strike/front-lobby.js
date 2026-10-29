@@ -41,14 +41,14 @@ function renderRuleset(){
  }
  const description=$('lobbyRulesetDescription');
  if(description)description.textContent=selected
-  ?'증강전 선택 중 · 싱글/멀티/AI 연습 · WAVE 1·10·20·30·40에 카드 3장, 슬롯별 리롤 1회'
-  :'일반전 선택 중 · 싱글/멀티/AI 연습에 기존 전투 규칙을 사용합니다.';
+  ?'증강전 선택 중 · 웨이브 무제한 · WAVE 1·10·20·30·40에서 카드 선택, 이후에도 전투 계속'
+   :'일반전 선택 중 · 웨이브 무제한 · 상대 핵심 기지를 파괴하면 승리합니다.';
  const solo=$('lobbySolo')?.querySelector('span');
- if(solo)solo.textContent=selected?'✦ 싱글 증강전 · 300종 카드':(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 무제한 웨이브 · 기지 파괴 시 종료';
+ if(solo)solo.textContent=selected?'✦ 싱글 증강전 · 웨이브 무제한 · 300종 카드':(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 무제한 웨이브 · 기지 파괴 시 종료';
  const multiplayer=$('lobbyMulti')?.querySelector('span');
- if(multiplayer)multiplayer.textContent=selected?'✦ 증강전 · 1:1~3:3 PvP 및 협동':'1:1~3:3 경쟁 · 2~3인 협동';
+ if(multiplayer)multiplayer.textContent=selected?'✦ 증강전 · 웨이브 무제한 · PvP/협동':'웨이브 무제한 · 기지 파괴 시 승패 확정';
  const practice=$('lobbyPractice')?.querySelector('span');
- if(practice)practice.textContent=selected?'✦ 증강전 · AI와 카드 선택 연습':'온라인 연결 없이 전장 연습';
+ if(practice)practice.textContent=selected?'✦ 증강전 · 웨이브 무제한 · AI 연습':'무제한 웨이브 · 오프라인 AI 연습';
 }
 function chooseRuleset(value){
  if(value!=='augment'&&value!=='standard')return false;

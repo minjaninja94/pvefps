@@ -303,6 +303,8 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    if(lane>=0&&bot.cash>=c+180){const slot=bot.buildings[lane].findIndex(x=>x===null);bot.buildings[lane][slot]=EXTRACTOR;bot.mineCosts[lane+'-'+slot]=c;bot.cash-=c;bot.eco++;bot.ecoReadyAt=state.seconds+ecoStabilize(bot.eco,state.seconds);}
   }
  }
+ // No wave-count or elapsed-time cap in classic, PvP or cooperative battles.
+ // Only the opposing team's core destruction is a normal victory condition.
  function wave(){
   state.wave++;if(augmented){const ix=global.DesertAugments.STAGES.indexOf(state.wave);if(ix>=0&&ix>state.augmentStage)beginAugment(ix);}state.marineSupports=[];state.marineRecruitCount.clear();state.broodBirthsByUid.clear();
   for(const p of state.players)if(state.seconds>=p.ecoReadyAt)p.cash+=24;

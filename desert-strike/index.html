@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=solo-augments2"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=wave-unlimited1"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -19,10 +19,10 @@
      </div>
      <p id="lobbyRulesetDescription" aria-live="polite">일반전 선택 중 · 기존 전투 규칙을 사용합니다.</p>
     </div>
-    <div class="lobby-actions"><button id="lobbySolo" class="lobby-primary" type="button"><strong>싱글 출격</strong><span>무제한 AI 전투 · 성장 경험치</span></button><button id="lobbyMulti" type="button" aria-expanded="false" aria-controls="lobbyMultiplayerConfig"><strong>멀티플레이</strong><span>1:1~3:3 경쟁 · 2~3인 협동</span></button><button id="lobbyPractice" type="button"><strong>3라인 연습</strong><span>온라인 연결 없이 전장 연습</span></button></div>
+    <div class="lobby-actions"><button id="lobbySolo" class="lobby-primary" type="button"><strong>싱글 출격</strong><span>무제한 웨이브 · 핵심 기지 파괴 시 종료</span></button><button id="lobbyMulti" type="button" aria-expanded="false" aria-controls="lobbyMultiplayerConfig"><strong>멀티플레이</strong><span>무제한 웨이브 · 핵심 기지 파괴 시 종료</span></button><button id="lobbyPractice" type="button"><strong>3라인 연습</strong><span>무제한 웨이브 · AI 전투 연습</span></button></div>
     <section id="lobbyMultiplayerConfig" class="lobby-online-setup lobby-inline-multiplayer" hidden aria-label="멀티플레이 방 만들기 및 참가">
      <div class="lobby-section-title"><div><div class="lobby-eyebrow">MULTIPLAYER COMMAND</div><h2>멀티플레이 방 만들기 · 참가</h2></div><button type="button" id="lobbyCloseMulti" class="btn outline">접기</button></div>
-     <p class="lobby-online-tip">방 설정과 공개방 검색을 바로 이용하세요. 선택한 종족과 스킨이 적용됩니다.</p>
+     <p class="lobby-online-tip">웨이브 제한 없이 본진을 파괴할 때까지 대전합니다. 방 설정과 공개방 검색을 바로 이용하세요.</p>
      <div id="lobbyMultiMount"></div>
     </section>
    </main>
@@ -119,7 +119,7 @@
 </div>
 
 <div class="screen" id="view-multiplayer">
- <div class="section-head"><div><span class="eyebrow">TRI-FRONT / MULTIPLAYER OPERATIONS</span><h1>3라인 멀티플레이</h1><p>전장 면적 3배 · 팀당 1~3명 경쟁 또는 2~3명 협동 대 동수 AI. 참가자마다 자원·병력 생산 시설을 소유합니다.</p></div><button id="mpExitBattle" class="btn outline" type="button">경기 종료 · 로비</button><span id="mpStateTag" class="alert-chip">연결 전</span></div>
+ <div class="section-head"><div><span class="eyebrow">TRI-FRONT / MULTIPLAYER OPERATIONS</span><h1>3라인 멀티플레이</h1><p>전장 면적 3배 · 웨이브 무제한 · 한쪽 팀의 핵심 기지 2개 파괴 시 승패 확정 (클래식은 1개). 참가자마다 자원·병력 생산 시설을 소유합니다.</p></div><button id="mpExitBattle" class="btn outline" type="button">경기 종료 · 로비</button><span id="mpStateTag" class="alert-chip">연결 전</span></div>
  <section class="panel mp-lobby" id="mpLobby">
   <div class="mp-lobby-grid">
    <label>지휘관 이름<input id="mpName" maxlength="16" placeholder="지휘관" value="지휘관"></label>

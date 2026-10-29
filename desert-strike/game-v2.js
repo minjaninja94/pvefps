@@ -554,6 +554,7 @@ function advanceSoloAugmentTimer(dt){
  if(Math.ceil(choice.remaining)!==prev&&$('soloAugmentTime'))$('soloAugmentTime').textContent=Math.ceil(choice.remaining)+'초';
  if(choice.remaining===0)chooseSoloAugment(soloAug.pick());
 }
+// Production continues indefinitely. A wave number never decides victory; only core destruction does.
 function wave(){
  state.wave++;
  const stage=window.DesertAugments?.STAGES?.indexOf(state.wave)??-1;

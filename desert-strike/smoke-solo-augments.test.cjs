@@ -70,6 +70,12 @@ test('real 300-card draft works inside the original single-player engine without
  assert.equal(st.augments.length,2);
  assert.ok(st.produced[0][0]>count,'wave 10 spawns exactly after card selection');
  assert.equal(st.wave,10,'no duplicated wave');
+ st.wave=40;const augmentsAt40=st.augments.length;
+ G.wave();
+ assert.equal(st.wave,41,'augment single-player must continue after the last offered draft at wave 40');
+ assert.equal(st.ended,false,'augment game cannot end at its last card schedule');
+ assert.equal(st.augmentChoice,null,'wave 41 does not create an unscheduled draft');
+ assert.equal(st.augments.length,augmentsAt40,'past wave 40, selected augments persist');
  G.reset();st=G.state();assert.equal(st.augments.length,0,'restarting forgets prior cards');
  chosenRuleset='standard';G.start();st=G.state();
  assert.equal(st.ruleset,'standard');assert.equal(st.augmentChoice,null);

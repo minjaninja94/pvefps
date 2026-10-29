@@ -164,3 +164,24 @@ console.log('3x-area real-combat test passed: 1v1,2v2,3v3 and 2/3-player coop, c
  assert.ok(match.state.turrets.every(l=>l.length===2&&l.every(h=>h>=0&&h<=1250)));
 }
 console.log('3-lane fog packet redaction, independent scouting and anti-air towers passed.');
+
+for(const mode of ['pvp','classic','coop']){
+ const m=E.create({mode,size:mode==='coop'?2:1,members:mode==='coop'?
+  [human(0,0,0),human(1,0,2)]:
+  [human(0,0,0),human(1,1,1)]});
+ for(const waveNumber of [22,40,41,100]){
+  m.state.wave=waveNumber-1;
+  m.wave();
+  assert.equal(m.state.wave,waveNumber,mode+' keeps spawning wave '+waveNumber);
+  assert.equal(m.state.ended,false,mode+' does not automatically finish at wave '+waveNumber);
+  assert.equal(m.state.winner,null,mode+' has no wave-count winner');
+ }
+ // Losing cores, not the elapsed duration or wave number, determines the outcome.
+ const required=m.state.lanes===1?1:2;
+ for(let lane=0;lane<required;lane++)m.state.cores[lane][1]=0;
+ m.tick(.1);
+ assert.equal(m.state.ended,true,mode+' ends when the opponent cores fall');
+ assert.equal(m.state.winner,0,mode+' awards a victory for destroying the cores');
+}
+console.log('Classic 1v1, 3-lane PvP and coop wave 22/40/41/100 and core-only victory passed.');
+
