@@ -45,7 +45,7 @@ function renderLadders(){
   const stats=document.createElement('small');stats.textContent=row?row.wins+'승 '+row.losses+'패 · '+row.win_rate+'%':'모드별 확정 기록 없음';
   div.append(heading,line,stats);summary.append(div);
  }
- for(const b of $('lobbyRankModes')?.querySelectorAll('[data-rank-mode]')||[]){
+ for(const b of $('lobbyRankModes')?.querySelectorAll?.('[data-rank-mode]')||[]){
   b.classList.toggle('selected',b.dataset.rankMode===rankMode);
   b.setAttribute('aria-pressed',String(b.dataset.rankMode===rankMode));
  }
