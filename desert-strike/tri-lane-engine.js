@@ -691,7 +691,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
        u.x+=(tx-u.x)/Math.max(dist,1)*step;u.y+=(ty-u.y)/Math.max(dist,1)*step;u.act='move';
       }else if(u.cool<=0){
        const damage=d.damage*([.52,.88,1.12,1.08,.82,1.55,.87,.4][u.role]||1);
-       hitFort(lane,defender,damage*warPressure(state.seconds),targetFort.part);
+       hitFort(lane,defender,damage,targetFort.part);
        u.cool=d.rate;u.act='attack';u.attackAge=.28;
       }
      }else{
