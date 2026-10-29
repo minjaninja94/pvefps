@@ -52,7 +52,7 @@ async function loadMember(user,importGuest=false){
 async function restore(){
  try{const db=await api(),{data,error}=await db.auth.getSession();if(error)throw error;
   if(data.session)await loadMember(data.session.user);
-  else {member=null;session=null;show();}
+  else {member=null;session=null;global.DesertCareer?.setLadders?.(null);show();}
  }catch(e){status('Supabase 계정 확인 실패: '+(e.message||e));}
 }
 async function signup(id,pass,nick){
@@ -82,7 +82,7 @@ async function logout(){
  if(match?.tracked&&match.playing&&!match.ended)await forfeit();
  const db=await api(),{error}=await db.auth.signOut();
  if(error)throw error;
- member=null;session=null;match=null;global.DesertLobby?.useGuestProfile?.();show();
+ member=null;session=null;match=null;global.DesertCareer?.setLadders?.(null);global.DesertLobby?.useGuestProfile?.();show();
 }
 async function saveProgress(progress,immediate=false){
  if(!member||!progress)return;
@@ -92,11 +92,13 @@ async function saveProgress(progress,immediate=false){
   wins:Math.max(0,Math.floor(progress.wins||0)),losses:Math.max(0,Math.floor(progress.losses||0)),
   mp_wins:Math.max(0,Math.floor(progress.mpWins||0)),mp_losses:Math.max(0,Math.floor(progress.mpLosses||0)),
   selected_faction:Number(progress.selectedFaction)||0,selected_skin:progress.selectedSkin||'default',
-  ai_difficulty:progress.aiDifficulty==='hard'?'hard':'normal',updated_at:new Date().toISOString()
+  ai_difficulty:['easy','normal','hard','veryhard','impossible'].includes(progress.aiDifficulty)?progress.aiDifficulty:'normal',updated_at:new Date().toISOString()
  };
  const save=async()=>{
+  const changed=member.mp_wins!==next.mp_wins||member.mp_losses!==next.mp_losses;
   const db=await api(),{error}=await db.from('desert_web_members').update(next).eq('user_id',member.user_id);
   if(error)throw error;member={...member,...next};
+  if(changed)void refreshRating().catch(e=>status('랭킹 갱신 실패: '+e.message));
  };
  if(immediate)return save();
  clearTimeout(saveTimer);saveTimer=setTimeout(()=>void save().catch(e=>status('프로필 저장 실패: '+e.message)),450);
@@ -104,7 +106,14 @@ async function saveProgress(progress,immediate=false){
 async function refreshRating(){
  if(!member)return;
  const db=await api(),{data,error}=await db.from('desert_ranked_scores').select('rating,wins,losses').eq('user_id',member.user_id).maybeSingle();
- if(!error){global.DesertCareer?.setServerRating?.(data?.rating??1000,data?.wins??0,data?.losses??0);}
+ if(!error)global.DesertCareer?.setServerRating?.(data?.rating??1000,data?.wins??0,data?.losses??0);
+ const modes=['all','pvp','classic','coop'];
+ const reports=await Promise.all(modes.map(async mode=>{
+  const result=await db.rpc('desert_rank_ladder',{p_mode:mode});
+  if(result.error)throw Error(mode+': '+result.error.message);
+  return [mode,result.data||[]];
+ }));
+ global.DesertCareer?.setLadders?.(Object.fromEntries(reports));
 }
 async function ensureGuestSession(){
  const db=await api();
