@@ -6,10 +6,10 @@
 'use strict';
 const LANES=3,WIDTH=3300,HEIGHT=1560,LANE_H=520,COLS=15,ROWS=5,SLOTS=COLS*ROWS;
 const OPENING_PREP_SECONDS=10,WAVE_INTERVAL=12,FACTORY_BUILD_SECONDS=12,CORE_DAMAGE_MULTIPLIER=.85;
-const OVERTIME_START=14*60,PRISM_STAGES=[1,18,36,54,72];
+const OVERTIME_START=16*60,PRISM_STAGES=[1,18,36,54,72];
 function warPressure(seconds){
  const t=Math.max(0,seconds);
- return t<6*60?1:t<10*60?1.18:t<14*60?1.36:t<18*60?1.65:t<21*60?2.1:Math.min(6,2.7+(t-21*60)/300);
+ return t<7*60?1:t<12*60?1.10:t<16*60?1.23:t<18*60?1.48:t<21*60?2.05:Math.min(6,2.65+(t-21*60)/300);
 }
 const incomePerTick=level=>(1+level)*(level>=5?.85:1);
 
