@@ -13,7 +13,7 @@ assert.equal(state.width,3300);
 assert.equal(state.height,520,'classic match must use exactly the solo map height');
 assert.equal(state.lanes,1);
 assert.equal(state.players.length,2);
-assert.equal(JSON.stringify(state.cores),'[[7200,7200]]','classic core HP mirrors solo');
+assert.equal(JSON.stringify(state.cores),'[[8640,8640]]','classic core HP mirrors solo');
 for(const p of state.players){
  assert.equal(p.buildings.length,1,'one 75-slot factory per human');
  assert.equal(p.buildings[0].length,75);
@@ -34,7 +34,7 @@ assert.ok(state.units.every(u=>u.y>=0&&u.y<=520&&u.lane===0),'every actor stays 
 const redacted=classic.snapshot('home'),other=classic.snapshot('away');
 assert.equal(redacted.height,520);
 assert.equal(redacted.lanes,1);
-assert.equal(redacted.coreMaxHP,7200);
+assert.equal(redacted.coreMaxHP,8640);
 assert.equal(redacted.mode,'classic');
 assert.equal(redacted.players[0].cash,state.players[0].cash);
 assert.equal(redacted.players[1].cash,null,'opponent credits remain private');
@@ -60,4 +60,4 @@ assert.match(net,/\['pvp','coop','classic'\]/,'classic must be whitelisted for o
 assert.match(net,/data\.state\.lanes!==\(data\.state\.mode==='classic'\?1:3\)/,'guest must validate real map lane counts');
 const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
 assert.match(html,/<option value="classic">클래식 1:1/,'lobby must offer the playable classic option');
-console.log('Classic 1v1 passed: 3300x520 map, 7200-HP core, one 75-slot production grid, 1v1 economy, deployment, scouting privacy, tech, single-core victory, and triple PvP/coop compatibility.');
+console.log('Classic 1v1 passed: 3300x520 map, 8640-HP core, one 75-slot production grid, 1v1 economy, deployment, scouting privacy, tech, single-core victory, and triple PvP/coop compatibility.');
