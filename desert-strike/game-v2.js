@@ -160,6 +160,7 @@ function broodLay(parent,target,roll=Math.random){
 }
 function ecoCostFor(level){return Math.round(70*Math.pow(1.36,level));}
 function ecoCost(){return ecoCostFor(state.eco);}
+function ecoBuildSeconds(level){return 24+8*Math.max(0,level-1);}
 function ecoStabilize(level,elapsed){return 4+2*level+Math.min(6,Math.floor(Math.max(0,elapsed)/120));}
 function ecoRemaining(side=0){return Math.max(0,(side===0?state.ecoReadyAt:state.enemyEcoReadyAt)-state.elapsed);}
 function constructExtractor(side,index){
@@ -168,7 +169,10 @@ function constructExtractor(side,index){
  const price=ecoCostFor(state[mine]);
  if(slots[index]!==null||state[mine]>=MAX_ECONOMY||ecoRemaining(side)>0||state[cash]<price)return false;
  slots[index]=EXTRACTOR;costs[index]=price;state[cash]-=price;state[mine]++;
- state[ready]=state.elapsed+ecoStabilize(state[mine],state.elapsed);
+ const buildEndsAt=state.elapsed+ecoBuildSeconds(state[mine]);
+ state[ready]=buildEndsAt+ecoStabilize(state[mine],state.elapsed);
+ (side===0?state.buildReadyAt:state.enemyBuildReadyAt)[index]=buildEndsAt;
+ (side===0?state.mineTimings:state.enemyMineTimings)[index]={startedAt:state.elapsed,buildEndsAt,readyAt:state[ready]};
  // React to a human economy purchase immediately, without skipping AI costs or blackout.
  if(side===0&&state.live&&state.aiDifficulty==='hard')hardInvest();
  return true;
@@ -204,7 +208,7 @@ function reset(){
  window.DesertCombatAudio?.stop?.();
  soloAug=null;enemyAug=null;
  $('soloAugmentOverlay')?.classList.add('hidden');
- state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:360,eco:0,enemyEco:0,ecoReadyAt:0,enemyEcoReadyAt:0,mineCosts:{},enemyMineCosts:{},weapon:0,armor:0,enemyWeapon:0,enemyArmor:0,incomeClock:0,cameraX:1100,followFront:true,
+ state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:360,eco:0,enemyEco:0,ecoReadyAt:0,enemyEcoReadyAt:0,mineCosts:{},enemyMineCosts:{},mineTimings:{},enemyMineTimings:{},weapon:0,armor:0,enemyWeapon:0,enemyArmor:0,incomeClock:0,cameraX:1100,followFront:true,
  wave:0,next:INTERVAL,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],forwardHP:[1000,1000],forwardClaimed:[false,false],
  built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),buildReadyAt:Array(SLOTS).fill(0),enemyBuildReadyAt:Array(SLOTS).fill(0),produced:[Array(8).fill(0),Array(8).fill(0)],combatStats:[combatRows(),combatRows()],units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},
@@ -270,7 +274,7 @@ function place(index){
  if(demolition){
   if(old!==null){
    const refund=Math.floor((old===EXTRACTOR?state.mineCosts[index]:ROLE[old].cost)*.55);
-   state.cash+=refund;state.built[index]=null;state.buildReadyAt[index]=0;if(old===EXTRACTOR){state.eco--;delete state.mineCosts[index];}
+   state.cash+=refund;state.built[index]=null;state.buildReadyAt[index]=0;if(old===EXTRACTOR){state.eco--;delete state.mineCosts[index];delete state.mineTimings[index];}
    setMessage((old===EXTRACTOR?'자원채취 건물':FACTIONS[state.faction].units[old])+' 생산 시설 철거 · '+refund+' CR 반환');chirp(210,.11);
   }
   updateUI(true);return;
@@ -280,7 +284,7 @@ function place(index){
   setMessage('이미 생산시설이 설치된 자리입니다. 다른 시설을 건설하려면 철거 버튼이나 우클릭으로 먼저 철거하세요.');return;
  }
  if(selectedRole===EXTRACTOR){
-  const ok=constructExtractor(0,index);setMessage(ok?'자원채취 건물 설치 · '+ecoStabilize(state.eco,state.elapsed)+'초간 인컴 중단':ecoRemaining()>0?'채굴망 안정화가 끝난 뒤 추가 건설할 수 있습니다.':state.eco>=MAX_ECONOMY?'자원채취 건물은 최대 7개입니다.':'자원 부족');updateUI(true);return;
+  const ok=constructExtractor(0,index);setMessage(ok?'자원채취 건설 '+ecoBuildSeconds(state.eco)+'초 + 안정화 '+ecoStabilize(state.eco,state.elapsed)+'초 · 전체 인컴 중단':ecoRemaining()>0?'채굴망 안정화가 끝난 뒤 추가 건설할 수 있습니다.':state.eco>=MAX_ECONOMY?'자원채취 건물은 최대 7개입니다.':'자원 부족');updateUI(true);return;
  }
  const price=ROLE[selectedRole].cost;
  if(price>state.cash){setMessage('자원 부족 · '+Math.ceil(price-state.cash)+' CR이 더 필요합니다.');return;}
@@ -1362,6 +1366,15 @@ function roleMatchupHtml(role,faction=state?.faction??0){
  return '<span class="tag strong">'+(role===7?'시너지 ':'강점 ')+r.good.map(i=>ROLE[i].mark+ROLE[i].name).join(' · ')+'</span>'+
  '<span class="tag weak">약점 '+r.bad.map(i=>ROLE[i].mark+ROLE[i].name).join(' · ')+'</span>';
 }
+function constructionBar(slot){
+ const mine=state.mineTimings[slot],at=factoryReadyAt(0,slot),now=state.elapsed;
+ const building=at>now+1e-6,stabilizing=!building&&(mine?.readyAt||0)>now+1e-6;
+ if(!building&&!stabilizing)return '';
+ const end=building?at:mine.readyAt,start=building?(mine?.startedAt??at-FACTORY_BUILD_SECONDS):at;
+ const progress=Math.max(0,Math.min(100,100*(now-start)/(end-start)));
+ const label=(building?'건설 ':'안정화 ')+Math.ceil(end-now-1e-6)+'초';
+ return '<span class="build-progress'+(stabilizing?' stabilizing':'')+'" role="progressbar" aria-label="'+label+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.floor(progress)+'"><span class="build-progress-fill" style="width:'+progress+'%"></span><span class="build-progress-label">'+label+'</span></span>';
+}
 function updateUI(full=false){
  if(!state)return;
  const cameraStatus=$('cameraStatus');if(cameraStatus)cameraStatus.textContent=state.followFront?'전선 자동 추적':'수동 이동 · '+Math.round((state.cameraX+CW/2)/WORLD_W*100)+'%';
@@ -1403,7 +1416,7 @@ function updateUI(full=false){
  $('barrageInfo').textContent=state.barrageCd>0?'재충전 '+Math.ceil(state.barrageCd)+'초':'비용 260 CR · 적 병력 필수';
  $('barrageButton').disabled=!(state.live&&!state.ended&&!state.paused&&state.barrageCd<=0&&state.cash>=260&&state.units.some(u=>u.side===1));
  const econ=ecoCost(),weapon=weaponCost(),armor=armorCost();
- $('econInfo').textContent='자원채취 '+state.eco+' / 7 · '+(ecoRemaining()>0?'인컴 중단 '+Math.ceil(ecoRemaining())+'초 남음':'0.5초마다 +'+(1+state.eco)+' CR')+(state.eco<MAX_ECONOMY?' · 다음 '+ecoCost()+' CR / 안정화 '+ecoStabilize(state.eco+1,state.elapsed)+'초':' · 최대 건설');
+ $('econInfo').textContent='자원채취 '+state.eco+' / 7 · '+(ecoRemaining()>0?'인컴 중단 '+Math.ceil(ecoRemaining())+'초 남음':'0.5초마다 +'+showIncome(state.eco)+' CR')+(state.eco<MAX_ECONOMY?' · 다음 '+ecoCost()+' CR / 건설 '+ecoBuildSeconds(state.eco+1)+'초 + 안정화 '+ecoStabilize(state.eco+1,state.elapsed)+'초':' · 최대 건설');
  $('weaponInfo').textContent='레벨 '+state.weapon+' / 5 · 공격력 +'+state.weapon*8+'%';
  $('armorInfo').textContent='레벨 '+state.armor+' / 5 · HP +'+state.armor*9+'%';
  $('repairInfo').textContent='방어 포탑 '+Math.ceil(state.turretHP[0])+' / '+MAX_TURRET;
@@ -1425,19 +1438,26 @@ function updateUI(full=false){
     '"><span class="uc-top">'+getDef(i,state.faction).mark+' '+getDef(i,state.faction).name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
     '</span><span class="uc-name">'+f.units[i]+'</span><span class="uc-role">'+getDef(i,state.faction).name+' · '+(getDef(i,state.faction).kind==='air'?'공중':'지상')+'</span>'+
     '<span class="uc-cost">'+r.cost+' CR</span><span class="good-counter">'+(i===7?'지원':'강점')+': '+getDef(i,state.faction).good.map(x=>ROLE[x].mark).join(' ')+'</span><span class="bad-counter">약점: '+getDef(i,state.faction).bad.map(x=>ROLE[x].mark).join(' ')+'</span></button>';
-  }).join('')+'<button class="unit-card resource-card'+(selectedRole===EXTRACTOR?' selected':'')+'" data-role="8" '+(state.eco>=7||ecoRemaining()>0?'disabled':'')+'><span class="uc-top">경제 · 슬롯 1칸</span><span class="uc-sprite"><img class="pixel-preview" src="./assets/resource-extractor.webp" alt=""></span><span class="uc-name">자원채취 건물</span><span class="uc-role">인컴 +1 / 0.5초 · '+state.eco+'/7</span><span class="uc-cost">'+ecoCost()+' CR</span><span class="bad-counter">안정화 '+ecoStabilize(state.eco+1,state.elapsed)+'초 · 전체 인컴 중단</span></button>';
-  $('buildGrid').innerHTML=state.built.map((id,i)=>
-   '<button class="build-cell'+(id!==null?' occupied':'')+(demolition&&id!==null?' demolition':'')+'" data-cell="'+i+'" aria-label="'+(id===EXTRACTOR?'자원채취 건물':id!==null?f.units[id]:'빈 슬롯')+'">'+
-   (id===EXTRACTOR?'<span class="cell-icon"><img class="extractor-slot" src="./assets/resource-extractor.webp" alt=""></span><span class="cell-name">자원채취</span>':id!==null?'<span class="cell-icon">'+getDef(id,state.faction).mark+'</span><span class="cell-name">'+f.units[id]+'</span>':
-    '<span class="cell-icon">+</span><span class="cell-position">'+(Math.floor(i/COLS)+1)+'-'+(i%COLS+1)+'</span>')+'</button>').join('');
+  }).join('')+'<button class="unit-card resource-card'+(selectedRole===EXTRACTOR?' selected':'')+'" data-role="8" '+(state.eco>=7||ecoRemaining()>0?'disabled':'')+'><span class="uc-top">경제 · 슬롯 1칸</span><span class="uc-sprite"><img class="pixel-preview" src="./assets/resource-extractor.webp" alt=""></span><span class="uc-name">자원채취 건물</span><span class="uc-role">인컴 +1 / 0.5초 · '+state.eco+'/7</span><span class="uc-cost">'+ecoCost()+' CR</span><span class="bad-counter">건설 '+ecoBuildSeconds(state.eco+1)+'초 + 안정화 '+ecoStabilize(state.eco+1,state.elapsed)+'초 · 전체 인컴 중단</span></button>';
+
   $('demolishButton').classList.toggle('selected',demolition);
-  $('unitDetails').innerHTML=selectedRole===EXTRACTOR?'<b>자원채취 건물</b> · 생산 슬롯 1칸 / 최대 7개<br>건설 1개당 인컴 +1 CR / 0.5초. 건설 직후 '+ecoStabilize(state.eco+1,state.elapsed)+'초간 기본·채굴 인컴과 웨이브 지원금이 중단됩니다. 단계와 경기 시간이 늘수록 안정화가 길어집니다.':selectedRole!==null?'<b>'+f.units[selectedRole]+'</b> · '+getDef(selectedRole,state.faction).name+
+  $('unitDetails').innerHTML=selectedRole===EXTRACTOR?'<b>자원채취 건물</b> · 생산 슬롯 1칸 / 최대 7개<br>건설 1개당 인컴 +1 CR / 0.5초. 건설 '+ecoBuildSeconds(state.eco+1)+'초 + 완공 후 안정화 '+ecoStabilize(state.eco+1,state.elapsed)+'초 동안 기본·채굴 인컴과 웨이브 지원금이 중단됩니다. 단계와 경기 시간이 늘수록 안정화가 길어집니다.':selectedRole!==null?'<b>'+f.units[selectedRole]+'</b> · '+getDef(selectedRole,state.faction).name+
     ' / '+ROLE[selectedRole].cost+' CR<br>'+getDef(selectedRole,state.faction).tips+'<div class="matchups">'+roleMatchupHtml(selectedRole,state.faction)+
     '</div><span>HP '+Math.round(effectiveDef(selectedRole,state.faction).hp)+' · 피해 '+Math.round(effectiveDef(selectedRole,state.faction).damage)+
     ' · 사거리 '+Math.round(effectiveDef(selectedRole,state.faction).range)+' · '+(effectiveDef(selectedRole,state.faction).airTarget?'대공 가능':'지상 공격')+'</span>':
     '<b>전술 안내</b> — 역할 마크와 상성표는 진영이 달라도 동일합니다. 유닛을 선택하세요.';
   state.lastCards=Math.floor(state.cash/30);
  }
+ const pendingBuild=state.built.some((r,i)=>r!==null&&(factoryReadyAt(0,i)>state.elapsed||(r===EXTRACTOR&&(state.mineTimings[i]?.readyAt||0)>state.elapsed)));
+ const gridKey=state.built.join(',')+':'+demolition+':'+(pendingBuild?Math.floor(state.elapsed):'ready');
+ if(full||state.lastGridKey!==gridKey){
+  state.lastGridKey=gridKey;const f=FACTIONS[state.faction];
+  $('buildGrid').innerHTML=state.built.map((id,i)=>
+   '<button class="build-cell'+(id!==null?' occupied':'')+(demolition&&id!==null?' demolition':'')+'" data-cell="'+i+'" aria-label="'+(id===EXTRACTOR?'자원채취 건물':id!==null?f.units[id]:'빈 슬롯')+'">'+
+   (id===EXTRACTOR?'<span class="cell-icon"><img class="extractor-slot" src="./assets/resource-extractor.webp" alt=""></span><span class="cell-name">자원채취</span>':id!==null?'<span class="cell-icon">'+getDef(id,state.faction).mark+'</span><span class="cell-name">'+f.units[id]+'</span>':
+    '<span class="cell-icon">+</span><span class="cell-position">'+(Math.floor(i/COLS)+1)+'-'+(i%COLS+1)+'</span>')+(id!==null?constructionBar(i):'')+'</button>').join('');
+ }
+
 }
 function initFactions(){
  $('factionCards').innerHTML=FACTIONS.map((f,i)=>{

@@ -138,7 +138,7 @@ async function main(){
   assert.equal(state.lanes,mode==='classic'?1:3,'map lane count must match the room');
   if(mode==='classic'){
    assert.equal(state.players[0].buildings.length,1,'classic online lobby has one factory grid');
-   assert.equal(state.coreMaxHP,7200,'classic solo-sized core HP arrives at guest');
+   assert.equal(state.coreMaxHP,8640,'classic solo-sized core HP arrives at guest');
    assert.equal(guests[0].network.sendOrder({type:'build',lane:2,slot:3,role:0}).ok,true);
    await until(()=>guests[0].events.status.some(x=>x.includes('건설 위치 오류')));
   }

@@ -11,14 +11,14 @@ for(const roll of [.01,.26,.51,.76])for(const faction of [0,3,4,7,9]){
  assert.equal(p.cash+p.hardBrain.spent,360,'all initial units and extractors are paid from equal starting cash');
  const opening=p.buildings.flat().filter(x=>x!==null&&x!==8);
  assert.ok(opening.includes(roll<.25||roll>.75?3:roll<.5?6:0),'proactive opening is independent of opponent composition');
- for(let step=1;step<=1200;step++){
+ for(let step=1;step<=2400;step++){
   const old=s.seconds,level=p.eco,ready=p.ecoReadyAt;
   const next=old+.2;
-  for(let slice=Math.floor(old*2)+1;slice<=Math.floor(next*2);slice++)if(slice*.5+1e-6>=ready)earned+=1+level;
+  for(let slice=Math.floor(old*2)+1;slice<=Math.floor(next*2);slice++)if(slice*.5+1e-6>=ready)earned+=E.incomePerTick(level);
   s.units.length=0;e.tick(.2);
   if(step%120===0){if(s.seconds>=p.ecoReadyAt)earned+=24;e.wave();}
   assert.ok(p.cash>=0,'no borrowing');
-  assert.equal(p.cash+p.hardBrain.spent,earned,'no bonus income, free purchases or stabilization catch-up');
+  assert.ok(Math.abs(p.cash+p.hardBrain.spent-earned)<1e-6,'no bonus income, free purchases or stabilization catch-up');
   assert.equal(p.buildings.flat().filter(r=>r===8).length,p.eco,'every income upgrade consumes a real slot');
  }
  assert.ok(p.eco>=3,'regular paid economy development');
@@ -96,7 +96,7 @@ assert.equal(mirror.eco,1);
 assert.equal(mirror.enemyEco,1,'hard AI must match the human extractor immediately when ready and funded');
 assert.equal(mirror.enemyCash,930,'hard AI pays the identical level-one 70 CR cost');
 assert.equal(mirror.enemyBuilt.filter(x=>x===8).length,1,'AI extractor occupies a real factory slot');
-assert.equal(mirror.enemyEcoReadyAt,mirror.ecoReadyAt,'both sides incur the same six-second blackout');
+assert.equal(mirror.enemyEcoReadyAt,mirror.ecoReadyAt,'both sides incur the same construction plus stabilization blackout');
 assert.equal(api.constructExtractor(0,1),false,'human cannot bypass own stabilization');
 mirror.elapsed=mirror.ecoReadyAt+.01;
 assert.equal(api.constructExtractor(0,1),true);
@@ -212,5 +212,5 @@ assert.equal(coopState.players[0].combatStats.losses[0],100,'multi match report 
  assert.equal(s.units.length,1,'global nuke leaves the human ally and no enemy across the map');
  assert.equal(e.order('h',{type:'tactic',kind:'nuke'}).ok,false,'one shot only');
 }
-console.log('Hard AI passed: 20 four-minute ledgers, four proactive openings, ground special factions, regular paid economy, zero resource bonuses, actual slot/blackout costs, bounded next-purchase reserves, 32 scouted concentration responses, ground/air distinction, economy resumption, observed hero lane reinforcement, solo and three-line integration.');
+console.log('Hard AI passed: 20 eight-minute ledgers, four proactive openings, ground special factions, regular paid economy, zero resource bonuses, actual slot/blackout costs, bounded next-purchase reserves, 32 scouted concentration responses, ground/air distinction, economy resumption, observed hero lane reinforcement, solo and three-line integration.');
 console.log(JSON.stringify(results.filter(x=>x.faction===0)));
