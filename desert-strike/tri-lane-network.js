@@ -299,7 +299,7 @@ async function start(){
  engine=global.DesertTriEngine.create({mode:room.mode,size:room.size,members:members(),ruleset:validateRuleset(room.ruleset),seed:room.seed||1,aiDifficulty:global.DesertLobby?.aiDifficulty?.()||'normal'});
  // The guest's Supabase registration can finish after Firebase signaling.
  // Retry registration before beginning the battle so normal online wins count.
- if(serverRegistration)await serverRegistration;
+ if(serverRegistration)await Promise.race([serverRegistration,new Promise(resolve=>setTimeout(resolve,2000))]);
  let registered={ok:false,reason:'서버 기록 시스템이 연결되지 않았습니다'};
  if(global.DesertMember?.startMatch)for(let attempt=0;attempt<8;attempt++){
   registered=await global.DesertMember.startMatch();
@@ -317,7 +317,7 @@ async function start(){
   if(!engine||engine.state.ended)return broadcast();
   engine.tick(dt);broadcast();
  },50);
- broadcast(true);active=true;status('3라인 경기 시작 · 방장 실시간 판정 중');
+ broadcast(true);active=true;status(registered?.ok?'랭크 경기 시작 · 서버 승패 집계 활성':'비공식 경기 시작 · 서버 점수 제외: '+(registered?.reason||'참가 등록 실패'));
 }
 function sendOrder(order){
  if(!roomId||room?.status!=='playing')return {ok:false,reason:'경기가 시작되지 않았습니다.'};
