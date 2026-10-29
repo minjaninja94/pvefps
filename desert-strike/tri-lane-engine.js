@@ -490,7 +490,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    for(const x of nearby)applyHit(a,x,dmg*(x.role===0?1.35:x.role===3?.55:1));
    if(a.faction===3&&nearby.length){state.marineStats.bongoCharges++;marineRecord(a.uid,'bongoCharges');state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'bongo',time:.5,team:a.team});}
   }else if(a.role===5){
-   for(const x of state.units)if(x.team!==a.team&&x.hp>0&&definition(x.faction,x.role).kind!=='air'&&Math.hypot(x.x-v.x,x.y-v.y)<66)applyHit(a,x,dmg*.8);
+   for(const x of state.units)if(x.team!==a.team&&x.hp>0&&definition(x.faction,x.role).kind!=='air'&&Math.hypot(x.x-v.x,x.y-v.y)<66)applyHit(a,x,dmg*.8*(global.DesertConsolidation?.splashWeight?.(x)||1));
   }else applyHit(a,v,dmg);
   if(a.faction===1)broodLay(a,v);
   if(state.effects.length>100)state.effects.shift();
