@@ -443,6 +443,7 @@ for(const aiDifficulty of ['normal','hard']){
  const cohort=s.enemyBuilt.filter(r=>r===1).length;
  assert.ok(cohort>=20,'hard AI buys a twenty-factory same-role group instead of only diversifying');
  assert.ok(s.enemyCash<before,'each AI hero factory costs ordinary player CR');
+ s.elapsed+=24; // actual construction completes before the hero-capable deployment wave
  g.wave();
  g.compactArmy();
  const hero=s.units.find(u=>u.side===1&&u.role===1&&u.heroCount===20);
