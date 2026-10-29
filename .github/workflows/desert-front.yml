@@ -93,6 +93,8 @@ jobs:
         run: node desert-strike/smoke-nine.test.cjs
       - name: Tower / vision / anti-greed strategy regressions
         run: node desert-strike/smoke-strategy.test.cjs
+      - name: Hard AI 30-pair comparative win-rate benchmark
+        run: node desert-strike/hard-ai-winrate-benchmark.cjs | tee /tmp/desert-hard-winrate.log
       - name: Ten-faction seeded 180-match balance simulation
         run: node desert-strike/smoke-balance.test.cjs > /tmp/desert-balance.json
       - name: Beastgirls and elven mages full sprite coverage
@@ -111,4 +113,5 @@ jobs:
             /tmp/desert-balance.json
             /tmp/desert-skirmish.log
             /tmp/desert-campaign.log
+            /tmp/desert-hard-winrate.log
           if-no-files-found: warn
