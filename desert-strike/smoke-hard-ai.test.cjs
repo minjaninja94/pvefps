@@ -135,6 +135,28 @@ assert.equal(safe.enemyNukes,1);
 safe.baseHP[1]=5040;
 assert.equal(api.hardEmergency(),true,'base below 70 percent permits the same emergency trigger as the player');
 
+// The AI must actually remove living soldiers in a 20-man hero push,
+// not merely display a nuclear banner or wait for core HP to fall.
+api.reset();
+const nuclear=api.state();nuclear.live=true;nuclear.aiDifficulty='hard';
+nuclear.wave=8;nuclear.enemyNukes=1;
+const push={uid:20010,side:0,faction:0,role:5,x:2350,y:260,
+ hp:2200,maxHP:2200,heroCount:20,killed:false};
+nuclear.units.push(push);
+assert.equal(api.hardEmergency(),true,'AI uses its only nuke against a 20-soldier hero in its half');
+assert.equal(nuclear.enemyNukes,0,'AI has no second nuke');
+assert.equal(nuclear.units.length,0,'hero is really removed from battlefield');
+assert.equal(nuclear.deadUnits.length,1,'hero death is recorded');
+assert.equal(nuclear.combatStats[0].losses[5],20,'battle report counts all 20 lost hero members');
+assert.equal(api.hardEmergency(),false,'AI cannot fire a second nuke');
+api.reset();
+const many=api.state();many.live=true;many.aiDifficulty='hard';many.wave=8;
+for(let i=0;i<20;i++)many.units.push({uid:30000+i,side:0,faction:0,role:0,
+ x:2350+i%5*15,y:250+Math.floor(i/5)*15,hp:120,maxHP:120,heroCount:1});
+assert.equal(api.hardEmergency(),true,'AI nukes a tightly packed 20-unit normal infantry rush');
+assert.equal(many.units.length,0,'ordinary clustered infantry also disappear');
+assert.equal(many.combatStats[0].losses[0],20);
+
 // Hard AI must never hold all resources for an unaffordable research upgrade.
 api.reset();const upgrades=api.state();upgrades.live=true;upgrades.wave=9;
 for(let i=0;i<7;i++)upgrades.enemyBuilt[i]=0;
