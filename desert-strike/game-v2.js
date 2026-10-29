@@ -557,7 +557,7 @@ function hardInvest(){
    if(candidates.length)action={kind:'unit',role:candidates[0]};
   }
   if(!action)break;
-  if(emergencyCounter&&brain.opening>=((ai.plans[brain.plan]?.opening?.length)||0)){
+  if(emergencyCounter&&!(roles[5]>=intel.total*.38&&roles[0]>=intel.total*.16)&&brain.opening>=((ai.plans[brain.plan]?.opening?.length)||0)){
    const counters=aiCountersFor(intel.dominant),current=counts.reduce((sum,n,i)=>sum+(counters.includes(i)?n:0),0);
    const total=counts.reduce((sum,n)=>sum+n,0);
    if(current<Math.ceil(total*.75)){
@@ -584,15 +584,24 @@ function aiInitialBuild(){
 // Refit a wrong production lineup for the scouted counter plan. Both difficulties
 // pay the same 55% sale refund and full new unit price as the human player.
 function aiAdaptFacilities(intel){
- if(intel.dominant===null||intel.total<5||state.wave<1||state.elapsed-(state.aiLastRefitAt??-Infinity)<(state.aiDifficulty==='hard'?5:7))return false;
- const counters=aiCountersFor(intel.dominant);
+ const protectedSiege=intel.total>=8&&intel.counts[5]>=intel.total*.38&&intel.counts[0]>=intel.total*.16;
+ if((intel.dominant===null&&!protectedSiege)||intel.total<5||state.wave<1||
+  state.elapsed-(state.aiLastRefitAt??-Infinity)<(state.aiDifficulty==='hard'?5:7))return false;
+ const counters=protectedSiege?[6,3,1]:aiCountersFor(intel.dominant);
  const army=state.enemyBuilt.filter(r=>r!==null&&r!==EXTRACTOR),goal=Math.ceil(army.length*.70);
- if(army.length<3||army.filter(r=>counters.includes(r)).length>=goal)return false;
+ if(army.length<3)return false;
+ const current=state.enemyBuilt.filter(r=>r!==null&&r!==EXTRACTOR);
+ const armored=current.filter(r=>r===3).length,ranged=current.filter(r=>r===1).length;
+ if(protectedSiege?armored>=Math.ceil(army.length*.2)&&ranged>=Math.ceil(army.length*.14)
+    :army.filter(r=>counters.includes(r)).length>=goal)return false;
  const oldIndex=state.enemyBuilt.findIndex(role=>role!==null&&role!==EXTRACTOR&&!counters.includes(role));
  if(oldIndex<0)return false;
  const old=state.enemyBuilt[oldIndex],refund=Math.floor(ROLE[old].cost*.55);
- const target=counters.filter(role=>ROLE[role].cost-refund<=state.enemyCash)
-  .sort((a,b)=>state.enemyBuilt.filter(r=>r===a).length-state.enemyBuilt.filter(r=>r===b).length||ROLE[a].cost-ROLE[b].cost)[0];
+ const options=counters.filter(role=>ROLE[role].cost-refund<=state.enemyCash);
+ const target=protectedSiege
+  ?([3,1,6].find(role=>options.includes(role)&&
+     current.filter(r=>r===role).length<Math.ceil(army.length*(role===3?.2:role===1?.14:.24))))
+  :options.sort((a,b)=>state.enemyBuilt.filter(r=>r===a).length-state.enemyBuilt.filter(r=>r===b).length||ROLE[a].cost-ROLE[b].cost)[0];
  if(target===undefined)return false;
  state.enemyBuilt[oldIndex]=target;state.enemyCash+=refund-ROLE[target].cost;
  state.aiLastRefitAt=state.elapsed;return true;
