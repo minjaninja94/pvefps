@@ -122,17 +122,30 @@ function buildGrid(){
  const p=my();if(!p)return;
  updateLanePicker(p);
  const cells=p.buildings[lane]||[];
- const key=myId+':'+lane+':'+demolish+':'+cells.join(',');
+ const ready=p.buildingReadyAt?.[lane]||[];
+ const pending=ready.some((at,i)=>cells[i]!==null&&cells[i]!==E.EXTRACTOR&&at>snap.seconds+1e-6);
+ const key=myId+':'+lane+':'+demolish+':'+cells.join(',')+':'+ready.join(',')+
+  (pending?':'+Math.floor(snap.seconds):'');
  if(key===gridKey)return;gridKey=key;
  const f=document.createDocumentFragment();
  for(let i=0;i<E.SLOTS;i++){
   const r=cells[i],b=document.createElement('button');b.type='button';b.dataset.slot=String(i);
   b.disabled=r!==null&&!demolish;
   b.className=(r===null?'':'filled ')+(demolish&&r!==null?'demolish':'');
-  if(r===null)b.textContent='+';else{const cv=document.createElement('canvas');cv.width=cv.height=72;unitIcon(cv,p.faction,r);b.append(cv);}
+  if(r===null)b.textContent='+';else{
+   const cv=document.createElement('canvas');cv.width=cv.height=72;unitIcon(cv,p.faction,r);b.append(cv);
+   const left=r===E.EXTRACTOR?0:Math.max(0,(ready[i]||0)-snap.seconds);
+   if(left>1e-6){
+    b.classList.add('constructing');
+    const clock=document.createElement('span');clock.className='construction-countdown';
+    clock.textContent=Math.ceil(left)+'초';b.append(clock);
+   }
+  }
   b.setAttribute('aria-label',(r===null?'빈 슬롯':global.DesertRoster?.FACTIONS[p.faction]?.units[r]||E.NAMES[r])+' '+(i+1));
   b.setAttribute('aria-pressed',String(demolish&&r!==null));
-  b.title=(r===null?'빈 자리':E.NAMES[r]+' 생산 시설')+' · '+laneName(lane)+' '+(i+1);
+  b.title=(r===null?'빈 자리':E.NAMES[r]+' 생산 시설')+' · '+laneName(lane)+' '+(i+1)+
+   (r!==null&&r!==E.EXTRACTOR&&ready[i]>snap.seconds?
+     ' · 건설 중 '+Math.ceil(ready[i]-snap.seconds)+'초':'');
   f.append(b);
  }
  $('mpBuildGrid').replaceChildren(f);
@@ -319,7 +332,7 @@ function onSnapshot(v){
  if(me){
   $('mpMyResources').textContent=me.cash+' CR';
   const remaining=Math.max(0,(me.ecoReadyAt||0)-v.seconds);
-  $('mpMyIncome').textContent=remaining>0?'인컴 중단 '+Math.ceil(remaining)+'초':'+'+(1+me.eco)+' / 0.5초';
+  $('mpMyIncome').textContent=remaining>0?'인컴 중단 '+Math.ceil(remaining)+'초':'+'+Number(E.incomePerTick(me.eco).toFixed(2))+' / 0.5초';
   $('mpBuiltCount').textContent=me.buildings.reduce((n,bs)=>n+bs.filter(x=>x!==null).length,0)+'개 건설';
   const cost=E.ecoPrice(me.eco);
   $('mpEco').textContent=me.eco>=7?'채취 건물 7 / 7':'자원채취 건물 · '+cost+' CR';
