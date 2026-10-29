@@ -11,6 +11,10 @@ const KEY='desert-front-training-v2',empty=()=>({xp:0,wins:0,losses:0,mpWins:0,m
 let progress=empty(),uid=null,active=false,lastMultiplayer='',authBusy=false;
 let selectedUnit=0,selectedAction='idle',animationStart=0,animationTick=0,onlineOpen=false;
 const RULESET_KEY='desert-front-ruleset-v1';
+const AI_LEVELS=['easy','normal','hard','veryhard','impossible'];
+const AI_NAMES={easy:'쉬움',normal:'보통',hard:'어려움',veryhard:'아주 어려움',impossible:'임파서블'};
+const difficultyLabel=value=>AI_NAMES[value]||AI_NAMES.normal;
+const normalizeDifficulty=value=>AI_LEVELS.includes(value)?value:'normal';
 let selectedRuleset='standard';
 function safeName(v){return String(v||'지휘관').trim().replace(/[<>\u0000-\u001f]/g,'').slice(0,16)||'지휘관';}
 function storageKey(){const uid=global.DesertMember?.account?.()?.userId;return uid?'desert-front-training-member-'+uid:KEY;}
@@ -18,7 +22,7 @@ function load(){
  try{const v=JSON.parse(localStorage.getItem(storageKey())||'{}');const p=empty();
   p.xp=Math.max(0,Math.min(10000000,Number(v.xp)||0));for(const k of ['wins','losses','mpWins','mpLosses'])p[k]=Math.max(0,Math.min(999999,Math.floor(Number(v[k])||0)));
   p.selectedFaction=Number.isInteger(v.selectedFaction)&&v.selectedFaction>=0&&v.selectedFaction<FACTIONS.length?v.selectedFaction:0;
-  p.aiDifficulty=v.aiDifficulty==='hard'?'hard':'normal';
+  p.aiDifficulty=normalizeDifficulty(v.aiDifficulty);
   p.nickname=safeName(v.nickname);p.selectedSkin=SKINS.some(x=>x.id===v.selectedSkin)?v.selectedSkin:'default';return p;
  }catch(_){return empty();}
 }
@@ -42,7 +46,7 @@ function renderRuleset(){
   ?'1·10·20·30·40웨이브에 증강을 선택합니다.'
    :'핵심 기지 파괴로 승리 · 웨이브 무제한';
  const solo=$('lobbySolo')?.querySelector('span');
- if(solo)solo.textContent=selected?'증강전 · 웨이브 무제한':(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 웨이브 무제한';
+ if(solo)solo.textContent=selected?'증강전 · 웨이브 무제한':difficultyLabel(progress.aiDifficulty)+' AI · 웨이브 무제한';
  const multiplayer=$('lobbyMulti')?.querySelector('span');
  if(multiplayer)multiplayer.textContent=selected?'증강전 · 1:1 / 3라인 / 협동':'1:1 / 3라인 / 협동';
  const practice=$('lobbyPractice')?.querySelector('span');
@@ -114,12 +118,12 @@ function renderCovers(){const art=global.DesertCommanderCovers;if(!art)return;co
  $('lobbyFactions')?.querySelectorAll('canvas[data-cover]')?.forEach(c=>art.draw(c,Number(c.dataset.cover),skin));
  art.draw($('lobbyHero'),progress.selectedFaction,skin);
 }
-function chooseDifficulty(value){if(!['normal','hard'].includes(value))return;progress.aiDifficulty=value;save();render();}
+function chooseDifficulty(value){if(!AI_LEVELS.includes(value))return;progress.aiDifficulty=value;save();render();}
 function render(){
  if(!FACTIONS.length)return;
  const fac=FACTIONS[progress.selectedFaction]||FACTIONS[0],l=levelFromXP(progress.xp),s=currentSkin();
  $('lobbyDifficulty')?.querySelectorAll('[data-difficulty]').forEach(b=>{const chosen=b.dataset.difficulty===progress.aiDifficulty;b.classList.toggle('selected',chosen);b.setAttribute('aria-pressed',String(chosen));});
- $('lobbySolo').querySelector('span').textContent=(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 웨이브 무제한';
+ $('lobbySolo').querySelector('span').textContent=difficultyLabel(progress.aiDifficulty)+' AI · 웨이브 무제한';
  renderRuleset();
  const account=global.DesertDeviceAccount?.status?.();
  $('lobbyAccountStatus').textContent=global.DesertMember?.account?.()?('회원 · '+global.DesertMember.account().nickname):'게스트 · 이 기기';
@@ -152,7 +156,7 @@ function importProgress(v){if(!v||typeof v!=='object')return;const next=empty();
  next.nickname=safeName(v.nickname);
  next.selectedFaction=Number.isInteger(v.selectedFaction)&&v.selectedFaction>=0&&v.selectedFaction<FACTIONS.length?v.selectedFaction:0;
  next.selectedSkin=SKINS.some(sk=>sk.id===v.selectedSkin)?v.selectedSkin:'default';
- next.aiDifficulty=v.aiDifficulty==='hard'?'hard':'normal';progress=next;save();render();}
+ next.aiDifficulty=normalizeDifficulty(v.aiDifficulty);progress=next;save();render();}
 function useGuestProfile(){progress=load();render();}
 function grantXP(amount){progress.xp=Math.min(10000000,progress.xp+Math.max(0,Math.floor(amount)));stateChange();}
 function completeSolo({win,wave,seconds}){if(win)progress.wins++;else progress.losses++;global.DesertCareer?.record?.({mode:'solo',size:1,side:0,winner:win?0:1,faction:progress.selectedFaction,wave,seconds,online:false});grantXP((win?120:45)+Math.min(80,Math.floor((wave||0)*3)));}
@@ -289,6 +293,6 @@ function initialize(){
  global.addEventListener?.('maiden-art-ready',renderCovers);global.addEventListener?.('isometric-art-ready',renderCovers);global.addEventListener?.('desert-real-sprites-ready',renderCovers);global.addEventListener?.('desert-moe-ready',renderCovers);
  show();void restoreAccount().finally(()=>global.DesertMember?.restore?.());
 }
-global.DesertLobby=Object.freeze({exportProgress,importProgress,useGuestProfile,careerStats:()=>({nickname:progress.nickname,level:levelFromXP(progress.xp).level,mpWins:progress.mpWins,mpLosses:progress.mpLosses,faction:progress.selectedFaction}),levelFromXP,filterForSkin,skinFilter:()=>currentSkin().filter,selectedSkin:()=>currentSkin().id,selectedFaction:()=>progress.selectedFaction,selectedUnit:()=>selectedUnit,aiDifficulty:()=>progress.aiDifficulty,chooseDifficulty,chooseFaction,chooseSkin,chooseUnit,chooseAction,completeSolo,completeMultiplayer,grantXP,show,hide,enterMatch,openMultiplayer,returnToLobby,syncRulesetFromRoom,selectedRuleset:()=>selectedRuleset});
+global.DesertLobby=Object.freeze({exportProgress,importProgress,useGuestProfile,careerStats:()=>({nickname:progress.nickname,level:levelFromXP(progress.xp).level,mpWins:progress.mpWins,mpLosses:progress.mpLosses,faction:progress.selectedFaction}),levelFromXP,filterForSkin,skinFilter:()=>currentSkin().filter,selectedSkin:()=>currentSkin().id,selectedFaction:()=>progress.selectedFaction,selectedUnit:()=>selectedUnit,aiDifficulty:()=>progress.aiDifficulty,difficultyLabel,chooseDifficulty,chooseFaction,chooseSkin,chooseUnit,chooseAction,completeSolo,completeMultiplayer,grantXP,show,hide,enterMatch,openMultiplayer,returnToLobby,syncRulesetFromRoom,selectedRuleset:()=>selectedRuleset});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize);else initialize();
 })(window);
