@@ -819,3 +819,25 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
 .mp-counter-good{color:#97e0ba}
 .mp-counter-bad{color:#f2afa0}
 @media(max-width:620px){.mp-counter-grid{grid-template-columns:1fr}}
+
+
+/* Always-available comparison of confirmed Prisms from the shared multiplayer HUD. */
+.command-hud .mp-augment-trigger{display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;border-color:#bfa171;color:#ffe7c0;background:#26313c}
+.command-hud .mp-augment-trigger:hover,.command-hud .mp-augment-trigger:focus-visible{border-color:#ffe6a5;background:#3f3a43}
+.mp-augment-trigger[hidden]{display:none!important}
+.mp-augment-trigger span{font-size:11px;font-weight:700;color:#c9dfeb}
+.mp-augment-dialog{position:fixed;max-width:min(750px,94vw);width:94vw;max-height:86dvh;overflow-y:auto;margin:auto;padding:18px;border:1px solid #bda071;border-radius:12px;background:#112531;color:#f4ecdc;box-shadow:0 12px 50px #000b}
+.mp-augment-dialog::backdrop{background:#07131bbd}
+.mp-augment-dialog:not([open]){display:none!important}
+.mp-augment-dialog-header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.mp-augment-dialog-header h2{font-size:18px;margin:0;color:#f4d39f}
+.mp-augment-dialog-note{font-size:12px;color:#bad0d6;line-height:1.5;margin:8px 0 0}
+.mp-augment-dialog .mp-augment-roster{margin:10px 0 0;padding:10px}
+.mp-augment-dialog .mp-augment-picks details{flex:0 1 auto;min-width:135px}
+.mp-augment-dialog .mp-augment-picks details[open]{width:100%}
+@media(max-width:700px){
+ .command-hud .mp-augment-trigger{padding:7px 9px;font-size:11px;white-space:normal}
+ .mp-augment-trigger span{font-size:10px}
+ .mp-augment-dialog{padding:10px;max-height:90dvh}
+ .mp-augment-dialog .mp-augment-picks details{min-width:0;width:100%}
+}
