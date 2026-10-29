@@ -280,14 +280,40 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   if(major===0&&counts[0]>=3&&(bot.faction===3||bot.faction===4)&&bot.cash>=COST[6])return 6;
   return [[1,6,3],[3,5],[0,1],[2,6],[2,3],[0,6],[4,1],[0,5]][major][0];
  }
+ function tacticNukeEligible(bot){
+  const endangered=state.cores.some(row=>row[bot.team]<=CORE_HP*.7);
+  const intrusion=state.units.some(u=>u.hp>0&&u.team!==bot.team&&
+   (bot.team===0?u.x<370:u.x>WIDTH-370));
+  return endangered||intrusion;
+ }
  function hardBotPurchase(bot){
   const ai=global.DesertHardAI;if(!ai)return;
   const brain=bot.hardBrain||(bot.hardBrain=ai.create(bot.faction));
   // Consume only one actual nuclear charge when the bot's core is endangered.
   // The ordinary team-agnostic tactic validates the intrusion and targets.
-  if(bot.nukes&&state.units.some(u=>u.hp>0&&u.team!==bot.team&&
-   (bot.team===1?u.x>WIDTH-550:u.x<550))){
-   tactic(bot,'nuke');
+  if(bot.nukes){
+   const enemy=state.units.filter(u=>u.hp>0&&u.team!==bot.team&&
+    (bot.team===1?u.x>=WIDTH*.62:u.x<=WIDTH*.38));
+   const threat=u=>global.DesertConsolidation?.strength?.(u)||1;
+   let blast=null,score=0;
+   if(state.wave>=5)for(const u of enemy){
+    const group=enemy.filter(v=>Math.hypot(u.x-v.x,u.y-v.y)<=240);
+    const threatCount=group.reduce((sum,v)=>sum+threat(v),0);
+    if(threatCount>score){score=threatCount;blast=group;}
+   }
+   // Regular emergency: same 70%-core / deep penetration restriction.
+   const emergency=tacticNukeEligible(bot);
+   if(emergency)tactic(bot,'nuke');
+   else if(score>=20&&blast?.length){
+    bot.nukes=0;
+    const taken=blast.reduce((sum,u)=>sum+threat(u),0);
+    for(const u of blast){
+     const hp=u.hp;u.hp=0;combatHit(u,hp);u.killed=true;
+     state.effects.push({x:u.x,y:u.y,lane:u.lane,kind:'nuke',time:1.2,team:bot.team});
+    }
+    state.units=state.units.filter(u=>u.hp>0);
+    state.effects.push({x:blast[0].x,y:blast[0].y,lane:blast[0].lane,kind:'nuke',time:1.6,team:bot.team,casualties:taken});
+   }
   }
   const ours=state.units.filter(u=>u.hp>0&&u.team===bot.team);
   const known=state.units.filter(u=>u.hp>0&&u.team!==bot.team&&((bot.team===1?u.x>=WIDTH*.56:u.x<=WIDTH*.44)||ours.some(v=>Math.hypot(v.x-u.x,v.y-u.y)<340)));
