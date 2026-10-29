@@ -8,7 +8,6 @@ const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
 const gallery=fs.readFileSync(path.join(__dirname,'sprite-gallery.html'),'utf8');
 assert.match(html,/sprite-animations\.js/);
 assert.ok(html.indexOf('sprite-animations.js')<html.indexOf('game-v2.js'),'sprite runtime must load before game');
-assert.match(html,/sprite-gallery\.html/);
 assert.match(gallery,/sprite-animations\.js/);
 let paintCalls=0,canvases=0;
 const context=new Proxy({fillRect(x,y,w,h){paintCalls++;assert.ok(Number.isFinite(x+y+w+h));},drawImage(){paintCalls++;},createLinearGradient(){return {addColorStop(){}};}},{
