@@ -128,6 +128,8 @@ click('startButton');
 const econGame=sandbox.window.__gameTest,eq=econGame.state();
 // Identical 0.5-second income tick at equal economy levels.
 eq.cash=360;eq.enemyCash=360;
+// Freeze purchases only while verifying independent, equal fixed income ticks.
+eq.aiNextThink=Infinity;
 econGame.tick(.5);
 assert.equal(eq.cash,361,'player receives +1 per half second');
 assert.equal(eq.enemyCash,361,'AI receives precisely the same +1 per half second');
