@@ -92,11 +92,11 @@ assert.equal(mirror.enemyEco,2,'AI never buys the missing extractor with free mo
 const priorBuildings=mirror.enemyBuilt.filter(x=>x!==null).length;
 api.hardInvest();
 assert.equal(mirror.enemyBuilt.filter(x=>x!==null).length,priorBuildings,'AI saves for the exact missing extractor instead of spending on units');
-mirror.enemyCash=130;
+mirror.enemyCash=129;
 api.hardInvest();
 assert.equal(mirror.enemyEco,3,'AI resumes the queued upgrade when funds are available');
-assert.equal(mirror.enemyCash,0,'queued extractor consumes its actual 130 CR price');
-assert.equal(mirror.enemyMineCosts[2],130,'third level is recorded at its real cost');
+assert.equal(mirror.enemyCash,0,'queued extractor consumes its actual 129 CR price');
+assert.equal(mirror.enemyMineCosts[2],129,'third level is recorded at its real cost');
 assert.ok(mirror.enemyEcoReadyAt>mirror.elapsed,'AI also suffers the third-level blackout');
 
 // Only the hard AI has one automatic, mirrored emergency nuke each match.
