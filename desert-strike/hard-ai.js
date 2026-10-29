@@ -17,6 +17,20 @@ function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={}}){
  const groundSpecial=[3,4,6,7].includes(brain.faction);
  const focusCounters=concentrated?[[1,3],[3,5],[0,1],[2,groundSpecial?3:6],[2,3],[0,groundSpecial?1:6],(intel.air||0)>=roles[6]*.5?[4,1]:[2,3],[0,5]][major]:[];
  const counterReady=army>=6&&focusCounters.reduce((n,r)=>n+counts[r],0)>=army*.6;
+ // Siege supported by spear infantry is a two-role strategy, not a pure
+ // 65%-dominance spam. A mobile assault needs armor to tie up the spears and
+ // ranged troops to thin them before the flanking cavalry reaches artillery.
+ const protectedSiege=seen>=8&&roles[5]>=Math.max(4,seen*.38)&&roles[0]>=Math.max(2,seen*.16);
+ if(protectedSiege&&army>=3){
+  const ordered=[6,3,1],minimum=[.24,.22,.18];
+  for(let i=0;i<ordered.length;i++){
+   const role=ordered[i],goal=Math.max(1,Math.ceil(army*minimum[i]));
+   if(counts[role]<goal){
+    if(cash>=costs[role])return {kind:'unit',role};
+    return null; // Save for a real counter, not more low-impact melee spam.
+   }
+  }
+ }
  const pending=plan.opening[brain.opening];
  // An exposed rush takes precedence over a scripted opener. A blocked expensive
  // opener must never leave an affordable, useful defender unbuilt.
