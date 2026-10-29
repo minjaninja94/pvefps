@@ -594,3 +594,19 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
 .lobby-ruleset-options button:focus-visible{outline:2px solid #fff4c1;outline-offset:2px}
 #lobbyRulesetDescription{margin:9px 0 0;font-size:11px;color:#b6cbd1;line-height:1.5}
 @media(max-width:460px){.lobby-ruleset-heading{align-items:flex-start;flex-direction:column}.lobby-ruleset-options button{padding:10px 8px}.lobby-ruleset-options button strong{font-size:14px}.lobby-ruleset-options button small{font-size:10px}}
+
+/* Single-player 300-card augment draft. Shared tier data, independent of P2P UI. */
+#soloAugmentOverlay{z-index:1600}
+.solo-augment-dialog{width:min(94vw,850px);max-width:850px;max-height:92dvh;overflow-y:auto;padding:clamp(16px,3vw,26px);border:1px solid #d4b478;background:linear-gradient(145deg,#263b48,#111f32);box-shadow:0 20px 75px #000c;text-align:left}
+.solo-augment-top{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.solo-augment-top h2{font-size:clamp(19px,2.6vw,28px);margin:5px 0;color:#ffe6b1}
+.solo-augment-clock{padding:8px 12px;border:1px solid #b7a17a;background:#172d3a;border-radius:8px;display:grid;gap:4px;text-align:center;flex-shrink:0}
+.solo-augment-clock span{font-size:10px;color:#bad5de}.solo-augment-clock strong{font-size:24px;color:#f9cd7b;font-variant-numeric:tabular-nums}
+.solo-augment-explain{color:#bed4dc;font-size:12px;line-height:1.5;margin:12px 0 17px}
+.solo-augment-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.solo-augment-card{min-width:0;display:flex;flex-direction:column;gap:12px;padding:16px 12px;border:1px solid #7e9aab;border-radius:11px;background:linear-gradient(155deg,#253b4e,#112632)}
+.solo-augment-card strong{color:#ffdb9c;font-size:16px;line-height:1.4}
+.solo-augment-card p{flex:1;font-size:13px;color:#d8e7e8;line-height:1.65;min-height:58px;margin:0;white-space:pre-line}
+.solo-augment-card .btn{min-height:38px;border-radius:7px;font-size:12px;text-align:center;cursor:pointer}
+.solo-augment-current{font-size:12px;margin:13px 0 0;color:#b5cbd3}
+@media(max-width:680px){.solo-augment-dialog{width:96vw;max-height:96dvh}.solo-augment-cards{grid-template-columns:1fr;gap:8px}.solo-augment-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;padding:10px 11px}.solo-augment-card strong{grid-column:1/-1;font-size:14px}.solo-augment-card p{grid-column:1/-1;min-height:0;font-size:12px}.solo-augment-card .btn{padding:7px 9px;min-height:33px}.solo-augment-top{align-items:flex-start}.solo-augment-clock strong{font-size:18px}}

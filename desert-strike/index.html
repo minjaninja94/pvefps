@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=augment-rule-picker1"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=solo-augments1"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -11,11 +11,11 @@
     <h1>지휘관 사령부</h1><p class="lobby-subtitle">종족을 고르고 부대를 편성하세요. 영웅의 외형은 전투 성능에 영향을 주지 않습니다.</p>
     <div class="lobby-stage"><div class="lobby-stage-glow"></div><canvas id="lobbyHero" width="320" height="210" aria-label="선택한 종족 사령부와 대표 유닛"></canvas><div class="lobby-stage-label"><span id="lobbyFactionName">철갑연합</span><small id="lobbyFactionTrait">다목적 장갑·전열</small></div></div>
     <div class="lobby-difficulty" id="lobbyDifficulty" role="group" aria-label="싱글·3라인 연습 AI 난이도"><span>AI 전투 난이도 <small>싱글 · 3라인 연습</small></span><div><button type="button" data-difficulty="normal" aria-pressed="true" class="selected"><strong>일반</strong><small>기본 전술 AI</small></button><button type="button" data-difficulty="hard" aria-pressed="false"><strong>하드</strong><small>선제 빌드 · 적극적인 인컴 투자</small></button></div><p>하드도 같은 시작 자원과 수입 규칙을 사용합니다. 추가 자원 보너스는 없습니다.</p></div>
-    <div id="lobbyRulesetPicker" class="lobby-ruleset-picker" role="group" aria-label="멀티플레이 및 3라인 연습 전투 규칙">
-     <div class="lobby-ruleset-heading"><strong>전투 규칙 선택</strong><small>멀티플레이 · 3라인 연습 적용</small></div>
+    <div id="lobbyRulesetPicker" class="lobby-ruleset-picker" role="group" aria-label="싱글, 멀티플레이 및 3라인 연습 전투 규칙">
+     <div class="lobby-ruleset-heading"><strong>전투 규칙 선택</strong><small>싱글 · 멀티플레이 · 3라인 연습 모두 적용</small></div>
      <div class="lobby-ruleset-options">
       <button type="button" id="lobbyRulesetStandard" data-ruleset="standard" class="selected" aria-pressed="true"><strong>일반전</strong><small>기본 규칙으로 전투</small></button>
-      <button type="button" id="lobbyRulesetAugment" data-ruleset="augment" aria-pressed="false"><strong>✦ 증강전</strong><small>300종 카드 · 웨이브마다 전략 강화</small></button>
+      <button type="button" id="lobbyRulesetAugment" data-ruleset="augment" aria-pressed="false"><strong>✦ 증강전</strong><small>300종 카드 · 싱글/멀티 공통</small></button>
      </div>
      <p id="lobbyRulesetDescription" aria-live="polite">일반전 선택 중 · 기존 전투 규칙을 사용합니다.</p>
     </div>
@@ -192,6 +192,14 @@
 <footer><span id="notification" role="status">진영을 선택하고 전투를 시작하세요.</span><span class="footer-tag">DESERT FRONT · ORIGINAL PROTOTYPE</span></footer>
 </div>
 <div id="startOverlay" class="modal-backdrop"><div class="modal-panel start-panel"><span class="eyebrow">DEPLOYMENT / CHOOSE YOUR FACTION</span><h2>전투 진영 선택</h2><p>열 종족이 역할 상성을 공유하지만 특성은 다릅니다. 월영 수인족은 근접, 은월 엘프족은 원거리 전투에 특화되어 있습니다. 상대 AI는 다른 진영으로 시작합니다.</p><div id="factionCards" class="faction-cards"></div><button id="startButton" class="btn start-cta">선택한 진영으로 출격 ↗</button></div></div>
+<div id="soloAugmentOverlay" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="soloAugmentHeading">
+ <section class="modal-panel solo-augment-dialog" tabindex="-1">
+  <div class="solo-augment-top"><div><span class="eyebrow">SINGLE PLAYER / AUGMENT DRAFT</span><h2 id="soloAugmentHeading">WAVE 01 · 증강 선택</h2></div><div class="solo-augment-clock"><span>남은 시간</span><strong id="soloAugmentTime">30초</strong></div></div>
+  <p class="solo-augment-explain">증강 카드 3장 중 하나를 선택합니다. 각 카드마다 리롤 1회가 가능하며, 30초가 지나면 자동 선택됩니다. 카드를 고르는 동안 전투가 일시정지됩니다.</p>
+  <div id="soloAugmentCards" class="solo-augment-cards" aria-label="선택 가능한 증강 카드"></div>
+  <p id="soloAugmentCurrent" class="solo-augment-current" aria-live="polite">획득 증강 0개 · 카드마다 리롤 1회</p>
+ </section>
+</div>
 <div id="endOverlay" class="modal-backdrop hidden"><div class="modal-panel end-panel"><span class="eyebrow">BATTLE REPORT</span><h2 id="endTitle">승리</h2><p id="endSummary"></p><div id="soloProductionStats" class="result-production" aria-label="경기 유닛 생산 통계"></div><button id="restartButton" class="btn start-cta">메인 로비로 돌아가기</button></div></div>
 <div id="mpResultOverlay" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="mpResultTitle">
  <div class="modal-panel result-panel" tabindex="-1">
@@ -231,12 +239,12 @@
 <script src="./combat-audio.js?v=godotvoice1" defer></script>
 <script src="./tri-lane-ui.js?v=augment-rule-picker2" defer></script>
 <script src="./battle-report.js?v=results1" defer></script>
-<script src="./game-v2.js?v=factiontraits1" defer></script>
+<script src="./game-v2.js?v=solo-augments1" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=battlebgm1" defer></script>
 <script src="./desert-member.js?v=auth-layer2" defer></script>
 <script src="./career-profile.js?v=rank-badges2" defer></script>
 <script src="./audio-settings.js?v=mixerv1" defer></script>
-<script src="./front-lobby.js?v=augment-rule-picker1" defer></script>
+<script src="./front-lobby.js?v=solo-augments1" defer></script>
 </body></html>

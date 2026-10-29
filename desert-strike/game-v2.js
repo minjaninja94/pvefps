@@ -37,7 +37,7 @@ const FACTIONS=[
 ];
 const RNAME=ROLE.map(r=>r.name),SPRITES=new Map();
 let selectedFaction=0,state=null,selectedRole=null,demolition=false,activeView='base',lastFrame=0,lastRenderAt=0,uiElapsed=0;
-let audio=null,bannerSeconds=0,barrageSeconds=0,stamp=0;
+let audio=null,bannerSeconds=0,barrageSeconds=0,stamp=0,soloAug=null;
 function clamp(n,a,b){return Math.min(b,Math.max(a,n));}
 function random(a,b){return a+Math.random()*(b-a);}
 function money(n){return Math.floor(n).toLocaleString('ko-KR');}
@@ -90,8 +90,13 @@ function compactArmy(){
  for(const shot of state.shots)if(result.redirects.has(shot.target))shot.target=result.redirects.get(shot.target);
  for(const hero of result.heroes)floatText(hero.x,hero.y-35,'영웅 ×20','#ff5968');
 }
+function effectiveDef(role,faction,side=0){
+ const base=getDef(role,faction);
+ if(side!==0||state?.ruleset!=='augment'||!state.augments?.length)return base;
+ return window.DesertAugments?.apply?.(base,state.augments,role)||base;
+}
 function combatDef(u){
- const base=getDef(u.role,u.faction),d=window.DesertConsolidation?.definition(base,u)||base;
+ const base=u.guardian?getDef(u.role,u.faction):effectiveDef(u.role,u.faction,u.side),d=window.DesertConsolidation?.definition(base,u)||base;
  return u.isHatchling?{...d,hp:1,damage:5,range:24,rate:1.28,speed:108,armor:0,airTarget:false,kind:'ground'}:d;
 }
 function broodLay(parent,target,roll=Math.random){
@@ -148,29 +153,43 @@ function chirp(hz=420,length=.08){
 }
 function reset(){
  window.DesertCombatAudio?.stop?.();
+ soloAug=null;
+ $('soloAugmentOverlay')?.classList.add('hidden');
  state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:360,eco:0,enemyEco:0,ecoReadyAt:0,enemyEcoReadyAt:0,mineCosts:{},enemyMineCosts:{},weapon:0,armor:0,enemyWeapon:0,enemyArmor:0,incomeClock:0,cameraX:1100,followFront:true,
  wave:0,next:INTERVAL,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],forwardHP:[1000,1000],forwardClaimed:[false,false],
  built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),produced:[Array(8).fill(0),Array(8).fill(0)],units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},
  broodBirths:[0,0],broodBirthsTotal:[0,0],
  towerShots:[],aiSight:new Set(),nukes:1,barrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
- nextUnitId:1,attackCount:0,nextConsolidation:1,aiDifficulty:window.DesertLobby?.aiDifficulty?.()||'normal',hardBrain:null};
+ nextUnitId:1,attackCount:0,nextConsolidation:1,aiDifficulty:window.DesertLobby?.aiDifficulty?.()||'normal',hardBrain:null,
+ ruleset:'standard',augments:[],augmentChoice:null,augmentStage:-1,augmentSchedule:[]};
  selectedRole=null;demolition=false;bannerSeconds=0;barrageSeconds=0;
  $('startOverlay').classList.remove('hidden');$('endOverlay').classList.add('hidden');
  $('pauseButton').textContent='Ⅱ 일시정지';$('speedButton').textContent='▶ 1×';
  updateUI(true);setMessage('진영을 선택하고 전투를 시작하세요.');
 }
 function start(){
+ const ruleset=window.DesertLobby?.selectedRuleset?.()==='augment'?'augment':'standard';
+ if(ruleset==='augment'&&!window.DesertAugments?.ready?.()){
+  setMessage('증강 카드 데이터 300종을 불러오는 중입니다. 로딩 후 다시 출격하세요.');
+  return;
+ }
  selectedFaction=Number(document.querySelector('[data-faction].selected')?.dataset.faction||selectedFaction);
  reset();
  state.faction=selectedFaction;
  state.enemyFaction=(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length;
  state.live=true;
+ state.ruleset=ruleset;
+ if(ruleset==='augment'){
+  soloAug=window.DesertAugments.create(Date.now()>>>0);
+  state.augmentSchedule=soloAug.schedule.slice();
+ }
  aiInitialBuild();
  $('startOverlay').classList.add('hidden');
  changeView('base');
  setMessage((state.aiDifficulty==='hard'?'하드 AI · 추가 자원 보너스 없음. ':'')+'전투 시작! 24초 이내에 생산 시설을 배치하세요.');
  updateUI(true);chirp(530,.16);
+ if(ruleset==='augment')beginSoloAugment(0);
 }
 function changeView(id){
  const mode=document.body?.dataset?.playMode;
@@ -269,7 +288,7 @@ function barrage(){
 function banner(t){$('waveBanner').textContent=t;$('waveBanner').classList.add('show');bannerSeconds=2;}
 function createUnit(side,slot,role,fromProduction=true){
  if(fromProduction&&role>=0&&role<8)state.produced[side][role]++;
- const faction=side===0?state.faction:state.enemyFaction,def=getDef(role,faction);
+ const faction=side===0?state.faction:state.enemyFaction,def=effectiveDef(role,faction,side);
  const row=Math.floor(slot/COLS),col=slot%COLS;
  const x=side===0?240+col*7:WORLD_W-240-col*7;
  const y=LANES[row]+(col-7)*3+random(-7,7);
@@ -465,8 +484,84 @@ function aiInvest(){
   state.enemyBuilt[slot]=role;state.enemyCash-=ROLE[role].cost;
  }
 }
+function renderSoloAugment(){
+ const popup=$('soloAugmentOverlay'),choice=state?.augmentChoice;
+ if(!popup)return;
+ if(!choice){popup.classList.add('hidden');return;}
+ popup.classList.remove('hidden');
+ const name=$('soloAugmentHeading'),time=$('soloAugmentTime'),cards=$('soloAugmentCards'),info=$('soloAugmentCurrent');
+ if(name)name.textContent='WAVE '+String(choice.round).padStart(2,'0')+' · '+({silver:'실버',gold:'골드',prismatic:'프리즘'}[choice.tier]||choice.tier)+' 증강 선택';
+ if(time)time.textContent=Math.ceil(choice.remaining)+'초';
+ if(info)info.textContent='획득 증강 '+state.augments.length+'개 · 카드마다 리롤 1회';
+ if(!cards)return;
+ cards.replaceChildren();
+ for(let i=0;i<3;i++){
+  const card=window.DesertAugments.card(choice.cards[i]);
+  const panel=document.createElement('div');panel.className='solo-augment-card';
+  const label=document.createElement('strong');label.textContent=card?.name||'증강 카드';
+  const detail=document.createElement('p');detail.textContent=card?.description||'카드 정보가 없습니다.';
+  const action=document.createElement('button');action.type='button';action.className='btn accent';
+  action.textContent='이 증강 선택';action.disabled=!card;
+  action.addEventListener('click',()=>chooseSoloAugment(i));
+  const reroll=document.createElement('button');reroll.type='button';reroll.className='btn outline';
+  reroll.textContent=choice.rerolls[i]?'리롤 사용 완료':'다시 뽑기 · 1회';
+  reroll.disabled=!card||choice.rerolls[i];
+  reroll.addEventListener('click',()=>rerollSoloAugment(i));
+  panel.append(label,detail,action,reroll);cards.append(panel);
+ }
+}
+function beginSoloAugment(index,deferWave=false){
+ if(state?.ruleset!=='augment'||!soloAug||state.augmentChoice||index<=state.augmentStage||index<0||index>=window.DesertAugments.STAGES.length)return false;
+ const tier=state.augmentSchedule[index],cards=soloAug.offer(tier,state.faction,state.augments);
+ if(cards.some(id=>!id)){setMessage('증강 카드 편성에 문제가 있습니다.');return false;}
+ state.augmentStage=index;
+ state.augmentChoice={round:window.DesertAugments.STAGES[index],tier,remaining:30,cards,rerolls:[false,false,false],deferWave};
+ renderSoloAugment();
+ return true;
+}
+function chooseSoloAugment(slot){
+ const choice=state?.augmentChoice;
+ if(!choice||!Number.isInteger(slot)||slot<0||slot>2||!choice.cards[slot])return false;
+ const id=choice.cards[slot],before=state.augments.slice();state.augments.push(id);
+ for(const u of state.units){
+  if(u.side!==0||u.hp<=0||u.isHatchling||u.guardian)continue;
+  const base=getDef(u.role,u.faction);
+  const previous=window.DesertAugments.apply(base,before,u.role).hp;
+  const next=window.DesertAugments.apply(base,state.augments,u.role).hp;
+  const ratio=next/Math.max(1,previous);
+  u.maxHP*=ratio;u.hp=Math.min(u.maxHP,u.hp*ratio);
+ }
+ const resumeWave=choice.deferWave;
+ state.augmentChoice=null;
+ renderSoloAugment();
+ setMessage('증강 확정 · '+(window.DesertAugments.card(id)?.name||id));
+ if(resumeWave)deployWave();
+ updateUI(true);
+ return true;
+}
+function rerollSoloAugment(slot){
+ const choice=state?.augmentChoice;
+ if(!choice||!Number.isInteger(slot)||slot<0||slot>2||choice.rerolls[slot])return false;
+ const card=soloAug.reroll(choice.tier,state.augments,choice.cards,slot);
+ if(!card)return false;
+ choice.cards[slot]=card;choice.rerolls[slot]=true;
+ renderSoloAugment();return true;
+}
+function advanceSoloAugmentTimer(dt){
+ const choice=state?.augmentChoice;if(!choice||!state.live||state.ended)return;
+ const prev=Math.ceil(choice.remaining);
+ choice.remaining=Math.max(0,choice.remaining-Math.max(0,dt));
+ if(Math.ceil(choice.remaining)!==prev&&$('soloAugmentTime'))$('soloAugmentTime').textContent=Math.ceil(choice.remaining)+'초';
+ if(choice.remaining===0)chooseSoloAugment(soloAug.pick());
+}
 function wave(){
- state.wave++;if(ecoRemaining()<=0)state.cash+=WAVE_STIPEND;
+ state.wave++;
+ const stage=window.DesertAugments?.STAGES?.indexOf(state.wave)??-1;
+ if(stage>=0&&beginSoloAugment(stage,true))return;
+ deployWave();
+}
+function deployWave(){
+ if(ecoRemaining()<=0)state.cash+=WAVE_STIPEND;
  state.marineSupports=[];state.marineRecruitCount=[0,0];state.broodBirths=[0,0];
  if(ecoRemaining(1)<=0)state.enemyCash+=WAVE_STIPEND;
  aiInvest();
@@ -474,7 +569,11 @@ function wave(){
  for(let i=0;i<SLOTS;i++){
   if(state.built[i]!==null&&state.built[i]!==EXTRACTOR){
    const role=state.built[i];
-   if(headcount[0]<SIDE_SUPPLY){createUnit(0,i,role);headcount[0]++;}
+   if(headcount[0]<SIDE_SUPPLY){
+    createUnit(0,i,role);headcount[0]++;
+    const extra=state.ruleset==='augment'?window.DesertAugments.extra(state.augments,role):0;
+    for(let n=0;n<extra&&headcount[0]<SIDE_SUPPLY;n++){createUnit(0,i,role);headcount[0]++;}
+   }
    if(state.faction===3&&role===7)for(const interval of [1,2])state.marineSupports.push({side:0,slot:i,role,wave:state.wave,due:state.elapsed+HUANGLONG_INTERVAL*interval});
   }
   if(state.enemyBuilt[i]!==null&&state.enemyBuilt[i]!==EXTRACTOR){
@@ -797,7 +896,7 @@ function projectileImpact(p){
  }
 }
 function tick(dt){
- if(!state.live||state.paused||state.ended)return;
+ if(!state.live||state.paused||state.ended||state.augmentChoice)return;
  if(state.followFront){
   const left=state.units.filter(u=>u.side===0),right=state.units.filter(u=>u.side===1);
   let center=WORLD_W/2;
@@ -815,7 +914,7 @@ function tick(dt){
  while(state.incomeClock>=INCOME_PERIOD){const at=state.elapsed-state.incomeClock+INCOME_PERIOD;state.incomeClock-=INCOME_PERIOD;if(at+1e-6>=state.ecoReadyAt)state.cash+=initialIncome+state.eco;if(at+1e-6>=state.enemyEcoReadyAt)state.enemyCash+=initialIncome+state.enemyEco;}
  if(state.aiDifficulty==='hard'&&state.elapsed>=(state.hardBrain?.nextThink||0)){hardInvest();if(state.hardBrain)state.hardBrain.nextThink=state.elapsed+1;}
  state.barrageCd=Math.max(0,state.barrageCd-ds);
- while(state.next<=0){state.next+=INTERVAL;wave();}
+ while(state.next<=0){state.next+=INTERVAL;wave();if(state.augmentChoice)break;}
  deployMarineSupports();
  state.sortedTeams=[state.units.filter(u=>u.side===0).sort((a,b)=>a.x-b.x),state.units.filter(u=>u.side===1).sort((a,b)=>a.x-b.x)];
  for(const u of state.units){
@@ -824,6 +923,7 @@ function tick(dt){
   if(!u.isHatchling){
    if(u.faction===8)u.hp=Math.min(u.maxHP,u.hp+u.maxHP*OCTOPER_REGEN*ds);
    if(u.faction===7)u.hp=Math.min(u.maxHP,u.hp+u.maxHP*ROBOT_REPAIR*ds);
+   if(def.regen>0)u.hp=Math.min(u.maxHP,u.hp+u.maxHP*def.regen*ds);
   }
   u.cooldown-=ds;u.anim+=ds*12;u.blink=Math.max(0,u.blink-ds);
   u.spawnAge=Math.min(5,(u.spawnAge||0)+ds);u.hitAge=Math.max(0,(u.hitAge||0)-ds);u.skillAge=Math.max(0,(u.skillAge||0)-ds);u.moving=false;
@@ -1412,6 +1512,7 @@ function drawProductionMinimap(){
 function frame(now){
  const delta=Math.min((now-lastFrame)/1000||0,.045);lastFrame=now;
  if(state&&activeView!=='multiplayer'&&!document.body?.classList?.contains('lobby-active')&&!document.hidden){
+  advanceSoloAugmentTimer(delta);
   if(state.live&&!state.ended&&state.baseHP[0]<MAX_BASE*.38)window.DesertCombatAudio?.cue('alarm');
   tick(delta);if(now-lastRenderAt>=40){lastRenderAt=now;if(activeView==='battle'){drawBattle();drawMinimap();}else if(activeView==='base'){drawBase();}drawProductionMinimap();}}
  requestAnimationFrame(frame);
@@ -1489,7 +1590,7 @@ function wire(){
  $('helpButton').addEventListener('click',()=>$('helpDialog').showModal());
  $('helpClose').addEventListener('click',()=>$('helpDialog').close());
  document.addEventListener('keydown',e=>{
-  if(document.body?.dataset?.playMode==='multi'||$('helpDialog').open)return;
+  if(document.body?.dataset?.playMode==='multi'||$('helpDialog').open||state?.augmentChoice)return;
   if(e.altKey&&['1','2','3'].includes(e.key)){e.preventDefault();changeView(['base','battle','special'][Number(e.key)-1]);return;}
   if(e.target&&['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;
   if(e.key>='1'&&e.key<='8')selectRole(Number(e.key)-1);

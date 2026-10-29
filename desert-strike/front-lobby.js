@@ -41,8 +41,10 @@ function renderRuleset(){
  }
  const description=$('lobbyRulesetDescription');
  if(description)description.textContent=selected
-  ?'증강전 선택 중 · 1·10·20·30·40웨이브에 카드 3장 중 선택, 슬롯별 리롤 1회 · 300종 증강'
-  :'일반전 선택 중 · 기존 전투 규칙을 사용합니다.';
+  ?'증강전 선택 중 · 싱글/멀티/AI 연습 · WAVE 1·10·20·30·40에 카드 3장, 슬롯별 리롤 1회'
+  :'일반전 선택 중 · 싱글/멀티/AI 연습에 기존 전투 규칙을 사용합니다.';
+ const solo=$('lobbySolo')?.querySelector('span');
+ if(solo)solo.textContent=selected?'✦ 싱글 증강전 · 300종 카드':(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 22웨이브 전투';
  const multiplayer=$('lobbyMulti')?.querySelector('span');
  if(multiplayer)multiplayer.textContent=selected?'✦ 증강전 · 1:1~3:3 PvP 및 협동':'1:1~3:3 경쟁 · 2~3인 협동';
  const practice=$('lobbyPractice')?.querySelector('span');
@@ -193,10 +195,25 @@ function prepare(){
  const button=[...document.querySelectorAll('#factionCards [data-faction]')].find(x=>Number(x.dataset.faction)===progress.selectedFaction);
  if(button)button.click();$('mpFaction').value=String(progress.selectedFaction);$('mpName').value=progress.nickname;
 }
+let soloAugLoadPending=false;
 function single(){
  if(global.DesertTriNetwork?.current()?.roomId){
   $('lobbyMultiplayerConfig').hidden=false;
   $('mpStatus').textContent='먼저 참여 중인 방에서 나가야 싱글플레이를 시작할 수 있습니다.';
+  return;
+ }
+ if(selectedRuleset==='augment'&&!global.DesertAugments?.ready?.()){
+  if(soloAugLoadPending)return;
+  if(!global.DesertAugments?.load){$('lobbyRulesetDescription').textContent='증강전을 시작할 수 없습니다. 카드를 불러오는 스크립트를 확인하세요.';return;}
+  soloAugLoadPending=true;$('lobbySolo').disabled=true;
+  $('lobbyRulesetDescription').textContent='300종 증강 카드 다운로드 중…';
+  void global.DesertAugments.load().then(()=>{
+   soloAugLoadPending=false;$('lobbySolo').disabled=false;
+   single();
+  }).catch(e=>{
+   soloAugLoadPending=false;$('lobbySolo').disabled=false;
+   $('lobbyRulesetDescription').textContent='증강 데이터 오류: '+(e?.message||String(e))+' · 다시 출격을 눌러주세요.';
+  });
   return;
  }
  document.body.dataset.playMode='solo';prepare();setMultiplayerExpanded(false);
@@ -273,6 +290,6 @@ function initialize(){
  global.addEventListener?.('maiden-art-ready',renderCovers);global.addEventListener?.('isometric-art-ready',renderCovers);global.addEventListener?.('desert-real-sprites-ready',renderCovers);global.addEventListener?.('desert-moe-ready',renderCovers);
  show();void restoreAccount().finally(()=>global.DesertMember?.restore?.());
 }
-global.DesertLobby=Object.freeze({exportProgress,importProgress,useGuestProfile,careerStats:()=>({nickname:progress.nickname,level:levelFromXP(progress.xp).level,mpWins:progress.mpWins,mpLosses:progress.mpLosses,faction:progress.selectedFaction}),levelFromXP,filterForSkin,skinFilter:()=>currentSkin().filter,selectedSkin:()=>currentSkin().id,selectedFaction:()=>progress.selectedFaction,selectedUnit:()=>selectedUnit,aiDifficulty:()=>progress.aiDifficulty,chooseDifficulty,chooseFaction,chooseSkin,chooseUnit,chooseAction,completeSolo,completeMultiplayer,grantXP,show,hide,enterMatch,openMultiplayer,returnToLobby,syncRulesetFromRoom});
+global.DesertLobby=Object.freeze({exportProgress,importProgress,useGuestProfile,careerStats:()=>({nickname:progress.nickname,level:levelFromXP(progress.xp).level,mpWins:progress.mpWins,mpLosses:progress.mpLosses,faction:progress.selectedFaction}),levelFromXP,filterForSkin,skinFilter:()=>currentSkin().filter,selectedSkin:()=>currentSkin().id,selectedFaction:()=>progress.selectedFaction,selectedUnit:()=>selectedUnit,aiDifficulty:()=>progress.aiDifficulty,chooseDifficulty,chooseFaction,chooseSkin,chooseUnit,chooseAction,completeSolo,completeMultiplayer,grantXP,show,hide,enterMatch,openMultiplayer,returnToLobby,syncRulesetFromRoom,selectedRuleset:()=>selectedRuleset});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize);else initialize();
 })(window);
