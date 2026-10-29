@@ -117,7 +117,7 @@ assert.ok(mirror.enemyEcoReadyAt>mirror.elapsed,'AI also suffers the third-level
 
 // A human player's one shot must also clear every enemy on a healthy map.
 api.reset();
-const own=api.state();own.live=true;own.baseHP[0]=7200;
+const own=api.state();own.live=true;own.baseHP[0]=8640;
 own.units.push({uid:65001,side:0,faction:0,role:1,x:260,y:260,hp:120,maxHP:120});
 for(let i=0;i<35;i++)own.units.push({uid:66000+i,side:1,faction:0,role:0,
  x:500+i*65,y:120+(i%3)*70,hp:110,maxHP:110});
@@ -141,7 +141,7 @@ for(let i=0;i<99;i++)nuke.units.push(unit(i,1200));
 nuke.units.push({...unit(99),x:180});
 nuke.units.push({uid:999888,side:1,role:0,faction:0,hp:100,maxHP:100,x:3000,y:240});
 assert.equal(api.hardEmergency(),false,'99+1 enemies while AI is winning must not waste the nuclear strike');
-nuke.baseHP[1]=7200*.38;
+nuke.baseHP[1]=8640*.38;
 assert.equal(api.hardEmergency(),true,'AI fires on 100 enemies when the base is under pressure');
 assert.equal(nuke.enemyNukes,0,'one real AI nuclear charge is consumed');
 assert.equal(nuke.units.length,1,'nuke clears opponents everywhere and preserves allies');
@@ -149,13 +149,13 @@ assert.equal(nuke.units[0].side,1);
 assert.equal(nuke.combatStats[0].losses[0],100,'all 100 eliminated soldiers are reported');
 assert.equal(api.hardEmergency(),false,'AI cannot launch a second nuke');
 api.reset();const save=api.state();save.live=true;save.aiDifficulty='hard';
-save.baseHP[1]=7200*.38;for(let i=0;i<99;i++)save.units.push(unit(i));
+save.baseHP[1]=8640*.38;for(let i=0;i<99;i++)save.units.push(unit(i));
 assert.equal(api.hardEmergency(),false,'hard AI saves its charge below 100 while the base is not critical');
 assert.equal(save.enemyNukes,1);
-save.baseHP[1]=7200*.14;
+save.baseHP[1]=8640*.14;
 assert.equal(api.hardEmergency(),true,'at 14% core HP the last-chance override prevents silent defeat');
 assert.equal(save.units.length,0);
-api.reset();const heroNuke=api.state();heroNuke.live=true;heroNuke.aiDifficulty='hard';heroNuke.baseHP[1]=7200*.39;
+api.reset();const heroNuke=api.state();heroNuke.live=true;heroNuke.aiDifficulty='hard';heroNuke.baseHP[1]=8640*.39;
 for(let i=0;i<5;i++)heroNuke.units.push({uid:50000+i,side:0,role:5,faction:0,
  x:1400+i*250,y:100+i*50,hp:2000,maxHP:2000,heroCount:20});
 assert.equal(api.hardEmergency(),true,'five 20-soldier heroes count as 100 and are wiped regardless of position');
@@ -193,7 +193,7 @@ for(let i=0;i<100;i++)coopState.units.push({id:99990+i,uid:'a',team:0,faction:0,
 const allyOwner=firstBot.uid;
 coopState.units.push({id:80000,uid:allyOwner,team:1,faction:firstBot.faction,
  role:1,lane:0,x:3030,y:280,hp:300,maxHP:300});
-coopState.cores[0][1]=2500*.38;
+coopState.cores[0][1]=3000*.38;
 co.tick(.2);
 assert.equal(firstBot.nukes,0,'hard multi AI uses one charge on 100 enemies under pressure');
 assert.equal(coopState.units.filter(u=>u.team===0).length,0,'nuke wipes all three lanes');
