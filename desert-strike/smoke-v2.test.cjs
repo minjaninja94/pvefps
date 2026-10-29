@@ -47,6 +47,7 @@ const controlledMath=Object.create(Math);
 controlledMath.random=()=>forcedMarineRoll===null?Math.random():forcedMarineRoll;
 const sandbox={document:doc,window:{addEventListener(){}},requestAnimationFrame(fn){queue.push(fn);},console,Math:controlledMath,Number,String,Object,Array,Map,Set,Date};
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'sprite-animations.js'),'utf8'),sandbox,{timeout:4000,filename:'sprite-animations.js'});
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'hard-ai.js'),'utf8'),sandbox,{filename:'hard-ai.js'});
 vm.runInNewContext(code.replace('initFactions();wire();reset();','window.__gameTest={state:()=>state,createUnit,resolveStrike,ecoCostFor,aiInvest,wave,tick,upgrade,aiReadOpponent,aiChoose,aiCountersFor,structureDamage,aiAdaptFacilities,separateUnits,unitRadius,bongoImpact,getDef,damage,nearestUnit,marineSpoils,deployMarineSupports,heal,enemyBaseVisible,enemyUnitVisible};initFactions();wire();reset();'),sandbox,{timeout:3500,filename:'game-v2.js'});
 assert.equal(el('cash').textContent,'360');
 assert.match(el('unitCards').innerHTML,/강점:/);
@@ -399,3 +400,29 @@ console.log('Six playable factions, 48 named units, Beastgirl melee and Elf rang
  test.elapsed=1.02;g.heal(tank,300,true);assert.equal(tank.hp,534,'one-shot Marine support retains its burst identity');
 }
 console.log('Rapid turret, temporary fog of war and diminishing healer stacking passed.');
+
+ // The reported 24-wave, all-Wolf-Tracker rush must meet a funded counter build,
+ // not an opponent capped at a handful of producers. Test both AI difficulties.
+for(const aiDifficulty of ['normal','hard']){
+ click('restartButton');click('startButton');
+ const pressure=g.state();
+ pressure.faction=6;pressure.enemyFaction=0;pressure.aiDifficulty=aiDifficulty;
+ pressure.built.fill(null);pressure.units.length=0;pressure.deadUnits.length=0;pressure.shots.length=0;
+ pressure.enemyBuilt.fill(null);pressure.enemyCash=360;pressure.enemyEco=0;
+ pressure.hardBrain=null;pressure.aiIntelMemory=null;pressure.aiSight.clear();pressure.aiNextThink=0;pressure.wave=0;pressure.next=24;
+ for(let step=0;step<5200&&!pressure.ended&&pressure.wave<24;step++){
+  if(pressure.cash>=65){
+   const slot=pressure.built.findIndex(r=>r===null);
+   if(slot>=0){pressure.cash-=65;pressure.built[slot]=0;}
+  }
+  g.tick(.12);
+ }
+ const counters=pressure.enemyBuilt.filter(r=>[1,3,6].includes(r)).length;
+ const report={difficulty:aiDifficulty,wave:pressure.wave,playerProduced:pressure.produced[0][0],
+  aiProduced:pressure.produced[1].reduce((sum,n)=>sum+n,0),playerFactories:pressure.built.filter(r=>r===0).length,
+  aiFactories:pressure.enemyBuilt.filter(r=>r!==null&&r!==8).length,aiCounters:counters,
+  hp:[Math.floor(pressure.baseHP[0]),Math.floor(pressure.baseHP[1])],eco:[pressure.eco,pressure.enemyEco]};
+ console.log('WOLF_SPAM_STRESS',JSON.stringify(report));
+ assert.ok(counters>=2,'AI must field multiple paid answers to the scouted wolf melee flood ('+aiDifficulty+')');
+ assert.ok(pressure.baseHP[1]>0,'single-role wolves must not defeat the AI without mixing counter types ('+aiDifficulty+')');
+}
