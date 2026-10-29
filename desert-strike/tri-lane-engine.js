@@ -622,6 +622,10 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    if(v.faction===0&&[3,4].includes(v.role))hit*=.94;
    if(v.faction===2&&state.seconds-(v.lastWardAt??-999)>=10){v.lastWardAt=state.seconds;hit*=.82;}
    v.hp-=hit;v.lastDamagedAt=state.seconds;
+   if(v.hp<=0){
+    const reboot=global.DesertPrism?.survival?.(chosenOf(v),v,state.seconds,v.hp)||0;
+    if(reboot>0){v.hp=reboot;v.killed=false;state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'shield',time:.8,team:v.team});}
+   }
    cool[lane][team]=TOWER_PERIOD;
    state.effects.push({x:v.x,y:v.y,lane,kind:'tower',time:.16,team});
   }
