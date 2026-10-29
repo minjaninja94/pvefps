@@ -27,7 +27,7 @@ const enemyCredits=state.players[1].cash;
 assert.equal(classic.order('home',{type:'build',lane:0,slot:1,role:1}).ok,true,'both sides can own the same slot index');
 assert.equal(state.players[1].cash,enemyCredits,'player builds may not debit their opponent');
 assert.equal(classic.order('home',{type:'build',lane:0,slot:0,role:3}).ok,false,'occupied buildings cannot be overwritten without demolition');
-state.next=.01;classic.tick(.2);
+state.seconds=23.9;state.next=.01;classic.tick(.2); // production completes at 24s
 assert.ok(state.units.some(u=>u.team===0&&u.lane===0),'first wave spawns home team');
 assert.ok(state.units.some(u=>u.team===1&&u.lane===0),'first wave spawns away team');
 assert.ok(state.units.every(u=>u.y>=0&&u.y<=520&&u.lane===0),'every actor stays in one 520-height arena');
