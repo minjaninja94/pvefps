@@ -640,11 +640,10 @@ function hardInvest(){
   const urgentDefense=intel.invaded||
    (intel.air>=3&&counts[4]<Math.max(2,intel.air*.20))||
    (intel.armor>=3&&counts[2]<Math.max(2,intel.armor*.20));
-  if(focus!==null&&!urgentDefense&&!ecoDue&&counts[focus]<20&&
-   total<Math.min(SLOTS-state.enemyEco,Math.max(growTo,28))){
-   action=state.enemyCash>=ROLE[focus].cost?{kind:'unit',role:focus}:null;
-  }
-  if(!action&&total<growTo&&!ecoDue&&brain.opening>=ai.plans[brain.plan].opening.length){
+  const commitHero=focus!==null&&!urgentDefense&&!ecoDue&&counts[focus]<20&&
+   total<Math.min(SLOTS-state.enemyEco,Math.max(growTo,28));
+  if(commitHero)action=state.enemyCash>=ROLE[focus].cost?{kind:'unit',role:focus}:null;
+  if(!action&&!commitHero&&total<growTo&&!ecoDue&&brain.opening>=ai.plans[brain.plan].opening.length){
    const candidates=ROLE.map((role,id)=>id).filter(id=>ROLE[id].cost<=state.enemyCash);
    const counters=intel.dominant===null?[]:aiCountersFor(intel.dominant);
    const weights=ai.plans[brain.plan].weights;
