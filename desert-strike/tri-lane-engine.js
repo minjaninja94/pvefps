@@ -263,14 +263,53 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  function hardBotPurchase(bot){
   const ai=global.DesertHardAI;if(!ai)return;
   const brain=bot.hardBrain||(bot.hardBrain=ai.create(bot.faction));
+  // Consume only one actual nuclear charge when the bot's core is endangered.
+  // The ordinary team-agnostic tactic validates the intrusion and targets.
+  if(bot.nukes&&state.units.some(u=>u.hp>0&&u.team!==bot.team&&
+   (bot.team===1?u.x>WIDTH-550:u.x<550))){
+   tactic(bot,'nuke');
+  }
   const ours=state.units.filter(u=>u.hp>0&&u.team===bot.team);
   const known=state.units.filter(u=>u.hp>0&&u.team!==bot.team&&((bot.team===1?u.x>=WIDTH*.56:u.x<=WIDTH*.44)||ours.some(v=>Math.hypot(v.x-u.x,v.y-u.y)<340)));
-  const air=known.filter(u=>definition(u.faction,u.role).kind==='air').reduce((n,u)=>n+(u.heroCount===20?20:1),0);
-  const armor=known.filter(u=>u.role===3||(u.role===6&&definition(u.faction,u.role).kind!=='air')).reduce((n,u)=>n+(u.heroCount===20?20:1),0);
-  const roles=Array(8).fill(0);for(const u of known)if(!u.guardian)roles[u.role]+=u.heroCount===20?20:1;
+  const power=u=>u.heroCount===20?(global.DesertConsolidation?.strength?.(u)??20):1;
+  let air=known.filter(u=>definition(u.faction,u.role).kind==='air').reduce((n,u)=>n+power(u),0);
+  let armor=known.filter(u=>u.role===3||(u.role===6&&definition(u.faction,u.role).kind!=='air')).reduce((n,u)=>n+power(u),0);
+  let roles=Array(8).fill(0);for(const u of known)if(!u.guardian)roles[u.role]+=power(u);
+  // Re-use previously scouted threats for two waves; hidden factory contents
+  // remain unknown, and the memory expires if no fresh units reappear.
+  const seen=roles.reduce((n,v)=>n+v,0);
+  if(seen){brain.lastRecon={at:state.seconds,roles:roles.slice(),air,armor};}
+  else if(brain.lastRecon&&state.seconds-brain.lastRecon.at<48){
+   roles=brain.lastRecon.roles.map(v=>Math.ceil(v*.7));
+   air=Math.ceil(brain.lastRecon.air*.7);armor=Math.ceil(brain.lastRecon.armor*.7);
+  }
   const lanePressure=Array(LANES).fill(0);for(const u of known)if(!u.guardian)lanePressure[Math.floor(u.y/LANE_H)]+=u.heroCount===20?20:1;
   const pressureTotal=lanePressure.reduce((n,v)=>n+v,0);
   const urgent=known.filter(u=>bot.team===1?u.x>WIDTH-580:u.x<580),invaded=urgent.length>0;
+  // A vision-limited barrage is worth paying for when it hits a full
+  // consolidated hero or a meaningful group, rather than blind-spamming it.
+  if(state.wave>=3&&bot.barrageCd<=0&&bot.cash>=420){
+   const largest=known.reduce((best,u)=>Math.max(best,known.reduce((sum,v)=>
+    sum+(Math.hypot(u.x-v.x,u.y-v.y)<110?COST[v.role]*power(v):0),0)),0);
+   if(largest>=650){
+    const before=bot.cash,shot=tactic(bot,'barrage');
+    if(shot.ok)ai.bought(brain,{kind:'barrage'},before-bot.cash);
+   }
+  }
+  // Buy real upgrades only out of surplus. They must not stall the first wave
+  // of counter factories or the next scheduled extractor.
+  const factories=bot.buildings.flat().filter(role=>role!==null&&role!==EXTRACTOR).length;
+  if(state.wave>=5&&factories>=7&&!invaded&&roles.reduce((n,v)=>n+v,0)<10){
+   const target=Math.min(5,1+Math.floor((state.wave-5)/5));
+   if(bot.weapon<target||bot.armor<target){
+    const kind=bot.weapon<=bot.armor?'weapon':'armor';
+    const cost=kind==='weapon'?WEAPON_COST(bot.weapon):ARMOR_COST(bot.armor);
+    if(bot.cash>=cost+240){
+     const result=research(bot,kind);
+     if(result.ok)ai.bought(brain,{kind:'research'},cost);
+    }
+   }
+  }
   for(let purchase=0;purchase<12;purchase++){
    const counts=Array(8).fill(0);for(const row of bot.buildings)for(const r of row)if(r!==null&&r!==EXTRACTOR)counts[r]++;
    const action=ai.choose(brain,{cash:bot.cash,counts,eco:bot.eco,readyAt:bot.ecoReadyAt,seconds:state.seconds,costs:COST.slice(0,8),ecoCost:ecoPrice(bot.eco),intel:{air,armor,invaded,roles}});
