@@ -130,7 +130,7 @@ test('real 300-card draft works inside the original single-player engine without
  assert.equal(st.ended,false,'no artificial wave-limit victory');
  assert.equal(st.ruleset,'standard','unlimited wave count does not change mode');
  // Hard difficulty uses the same independent AI draft, without leaking into classic mode.
- chosenAiDifficulty='hard';chosenRuleset='augment';G.start();st=G.state();
+ w.DesertPrismExperimentalEnabled=false;chosenAiDifficulty='hard';chosenRuleset='augment';G.start();st=G.state();
  assert.equal(st.aiDifficulty,'hard');
  assert.equal(st.enemyAugments.length,1,'hard AI gets an augment on round 1');
  assert.equal(w.DesertAugments.card(st.enemyAugments[0]).tier,st.augmentChoice.tier);
