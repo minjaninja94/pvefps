@@ -320,7 +320,7 @@ function onSnapshot(v){
  if(modeChanged){
   const classic=v.mode==='classic';
   $('mpBaseDescription').textContent=classic?'단일 전장 · 75칸':'라인 선택 → 유닛 선택 → 빈 칸에 건설';
-  $('mpBattleDescription').textContent=classic?'전장 유닛을 누르면 정보를 봅니다.':'미니맵을 눌러 라인을 선택하세요.';
+  $('mpBattleDescription').textContent=classic?'싱글 크기 전장 · 좌우 드래그':'싱글 크기 전장 · 라인 선택 및 좌우 드래그';
  }
  const preparation=!v.ended&&v.wave===0?Math.max(0,(v.preparationEndsAt??E.OPENING_PREP_SECONDS??10)-v.seconds):0;
  const opening=$('mpOpening');if(opening)opening.hidden=preparation<=1e-6;
@@ -432,20 +432,37 @@ function init(){
   const r=e.currentTarget.getBoundingClientRect();
   pickLane(Math.floor((e.clientY-r.top)/r.height*laneCount()),true);
  });
- $('mpBattleCanvas').addEventListener('click',e=>{
+ const mapCanvas=$('mpBattleCanvas');
+ let drag=null,suppressMapClick=false;
+ mapCanvas.addEventListener('pointerdown',e=>{
+  if(e.button!==undefined&&e.button!==0)return;
+  drag={id:e.pointerId,x:e.clientX,from:cameraX,moved:false};
+  mapCanvas.setPointerCapture?.(e.pointerId);
+ });
+ mapCanvas.addEventListener('pointermove',e=>{
+  if(!drag||drag.id!==e.pointerId)return;
+  const r=mapCanvas.getBoundingClientRect(),delta=(e.clientX-drag.x)/r.width*1100;
+  if(Math.abs(delta)>7)drag.moved=true;
+  if(drag.moved){cameraX=Math.max(0,Math.min(E.WIDTH-1100,drag.from-delta));draw();}
+ });
+ mapCanvas.addEventListener('pointerup',e=>{if(drag?.id===e.pointerId){suppressMapClick=drag.moved;drag=null;}});
+ mapCanvas.addEventListener('pointercancel',()=>{drag=null;});
+ mapCanvas.addEventListener('click',e=>{
   if(!snap)return;
-  const r=e.currentTarget.getBoundingClientRect();
-  const x=(e.clientX-r.left)/r.width*1100,y=(e.clientY-r.top)/r.height*battleHeight();
-  pickLane(Math.floor(y/battleHeight()*laneCount()));
-  const closest=snap.units.map(u=>({unit:u,distance:Math.hypot(x-u.x/3,y-u.y/snap.height*battleHeight())}))
-   .filter(x=>x.distance<28).sort((a,b)=>a.distance-b.distance)[0]?.unit;
+  if(suppressMapClick){suppressMapClick=false;return;}
+  const r=mapCanvas.getBoundingClientRect(),sx=(e.clientX-r.left)/r.width*1100,sy=(e.clientY-r.top)/r.height*520;
+  const world=global.IsoWorld?.unproject?.(sx+cameraX,sy)||{x:sx+cameraX,y:sy};
+  const closest=snap.units.filter(u=>u.lane===lane).map(u=>({unit:u,distance:Math.hypot(u.x-world.x,u.y-lane*520-world.y)}))
+   .filter(v=>v.distance<65).sort((a,b)=>a.distance-b.distance)[0]?.unit;
   if(closest){
    const name=global.DesertRoster?.FACTIONS?.[closest.faction]?.units?.[closest.role]||E.NAMES[closest.role];
-   $('mpInspect').textContent=(closest.team===my()?.team?'아군':'적군')+' · '+name+
-    ' · HP '+Math.ceil(closest.hp)+' / '+Math.ceil(closest.maxHP)+
-    ' · '+laneName(Math.max(0,Math.min(laneCount()-1,closest.lane)))+(closest.guardian?' · 가디언':'');
-  }else $('mpInspect').textContent=laneName(lane)+' 전장 선택 · 전투 병력을 누르면 상세 정보가 표시됩니다.';
+   $('mpInspect').textContent=(closest.team===my()?.team?'아군':'적군')+' · '+name+' · HP '+Math.ceil(closest.hp)+' / '+Math.ceil(closest.maxHP)+' · '+laneName(lane)+(closest.guardian?' · 가디언':'');
+  }else $('mpInspect').textContent=laneName(lane)+' 전장 · 드래그로 좌우 이동';
  });
+ $('mpBattleLaneSelect')?.addEventListener('click',e=>{const b=e.target.closest('[data-mp-lane]');if(b)pickLane(Number(b.dataset.mpLane));});
+ $('mpPanLeft')?.addEventListener('click',()=>panCamera(-500));
+ $('mpPanRight')?.addEventListener('click',()=>panCamera(500));
+ $('mpPanCenter')?.addEventListener('click',()=>{cameraX=1100;draw();});
  // Horizontal swipes change only the production line. Vertical swipes keep scrolling
  // the 75-slot board. A completed swipe must not accidentally order a building.
  const swipeArea=$('mpBuildSwipe');
