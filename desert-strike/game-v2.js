@@ -79,7 +79,7 @@ function getDef(role,faction){
   range:isBongo?43:isProwler?40:isWolfRider?42:r.range*(rangeBoost?1.10:isRobot&&[1,2,4,5].includes(role)?1.04:1),
   rate:isBongo?1.45:isProwler?.95:isWolfRider?.9:r.rate,
   airTarget:groundSpecial&&faction!==7?false:r.airTarget,
-  good:isBongo||isProwler?[0,7]:groundSpecial&&faction===6?[0,7]:groundSpecial&&faction===7?[0,3]:r.good,bad:isBongo||isProwler?[2,3]:groundSpecial&&faction===6?[2,3]:groundSpecial&&faction===7?[2,5]:r.bad,
+  good:isBongo?[0,7]:isProwler?[0,5,7]:groundSpecial&&faction===6?[0,7]:groundSpecial&&faction===7?[0,3]:r.good,bad:isBongo||isProwler?[2,3]:groundSpecial&&faction===6?[2,3]:groundSpecial&&faction===7?[2,5]:r.bad,
   tips:unitGuide(faction,role),
   unitType:groundSpecial?'ground-special':r.kind
 };
