@@ -179,7 +179,7 @@ function constructExtractor(side,index){
  (side===0?state.buildReadyAt:state.enemyBuildReadyAt)[index]=buildEndsAt;
  (side===0?state.mineTimings:state.enemyMineTimings)[index]={startedAt:state.elapsed,buildEndsAt,readyAt:state[ready]};
  // React to a human economy purchase immediately, without skipping AI costs or blackout.
- if(side===0&&state.live&&state.aiDifficulty==='hard')hardInvest();
+ if(side===0&&state.live&&['veryhard','impossible'].includes(state.aiDifficulty))hardInvest();
  return true;
 }
 function weaponCostFor(level){return Math.round(200*Math.pow(1.65,level));}
@@ -351,7 +351,7 @@ function emergency(){
 // The ≥100 equivalent threshold is preferred; below it, only a genuinely
 // critical base (≤15% HP) may justify spending the last charge.
 function hardEmergency(){
- if(!state.live||state.ended||state.paused||state.aiDifficulty!=='hard'||!state.enemyNukes)return false;
+ if(!state.live||state.ended||state.paused||!['veryhard','impossible'].includes(state.aiDifficulty)||!state.enemyNukes)return false;
  const enemies=state.units.filter(u=>u.side===0&&u.hp>0),allies=state.units.filter(u=>u.side===1&&u.hp>0);
  if(!enemies.length)return false;
  const power=u=>window.DesertConsolidation?.strength?.(u)??1;
@@ -370,7 +370,7 @@ function hardEmergency(){
 // the player's orbital strike. Visible enemy clumps and 20-man heroes count
 // at their real strength. Never target hidden units or grant free attacks.
 function hardBarrage(){
- if(!state.live||state.ended||state.paused||state.aiDifficulty!=='hard'||state.wave<3||
+ if(!state.live||state.ended||state.paused||!['veryhard','impossible'].includes(state.aiDifficulty)||state.wave<3||
   state.enemyBarrageCd>0||state.enemyCash<260)return false;
  const scouts=state.units.filter(u=>u.side===1&&u.hp>0);
  const visible=state.units.filter(u=>u.side===0&&u.hp>0&&
@@ -383,7 +383,7 @@ function hardBarrage(){
   const defensive=u.x>WORLD_W*.68?1.25:1;
   if(clustered*defensive>score){score=clustered*defensive;target=u;}
  }
- if(!target||score<650||state.enemyCash<260+(target.x<WORLD_W*.7?160:0))return false;
+ if(!target||score<(state.aiDifficulty==='impossible'?480:650)||state.enemyCash<260+(target.x<WORLD_W*.7?160:0))return false;
  // A single healthy 20-man hero is not worth a 260-CR shot that barely
  // scratches it. Estimate soldier-value removed by real applied damage.
  const expected=visible.reduce((sum,u)=>{
@@ -625,7 +625,7 @@ function hardInvest(){
  const matchingEconomy=hardMirrorEconomy();
  const intel=aiReadOpponent();
  if(matchingEconomy&&!intel.invaded&&intel.total<6)return;
- aiAdaptFacilities(intel);
+ if(state.aiDifficulty!=='easy')aiAdaptFacilities(intel);
  // Counter-building outranks low-impact late research during an observed rush.
  const emergencyCounter=intel.dominant!==null&&intel.total>=8;
  const factoryCount=state.enemyBuilt.filter(role=>role!==null&&role!==EXTRACTOR).length;
@@ -682,7 +682,7 @@ function hardInvest(){
  }
 }
 function aiInitialBuild(){
- if(state.aiDifficulty==='hard'){hardInvest();return;}
+ if(['veryhard','impossible'].includes(state.aiDifficulty)){hardInvest();return;}
 
  // Equal starting resources. Both buildings are paid for out of the AI's 360 CR.
  for(const [slot,role] of [[1,0],[17,1]]){
@@ -726,16 +726,17 @@ function normalMirrorEconomy(){
  return true;
 }
 function aiInvest(){
- if(state.aiDifficulty==='hard'){hardInvest();return;}
+ if(['veryhard','impossible'].includes(state.aiDifficulty)){hardInvest();return;}
  const intel=aiReadOpponent();
  // Stop creating tiny forces and losing to players who scale to 20+ factories.
  if(normalMirrorEconomy())return;
  aiAdaptFacilities(intel);
  const army=state.enemyBuilt.filter(r=>r!==null&&r!==EXTRACTOR);
- const desired=Math.min(SLOTS-state.enemyEco,Math.max(6,4+Math.floor(state.elapsed/10),
-  Math.ceil(intel.total*1.35),intel.invaded?army.length+7:0));
+ const easy=state.aiDifficulty==='easy',middle=state.aiDifficulty==='hard';
+ const desired=Math.min(easy?16:SLOTS-state.enemyEco,Math.max(easy?3:6,4+Math.floor(state.elapsed/(easy?23:middle?8:10)),
+  Math.ceil(intel.total*(easy?.75:middle?1.5:1.35)),intel.invaded?army.length+(easy?2:middle?8:7):0));
  const slots=state.enemyBuilt.map((role,i)=>role===null?i:-1).filter(i=>i>=0);
- for(let purchased=0;slots.length&&purchased<8&&army.length+purchased<desired;purchased++){
+ for(let purchased=0;slots.length&&purchased<(easy?2:middle?10:8)&&army.length+purchased<desired;purchased++){
   let role=aiChoose(state.enemyCash);
   if(role===null)break;
   const counts=Array(8).fill(0);for(const r of state.enemyBuilt)if(r!==null&&r!==EXTRACTOR)counts[r]++;
@@ -1256,13 +1257,13 @@ function tick(dt){
  state.elapsed+=ds;state.next-=ds;state.incomeClock+=ds;
  if(state.elapsed>=state.nextConsolidation){state.nextConsolidation=state.elapsed+1;compactArmy();}
  while(state.incomeClock>=INCOME_PERIOD){const at=state.elapsed-state.incomeClock+INCOME_PERIOD;state.incomeClock-=INCOME_PERIOD;if(at+1e-6>=state.ecoReadyAt)state.cash+=incomePerTick(state.eco);if(at+1e-6>=state.enemyEcoReadyAt)state.enemyCash+=incomePerTick(state.enemyEco);}
- if(state.elapsed>=state.aiNextThink){if(state.aiDifficulty==='hard')hardBarrage();aiInvest();state.aiNextThink=state.elapsed+(state.aiDifficulty==='hard'?.6:1.3);}
+ if(state.elapsed>=state.aiNextThink){if(['veryhard','impossible'].includes(state.aiDifficulty))hardBarrage();aiInvest();state.aiNextThink=state.elapsed+({easy:2.7,normal:1.3,hard:.9,veryhard:.6,impossible:.32}[state.aiDifficulty]||1.3);}
  state.barrageCd=Math.max(0,state.barrageCd-ds);
  state.enemyBarrageCd=Math.max(0,state.enemyBarrageCd-ds);
  while(state.next<=0){state.next+=INTERVAL;wave();if(state.augmentChoice)break;}
  if(state.augmentChoice){updateUI(true);return;}
  deployMarineSupports();
- if(state.aiDifficulty==='hard')hardEmergency();
+ if(['veryhard','impossible'].includes(state.aiDifficulty))hardEmergency();
  state.sortedTeams=[state.units.filter(u=>u.side===0).sort((a,b)=>a.x-b.x),state.units.filter(u=>u.side===1).sort((a,b)=>a.x-b.x)];
  for(const u of state.units){
   if(u.hp<=0)continue;
@@ -1410,7 +1411,7 @@ function updateUI(full=false){
  }
  const marineOps=$('marineAbilityStatus');
  if(marineOps){marineOps.hidden=true; if(state.faction===3)$('factionLabel').title+=' · '+'★ 해병성채 | 긴빠이 '+state.marineStats.loot+'회 (+'+state.marineStats.lootedCR+' CR) | 자진입대 '+state.marineStats.recruits+'회 · 이번 웨이브 '+state.marineRecruitCount[0]+'/'+MARINE_RECRUIT_CAP+' | 황룡 '+state.marineStats.huangSpawns+'기 소환 | 오도봉고 '+(state.marineStats.bongoCharges||0)+'회 돌진';}
- $('enemyFactionLabel').textContent=(state.aiDifficulty==='hard'?'하드 AI · VS ':'VS ')+FACTIONS[state.enemyFaction].name;
+ $('enemyFactionLabel').textContent=(window.DesertLobby?.difficultyLabel?.(state.aiDifficulty)||'보통')+' AI · VS '+FACTIONS[state.enemyFaction].name;
  const inv=state.units.filter(u=>u.side===1&&u.x<490).length;
  $('baseAlert').textContent=inv>0?'침공 경보 · '+inv+'기':state.turretHP[0]===0?'방어 포탑 파괴':'기지 안전';
  $('baseAlert').classList.toggle('danger',inv>0||state.turretHP[0]===0);
