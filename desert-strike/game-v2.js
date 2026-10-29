@@ -120,7 +120,7 @@ function compactArmy(){
  for(const hero of result.heroes){
   hero._combatLife=20;
   if(!hero.guardian&&!hero.conscripted){
-   state.combatStats?.[hero.side].heroes[hero.role]++;
+   if(state.combatStats)state.combatStats[hero.side].heroes[hero.role]++;
   }
   floatText(hero.x,hero.y-35,'영웅 ×20','#ff5968');
  }
