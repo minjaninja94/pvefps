@@ -8,19 +8,59 @@ const TIERS=[{min:2300,name:'마스터',asset:'master'},{min:2000,name:'다이�
  {min:1700,name:'플래티넘',asset:'platinum'},{min:1400,name:'골드',asset:'gold'},
  {min:1100,name:'실버',asset:'silver'},{min:0,name:'브론즈',asset:'bronze'}];
 const $=id=>document.getElementById(id),clamp=(x,a,b)=>Math.max(a,Math.min(b,Math.floor(Number(x)||0)));
-let local=read(),server=null,lastFocused=null;
+let local=read(),server=null,lastFocused=null,ladders={all:[],pvp:[],classic:[],coop:[]},rankMode='all';
 function read(){try{const d=JSON.parse(localStorage.getItem(KEY)||'{}');return {rating:clamp(d.rating||1000,100,3000),records:Array.isArray(d.records)?d.records.slice(0,40):[]};}catch(_){return {rating:1000,records:[]};}}
 function tierInfo(r){return TIERS.find(x=>r>=x.min)||TIERS[TIERS.length-1];}
 function tier(r){return tierInfo(r).name;}
 function rankInfo(){
- const member=!!global.DesertMember?.isMember?.();
- const career=global.DesertLobby?.careerStats?.()||{};
- const score=member?(server?.rating??1000):local.rating;
- const wins=member?(server?.wins??0):(career.mpWins??0);
- const losses=member?(server?.losses??0):(career.mpLosses??0);
- return {member,rating:score,tier:tierInfo(score),wins,losses,nickname:global.DesertMember?.account?.()?.nickname||career.nickname||'지휘관'};
+ const member=!!global.DesertMember?.isMember?.(),career=global.DesertLobby?.careerStats?.()||{};
+ const id=global.DesertMember?.account?.()?.userId;
+ const row=member?ladders.all.find(p=>p.user_id===id):null;
+ const tierName=row?.tier||(member?'배치 대기':'게스트');
+ const asset={챌린저:'master',그랜드마스터:'master',마스터:'master',다이아몬드:'diamond',에메랄드:'platinum',플래티넘:'platinum',골드:'gold',실버:'silver',브론즈:'bronze',아이언:'bronze'}[tierName]||'bronze';
+ return {member,rating:member?(server?.rating??1000):local.rating,
+  tier:{name:tierName,asset},rank:row,
+  wins:row?.wins??(member?(career.mpWins??0):(career.mpWins??0)),
+  losses:row?.losses??(career.mpLosses??0),
+  nickname:global.DesertMember?.account?.()?.nickname||career.nickname||'지휘관'};
 }
 function setServerRating(rating,wins=0,losses=0){server={rating:clamp(rating,100,3000),wins:clamp(wins,0,1e7),losses:clamp(losses,0,1e7)};render();}
+function setLadders(data){
+ for(const mode of ['all','pvp','classic','coop'])ladders[mode]=Array.isArray(data?.[mode])?data[mode]:[];
+ render();
+}
+function renderLadders(){
+ const ownId=global.DesertMember?.account?.()?.userId;
+ const summary=$('lobbyModeRankSummary'),board=$('lobbyLeaderboard');
+ if(!summary||!board)return;
+ const modes=[['all','전체'],['pvp','3라인 PvP'],['classic','클래식 1:1'],['coop','협동']];
+ summary.replaceChildren();
+ for(const [mode,title] of modes){
+  const row=ladders[mode].find(x=>x.user_id===ownId);
+  const div=document.createElement('div');div.className='lobby-mode-rank';
+  const heading=document.createElement('strong');heading.textContent=title;
+  const line=document.createElement('span');line.textContent=row?
+   row.tier+(row.provisional?' · 임시':'')+' · '+row.rank_position+'위':
+   '배치 대기';
+  const stats=document.createElement('small');stats.textContent=row?row.wins+'승 '+row.losses+'패 · '+row.win_rate+'%':'모드별 확정 기록 없음';
+  div.append(heading,line,stats);summary.append(div);
+ }
+ for(const b of $('lobbyRankModes')?.querySelectorAll('[data-rank-mode]')||[]){
+  b.classList.toggle('selected',b.dataset.rankMode===rankMode);
+  b.setAttribute('aria-pressed',String(b.dataset.rankMode===rankMode));
+ }
+ board.replaceChildren();
+ if(!global.DesertMember?.isMember?.()){board.textContent='회원 로그인 후 DB 랭킹을 조회할 수 있습니다.';return;}
+ const rows=ladders[rankMode];
+ if(!rows.length){board.textContent='해당 모드의 서버 확정 기록이 없습니다.';return;}
+ for(const r of rows.slice(0,30)){
+  const div=document.createElement('div');div.className='lobby-leaderboard-row'+(r.user_id===ownId?' own':'');
+  const name=document.createElement('strong');name.textContent='#'+r.rank_position+' '+r.nickname;
+  const tier=document.createElement('span');tier.textContent=r.tier+(r.provisional?' (임시)':'');
+  const stats=document.createElement('small');stats.textContent=r.wins+'승 '+r.losses+'패 · 승률 '+r.win_rate+'%';
+  div.append(name,tier,stats);board.append(div);
+ }
+}
 function record(input){
  if(!input||!['solo','pvp','classic','coop','practice'].includes(input.mode))return;
  const result=input.winner===null?'무승부':input.winner===input.side?'승리':'패배';
@@ -34,16 +74,16 @@ function record(input){
 }
 function render(){
  const info=rankInfo(),t=$('careerRating');
- if(t)t.textContent=(info.member?'서버 기록 · 비공식 ':'게스트 기록 · 비공식 ')+info.tier.name+' · '+info.rating.toLocaleString('ko-KR')+' RP · '+info.wins+'승 '+info.losses+'패';
+ if(t)t.textContent=info.tier.name+(info.rank?.provisional?' · 임시':'')+' · '+info.wins+'승 '+info.losses+'패 (내부 점수 비공개)';
  const badge=$('lobbyRankBadge');
  if(badge){
   badge.src='./assets/ranks/'+info.tier.asset+'.svg';
   badge.alt=info.tier.name+' 티어 엠블럼';
  }
  const label=$('lobbyRank');if(label)label.textContent=info.tier.name;
- const rp=$('lobbyRankRP');if(rp)rp.textContent=info.rating.toLocaleString('ko-KR')+' RP';
+ const rp=$('lobbyRankRP');if(rp)rp.textContent=info.rank?'#'+info.rank.rank_position+' / '+info.rank.total_players+'명 · '+info.wins+'승':'멀티 랭킹 배치 대기';
  const type=$('lobbyRankIdentity');if(type)type.textContent=info.nickname+' · '+(info.member?'회원':'게스트');
- const note=$('lobbyRankNote');if(note)note.textContent=info.member?'회원 기록 · 비공식':'기기 저장 기록 · 비공식';
+ const note=$('lobbyRankNote');if(note)note.textContent=info.rank?.provisional?'DB 승수 기준 임시 티어 · 과거 모드 미분류':info.member?'서버 확정 전적 기반':'게스트 기록 · 서버 랭킹 제외';
  const wl=$('lobbyRankWL');if(wl)wl.textContent=info.wins+'승 '+info.losses+'패';
  const wr=$('lobbyRankWinrate');if(wr)wr.textContent=(info.wins+info.losses?((info.wins/(info.wins+info.losses))*100).toFixed(1):'0.0')+'%';
  const recent=$('lobbyRecentMatches');
@@ -60,6 +100,7 @@ function render(){
    item.append(status,title,time);recent.append(item);
   }
  }
+ renderLadders();
  const history=$('careerHistory');if(!history)return;history.replaceChildren();
  if(!local.records.length){history.textContent='아직 이 브라우저에 저장된 경기 기록이 없습니다.';return;}
  for(const x of local.records){const row=document.createElement('div');row.className='career-record';
@@ -99,6 +140,7 @@ function close(){
 }
 function init(){
  $('careerOpen')?.addEventListener('click',()=>open());
+ $('lobbyRankModes')?.addEventListener('click',e=>{const b=e.target.closest('[data-rank-mode]');if(!b)return;rankMode=b.dataset.rankMode;renderLadders();});
  $('careerHistoryOpen')?.addEventListener('click',()=>open({history:true}));
  $('careerClose')?.addEventListener('click',close);
  $('careerTabLogin')?.addEventListener('click',()=>setMode('login'));
@@ -117,6 +159,6 @@ function init(){
  });
  render();
 }
-global.DesertCareer=Object.freeze({record,render,open,close,setMode,tier,rankInfo,setServerRating,rating:()=>rankInfo().rating,history:()=>local.records.slice()});
+global.DesertCareer=Object.freeze({record,render,open,close,setMode,tier,rankInfo,setServerRating,setLadders,rating:()=>rankInfo().rating,history:()=>local.records.slice()});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })(window);
