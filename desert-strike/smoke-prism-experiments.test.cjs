@@ -26,7 +26,7 @@ test('100 unique, valid per-faction Prism cards extend original 300 and can be d
   'prism_execute','prism_frenzy','prism_revenge','prism_reflect'])
   assert.ok(kinds.has(kind),'missing interactive mechanic: '+kind);
  await A.load();assert.equal(A.list().length,400);
- assert.equal(A.list().filter(c=>c.tier==='prismatic'&&c.experimental).length,0,'view exposes safe metadata without extra mutation fields');
+ assert.equal(A.list().filter(c=>c.tier==='prismatic'&&c.experimental).length,100,'all 100 experimental Prism cards are identifiable in the codex');
  assert.equal(A.list().filter(c=>c.scope==='common').length,50);
  for(let f=0;f<10;f++)assert.equal(A.list().filter(c=>c.scope==='faction-'+f).length,35);
  assert.equal(A.ready(),true);
@@ -85,7 +85,7 @@ test('host engine applies experimental reinforcements and bonus credits, indepen
  e.state.augmentChoice=null;
  for(let k=1;k<=3;k++)e.wave();
  assert.equal(e.state.wave,3);
- assert.equal(left.cash-before,70+3*24,'first player gets extra cash from card only');
+ assert.equal(left.cash-before,70*3+3*24,'first player gets wave-by-wave bonus credits');
  assert.equal(right.cash-rightCash,3*24,'opponent gets baseline wave income only');
  assert.ok(e.state.units.some(u=>u.uid==='a'&&u.role===3),'free armor reinforcements spawn during qualifying wave');
  assert.equal(window.DesertPrism.populationLimit(left.augments,75,true),88);
