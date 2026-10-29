@@ -30,8 +30,9 @@
     return {...cached,uid:auth.currentUser.uid};
   }
   function message(e) {
-    if (/operation-not-allowed|admin-restricted-operation/.test(e?.code || '')) return 'Firebase에서 익명 로그인을 활성화해야 합니다. MULTIPLAYER_SETUP.md의 1번을 확인해 주세요.';
-    if (/permission-denied/.test(e?.code || '')) return '멀티플레이 접근 규칙이 아직 적용되지 않았습니다. MULTIPLAYER_SETUP.md의 2번을 확인해 주세요.';
+    if (/operation-not-allowed|admin-restricted-operation/.test(e?.code || '')) return '새 기기에서 Firebase 익명 로그인이 차단되었습니다. Firebase 콘솔 → Authentication → 로그인 방법 → 익명 사용을 켜야 외부 테스터가 방을 만들 수 있습니다.';
+    if (/unauthorized-domain/.test(e?.code || '')) return '현재 사이트 주소가 Firebase Authentication 승인 도메인에 등록되지 않았습니다.';
+    if (/permission-denied/.test(e?.code || '')) return 'Firebase 방 생성/참가 권한이 거부되었습니다. Firebase 콘솔에서 최신 Firestore 보안 규칙 게시 여부를 확인해야 합니다.';
     if (/resource-exhausted|quota-exceeded/.test(e?.code || '')) return 'Firebase 무료 사용 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.';
     return e?.message || '연결하지 못했습니다. 다시 시도해 주세요.';
   }
