@@ -34,7 +34,7 @@ test('real 300-card draft works inside the original single-player engine without
  vm.runInNewContext(src('augment-rules.js'),sandbox,{filename:'augment-rules.js',timeout:3000});
  await w.DesertAugments.load();
  vm.runInNewContext(src('sprite-animations.js'),sandbox,{filename:'sprite-animations.js',timeout:3000});
- const inject="window.__soloTest={state:()=>state,start,reset,wave,tick,createUnit,effectiveDef,combatDef,chooseSoloAugment,rerollSoloAugment,advanceSoloAugmentTimer};initFactions();wire();reset();";
+ const inject="window.__soloTest={state:()=>state,start,reset,wave,tick,createUnit,effectiveDef,combatDef,getDef,damage,heal,supplyCap,chooseSoloAugment,rerollSoloAugment,advanceSoloAugmentTimer};initFactions();wire();reset();";
  const game=src('game-v2.js').replace("initFactions();wire();reset();",inject);
  assert.ok(game.includes(inject),'sandbox game injection');
  vm.runInNewContext(game,sandbox,{filename:'game-v2.js',timeout:9000});
@@ -44,6 +44,10 @@ test('real 300-card draft works inside the original single-player engine without
  assert.equal(st.wave,0);
  assert.equal(st.augmentChoice.round,1);
  assert.equal(st.augmentChoice.cards.length,3);
+ assert.equal(st.enemyAugments.length,1,'AI draws its own initial card without waiting for the human');
+ const enemyFirst=w.DesertAugments.card(st.enemyAugments[0]);
+ assert.equal(enemyFirst.tier,st.augmentChoice.tier,'AI draft receives the same rarity as the human');
+ assert.ok(['common','faction-'+st.enemyFaction].includes(enemyFirst.scope),'AI never receives another faction\'s signature card');
  assert.equal(el('soloAugmentOverlay').classList.contains('hidden'),false);
  const before=st.elapsed;G.tick(20);assert.equal(st.elapsed,before,'battle clock freezes during draft');
  const card0=st.augmentChoice.cards[0];
@@ -64,6 +68,9 @@ test('real 300-card draft works inside the original single-player engine without
  st.built[0]=0;st.wave=9;const count=st.produced[0][0];
  G.wave();assert.equal(st.wave,10);
  assert.equal(st.augmentChoice.round,10);
+ assert.equal(st.enemyAugments.length,2,'AI gets its second distinct card on wave 10');
+ assert.equal(w.DesertAugments.card(st.enemyAugments[1]).tier,st.augmentChoice.tier);
+ assert.equal(new Set(st.enemyAugments).size,2,'AI cannot draft duplicates');
  assert.equal(st.produced[0][0],count,'wave 10 units await the new draft');
  G.advanceSoloAugmentTimer(30.5);
  assert.equal(st.augmentChoice,null,'auto-pick after 30s');
@@ -76,9 +83,35 @@ test('real 300-card draft works inside the original single-player engine without
  assert.equal(st.ended,false,'augment game cannot end at its last card schedule');
  assert.equal(st.augmentChoice,null,'wave 41 does not create an unscheduled draft');
  assert.equal(st.augments.length,augmentsAt40,'past wave 40, selected augments persist');
- G.reset();st=G.state();assert.equal(st.augments.length,0,'restarting forgets prior cards');
+ assert.equal(st.enemyAugments.length,2,'AI also retains cards after the final selection wave');
+ // Verify the enemy actually gets live stat bonuses, not merely card IDs.
+ const expected=w.DesertAugments.apply(G.getDef(2,st.enemyFaction),st.enemyAugments,2);
+ const actual=G.effectiveDef(2,st.enemyFaction,1);
+ for(const key of ['hp','damage','armor','speed','range','rate'])
+  assert.equal(actual[key],expected[key],'AI '+key+' uses its own collected card effects');
+ // Exercise an experimental enemy prism in the shipped solo combat engine.
+ vm.runInNewContext(src('prism-experiments.js'),sandbox,{filename:'prism-experiments.js'});
+ st.enemyFaction=0;st.enemyAugments=['exp-prism-0-1','exp-prism-0-7','exp-prism-0-3','exp-prism-0-0'];
+ st.enemyBuilt.fill(null);st.enemyCash=0;st.enemyEcoReadyAt=0;st.units=[];st.baseHP[1]=7200*.49;
+ assert.equal(G.supplyCap(1),252,'AI prism population cap increases just like the human cap');
+ const previousSpawn=st.produced[1][3];
+ st.wave=41;G.wave();
+ assert.equal(st.wave,42);
+ assert.equal(st.enemyCash,94,'AI receives both baseline +24 and experimental +70 CR');
+ assert.ok(st.produced[1][3]>=previousSpawn+6,'AI reinforcement plus one-time last stand summons real units');
+ assert.equal(st.enemyPrismLastStandUsed,true);
+ assert.ok(st.baseHP[1]>7200*.49,'AI fortress last stand repairs its own base');
+ st.units=[];st.enemyAugments=['exp-prism-0-8'];
+ G.createUnit(1,0,2);G.createUnit(0,0,3);
+ const enemyAttack=st.units.find(u=>u.side===1),humanTank=st.units.find(u=>u.side===0);
+ humanTank.hp=2000;humanTank.maxHP=2000;
+ for(let i=0;i<4;i++)G.damage(humanTank,1,2,enemyAttack);
+ assert.equal(enemyAttack._prismCounter['prism-prism_burst-2-0'],4,'AI attack applies periodic prism burst counters');
+ st.enemyAugments=['exp-prism-0-3'];
+ assert.equal(G.supplyCap(1),252);
+ G.reset();st=G.state();assert.equal(st.augments.length,0,'restarting forgets prior cards');assert.equal(st.enemyAugments.length,0,'AI cards reset too');
  chosenRuleset='standard';G.start();st=G.state();
- assert.equal(st.ruleset,'standard');assert.equal(st.augmentChoice,null);
+ assert.equal(st.ruleset,'standard');assert.equal(st.augmentChoice,null);assert.equal(st.enemyAugments.length,0,'classic AI receives no augments');
  st.built[0]=0;G.wave();assert.equal(st.produced[0][0],1,'classic spawn rules remain unchanged');
  st.wave=99;
  G.wave();
