@@ -358,16 +358,37 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   }
   for(let purchase=0;purchase<12;purchase++){
    const counts=Array(8).fill(0);for(const row of bot.buildings)for(const r of row)if(r!==null&&r!==EXTRACTOR)counts[r]++;
-   const action=ai.choose(brain,{cash:bot.cash,counts,eco:bot.eco,readyAt:bot.ecoReadyAt,seconds:state.seconds,costs:COST.slice(0,8),ecoCost:ecoPrice(bot.eco),intel:{air,armor,invaded,roles}});
-   if(!action)break;
+   let action=ai.choose(brain,{cash:bot.cash,counts,eco:bot.eco,readyAt:bot.ecoReadyAt,seconds:state.seconds,costs:COST.slice(0,8),ecoCost:ecoPrice(bot.eco),intel:{air,armor,invaded,roles}});
    const sizes=bot.buildings.map(row=>row.filter(r=>r!==null&&r!==EXTRACTOR).length),focus=brain.plan%LANES;
+   // Twenty soldiers only form one hero if built by the same owner, in the
+   // same lane, close to one another, and healthy. Keep a funded lane-specific
+   // cohort after each lane has two real defensive factories.
+   const heroSafe=state.wave>=6&&!invaded&&air<5&&armor<5&&sizes.every(n=>n>=2);
+   const heroRole=brain.heroRole??([3,6,1,5][brain.plan]||1);
+   if(brain.heroRole===undefined)brain.heroRole=heroRole;
+   if(brain.heroLane===undefined)brain.heroLane=focus;
+   const committed=bot.buildings[brain.heroLane].filter(r=>r===heroRole).length;
+   const focusHero=heroSafe&&committed<20;
+   if(focusHero&&action?.kind!=='econ')
+    action=bot.cash>=COST[heroRole]?{kind:'unit',role:heroRole}:null;
+   if(!action)break;
    const lanes=Array.from({length:LANES},(_,i)=>i).filter(l=>bot.buildings[l].some(x=>x===null)).sort((a,b)=>{
     const capacity=sizes.reduce((n,v)=>n+v,0)+1;
     const score=l=>sizes[l]-(pressureTotal?capacity*(.7*lanePressure[l]/pressureTotal+.1):(l===focus?2:0));
     return score(a)-score(b);
    });
-   if(!lanes.length)break;const lane=lanes[0],slot=bot.buildings[lane].findIndex(v=>v===null);
+   if(!lanes.length)break;
+   const lane=focusHero&&action.kind==='unit'&&action.role===heroRole&&lanes.includes(brain.heroLane)
+    ?brain.heroLane:lanes[0];
    const r=action.kind==='econ'?EXTRACTOR:action.role,cost=r===EXTRACTOR?ecoPrice(bot.eco):COST[r];
+   const positions=bot.buildings[lane].map((v,i)=>v===r?i:-1).filter(i=>i>=0);
+   const candidates=bot.buildings[lane].map((v,i)=>v===null?i:-1).filter(i=>i>=0);
+   const point=i=>({x:(i%15)*4,y:((Math.floor(i/15)*11+(i%15)*21)%196)});
+   const distance=(a,b)=>Math.hypot(point(a).x-point(b).x,point(a).y-point(b).y);
+   candidates.sort((a,b)=>
+    (positions.length?Math.min(...positions.map(i=>distance(a,i))):0)-
+    (positions.length?Math.min(...positions.map(i=>distance(b,i))):0));
+   const slot=candidates[0];
    if(bot.cash<cost)break;bot.cash-=cost;bot.buildings[lane][slot]=r;
    if(r===EXTRACTOR){bot.mineCosts[lane+'-'+slot]=cost;bot.eco++;bot.ecoReadyAt=state.seconds+ecoStabilize(bot.eco,state.seconds);}
    ai.bought(brain,action,cost);
