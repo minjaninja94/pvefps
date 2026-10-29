@@ -82,6 +82,11 @@ for(const ruleset of ['standard','augment'])for(const mode of ['pvp','classic'])
  assert.equal(st.cores[0][0],core,ruleset+' '+mode+' core HP');
  assert.equal(match.order('a',{type:'build',lane:0,slot:0,role:0}).ok,true);
  assert.equal(p.buildingReadyAt[0][0],24);
+ assert.equal(match.order('a',{type:'build',lane:0,slot:1,role:8}).ok,true);
+ assert.equal(p.buildingReadyAt[0][1],24,'extractor has real construction time');
+ assert.equal(p.ecoReadyAt,30,'construction is followed by stabilization');
+ assert.equal(match.order('a',{type:'build',lane:0,slot:2,role:8}).ok,false,'cannot overlap income expansion');
+
  assert.equal(match.snapshot('a').players[0].buildingReadyAt[0][0],24,'owner sees build ETA');
  assert.equal(match.snapshot('b').players[0].buildingReadyAt[0][0],0,'enemy never sees private construction timer');
  st.seconds=23.9;match.wave();

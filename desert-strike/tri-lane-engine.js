@@ -11,6 +11,7 @@ const incomePerTick=level=>(1+level)*(level>=5?.85:1);
 const TOWER_HP=1250,TOWER_RANGE=285,TOWER_PERIOD=.34,TOWER_DAMAGE=27,FOG_END_WAVE=6,FOG_WIDTH=770;
 const AGGRO_RADIUS=590,AGGRO_LEASH=740,SUPPORT_RADIUS=615,CONTACT_CELL=64;
 const EXTRACTOR=8,ecoPrice=level=>Math.round(70*Math.pow(1.36,level)),ecoStabilize=(level,seconds)=>4+2*level+Math.min(6,Math.floor(Math.max(0,seconds)/120));
+const ecoBuildSeconds=level=>24+8*Math.max(0,level-1);
 const WEAPON_COST=n=>Math.round(200*Math.pow(1.65,n)),ARMOR_COST=n=>Math.round(190*Math.pow(1.63,n));
 const COST=[65,95,150,205,165,245,205,145,70], NAMES=['돌격','사격','대장갑','장갑','대공','포격','특수','지원','자원채취'];
 const BASE=[
@@ -75,7 +76,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  const state={mode,size,ruleset:augmented?'augment':'standard',augmentStage:-1,augmentChoice:null,augmentSchedule:aug?.schedule||[],aiDifficulty:aiDifficulty==='hard'?'hard':'normal',seconds:0,wave:0,next:24,ended:false,winner:null,
   width:WIDTH,height:HEIGHT,lanes:LANES,
   cores:Array.from({length:LANES},()=>[CORE_HP,CORE_HP]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),forwardHP:Array.from({length:LANES},()=>[1000,1000]),forwardClaimed:Array.from({length:LANES},()=>[false,false]),forwardCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,nextConsolidation:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,augments:[],produced:Array(8).fill(0),combatStats:{damage:Array(8).fill(0),kills:Array(8).fill(0),
-  losses:Array(8).fill(0),heroDamage:Array(8).fill(0),heroes:Array(8).fill(0)},cash:360,eco:0,ecoReadyAt:0,weapon:0,armor:0,nukes:1,barrageCd:0,mineCosts:{},buildings:Array.from({length:LANES},()=>Array(SLOTS).fill(null)),buildingReadyAt:Array.from({length:LANES},()=>Array(SLOTS).fill(0))})),lanePressure:Array(LANES).fill(.5)};
+  losses:Array(8).fill(0),heroDamage:Array(8).fill(0),heroes:Array(8).fill(0)},cash:360,eco:0,ecoReadyAt:0,weapon:0,armor:0,nukes:1,barrageCd:0,mineCosts:{},mineTimings:{},buildings:Array.from({length:LANES},()=>Array(SLOTS).fill(null)),buildingReadyAt:Array.from({length:LANES},()=>Array(SLOTS).fill(0))})),lanePressure:Array(LANES).fill(.5)};
  const byUid=uid=>state.players.find(p=>p.uid===uid);
  function combatLife(u){return u.heroCount===20?Math.max(0,Math.min(20,Math.ceil(Math.max(0,u.hp)/(u.maxHP/20)-1e-9))):(u.hp>0?1:0);}
  function combatHit(v,before,a=null){
@@ -170,9 +171,16 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   if(payment>p.cash)return {ok:false,reason:'자원 부족'};
   p.cash-=payment;p.buildings[lane][slot]=role;
   p.buildingReadyAt[lane][slot]=role!==null&&role!==EXTRACTOR?state.seconds+FACTORY_BUILD_SECONDS:0;
-  if(old===EXTRACTOR){p.eco--;delete p.mineCosts[key];}
-  if(role===EXTRACTOR){p.mineCosts[key]=payment;p.eco++;p.ecoReadyAt=state.seconds+ecoStabilize(p.eco,state.seconds);}
+  if(old===EXTRACTOR){p.eco--;delete p.mineCosts[key];delete p.mineTimings[key];}
+  if(role===EXTRACTOR){p.mineCosts[key]=payment;startExtractor(p,lane,slot);}
   return {ok:true,cash:p.cash};
+ }
+ function startExtractor(p,lane,slot){
+  p.eco++;
+  const buildEndsAt=state.seconds+ecoBuildSeconds(p.eco);
+  p.ecoReadyAt=buildEndsAt+ecoStabilize(p.eco,state.seconds);
+  p.buildingReadyAt[lane][slot]=buildEndsAt;
+  p.mineTimings[lane+'-'+slot]={startedAt:state.seconds,buildEndsAt,readyAt:p.ecoReadyAt};
  }
  function spawn(p,lane,slot,role,fromProduction=true){
   if(fromProduction&&role>=0&&role<8)p.produced[role]++;
@@ -389,7 +397,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    const slot=candidates[0];
    if(bot.cash<cost)break;bot.cash-=cost;bot.buildings[lane][slot]=r;
    bot.buildingReadyAt[lane][slot]=r===EXTRACTOR?0:state.seconds+FACTORY_BUILD_SECONDS;
-   if(r===EXTRACTOR){bot.mineCosts[lane+'-'+slot]=cost;bot.eco++;bot.ecoReadyAt=state.seconds+ecoStabilize(bot.eco,state.seconds);}
+   if(r===EXTRACTOR){bot.mineCosts[lane+'-'+slot]=cost;startExtractor(bot,lane,slot);}
    ai.bought(brain,action,cost);
   }
  }
@@ -411,7 +419,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   }
   if(state.wave>5&&bot.eco<5&&state.seconds>=bot.ecoReadyAt){
    const c=ecoPrice(bot.eco),lane=bot.buildings.findIndex(slots=>slots.some(x=>x===null));
-   if(lane>=0&&bot.cash>=c+180){const slot=bot.buildings[lane].findIndex(x=>x===null);bot.buildings[lane][slot]=EXTRACTOR;bot.mineCosts[lane+'-'+slot]=c;bot.cash-=c;bot.eco++;bot.ecoReadyAt=state.seconds+ecoStabilize(bot.eco,state.seconds);}
+   if(lane>=0&&bot.cash>=c+180){const slot=bot.buildings[lane].findIndex(x=>x===null);bot.buildings[lane][slot]=EXTRACTOR;bot.mineCosts[lane+'-'+slot]=c;bot.cash-=c;startExtractor(bot,lane,slot);}
   }
  }
  // No wave-count or elapsed-time cap in classic, PvP or cooperative battles.
@@ -802,6 +810,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     produced:state.ended||allied(p)?p.produced.slice():null,
     combatStats:state.ended||allied(p)?Object.fromEntries(Object.entries(p.combatStats).map(([k,v])=>[k,v.slice()])):null,
     augments:allied(p)?p.augments.slice():[],cash:allied(p)?Math.floor(p.cash):null,eco:allied(p)?p.eco:null,ecoReadyAt:allied(p)?p.ecoReadyAt:null,weapon:allied(p)?p.weapon:null,armor:allied(p)?p.armor:null,
+    mineTimings:allied(p)?Object.fromEntries(Object.entries(p.mineTimings).map(([key,value])=>[key,{...value}])):{},
     nukes:allied(p)?p.nukes:null,barrageCd:allied(p)?Math.ceil(p.barrageCd*10)/10:null,
     buildings:p.buildings.map((slots,lane)=>allied(p)||visible[lane]?slots:Array(SLOTS).fill(null)),
     buildingReadyAt:p.buildingReadyAt.map((row,lane)=>allied(p)||visible[lane]?row.slice():Array(SLOTS).fill(0))})),
@@ -814,5 +823,5 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  for(const bot of state.players.filter(p=>p.bot))botPurchase(bot);
  return {state,order,tick,wave,snapshot,definition};
 }
-global.DesertTriEngine=Object.freeze({create,definition,WIDTH,HEIGHT,LANE_H,LANES,COLS,ROWS,SLOTS,COST,NAMES,EXTRACTOR,ecoPrice,ecoStabilize,incomePerTick,FACTORY_BUILD_SECONDS,WEAPON_COST,ARMOR_COST});
+global.DesertTriEngine=Object.freeze({create,definition,WIDTH,HEIGHT,LANE_H,LANES,COLS,ROWS,SLOTS,COST,NAMES,EXTRACTOR,ecoPrice,ecoBuildSeconds,ecoStabilize,incomePerTick,FACTORY_BUILD_SECONDS,WEAPON_COST,ARMOR_COST});
 })(typeof window==='undefined'?globalThis:window);

@@ -94,7 +94,7 @@ function unitCards(){
   b.append(cv,name,cost);out.append(b);
  }
  const d=role===8?null:global.DesertRoster?.getDef(role,fac);
- $('mpUnitDetails').textContent=(role===8?'자원채취: 인컴 +1 CR / 0.5초. 건설 직후 '+E.ecoStabilize((me?.eco||0)+1,snap?.seconds||0)+'초간 기본·추가 인컴과 웨이브 지원금 중단. 최대 7개.':d?.tips||'')+' · 단축키 1–8 · 유닛 선택 후 빈 슬롯 터치';
+ $('mpUnitDetails').textContent=(role===8?'자원채취: 건설 '+E.ecoBuildSeconds((me?.eco||0)+1)+'초 + 완공 후 안정화 '+E.ecoStabilize((me?.eco||0)+1,snap?.seconds||0)+'초 동안 기본·추가 인컴과 웨이브 지원금 중단. 최대 7개.':d?.tips||'')+' · 단축키 1–8 · 유닛 선택 후 빈 슬롯 터치';
  }
  $('mpUnitCards').querySelectorAll('[data-role]').forEach(b=>b.classList.toggle('unaffordable',!!me&&me.cash<(Number(b.dataset.role)===8?E.ecoPrice(me.eco):E.COST[Number(b.dataset.role)])));
 }
@@ -123,7 +123,7 @@ function buildGrid(){
  updateLanePicker(p);
  const cells=p.buildings[lane]||[];
  const ready=p.buildingReadyAt?.[lane]||[];
- const pending=ready.some((at,i)=>cells[i]!==null&&cells[i]!==E.EXTRACTOR&&at>snap.seconds+1e-6);
+ const pending=ready.some((at,i)=>cells[i]!==null&&Math.max(at,p.mineTimings?.[lane+'-'+i]?.readyAt||0)>snap.seconds+1e-6);
  const key=myId+':'+lane+':'+demolish+':'+cells.join(',')+':'+ready.join(',')+
   (pending?':'+Math.floor(snap.seconds):'');
  if(key===gridKey)return;gridKey=key;
@@ -134,17 +134,27 @@ function buildGrid(){
   b.className=(r===null?'':'filled ')+(demolish&&r!==null?'demolish':'');
   if(r===null)b.textContent='+';else{
    const cv=document.createElement('canvas');cv.width=cv.height=72;unitIcon(cv,p.faction,r);b.append(cv);
-   const left=r===E.EXTRACTOR?0:Math.max(0,(ready[i]||0)-snap.seconds);
-   if(left>1e-6){
+   const name=document.createElement('span');name.className='cell-name';
+   name.textContent=r===E.EXTRACTOR?'자원채취':global.DesertRoster?.FACTIONS[p.faction]?.units[r]||E.NAMES[r];b.append(name);
+   const timing=p.mineTimings?.[lane+'-'+i],at=ready[i]||0;
+   const building=at>snap.seconds+1e-6,stabilizing=!building&&(timing?.readyAt||0)>snap.seconds+1e-6;
+   if(building||stabilizing){
     b.classList.add('constructing');
-    const clock=document.createElement('span');clock.className='construction-countdown';
-    clock.textContent=Math.ceil(left)+'초';b.append(clock);
+    const end=building?at:timing.readyAt,start=building?(timing?.startedAt??at-E.FACTORY_BUILD_SECONDS):at;
+    const progress=Math.max(0,Math.min(100,100*(snap.seconds-start)/(end-start)));
+    const bar=document.createElement('span');bar.className='build-progress'+(stabilizing?' stabilizing':'');
+    const label=(building?'건설 ':'안정화 ')+Math.ceil(end-snap.seconds-1e-6)+'초';
+    bar.setAttribute('role','progressbar');bar.setAttribute('aria-label',label);
+    bar.setAttribute('aria-valuemin','0');bar.setAttribute('aria-valuemax','100');bar.setAttribute('aria-valuenow',String(Math.floor(progress)));
+    const fill=document.createElement('span');fill.className='build-progress-fill';fill.style.width=progress+'%';
+    const clock=document.createElement('span');clock.className='build-progress-label';clock.textContent=label;
+    bar.append(fill,clock);b.append(bar);
    }
   }
   b.setAttribute('aria-label',(r===null?'빈 슬롯':global.DesertRoster?.FACTIONS[p.faction]?.units[r]||E.NAMES[r])+' '+(i+1));
   b.setAttribute('aria-pressed',String(demolish&&r!==null));
   b.title=(r===null?'빈 자리':E.NAMES[r]+' 생산 시설')+' · '+laneName(lane)+' '+(i+1)+
-   (r!==null&&r!==E.EXTRACTOR&&ready[i]>snap.seconds?
+   (r!==null&&ready[i]>snap.seconds?
      ' · 건설 중 '+Math.ceil(ready[i]-snap.seconds)+'초':'');
   f.append(b);
  }
@@ -335,7 +345,7 @@ function onSnapshot(v){
   $('mpMyIncome').textContent=remaining>0?'인컴 중단 '+Math.ceil(remaining)+'초':'+'+Number((E.incomePerTick?.(me.eco)??((1+me.eco)*(me.eco>=5?.85:1))).toFixed(2))+' / 0.5초';
   $('mpBuiltCount').textContent=me.buildings.reduce((n,bs)=>n+bs.filter(x=>x!==null).length,0)+'개 건설';
   const cost=E.ecoPrice(me.eco);
-  $('mpEco').textContent=me.eco>=7?'채취 건물 7 / 7':'자원채취 건물 · '+cost+' CR';
+  $('mpEco').textContent=me.eco>=7?'채취 건물 7 / 7':'자원채취 건물 · '+cost+' CR · 건설 '+E.ecoBuildSeconds(me.eco+1)+'초';
   $('mpEco').disabled=me.eco>=7||me.cash<cost||remaining>0||v.ended;
  }
  $('mpWave').textContent='WAVE '+String(v.wave).padStart(2,'0');

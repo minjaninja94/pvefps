@@ -742,3 +742,14 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
  border-radius:4px;padding:2px 0;background:#162733df;color:#ffe4a9;font-size:11px;
  font-weight:900;font-variant-numeric:tabular-nums;pointer-events:none}
 @media(max-width:620px){#view-multiplayer #mpBuildGrid .construction-countdown{font-size:10px}}
+
+/* Construction and extractor stabilization sit directly below each building name. */
+.build-cell .build-progress,#view-multiplayer #mpBuildGrid .build-progress{display:block;position:relative;isolation:isolate;width:calc(100% - 8px);height:17px;margin:4px auto 2px;overflow:hidden;border:1px solid #b79660;border-radius:3px;background:#11252e;color:#ffedc0;pointer-events:none}
+.build-progress-fill{position:absolute;inset:0 auto 0 0;background:#80622e;z-index:-1}
+.build-progress-label{display:block;text-align:center;font-size:10px;font-weight:800;line-height:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.build-progress.stabilizing{border-color:#77c2c9!important;color:#dcfcff!important}
+.build-progress.stabilizing .build-progress-fill{background:#285b69}
+#view-multiplayer #mpBuildGrid .cell-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:10px;line-height:1.4;color:#e5efdf}
+#view-multiplayer #mpBuildGrid button.constructing canvas{opacity:.6}
+#view-multiplayer #mpBuildGrid button.filled{padding:3px 1px}
+.build-cell:has(.build-progress){min-height:83px}
