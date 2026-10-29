@@ -38,6 +38,8 @@ jobs:
           node --check desert-strike/balance-sim.cjs
       - name: Lobby and battle BGM transitions
         run: node --test desert-strike/smoke-bgm.test.cjs
+      - name: Unlimited waves in solo and PvP/co-op with core-only victory
+        run: node --test desert-strike/smoke-endless-waves.test.cjs
       - name: Single-player 300-card augment draft and original-mode isolation
         run: node --test desert-strike/smoke-solo-augments.test.cjs
       - name: Match report, per-unit production totals and server result callbacks

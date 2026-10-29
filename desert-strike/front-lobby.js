@@ -44,7 +44,7 @@ function renderRuleset(){
   ?'증강전 선택 중 · 싱글/멀티/AI 연습 · WAVE 1·10·20·30·40에 카드 3장, 슬롯별 리롤 1회'
   :'일반전 선택 중 · 싱글/멀티/AI 연습에 기존 전투 규칙을 사용합니다.';
  const solo=$('lobbySolo')?.querySelector('span');
- if(solo)solo.textContent=selected?'✦ 싱글 증강전 · 300종 카드':(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 22웨이브 전투';
+ if(solo)solo.textContent=selected?'✦ 싱글 증강전 · 300종 카드':(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 무제한 웨이브 · 기지 파괴 시 종료';
  const multiplayer=$('lobbyMulti')?.querySelector('span');
  if(multiplayer)multiplayer.textContent=selected?'✦ 증강전 · 1:1~3:3 PvP 및 협동':'1:1~3:3 경쟁 · 2~3인 협동';
  const practice=$('lobbyPractice')?.querySelector('span');
@@ -120,7 +120,7 @@ function render(){
  if(!FACTIONS.length)return;
  const fac=FACTIONS[progress.selectedFaction]||FACTIONS[0],l=levelFromXP(progress.xp),s=currentSkin();
  $('lobbyDifficulty')?.querySelectorAll('[data-difficulty]').forEach(b=>{const chosen=b.dataset.difficulty===progress.aiDifficulty;b.classList.toggle('selected',chosen);b.setAttribute('aria-pressed',String(chosen));});
- $('lobbySolo').querySelector('span').textContent=(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 22웨이브 전투';
+ $('lobbySolo').querySelector('span').textContent=(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 무제한 웨이브 · 기지 파괴 시 종료';
  renderRuleset();
  const account=global.DesertDeviceAccount?.status?.();
  $('lobbyAccountStatus').textContent=global.DesertMember?.account?.()?('회원 · '+global.DesertMember.account().nickname):'게스트 · 이 기기';

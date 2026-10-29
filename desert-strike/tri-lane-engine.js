@@ -586,10 +586,6 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   while(state.next<=0){state.next+=24;wave();}
   deployMarineSupports();
   stepUnits(dt);
-  if(state.seconds>=1200&&!state.ended){
-   const scores=[0,0];for(const v of state.cores){scores[0]+=v[0];scores[1]+=v[1];}
-   state.ended=true;state.winner=scores[0]===scores[1]?null:scores[0]>scores[1]?0:1;
-  }
  }
  function snapshot(viewerUid=null){
   // Host keeps full state internally. Guest packets are redacted per viewer, not

@@ -74,6 +74,11 @@ test('real 300-card draft works inside the original single-player engine without
  chosenRuleset='standard';G.start();st=G.state();
  assert.equal(st.ruleset,'standard');assert.equal(st.augmentChoice,null);
  st.built[0]=0;G.wave();assert.equal(st.produced[0][0],1,'classic spawn rules remain unchanged');
+ st.wave=99;
+ G.wave();
+ assert.equal(st.wave,100,'single-player continues beyond wave 22 and wave 99');
+ assert.equal(st.ended,false,'no artificial wave-limit victory');
+ assert.equal(st.ruleset,'standard','unlimited wave count does not change mode');
 });
 test('lobby labels single/online/practice choices and loads 300 cards before single deployment',()=>{
  const lobby=src('front-lobby.js'),html=src('index.html'),css=src('style-v2.css');
