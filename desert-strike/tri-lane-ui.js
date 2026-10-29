@@ -242,7 +242,7 @@ function drawOverview(){
    g.fillStyle=u.team===0?'#86dedc':'#f5a28a';g.fillRect(u.x/3,y+h/2,3,Math.min(12,h/3));
   }
   if(snap.fog?.[l]){g.fillStyle='#071521e9';g.fillRect(snap.viewerTeam===0?1100-770/3:0,y,770/3,h);}
-  if(l===lane){g.strokeStyle='#efcc9d';g.strokeRect(1,y+1,1098,h-1);}
+  if(l===lane){g.strokeStyle='#efcc9d';g.strokeRect(1,y+1,1098,h-1);g.strokeStyle='#ffe6ad';g.lineWidth=2;g.strokeRect(cameraX/3+1,y+2,1100/3-2,Math.max(5,h-5));g.lineWidth=1;}
  }
 }
 function combatAudioSnapshot(v){
