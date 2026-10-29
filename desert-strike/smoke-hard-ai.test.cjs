@@ -71,6 +71,22 @@ assert.ok(elements.get('enemyFactionLabel').textContent.includes('하드 AI'));
 const soloAI=sw.DesertHardAI;let soloIntel;sw.DesertHardAI={...soloAI,choose:(b,data)=>{soloIntel=data.intel;return soloAI.choose(b,data);}};
 s.units=[{side:0,faction:0,role:0,x:2000,y:260,hp:2000,maxHP:2000,heroCount:20}];api.hardInvest();assert.equal(soloIntel.roles[0],20,'solo scouts count an observed aggregate as twenty soldiers');
 
+// Exact two-role failure case: a shield of spearmen in front of a 70%
+// siege backline should trigger balanced cavalry, armor and rifle production.
+{
+ const army=[13,5,0,1,0,1,10,2],sightings=[12,0,0,0,0,28,0,0];
+ const target=ai.choose({...brain,opening:99,nextRole:null,lastThreat:''},
+  {...base,cash:800,eco:5,counts:army,intel:{roles:sightings,air:0,armor:0}});
+ assert.equal(target.role,3,'protected artillery needs a real armored screen, not more light melee');
+ const armored=[13,5,0,9,0,1,10,2];
+ const follow=ai.choose({...brain,opening:99,nextRole:null,lastThreat:''},
+  {...base,cash:800,eco:5,counts:armored,intel:{roles:sightings,air:0,armor:0}});
+ assert.equal(follow.role,1,'after armor, hard AI should add ranged infantry to thin supporting spears');
+ assert.equal(ai.choose({...brain,opening:99,nextRole:null,lastThreat:''},
+  {...base,cash:0,eco:5,counts:army,intel:{roles:sightings}}),null,
+  'siege counter tactics still require normal CR');
+}
+
 // Solo hard AI reacts to a player extractor immediately, without gifted CR or
 // bypassing either side's paid blackout. It saves for unaffordable catch-up.
 api.reset();
