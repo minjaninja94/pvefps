@@ -29,11 +29,12 @@
    <aside class="lobby-panel lobby-profile">
 
     <div class="lobby-rank-card"><img id="lobbyRankBadge" class="lobby-rank-badge" src="./assets/ranks/bronze.svg" width="112" height="108" alt="브론즈 랭크 엠블럼">
-     <div class="lobby-rank-overview"><small id="lobbyRankIdentity">게스트 지휘관 · 비공식 기록</small><div id="lobbyRank" class="lobby-rank">브론즈</div><strong id="lobbyRankRP" class="lobby-rp">1,000 RP</strong><small id="lobbyRankNote">게스트 기록</small></div>
+     <div class="lobby-rank-overview"><small id="lobbyRankIdentity">게스트 지휘관 · 비공식 기록</small><div id="lobbyRank" class="lobby-rank">브론즈</div><strong id="lobbyRankRP" class="lobby-rp">전체 멀티 순위 확인 중</strong><small id="lobbyRankNote">게스트 기록</small></div>
     </div>
     <div class="lobby-rank-stats"><div><span>랭크 전적</span><strong id="lobbyRankWL">0승 0패</strong></div><div><span>승률</span><strong id="lobbyRankWinrate">0%</strong></div></div>
     <div class="lobby-level"><b id="lobbyLevel">LV. 1</b><span id="lobbyXP">0 / 170 XP</span></div><div class="lobby-xp-track"><i id="lobbyXPFill"></i></div><p id="lobbyRecord">싱글 0승 0패 · 온라인 0승 0패</p>
     <div class="lobby-recent-head"><strong>최근 전적</strong><button id="careerHistoryOpen" type="button" class="btn outline">전체 40경기 보기</button></div><div id="lobbyRecentMatches" class="lobby-recent-matches">최근 경기 없음</div>
+    <section id="lobbyRankLadder" class="lobby-ladder" aria-label="멀티 랭킹 및 모드별 티어"><div class="lobby-ladder-heading"><strong>멀티 모드별 랭킹</strong><small>DB 승수·승률 기준 임시 티어 · 내부 점수 비공개</small></div><nav id="lobbyRankModes" class="lobby-rank-modes" aria-label="랭킹 모드"><button type="button" class="selected" data-rank-mode="all">전체</button><button type="button" data-rank-mode="pvp">3라인 PvP</button><button type="button" data-rank-mode="classic">클래식 1:1</button><button type="button" data-rank-mode="coop">협동</button></nav><div id="lobbyModeRankSummary" class="lobby-mode-ranks">회원 로그인 후 랭킹을 불러옵니다.</div><div id="lobbyLeaderboard" class="lobby-leaderboard">랭킹 확인 중…</div></section>
     <div class="lobby-profile-options"><label>지휘관 이름<input id="lobbyNickname" maxlength="16" value="지휘관" autocomplete="nickname"></label><button id="lobbySaveName" type="button">프로필 저장</button></div>
     <button type="button" id="careerOpen" class="btn accent lobby-login-button">로그인 / 회원가입</button>
     <details class="lobby-device-details"><summary>기기 연결 정보 (게스트)</summary>
@@ -46,7 +47,7 @@
    <div class="lobby-section-title"><div><h2 id="careerDialogTitle">지휘관 로그인</h2></div><button type="button" id="careerClose" class="btn outline" aria-label="팝업 닫기">✕ 닫기</button></div>
    <div class="career-mode-tabs" role="group" aria-label="로그인 방식"><button id="careerTabLogin" type="button" class="active" aria-pressed="true">로그인</button><button id="careerTabSignup" type="button" aria-pressed="false">회원가입</button></div>
    <p class="career-short-note">이메일 없이 아이디·비밀번호로 접속합니다. 회원 기록은 계정에 저장됩니다.</p>
-   <strong id="careerRating">비공식 브론즈 · 1000 RP</strong>
+   <strong id="careerRating">멀티 임시 랭킹 · 회원 로그인 필요</strong>
    <div id="careerAccount" class="career-account">접속 대기</div>
    <div class="career-auth-form"><label>아이디 <input id="careerEmail" type="text" autocomplete="username" maxlength="20" minlength="4" placeholder="영문·숫자·_ 4~20자"></label><label id="careerNicknameLabel">닉네임 <input id="careerNickname" type="text" maxlength="16" placeholder="게임 내 표시 이름"></label><label>비밀번호 <input id="careerPassword" type="password" autocomplete="current-password" minlength="8" maxlength="72" placeholder="8자 이상"></label></div>
    <div class="career-actions"><button type="button" id="careerRegister" class="btn accent">회원가입</button><button type="button" id="careerLogin" class="btn outline">로그인</button><button type="button" id="careerGuest" class="btn outline">게스트 플레이</button><button type="button" id="careerLogout" class="btn outline" hidden>로그아웃</button></div>
@@ -179,6 +180,7 @@
 
   </div>
   <section class="mp-tab-screen mp-battle-section" id="mpBattleView" hidden>
+    <section id="mpAugmentBattleRoster" class="mp-augment-battle-roster" hidden aria-label="양측 선택 완료 증강을 전투 화면에서 직접 비교"></section>
    <div class="mp-production-title"><div><h2>실시간 전장</h2><p id="mpBattleDescription">미니맵을 눌러 라인을 선택하세요.</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="base">생산 배치 →</button></div>
    <nav class="mp-battle-navigation" aria-label="멀티 전장 카메라 조작"><div id="mpBattleLaneSelect" class="mp-battle-lane-select" role="group" aria-label="보는 라인"><button type="button" data-mp-lane="0">상단</button><button type="button" data-mp-lane="1" class="active">중앙</button><button type="button" data-mp-lane="2">하단</button></div><div class="mp-battle-camera"><button id="mpPanLeft" type="button" class="btn outline" aria-label="전장 왼쪽으로 이동">◀</button><span id="mpBattleCurrentLane">중앙 라인</span><button id="mpPanCenter" type="button" class="btn outline">중앙</button><button id="mpPanRight" type="button" class="btn outline" aria-label="전장 오른쪽으로 이동">▶</button></div></nav><div class="mp-battle-wrap"><canvas id="mpBattleCanvas" width="1100" height="520" aria-label="싱글플레이와 같은 크기의 선택된 생산 라인 전장. 좌우 드래그로 시점을 이동합니다."></canvas><div id="mpOpening" class="opening-countdown" role="status" aria-label="초기 배치 카운트다운" hidden><span>초기 배치 시간</span><div><strong id="mpOpeningSeconds">10</strong><b>초 뒤 첫 웨이브</b></div><small>지금 배치한 병력 시설은 준비 종료와 함께 첫 출격합니다.</small></div></div>
    <div class="mp-lane-summary" id="mpLaneSummary"></div>
