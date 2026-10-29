@@ -62,6 +62,7 @@ function uiButtons(){
  $('mpCreate').disabled=!!r||!!practice;$('mpJoin').disabled=!!r||!!practice;
  $('mpPractice').disabled=!!r||!!practice;
  $('mpMode').disabled=!!r;$('mpSize').disabled=!!r;$('mpRuleset').disabled=!!r;
+ global.DesertLobby?.syncRulesetFromRoom?.(r?(r.ruleset||'standard'):null);
  if(lobby?.id)$('mpRoomCode').value=lobby.id;
 }
 function onRoom(v){

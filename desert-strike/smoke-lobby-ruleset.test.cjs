@@ -12,6 +12,8 @@ test('main lobby directly exposes both standard and 300-card augment choices',()
  assert.match(src,/RULESET_KEY/);
  assert.match(src,/function chooseRuleset/);
  assert.match(src,/function restoreRuleset/);
+ assert.match(src,/function syncRulesetFromRoom/);
+ assert.match(read('tri-lane-ui.js'),/DesertLobby\?\.syncRulesetFromRoom/);
  assert.match(src,/renderRuleset\(\)/);
  assert.match(read('tri-lane-ui.js'),/ruleset:\$\('mpRuleset'\)\.value/);
  assert.match(read('tri-lane-ui.js'),/practice=E\.create\(\{mode,size:1.*ruleset:\$\('mpRuleset'\)\.value/);
@@ -26,7 +28,7 @@ test('switching to augment updates multiplayer and offline practice, persists, a
  const doc={readyState:'loading',addEventListener(){},getElementById:id=>ids[id]||null,
   querySelectorAll:selector=>selector==='#lobbyRulesetPicker [data-ruleset]'?buttons:[]};
  const w={localStorage:{getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,v)},DesertTriNetwork:{current:()=>({roomId:room})}};
- const source=read('front-lobby.js').replace('})(window);','global.__testRules={chooseRuleset,renderRuleset,restoreRuleset};})(window);');
+ const source=read('front-lobby.js').replace('})(window);','global.__testRules={chooseRuleset,renderRuleset,restoreRuleset,syncRulesetFromRoom};})(window);');
  vm.runInNewContext(source,{window:w,document:doc,Event:class{constructor(name){this.type=name;}},Math,Number,Array,String,Object,Date,JSON},{filename:'front-lobby.js'});
  const helper=w.__testRules;helper.restoreRuleset();
  assert.equal(ruleset.value,'standard');assert.equal(buttons[0].attrs['aria-pressed'],'true');
@@ -37,5 +39,6 @@ test('switching to augment updates multiplayer and offline practice, persists, a
  room='ROOM01';assert.equal(helper.chooseRuleset('standard'),false,'joined rooms cannot switch ruleset');
  assert.equal(ruleset.value,'augment');
  helper.renderRuleset();assert.equal(buttons[0].disabled,true);assert.equal(buttons[1].disabled,true);
- room=null;helper.restoreRuleset();assert.equal(ruleset.value,'augment','remember selected ruleset');
+ helper.syncRulesetFromRoom('standard');assert.equal(buttons[0].attrs['aria-pressed'],'true','show joined room ruleset');
+ room=null;ruleset.disabled=false;helper.syncRulesetFromRoom(null);assert.equal(ruleset.value,'augment','restore preferred mode after leaving');
 });
