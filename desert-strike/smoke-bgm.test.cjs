@@ -68,3 +68,55 @@ test('lobby and battle music are exclusive, loop, and obey the persistent switch
  assert.equal(battle.paused,true);
  assert.equal(lobby.paused,false);
 });
+
+test('in-game gear changes persistent music, voice and effects volumes and syncs lobby sliders',()=>{
+ const ids=new Map(),handlers={};
+ function el(id){
+  if(!ids.has(id))ids.set(id,{
+   id,value:'',textContent:'',hidden:id==='battleAudioSettingsPanel',listeners:{},attrs:{},
+   addEventListener(type,fn){this.listeners[type]=fn;},
+   setAttribute(name,value){this.attrs[name]=value;},
+   contains(target){return target===this;},focus(){this.focused=true;}
+  });
+  return ids.get(id);
+ }
+ const state={music:30,voice:50,effects:32,musicOn:true,effectsOn:true};
+ const window={
+  DesertLobbyMusic:{
+   volume:()=>state.music,setVolume:v=>{state.music=Number(v);},
+   isEnabled:()=>state.musicOn,setEnabled:v=>{state.musicOn=!!v;}
+  },
+  DesertCombatAudio:{
+   volume:key=>state[key],setVolume:(key,v)=>{state[key]=Number(v);},
+   isEnabled:()=>state.effectsOn,setEnabled:v=>{state.effectsOn=!!v;}
+  }
+ };
+ const document={readyState:'complete',getElementById:el,addEventListener:(k,fn)=>{handlers[k]=fn;}};
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'audio-settings.js'),'utf8'),{window,document});
+ assert.equal(el('battleMusicVolume').value,'30');
+ assert.equal(el('battleVoiceVolume').value,'50');
+ assert.equal(el('battleEffectsVolume').value,'32');
+ el('battleAudioSettingsButton').listeners.click();
+ assert.equal(el('battleAudioSettingsPanel').hidden,false);
+ assert.equal(el('battleAudioSettingsButton').attrs['aria-expanded'],'true');
+ el('battleMusicVolume').value='15';el('battleMusicVolume').listeners.input();
+ assert.equal(state.music,15);
+ assert.equal(el('audioMusicVolume').value,'15','lobby slider follows live battle music volume');
+ el('audioVoiceVolume').value='41';el('audioVoiceVolume').listeners.input();
+ assert.equal(el('battleVoiceVolume').value,'41','battle slider follows lobby voice volume');
+ el('battleEffectsVolume').value='5';el('battleEffectsVolume').listeners.input();
+ assert.equal(state.effects,5);
+ assert.equal(el('audioEffectsValue').textContent,'5%');
+ el('battleMusicToggle').listeners.click();
+ el('battleEffectsToggle').listeners.click();
+ assert.equal(state.musicOn,false);assert.equal(state.effectsOn,false);
+ assert.equal(el('battleMusicToggle').attrs['aria-pressed'],'false');
+ assert.equal(el('battleEffectsToggle').attrs['aria-pressed'],'false');
+ handlers.keydown({key:'Escape'});
+ assert.equal(el('battleAudioSettingsPanel').hidden,true);
+ assert.equal(el('battleAudioSettingsButton').attrs['aria-expanded'],'false');
+ const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
+ assert.match(html,/id="backToLobby"[\\s\\S]*?id="battleAudioSettingsButton"/);
+ for(const id of ['battleAudioSettingsPanel','battleMusicVolume','battleVoiceVolume','battleEffectsVolume'])
+  assert.ok(html.includes('id="'+id+'"'),id);
+});
