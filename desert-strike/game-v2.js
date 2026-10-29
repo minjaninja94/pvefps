@@ -174,7 +174,7 @@ function reset(){
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},
  broodBirths:[0,0],broodBirthsTotal:[0,0],
  towerShots:[],aiSight:new Set(),nukes:1,enemyNukes:1,barrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
- nextUnitId:1,attackCount:0,nextConsolidation:1,aiDifficulty:window.DesertLobby?.aiDifficulty?.()||'normal',hardBrain:null,prismWaveAt:-Infinity,
+ nextUnitId:1,attackCount:0,nextConsolidation:1,aiNextThink:0,aiLastRefitAt:-Infinity,aiIntelMemory:null,aiDifficulty:window.DesertLobby?.aiDifficulty?.()||'normal',hardBrain:null,prismWaveAt:-Infinity,
  ruleset:'standard',augments:[],enemyAugments:[],augmentChoice:null,augmentStage:-1,augmentSchedule:[],prismLastStandUsed:false,enemyPrismLastStandUsed:false};
  selectedRole=null;demolition=false;bannerSeconds=0;barrageSeconds=0;
  $('startOverlay').classList.remove('hidden');$('endOverlay').classList.add('hidden');
@@ -353,24 +353,46 @@ const AI_COUNTER_ROLES=[
  [0,5]    // medic -> charge/siege
 ];
 function aiReadOpponent(){
- // The AI sees enemy composition only after its troops observe it. No hidden factory reads.
+ // Scout visible troops only; never inspect hidden production slots. Preserve the
+ // scouted threat briefly after a wave is wiped out so counter-building can continue.
  const sightings=state.aiSight||(state.aiSight=new Set());
- const counts=Array(ROLE.length).fill(0);
+ const now=state.elapsed,live=Array(8).fill(0),airCount=Array(8).fill(0),armorCount=Array(8).fill(0);
+ const scouts=state.units.filter(u=>u.side===1&&u.hp>0);
  for(const foe of state.units){
   if(foe.side!==0||foe.hp<=0||sightings.has(foe.uid))continue;
-  if(foe.x>=WORLD_W*.57||state.units.some(u=>u.side===1&&u.hp>0&&Math.hypot(u.x-foe.x,u.y-foe.y)<=340))sightings.add(foe.uid);
+  if(foe.x>=WORLD_W*.54||scouts.some(u=>Math.hypot(u.x-foe.x,u.y-foe.y)<=420))sightings.add(foe.uid);
  }
- for(const foe of state.units)if(foe.side===0&&foe.hp>0&&sightings.has(foe.uid))counts[foe.role]++;
- const sum=counts.reduce((a,b)=>a+b,0);
+ for(const foe of state.units)if(foe.side===0&&foe.hp>0&&sightings.has(foe.uid)){
+  const count=foe.heroCount===20?(window.DesertConsolidation?.strength?.(foe)??20):1;
+  live[foe.role]+=count;
+  const type=getDef(foe.role,foe.faction).kind;
+  if(type==='air')airCount[foe.role]+=count;
+  if(foe.role===3||(foe.role===6&&type==='ground'))armorCount[foe.role]+=count;
+ }
+ let memory=state.aiIntelMemory;
+ if(!memory)memory=state.aiIntelMemory={counts:Array(8).fill(0),lastSeen:Array(8).fill(-Infinity),air:0,armor:0};
+ const counts=live.slice();
+ for(let i=0;i<8;i++){
+  if(live[i]){memory.counts[i]=Math.max(live[i],memory.counts[i]*.83);memory.lastSeen[i]=now;}
+  if(now-memory.lastSeen[i]<=INTERVAL*3)counts[i]=Math.max(counts[i],Math.ceil(memory.counts[i]*.75));
+  else memory.counts[i]=0;
+ }
+ const total=counts.reduce((a,b)=>a+b,0);
  let major=0;
  for(let i=1;i<counts.length;i++)if(counts[i]>counts[major])major=i;
- const dominant=sum>=3&&counts[major]/sum>=.63?major:null;
- return {counts,total:sum,dominant,major};
+ const dominant=total>=4&&counts[major]/total>=.65?major:null;
+ const air=airCount.reduce((a,b)=>a+b,0),armor=armorCount.reduce((a,b)=>a+b,0);
+ if(air)memory.air=air;if(armor)memory.armor=armor;
+ return {counts,total,dominant,major,air:air||((now-memory.lastSeen[6]<=INTERVAL*3)?memory.air:0),armor:armor||((now-memory.lastSeen[3]<=INTERVAL*3)?memory.armor:0),
+  invaded:state.units.some(u=>u.side===0&&u.hp>0&&u.x>=WORLD_W-560)};
 }
 function aiCountersFor(role){
+ if(role===0){
+  // Factions 3/4/6/7 field ground cavalry or robots in slot 6, not aircraft.
+  return [3,4,6,7].includes(state.enemyFaction)?[1,3]:[6,1,3];
+ }
  if(role===6&&[3,4,6,7].includes(state.faction))return [2,3];
- if(role===0&&(state.enemyFaction===3||state.enemyFaction===4))return [1,3,6]; // Marines field an Odo Bongo rather than a flier.
- if(role===3&&(state.enemyFaction===3||state.enemyFaction===4))return [2]; // Odo Bongo cannot counter heavy tanks; use actual armor breakers.
+ if(role===3&&[3,4,6,7].includes(state.enemyFaction))return [2];
  return AI_COUNTER_ROLES[role];
 }
 function aiChoose(budget=state.enemyCash){
@@ -381,7 +403,7 @@ function aiChoose(budget=state.enemyCash){
  for(const role of state.enemyBuilt)if(role!==null&&role!==EXTRACTOR)myCounts[role]++;
  // Mixed heavy/air/healer compositions require two real counter types, not a random counter.
  const groundVehicle=[3,4,6,7].includes(state.faction);
- const tanks=intel.counts[3]+(groundVehicle?intel.counts[6]:0),air=groundVehicle?0:intel.counts[6],medics=intel.counts[7];
+ const tanks=intel.counts[3]+(groundVehicle?intel.counts[6]:0),air=intel.air,medics=intel.counts[7];
  if(tanks>=2&&air>=2){
   if(affordable.includes(4)&&myCounts[4]<Math.ceil(air*.9))return 4;
   if(affordable.includes(2)&&myCounts[2]<Math.ceil(tanks*1.05))return 2;
@@ -395,9 +417,9 @@ function aiChoose(budget=state.enemyCash){
   if(matching.length){
    // Melee-only armies cannot attack aircraft. Buy one air unit once affordable,
    // then mix rifle + armor rather than exploit an unlimited flier swarm.
-   if(intel.dominant===0 && state.enemyFaction!==4 && state.wave>=2 && affordable.includes(6) && myCounts[6]<Math.max(1,Math.floor(intel.counts[0]/6)))return 6;
+   if(intel.dominant===0&&![3,4,6,7].includes(state.enemyFaction)&&affordable.includes(6)&&myCounts[6]<Math.min(16,Math.max(2,Math.ceil(intel.counts[0]/3))))return 6;
    // Dedicated anti-air is essential against air-only forces; rifles alone are insufficient.
-   if(intel.dominant===6&&state.faction!==3&&affordable.includes(4)&&myCounts[4]<Math.ceil(intel.counts[6]*.85))return 4;
+   if(intel.dominant===6&&intel.air>=2&&affordable.includes(4)&&myCounts[4]<Math.ceil(intel.air*.85))return 4;
    // Against tank spam, prioritize armor breakers. Marines must never answer tanks with trucks.
    if(intel.dominant===3&&affordable.includes(2)&&myCounts[2]<Math.ceil(intel.counts[3]*1.1))return 2;
    matching.sort((a,b)=>{
@@ -458,20 +480,28 @@ function hardMirrorEconomy(){
 function hardInvest(){
  const ai=window.DesertHardAI;if(!ai)return;
  if(hardMirrorEconomy())return;
- if(hardResearch())return;
+ const intel=aiReadOpponent();
+ aiAdaptFacilities(intel);
+ // Counter-building outranks low-impact late research during an observed rush.
+ const emergencyCounter=intel.dominant!==null&&intel.total>=8;
+ if(!emergencyCounter&&hardResearch())return;
  const brain=state.hardBrain||(state.hardBrain=ai.create(state.enemyFaction));
- const scouts=state.units.filter(u=>u.side===1&&u.hp>0);
- const seen=state.units.filter(u=>u.side===0&&u.hp>0&&(u.x>=WORLD_W*.57||scouts.some(v=>Math.hypot(v.x-u.x,v.y-u.y)<=340)));
- const amount=u=>u.heroCount===20?20:1;
- const air=seen.filter(u=>getDef(u.role,u.faction).kind==='air').reduce((n,u)=>n+amount(u),0);
- const armor=seen.filter(u=>u.role===3||(u.role===6&&getDef(u.role,u.faction).kind!=='air')).reduce((n,u)=>n+amount(u),0);
- const roles=Array(8).fill(0);for(const u of seen)if(!u.guardian)roles[u.role]+=amount(u);
- const invaded=seen.some(u=>u.x>WORLD_W-580);
+ const roles=intel.counts;
+ const air=intel.air,armor=intel.armor,invaded=intel.invaded;
  for(let purchase=0;purchase<12;purchase++){
   const counts=Array(8).fill(0);for(const role of state.enemyBuilt)if(role!==null&&role!==EXTRACTOR)counts[role]++;
   const slot=state.enemyBuilt.findIndex(v=>v===null);if(slot<0)break;
   const action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,costs:ROLE.map(x=>x.cost),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded,roles}});
   if(!action)break;
+  if(emergencyCounter&&brain.opening>=((ai.plans[brain.plan]?.opening?.length)||0)){
+   const counters=aiCountersFor(intel.dominant),current=counts.reduce((sum,n,i)=>sum+(counters.includes(i)?n:0),0);
+   const total=counts.reduce((sum,n)=>sum+n,0);
+   if(current<Math.ceil(total*.75)){
+    const role=counters.slice().sort((a,b)=>counts[a]-counts[b])[0];
+    if(state.enemyCash>=ROLE[role].cost)action={kind:'unit',role};
+    else if(action.kind==='unit')break;
+   }
+  }
   const cost=action.kind==='econ'?ecoCostFor(state.enemyEco):ROLE[action.role].cost;
   if(action.kind==='econ'){if(!constructExtractor(1,slot))break;}
   else {if(state.enemyCash<cost)break;state.enemyBuilt[slot]=action.role;state.enemyCash-=cost;}
@@ -487,57 +517,46 @@ function aiInitialBuild(){
   state.enemyBuilt[slot]=role;state.enemyCash-=ROLE[role].cost;
  }
 }
+// Refit a wrong production lineup for the scouted counter plan. Both difficulties
+// pay the same 55% sale refund and full new unit price as the human player.
 function aiAdaptFacilities(intel){
- // The opponent uses building replacement under the exact same 55% refund as the player.
- // At most one conversion per 2 waves. React only to clear, repeated single-role spam.
- if(intel.dominant===null||intel.total<4||state.wave<2||state.wave%2!==0)return false;
+ if(intel.dominant===null||intel.total<5||state.wave<1||state.elapsed-(state.aiLastRefitAt||-Infinity)<10)return false;
  const counters=aiCountersFor(intel.dominant);
- const aiCount=state.enemyBuilt.filter(r=>r!==null&&r!==EXTRACTOR).length;
- const counterCount=state.enemyBuilt.filter(r=>counters.includes(r)).length;
- if(counterCount>=Math.ceil(aiCount*.55))return false;
- const badIndex=state.enemyBuilt.findIndex(role=>role!==null&&role!==EXTRACTOR&&!counters.includes(role));
- if(badIndex<0)return false;
- const oldRole=state.enemyBuilt[badIndex],refund=Math.floor(ROLE[oldRole].cost*.55);
- const options=counters.filter(role=>ROLE[role].cost-refund<=state.enemyCash);
- if(!options.length)return false;
- const target=options.sort((a,b)=>ROLE[a].cost-ROLE[b].cost)[0];
- state.enemyCash-=ROLE[target].cost-refund;
- state.enemyBuilt[badIndex]=target;
+ const army=state.enemyBuilt.filter(r=>r!==null&&r!==EXTRACTOR),goal=Math.ceil(army.length*.70);
+ if(army.length<3||army.filter(r=>counters.includes(r)).length>=goal)return false;
+ const oldIndex=state.enemyBuilt.findIndex(role=>role!==null&&role!==EXTRACTOR&&!counters.includes(role));
+ if(oldIndex<0)return false;
+ const old=state.enemyBuilt[oldIndex],refund=Math.floor(ROLE[old].cost*.55);
+ const target=counters.filter(role=>ROLE[role].cost-refund<=state.enemyCash)
+  .sort((a,b)=>state.enemyBuilt.filter(r=>r===a).length-state.enemyBuilt.filter(r=>r===b).length||ROLE[a].cost-ROLE[b].cost)[0];
+ if(target===undefined)return false;
+ state.enemyBuilt[oldIndex]=target;state.enemyCash+=refund-ROLE[target].cost;
+ state.aiLastRefitAt=state.elapsed;return true;
+}
+function normalMirrorEconomy(){
+ // Normal AI may trail the player's extractors by one; it still pays for every
+ // facility, loses income during stabilization, and never receives free money.
+ const target=Math.min(MAX_ECONOMY,Math.max(state.elapsed>85?2:state.elapsed>25?1:0,state.eco-1));
+ if(state.enemyEco>=target)return false;
+ const slot=state.enemyBuilt.findIndex(r=>r===null);
+ if(slot<0)return false;
+ if(ecoRemaining(1)<=0&&state.enemyCash>=ecoCostFor(state.enemyEco))constructExtractor(1,slot);
  return true;
 }
 function aiInvest(){
  if(state.aiDifficulty==='hard'){hardInvest();return;}
  const intel=aiReadOpponent();
- const enemyCount=state.enemyBuilt.filter(role=>role!==null&&role!==EXTRACTOR).length;
- const invaded=state.units.some(u=>u.side===0&&u.x>WORLD_W-580&&u.hp>0);
- const heavyRush=intel.total>=4&&intel.dominant!==null;
- // Spend normal starting income on a genuine early offensive army to punish pure eco greed.
- const opening=Math.min(12,4+Math.floor(Math.max(0,state.wave-1)*1.2));
- // Keep pace with a committed enemy production build, but not by spawning free units.
- const isAirRush=heavyRush&&intel.dominant===6&&![3,4,6,7].includes(state.faction);
- const isTankRush=heavyRush&&intel.dominant===3;
- const isTruckRush=heavyRush&&intel.dominant===6&&([3,4,6,7].includes(state.faction));
- // Single-unit spam has little tactical flexibility. Counter it by investing earned credits
- // in a stronger specialist army rather than hoarding cash at a same-size facility cap.
- const focusMultiplier=isAirRush?1.6:isTankRush?1.45:isTruckRush?1.4:heavyRush?1.05:.85;
- const desired=Math.min(SLOTS,Math.max(opening,2+Math.floor(state.wave/3)+Math.floor(Math.max(0,state.wave-9)/2),
-  Math.ceil(intel.total*focusMultiplier),invaded?intel.total+2:0));
- // One reasonable purchasing opportunity per wave, up to three early in a rush.
- let purchases=Math.min(invaded||isAirRush||isTankRush||isTruckRush?4:heavyRush?3:state.wave<=5?2:3,Math.max(0,desired-enemyCount));
- const reserve=invaded||heavyRush||state.wave<=4?0:50;
- if(state.wave>=5&&state.wave%3===0&&!invaded&&state.enemyEco<MAX_ECONOMY){
-  const wantLevel=Math.min(MAX_ECONOMY,Math.floor(state.wave/4));
-  const ecoPrice=ecoCostFor(state.enemyEco);
-  if(state.enemyEco<wantLevel&&state.enemyCash>=ecoPrice+150){
-   const slot=state.enemyBuilt.findIndex(v=>v===null);if(slot>=0)constructExtractor(1,slot);
-  }
- }
+ // Stop creating tiny forces and losing to players who scale to 20+ factories.
+ if(normalMirrorEconomy())return;
  aiAdaptFacilities(intel);
- const slots=state.enemyBuilt.map((v,i)=>v===null?i:-1).filter(i=>i>=0);
- while(slots.length&&purchases-->0){
-  const role=aiChoose(state.enemyCash-reserve);
+ const army=state.enemyBuilt.filter(r=>r!==null&&r!==EXTRACTOR);
+ const desired=Math.min(SLOTS-state.enemyEco,Math.max(6,4+Math.floor(state.elapsed/10),
+  Math.ceil(intel.total*1.35),intel.invaded?army.length+7:0));
+ const slots=state.enemyBuilt.map((role,i)=>role===null?i:-1).filter(i=>i>=0);
+ for(let purchased=0;slots.length&&purchased<8&&army.length+purchased<desired;purchased++){
+  const role=aiChoose(state.enemyCash);
   if(role===null)break;
-  const slot=slots.splice(Math.floor(Math.random()*slots.length),1)[0];
+  const slot=slots.shift();
   state.enemyBuilt[slot]=role;state.enemyCash-=ROLE[role].cost;
  }
 }
@@ -1041,7 +1060,7 @@ function tick(dt){
  state.elapsed+=ds;state.next-=ds;state.incomeClock+=ds;
  if(state.elapsed>=state.nextConsolidation){state.nextConsolidation=state.elapsed+1;compactArmy();}
  while(state.incomeClock>=INCOME_PERIOD){const at=state.elapsed-state.incomeClock+INCOME_PERIOD;state.incomeClock-=INCOME_PERIOD;if(at+1e-6>=state.ecoReadyAt)state.cash+=initialIncome+state.eco;if(at+1e-6>=state.enemyEcoReadyAt)state.enemyCash+=initialIncome+state.enemyEco;}
- if(state.aiDifficulty==='hard'&&state.elapsed>=(state.hardBrain?.nextThink||0)){hardInvest();if(state.hardBrain)state.hardBrain.nextThink=state.elapsed+1;}
+ if(state.elapsed>=state.aiNextThink){aiInvest();state.aiNextThink=state.elapsed+(state.aiDifficulty==='hard'?.6:1.3);}
  state.barrageCd=Math.max(0,state.barrageCd-ds);
  while(state.next<=0){state.next+=INTERVAL;wave();if(state.augmentChoice)break;}
  if(state.augmentChoice){updateUI(true);return;}
