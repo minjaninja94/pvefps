@@ -363,7 +363,8 @@ function aiReadOpponent(){
   if(foe.x>=WORLD_W*.54||scouts.some(u=>Math.hypot(u.x-foe.x,u.y-foe.y)<=420))sightings.add(foe.uid);
  }
  for(const foe of state.units)if(foe.side===0&&foe.hp>0&&sightings.has(foe.uid)){
-  const count=foe.heroCount===20?(window.DesertConsolidation?.strength?.(foe)??20):1;
+  const strength=foe.heroCount===20?(window.DesertConsolidation?.strength?.(foe)??20):1;
+  const count=Number.isFinite(strength)?strength:20;
   live[foe.role]+=count;
   const type=getDef(foe.role,foe.faction).kind;
   if(type==='air')airCount[foe.role]+=count;
@@ -417,6 +418,7 @@ function aiChoose(budget=state.enemyCash){
   if(matching.length){
    // Melee-only armies cannot attack aircraft. Buy one air unit once affordable,
    // then mix rifle + armor rather than exploit an unlimited flier swarm.
+   if(intel.dominant===0&&myCounts[1]<Math.min(2,Math.ceil(intel.counts[0]/4))&&affordable.includes(1))return 1;
    if(intel.dominant===0&&![3,4,6,7].includes(state.enemyFaction)&&affordable.includes(6)&&myCounts[6]<Math.min(16,Math.max(2,Math.ceil(intel.counts[0]/3))))return 6;
    // Dedicated anti-air is essential against air-only forces; rifles alone are insufficient.
    if(intel.dominant===6&&intel.air>=2&&affordable.includes(4)&&myCounts[4]<Math.ceil(intel.air*.85))return 4;
@@ -479,8 +481,9 @@ function hardMirrorEconomy(){
 }
 function hardInvest(){
  const ai=window.DesertHardAI;if(!ai)return;
- if(hardMirrorEconomy())return;
+ const matchingEconomy=hardMirrorEconomy();
  const intel=aiReadOpponent();
+ if(matchingEconomy&&!intel.invaded)return;
  aiAdaptFacilities(intel);
  // Counter-building outranks low-impact late research during an observed rush.
  const emergencyCounter=intel.dominant!==null&&intel.total>=8;
@@ -520,7 +523,7 @@ function aiInitialBuild(){
 // Refit a wrong production lineup for the scouted counter plan. Both difficulties
 // pay the same 55% sale refund and full new unit price as the human player.
 function aiAdaptFacilities(intel){
- if(intel.dominant===null||intel.total<5||state.wave<1||state.elapsed-(state.aiLastRefitAt||-Infinity)<10)return false;
+ if(intel.dominant===null||intel.total<5||state.wave<1||state.elapsed-(state.aiLastRefitAt??-Infinity)<(state.aiDifficulty==='hard'?5:7))return false;
  const counters=aiCountersFor(intel.dominant);
  const army=state.enemyBuilt.filter(r=>r!==null&&r!==EXTRACTOR),goal=Math.ceil(army.length*.70);
  if(army.length<3||army.filter(r=>counters.includes(r)).length>=goal)return false;
@@ -536,7 +539,7 @@ function aiAdaptFacilities(intel){
 function normalMirrorEconomy(){
  // Normal AI may trail the player's extractors by one; it still pays for every
  // facility, loses income during stabilization, and never receives free money.
- const target=Math.min(MAX_ECONOMY,Math.max(state.elapsed>85?2:state.elapsed>25?1:0,state.eco-1));
+ const target=Math.min(MAX_ECONOMY,Math.max(Math.floor(state.wave/5),state.elapsed>85?2:state.elapsed>25?1:0,state.eco-1));
  if(state.enemyEco>=target)return false;
  const slot=state.enemyBuilt.findIndex(r=>r===null);
  if(slot<0)return false;
