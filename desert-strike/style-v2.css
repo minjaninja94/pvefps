@@ -753,3 +753,13 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
 #view-multiplayer #mpBuildGrid button.constructing canvas{opacity:.6}
 #view-multiplayer #mpBuildGrid button.filled{padding:3px 1px}
 .build-cell:has(.build-progress){min-height:83px}
+
+.mp-battle-wrap{position:relative}
+.opening-countdown{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;pointer-events:none;text-align:center;padding:18px;background:radial-gradient(ellipse at center,#0b1d2aeb 0%,#0b1d2a85 60%,#0b1d2a25 100%);color:#fff0c9;text-shadow:0 2px 7px #000}
+.opening-countdown[hidden]{display:none}
+.opening-countdown>span{font-size:clamp(14px,2vw,21px);font-weight:900;letter-spacing:.14em;color:#99e5ec}
+.opening-countdown>div{display:flex;align-items:baseline;justify-content:center;gap:14px}
+.opening-countdown strong{font-size:clamp(54px,9vw,96px);line-height:1;font-weight:900;font-variant-numeric:tabular-nums;color:#ffdd93}
+.opening-countdown b{font-size:clamp(16px,2.5vw,28px)}
+.opening-countdown small{font-size:clamp(10px,1.4vw,14px);line-height:1.5;color:#d5e5e5;max-width:92%}
+@media(max-width:620px){.opening-countdown{gap:5px;padding:9px}.opening-countdown strong{font-size:48px}.opening-countdown>div{gap:8px}}

@@ -49,7 +49,7 @@ const sandbox={document:doc,window:{addEventListener(){}},requestAnimationFrame(
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'sprite-animations.js'),'utf8'),sandbox,{timeout:4000,filename:'sprite-animations.js'});
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'unit-consolidation.js'),'utf8'),sandbox,{filename:'unit-consolidation.js'});
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'hard-ai.js'),'utf8'),sandbox,{filename:'hard-ai.js'});
-vm.runInNewContext(code.replace('initFactions();wire();reset();','window.__gameTest={state:()=>state,createUnit,resolveStrike,ecoCostFor,aiInvest,hardInvest,compactArmy,aiSlotFor,wave,tick,upgrade,aiReadOpponent,aiChoose,aiCountersFor,structureDamage,aiAdaptFacilities,separateUnits,unitRadius,bongoImpact,getDef,damage,nearestUnit,marineSpoils,deployMarineSupports,heal,enemyBaseVisible,enemyUnitVisible};initFactions();wire();reset();'),sandbox,{timeout:3500,filename:'game-v2.js'});
+vm.runInNewContext(code.replace('initFactions();wire();reset();','window.__gameTest={state:()=>state,createUnit,resolveStrike,ecoCostFor,aiInvest,hardInvest,compactArmy,aiSlotFor,productionReadyAt,wave,tick,upgrade,aiReadOpponent,aiChoose,aiCountersFor,structureDamage,aiAdaptFacilities,separateUnits,unitRadius,bongoImpact,getDef,damage,nearestUnit,marineSpoils,deployMarineSupports,heal,enemyBaseVisible,enemyUnitVisible};initFactions();wire();reset();'),sandbox,{timeout:3500,filename:'game-v2.js'});
 assert.equal(el('cash').textContent,'360');
 assert.match(el('unitCards').innerHTML,/강점:/);
 assert.match(el('unitCards').innerHTML,/약점:/);
@@ -85,7 +85,7 @@ assert.match(el('cameraStatus').textContent,/전선 자동 추적/,'front camera
 assert.match(el('builtCount').textContent,/1 \/ 75/);
 steps(640);
 assert.ok(sandbox.window.DesertSprites.cacheSize>16,'combat must use procedural animation frames');
-assert.equal(el('wave').textContent,'02','two 12-second waves should trigger by 25.6s');
+assert.equal(el('wave').textContent,'02','opening at 10s and next wave at 22s should trigger by 25.6s');
 assert.ok(Number(el('friendlyCount').textContent)>=1,'wave spawned allied units');
 click('pauseButton');
 const stopped=el('timer').textContent;
@@ -273,17 +273,17 @@ for(const scenario of spamCases)for(const rngSeed of [17,61]){
  const unitCost=g.getDef(scenario.role,scenario.player).cost;
  while(game.cash>=unitCost && game.built.some(v=>v===null)){
   const i=game.built.findIndex(v=>v===null);
-  game.built[i]=scenario.role;game.buildReadyAt[i]=game.elapsed+12;game.cash-=unitCost;
+  game.built[i]=scenario.role;game.buildReadyAt[i]=g.productionReadyAt();game.cash-=unitCost;
  }
  game.enemyBuilt.fill(null);game.enemyCash=360;
  game.enemyEco=0;game.enemyBuilt[1]=0;game.enemyCash-=65;
  game.enemyBuilt[17]=1;game.enemyCash-=g.getDef(1,scenario.enemy).cost;
- game.enemyBuildReadyAt[1]=game.enemyBuildReadyAt[17]=game.elapsed+12;
- game.wave=0;game.next=12;
+ game.enemyBuildReadyAt[1]=game.enemyBuildReadyAt[17]=g.productionReadyAt();
+ game.wave=0;game.next=10;
  for(let i=0;i<4000&&!game.ended;i++){
   if(game.cash>=unitCost){
    const free=game.built.findIndex(v=>v===null);
-   if(free>=0){game.built[free]=scenario.role;game.buildReadyAt[free]=game.elapsed+12;game.cash-=unitCost;}
+   if(free>=0){game.built[free]=scenario.role;game.buildReadyAt[free]=g.productionReadyAt();game.cash-=unitCost;}
   }
   g.tick(.12);
  }
