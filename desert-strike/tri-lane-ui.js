@@ -277,6 +277,38 @@ function combatAudioSnapshot(v){
   if(!effects.has(id))audio.cue(['pollen','huanglong'].includes(effect.kind)?'heal':'explosion',effect.x);
  }
 }
+function renderAugmentRoster(){
+ const panel=$('mpAugmentRoster');if(!panel)return;
+ if(!snap||snap.ruleset!=='augment'){panel.hidden=true;augmentRosterKey='';return;}
+ const key=JSON.stringify(snap.players.map(p=>[p.uid,p.team,p.name,p.augments]));
+ if(key===augmentRosterKey)return;
+ augmentRosterKey=key;panel.hidden=false;panel.replaceChildren();
+ const heading=document.createElement('h3');heading.textContent='양측 증강 현황';
+ const note=document.createElement('p');note.textContent='선택 완료된 프리즘을 모두 공개합니다. 카드명을 누르면 효과를 확인할 수 있습니다.';
+ const teams=document.createElement('div');teams.className='mp-augment-teams';
+ const ownSide=my()?.team??0;
+ for(const side of [ownSide,1-ownSide]){
+  const group=document.createElement('section');group.className='mp-augment-side';
+  const h=document.createElement('h4');h.textContent=side===ownSide?'아군 증강':'상대 증강';group.append(h);
+  for(const p of snap.players.filter(p=>p.team===side)){
+   const who=document.createElement('div');who.className='mp-augment-player';
+   const name=document.createElement('strong');name.textContent=p.name||'지휘관';
+   who.append(name);
+   const cards=document.createElement('div');cards.className='mp-augment-picks';
+   for(const id of p.augments||[]){
+    const card=global.DesertAugments?.card(id);
+    const details=document.createElement('details'),summary=document.createElement('summary'),body=document.createElement('p');
+    summary.textContent=card?.name||'증강 데이터 확인 중';
+    body.textContent=card?.description||'카드 설명이 준비되지 않았습니다.';
+    details.title=body.textContent;details.append(summary,body);cards.append(details);
+   }
+   if(!cards.childElementCount){const empty=document.createElement('span');empty.textContent='선택 전';cards.append(empty);}
+   who.append(cards);group.append(who);
+  }
+  teams.append(group);
+ }
+ panel.append(heading,note,teams);
+}
 function renderAugment(){
  const panel=$('mpAugmentPanel'),choice=snap?.augmentChoice;
  if(!panel)return;
@@ -369,7 +401,7 @@ function onSnapshot(v){
    if(!practice)void NET.reportWinner?.(v.winner);
   }
  }
- renderAugment();unitCards();buildGrid();upgradeInfo();drawOverview();
+ renderAugment();renderAugmentRoster();unitCards();buildGrid();upgradeInfo();drawOverview();
 }
 function order(cmd){
  if(!snap||snap.ended)return message('진행 중인 경기가 없습니다.');
