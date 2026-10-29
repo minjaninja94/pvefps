@@ -6,10 +6,10 @@
 'use strict';
 const LANES=3,WIDTH=3300,HEIGHT=1560,LANE_H=520,COLS=15,ROWS=5,SLOTS=COLS*ROWS;
 const OPENING_PREP_SECONDS=10,WAVE_INTERVAL=12,FACTORY_BUILD_SECONDS=12,CORE_DAMAGE_MULTIPLIER=.85;
-const OVERTIME_START=14*60,MATCH_LIMIT=24*60,PRISM_STAGES=[1,18,36,54,72];
+const OVERTIME_START=14*60,PRISM_STAGES=[1,18,36,54,72];
 function warPressure(seconds){
  const t=Math.max(0,seconds);
- return t<6*60?1:t<10*60?1.18:t<14*60?1.36:t<18*60?1.65:t<21*60?2.1:2.7;
+ return t<6*60?1:t<10*60?1.18:t<14*60?1.36:t<18*60?1.65:t<21*60?2.1:Math.min(6,2.7+(t-21*60)/300);
 }
 const incomePerTick=level=>(1+level)*(level>=5?.85:1);
 
@@ -776,18 +776,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    if(state.augmentChoice)return;
   }
   state.next-=dt;
-   if(state.seconds>=MATCH_LIMIT){
-    // After prolonged deadlock, decide by remaining fortifications and map control.
-    // Exact parity remains a draw; no arbitrary host-side winner is invented.
-    const strength=[0,1].map(team=>
-      state.cores.reduce((total,row,l)=>total+row[team]/CORE_HP*4+
-       state.turrets[l][team]/TOWER_HP+
-       state.forwardHP[l][team]/1000+
-       (team===0?state.lanePressure[l]:1-state.lanePressure[l]),0));
-    state.winner=Math.abs(strength[0]-strength[1])<.001?null:(strength[0]>strength[1]?0:1);
-    state.ended=true;return;
-   }
-  for(const p of state.players)p.barrageCd=Math.max(0,p.barrageCd-dt);
+   for(const p of state.players)p.barrageCd=Math.max(0,p.barrageCd-dt);
   if(state.seconds>=state.nextConsolidation){state.nextConsolidation=state.seconds+1;
    const outcome=global.DesertConsolidation?.compact(state.units,{now:state.seconds,multiplayer:true});
    for(const hero of outcome?.heroes||[]){
@@ -820,7 +809,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   const isAllowed=p=>!viewer||p.team===viewer.team||visible.every(Boolean);
   const offer=state.augmentChoice?.offers?.[viewerUid];
   return {ruleset:state.ruleset,augmentChoice:offer?{round:state.augmentChoice.round,tier:state.augmentChoice.tier,remaining:state.augmentChoice.remaining,cards:offer.cards.slice(),rerolls:offer.rerolls.slice(),selected:offer.selected}:null,
-   mode:state.mode,size:state.size,aiDifficulty:state.aiDifficulty,width:WIDTH,height:HEIGHT,lanes:LANES,coreMaxHP:CORE_HP,matchLimit:MATCH_LIMIT,overtimeAt:OVERTIME_START,pressure:warPressure(state.seconds),preparationEndsAt:OPENING_PREP_SECONDS,seconds:Math.round(state.seconds*10)/10,wave:state.wave,next:Math.ceil(state.next*10)/10,
+   mode:state.mode,size:state.size,aiDifficulty:state.aiDifficulty,width:WIDTH,height:HEIGHT,lanes:LANES,coreMaxHP:CORE_HP,overtimeAt:OVERTIME_START,pressure:warPressure(state.seconds),preparationEndsAt:OPENING_PREP_SECONDS,seconds:Math.round(state.seconds*10)/10,wave:state.wave,next:Math.ceil(state.next*10)/10,
    ended:state.ended,winner:state.winner,cores:state.cores,turrets:state.turrets,forwardHP:state.forwardHP,lanePressure:state.lanePressure.map(x=>Math.round(x*100)/100),
    fog:visible.map(s=>!s),viewerTeam:viewer?.team??null,
    factionTraits:state.players.filter(p=>!viewer||p.team===viewer.team).map(p=>({uid:p.uid,faction:p.faction,births:state.broodBirthsByUid.get(p.uid)||0,totalBirths:state.broodTotalByUid.get(p.uid)||0})),
