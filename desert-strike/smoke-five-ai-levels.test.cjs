@@ -54,5 +54,11 @@ test('no forced siege, no global healing reduction, and restored 30-second onlin
  assert.ok(!engineSource.includes('ROBOT_REPAIR*dt*'));
  assert.ok(ui.includes('mp-good-counter'));
  assert.ok(ui.includes('mp-bad-counter'));
+ assert.ok(ui.includes('function renderCounterGuide(fac)'));
+ assert.ok(read('index.html').includes('id="mpCounterMatrix"'));
+ assert.ok(read('style-v2.css').includes('.mp-counter-grid'));
+ assert.ok(ui.includes('renderCounterGuide(fac)'));
+ assert.ok(ui.includes('d?.good||[]'));
+ assert.ok(ui.includes('d?.bad||[]'));
  assert.ok(ui.includes('30초 후 자동 선택'));
 });
