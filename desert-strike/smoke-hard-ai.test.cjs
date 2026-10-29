@@ -115,47 +115,35 @@ assert.equal(mirror.enemyCash,0,'queued extractor consumes its actual 129 CR pri
 assert.equal(mirror.enemyMineCosts[2],129,'third level is recorded at its real cost');
 assert.ok(mirror.enemyEcoReadyAt>mirror.elapsed,'AI also suffers the third-level blackout');
 
-// Only the hard AI has one automatic, mirrored emergency nuke each match.
-api.reset();
-const bomb=api.state();bomb.live=true;bomb.aiDifficulty='hard';bomb.next=100000;
-const intruder={uid:9999,side:0,faction:0,role:0,x:3000,y:260,hp:100,maxHP:100,killed:false,heroCount:1};
-bomb.units.push(intruder);
-api.tick(.04);
-assert.equal(bomb.enemyNukes,0,'hard AI fires one automatic nuke against a deep invasion');
-assert.equal(bomb.units.length,0,'hard AI removes only attackers within its own defensive footprint');
-assert.equal(bomb.deadUnits.length,1);
-bomb.units.push({...intruder,uid:10000,hp:100,killed:false});
-assert.equal(api.hardEmergency(),false,'second AI nuke must be impossible');
-assert.equal(bomb.units.length,1);
-api.reset();
-const safe=api.state();safe.live=true;safe.aiDifficulty='hard';
-safe.units.push({...intruder,x:2850,uid:10001,hp:100,killed:false});
-assert.equal(api.hardEmergency(),false,'a shallow incursion cannot trigger the AI nuke at full base health');
-assert.equal(safe.enemyNukes,1);
-safe.baseHP[1]=5040;
-assert.equal(api.hardEmergency(),true,'base below 70 percent permits the same emergency trigger as the player');
-
-// The AI must actually remove living soldiers in a 20-man hero push,
-// not merely display a nuclear banner or wait for core HP to fall.
-api.reset();
-const nuclear=api.state();nuclear.live=true;nuclear.aiDifficulty='hard';
-nuclear.wave=8;nuclear.enemyNukes=1;
-const push={uid:20010,side:0,faction:0,role:5,x:2350,y:260,
- hp:2200,maxHP:2200,heroCount:20,killed:false};
-nuclear.units.push(push);
-assert.equal(api.hardEmergency(),true,'AI uses its only nuke against a 20-soldier hero in its half');
-assert.equal(nuclear.enemyNukes,0,'AI has no second nuke');
-assert.equal(nuclear.units.length,0,'hero is really removed from battlefield');
-assert.equal(nuclear.deadUnits.length,1,'hero death is recorded');
-assert.equal(nuclear.combatStats[0].losses[5],20,'battle report counts all 20 lost hero members');
-assert.equal(api.hardEmergency(),false,'AI cannot fire a second nuke');
-api.reset();
-const many=api.state();many.live=true;many.aiDifficulty='hard';many.wave=8;
-for(let i=0;i<20;i++)many.units.push({uid:30000+i,side:0,faction:0,role:0,
- x:2350+i%5*15,y:250+Math.floor(i/5)*15,hp:120,maxHP:120,heroCount:1});
-assert.equal(api.hardEmergency(),true,'AI nukes a tightly packed 20-unit normal infantry rush');
-assert.equal(many.units.length,0,'ordinary clustered infantry also disappear');
-assert.equal(many.combatStats[0].losses[0],20);
+// The hard AI reserves its single nuclear charge while winning or when the
+// enemy is too small. It fires on 100+ soldier-equivalents while losing.
+// The hit always clears EVERY opponent, even those far outside the front.
+api.reset();const nuke=api.state();nuke.live=true;nuke.aiDifficulty='hard';nuke.next=100000;
+const unit=(i,x=2380)=>({uid:40000+i,side:0,faction:0,role:0,x,y:260+i%3*20,
+ hp:100,maxHP:100,killed:false,heroCount:1});
+for(let i=0;i<99;i++)nuke.units.push(unit(i));
+nuke.units.push({...unit(99),x:180});
+nuke.units.push({uid:999888,side:1,role:0,faction:0,hp:100,maxHP:100,x:3000,y:240});
+assert.equal(api.hardEmergency(),false,'99+1 enemies while AI is winning must not waste the nuclear strike');
+nuke.baseHP[1]=7200*.38;
+assert.equal(api.hardEmergency(),true,'AI fires on 100 enemies when the base is under pressure');
+assert.equal(nuke.enemyNukes,0,'one real AI nuclear charge is consumed');
+assert.equal(nuke.units.length,1,'nuke clears opponents everywhere and preserves allies');
+assert.equal(nuke.units[0].side,1);
+assert.equal(nuke.combatStats[0].losses[0],100,'all 100 eliminated soldiers are reported');
+assert.equal(api.hardEmergency(),false,'AI cannot launch a second nuke');
+api.reset();const save=api.state();save.live=true;save.aiDifficulty='hard';
+save.baseHP[1]=7200*.38;for(let i=0;i<99;i++)save.units.push(unit(i));
+assert.equal(api.hardEmergency(),false,'hard AI saves its charge below 100 while the base is not critical');
+assert.equal(save.enemyNukes,1);
+save.baseHP[1]=7200*.14;
+assert.equal(api.hardEmergency(),true,'at 14% core HP the last-chance override prevents silent defeat');
+assert.equal(save.units.length,0);
+api.reset();const heroNuke=api.state();heroNuke.live=true;heroNuke.aiDifficulty='hard';heroNuke.baseHP[1]=7200*.39;
+for(let i=0;i<5;i++)heroNuke.units.push({uid:50000+i,side:0,role:5,faction:0,
+ x:1400+i*250,y:100+i*50,hp:2000,maxHP:2000,heroCount:20});
+assert.equal(api.hardEmergency(),true,'five 20-soldier heroes count as 100 and are wiped regardless of position');
+assert.equal(heroNuke.combatStats[0].losses[5],100);
 
 // Hard AI must never hold all resources for an unaffordable research upgrade.
 api.reset();const upgrades=api.state();upgrades.live=true;upgrades.wave=9;
@@ -179,32 +167,34 @@ assert.equal(api.hardBarrage(),false,'AI barrage cannot fire again during cooldo
 artillery.enemyBarrageCd=0;artillery.aiDifficulty='normal';
 assert.equal(api.hardBarrage(),false,'normal AI does not receive hard-only tactical automation');
 
-// Every hard co-op bot must be able to spend its one defensive nuclear charge.
+// Multiplayer: same global effect for AI, human and team-wide (3-lane) combat.
 const coopEnv=environment(.28),co=coopEnv.w.DesertTriEngine.create({mode:'coop',size:2,aiDifficulty:'hard',
  members:[{uid:'a',team:0,faction:0},{uid:'b',team:0,faction:2}]}),
  coopState=co.state,firstBot=coopState.players.find(p=>p.bot);
 coopState.seconds=6;coopState.next=999999;
-coopState.cores[0][1]=1200;
-coopState.units.push({id:99999,uid:'a',team:0,faction:0,role:0,lane:0,
- x:co.state.width-200,y:260,hp:180,maxHP:180,heroCount:1});
+for(let i=0;i<100;i++)coopState.units.push({id:99990+i,uid:'a',team:0,faction:0,role:0,lane:i%3,
+ x:2200+(i%5)*25,y:260+(i%3)*520,hp:180,maxHP:180,heroCount:1});
+const allyOwner=firstBot.uid;
+coopState.units.push({id:80000,uid:allyOwner,team:1,faction:firstBot.faction,
+ role:1,lane:0,x:3030,y:280,hp:300,maxHP:300});
+coopState.cores[0][1]=2500*.38;
 co.tick(.2);
-assert.equal(firstBot.nukes,0,'hard co-op bot launches its one defensive nuclear strike');
-assert.ok(coopState.units.every(u=>u.id!==99999),'strike clears qualifying intruders');
-
-// The same one-use nuclear defense must remove a real 20-member hero
-// in hard multiplayer, even with a healthy core and no deep-base breach.
+assert.equal(firstBot.nukes,0,'hard multi AI uses one charge on 100 enemies under pressure');
+assert.equal(coopState.units.filter(u=>u.team===0).length,0,'nuke wipes all three lanes');
+assert.ok(coopState.units.some(u=>u.id===80000),'friendly army survives the nuclear strike');
+assert.equal(coopState.players[0].combatStats.losses[0],100,'multi match report counts all casualties');
 {
- const fixture=environment(.25),engine=fixture.w.DesertTriEngine.create({mode:'coop',size:2,aiDifficulty:'hard',
-  members:[{uid:'human',team:0,faction:0},{uid:'support',team:0,faction:1}]}),s=engine.state;
- const bot=s.players.find(p=>p.bot);
- s.wave=7;s.next=999999;
- const packed={id:90444,uid:'human',team:0,faction:0,role:5,lane:0,
-  x:s.width*.7,y:260,hp:2600,maxHP:2600,heroCount:20};
- s.units.push(packed);
- engine.tick(.2);
- assert.equal(bot.nukes,0,'multiplayer hard AI fires the one nuke on a concentrated hero push');
- assert.ok(s.units.every(u=>u.id!==packed.id),'multiplayer nuke removes the hero from authoritative combat');
- assert.equal(s.players[0].combatStats.losses[5],20,'all packed casualties appear in the multiplayer report');
+ const fx=environment(.12),e=fx.w.DesertTriEngine.create({mode:'pvp',size:1,members:[
+  {uid:'h',team:0,faction:0},{uid:'v',team:1,faction:0}]}),s=e.state;
+ for(let i=0;i<7;i++)s.units.push({id:700+i,uid:'v',team:1,role:0,faction:0,
+  lane:0,x:800+i*350,y:260,hp:100,maxHP:100});
+ s.units.push({id:790,uid:'h',team:0,role:2,faction:0,lane:0,x:210,y:260,hp:130,maxHP:130});
+ const fired=e.order('h',{type:'tactic',kind:'nuke'});
+ assert.equal(fired.ok,true,'a human multiplayer player may fire while the base is healthy');
+ assert.equal(fired.soldiers,7);
+ assert.equal(s.players[0].nukes,0);
+ assert.equal(s.units.length,1,'global nuke leaves the human ally and no enemy across the map');
+ assert.equal(e.order('h',{type:'tactic',kind:'nuke'}).ok,false,'one shot only');
 }
 console.log('Hard AI passed: 20 four-minute ledgers, four proactive openings, ground special factions, regular paid economy, zero resource bonuses, actual slot/blackout costs, bounded next-purchase reserves, 32 scouted concentration responses, ground/air distinction, economy resumption, observed hero lane reinforcement, solo and three-line integration.');
 console.log(JSON.stringify(results.filter(x=>x.faction===0)));
