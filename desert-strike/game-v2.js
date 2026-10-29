@@ -328,7 +328,8 @@ function hardBarrage(){
   const d=Math.hypot(u.x-target.x,u.y-target.y);
   if(d<118){damage(u,260*(1-.45*d/118),'barrage');pulse(u.x,u.y,'#ffb681',25);}
  }
- window.DesertHardAI?.bought?.(state.hardBrain,{kind:'barrage'},260);
+ const brain=state.hardBrain||(state.hardBrain=window.DesertHardAI?.create?.(state.enemyFaction));
+ if(brain)window.DesertHardAI?.bought?.(brain,{kind:'barrage'},260);
  window.DesertCombatAudio?.cue?.('explosion',target.x);
  pulse(target.x,target.y,'#ffc68b',90);
  setMessage('하드 AI가 정찰된 밀집 부대에 유료 궤도 포격을 실시했습니다.');
@@ -525,7 +526,7 @@ function hardInvest(){
  for(let purchase=0;purchase<12;purchase++){
   const counts=Array(8).fill(0);for(const role of state.enemyBuilt)if(role!==null&&role!==EXTRACTOR)counts[role]++;
   const slot=state.enemyBuilt.findIndex(v=>v===null);if(slot<0)break;
-  const action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,costs:ROLE.map(x=>x.cost),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded,roles}});
+  let action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,costs:ROLE.map(x=>x.cost),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded,roles}});
   if(!action)break;
   if(emergencyCounter&&brain.opening>=((ai.plans[brain.plan]?.opening?.length)||0)){
    const counters=aiCountersFor(intel.dominant),current=counts.reduce((sum,n,i)=>sum+(counters.includes(i)?n:0),0);
