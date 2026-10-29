@@ -1173,7 +1173,7 @@ function updateUI(full=false){
   activeAug.hidden=state.ruleset!=='augment'||!state.live;
   if(!activeAug.hidden){
    const names=state.augments.map(id=>window.DesertAugments?.card?.(id)?.name||'증강 카드');
-   activeAug.textContent='✦ 싱글 증강전 · 보유 '+state.augments.length+'개'+
+   activeAug.textContent='✦ 싱글 증강전 · 내 증강 '+state.augments.length+'개 · AI 증강 '+state.enemyAugments.length+'개'+
     (names.length?' · '+names.join(' · '):' · 첫 증강 선택 대기');
   }
  }
