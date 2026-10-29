@@ -57,7 +57,7 @@ assert.ok(bot.buildings.flat().filter(r=>[1,3].includes(r)).length>=bot.building
 const elements=new Map(),noop=()=>{},g=new Proxy({createLinearGradient:()=>({addColorStop:noop})},{get:(o,k)=>o[k]||noop});
 const el=id=>{if(!elements.has(id))elements.set(id,{style:{},dataset:{},classList:{add:noop,remove:noop,toggle:noop},getContext:()=>g,querySelectorAll:()=>[],addEventListener:noop});return elements.get(id);};
 const env=environment(.01),sw=env.w;Object.assign(env.ctx,{document:{getElementById:el,querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>({getContext:()=>g})},requestAnimationFrame:noop,Date});sw.DesertLobby={aiDifficulty:()=> 'hard'};
-vm.runInNewContext(read('game-v2.js').replace('initFactions();wire();reset();','window.testHard={state:()=>state,reset,aiInitialBuild,hardInvest,hardEmergency,constructExtractor,tick};reset();'),env.ctx);
+vm.runInNewContext(read('game-v2.js').replace('initFactions();wire();reset();','window.testHard={state:()=>state,reset,aiInitialBuild,hardInvest,hardEmergency,hardBarrage,hardResearch,constructExtractor,tick};reset();'),env.ctx);
 const api=sw.testHard;api.aiInitialBuild();
 const first=Array.from(api.state().enemyBuilt),cashOpening=api.state().enemyCash;api.reset();api.state().built.fill(6);api.aiInitialBuild();assert.deepEqual(Array.from(api.state().enemyBuilt),first,'hidden aircraft factories cannot alter the proactive opening');assert.equal(api.state().enemyCash,cashOpening);
 const s=api.state();s.live=true;s.next=100000;
@@ -118,6 +118,40 @@ assert.equal(api.hardEmergency(),false,'a shallow incursion cannot trigger the A
 assert.equal(safe.enemyNukes,1);
 safe.baseHP[1]=5040;
 assert.equal(api.hardEmergency(),true,'base below 70 percent permits the same emergency trigger as the player');
+
+// Hard AI must never hold all resources for an unaffordable research upgrade.
+api.reset();const upgrades=api.state();upgrades.live=true;upgrades.wave=9;
+for(let i=0;i<7;i++)upgrades.enemyBuilt[i]=0;
+upgrades.enemyCash=80;
+assert.equal(api.hardResearch(),false,'unaffordable research must not freeze every factory purchase');
+assert.equal(upgrades.enemyCash,80);
+
+// The paid hard-only barrage sees a true 20-soldier hero as a valuable cluster,
+// spends exactly 260 CR and obeys the same 32s cooldown as the player.
+api.reset();const artillery=api.state();
+artillery.live=true;artillery.wave=5;artillery.aiDifficulty='hard';artillery.enemyCash=580;
+const packed={uid:10020,side:0,faction:0,role:0,x:2400,y:260,
+ hp:2200,maxHP:2200,heroCount:20,killed:false};
+artillery.units.push(packed);
+assert.equal(api.hardBarrage(),true,'hard AI uses a paid blast against a scouted packed hero');
+assert.equal(artillery.enemyCash,320,'AI barrage is charged the same 260 CR');
+assert.equal(artillery.enemyBarrageCd,32);
+assert.ok(packed.hp<2200);
+assert.equal(api.hardBarrage(),false,'AI barrage cannot fire again during cooldown');
+artillery.enemyBarrageCd=0;artillery.aiDifficulty='normal';
+assert.equal(api.hardBarrage(),false,'normal AI does not receive hard-only tactical automation');
+
+// Every hard co-op bot must be able to spend its one defensive nuclear charge.
+const coopEnv=environment(.28),co=coopEnv.w.DesertTriEngine.create({mode:'coop',size:2,aiDifficulty:'hard',
+ members:[{uid:'a',team:0,faction:0},{uid:'b',team:0,faction:2}]}),
+ coopState=co.state,firstBot=coopState.players.find(p=>p.bot);
+coopState.seconds=6;coopState.next=999999;
+coopState.cores[0][1]=1200;
+coopState.units.push({id:99999,uid:'a',team:0,faction:0,role:0,lane:0,
+ x:co.state.width-200,y:260,hp:180,maxHP:180,heroCount:1});
+co.tick(.2);
+assert.equal(firstBot.nukes,0,'hard co-op bot launches its one defensive nuclear strike');
+assert.ok(coopState.units.every(u=>u.id!==99999),'strike clears qualifying intruders');
 
 console.log('Hard AI passed: 20 four-minute ledgers, four proactive openings, ground special factions, regular paid economy, zero resource bonuses, actual slot/blackout costs, bounded next-purchase reserves, 32 scouted concentration responses, ground/air distinction, economy resumption, observed hero lane reinforcement, solo and three-line integration.');
 console.log(JSON.stringify(results.filter(x=>x.faction===0)));
