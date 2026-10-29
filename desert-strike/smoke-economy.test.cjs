@@ -44,7 +44,7 @@ for(const side of [0,1]){
 const incomeByLevel=[1,2.2,3.2,4.05,4.8,5.45,6,6.45];
 for(let level=0;level<=7;level++){
  assert.equal(E.incomePerTick(level),incomeByLevel[level],level+' published mining income');
- assert.equal(Number((E.incomePerTick(Math.min(7,level+1))-E.incomePerTick(level)).toFixed(1)),level===7?0:Number((incomeByLevel[level+1]-incomeByLevel[level]).toFixed(2)),'published marginal return per extractor');
+ assert.equal(Number((E.incomePerTick(Math.min(7,level+1))-E.incomePerTick(level)).toFixed(2)),level===7?0:Number((incomeByLevel[level+1]-incomeByLevel[level]).toFixed(2)),'published marginal return per extractor');
 }
 for(let level=0;level<=7;level++){
  const income=E.incomePerTick(Math.min(7,level+1));
