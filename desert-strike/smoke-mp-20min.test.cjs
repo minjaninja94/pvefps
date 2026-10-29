@@ -53,8 +53,8 @@ test('stalemate escalation is offensive, has no time cap and keeps core victory'
  defender.state.seconds=13*60;defender.wave();
  for(const u of defender.state.units)if(u.team===0){u.x=1600;u.hp=10000;}
  const before=defender.state.forwardHP[0][1];
- defender.wave();assert.equal(defender.state.forwardHP[0][1],before,'no siege before 14 minutes');
- defender.state.seconds=15*60;
+ defender.wave();assert.equal(defender.state.forwardHP[0][1],before,'no siege before 16 minutes');
+ defender.state.seconds=17*60;
  defender.wave();
  assert.ok(defender.state.forwardHP[0][1]<before,'late frontline siege damages enemy tower');
  assert.equal(defender.state.forwardHP[0][0],1000,'no self-damage from own siege');
