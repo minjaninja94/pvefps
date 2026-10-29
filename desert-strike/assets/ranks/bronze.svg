@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 220" role="img" aria-label="브론즈 등급 엠블럼">
+ <defs>
+ <linearGradient id="metal" x1=".08" y1="0" x2=".95" y2="1"><stop offset="0" stop-color="#ffd0a0"/><stop offset=".25" stop-color="#b46b42"/><stop offset=".65" stop-color="#512c22"/><stop offset="1" stop-color="#b46b42"/></linearGradient>
+ <linearGradient id="rim" x1="0" y1="0" x2="1" y2=".95"><stop offset="0" stop-color="#ffd0a0"/><stop offset=".3" stop-color="#b46b42"/><stop offset="1" stop-color="#512c22"/></linearGradient>
+ <linearGradient id="gem" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffd0a0"/><stop offset=".52" stop-color="#b46b42"/><stop offset="1" stop-color="#512c22"/></linearGradient>
+ <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="#080f20" flood-opacity=".65"/></filter>
+ </defs>
+ <g filter="url(#shadow)"><path d="M 36 52 Q -2 38 7 14 Q 23 25 42 32Z" fill="url(#metal)" stroke="#512c22" stroke-width="3"/><path d="M 204 52 Q 242 38 233 14 Q 217 25 198 32Z" fill="url(#metal)" stroke="#512c22" stroke-width="3"/>
+ <path d="M120 34 L179 55 182 121 Q175 174 120 204 Q65 174 58 121 L61 55Z" fill="#10202b" stroke="#512c22" stroke-width="10"/>
+ <path d="M120 37 L174 58 177 119 Q171 165 120 196 Q69 165 63 119 L66 58Z" fill="url(#rim)" stroke="#ffd0a0" stroke-width="4"/>
+ <path d="M120 49 L164 67 168 115 Q162 157 120 183 Q78 157 72 115 L76 67Z" fill="#101b2e" stroke="#512c22" stroke-width="3"/>
+ <path d="M120 53 L154 72 L120 81 L86 72 Z" fill="#ffd0a0" opacity=".26"/>
+ <path d="M78 133 L102 154 M162 133 L138 154" stroke="#b46b42" stroke-width="4" stroke-linecap="round"/>
+ <path d="M120 82 L128 106 L152 106 133 119 140 143 120 127 100 143 107 119 88 106 112 106Z" fill="url(#gem)" stroke="#ffd0a0" stroke-width="3"/>
+ <path d="M101 187 L120 197 139 187" stroke="#ffd0a0" fill="none" stroke-width="3"/>
+ </g></svg>
