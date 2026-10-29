@@ -7,7 +7,7 @@ const PROJECT='https://gshcrhfqpkkcwinrbqjm.supabase.co';
 const KEY='sb_publishable_w5JXAnoVsKky54QgiAPtAg_UyzmZAli';
 const EMAIL_DOMAIN='@accounts.desertfront.invalid';
 const SDK='https://esm.sh/@supabase/supabase-js@2.76.1';
-let clientPromise,member=null,session=null,match=null,saveTimer=null,processing=false;
+let clientPromise,member=null,session=null,match=null,saveTimer=null,processing=false,registrationVersion=0;
 const $=id=>document.getElementById(id);
 const username=id=>String(id||'').trim().toLowerCase();
 const status=t=>{if($('careerStatus'))$('careerStatus').textContent=t;};
@@ -115,15 +115,17 @@ async function ensureGuestSession(){
  session=result.data.session;return result.data.session;
 }
 async function joinMatch(opts){
+ const version=++registrationVersion;
  try{
   const db=await api();await ensureGuestSession();
   const {data,error}=await db.rpc('desert_join_match',{
    p_code:opts.code,p_mode:opts.mode,p_size:Number(opts.size),p_team:Number(opts.team),p_host:!!opts.host
   });
   if(error)throw error;
+  if(version!==registrationVersion)return {ok:false,reason:'이전 방 등록 요청이 종료되었습니다.'};
   match={code:opts.code,tracked:true,playing:false,ended:false,reportedResult:false,winner:null};
   return {ok:true,data};
- }catch(e){match=null;return {ok:false,reason:e.message||String(e)};}
+ }catch(e){if(version===registrationVersion)match=null;return {ok:false,reason:e.message||String(e)};}
 }
 async function startMatch(){
  if(!match?.tracked)return {ok:false,reason:'서버 경기 기록에 참가자가 등록되지 않았습니다.'};
@@ -169,7 +171,7 @@ async function pendingState(){
  const db=await api(),{data}=await db.rpc('desert_my_match',{p_code:match.code});
  return data;
 }
-function endMatch(){if(match)match.ended=true;}
+function endMatch(){registrationVersion++;if(match)match.ended=true;}
 function fastForfeit(){
  if(!match?.tracked||!match.playing||match.ended||match.reportedResult||!session?.access_token)return;
  const body=JSON.stringify({p_code:match.code});
