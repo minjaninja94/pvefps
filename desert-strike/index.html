@@ -114,7 +114,7 @@
 
  </section>
   <div class="mp-overview"><canvas id="mpOverviewCanvas" width="1100" height="96" aria-label="3라인 전황 미니맵. 원하는 라인을 눌러 이동합니다."></canvas></div>
-  <div class="mp-command-bar"><div><strong id="mpMyResources">360 CR</strong> <span id="mpMyIncome">+1 / 0.5초</span></div><div><b id="mpWave">웨이브 0</b> · <span id="mpCountdown">10초</span></div><button id="mpEco" class="btn outline">경제 강화</button></div>
+  <div class="mp-command-bar"><div><strong id="mpMyResources">360 CR</strong> <span id="mpMyIncome">+1 / 0.5초</span></div><div><b id="mpWave">웨이브 0</b> · <span id="mpCountdown">10초</span></div><button id="mpEco" class="btn outline">경제 강화</button><button id="mpAugmentOpen" class="btn outline mp-augment-trigger" type="button" hidden aria-haspopup="dialog" aria-controls="mpAugmentDialog" aria-label="아군 및 상대가 선택 완료한 증강 보기">✦ 양측 증강 <span id="mpAugmentCounts">아군 0 · 상대 0</span></button></div>
   <nav class="mp-main-tabs" id="mpViewTabs" aria-label="멀티플레이 화면 전환" hidden>
    <button type="button" class="tab active" data-mp-view="base" aria-current="page"><span class="tab-no">01</span><span>내 기지 · 건설</span></button>
    <button type="button" class="tab" data-mp-view="battle"><span class="tab-no">02</span><span>전장</span></button>
@@ -154,7 +154,7 @@
   <div id="mpStatus" role="status" class="mp-status">방을 만들거나 방 코드를 입력하세요.</div>
   <div id="mpMembers" class="mp-members">아직 참가한 방이 없습니다.</div>
  </section>
- <section class="panel mp-command" id="mpCommand" hidden><section id="mpAugmentPanel" class="mp-augment-panel" hidden aria-label="증강 카드 선택"></section><section id="mpAugmentRoster" class="mp-augment-roster" hidden aria-label="아군 및 상대 지휘관의 선택된 증강"></section>
+ <section class="panel mp-command" id="mpCommand" hidden><section id="mpAugmentPanel" class="mp-augment-panel" hidden aria-label="증강 카드 선택"></section>
   <div class="mp-tab-screen active" id="mpBaseView">
   <div class="mp-production-title"><div><h2>멀티 생산 기지</h2><p id="mpBaseDescription">라인 선택 → 유닛 선택 → 빈 칸에 건설</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="battle">전장 보기 →</button></div>
   <div id="mpFactionTraits" class="marine-ops faction-trait-banner" hidden role="status" aria-live="off"></div>
@@ -196,6 +196,7 @@
 
   </section>
  </section>
+ <dialog id="mpAugmentDialog" class="mp-augment-dialog" aria-labelledby="mpAugmentDialogTitle"><div class="mp-augment-dialog-header"><h2 id="mpAugmentDialogTitle">✦ 양측 증강 현황</h2><button type="button" id="mpAugmentClose" class="btn outline">닫기 ✕</button></div><p class="mp-augment-dialog-note">서로 이미 선택한 증강만 공개됩니다. 아직 고르지 않은 카드 후보는 비공개입니다.</p><section id="mpAugmentRoster" class="mp-augment-roster" hidden aria-label="아군 및 상대 지휘관의 선택된 증강"></section></dialog>
 </div>
 <section id="upgradePanel" class="upgrade-layer" hidden role="dialog" aria-modal="false" aria-labelledby="upgradeTitle"><div id="view-special" class="upgrade-content">
  <div class="upgrade-toolbar"><div><h2 id="upgradeTitle">업그레이드 · 전술 지원</h2></div><button id="closeUpgrades" type="button" class="btn outline" aria-label="업그레이드 닫기">닫기 ✕</button></div>
