@@ -391,7 +391,7 @@ function aiReadOpponent(){
 function aiCountersFor(role){
  if(role===0){
   // Factions 3/4/6/7 field ground cavalry or robots in slot 6, not aircraft.
-  return state.enemyFaction===3?[6,1,3]:[4,6,7].includes(state.enemyFaction)?[1,3]:[6,1,3];
+  return state.enemyFaction===3?[6,1,3,5]:[4,6,7].includes(state.enemyFaction)?[1,3,5]:[6,1,3,5];
  }
  if(role===6&&[3,4,6,7].includes(state.faction))return [2,3];
  if(role===3&&[3,4,6,7].includes(state.enemyFaction))return [2];
@@ -1042,7 +1042,7 @@ function projectileImpact(p){
   for(const v of state.units)if(v.hp>0&&v.side!==p.side){
    if(getDef(v.role,v.faction).kind==='air'&&!ROLE[p.source].airTarget)continue;
    const d=Math.hypot(v.x-x,v.y-y);
-   if(d<=p.blast+10)damage(v,p.damage*(1-.48*d/(p.blast+10)),p.source,shooter,Math.random,p.volley);
+   if(d<=p.blast+10)damage(v,p.damage*(1-.48*d/(p.blast+10))*(window.DesertConsolidation?.splashWeight?.(v)||1),p.source,shooter,Math.random,p.volley);
   }
  }else if(p.target&&p.target.hp>0&&Math.hypot(p.target.x-x,p.target.y-y)<40){
   damage(p.target,p.damage,p.source,shooter,Math.random,p.volley);
