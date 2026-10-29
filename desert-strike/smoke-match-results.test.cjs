@@ -11,7 +11,7 @@ test('real factory deployment counts persist, even when units consolidate or die
  assert.equal(engine.order('me',{type:'build',lane:0,slot:0,role:0}).ok,true);
  assert.equal(engine.order('foe',{type:'build',lane:0,slot:0,role:1}).ok,true);
  const state=engine.state;
- engine.wave();engine.wave();
+ state.seconds=24;engine.wave();state.seconds=48;engine.wave();
  assert.equal(state.players[0].produced[0],2);
  assert.equal(state.players[1].produced[1],2);
  assert.equal(state.players[0].produced.reduce((n,v)=>n+v,0),2);
