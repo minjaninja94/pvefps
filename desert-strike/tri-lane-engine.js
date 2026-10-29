@@ -475,6 +475,20 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     break;
    }
   }
+  // Once frontlines have lasted 14 minutes, massed attackers convert their
+  // presence in the contested area into a periodic anti-stalemate siege strike.
+  if(state.seconds>=OVERTIME_START)for(let lane=0;lane<LANES;lane++){
+   for(let team=0;team<2;team++){
+    const troops=state.units.filter(u=>u.hp>0&&u.team===team&&u.lane===lane&&!u.guardian
+     &&(team===0?u.x>WIDTH*.36:u.x<WIDTH*.64));
+    if(troops.length<4||state.cores[lane][1-team]<=0)continue;
+    const power=Math.min(35,troops.reduce((n,u)=>n+(global.DesertConsolidation?.strength?.(u)??1),0));
+    const part=fort(lane,1-team).part;
+    hitFort(lane,1-team,75+power*4,part);
+    const x=part==='forward'?(1-team===0?WIDTH/4:WIDTH*3/4):(1-team===0?215:WIDTH-215);
+    state.effects.push({x,y:(lane+.5)*LANE_H,lane,kind:'pressure',time:1,team});
+   }
+  }
  }
  function deployMarineSupports(){
   if(!state.marineSupports.length)return;
@@ -765,7 +779,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   let lost=[0,0];
   for(const cores of state.cores){if(cores[0]<=0)lost[0]++;if(cores[1]<=0)lost[1]++;}
   const required=LANES===1?1:2;
-  if(lost[0]>=required||lost[1]>=required){state.ended=true;state.winner=lost[1]>=required?0:1;}
+  if(lost[0]>=required||lost[1]>=required){state.ended=true;state.winner=lost[0]>=required&&lost[1]>=required?null:lost[1]>=required?0:1;}
  }
  function tick(dt){
   if(state.ended)return;
