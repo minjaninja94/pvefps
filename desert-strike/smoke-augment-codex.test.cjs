@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const root=__dirname,read=name=>fs.readFileSync(path.join(root,name),'utf8');
 const original=JSON.parse(read('assets/augments.json'));
 class FakeNode{
- constructor(tag='div',id=''){this.tag=tag;this.id=id;this.children=[];this.attributes={};this.dataset={};this.className='';this.hidden=false;this.value='';this.textContent='';this.handlers={};this.open=false;this._classes=new Set();this.classList={toggle:(x,selected)=>selected?this._classes.add(x):this._classes.delete(x),contains:x=>this._classes.has(x)};}
+ constructor(tag='div',id=''){this.tag=tag;this.id=id;this.children=[];this.attributes={};this.dataset={};this.className='';this.hidden=false;this.value='';this.textContent='';this.handlers={};this.open=false;this._classes=new Set();this.classList={add:x=>this._classes.add(x),remove:x=>this._classes.delete(x),toggle:(x,selected)=>selected?this._classes.add(x):this._classes.delete(x),contains:x=>this._classes.has(x)};}
  append(...x){this.children.push(...x);}
  replaceChildren(...x){this.children=[...x];}
  setAttribute(k,v){this.attributes[k]=String(v);if(k==='open')this.open=true;}
