@@ -16,8 +16,8 @@ for(const name of ['unit-consolidation.js','defense-guardian.js','hard-ai.js'])
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,name),'utf8'),sandbox,{timeout:10000,filename:name});
 vm.runInNewContext(source.replace('initFactions();wire();reset();','window.__sim={state:()=>state,reset,tick,wave,getDef,aiInitialBuild,createUnit,calcDamage,broodLay,marineSpoils,armyPopulation,hardResearch,sideWeaponMultiplier,FACTIONS};initFactions();wire();reset();'),sandbox,{timeout:10000,filename:'game-v2.js'});
 const game=sandbox.window.__sim;
-assert.equal(game.getDef(2,0).cost,150,'benchmark must use live armor breaker cost');
-assert.equal(game.getDef(5,0).cost,245,'benchmark must use live artillery cost');
+assert.equal(game.getDef(2,0).cost,185,'benchmark must use live armor breaker cost');
+assert.equal(game.getDef(5,0).cost,360,'benchmark must use live artillery cost');
 assert.equal(game.FACTIONS.length,10,'full faction roster must participate');
 const specialAttacker={role:6,faction:4,heroCount:1};
 const normalTank={role:3,faction:0,hp:1000,maxHP:1000};

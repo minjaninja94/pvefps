@@ -13,7 +13,7 @@ const AGGRO_RADIUS=590,AGGRO_LEASH=740,SUPPORT_RADIUS=615,CONTACT_CELL=64;
 const EXTRACTOR=8,ecoPrice=level=>Math.round(70*Math.pow(1.36,level)),ecoStabilize=(level,seconds)=>4+2*level+Math.min(6,Math.floor(Math.max(0,seconds)/120));
 const ecoBuildSeconds=level=>24+8*Math.max(0,level-1);
 const WEAPON_COST=n=>Math.round(200*Math.pow(1.65,n)),ARMOR_COST=n=>Math.round(190*Math.pow(1.63,n));
-const COST=[65,95,150,205,165,245,205,145,70], NAMES=['돌격','사격','대장갑','장갑','대공','포격','특수','지원','자원채취'];
+const COST=[65,100,185,285,185,360,300,220,70], NAMES=['돌격','사격','대장갑','장갑','대공','포격','특수','지원','자원채취'];
 const BASE=[
  [115,21,1,29,.77,82,false,'ground'],
  [108,17,1,164,.8,60,true,'ground'],

@@ -46,10 +46,10 @@ for(const size of [1,2,3]){
  assert.equal(match.order('P0',{type:'build',lane:0,slot:0,role:0}).ok,true);
  assert.equal(match.state.players[0].cash,295,'65 CR real purchase');
  assert.equal(match.order('P0',{type:'build',lane:1,slot:0,role:1}).ok,true);
- assert.equal(match.state.players[0].cash,200,'95 CR in another lane costs independently');
+ assert.equal(match.state.players[0].cash,360-E.COST[0]-E.COST[1],'current rifle price in another lane costs independently');
  assert.equal(match.state.players[1].cash,360,'teammate money is never debited');
  assert.equal(match.order('P0',{type:'build',lane:0,slot:0,role:null}).ok,true);
- assert.equal(match.state.players[0].cash,235,'demolition refunds 55% rounded down');
+ assert.equal(match.state.players[0].cash,360-E.COST[0]-E.COST[1]+Math.floor(E.COST[0]*.55),'demolition refunds 55% rounded down');
  assert.equal(match.state.players[0].buildings[0][0],null);
  assert.equal(match.order('P0',{type:'build',lane:3,slot:0,role:0}).ok,false);
  assert.equal(match.order('P0',{type:'build',lane:1,slot:75,role:0}).ok,false);

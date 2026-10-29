@@ -23,10 +23,21 @@ for(const name of ['unit-consolidation.js','defense-guardian.js','hard-ai.js','a
  vm.runInNewContext(read(name),ctx,{filename:name});
 await w.DesertAugments.load();
 const source=read('game-v2.js').replace('initFactions();wire();reset();',
- 'window.__pace={reset,state:()=>state,place,selectRole,wave,tick,aiInitialBuild,hardInvest,structureHit};reset();');
+ 'window.__pace={reset,state:()=>state,place,selectRole,wave,tick,aiInitialBuild,hardInvest,structureHit,demolish:i=>{demolition=true;place(i);demolition=false;}};reset();');
 assert.ok(source.includes('window.__pace='),'solo injection succeeded');
 vm.runInNewContext(source,ctx,{filename:'game-v2.js'});
 const S=w.__pace;
+const expectedPrices=[65,100,185,285,185,360,300,220];
+assert.deepEqual(Array.from(w.DesertRoster.ROLE,r=>r.cost),expectedPrices,'published role prices');
+for(const ruleset of ['standard','augment']){
+ S.reset();const st=S.state();Object.assign(st,{live:true,ruleset,cash:10000,aiNextThink:Infinity});
+ for(let role=0;role<8;role++){
+  const before=st.cash;S.selectRole(role);S.place(role);
+  assert.equal(st.cash,before-expectedPrices[role],ruleset+' solo pays displayed price');
+  assert.equal(st.buildReadyAt[role],24,'advanced price does not bypass construction');
+  S.demolish(role);assert.equal(st.cash,before-expectedPrices[role]+Math.floor(expectedPrices[role]*.55),'correct-price refund');
+ }
+}
 const near=(a,b,msg)=>assert.ok(Math.abs(a-b)<1e-6,msg+': '+a+' vs '+b);
 for(const ruleset of ['standard','augment']){
  S.reset();const state=S.state();state.live=true;state.ruleset=ruleset;state.aiNextThink=Infinity;
@@ -72,6 +83,18 @@ const multiCode=read('tri-lane-engine.js').replace(marker,'return {state,order,t
 assert.ok(multiCode.includes('__test:{hitFort}'));
 vm.runInNewContext(multiCode,multiContext,{filename:'tri-lane-engine.js'});
 const E=multiContext.window.DesertTriEngine;
+assert.deepEqual(Array.from(E.COST).slice(0,8),expectedPrices,'standalone authoritative host and solo catalogue agree');
+for(const ruleset of ['standard','augment'])for(const mode of ['pvp','classic']){
+ const game=E.create({mode,size:1,ruleset,members:[{uid:'a',team:0,faction:0},{uid:'b',team:1,faction:3}]});
+ if(ruleset==='augment')for(const p of game.state.players)assert.equal(game.order(p.uid,{type:'augment_pick',slot:1}).ok,true);
+ const p=game.state.players[0];p.cash=10000;
+ for(let role=0;role<8;role++){
+  const before=p.cash;assert.equal(game.order('a',{type:'build',lane:0,slot:role,role}).ok,true);
+  assert.equal(p.cash,before-expectedPrices[role],ruleset+' '+mode+' actual payment');
+  assert.equal(game.order('a',{type:'build',lane:0,slot:role,role:null}).ok,true);
+  assert.equal(p.cash,before-expectedPrices[role]+Math.floor(expectedPrices[role]*.55),'actual-price host refund');
+ }
+}
 for(const ruleset of ['standard','augment'])for(const mode of ['pvp','classic']){
  const match=E.create({mode,size:1,ruleset,members:[
   {uid:'a',team:0,faction:0},{uid:'b',team:1,faction:2}]});
