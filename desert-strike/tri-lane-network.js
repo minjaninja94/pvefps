@@ -7,7 +7,7 @@
 const ICE=[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}];
 let events={},scope=null,db=null,fs=null,uid=null,roomId=null,room=null,host=false,localPeer=null;
 let roomUnsub=null,peerSubs=new Map(),channels=new Map(),pcs=new Map(),clock=null,engine=null,seq=0,lastFrame=0;
-let active=false,answering=false,hostPeerOpen=new Set(),snapshotSeq=0,serverTimer=null,gameEndedLocally=false;
+let active=false,answering=false,hostPeerOpen=new Set(),snapshotSeq=0,serverTimer=null,gameEndedLocally=false,resultRetry=null,resultWinner=null,resultAttempts=0;
 const msg=e=>global.IronFirebase?.message?.(e)||e?.message||String(e);
 function notify(key,data){try{events[key]?.(data);}catch(e){console.error('멀티 UI 갱신 오류',e);}}
 function beginServerHeartbeat(){
@@ -18,12 +18,26 @@ function beginServerHeartbeat(){
   if(data?.state==='done'&&data.winner_team!==null&&!gameEndedLocally){gameEndedLocally=true;notify('forcedResult',data);}
  }).catch(()=>{});},8000);
 }
+async function attemptResult(){
+ if(!gameEndedLocally||!roomId)return null;
+ if(resultRetry){clearTimeout(resultRetry);resultRetry=null;}
+ resultAttempts++;
+ const result=await global.DesertMember?.reportResult?.(resultWinner);
+ notify('serverResult',result||{state:'untracked'});
+ if(result?.state==='error'&&resultAttempts<6&&roomId){
+  resultRetry=setTimeout(()=>{void attemptResult();},5000);
+ }
+ return result;
+}
 async function reportWinner(winner){
  if(gameEndedLocally)return null;
- gameEndedLocally=true;
- const result=await global.DesertMember?.reportResult?.(winner);
- notify('serverResult',result||{state:'untracked'});
- return result;
+ gameEndedLocally=true;resultWinner=winner;resultAttempts=0;
+ return attemptResult();
+}
+async function retryResult(){
+ if(!gameEndedLocally||!roomId)return null;
+ resultAttempts=0;
+ return attemptResult();
 }
 
 function status(s){notify('status',s);}
@@ -48,7 +62,8 @@ function everyoneReady(r){
 function resetLocal(){
  if(clock){clearInterval(clock);clock=null;}
  if(serverTimer){clearInterval(serverTimer);serverTimer=null;}
- global.DesertMember?.endMatch?.();gameEndedLocally=false;
+ if(resultRetry){clearTimeout(resultRetry);resultRetry=null;}
+ global.DesertMember?.endMatch?.();gameEndedLocally=false;resultWinner=null;resultAttempts=0;
  if(roomUnsub){roomUnsub();roomUnsub=null;}
  for(const stop of peerSubs.values())stop();peerSubs.clear();
  for(const ch of channels.values())try{ch.close();}catch(e){}
@@ -275,5 +290,5 @@ async function browse(){
  return rooms.filter(x=>x&&x.members<x.capacity).sort((a,b)=>a.members-b.members);
 }
 function current(){return {roomId,room,uid,host,peers:new Set(hostPeerOpen),active};}
-global.DesertTriNetwork=Object.freeze({configure,identity,create,join,browse,ready,start,leave,sendOrder,reportWinner,current,validateName});
+global.DesertTriNetwork=Object.freeze({configure,identity,create,join,browse,ready,start,leave,sendOrder,reportWinner,retryResult,current,validateName});
 })(window);

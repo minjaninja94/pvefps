@@ -150,14 +150,16 @@ async function forfeit(){
  }catch(e){match.ended=false;status('탈주 기록 서버 처리 중: '+e.message);return null;}
 }
 async function reportResult(winner){
- if(!match?.tracked||!match.playing||match.ended||![0,1].includes(winner))return null;
- match.reportedResult=true;
+ if(!match?.tracked||!match.playing)return {state:'untracked'};
+ if(match.ended)return {state:'done',winner_team:match.winner};
+ if(winner!==null&&![0,1].includes(winner))return {state:'error',error:'올바르지 않은 경기 결과'};
  try{
   const db=await api(),{data,error}=await db.rpc('desert_report_match_result',{p_code:match.code,p_winner:winner});
   if(error)throw error;
-  if(data?.state==='done'){match.ended=true;await refreshRating();}
+  match.reportedResult=!!(data?.report_received||data?.state==='done'||data?.waiting_for_other_players);
+  if(data?.state==='done'){match.ended=true;match.winner=data.winner_team;await refreshRating();}
   return data;
- }catch(e){status('경기 결과 전송 실패: '+e.message);return null;}
+ }catch(e){status('경기 결과 전송 실패: '+e.message);return {state:'error',error:e?.message||String(e)};}
 }
 async function pendingState(){
  if(!match?.tracked)return null;

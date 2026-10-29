@@ -18,7 +18,8 @@ function unitStats(target,groups){
  for(const g of groups){
   const list=normalized(g.counts);
   const panel=make('section','result-production-team');
-  panel.append(make('div','result-team-title',g.label+' · 총 '+count(list)+'기'));
+  panel.append(make('div','result-team-title',g.label+(g.unavailable?'':' · 총 '+count(list)+'기')));
+  if(g.unavailable){panel.append(make('p','result-detail-hint','상대 연결이 끊겨 생산 통계를 수신하지 못했습니다.'));target.append(panel);continue;}
   const grid=make('div','result-production-grid');
   for(let i=0;i<8;i++){
    const detail=global.DesertRoster?.getDef?.(i,g.faction)?.unitName;
@@ -47,7 +48,7 @@ function showMulti(v,playerId,{serverStatus='서버 경기 결과 확인 중…'
   const people=(v.players||[]).filter(p=>p.team===team);
   let merged=zero(),any=false;
   for(const p of people){if(Array.isArray(p.produced)){merged=merged.map((x,i)=>x+normalized(p.produced)[i]);any=true;}}
-  groups.push({label:(team===side?'아군':'상대')+' · '+people.map(label).join(', ') + (!any?' (생산 내역 수신 대기)':''),counts:merged,faction:people[0]?.faction});
+  groups.push({label:(team===side?'아군':'상대')+' · '+people.map(label).join(', '),counts:merged,faction:people[0]?.faction,unavailable:!any});
  }
  unitStats($('mpResultProduction'),groups);
  $('mpResultStatus').textContent=serverStatus;

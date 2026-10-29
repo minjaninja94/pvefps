@@ -26,6 +26,7 @@ jobs:
           node --check desert-strike/expansion-art.js
           node --check desert-strike/front-lobby.js
           node --check desert-strike/desert-member.js
+          node --check desert-strike/battle-report.js
           node --check desert-strike/lobby-music.js
           node --check desert-strike/combat-audio.js
           node --check desert-strike/augment-rules.js
@@ -37,6 +38,8 @@ jobs:
           node --check desert-strike/balance-sim.cjs
       - name: Lobby and battle BGM transitions
         run: node --test desert-strike/smoke-bgm.test.cjs
+      - name: Match report, per-unit production totals and server result callbacks
+        run: node --test desert-strike/smoke-match-results.test.cjs
       - name: Godot 300-card augment parity and sandboxed host decisions
         run: node --test desert-strike/smoke-augments.test.cjs
       - name: Public-only Firestore room discovery and legacy invite safety
