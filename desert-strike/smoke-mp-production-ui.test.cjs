@@ -44,7 +44,7 @@ const doc={readyState:'complete',hidden:false,body:{dataset:{playMode:'multi'}},
  getElementById:item,addEventListener:no,createElement(tag){
   const el={tagName:tag,dataset:{},children:[],get childElementCount(){return this.children.length;},attrs:{},style:{},classList:{add(){}},className:'',textContent:'',title:'',disabled:false,
     width:0,height:0,append(...xs){this.children.push(...xs);},setAttribute(k,v){this.attrs[k]=v;},
-    getContext(){return g;}};
+    getContext(){return g;},addEventListener(){}};
   return el;
  },createDocumentFragment(){return {children:[],append(x){this.children.push(x);}};}};
 const network={configure(handlers){this.handlers=handlers;},sendOrder(cmd){calls.push({...cmd});return {ok:true};}};
