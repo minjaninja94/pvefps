@@ -625,7 +625,7 @@ function hardInvest(){
  const matchingEconomy=hardMirrorEconomy();
  const intel=aiReadOpponent();
  if(matchingEconomy&&!intel.invaded&&intel.total<6)return;
- if(state.aiDifficulty!=='easy')aiAdaptFacilities(intel);
+ aiAdaptFacilities(intel);
  // Counter-building outranks low-impact late research during an observed rush.
  const emergencyCounter=intel.dominant!==null&&intel.total>=8;
  const factoryCount=state.enemyBuilt.filter(role=>role!==null&&role!==EXTRACTOR).length;
@@ -695,7 +695,7 @@ function aiInitialBuild(){
 function aiAdaptFacilities(intel){
  const protectedSiege=intel.total>=8&&intel.counts[5]>=intel.total*.38&&intel.counts[0]>=intel.total*.16;
  if((intel.dominant===null&&!protectedSiege)||intel.total<5||state.wave<1||
-  state.elapsed-(state.aiLastRefitAt??-Infinity)<(state.aiDifficulty==='hard'?5:7))return false;
+  state.elapsed-(state.aiLastRefitAt??-Infinity)<(['veryhard','impossible'].includes(state.aiDifficulty)?5:state.aiDifficulty==='hard'?6:7))return false;
  const counters=protectedSiege?[6,3,1]:aiCountersFor(intel.dominant);
  const army=state.enemyBuilt.filter(r=>r!==null&&r!==EXTRACTOR),goal=Math.ceil(army.length*.70);
  if(army.length<3)return false;
@@ -730,7 +730,7 @@ function aiInvest(){
  const intel=aiReadOpponent();
  // Stop creating tiny forces and losing to players who scale to 20+ factories.
  if(normalMirrorEconomy())return;
- aiAdaptFacilities(intel);
+ if(state.aiDifficulty!=='easy')aiAdaptFacilities(intel);
  const army=state.enemyBuilt.filter(r=>r!==null&&r!==EXTRACTOR);
  const easy=state.aiDifficulty==='easy',middle=state.aiDifficulty==='hard';
  const desired=Math.min(easy?16:SLOTS-state.enemyEco,Math.max(easy?3:6,4+Math.floor(state.elapsed/(easy?23:middle?8:10)),
