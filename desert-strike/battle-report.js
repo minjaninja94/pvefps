@@ -8,6 +8,14 @@ const roles=['돌격','사격','대장갑','장갑','대공','포격','특수','
 const zero=()=>Array(8).fill(0);
 const normalized=a=>roles.map((_,i)=>Number.isFinite(a?.[i])?Math.max(0,Math.floor(a[i])):0);
 const count=a=>normalized(a).reduce((s,v)=>s+v,0);
+const METRIC_KEYS=['damage','kills','losses','heroes','heroDamage'];
+function combineMetrics(a,b){
+ if(!b)return a;
+ const out=a||Object.fromEntries(METRIC_KEYS.map(k=>[k,zero()]));
+ for(const k of METRIC_KEYS)out[k]=out[k].map((n,i)=>n+(Number.isFinite(b?.[k]?.[i])?Math.max(0,b[k][i]):0));
+ return out;
+}
+const pretty=n=>Math.round(Math.max(0,n||0)).toLocaleString('ko-KR');
 function duration(seconds){
  const n=Math.max(0,Math.floor(Number(seconds)||0));return Math.floor(n/60)+'분 '+String(n%60).padStart(2,'0')+'초';
 }
@@ -19,13 +27,23 @@ function unitStats(target,groups){
   const list=normalized(g.counts);
   const panel=make('section','result-production-team');
   panel.append(make('div','result-team-title',g.label+(g.unavailable?'':' · 총 '+count(list)+'기')));
+  const m=g.metrics;
+  if(m)panel.append(make('div','result-team-metrics',
+   '유닛 피해 '+pretty(count(m.damage))+' · 처치 '+pretty(count(m.kills))+
+   ' · 손실 '+pretty(count(m.losses))+' · 영웅 생성 '+pretty(count(m.heroes))+'기'));
+
   if(g.unavailable){panel.append(make('p','result-detail-hint','상대 연결이 끊겨 생산 통계를 수신하지 못했습니다.'));target.append(panel);continue;}
   const grid=make('div','result-production-grid');
   for(let i=0;i<8;i++){
    const detail=global.DesertRoster?.getDef?.(i,g.faction)?.unitName;
    const row=make('div','result-production-row');
    row.append(make('span','result-unit-role',detail||roles[i]),make('strong','result-unit-count',list[i]+'기'));
-   if(!list[i])row.classList.add('empty');grid.append(row);
+   if(m){
+    row.append(make('small','result-unit-metrics','피해 '+pretty(m.damage?.[i])+
+     ' · 처치 '+pretty(m.kills?.[i])+' · 손실 '+pretty(m.losses?.[i])+
+     ' · 영웅 '+pretty(m.heroes?.[i])+'기 · 영웅 피해 '+pretty(m.heroDamage?.[i])));
+   }
+   if(!list[i]&&!(m?.heroes?.[i]||m?.damage?.[i]))row.classList.add('empty');grid.append(row);
   }
   panel.append(grid);target.append(panel);
  }
@@ -33,7 +51,8 @@ function unitStats(target,groups){
 function showSolo(state){
  const target=$('soloProductionStats');if(!target)return;
  const friendly=state?.produced?.[0]||zero(),enemy=state?.produced?.[1]||zero();
- unitStats(target,[{label:'내가 생산한 유닛',counts:friendly,faction:state?.faction},{label:'상대 AI 생산 유닛',counts:enemy,faction:state?.enemyFaction}]);
+ unitStats(target,[{label:'내가 생산한 유닛',counts:friendly,faction:state?.faction,metrics:state?.combatStats?.[0]},
+  {label:'상대 AI 생산 유닛',counts:enemy,faction:state?.enemyFaction,metrics:state?.combatStats?.[1]}]);
 }
 function showMulti(v,playerId,{serverStatus='서버 경기 결과 확인 중…'}={}){
  if(!v?.ended)return;
@@ -46,9 +65,12 @@ function showMulti(v,playerId,{serverStatus='서버 경기 결과 확인 중…'
  const groups=[];
  for(const team of [side,1-side]){
   const people=(v.players||[]).filter(p=>p.team===team);
-  let merged=zero(),any=false;
-  for(const p of people){if(Array.isArray(p.produced)){merged=merged.map((x,i)=>x+normalized(p.produced)[i]);any=true;}}
-  groups.push({label:(team===side?'아군':'상대')+' · '+people.map(label).join(', '),counts:merged,faction:people[0]?.faction,unavailable:!any});
+  let merged=zero(),any=false,metrics=null;
+  for(const p of people){
+   if(Array.isArray(p.produced)){merged=merged.map((x,i)=>x+normalized(p.produced)[i]);any=true;}
+   metrics=combineMetrics(metrics,p.combatStats);
+  }
+  groups.push({label:(team===side?'아군':'상대')+' · '+people.map(label).join(','),counts:merged,faction:people[0]?.faction,metrics,unavailable:!any});
  }
  unitStats($('mpResultProduction'),groups);
  $('mpResultStatus').textContent=serverStatus;
