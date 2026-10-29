@@ -14,7 +14,7 @@ assert.equal(s.built[0],8);assert.equal(s.eco,1);assert.equal(s.cash,290);assert
 assert.equal(s.buildReadyAt[0],12);assert.match(S.constructionBar(0),/건설 12초/);assert.match(elements.get('buildGrid').innerHTML,/cell-name[\s\S]*build-progress/);
 const cash=s.cash;advanceSolo(12);assert.equal(s.cash,cash,'construction blocks all income');assert.match(S.constructionBar(0),/안정화 3초/);advanceSolo(2.9);assert.equal(s.cash,cash,'all passive income must stop without accumulating a catch-up balance');
 S.place(1);assert.equal(s.built[1],null,'cannot stack extractors during stabilization');
-advanceSolo(.2);assert.equal(S.constructionBar(0),'');assert.equal(s.cash,cash+2,'income resumes at the next eligible fixed tick');
+advanceSolo(.2);assert.equal(S.constructionBar(0),'');assert.ok(Math.abs(s.cash-(cash+1.8))<1e-6,'level-one income resumes at +1.8 CR per eligible half-second');
 S.wave();assert.ok(s.units.every(u=>u.role<8),'extractors never spawn combat units');
 S.reset();s=S.state();s.live=true;s.next=.1;S.selectRole(8);S.place(0);const stopped=s.cash;advanceSolo(.2);assert.equal(s.cash,stopped,'wave stipend is paused too');
 S.demolish(0);assert.equal(s.eco,0);assert.equal(s.cash,stopped+38);assert.equal(s.ecoReadyAt,15,'selling must not bypass the blackout');S.place(1);assert.equal(s.built[1],null);
@@ -41,6 +41,11 @@ for(const side of [0,1]){
  const timing=(side?st.enemyMineTimings:st.mineTimings)[0];
  assert.equal(timing.buildEndsAt,756);assert.equal(timing.readyAt,768,'seventh extractor: 36s construction + 12s stabilization');
 }
+const incomeByLevel=[1,1.8,2.6,3.4,4.2,5,5.8,6.6];
+for(let level=0;level<=7;level++){
+ assert.equal(E.incomePerTick(level),incomeByLevel[level],level+' published mining income');
+ assert.equal(Number((E.incomePerTick(Math.min(7,level+1))-E.incomePerTick(level)).toFixed(1)),level===7?0:.8,'uniform return per extractor');
+}
 for(let level=0;level<=7;level++){
  const income=E.incomePerTick(Math.min(7,level+1));
  assert.ok(S.ecoTooltip(level,240).includes('+'+Number(income.toFixed(2))+' CR / 0.5초'));
@@ -48,8 +53,8 @@ for(let level=0;level<=7;level++){
  else assert.doesNotMatch(S.ecoTooltip(level,240),/건설|안정화/,'max level must not advertise an eighth building');
 }
 S.reset();s=S.state();s.eco=4;s.live=true;S.selectRole(8);
-assert.match(elements.get('unitCards').innerHTML,/완료 후 \+5\.1 \/ 0\.5초/);
+assert.match(elements.get('unitCards').innerHTML,/완료 후 \+5 \/ 0\.5초/);
 assert.doesNotMatch(elements.get('unitCards').innerHTML,/인컴 \+1/);
 s.eco=7;S.updateUI(true);assert.match(elements.get('unitCards').innerHTML,/최대 단계/);
-assert.match(elements.get('econInfo').title,/수입 \+6\.8/);
+assert.match(elements.get('econInfo').title,/수입 \+6\.6/);
 console.log('Economy regression passed: real slots, paid costs, paused income/stipends, no catch-up, resumption, demolition/refund, no blackout bypass, 7-building global cap, no combat spawns, redaction and solo/multiplayer parity.');
