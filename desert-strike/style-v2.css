@@ -610,3 +610,6 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
 .solo-augment-card .btn{min-height:38px;border-radius:7px;font-size:12px;text-align:center;cursor:pointer}
 .solo-augment-current{font-size:12px;margin:13px 0 0;color:#b5cbd3}
 @media(max-width:680px){.solo-augment-dialog{width:96vw;max-height:96dvh}.solo-augment-cards{grid-template-columns:1fr;gap:8px}.solo-augment-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;padding:10px 11px}.solo-augment-card strong{grid-column:1/-1;font-size:14px}.solo-augment-card p{grid-column:1/-1;min-height:0;font-size:12px}.solo-augment-card .btn{padding:7px 9px;min-height:33px}.solo-augment-top{align-items:flex-start}.solo-augment-clock strong{font-size:18px}}
+
+.solo-augment-status{margin:0 0 10px;padding:10px 13px;border:1px solid #d2b073;background:linear-gradient(95deg,#423e2c,#1a333e);border-radius:9px;color:#ffe3a8;font-size:12px;line-height:1.55;font-weight:700;overflow-wrap:anywhere}
+.solo-augment-status[hidden]{display:none!important}

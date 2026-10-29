@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=solo-augments1"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=solo-augments2"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -81,6 +81,7 @@
 </header>
 <div class="stats"><div><small>자원</small><strong id="cash">360</strong><em>CR</em></div><div><small>자원 수입</small><strong id="income">+1</strong><em>/ 0.5초</em></div><div><small>웨이브</small><strong id="wave">00</strong></div><div><small>다음 출격</small><strong id="timer">24.0</strong><em>초</em></div><div class="compact-status"><span id="battleStatus">작전 대기</span><span id="enemyFactionLabel"></span></div></div>
 <div id="factionTraitStatus" class="marine-ops faction-trait-banner" hidden role="status" aria-live="off"></div>
+<div id="soloAugmentStatus" class="solo-augment-status" hidden role="status" aria-live="off">✦ 싱글 증강전 · 첫 증강 선택 대기</div>
 <div id="marineAbilityStatus" class="marine-ops" hidden role="status" aria-live="off">★ 해병성채 · 긴빠이 · 자진입대 · 황룡 · 오도봉고</div>
 <nav class="tabs" aria-label="게임 화면 전환">
  <button class="tab active" data-view="base" aria-current="page"><span class="tab-no">01</span><span>내 기지 · 건설<small>BASE & PRODUCTION</small></span><span id="warningDot" class="danger-dot" hidden>!</span></button>
@@ -239,7 +240,7 @@
 <script src="./combat-audio.js?v=godotvoice1" defer></script>
 <script src="./tri-lane-ui.js?v=augment-rule-picker2" defer></script>
 <script src="./battle-report.js?v=results1" defer></script>
-<script src="./game-v2.js?v=solo-augments1" defer></script>
+<script src="./game-v2.js?v=solo-augments2" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=battlebgm1" defer></script>

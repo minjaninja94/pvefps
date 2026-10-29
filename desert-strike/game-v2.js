@@ -915,6 +915,7 @@ function tick(dt){
  if(state.aiDifficulty==='hard'&&state.elapsed>=(state.hardBrain?.nextThink||0)){hardInvest();if(state.hardBrain)state.hardBrain.nextThink=state.elapsed+1;}
  state.barrageCd=Math.max(0,state.barrageCd-ds);
  while(state.next<=0){state.next+=INTERVAL;wave();if(state.augmentChoice)break;}
+ if(state.augmentChoice){updateUI(true);return;}
  deployMarineSupports();
  state.sortedTeams=[state.units.filter(u=>u.side===0).sort((a,b)=>a.x-b.x),state.units.filter(u=>u.side===1).sort((a,b)=>a.x-b.x)];
  for(const u of state.units){
@@ -1037,6 +1038,15 @@ function updateUI(full=false){
  $('enemyHealthFill').style.width=(enemyBaseVisible()?100*state.baseHP[1]/MAX_BASE:0)+'%';
  $('factionLabel').textContent=FACTIONS[state.faction].name;
  const traitStatus=$('factionTraitStatus');if(traitStatus){traitStatus.hidden=false;traitStatus.textContent='◆ '+FACTIONS[state.faction].name+' · '+FACTIONS[state.faction].bonus+(state.faction===1?' · 공생충 '+state.broodBirths[0]+'/'+BROOD_BIRTH_CAP+' (전체 '+state.broodBirthsTotal[0]+'기)':'');}
+ const activeAug=$('soloAugmentStatus');
+ if(activeAug){
+  activeAug.hidden=state.ruleset!=='augment'||!state.live;
+  if(!activeAug.hidden){
+   const names=state.augments.map(id=>window.DesertAugments?.card?.(id)?.name||'증강 카드');
+   activeAug.textContent='✦ 싱글 증강전 · 보유 '+state.augments.length+'개'+
+    (names.length?' · '+names.join(' · '):' · 첫 증강 선택 대기');
+  }
+ }
  const marineOps=$('marineAbilityStatus');
  if(marineOps){marineOps.hidden=state.faction!==3; if(state.faction===3)marineOps.textContent='★ 해병성채 | 긴빠이 '+state.marineStats.loot+'회 (+'+state.marineStats.lootedCR+' CR) | 자진입대 '+state.marineStats.recruits+'회 · 이번 웨이브 '+state.marineRecruitCount[0]+'/'+MARINE_RECRUIT_CAP+' | 황룡 '+state.marineStats.huangSpawns+'기 소환 | 오도봉고 '+(state.marineStats.bongoCharges||0)+'회 돌진';}
  $('enemyFactionLabel').textContent=(state.aiDifficulty==='hard'?'하드 AI · VS ':'VS ')+FACTIONS[state.enemyFaction].name;
@@ -1086,8 +1096,8 @@ function updateUI(full=false){
   $('demolishButton').classList.toggle('selected',demolition);
   $('unitDetails').innerHTML=selectedRole===EXTRACTOR?'<b>자원채취 건물</b> · 생산 슬롯 1칸 / 최대 7개<br>건설 1개당 인컴 +1 CR / 0.5초. 건설 직후 '+ecoStabilize(state.eco+1,state.elapsed)+'초간 기본·채굴 인컴과 웨이브 지원금이 중단됩니다. 단계와 경기 시간이 늘수록 안정화가 길어집니다.':selectedRole!==null?'<b>'+f.units[selectedRole]+'</b> · '+getDef(selectedRole,state.faction).name+
     ' / '+ROLE[selectedRole].cost+' CR<br>'+getDef(selectedRole,state.faction).tips+'<div class="matchups">'+roleMatchupHtml(selectedRole,state.faction)+
-    '</div><span>HP '+Math.round(getDef(selectedRole,state.faction).hp)+' · 피해 '+Math.round(getDef(selectedRole,state.faction).damage)+
-    ' · 사거리 '+getDef(selectedRole,state.faction).range+' · '+(getDef(selectedRole,state.faction).airTarget?'대공 가능':'지상 공격')+'</span>':
+    '</div><span>HP '+Math.round(effectiveDef(selectedRole,state.faction).hp)+' · 피해 '+Math.round(effectiveDef(selectedRole,state.faction).damage)+
+    ' · 사거리 '+Math.round(effectiveDef(selectedRole,state.faction).range)+' · '+(effectiveDef(selectedRole,state.faction).airTarget?'대공 가능':'지상 공격')+'</span>':
     '<b>전술 안내</b> — 역할 마크와 상성표는 진영이 달라도 동일합니다. 유닛을 선택하세요.';
   state.lastCards=Math.floor(state.cash/30);
  }
