@@ -57,8 +57,8 @@ for(const size of [1,2,3]){
  const cash1=match.state.players[0].cash;
  match.tick(1); // max 0.2 seconds per authoritative step
  assert.equal(match.state.players[0].cash,cash1);
- for(let i=0;i<124;i++)match.tick(.2);
- assert.ok(match.state.wave>=1,'24 sec deploy wave');
+ for(let i=0;i<64;i++)match.tick(.2);
+ assert.ok(match.state.wave>=1,'12 sec deploy wave');
  const own=match.state.units.filter(u=>u.team===0&&u.uid==='P0');
  assert.ok(own.some(u=>u.lane===1),'line-2 production deploys only into that lane');
  assert.ok(own.every(u=>u.lane===1),'no cross-line spawning');
@@ -73,7 +73,7 @@ for(const size of [2,3]){
  const match=E.create({mode:'coop',size,members:humans});
  assert.equal(match.state.players.filter(p=>p.bot).length,size,'AI opponent count matches human squad size');
  for(const p of humans)for(let line=0;line<3;line++)assert.equal(match.order(p.uid,{type:'build',lane:line,slot:line,role:0}).ok,true);
- for(let i=0;i<245;i++)match.tick(.2); // wave 2: AI factories bought at wave 1 finish after 24 seconds
+ for(let i=0;i<125;i++)match.tick(.2); // wave 2: AI factories bought at wave 1 finish after 12 seconds
  assert.ok(match.state.wave>=2);
  assert.ok(match.state.units.some(u=>u.team===0&&u.lane===0));
  assert.ok(match.state.units.some(u=>u.team===0&&u.lane===1));
@@ -92,7 +92,7 @@ assert.throws(()=>E.create({mode:'pvp',size:2,members:[human(0),human(0),human(1
   assert.ok(m.order('P0',{type:'build',lane,slot:0,role:0}).ok);
   assert.ok(m.order('P1',{type:'build',lane,slot:0,role:0}).ok);
  }
- m.state.seconds=24;m.wave(); // production is active at the first valid wave
+ m.state.seconds=12;m.wave(); // production is active at the first valid wave
  assert.equal(m.state.units.length,6);
  const a=m.state.units.filter(u=>u.lane===0),b=m.state.units.filter(u=>u.lane===2);
  for(const u of a){u.x=1500;u.y=250;u.cool=0;}
@@ -104,21 +104,21 @@ assert.throws(()=>E.create({mode:'pvp',size:2,members:[human(0),human(0),human(1
 }
 console.log('3x-area real-combat test passed: 1v1,2v2,3v3 and 2/3-player coop, credits, refunds, all three lanes and collisions');
 
-// Marine one-facility: 0s/8s/16s waves, resource theft + critically wounded allegiance flip.
+// Marine one-facility: 0s/4s/8s waves, resource theft + critically wounded allegiance flip.
 {
  const m=E.create({mode:'pvp',size:1,members:[human(0,0,3),human(1,1,0)]});
  assert.ok(m.order('P0',{type:'build',lane:0,slot:1,role:7}).ok);
- m.state.seconds=24;m.wave();
+ m.state.seconds=12;m.wave();
  assert.equal(m.state.marineStats.huangSpawns,1);
  assert.equal(m.state.marineSupports.length,2);
- for(let i=0;i<40;i++)m.tick(.2);
- assert.equal(m.state.marineStats.huangSpawns,2,'second troop after 8s');
- for(let i=0;i<40;i++)m.tick(.2);
- assert.equal(m.state.marineStats.huangSpawns,3,'third troop after 16s');
+ for(let i=0;i<20;i++)m.tick(.2);
+ assert.equal(m.state.marineStats.huangSpawns,2,'second troop after 4s');
+ for(let i=0;i<20;i++)m.tick(.2);
+ assert.equal(m.state.marineStats.huangSpawns,3,'third troop after 8s');
  const killer=m.state.players[0],victim=m.state.players[1];
  assert.ok(m.order('P0',{type:'build',lane:0,slot:2,role:1}).ok);
  assert.ok(m.order('P1',{type:'build',lane:0,slot:2,role:3}).ok);
- m.state.seconds+=24;m.wave();
+ m.state.seconds+=12;m.wave();
  const marine=m.state.units.find(u=>u.uid==='P0'&&u.role===1);
  const enemy=m.state.units.find(u=>u.uid==='P1'&&u.role===3);
  assert.ok(marine&&enemy);
@@ -146,11 +146,11 @@ console.log('3x-area real-combat test passed: 1v1,2v2,3v3 and 2/3-player coop, c
  assert.ok(match.snapshot('P0').players[1].buildings[0].every(role=>role===null));
  assert.ok(match.order('P1',{type:'build',lane:0,slot:5,role:6}).ok);
  assert.equal(match.snapshot('P0').players[1].buildings[0][5],null,'hidden construction never reaches guest snapshot');
- match.state.seconds=24;match.wave();
+ match.state.seconds=12;match.wave();
  assert.equal(match.snapshot('P0').units.some(u=>u.team===1&&u.role===6),false,'reinforcements in enemy spawn are hidden');
  const spy=match.state.units.find(u=>u.team===1&&u.role===6);
  const scout=match.state.players[0];assert.ok(match.order('P0',{type:'build',lane:0,slot:0,role:1}).ok);
- match.state.seconds+=24;match.wave();
+ match.state.seconds+=12;match.wave();
  const our=match.state.units.find(u=>u.team===0&&u.role===1);
  our.x=2600;
  assert.equal(match.snapshot('P0').fog[0],false);

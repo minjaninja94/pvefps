@@ -49,7 +49,7 @@ const doc={readyState:'complete',hidden:false,body:{dataset:{playMode:'multi'}},
  },createDocumentFragment(){return {children:[],append(x){this.children.push(x);}};}};
 const network={configure(handlers){this.handlers=handlers;},sendOrder(cmd){calls.push({...cmd});return {ok:true};}};
 const cost=[65,100,185,285,185,360,300,220],unitNames=['돌격','사격','대장갑','장갑','대공','포격','기동','지원'];
-const engine={SLOTS:75,COST:cost,NAMES:unitNames,EXTRACTOR:8,FACTORY_BUILD_SECONDS:24,incomePerTick:level=>(1+level)*(level>=5?.85:1),ecoBuildSeconds:level=>24+8*(level-1),ecoPrice(){return 70;},ecoStabilize(){return 8;},WEAPON_COST(n){return Math.round(200*Math.pow(1.65,n));},ARMOR_COST(n){return Math.round(190*Math.pow(1.63,n));}};
+const engine={SLOTS:75,COST:cost,NAMES:unitNames,EXTRACTOR:8,FACTORY_BUILD_SECONDS:12,incomePerTick:level=>(1+level)*(level>=5?.85:1),ecoBuildSeconds:level=>12+4*(level-1),ecoPrice(){return 70;},ecoStabilize(){return 8;},WEAPON_COST(n){return Math.round(200*Math.pow(1.65,n));},ARMOR_COST(n){return Math.round(190*Math.pow(1.63,n));}};
 const window={DesertTriEngine:engine,DesertTriNetwork:network,addEventListener:no,
  DesertRoster:{FACTIONS:[{name:'철갑연합',units:unitNames}],getDef(){return {kind:'ground',tips:'테스트 병력'};}},};
 vm.runInNewContext(src,{window,document:doc,performance:{now:()=>1000},requestAnimationFrame:no,console,Math,Number,Array,Object,Promise,setInterval:no,clearInterval:no},{filename:'tri-lane-ui.js',timeout:10000});
@@ -128,17 +128,17 @@ window.DesertTriUI.setView('upgrade');
 assert.match(item('mpRepairInfo').textContent,/단일 전장/,'classic can repair its one turret');
 // Render real timer transitions, including an extractor after its factory build ends.
 classicBuildings[0][6]=8;
-const readiness=[Array(75).fill(0)];readiness[0][5]=24;readiness[0][6]=24;
-const timed={...classic,seconds:12,players:[{...classic.players[0],eco:1,ecoReadyAt:30,buildingReadyAt:readiness,mineTimings:{'0-6':{startedAt:0,buildEndsAt:24,readyAt:30}}}]};
+const readiness=[Array(75).fill(0)];readiness[0][5]=12;readiness[0][6]=12;
+const timed={...classic,seconds:6,players:[{...classic.players[0],eco:1,ecoReadyAt:15,buildingReadyAt:readiness,mineTimings:{'0-6':{startedAt:0,buildEndsAt:12,readyAt:15}}}]};
 window.DesertTriUI.onSnapshot(timed);
 let cells=item('mpBuildGrid').children;
 assert.equal(cells[5].children[1].className,'cell-name','name is directly above timer');
 assert.equal(cells[5].children[2].attrs['aria-valuenow'],'50');
-assert.equal(cells[6].children[2].children[1].textContent,'건설 12초');
-window.DesertTriUI.onSnapshot({...timed,seconds:25});cells=item('mpBuildGrid').children;
+assert.equal(cells[6].children[2].children[1].textContent,'건설 6초');
+window.DesertTriUI.onSnapshot({...timed,seconds:13});cells=item('mpBuildGrid').children;
 assert.equal(cells[5].children.length,2,'completed factory removes timer');
 assert.equal(cells[6].children[2].className,'build-progress stabilizing');
-assert.equal(cells[6].children[2].children[1].textContent,'안정화 5초');
-window.DesertTriUI.onSnapshot({...timed,seconds:30});
+assert.equal(cells[6].children[2].children[1].textContent,'안정화 2초');
+window.DesertTriUI.onSnapshot({...timed,seconds:15});
 assert.equal(item('mpBuildGrid').children[6].children.length,2,'extractor timer clears after stabilization');
 console.log('Multiplayer production UI passed: embedded lane picker, 75-slot grids, purchase lanes, swipe, click cancellation, vertical scroll.');

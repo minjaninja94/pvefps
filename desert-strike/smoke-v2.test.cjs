@@ -85,7 +85,7 @@ assert.match(el('cameraStatus').textContent,/전선 자동 추적/,'front camera
 assert.match(el('builtCount').textContent,/1 \/ 75/);
 steps(640);
 assert.ok(sandbox.window.DesertSprites.cacheSize>16,'combat must use procedural animation frames');
-assert.equal(el('wave').textContent,'01','wave 1 should trigger');
+assert.equal(el('wave').textContent,'02','two 12-second waves should trigger by 25.6s');
 assert.ok(Number(el('friendlyCount').textContent)>=1,'wave spawned allied units');
 click('pauseButton');
 const stopped=el('timer').textContent;
@@ -273,17 +273,17 @@ for(const scenario of spamCases)for(const rngSeed of [17,61]){
  const unitCost=g.getDef(scenario.role,scenario.player).cost;
  while(game.cash>=unitCost && game.built.some(v=>v===null)){
   const i=game.built.findIndex(v=>v===null);
-  game.built[i]=scenario.role;game.buildReadyAt[i]=game.elapsed+24;game.cash-=unitCost;
+  game.built[i]=scenario.role;game.buildReadyAt[i]=game.elapsed+12;game.cash-=unitCost;
  }
  game.enemyBuilt.fill(null);game.enemyCash=360;
  game.enemyEco=0;game.enemyBuilt[1]=0;game.enemyCash-=65;
  game.enemyBuilt[17]=1;game.enemyCash-=g.getDef(1,scenario.enemy).cost;
- game.enemyBuildReadyAt[1]=game.enemyBuildReadyAt[17]=game.elapsed+24;
- game.wave=0;game.next=24;
+ game.enemyBuildReadyAt[1]=game.enemyBuildReadyAt[17]=game.elapsed+12;
+ game.wave=0;game.next=12;
  for(let i=0;i<4000&&!game.ended;i++){
   if(game.cash>=unitCost){
    const free=game.built.findIndex(v=>v===null);
-   if(free>=0){game.built[free]=scenario.role;game.buildReadyAt[free]=game.elapsed+24;game.cash-=unitCost;}
+   if(free>=0){game.built[free]=scenario.role;game.buildReadyAt[free]=game.elapsed+12;game.cash-=unitCost;}
   }
   g.tick(.12);
  }
@@ -346,15 +346,15 @@ console.log('Six playable factions, 48 named units, Beastgirl melee and Elf rang
  const g=sandbox.window.__gameTest,st=g.state();
  st.faction=3;st.enemyFaction=0;st.enemyCash=500;st.cash=250;
  st.units.length=0;st.built.fill(null);st.enemyBuilt.fill(null);
- st.built[3]=7;st.live=true;st.wave=0;st.next=24;
+ st.built[3]=7;st.live=true;st.wave=0;st.next=12;
  g.wave();
  assert.equal(st.marineStats.huangSpawns,1,'one Huanglong on wave opening');
  assert.equal(st.marineSupports.length,2,'two later staggered Huanglong spawns queued');
- for(let i=0;i<40;i++)g.tick(.2);
- assert.equal(st.marineStats.huangSpawns,2,'second Huanglong at 8 seconds');
- for(let i=0;i<40;i++)g.tick(.2);
- assert.equal(st.marineStats.huangSpawns,3,'third Huanglong at 16 seconds');
- for(let i=0;i<35;i++)g.tick(.2);
+ for(let i=0;i<20;i++)g.tick(.2);
+ assert.equal(st.marineStats.huangSpawns,2,'second Huanglong at 4 seconds');
+ for(let i=0;i<20;i++)g.tick(.2);
+ assert.equal(st.marineStats.huangSpawns,3,'third Huanglong at 8 seconds');
+ for(let i=0;i<17;i++)g.tick(.2);
  assert.equal(st.marineStats.huangSpawns,3,'no fourth Huanglong in one wave');
  st.units.length=0;st.marineRecruitCount=[0,0];
  const killer={side:0,faction:3,role:1,conscripted:false};
@@ -383,7 +383,7 @@ console.log('Six playable factions, 48 named units, Beastgirl melee and Elf rang
  click('restartButton');click('startButton');
  const test=g.state();
  test.built.fill(null);test.enemyBuilt.fill(null);test.units.length=0;
- test.wave=0;test.next=24;test.enemyFaction=0;
+ test.wave=0;test.next=12;test.enemyFaction=0;
  assert.equal(g.enemyBaseVisible(),false,'enemy base is concealed before scouting');
  g.createUnit(1,0,6);
  const airplane=test.units.at(-1);airplane.x=330;airplane.y=260;
@@ -412,7 +412,7 @@ for(const aiDifficulty of ['normal','hard']){
  pressure.faction=6;pressure.enemyFaction=0;pressure.aiDifficulty=aiDifficulty;
  pressure.built.fill(null);pressure.units.length=0;pressure.deadUnits.length=0;pressure.shots.length=0;
  pressure.enemyBuilt.fill(null);pressure.enemyCash=360;pressure.enemyEco=0;
- pressure.hardBrain=null;pressure.aiIntelMemory=null;pressure.aiSight.clear();pressure.aiNextThink=0;pressure.wave=0;pressure.next=24;
+ pressure.hardBrain=null;pressure.aiIntelMemory=null;pressure.aiSight.clear();pressure.aiNextThink=0;pressure.wave=0;pressure.next=12;
  for(let step=0;step<5200&&!pressure.ended&&pressure.wave<24;step++){
   if(pressure.cash>=65){
    const slot=pressure.built.findIndex(r=>r===null);
@@ -445,7 +445,7 @@ for(const aiDifficulty of ['normal','hard']){
  const cohort=s.enemyBuilt.filter(r=>r===1).length;
  assert.ok(cohort>=20,'hard AI buys a twenty-factory same-role group instead of only diversifying');
  assert.ok(s.enemyCash<before,'each AI hero factory costs ordinary player CR');
- s.elapsed+=24; // actual construction completes before the hero-capable deployment wave
+ s.elapsed+=12; // actual construction completes before the hero-capable deployment wave
  g.wave();
  g.compactArmy();
  const hero=s.units.find(u=>u.side===1&&u.role===1&&u.heroCount===20);

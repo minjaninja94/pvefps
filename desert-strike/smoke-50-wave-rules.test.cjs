@@ -34,7 +34,7 @@ for(const ruleset of ['standard','augment']){
  for(let role=0;role<8;role++){
   const before=st.cash;S.selectRole(role);S.place(role);
   assert.equal(st.cash,before-expectedPrices[role],ruleset+' solo pays displayed price');
-  assert.equal(st.buildReadyAt[role],24,'advanced price does not bypass construction');
+  assert.equal(st.buildReadyAt[role],12,'advanced price does not bypass construction');
   S.demolish(role);assert.equal(st.cash,before-expectedPrices[role]+Math.floor(expectedPrices[role]*.55),'correct-price refund');
  }
 }
@@ -45,13 +45,13 @@ for(const ruleset of ['standard','augment']){
  assert.deepEqual([...state.baseHP],[8640,8640],ruleset+' solo core HP');
  S.selectRole(0);S.place(0);
  assert.equal(state.built[0],0);
- assert.equal(state.buildReadyAt[0],24);
+ assert.equal(state.buildReadyAt[0],12);
  assert.equal(state.cash,295,'paid factory cost remains 65 CR');
- state.elapsed=23.99;S.wave();
+ state.elapsed=11.99;S.wave();
  assert.equal(state.produced[0][0],0,ruleset+' cannot spawn from unfinished facility');
- state.elapsed=24;S.wave();
+ state.elapsed=12;S.wave();
  assert.equal(state.produced[0][0],1,ruleset+' deploys on completion');
- assert.equal(state.buildReadyAt[0],24);
+ assert.equal(state.buildReadyAt[0],12);
  // Sold/rebuilt factories cannot bypass their next construction window.
  const before=state.baseHP[1];S.structureHit(1,1000,'core');
  near(state.baseHP[1],before-850,ruleset+' core loses 85% of former direct attack');
@@ -72,7 +72,7 @@ for(const d of ['normal','hard']){
  S.aiInitialBuild();
  const rows=state.enemyBuilt.map((r,i)=>r!==null&&r!==8?i:-1).filter(i=>i>=0);
  assert.ok(rows.length>0,d+' AI builds paid factories');
- for(const slot of rows)near(state.enemyBuildReadyAt[slot],24,d+' initial build waits 24 seconds');
+ for(const slot of rows)near(state.enemyBuildReadyAt[slot],12,d+' initial build waits 12 seconds');
 }
 const multiContext={window:{},fetch:mockFetch,console,Math,Map,Set,Object,Array,Number,String,Date,JSON};
 for(const name of ['unit-consolidation.js','defense-guardian.js','hard-ai.js','augment-rules.js'])
@@ -104,17 +104,17 @@ for(const ruleset of ['standard','augment'])for(const mode of ['pvp','classic'])
  const core=mode==='classic'?8640:3000;
  assert.equal(st.cores[0][0],core,ruleset+' '+mode+' core HP');
  assert.equal(match.order('a',{type:'build',lane:0,slot:0,role:0}).ok,true);
- assert.equal(p.buildingReadyAt[0][0],24);
+ assert.equal(p.buildingReadyAt[0][0],12);
  assert.equal(match.order('a',{type:'build',lane:0,slot:1,role:8}).ok,true);
- assert.equal(p.buildingReadyAt[0][1],24,'extractor has real construction time');
- assert.equal(p.ecoReadyAt,30,'construction is followed by stabilization');
+ assert.equal(p.buildingReadyAt[0][1],12,'extractor has real construction time');
+ assert.equal(p.ecoReadyAt,15,'construction is followed by stabilization');
  assert.equal(match.order('a',{type:'build',lane:0,slot:2,role:8}).ok,false,'cannot overlap income expansion');
 
- assert.equal(match.snapshot('a').players[0].buildingReadyAt[0][0],24,'owner sees build ETA');
+ assert.equal(match.snapshot('a').players[0].buildingReadyAt[0][0],12,'owner sees build ETA');
  assert.equal(match.snapshot('b').players[0].buildingReadyAt[0][0],0,'enemy never sees private construction timer');
- st.seconds=23.9;match.wave();
+ st.seconds=11.9;match.wave();
  assert.equal(p.produced[0],0,ruleset+' '+mode+' no unfinished factory spawn');
- st.seconds=24;match.wave();
+ st.seconds=12;match.wave();
  assert.equal(p.produced[0],1,ruleset+' '+mode+' one actual soldier after build completion');
  const before=st.cores[0][1];match.__test.hitFort(0,1,1000,'core');
  near(st.cores[0][1],before-850,ruleset+' '+mode+' -15% core damage');
@@ -133,9 +133,9 @@ for(const ruleset of ['standard','augment'])for(const difficulty of ['normal','h
   difficulty+' '+ruleset+' AI buys its own combat production');
  for(const bot of bots)for(let lane=0;lane<3;lane++)for(let slot=0;slot<75;slot++)
   if(bot.buildings[lane][slot]!==null&&bot.buildings[lane][slot]!==8)
-   assert.ok(bot.buildingReadyAt[lane][slot]>=24,
-    difficulty+' '+ruleset+' bot obeys the same 24-second construction');
+   assert.ok(bot.buildingReadyAt[lane][slot]>=12,
+    difficulty+' '+ruleset+' bot obeys the same 12-second construction');
 }
-console.log('50-wave rules passed: solo, classic, PvP, co-op, normal and hard AI, both rule sets; real 24s build, +20% core, -15% core damage, -15% income after level 4, protected build timer.');
+console.log('50-wave rules passed: solo, classic, PvP, co-op, normal and hard AI, both rule sets; real 12s build, +20% core, -15% core damage, -15% income after level 4, protected build timer.');
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});
