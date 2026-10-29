@@ -47,7 +47,8 @@ function extra(selected=[],role){
  }
  return Math.max(0,Math.min(3,count));
 }
-const api=Object.freeze({load,ready,create,apply,extra,card:id=>byId.get(id)||null,STAGES,TIERS});
+const api=Object.freeze({load,ready,create,apply,extra,card:id=>byId.get(id)||null,
+ list:()=>cards.map(c=>({id:c.id,name:c.name,description:c.description,tier:c.tier,scope:c.scope})),STAGES,TIERS});
 global.DesertAugments=api;
 if(typeof document!=='undefined')void load().catch(()=>{});
 })(typeof window==='undefined'?globalThis:window);
