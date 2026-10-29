@@ -128,7 +128,10 @@ function constructExtractor(side,index){
  const price=ecoCostFor(state[mine]);
  if(slots[index]!==null||state[mine]>=MAX_ECONOMY||ecoRemaining(side)>0||state[cash]<price)return false;
  slots[index]=EXTRACTOR;costs[index]=price;state[cash]-=price;state[mine]++;
- state[ready]=state.elapsed+ecoStabilize(state[mine],state.elapsed);return true;
+ state[ready]=state.elapsed+ecoStabilize(state[mine],state.elapsed);
+ // React to a human economy purchase immediately, without skipping AI costs or blackout.
+ if(side===0&&state.live&&state.aiDifficulty==='hard')hardInvest();
+ return true;
 }
 function weaponCostFor(level){return Math.round(200*Math.pow(1.65,level));}
 function armorCostFor(level){return Math.round(190*Math.pow(1.63,level));}
@@ -166,7 +169,7 @@ function reset(){
  built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),produced:[Array(8).fill(0),Array(8).fill(0)],units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},
  broodBirths:[0,0],broodBirthsTotal:[0,0],
- towerShots:[],aiSight:new Set(),nukes:1,barrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
+ towerShots:[],aiSight:new Set(),nukes:1,enemyNukes:1,barrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
  nextUnitId:1,attackCount:0,nextConsolidation:1,aiDifficulty:window.DesertLobby?.aiDifficulty?.()||'normal',hardBrain:null,prismWaveAt:-Infinity,
  ruleset:'standard',augments:[],augmentChoice:null,augmentStage:-1,augmentSchedule:[]};
  selectedRole=null;demolition=false;bannerSeconds=0;barrageSeconds=0;
@@ -260,17 +263,41 @@ function upgrade(kind){
  }
  updateUI(true);
 }
-function emergency(){
- if(!state.live||state.ended||state.paused||!state.nukes)return;
- const invaders=state.units.filter(u=>u.side===1&&u.hp>0&&u.x<=550);
- const eligible=state.baseHP[0]<=MAX_BASE*.7||invaders.some(u=>u.x<370);
- if(!eligible||!invaders.length){setMessage('핵폭탄은 기지가 위기일 때 침공한 적에게 사용할 수 있습니다.');return;}
- state.nukes=0;
+// Both sides share the same emergency footprint and 70%-HP / deep-invasion trigger.
+function emergencyTargets(defendingSide){
+ return state.units.filter(u=>u.side!==defendingSide&&u.hp>0&&
+  (defendingSide===0?u.x<=550:u.x>=WORLD_W-550));
+}
+function emergencyEligible(defendingSide,targets){
+ return targets.length>0&&(state.baseHP[defendingSide]<=MAX_BASE*.7||
+  targets.some(u=>defendingSide===0?u.x<370:u.x>WORLD_W-370));
+}
+function detonateEmergency(defendingSide){
+ const stock=defendingSide===0?'nukes':'enemyNukes';
+ if(!state[stock])return false;
+ const invaders=emergencyTargets(defendingSide);
+ if(!emergencyEligible(defendingSide,invaders))return false;
+ state[stock]--;
  for(const u of invaders){killUnit(u);pulse(u.x,u.y,'#f2d489',40);}
  state.units=state.units.filter(u=>u.hp>0);
- state.shots=state.shots.filter(p=>p.side===0);
- setMessage('긴급 핵폭탄 발동! 아군 영토로 침입한 적 '+invaders.length+'기를 제거했습니다.');
- banner('☢ EMERGENCY STRIKE');window.DesertCombatAudio?.cue('explosion');chirp(130,.3);updateUI(true);
+ state.shots=state.shots.filter(p=>p.side===defendingSide);
+ if(defendingSide===0){
+  setMessage('긴급 핵폭탄 발동! 아군 영토로 침입한 적 '+invaders.length+'기를 제거했습니다.');
+  banner('☢ EMERGENCY STRIKE');
+ }else{
+  setMessage('하드 AI 긴급 핵폭탄 발동! 적 진영에 침투한 아군 '+invaders.length+'기가 제거되었습니다.');
+  banner('☢ ENEMY EMERGENCY STRIKE');
+ }
+ window.DesertCombatAudio?.cue('explosion');chirp(130,.3);updateUI(true);
+ return true;
+}
+function emergency(){
+ if(!state.live||state.ended||state.paused||!state.nukes)return;
+ if(!detonateEmergency(0))setMessage('핵폭탄은 기지가 위기일 때 침공한 적에게 사용할 수 있습니다.');
+}
+function hardEmergency(){
+ if(!state.live||state.ended||state.paused||state.aiDifficulty!=='hard')return false;
+ return detonateEmergency(1);
 }
 function barrage(){
  if(!state.live||state.ended||state.paused||state.cash<260||state.barrageCd>0)return;
@@ -405,8 +432,26 @@ function hardResearch(){
  else {state.enemyArmor++;applyArmorResearch(1,state.enemyArmor);}
  return true;
 }
+// Matching the human's *purchased* extractor count takes priority over routine
+// research and units. Unaffordable upgrades are queued, never granted for free.
+function hardMirrorEconomy(){
+ if(state.enemyEco>=state.eco||state.enemyEco>=MAX_ECONOMY)return false;
+ const slot=state.enemyBuilt.findIndex(role=>role===null);
+ if(slot<0)return false;
+ if(ecoRemaining(1)<=0){
+  const price=ecoCostFor(state.enemyEco);
+  if(state.enemyCash>=price&&constructExtractor(1,slot)){
+   const ai=window.DesertHardAI;
+   const brain=state.hardBrain||(state.hardBrain=ai.create(state.enemyFaction));
+   ai.bought(brain,{kind:'econ'},price);
+  }
+ }
+ // Wait for the same stabilization window and earned CR as the human.
+ return true;
+}
 function hardInvest(){
  const ai=window.DesertHardAI;if(!ai)return;
+ if(hardMirrorEconomy())return;
  if(hardResearch())return;
  const brain=state.hardBrain||(state.hardBrain=ai.create(state.enemyFaction));
  const scouts=state.units.filter(u=>u.side===1&&u.hp>0);
@@ -975,6 +1020,7 @@ function tick(dt){
  while(state.next<=0){state.next+=INTERVAL;wave();if(state.augmentChoice)break;}
  if(state.augmentChoice){updateUI(true);return;}
  deployMarineSupports();
+ if(state.aiDifficulty==='hard')hardEmergency();
  state.sortedTeams=[state.units.filter(u=>u.side===0).sort((a,b)=>a.x-b.x),state.units.filter(u=>u.side===1).sort((a,b)=>a.x-b.x)];
  for(const u of state.units){
   if(u.hp<=0)continue;
