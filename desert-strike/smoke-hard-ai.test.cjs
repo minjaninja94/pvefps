@@ -121,7 +121,7 @@ assert.ok(mirror.enemyEcoReadyAt>mirror.elapsed,'AI also suffers the third-level
 api.reset();const nuke=api.state();nuke.live=true;nuke.aiDifficulty='hard';nuke.next=100000;
 const unit=(i,x=2380)=>({uid:40000+i,side:0,faction:0,role:0,x,y:260+i%3*20,
  hp:100,maxHP:100,killed:false,heroCount:1});
-for(let i=0;i<99;i++)nuke.units.push(unit(i));
+for(let i=0;i<99;i++)nuke.units.push(unit(i,1200));
 nuke.units.push({...unit(99),x:180});
 nuke.units.push({uid:999888,side:1,role:0,faction:0,hp:100,maxHP:100,x:3000,y:240});
 assert.equal(api.hardEmergency(),false,'99+1 enemies while AI is winning must not waste the nuclear strike');
