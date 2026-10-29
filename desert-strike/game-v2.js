@@ -519,7 +519,12 @@ function hardInvest(){
  aiAdaptFacilities(intel);
  // Counter-building outranks low-impact late research during an observed rush.
  const emergencyCounter=intel.dominant!==null&&intel.total>=8;
- if(!emergencyCounter&&hardResearch())return;
+ const factoryCount=state.enemyBuilt.filter(role=>role!==null&&role!==EXTRACTOR).length;
+ const growTo=Math.min(SLOTS-state.enemyEco,Math.max(8,7+Math.floor(state.elapsed/18),Math.ceil(intel.total*.9)));
+ // A researched army still needs enough factories to compete with player scaling.
+ // Do not spend the equivalent of several new factories on early upgrades.
+ if(!emergencyCounter&&factoryCount>=Math.min(18,Math.max(10,Math.floor(state.elapsed/18)))&&
+  state.enemyCash>=310&&hardResearch())return;
  const brain=state.hardBrain||(state.hardBrain=ai.create(state.enemyFaction));
  const roles=intel.counts;
  const air=intel.air,armor=intel.armor,invaded=intel.invaded;
@@ -527,6 +532,21 @@ function hardInvest(){
   const counts=Array(8).fill(0);for(const role of state.enemyBuilt)if(role!==null&&role!==EXTRACTOR)counts[role]++;
   const slot=state.enemyBuilt.findIndex(v=>v===null);if(slot<0)break;
   let action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,costs:ROLE.map(x=>x.cost),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded,roles}});
+  // After the planned opener, maintain factory output while waiting for a
+  // costly specialist. Respect the extractor reserve and never buy for free.
+  const total=counts.reduce((n,v)=>n+v,0);
+  const ecoDue=state.enemyEco<Math.min(MAX_ECONOMY,1+Math.floor(state.elapsed/65))&&
+   total>=2+state.enemyEco*2&&ecoRemaining(1)<=0;
+  if(!action&&total<growTo&&!ecoDue&&brain.opening>=ai.plans[brain.plan].opening.length){
+   const candidates=ROLE.map((role,id)=>id).filter(id=>ROLE[id].cost<=state.enemyCash);
+   const counters=intel.dominant===null?[]:aiCountersFor(intel.dominant);
+   const weights=ai.plans[brain.plan].weights;
+   candidates.sort((a,b)=>{
+    const score=r=>(weights[r]+(counters.includes(r)?7:0))/(counts[r]+1)-(ROLE[r].cost/1000);
+    return score(b)-score(a);
+   });
+   if(candidates.length)action={kind:'unit',role:candidates[0]};
+  }
   if(!action)break;
   if(emergencyCounter&&brain.opening>=((ai.plans[brain.plan]?.opening?.length)||0)){
    const counters=aiCountersFor(intel.dominant),current=counts.reduce((sum,n,i)=>sum+(counters.includes(i)?n:0),0);
