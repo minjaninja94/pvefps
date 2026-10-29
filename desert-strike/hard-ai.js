@@ -18,13 +18,30 @@ function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={}}){
  const focusCounters=concentrated?[[1,3],[3,5],[0,1],[2,groundSpecial?3:6],[2,3],[0,groundSpecial?1:6],(intel.air||0)>=roles[6]*.5?[4,1]:[2,3],[0,5]][major]:[];
  const counterReady=army>=6&&focusCounters.reduce((n,r)=>n+counts[r],0)>=army*.6;
  const pending=plan.opening[brain.opening];
+ // An exposed rush takes precedence over a scripted opener. A blocked expensive
+ // opener must never leave an affordable, useful defender unbuilt.
+ const air=intel.air||0,armor=intel.armor||0;
+ const uncoveredAir=air>=2&&counts[4]+counts[1]*.35<air*.4;
+ const uncoveredArmor=armor>=2&&counts[2]<armor*.35;
+ const urgent=!!intel.invaded||uncoveredAir||uncoveredArmor||(concentrated&&!counterReady);
+ if(urgent){
+  const counters=uncoveredAir?[4,1]:uncoveredArmor?[2,3]:concentrated?focusCounters:[1,3,0];
+  const covered=counters.reduce((n,r)=>n+counts[r],0);
+  const target=counters.slice().sort((a,b)=>counts[a]-counts[b]||costs[a]-costs[b])[0];
+  if(target!==undefined&&covered<Math.max(2,Math.ceil(army*.72))){
+   if(cash>=costs[target])return {kind:'unit',role:target};
+   // When the emergency counter is still unaffordable, bank for that precise
+   // upgrade instead of wasting the saving on an irrelevant cheap unit.
+   if(!intel.invaded)return null;
+   const fallback=counters.find(r=>costs[r]<=cash);
+   if(fallback!==undefined)return {kind:'unit',role:fallback};
+  }
+ }
  if(pending!==undefined)return cash>=costs[pending]?{kind:'unit',role:pending,opening:true}:null;
  // Build a real extractor about once a minute, once its preceding army exists.
  // Save only the actual upcoming purchase price; never preserve an arbitrary bank.
  const due=eco<Math.min(7,1+Math.floor(seconds/65))&&army>=2+eco*2&&seconds>=readyAt;
- const uncoveredAir=(intel.air||0)>=2&&counts[4]+counts[1]*.35<(intel.air||0)*.4;
- const uncoveredArmor=(intel.armor||0)>=2&&counts[2]<(intel.armor||0)*.35;
- if(due&&!intel.invaded&&!uncoveredAir&&!uncoveredArmor&&(!concentrated||counterReady)){
+ if(due&&!urgent&&(!concentrated||counterReady)){
   if(cash>=ecoCost)return {kind:'econ'};
   return null;
  }
@@ -34,7 +51,6 @@ function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={}}){
  if(seconds>120){weights[5]+=2;weights[7]+=1.5;weights[3]+=1;}
  // Keep our initiative; scouted threats add limited support to the build plan.
  // Counts are actual visible ground/air targets, never hidden production slots.
- const air=intel.air||0,armor=intel.armor||0;
  if(air>=2){weights[4]+=Math.min(7,air*1.2);weights[1]+=2;}
  if(armor>=2)weights[2]+=Math.min(6,armor);
  if(intel.invaded){weights[0]+=2;weights[1]+=3;weights[3]+=2;weights[5]*=.5;}
@@ -55,7 +71,13 @@ function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={}}){
  const threat=(air>=2?'air':'')+(armor>=2?'armor':'')+(concentrated?'focus'+major+':'+focusCounters.join(','):'');
  if(brain.lastThreat!==threat){brain.nextRole=null;brain.lastThreat=threat;}
  const role=brain.nextRole??options[0].role;brain.nextRole=role;
- return cash>=costs[role]?{kind:'unit',role}:null;
+ // Hold for a quality counter unless the frontline is under active pressure.
+ if(cash>=costs[role])return {kind:'unit',role};
+ if(intel.invaded){
+  const alternative=options.find(x=>x.cost<=cash);
+  return alternative?{kind:'unit',role:alternative.role}:null;
+ }
+ return null;
 }
 function bought(brain,action,cost){brain.spent+=cost;if(action.opening)brain.opening++;if(action.kind==='unit')brain.nextRole=null;if(action.kind==='econ')brain.economyPurchases++;}
 const api=Object.freeze({create,choose,bought,plans:PLANS});global.DesertHardAI=api;
