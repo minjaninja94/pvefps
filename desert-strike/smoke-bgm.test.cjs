@@ -116,7 +116,9 @@ test('in-game gear changes persistent music, voice and effects volumes and syncs
  assert.equal(el('battleAudioSettingsPanel').hidden,true);
  assert.equal(el('battleAudioSettingsButton').attrs['aria-expanded'],'false');
  const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
- assert.match(html,/id="backToLobby"[\\s\\S]*?id="battleAudioSettingsButton"/);
+ assert.ok(html.indexOf('id="backToLobby"')>=0&&
+  html.indexOf('id="battleAudioSettingsButton"')>html.indexOf('id="backToLobby"'),
+  'gear control must appear after the lobby button in the battle HUD');
  for(const id of ['battleAudioSettingsPanel','battleMusicVolume','battleVoiceVolume','battleEffectsVolume'])
   assert.ok(html.includes('id="'+id+'"'),id);
 });
