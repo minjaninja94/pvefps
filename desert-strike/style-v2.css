@@ -708,3 +708,29 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
 
 /* Experimental 100-card expansion: deliberately identifiable and removable as one module. */
 .augment-codex-card.is-experimental{background:linear-gradient(125deg,#30294c,#202e45);border-left:4px solid #cd8cff}.augment-codex-experiment{display:inline-flex;padding:3px 7px;border:1px solid #b58bf5;border-radius:6px;color:#f5d6ff;background:#573e72;font-size:10px;font-weight:800}.augment-codex-card.is-experimental .augment-codex-card-title{color:#f2d4ff}
+
+/* Accessible in-battle audio controls, shared by solo and multiplayer HUD. */
+.battle-audio-anchor{position:relative;display:inline-flex;align-items:center;z-index:30}
+.battle-audio-gear{font-size:20px;line-height:1;min-width:42px;min-height:40px;
+ display:inline-flex;align-items:center;justify-content:center;padding:6px 9px}
+.battle-audio-panel{position:absolute;right:-12px;top:calc(100% + 10px);z-index:100;
+ width:min(340px,calc(100vw - 24px));padding:15px;border:1px solid #698797;
+ border-radius:12px;color:#e5edf0;background:#122731;box-shadow:0 14px 32px #000c;
+ text-align:left}
+.battle-audio-panel[hidden]{display:none!important}
+.battle-audio-heading{display:flex;align-items:center;justify-content:space-between;
+ gap:12px;margin-bottom:12px}
+.battle-audio-heading button{border:1px solid #56707b;border-radius:7px;
+ background:#203c49;color:#e7edf1;font-size:15px;padding:4px 9px;cursor:pointer}
+.battle-audio-toggles{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.battle-audio-toggles button{padding:7px 9px;font:inherit;font-size:12px;border-radius:8px;
+ background:#294250;color:#e7edf1;border:1px solid #638090;cursor:pointer}
+.battle-audio-toggles button[aria-pressed="false"]{opacity:.65;background:#142630}
+.battle-audio-controls{display:grid!important;grid-template-columns:1fr!important;
+ margin:5px 0 12px!important;gap:13px!important}
+.battle-audio-controls label{display:grid!important;grid-template-columns:75px minmax(0,1fr) 43px;
+ align-items:center;gap:8px;font-size:12px}
+.battle-audio-controls input{width:100%;min-width:0;accent-color:#f1ce8c}
+.battle-audio-panel small{display:block;color:#b8cbd0;font-size:11px;line-height:1.5}
+@media(max-width:640px){.battle-audio-panel{right:-85px;width:min(310px,calc(100vw - 18px))}
+ .battle-audio-gear{min-width:38px}}
