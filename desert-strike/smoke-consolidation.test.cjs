@@ -6,9 +6,10 @@ let units=Array.from({length:19},(_,i)=>unit(i));assert.equal(C.compact(units,{m
 units=Array.from({length:20},(_,i)=>unit(i));let old=units[4],attacker={...unit(99),uid:'owner-b',team:1,hp:50,strike:{target:old}};units.push(attacker);
 let result=C.compact(units,{multiplayer:true});assert.equal(result.removed,19);assert.equal(units.length,2);const hero=result.heroes[0];assert.equal(hero.hp,2000);assert.equal(hero.maxHP,2000);assert.equal(hero.radius,30);assert.equal(hero.heroCount,20);assert.equal(C.population(units,u=>u.team===0),20);
 assert.equal(C.splashWeight(unit(0)),1,'unmerged soldiers receive one splash hit');
-assert.equal(C.splashWeight(hero),8,'fully packed twenty-soldier hero absorbs a representative multi-soldier blast');
+assert.equal(C.splashWeight(hero),4.42,'a single siege unit can hit several members of one packed hero');
+assert.ok(C.splashWeight(hero,20)<1.2,'a twenty-shot attacker never multiplies its already aggregated blast damage again');
 const injured={...hero,hp:hero.maxHP/2};
-assert.ok(C.splashWeight(injured)>1&&C.splashWeight(injured)<8,'splash weight follows surviving packed soldiers');
+assert.ok(C.splashWeight(injured)>1&&C.splashWeight(injured)<4.5,'splash weight follows surviving packed soldiers');
 assert.equal(attacker.strike.target,hero);assert.equal(old.hp,0);
 const base={hp:100,damage:12,armor:3,heal:30,speed:80,range:160,rate:.8};const d=C.definition(base,hero);for(const k of ['hp','damage','armor','heal'])assert.equal(d[k],base[k]*20);for(const k of ['speed','range','rate'])assert.equal(d[k],base[k]);
 // Damage mitigation must match individual soldiers, including low-damage guns.
