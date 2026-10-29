@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id);
 const NET=global.DesertTriNetwork,E=global.DesertTriEngine;
 if(!NET||!E)return;
 let snap=null,lane=1,role=0,demolish=false,practice=null,practiceTimer=null,practiceRecorded=false,view='base',repairLane=1;
-let myId='',lobby=null,host=false,gridKey='',cardsKey='',augmentKey='',lastSnapshotAt=0,lastDrawAt=0,resultKey='',augmentRosterKey='',cameraX=1100;
+let myId='',lobby=null,host=false,gridKey='',cardsKey='',counterKey='',augmentKey='',lastSnapshotAt=0,lastDrawAt=0,resultKey='',augmentRosterKey='',cameraX=1100;
 const LANES=['상단','중앙','하단'],ICONS=['⚔','⌖','◆','▣','✣','✹','♞','✚'];
 function message(msg){$('mpStatus').textContent=msg;}
 function laneCount(){return snap?.lanes??3;}
@@ -88,8 +88,24 @@ function ecoTooltip(level,seconds){
  if(level>=7)return '최대 7개 · 수입 +'+income(level)+' CR / 0.5초';
  return '완료 후 수입 +'+income(level+1)+' CR / 0.5초 · 건설 '+E.ecoBuildSeconds(level+1)+'초 + 안정화 '+E.ecoStabilize(level+1,seconds)+'초. 건설·안정화 동안 기본·채굴 인컴과 웨이브 지원금 중단. 철거해도 남은 중단 시간은 유지됩니다.';
 }
+function renderCounterGuide(fac){
+ const root=$('mpCounterMatrix');if(!root||counterKey===fac)return;
+ counterKey=fac;const fragment=document.createDocumentFragment();
+ for(let i=0;i<8;i++){
+  const d=global.DesertRoster?.getDef?.(i,fac),item=document.createElement('div');
+  item.className='mp-counter-item';
+  const heading=document.createElement('strong'),good=document.createElement('span'),bad=document.createElement('span');
+  heading.textContent=(ICONS[i]||'')+' '+(global.DesertRoster?.FACTIONS?.[fac]?.units?.[i]||E.NAMES[i]);
+  good.textContent=(i===7?'시너지: ':'강점: ')+(d?.good||[]).map(r=>E.NAMES[r]).join(' · ');
+  bad.textContent='약점: '+(d?.bad||[]).map(r=>E.NAMES[r]).join(' · ');
+  good.className='mp-counter-good';bad.className='mp-counter-bad';
+  item.append(heading,good,bad);fragment.append(item);
+ }
+ root.replaceChildren(fragment);
+}
 function unitCards(){
- const me=my(),fac=me?.faction??faction(),key=fac+':'+role+':'+skin()+':'+(me?.eco||0)+':'+((me?.ecoReadyAt||0)>(snap?.seconds||0))+':'+Math.floor((snap?.seconds||0)/120);
+ const me=my(),fac=me?.faction??faction();renderCounterGuide(fac);
+  const key=fac+':'+role+':'+skin()+':'+(me?.eco||0)+':'+((me?.ecoReadyAt||0)>(snap?.seconds||0))+':'+Math.floor((snap?.seconds||0)/120);
  if(cardsKey!==key){cardsKey=key;const out=$('mpUnitCards');out.replaceChildren();
  for(let i=0;i<9;i++){
   const d=i===8?null:global.DesertRoster?.getDef(i,fac),b=document.createElement('button');b.type='button';b.dataset.role=i;b.className='mp-unit-card'+(role===i?' active':'');b.setAttribute('aria-pressed',String(role===i));
@@ -443,7 +459,7 @@ async function leave(){
  if(practice){clearInterval(practiceTimer);practiceTimer=null;practice=null;practiceRecorded=false;myId='';snap=null;$('mpCommand').hidden=true;$('mpStateTag').textContent='연결 전';message('연습 종료');}
  else{await NET.leave();snap=null;$('mpCommand').hidden=true;}
  $('mpViewTabs').hidden=true;setView('base');
- lane=1;cameraX=1100;repairLane=1;role=0;demolish=false;gridKey='';cardsKey='';augmentKey='';augmentRosterKey='';$('mpAugmentPanel').hidden=true;
+ lane=1;cameraX=1100;repairLane=1;role=0;demolish=false;gridKey='';cardsKey='';counterKey='';augmentKey='';augmentRosterKey='';$('mpAugmentPanel').hidden=true;
  delete document.body.dataset.multiArena;
  uiButtons();
 }
