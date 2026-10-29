@@ -89,6 +89,8 @@ jobs:
         run: node desert-strike/smoke-trilane.test.cjs
       - name: Hero offspring and capture balance invariants
         run: node desert-strike/smoke-hero-inheritance.test.cjs
+      - name: External visitor room creation and nonblocking server ledger regression
+        run: node --test desert-strike/smoke-external-rooms.test.cjs
       - name: WebRTC and Firebase mocked 1v1 handshake and real-time orders
         run: node desert-strike/smoke-trilane-network.test.cjs
       - name: Ten-faction 80-unit art and commander lobby progression
