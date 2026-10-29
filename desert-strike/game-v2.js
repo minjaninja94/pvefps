@@ -173,7 +173,7 @@ function reset(){
  built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),produced:[Array(8).fill(0),Array(8).fill(0)],units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},
  broodBirths:[0,0],broodBirthsTotal:[0,0],
- towerShots:[],aiSight:new Set(),nukes:1,enemyNukes:1,barrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
+ towerShots:[],aiSight:new Set(),nukes:1,enemyNukes:1,barrageCd:0,enemyBarrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
  nextUnitId:1,attackCount:0,nextConsolidation:1,aiNextThink:0,aiLastRefitAt:-Infinity,aiIntelMemory:null,aiDifficulty:window.DesertLobby?.aiDifficulty?.()||'normal',hardBrain:null,prismWaveAt:-Infinity,
  ruleset:'standard',augments:[],enemyAugments:[],augmentChoice:null,augmentStage:-1,augmentSchedule:[],prismLastStandUsed:false,enemyPrismLastStandUsed:false};
  selectedRole=null;demolition=false;bannerSeconds=0;barrageSeconds=0;
@@ -304,6 +304,35 @@ function emergency(){
 function hardEmergency(){
  if(!state.live||state.ended||state.paused||state.aiDifficulty!=='hard')return false;
  return detonateEmergency(1);
+}
+// Hard-only paid barrage: the same 260 CR, cooldown, radius and damage as
+// the player's orbital strike. Visible enemy clumps and 20-man heroes count
+// at their real strength. Never target hidden units or grant free attacks.
+function hardBarrage(){
+ if(!state.live||state.ended||state.paused||state.aiDifficulty!=='hard'||state.wave<3||
+  state.enemyBarrageCd>0||state.enemyCash<260)return false;
+ const scouts=state.units.filter(u=>u.side===1&&u.hp>0);
+ const visible=state.units.filter(u=>u.side===0&&u.hp>0&&
+  (u.x>=WORLD_W*.54||scouts.some(v=>Math.hypot(v.x-u.x,v.y-u.y)<=420)));
+ if(!visible.length)return false;
+ const value=u=>ROLE[u.role].cost*(u.heroCount===20?(window.DesertConsolidation?.strength?.(u)??20):1);
+ let target=null,score=0;
+ for(const u of visible){
+  const clustered=visible.reduce((n,v)=>n+(Math.hypot(u.x-v.x,u.y-v.y)<110?value(v):0),0);
+  const defensive=u.x>WORLD_W*.68?1.25:1;
+  if(clustered*defensive>score){score=clustered*defensive;target=u;}
+ }
+ if(!target||score<650||state.enemyCash<260+(target.x<WORLD_W*.7?160:0))return false;
+ state.enemyCash-=260;state.enemyBarrageCd=32;
+ for(const u of visible){
+  const d=Math.hypot(u.x-target.x,u.y-target.y);
+  if(d<118){damage(u,260*(1-.45*d/118),'barrage');pulse(u.x,u.y,'#ffb681',25);}
+ }
+ window.DesertHardAI?.bought?.(state.hardBrain,{kind:'barrage'},260);
+ window.DesertCombatAudio?.cue?.('explosion',target.x);
+ pulse(target.x,target.y,'#ffc68b',90);
+ setMessage('하드 AI가 정찰된 밀집 부대에 유료 궤도 포격을 실시했습니다.');
+ return true;
 }
 function barrage(){
  if(!state.live||state.ended||state.paused||state.cash<260||state.barrageCd>0)return;
@@ -458,7 +487,7 @@ function hardResearch(){
  if(state.enemyWeapon>=target&&state.enemyArmor>=target)return false;
  const kind=state.enemyWeapon<=state.enemyArmor?'weapon':'armor';
  const price=kind==='weapon'?weaponCostFor(state.enemyWeapon):armorCostFor(state.enemyArmor);
- if(state.enemyCash<price)return true; // reserve resources, no gifted research
+ if(state.enemyCash<price)return false; // do not stall paid counter production while saving for research
  state.enemyCash-=price;
  if(kind==='weapon')state.enemyWeapon++;
  else {state.enemyArmor++;applyArmorResearch(1,state.enemyArmor);}
@@ -485,7 +514,7 @@ function hardInvest(){
  const ai=window.DesertHardAI;if(!ai)return;
  const matchingEconomy=hardMirrorEconomy();
  const intel=aiReadOpponent();
- if(matchingEconomy&&!intel.invaded)return;
+ if(matchingEconomy&&!intel.invaded&&intel.total<6)return;
  aiAdaptFacilities(intel);
  // Counter-building outranks low-impact late research during an observed rush.
  const emergencyCounter=intel.dominant!==null&&intel.total>=8;
@@ -1065,8 +1094,9 @@ function tick(dt){
  state.elapsed+=ds;state.next-=ds;state.incomeClock+=ds;
  if(state.elapsed>=state.nextConsolidation){state.nextConsolidation=state.elapsed+1;compactArmy();}
  while(state.incomeClock>=INCOME_PERIOD){const at=state.elapsed-state.incomeClock+INCOME_PERIOD;state.incomeClock-=INCOME_PERIOD;if(at+1e-6>=state.ecoReadyAt)state.cash+=initialIncome+state.eco;if(at+1e-6>=state.enemyEcoReadyAt)state.enemyCash+=initialIncome+state.enemyEco;}
- if(state.elapsed>=state.aiNextThink){aiInvest();state.aiNextThink=state.elapsed+(state.aiDifficulty==='hard'?.6:1.3);}
+ if(state.elapsed>=state.aiNextThink){if(state.aiDifficulty==='hard')hardBarrage();aiInvest();state.aiNextThink=state.elapsed+(state.aiDifficulty==='hard'?.6:1.3);}
  state.barrageCd=Math.max(0,state.barrageCd-ds);
+ state.enemyBarrageCd=Math.max(0,state.enemyBarrageCd-ds);
  while(state.next<=0){state.next+=INTERVAL;wave();if(state.augmentChoice)break;}
  if(state.augmentChoice){updateUI(true);return;}
  deployMarineSupports();
