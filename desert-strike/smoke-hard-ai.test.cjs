@@ -6,7 +6,7 @@ function environment(roll){const w={},math=Object.create(Math);math.random=()=>r
 const results=[];
 for(const roll of [.01,.26,.51,.76])for(const faction of [0,3,4,7,9]){
  const {w}=environment(roll),E=w.DesertTriEngine;
- const e=E.create({aiDifficulty:'hard',members:[{uid:'human',team:0,faction:0},{uid:'bot',team:1,faction,bot:true}]}),s=e.state,p=s.players[1];
+ const e=E.create({aiDifficulty:'veryhard',members:[{uid:'human',team:0,faction:0},{uid:'bot',team:1,faction,bot:true}]}),s=e.state,p=s.players[1];
  s.next=1000000;let earned=360;
  assert.equal(p.cash+p.hardBrain.spent,360,'all initial units and extractors are paid from equal starting cash');
  const opening=p.buildings.flat().filter(x=>x!==null&&x!==8);
@@ -25,7 +25,7 @@ for(const roll of [.01,.26,.51,.76])for(const faction of [0,3,4,7,9]){
  assert.ok(p.cash<Math.max(E.ecoPrice(p.eco),...E.COST.slice(0,8)),'bank only the next actual construction cost');
  assert.ok(new Set(p.buildings.flat().filter(r=>r!==null&&r!==8)).size>=4,'develop a planned combined army instead of only cheap units');
  results.push({plan:w.DesertHardAI.plans[p.hardBrain.plan].id,faction,eco:p.eco,cash:p.cash,army:p.buildings.flat().filter(r=>r!==null&&r!==8).length});
- assert.equal(e.snapshot('human').aiDifficulty,'hard');assert.equal(e.snapshot('human').players[1].cash,null,'hard mode does not reveal enemy resources');
+ assert.equal(e.snapshot('human').aiDifficulty,'veryhard');assert.equal(e.snapshot('human').players[1].cash,null,'hard mode does not reveal enemy resources');
 }
 // Verify threat handling only consumes the explicitly supplied scouted intel.
 const {w}=environment(.01),ai=w.DesertHardAI,brain=ai.create(0,()=>.01);brain.opening=2;
@@ -45,7 +45,7 @@ for(let plan=0;plan<4;plan++)for(let major=0;major<8;major++){
 const flierRoles=[0,0,0,0,0,0,20,0];assert.equal(ai.choose({...brain},{...base,counts:Array(8).fill(2),intel:{roles:flierRoles,air:20}}).role,4,'actual flying special spam receives anti-air, ground specials do not');
 assert.equal(ai.choose({...brain},{...base,eco:0,ecoCost:70,counts:[0,6,0,4,0,0,0,0],intel:{roles:[20,0,0,0,0,0,0,0]}}).kind,'econ','resume income development once real counter production is ready');
 // Integration: one visible aggregate means twenty troops, and production follows its band.
-const probe=environment(.01),pe=probe.w.DesertTriEngine.create({aiDifficulty:'hard',members:[{uid:'human',team:0,faction:0},{uid:'bot',team:1,faction:0,bot:true}]}),bot=pe.state.players[1];
+const probe=environment(.01),pe=probe.w.DesertTriEngine.create({aiDifficulty:'veryhard',members:[{uid:'human',team:0,faction:0},{uid:'bot',team:1,faction:0,bot:true}]}),bot=pe.state.players[1];
 bot.buildings.forEach(row=>row.fill(null));bot.hardBrain.opening=99;bot.cash=2000;
 pe.state.units.push({id:900,team:0,faction:0,role:0,lane:2,x:2000,y:1300,hp:2000,maxHP:2000,heroCount:20});
 let scouted;const original=probe.w.DesertHardAI;
@@ -56,19 +56,19 @@ assert.ok(bot.buildings.flat().filter(r=>[1,3].includes(r)).length>=bot.building
 // Real solo integration: paid opening, blackout, one-second think cadence and HUD.
 const elements=new Map(),noop=()=>{},g=new Proxy({createLinearGradient:()=>({addColorStop:noop})},{get:(o,k)=>o[k]||noop});
 const el=id=>{if(!elements.has(id))elements.set(id,{style:{},dataset:{},classList:{add:noop,remove:noop,toggle:noop},getContext:()=>g,querySelectorAll:()=>[],addEventListener:noop});return elements.get(id);};
-const env=environment(.01),sw=env.w;Object.assign(env.ctx,{document:{getElementById:el,querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>({getContext:()=>g})},requestAnimationFrame:noop,Date});sw.DesertLobby={aiDifficulty:()=> 'hard'};
+const env=environment(.01),sw=env.w;Object.assign(env.ctx,{document:{getElementById:el,querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>({getContext:()=>g})},requestAnimationFrame:noop,Date});sw.DesertLobby={aiDifficulty:()=> 'veryhard'};
 vm.runInNewContext(read('game-v2.js').replace('initFactions();wire();reset();','window.testHard={state:()=>state,reset,aiInitialBuild,hardInvest,hardEmergency,detonateEmergency,hardBarrage,hardResearch,constructExtractor,tick};reset();'),env.ctx);
 const api=sw.testHard;api.aiInitialBuild();
 const first=Array.from(api.state().enemyBuilt),cashOpening=api.state().enemyCash;api.reset();api.state().built.fill(6);api.aiInitialBuild();assert.deepEqual(Array.from(api.state().enemyBuilt),first,'hidden aircraft factories cannot alter the proactive opening');assert.equal(api.state().enemyCash,cashOpening);
 const s=api.state();s.live=true;s.next=100000;
-assert.equal(s.aiDifficulty,'hard');assert.equal(s.enemyCash+s.hardBrain.spent,360);assert.ok(s.enemyBuilt.includes(3));
+assert.equal(s.aiDifficulty,'veryhard');assert.equal(s.enemyCash+s.hardBrain.spent,360);assert.ok(s.enemyBuilt.includes(3));
 // Buy the paid opening army first, then wait for an affordable extractor.
 // Higher-tier prices must delay that investment rather than grant free CR.
 for(let n=0;n<3000&&s.enemyEco===0;n++)api.tick(.04);
 assert.equal(s.enemyEco,1);assert.ok(s.enemyEcoReadyAt>s.elapsed);const before=s.enemyCash,spent=s.hardBrain.spent;
 for(let n=0;n<75;n++)api.tick(.04);
 assert.equal(s.enemyCash+s.hardBrain.spent,before+spent,'solo hard AI pays the same stabilization penalty');
-assert.ok(elements.get('enemyFactionLabel').textContent.includes('하드 AI'));
+assert.ok(elements.get('enemyFactionLabel').textContent.includes('아주 어려움 AI'));
 const soloAI=sw.DesertHardAI;let soloIntel;sw.DesertHardAI={...soloAI,choose:(b,data)=>{soloIntel=data.intel;return soloAI.choose(b,data);}};
 s.units=[{side:0,faction:0,role:0,x:2000,y:260,hp:2000,maxHP:2000,heroCount:20}];api.hardInvest();assert.equal(soloIntel.roles[0],20,'solo scouts count an observed aggregate as twenty soldiers');
 
@@ -135,7 +135,7 @@ assert.equal(api.detonateEmergency(0),false,'single human nuke cannot be reused'
 // The hard AI reserves its single nuclear charge while winning or when the
 // enemy is too small. It fires on 100+ soldier-equivalents while losing.
 // The hit always clears EVERY opponent, even those far outside the front.
-api.reset();const nuke=api.state();nuke.live=true;nuke.aiDifficulty='hard';nuke.next=100000;
+api.reset();const nuke=api.state();nuke.live=true;nuke.aiDifficulty='veryhard';nuke.next=100000;
 const unit=(i,x=2380)=>({uid:40000+i,side:0,faction:0,role:0,x,y:260+i%3*20,
  hp:100,maxHP:100,killed:false,heroCount:1});
 for(let i=0;i<99;i++)nuke.units.push(unit(i,1200));
@@ -149,14 +149,14 @@ assert.equal(nuke.units.length,1,'nuke clears opponents everywhere and preserves
 assert.equal(nuke.units[0].side,1);
 assert.equal(nuke.combatStats[0].losses[0],100,'all 100 eliminated soldiers are reported');
 assert.equal(api.hardEmergency(),false,'AI cannot launch a second nuke');
-api.reset();const save=api.state();save.live=true;save.aiDifficulty='hard';
+api.reset();const save=api.state();save.live=true;save.aiDifficulty='veryhard';
 save.baseHP[1]=8640*.38;for(let i=0;i<99;i++)save.units.push(unit(i));
 assert.equal(api.hardEmergency(),false,'hard AI saves its charge below 100 while the base is not critical');
 assert.equal(save.enemyNukes,1);
 save.baseHP[1]=8640*.14;
 assert.equal(api.hardEmergency(),true,'at 14% core HP the last-chance override prevents silent defeat');
 assert.equal(save.units.length,0);
-api.reset();const heroNuke=api.state();heroNuke.live=true;heroNuke.aiDifficulty='hard';heroNuke.baseHP[1]=8640*.39;
+api.reset();const heroNuke=api.state();heroNuke.live=true;heroNuke.aiDifficulty='veryhard';heroNuke.baseHP[1]=8640*.39;
 for(let i=0;i<5;i++)heroNuke.units.push({uid:50000+i,side:0,role:5,faction:0,
  x:1400+i*250,y:100+i*50,hp:2000,maxHP:2000,heroCount:20});
 assert.equal(api.hardEmergency(),true,'five 20-soldier heroes count as 100 and are wiped regardless of position');
@@ -172,7 +172,7 @@ assert.equal(upgrades.enemyCash,80);
 // The paid hard-only barrage sees a true 20-soldier hero as a valuable cluster,
 // spends exactly 260 CR and obeys the same 32s cooldown as the player.
 api.reset();const artillery=api.state();
-artillery.live=true;artillery.wave=5;artillery.aiDifficulty='hard';artillery.enemyCash=580;
+artillery.live=true;artillery.wave=5;artillery.aiDifficulty='veryhard';artillery.enemyCash=580;
 const packed={uid:10020,side:0,faction:0,role:0,x:2400,y:260,
  hp:2200,maxHP:2200,heroCount:20,killed:false};
 artillery.units.push(packed,{...packed,uid:10021,x:2410},{...packed,uid:10022,x:2390});
@@ -185,7 +185,7 @@ artillery.enemyBarrageCd=0;artillery.aiDifficulty='normal';
 assert.equal(api.hardBarrage(),false,'normal AI does not receive hard-only tactical automation');
 
 // Multiplayer: same global effect for AI, human and team-wide (3-lane) combat.
-const coopEnv=environment(.28),co=coopEnv.w.DesertTriEngine.create({mode:'coop',size:2,aiDifficulty:'hard',
+const coopEnv=environment(.28),co=coopEnv.w.DesertTriEngine.create({mode:'coop',size:2,aiDifficulty:'veryhard',
  members:[{uid:'a',team:0,faction:0},{uid:'b',team:0,faction:2}]}),
  coopState=co.state,firstBot=coopState.players.find(p=>p.bot);
 coopState.seconds=6;coopState.next=999999;
