@@ -6,11 +6,7 @@
 'use strict';
 const LANES=3,WIDTH=3300,HEIGHT=1560,LANE_H=520,COLS=15,ROWS=5,SLOTS=COLS*ROWS;
 const OPENING_PREP_SECONDS=10,WAVE_INTERVAL=12,FACTORY_BUILD_SECONDS=12,CORE_DAMAGE_MULTIPLIER=.85;
-const OVERTIME_START=16*60,PRISM_STAGES=[1,18,36,54,72];
-function warPressure(seconds){
- const t=Math.max(0,seconds);
- return t<7*60?1:t<12*60?1.10:t<16*60?1.23:t<18*60?1.48:t<21*60?2.05:Math.min(6,2.65+(t-21*60)/300);
-}
+const PRISM_STAGES=[1,18,36,54,72];
 const incomePerTick=level=>(1+level)*(level>=5?.85:1);
 
 const TOWER_HP=1250,TOWER_RANGE=285,TOWER_PERIOD=.34,TOWER_DAMAGE=27,FOG_END_WAVE=6,FOG_WIDTH=770;
@@ -107,7 +103,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   if(!aug||index<0||index>=5||state.augmentChoice)return;
   const tier=state.augmentSchedule[index],offers={};
   for(const p of state.players)offers[p.uid]={cards:aug.offer(tier,p.faction,p.augments),rerolls:[false,false,false],selected:''};
-  state.augmentStage=index;state.augmentChoice={round:augmentRounds[index],tier,remaining:12,offers};
+  state.augmentStage=index;state.augmentChoice={round:augmentRounds[index],tier,remaining:30,offers};
   for(const p of state.players.filter(p=>p.bot))chooseAugment(p,aug.pick());
  }
  function chooseAugment(p,slot){
@@ -216,7 +212,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    if(!Number.isInteger(lane)||lane<0||lane>=LANES)return {ok:false,reason:'수리할 라인을 선택하세요.'};
    if(state.turrets[lane][p.team]>=TOWER_HP)return {ok:false,reason:'포탑 체력이 최대입니다.'};
    if(p.cash<180)return {ok:false,reason:'포탑 수리 비용 180 CR 부족'};
-   p.cash-=180;state.turrets[lane][p.team]=Math.min(TOWER_HP,state.turrets[lane][p.team]+(state.seconds>=OVERTIME_START?190:310));
+   p.cash-=180;state.turrets[lane][p.team]=Math.min(TOWER_HP,state.turrets[lane][p.team]+310);
    state.effects.push({x:p.team===0?215:WIDTH-215,y:(lane+.5)*LANE_H,lane,kind:'repair',time:.9,team:p.team});
    return {ok:true,cash:p.cash};
   }
@@ -274,7 +270,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  function hitFort(lane,team,amount,part=fort(lane,team).part){
   if(part==='forward'){
    if(state.forwardHP[lane][team]<=0)return;
-   state.forwardHP[lane][team]=Math.max(0,state.forwardHP[lane][team]-amount*warPressure(state.seconds));
+   state.forwardHP[lane][team]=Math.max(0,state.forwardHP[lane][team]-amount);
    if(state.forwardHP[lane][team]===0&&!state.forwardClaimed[lane][team]){
     state.forwardClaimed[lane][team]=true;
     const guardian=global.DesertGuardian;
@@ -284,8 +280,8 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     if(owner){spawn(owner,lane,0,guardian?.ROLE??0,false);guardian?.mark(state.units[state.units.length-1],team,lane);}
     state.effects.push({x:team===0?WIDTH/4:WIDTH*3/4,y:(lane+.5)*LANE_H,lane,team,kind:'guardian',time:1.4});
    }
-  }else if(part==='turret')state.turrets[lane][team]=Math.max(0,state.turrets[lane][team]-amount*warPressure(state.seconds));
-  else state.cores[lane][team]=Math.max(0,state.cores[lane][team]-amount*CORE_DAMAGE_MULTIPLIER*warPressure(state.seconds));
+  }else if(part==='turret')state.turrets[lane][team]=Math.max(0,state.turrets[lane][team]-amount);
+  else state.cores[lane][team]=Math.max(0,state.cores[lane][team]-amount*CORE_DAMAGE_MULTIPLIER);
  }
  function selectCounter(lane,bot){
   // Observed frontline units only: AI must not inspect unscouted human facilities.
@@ -475,20 +471,6 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     break;
    }
   }
-  // Once frontlines have lasted 16 minutes, massed attackers convert their
-  // presence in the contested area into a periodic anti-stalemate siege strike.
-  if(state.seconds>=OVERTIME_START)for(let lane=0;lane<LANES;lane++){
-   for(let team=0;team<2;team++){
-    const troops=state.units.filter(u=>u.hp>0&&u.team===team&&u.lane===lane&&!u.guardian
-     &&(team===0?u.x>WIDTH*.36:u.x<WIDTH*.64));
-    if(troops.length<4||state.cores[lane][1-team]<=0)continue;
-    const power=Math.min(35,troops.reduce((n,u)=>n+(global.DesertConsolidation?.strength?.(u)??1),0));
-    const part=fort(lane,1-team).part;
-    hitFort(lane,1-team,75+power*4,part);
-    const x=part==='forward'?(1-team===0?WIDTH/4:WIDTH*3/4):(1-team===0?215:WIDTH-215);
-    state.effects.push({x,y:(lane+.5)*LANE_H,lane,kind:'pressure',time:1,team});
-   }
-  }
  }
  function deployMarineSupports(){
   if(!state.marineSupports.length)return;
@@ -536,7 +518,6 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   }
   if(v.hp<=0)return;
   let hit=global.DesertConsolidation?.hit(damage*mult,defender.armor,v,a)??Math.max(3,damage*mult-defender.armor*.66);
-   hit*=warPressure(state.seconds);
   if(v.faction===4&&attacker.range>=48)hit*=1-BEAST_RANGED_DAMAGE_REDUCTION;
   if(v.faction===0&&[3,4].includes(v.role))hit*=.94;
   if(v.faction===2&&state.seconds-(v.lastWardAt??-999)>=10){v.lastWardAt=state.seconds;hit*=.82;}
@@ -603,7 +584,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     if(healed>0){a.hp=0;state.effects.push({x:a.x,y:a.y,lane:a.lane,kind:'huanglong',time:.9,team:a.team});}
    }else{
     if(v.healWindowStart===undefined||state.seconds-v.healWindowStart>=1){v.healWindowStart=state.seconds;v.healWindowUsed=0;}
-    const amount=Math.max(0,Math.min(d.heal||36,Math.max(80*(v.heroCount||1),v.maxHP*.085)-v.healWindowUsed))*(state.seconds>=10*60?.75:1);
+    const amount=Math.max(0,Math.min(d.heal||36,Math.max(80*(v.heroCount||1),v.maxHP*.085)-v.healWindowUsed));
     v.healWindowUsed+=amount;
     const received=global.DesertGuardian?.healAmount(v,amount,state.seconds)??amount,recovered=Math.min(received,v.maxHP-v.hp);
     v.hp=Math.min(v.maxHP,v.hp+received);
@@ -652,11 +633,11 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    if(u.hp<=0)continue;
    u.prismTime=state.seconds;
    const d=combatDef(u,state.players),support=u.role===7,r=support?SUPPORT_RADIUS:AGGRO_RADIUS;
-   if(!u.isHatchling&&d.regen>0)u.hp=Math.min(u.maxHP,u.hp+u.maxHP*d.regen*dt*(state.seconds>=10*60?.65:1));
+   if(!u.isHatchling&&d.regen>0)u.hp=Math.min(u.maxHP,u.hp+u.maxHP*d.regen*dt);
    const moveSpeed=d.speed*((u.inkUntil||0)>state.seconds?.80:1);
    if(!u.isHatchling){
-    if(u.faction===8)u.hp=Math.min(u.maxHP,u.hp+u.maxHP*OCTOPER_REGEN*dt*(state.seconds>=10*60?.65:1));
-    if(u.faction===7)u.hp=Math.min(u.maxHP,u.hp+u.maxHP*ROBOT_REPAIR*dt*(state.seconds>=10*60?.65:1));
+    if(u.faction===8)u.hp=Math.min(u.maxHP,u.hp+u.maxHP*OCTOPER_REGEN*dt);
+    if(u.faction===7)u.hp=Math.min(u.maxHP,u.hp+u.maxHP*ROBOT_REPAIR*dt);
    }
    u.cool=Math.max(0,u.cool-dt);u.frame=(u.frame+dt*11)%16;u.attackAge=Math.max(0,u.attackAge-dt);
    u.spawnAge=Math.min(5,(u.spawnAge||0)+dt);u.hitAge=Math.max(0,(u.hitAge||0)-dt);u.skillAge=Math.max(0,(u.skillAge||0)-dt);
@@ -823,7 +804,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   const isAllowed=p=>!viewer||p.team===viewer.team||visible.every(Boolean);
   const offer=state.augmentChoice?.offers?.[viewerUid];
   return {ruleset:state.ruleset,augmentChoice:offer?{round:state.augmentChoice.round,tier:state.augmentChoice.tier,remaining:state.augmentChoice.remaining,cards:offer.cards.slice(),rerolls:offer.rerolls.slice(),selected:offer.selected}:null,
-   mode:state.mode,size:state.size,aiDifficulty:state.aiDifficulty,width:WIDTH,height:HEIGHT,lanes:LANES,coreMaxHP:CORE_HP,overtimeAt:OVERTIME_START,pressure:warPressure(state.seconds),preparationEndsAt:OPENING_PREP_SECONDS,seconds:Math.round(state.seconds*10)/10,wave:state.wave,next:Math.ceil(state.next*10)/10,
+   mode:state.mode,size:state.size,aiDifficulty:state.aiDifficulty,width:WIDTH,height:HEIGHT,lanes:LANES,coreMaxHP:CORE_HP,preparationEndsAt:OPENING_PREP_SECONDS,seconds:Math.round(state.seconds*10)/10,wave:state.wave,next:Math.ceil(state.next*10)/10,
    ended:state.ended,winner:state.winner,cores:state.cores,turrets:state.turrets,forwardHP:state.forwardHP,lanePressure:state.lanePressure.map(x=>Math.round(x*100)/100),
    fog:visible.map(s=>!s),viewerTeam:viewer?.team??null,
    factionTraits:state.players.filter(p=>!viewer||p.team===viewer.team).map(p=>({uid:p.uid,faction:p.faction,births:state.broodBirthsByUid.get(p.uid)||0,totalBirths:state.broodTotalByUid.get(p.uid)||0})),
