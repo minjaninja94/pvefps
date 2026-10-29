@@ -22,11 +22,11 @@ S.reset();let st=S.state();Object.assign(st,{live:true,aiNextThink:Infinity});S.
 assert.equal(st.next,10);advance(S,9.9);assert.equal(st.wave,0);assert.equal(st.produced[0][0],0);
 advance(S,.2);assert.equal(st.wave,1);assert.equal(st.produced[0][0],1);
 advance(S,12);assert.equal(st.wave,2);assert.equal(st.produced[0][0],2,'same building repeats every 12s');
-// Baseline +1 CR passive income and per-wave grants remain unchanged; mining steps gain +0.8 CR.
+// Baseline +1 CR passive income and per-wave grants remain unchanged; mining steps have diminishing marginal returns.
 assert.ok(Math.abs(st.cash-(295+44+48))<1e-6,'22s passive 44 CR + two 24-CR wave grants');
 S.reset();st=S.state();Object.assign(st,{live:true,aiNextThink:Infinity});S.selectRole(8);S.place(0);st.paused=true;
 assert.equal(st.ecoReadyAt,15);advance(S,5);assert.equal(st.elapsed,0,'pause does not burn the construction/blackout clock');
-st.paused=false;advance(S,14.9);assert.equal(st.cash,290);advance(S,.2);assert.ok(Math.abs(st.cash-291.8)<1e-6,'level-one +1.8 CR resumes without catch-up after blackout');
+st.paused=false;advance(S,14.9);assert.equal(st.cash,290);advance(S,.2);assert.ok(Math.abs(st.cash-292.2)<1e-6,'level-one +2.2 CR resumes without catch-up after blackout');
 for(const mode of ['classic','pvp','coop'])for(const difficulty of ['normal','hard']){
  const members=mode==='coop'?[{uid:'a',team:0,faction:0},{uid:'ally',team:0,faction:2}]:[{uid:'a',team:0,faction:0},{uid:'b',team:1,faction:1}];
  const game=E.create({mode,size:mode==='coop'?2:1,aiDifficulty:difficulty,members}),p=game.state.players[0];
