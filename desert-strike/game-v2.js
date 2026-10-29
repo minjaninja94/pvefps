@@ -307,21 +307,25 @@ function emergencyEligible(defendingSide,targets){
  return targets.length>0&&(state.baseHP[defendingSide]<=MAX_BASE*.7||
   targets.some(u=>defendingSide===0?u.x<370:u.x>WORLD_W-370));
 }
-function detonateEmergency(defendingSide){
+function detonateEmergency(defendingSide,tacticalTargets=null){
  const stock=defendingSide===0?'nukes':'enemyNukes';
  if(!state[stock])return false;
- const invaders=emergencyTargets(defendingSide);
- if(!emergencyEligible(defendingSide,invaders))return false;
+ const invaders=tacticalTargets||emergencyTargets(defendingSide);
+ if(!invaders.length||(!tacticalTargets&&!emergencyEligible(defendingSide,invaders)))return false;
  state[stock]--;
- for(const u of invaders){killUnit(u);pulse(u.x,u.y,'#f2d489',40);}
+ const soldiers=invaders.reduce((sum,u)=>sum+(window.DesertConsolidation?.strength?.(u)||1),0);
+ const middle={x:invaders.reduce((s,u)=>s+u.x,0)/invaders.length,
+               y:invaders.reduce((s,u)=>s+u.y,0)/invaders.length};
+ for(const u of invaders){killUnit(u);pulse(u.x,u.y,'#f2d489',45);}
+ pulse(middle.x,middle.y,'#fff1ae',130);
  state.units=state.units.filter(u=>u.hp>0);
  state.shots=state.shots.filter(p=>p.side===defendingSide);
  if(defendingSide===0){
-  setMessage('긴급 핵폭탄 발동! 아군 영토로 침입한 적 '+invaders.length+'기를 제거했습니다.');
+  setMessage('긴급 핵폭탄 발동! 적 '+soldiers+'명 상당을 제거했습니다.');
   banner('☢ EMERGENCY STRIKE');
  }else{
-  setMessage('하드 AI 긴급 핵폭탄 발동! 적 진영에 침투한 아군 '+invaders.length+'기가 제거되었습니다.');
-  banner('☢ ENEMY EMERGENCY STRIKE');
+  setMessage('하드 AI 핵폭탄 발동! 아군 '+soldiers+'명 상당 소멸 · 핵 1회 사용 완료');
+  banner('☢ ENEMY NUCLEAR STRIKE');
  }
  window.DesertCombatAudio?.cue('explosion');chirp(130,.3);updateUI(true);
  return true;
@@ -331,8 +335,24 @@ function emergency(){
  if(!detonateEmergency(0))setMessage('핵폭탄은 기지가 위기일 때 침공한 적에게 사용할 수 있습니다.');
 }
 function hardEmergency(){
- if(!state.live||state.ended||state.paused||state.aiDifficulty!=='hard')return false;
- return detonateEmergency(1);
+ if(!state.live||state.ended||state.paused||state.aiDifficulty!=='hard'||!state.enemyNukes)return false;
+ // A core-only emergency trigger almost never fires against ranged/hero pushes.
+ // Hard AI can also spend its one real nuke on a massed army that has entered
+ // its half of the field. A hero counts as its living component soldiers.
+ if(detonateEmergency(1))return true;
+ if(state.wave<5)return false;
+ const seen=state.units.filter(u=>u.side===0&&u.hp>0&&u.x>=WORLD_W*.62);
+ if(!seen.length)return false;
+ const power=u=>window.DesertConsolidation?.strength?.(u)||1;
+ let victims=null,best=0;
+ for(const center of seen){
+  const affected=seen.filter(u=>Math.hypot(u.x-center.x,u.y-center.y)<=240);
+  const pressure=affected.reduce((sum,u)=>sum+power(u),0);
+  if(pressure>best){best=pressure;victims=affected;}
+ }
+ // Minimum one consolidated hero / approximately twenty separate soldiers.
+ if(best<20)return false;
+ return detonateEmergency(1,victims);
 }
 // Hard-only paid barrage: the same 260 CR, cooldown, radius and damage as
 // the player's orbital strike. Visible enemy clumps and 20-man heroes count
