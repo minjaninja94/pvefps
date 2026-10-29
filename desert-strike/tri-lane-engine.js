@@ -7,6 +7,7 @@
 const LANES=3,WIDTH=3300,HEIGHT=1560,LANE_H=520,COLS=15,ROWS=5,SLOTS=COLS*ROWS;
 const OPENING_PREP_SECONDS=10,WAVE_INTERVAL=12,FACTORY_BUILD_SECONDS=12,CORE_DAMAGE_MULTIPLIER=.85;
 const PRISM_STAGES=[1,18,36,54,72];
+const AI_LEVELS=['easy','normal','hard','veryhard','impossible'];
 const incomePerTick=level=>(1+level)*(level>=5?.85:1);
 
 const TOWER_HP=1250,TOWER_RANGE=285,TOWER_PERIOD=.34,TOWER_DAMAGE=27,FOG_END_WAVE=6,FOG_WIDTH=770;
@@ -75,7 +76,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  if(mode==='coop'&&(humans.length!==size||humans.some(p=>p.team!==0)))throw Error('협동 인원과 팀이 일치하지 않습니다');
  if(mode!=='coop'&&(humans.filter(p=>p.team===0).length!==size||humans.filter(p=>p.team===1).length!==size))throw Error('경쟁 양 팀 인원이 일치하지 않습니다');
  const players=humans.concat(mode==='coop'?Array.from({length:size},(_,i)=>({uid:'AI_'+i,name:'적 AI '+(i+1),team:1,faction:(i+3)%10,bot:true})):[]);
- const state={mode,size,ruleset:augmented?'augment':'standard',augmentStage:-1,augmentChoice:null,augmentSchedule:aug?.schedule||[],aiDifficulty:aiDifficulty==='hard'?'hard':'normal',seconds:0,wave:0,next:OPENING_PREP_SECONDS,ended:false,winner:null,
+ const state={mode,size,ruleset:augmented?'augment':'standard',augmentStage:-1,augmentChoice:null,augmentSchedule:aug?.schedule||[],aiDifficulty:AI_LEVELS.includes(aiDifficulty)?aiDifficulty:'normal',seconds:0,wave:0,next:OPENING_PREP_SECONDS,ended:false,winner:null,
   width:WIDTH,height:HEIGHT,lanes:LANES,
   cores:Array.from({length:LANES},()=>[CORE_HP,CORE_HP]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),forwardHP:Array.from({length:LANES},()=>[1000,1000]),forwardClaimed:Array.from({length:LANES},()=>[false,false]),forwardCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,nextConsolidation:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,augments:[],produced:Array(8).fill(0),combatStats:{damage:Array(8).fill(0),kills:Array(8).fill(0),
   losses:Array(8).fill(0),heroDamage:Array(8).fill(0),heroes:Array(8).fill(0)},cash:360,eco:0,ecoReadyAt:0,weapon:0,armor:0,nukes:1,barrageCd:0,mineCosts:{},mineTimings:{},buildings:Array.from({length:LANES},()=>Array(SLOTS).fill(null)),buildingReadyAt:Array.from({length:LANES},()=>Array(SLOTS).fill(0))})),lanePressure:Array(LANES).fill(.5)};
@@ -343,10 +344,10 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   const urgent=known.filter(u=>bot.team===1?u.x>WIDTH-580:u.x<580),invaded=urgent.length>0;
   // A vision-limited barrage is worth paying for when it hits a full
   // consolidated hero or a meaningful group, rather than blind-spamming it.
-  if(state.wave>=3&&bot.barrageCd<=0&&bot.cash>=420){
+  if(state.wave>=3&&bot.barrageCd<=0&&bot.cash>=(state.aiDifficulty==='impossible'?350:420)){
    const largest=known.reduce((best,u)=>Math.max(best,known.reduce((sum,v)=>
     sum+(Math.hypot(u.x-v.x,u.y-v.y)<110?COST[v.role]*power(v):0),0)),0);
-   if(largest>=650){
+   if(largest>=(state.aiDifficulty==='impossible'?480:650)){
     const before=bot.cash,shot=tactic(bot,'barrage');
     if(shot.ok)ai.bought(brain,{kind:'barrage'},before-bot.cash);
    }
@@ -354,7 +355,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   // Buy real upgrades only out of surplus. They must not stall the first wave
   // of counter factories or the next scheduled extractor.
   const factories=bot.buildings.flat().filter(role=>role!==null&&role!==EXTRACTOR).length;
-  if(state.wave>=5&&factories>=7&&!invaded&&roles.reduce((n,v)=>n+v,0)<10){
+  if(state.wave>=(state.aiDifficulty==='impossible'?4:5)&&factories>=7&&!invaded&&roles.reduce((n,v)=>n+v,0)<10){
    const target=Math.min(5,1+Math.floor((state.wave-5)/5));
    if(bot.weapon<target||bot.armor<target){
     const kind=bot.weapon<=bot.armor?'weapon':'armor';
@@ -365,7 +366,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     }
    }
   }
-  for(let purchase=0;purchase<12;purchase++){
+  for(let purchase=0;purchase<(state.aiDifficulty==='impossible'?16:12);purchase++){
    const counts=Array(8).fill(0);for(const row of bot.buildings)for(const r of row)if(r!==null&&r!==EXTRACTOR)counts[r]++;
    let action=ai.choose(brain,{cash:bot.cash,counts,eco:bot.eco,readyAt:bot.ecoReadyAt,seconds:state.seconds,costs:COST.slice(0,8),ecoCost:ecoPrice(bot.eco),intel:{air,armor,invaded,roles}});
    const sizes=bot.buildings.map(row=>row.filter(r=>r!==null&&r!==EXTRACTOR).length),focus=brain.plan%LANES;
@@ -405,22 +406,24 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   }
  }
  function botPurchase(bot){
-  if(state.aiDifficulty==='hard'){hardBotPurchase(bot);return;}
+  if(state.aiDifficulty==='veryhard'||state.aiDifficulty==='impossible'){hardBotPurchase(bot);return;}
+   if(state.aiDifficulty==='easy'&&state.wave%2===1&&state.wave>1)return;
 
   // A paid early army deters players from investing everything in economy.
   for(let lane=0;lane<LANES;lane++){
    const existing=bot.buildings[lane].filter(x=>x!==null).length;
-   const desired=Math.min(12,1+Math.floor((state.wave+1)/3)+Math.floor(Math.max(0,state.wave-7)/3));
+   const cap=state.aiDifficulty==='easy'?7:state.aiDifficulty==='hard'?16:12;
+    const desired=Math.min(cap,1+Math.floor((state.wave+1)/(state.aiDifficulty==='easy'?5:3))+Math.floor(Math.max(0,state.wave-7)/(state.aiDifficulty==='hard'?2:3)));
    let count=Math.max(0,desired-existing);
    while(count-->0){
-    let role=selectCounter(lane,bot);
+    let role=state.aiDifficulty==='easy'?[0,1,0,3][(state.wave+lane)%4]:selectCounter(lane,bot);
     if(bot.cash<COST[role])role=bot.cash>=COST[1]?1:0;
     if(bot.cash<COST[role])break;
     const slot=bot.buildings[lane].findIndex(x=>x===null);if(slot<0)break;
     bot.buildings[lane][slot]=role;bot.buildingReadyAt[lane][slot]=productionReadyAt();bot.cash-=COST[role];
    }
   }
-  if(state.wave>5&&bot.eco<5&&state.seconds>=bot.ecoReadyAt){
+  if(state.wave>(state.aiDifficulty==='easy'?12:5)&&bot.eco<(state.aiDifficulty==='easy'?3:5)&&state.seconds>=bot.ecoReadyAt){
    const c=ecoPrice(bot.eco),lane=bot.buildings.findIndex(slots=>slots.some(x=>x===null));
    if(lane>=0&&bot.cash>=c+180){const slot=bot.buildings[lane].findIndex(x=>x===null);bot.buildings[lane][slot]=EXTRACTOR;bot.mineCosts[lane+'-'+slot]=c;bot.cash-=c;startExtractor(bot,lane,slot);}
   }
@@ -781,7 +784,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   // Correct fixed income for every *owner*, not pooled by team.
   const before=Math.floor((state.seconds-dt)*2),now=Math.floor(state.seconds*2);
   if(now>before)for(let slice=before+1;slice<=now;slice++)for(const p of state.players)if(slice*.5+1e-6>=p.ecoReadyAt)p.cash+=incomePerTick(p.eco);
-  if(state.aiDifficulty==='hard')for(const bot of state.players.filter(p=>p.bot))if(state.seconds>=(bot.hardBrain?.nextThink||0)){hardBotPurchase(bot);if(bot.hardBrain)bot.hardBrain.nextThink=state.seconds+1;}
+  if(state.aiDifficulty==='veryhard'||state.aiDifficulty==='impossible')for(const bot of state.players.filter(p=>p.bot))if(state.seconds>=(bot.hardBrain?.nextThink||0)){hardBotPurchase(bot);if(bot.hardBrain)bot.hardBrain.nextThink=state.seconds+(state.aiDifficulty==='impossible'?.45:1);}
   while(state.next<=0){state.next+=WAVE_INTERVAL;wave();}
   deployMarineSupports();
   stepUnits(dt);
