@@ -475,7 +475,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     break;
    }
   }
-  // Once frontlines have lasted 14 minutes, massed attackers convert their
+  // Once frontlines have lasted 16 minutes, massed attackers convert their
   // presence in the contested area into a periodic anti-stalemate siege strike.
   if(state.seconds>=OVERTIME_START)for(let lane=0;lane<LANES;lane++){
    for(let team=0;team<2;team++){
