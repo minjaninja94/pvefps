@@ -42,7 +42,7 @@ function item(id){
 const viewport={scrollTop:150};
 const doc={readyState:'complete',hidden:false,body:{dataset:{playMode:'multi'}},
  getElementById:item,addEventListener:no,createElement(tag){
-  const el={tagName:tag,dataset:{},children:[],attrs:{},style:{},classList:{add(){}},className:'',textContent:'',title:'',disabled:false,
+  const el={tagName:tag,dataset:{},children:[],get childElementCount(){return this.children.length;},attrs:{},style:{},classList:{add(){}},className:'',textContent:'',title:'',disabled:false,
     width:0,height:0,append(...xs){this.children.push(...xs);},setAttribute(k,v){this.attrs[k]=v;},
     getContext(){return g;}};
   return el;
