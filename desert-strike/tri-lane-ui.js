@@ -84,9 +84,9 @@ function unitIcon(canvas,f,r,size=72){
  global.DesertUnitMotion?.draw(g,{faction:f,role:r,action:'idle',frame:0,size,skin:skin()});
 }
 function ecoTooltip(level,seconds){
- const income=eco=>Number((E.incomePerTick?.(eco)??Number((1+eco*.8).toFixed(1))).toFixed(2));
+ const income=eco=>Number((E.incomePerTick?.(eco)??1).toFixed(2));
  if(level>=7)return '최대 7개 · 수입 +'+income(level)+' CR / 0.5초';
- return '완료 후 수입 +'+income(level+1)+' CR / 0.5초 (증가 +0.8) · 건설 '+E.ecoBuildSeconds(level+1)+'초 + 안정화 '+E.ecoStabilize(level+1,seconds)+'초. 건설·안정화 동안 기본·채굴 인컴과 웨이브 지원금 중단. 철거해도 남은 중단 시간은 유지됩니다.';
+ return '완료 후 수입 +'+income(level+1)+' CR / 0.5초 (추가 +'+Number((income(level+1)-income(level)).toFixed(2))+' CR) · 건설 '+E.ecoBuildSeconds(level+1)+'초 + 안정화 '+E.ecoStabilize(level+1,seconds)+'초. 건설·안정화 동안 기본·채굴 인컴과 웨이브 지원금 중단. 철거해도 남은 중단 시간은 유지됩니다.';
 }
 function renderCounterGuide(fac){
  const root=$('mpCounterMatrix');if(!root||counterKey===fac)return;
@@ -403,7 +403,7 @@ function onSnapshot(v){
  if(me){
   $('mpMyResources').textContent=me.cash+' CR';
   const remaining=Math.max(0,(me.ecoReadyAt||0)-v.seconds);
-  $('mpMyIncome').textContent=remaining>0?'인컴 중단 '+Math.ceil(remaining)+'초':'+'+Number((E.incomePerTick?.(me.eco)??Number((1+me.eco*.8).toFixed(1))).toFixed(2))+' / 0.5초';
+  $('mpMyIncome').textContent=remaining>0?'인컴 중단 '+Math.ceil(remaining)+'초':'+'+Number((E.incomePerTick?.(me.eco)??1).toFixed(2))+' / 0.5초';
   $('mpBuiltCount').textContent=me.buildings.reduce((n,bs)=>n+bs.filter(x=>x!==null).length,0)+'개 건설';
   const cost=E.ecoPrice(me.eco);
   $('mpEco').textContent=me.eco>=7?'채취 건물 7 / 7':'자원채취 건물 · '+cost+' CR';
