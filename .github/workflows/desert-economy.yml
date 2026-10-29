@@ -37,6 +37,10 @@ jobs:
         run: node desert-strike/smoke-half-time-pacing.test.cjs
       - name: Economy and occupied production slots
         run: node desert-strike/smoke-economy.test.cjs
+      - name: Player-facing production controls and lobby rules
+        run: |
+          node desert-strike/smoke-mp-production-ui.test.cjs
+          node --test desert-strike/smoke-lobby-ruleset.test.cjs desert-strike/smoke-solo-augments.test.cjs desert-strike/smoke-endless-waves.test.cjs
       - name: Cooperative combat
         run: node desert-strike/smoke-trilane.test.cjs
       - name: Authoritative networking

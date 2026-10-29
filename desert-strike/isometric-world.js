@@ -110,7 +110,7 @@ function paintTerrain(g,w,h,base,faction){
     g.fillStyle='#b4a87c56';g.fillRect(xx+4,yy+4,21,2);
    }
   }
-  g.fillStyle='#e8d3a895';g.font='bold 13px monospace';g.fillText('PRODUCTION / ISOMETRIC FACTORY DECK',344,29);
+  g.fillStyle='#e8d3a895';g.font='bold 13px monospace';
  }else{
   // Full-width center trench is crossed by bolted isometric bridges.
   const mid=w/2;

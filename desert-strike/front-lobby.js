@@ -1,13 +1,11 @@
-/* Passwordless commander lobby. Cosmetics/progress are separate; real competitive rating
-   requires a trusted backend. Never place passwords or Firebase Admin keys in browser code. */
 (function(global){'use strict';
 const $=id=>document.getElementById(id),FACTIONS=global.DesertRoster?.FACTIONS||[];
 const SKINS=[
- {id:'default',name:'기본 제복',level:1,desc:'종족별 원본 스프라이트',filter:'none',tone:'#a9d9ce'},
- {id:'moe',name:'모에화 빔',level:1,desc:'전 병종 SD 캐릭터',filter:'none',tone:'#f4afd5'},
+ {id:'default',name:'기본 제복',level:1,desc:'기본 외형',filter:'none',tone:'#a9d9ce'},
+ {id:'moe',name:'모에화 빔',level:1,desc:'SD 외형',filter:'none',tone:'#f4afd5'},
  {id:'twilight',name:'황혼 작전',level:3,desc:'자줏빛 야전 도색',filter:'hue-rotate(55deg) saturate(1.3)',tone:'#ba91f2'},
  {id:'aurora',name:'오로라 특무',level:6,desc:'청록 발광형 전투복',filter:'hue-rotate(145deg) saturate(1.15)',tone:'#8bdff6'},
- {id:'gold',name:'황금 근위',level:10,desc:'시즌 훈련 보상',filter:'sepia(.62) saturate(1.35) contrast(1.05)',tone:'#e9c47f'}
+ {id:'gold',name:'황금 근위',level:10,desc:'레벨 10 해금',filter:'sepia(.62) saturate(1.35) contrast(1.05)',tone:'#e9c47f'}
 ];
 const KEY='desert-front-training-v2',empty=()=>({xp:0,wins:0,losses:0,mpWins:0,mpLosses:0,selectedFaction:0,selectedSkin:'default',aiDifficulty:'normal',nickname:'지휘관'});
 let progress=empty(),uid=null,active=false,lastMultiplayer='',authBusy=false;
@@ -41,14 +39,14 @@ function renderRuleset(){
  }
  const description=$('lobbyRulesetDescription');
  if(description)description.textContent=selected
-  ?'증강전 선택 중 · 웨이브 무제한 · WAVE 1·10·20·30·40에서 카드 선택, 이후에도 전투 계속'
-   :'일반전 선택 중 · 웨이브 무제한 · 상대 핵심 기지를 파괴하면 승리합니다.';
+  ?'1·10·20·30·40웨이브에 증강을 선택합니다.'
+   :'핵심 기지 파괴로 승리 · 웨이브 무제한';
  const solo=$('lobbySolo')?.querySelector('span');
- if(solo)solo.textContent=selected?'✦ 싱글 증강전 · 웨이브 무제한 · 400종 카드':(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 무제한 웨이브 · 기지 파괴 시 종료';
+ if(solo)solo.textContent=selected?'증강전 · 웨이브 무제한':(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 웨이브 무제한';
  const multiplayer=$('lobbyMulti')?.querySelector('span');
- if(multiplayer)multiplayer.textContent=selected?'✦ 증강전 · 웨이브 무제한 · PvP/협동':'웨이브 무제한 · 기지 파괴 시 승패 확정';
+ if(multiplayer)multiplayer.textContent=selected?'증강전 · 1:1 / 3라인 / 협동':'1:1 / 3라인 / 협동';
  const practice=$('lobbyPractice')?.querySelector('span');
- if(practice)practice.textContent=selected?'✦ 증강전 · 웨이브 무제한 · AI 연습':'무제한 웨이브 · 오프라인 AI 연습';
+ if(practice)practice.textContent=selected?'증강전 · AI 연습':'AI 연습';
 }
 function chooseRuleset(value){
  if(value!=='augment'&&value!=='standard')return false;
@@ -74,7 +72,8 @@ function updateUnitInfo(){
  const i=progress.selectedFaction,r=selectedUnit,fac=FACTIONS[i],unit=global.DesertRoster?.getDef?.(r,i);
  if(!fac||!unit)return;
  $('lobbyUnitTitle').textContent=fac.units[r]+' · '+unit.name;
- $('lobbyUnitStats').textContent='HP '+Math.round(unit.hp)+' · 공격 '+Math.round(unit.damage)+' · 치료 '+Math.round(unit.heal||0)+' · 사거리 '+Math.round(unit.range)+' · 속도 '+Math.round(unit.speed)+' · '+(unit.kind==='air'?'비행':unit.name.includes('기병')?'지상 기병':unit.name.includes('차량')?'지상 차량':unit.name.includes('메카')?'지상 메카':'지상')+(unit.airTarget?' · 대공 가능':'')+' · '+(unit.tips||'');
+ $('lobbyUnitStats').title=unit.tips||'';
+ $('lobbyUnitStats').textContent=unit.cost+' CR · HP '+Math.round(unit.hp)+' · 공격 '+Math.round(unit.damage)+' · 치료 '+Math.round(unit.heal||0)+' · 사거리 '+Math.round(unit.range)+' · 속도 '+Math.round(unit.speed)+' · '+(unit.kind==='air'?'비행':unit.name.includes('기병')?'지상 기병':unit.name.includes('차량')?'지상 차량':unit.name.includes('메카')?'지상 메카':'지상')+(unit.airTarget?' · 대공 가능':'');
  $('lobbyUnitAnimBadge').textContent=global.DesertUnitMotion?.ACTIONS.find(a=>a.id===selectedAction)?.label||'대기';
  $('lobbyUnitActions').querySelectorAll('[data-action]').forEach(btn=>btn.classList.toggle('active',btn.dataset.action===selectedAction));
 }
@@ -120,7 +119,7 @@ function render(){
  if(!FACTIONS.length)return;
  const fac=FACTIONS[progress.selectedFaction]||FACTIONS[0],l=levelFromXP(progress.xp),s=currentSkin();
  $('lobbyDifficulty')?.querySelectorAll('[data-difficulty]').forEach(b=>{const chosen=b.dataset.difficulty===progress.aiDifficulty;b.classList.toggle('selected',chosen);b.setAttribute('aria-pressed',String(chosen));});
- $('lobbySolo').querySelector('span').textContent=(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 무제한 웨이브 · 기지 파괴 시 종료';
+ $('lobbySolo').querySelector('span').textContent=(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 웨이브 무제한';
  renderRuleset();
  const account=global.DesertDeviceAccount?.status?.();
  $('lobbyAccountStatus').textContent=global.DesertMember?.account?.()?('회원 · '+global.DesertMember.account().nickname):'게스트 · 이 기기';
@@ -163,8 +162,8 @@ async function syncProfile(){
  if(!uid||!global.IronFirebase)return;
  try{const {db,fs}=await global.IronFirebase.ready();await fs.setDoc(fs.doc(db,'desertProfiles',uid),
  {name:progress.nickname,faction:progress.selectedFaction,skin:currentSkin().id},{merge:true});
- info('계정 프로필 동기화 완료 · XP와 훈련 랭크는 이 브라우저에만 저장됩니다.');
- }catch(e){info('계정은 연결됐지만 프로필 DB 동기화는 설정 확인이 필요합니다: '+(global.IronFirebase.message?.(e)||e.message));}
+ info('프로필 저장 완료');
+ }catch(e){info('프로필 저장 실패: '+(global.IronFirebase.message?.(e)||e.message));}
 }
 async function restoreAccount(){
  if(!global.DesertDeviceAccount)return;
@@ -206,7 +205,7 @@ function single(){
   if(soloAugLoadPending)return;
   if(!global.DesertAugments?.load){$('lobbyRulesetDescription').textContent='증강전을 시작할 수 없습니다. 카드를 불러오는 스크립트를 확인하세요.';return;}
   soloAugLoadPending=true;$('lobbySolo').disabled=true;
-  $('lobbyRulesetDescription').textContent='300종 증강 카드 다운로드 중…';
+  $('lobbyRulesetDescription').textContent='증강 카드를 불러오는 중…';
   void global.DesertAugments.load().then(()=>{
    soloAugLoadPending=false;$('lobbySolo').disabled=false;
    single();
