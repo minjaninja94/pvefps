@@ -5,8 +5,9 @@ const CW=1100,CH=520,WORLD_W=3300,HOME_H=340,MAX_BASE=8640,MAX_TURRET=1700,INTER
 const COLORS=['#79dfee','#ff9a79'],LANES=[110,180,260,340,410];
 const EXTRACTOR=8;
 const initialIncome=1,WAVE_STIPEND=24,MAX_ECONOMY=7;
-const OPENING_PREP_SECONDS=10,FACTORY_BUILD_SECONDS=12,INCOME_GAIN_PER_EXTRACTOR=.8,CORE_DAMAGE_MULTIPLIER=.85;
-function incomePerTick(eco){return Number((initialIncome+Math.min(MAX_ECONOMY,Math.max(0,eco))*INCOME_GAIN_PER_EXTRACTOR).toFixed(1));}
+const OPENING_PREP_SECONDS=10,FACTORY_BUILD_SECONDS=12,CORE_DAMAGE_MULTIPLIER=.85;
+const INCOME_STEPS=[1.2,1,.85,.75,.65,.55,.45];
+function incomePerTick(eco){return Number((initialIncome+INCOME_STEPS.slice(0,Math.min(MAX_ECONOMY,Math.max(0,Math.floor(eco)))).reduce((sum,x)=>sum+x,0)).toFixed(2));}
 function showIncome(eco){return Number(incomePerTick(eco).toFixed(2)).toString();}
 function factoryReadyAt(side,slot){return (side===0?state.buildReadyAt:state.enemyBuildReadyAt)?.[slot]??0;}
 function factoryReady(side,slot){return state.elapsed+1e-6>=factoryReadyAt(side,slot);}
@@ -165,7 +166,7 @@ function ecoBuildSeconds(level){return 12+4*Math.max(0,level-1);}
 function ecoStabilize(level,elapsed){return (4+2*level+Math.min(6,Math.floor(Math.max(0,elapsed)/120)))/2;}
 function ecoTooltip(level,elapsed){
  if(level>=MAX_ECONOMY)return '최대 7개 · 수입 +'+showIncome(level)+' CR / 0.5초';
- return '완료 후 수입 +'+showIncome(level+1)+' CR / 0.5초 (증가 +0.8) · 건설 '+ecoBuildSeconds(level+1)+'초 + 안정화 '+ecoStabilize(level+1,elapsed)+'초. 건설·안정화 동안 기본·채굴 인컴과 웨이브 지원금 중단. 철거해도 남은 중단 시간은 유지됩니다.';
+ return '완료 후 수입 +'+showIncome(level+1)+' CR / 0.5초 (추가 +'+Number((incomePerTick(level+1)-incomePerTick(level)).toFixed(2))+' CR) · 건설 '+ecoBuildSeconds(level+1)+'초 + 안정화 '+ecoStabilize(level+1,elapsed)+'초. 건설·안정화 동안 기본·채굴 인컴과 웨이브 지원금 중단. 철거해도 남은 중단 시간은 유지됩니다.';
 }
 function ecoRemaining(side=0){return Math.max(0,(side===0?state.ecoReadyAt:state.enemyEcoReadyAt)-state.elapsed);}
 function constructExtractor(side,index){
