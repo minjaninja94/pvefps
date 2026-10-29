@@ -45,7 +45,7 @@ function definition(faction,role){
   kind:groundSpecial?'ground':t[7],
   heal:(role===7?36:0)*mut[1]*1.5*(robot?.85:fairy?FAIRY_HEAL_MULTIPLIER:1),
   blast:role===5?(octo?58*1.15:58):0,
-  good:bongo||prowler?[0,7]:groundSpecial&&furry?[0,7]:groundSpecial&&robot?[0,3]:GOODS[role],bad:bongo||prowler?[2,3]:groundSpecial&&furry?[2,3]:groundSpecial&&robot?[2,5]:BADS[role]
+  good:bongo?[0,7]:prowler?[0,5,7]:groundSpecial&&furry?[0,7]:groundSpecial&&robot?[0,3]:GOODS[role],bad:bongo||prowler?[2,3]:groundSpecial&&furry?[2,3]:groundSpecial&&robot?[2,5]:BADS[role]
  };
 }
 function combatDef(u,players=null){
