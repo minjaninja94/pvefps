@@ -356,6 +356,7 @@ function aiReadOpponent(){
  // Scout visible troops only; never inspect hidden production slots. Preserve the
  // scouted threat briefly after a wave is wiped out so counter-building can continue.
  const sightings=state.aiSight||(state.aiSight=new Set());
+ if(sightings.size===0)state.aiIntelMemory=null;
  const now=state.elapsed,live=Array(8).fill(0),airCount=Array(8).fill(0),armorCount=Array(8).fill(0);
  const scouts=state.units.filter(u=>u.side===1&&u.hp>0);
  for(const foe of state.units){
