@@ -763,3 +763,30 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
 .opening-countdown b{font-size:clamp(16px,2.5vw,28px)}
 .opening-countdown small{font-size:clamp(10px,1.4vw,14px);line-height:1.5;color:#d5e5e5;max-width:92%}
 @media(max-width:620px){.opening-countdown{gap:5px;padding:9px}.opening-countdown strong{font-size:48px}.opening-countdown>div{gap:8px}}
+
+
+/* Multiplayer uses the same 1100×520 isometric viewport and sprite scale as solo. */
+.mp-battle-navigation{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:10px 0}
+.mp-battle-lane-select,.mp-battle-camera{display:flex;align-items:center;gap:6px}
+.mp-battle-lane-select button{min-width:58px;padding:9px 12px;background:#192c35;color:#c9e2e5;border:1px solid #466373}
+.mp-battle-lane-select button.active{border-color:#f1c889;background:#493e31;color:#ffe2a2}
+.mp-battle-camera{color:#e5d2ab;font-size:12px;font-weight:800}
+.mp-battle-camera .btn{padding:7px 12px}
+#mpBattleCanvas{width:100%;height:auto;aspect-ratio:1100/520;display:block;touch-action:pan-y;cursor:grab}
+#mpBattleCanvas:active{cursor:grabbing}
+.mp-augment-roster{margin:9px 0 16px;padding:13px;border:1px solid #526f80;background:#10212d;border-radius:10px}
+.mp-augment-roster[hidden]{display:none}
+.mp-augment-roster h3{font-size:15px;color:#f2d5a2;margin:0 0 5px}
+.mp-augment-roster>p{font-size:11px;color:#aabec9;margin:0 0 10px}
+.mp-augment-teams{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.mp-augment-side{background:#152934;border:1px solid #3d5768;border-radius:8px;padding:9px}
+.mp-augment-side h4{font-size:12px;color:#f3d8aa;margin:0 0 6px}
+.mp-augment-player{margin:5px 0;padding-top:5px;border-top:1px solid #ffffff15}
+.mp-augment-player>strong{font-size:12px;color:#e0e9eb}
+.mp-augment-picks{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.mp-augment-picks details{max-width:100%;border:1px solid #6b6a8c;border-radius:5px;background:#242841;color:#f4dcbb;font-size:11px}
+.mp-augment-picks details[open]{width:100%;border-color:#cfa777}
+.mp-augment-picks summary{cursor:pointer;padding:6px 8px;line-height:1.3;list-style-position:inside;font-weight:800}
+.mp-augment-picks details p{padding:1px 9px 9px;margin:0;color:#d1dce3;line-height:1.55}
+.mp-augment-picks>span{font-size:11px;color:#91a8b8}
+@media(max-width:700px){.mp-augment-teams{grid-template-columns:1fr}.mp-battle-navigation{justify-content:center}.mp-battle-camera{width:100%;justify-content:space-between}}
