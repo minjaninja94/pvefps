@@ -324,7 +324,7 @@ function renderAugment(){
  panel.hidden=false;panel.replaceChildren();
  const heading=document.createElement('h3');
  heading.textContent=headingText();
- const description=document.createElement('p');description.textContent='셋 중 하나를 선택하세요. 각 카드 칸은 1회 리롤 가능합니다. 미선택 시 자동 선택됩니다.';
+ const description=document.createElement('p');description.textContent='프리즘 3장 중 1장 선택 · 카드마다 리롤 1회 · 12초 후 자동 선택';
  const cards=document.createElement('div');cards.className='mp-augment-cards';
  for(let i=0;i<3;i++){
   const card=global.DesertAugments?.card(choice.cards[i]),slot=document.createElement('div');slot.className='mp-augment-card';
@@ -357,7 +357,7 @@ function onSnapshot(v){
  const preparation=!v.ended&&v.wave===0?Math.max(0,(v.preparationEndsAt??E.OPENING_PREP_SECONDS??10)-v.seconds):0;
  const opening=$('mpOpening');if(opening)opening.hidden=preparation<=1e-6;
  const openingNumber=$('mpOpeningSeconds');if(openingNumber)openingNumber.textContent=String(Math.max(0,Math.ceil(preparation-1e-6)));
- if(!v.ended)$('mpStateTag').textContent=preparation>0?'초기 배치 · '+Math.ceil(preparation-1e-6)+'초 뒤 첫 출격':v.mode==='classic'?(practice?'클래식 1:1 AI 연습':'클래식 1:1 진행 중'):(practice?'3라인 AI 연습':'3라인 전투 중');
+ if(!v.ended)$('mpStateTag').textContent=preparation>0?'초기 배치 · '+Math.ceil(preparation-1e-6)+'초 뒤 첫 출격':(v.mode==='classic'?'클래식 1:1':practice?'3라인 AI 연습':'3라인 전투')+' · '+(v.seconds>=14*60?'전선 압박 포격':v.pressure>1?'전선 격화 ×'+v.pressure.toFixed(2):'진행 중');
  const battle=$('mpBattleCanvas');if(battle.height!==battleHeight())battle.height=battleHeight();
  if(fresh||lane>=laneCount()){lane=laneCount()===1?0:1;cameraX=1100;repairLane=lane;gridKey='';setView('base');}
  const me=my(),side=me?.team??0;
