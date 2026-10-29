@@ -31,6 +31,8 @@ jobs:
         run: node desert-strike/smoke-consolidation.test.cjs
       - name: Paid proactive hard AI and income parity
         run: node desert-strike/smoke-hard-ai.test.cjs
+      - name: Fifty-wave construction income and core parity across all game modes
+        run: node desert-strike/smoke-50-wave-rules.test.cjs
       - name: Economy and occupied production slots
         run: node desert-strike/smoke-economy.test.cjs
       - name: Cooperative combat
