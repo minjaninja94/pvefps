@@ -27,7 +27,7 @@ function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={}}){
  if(urgent){
   const counters=uncoveredAir?[4,1]:uncoveredArmor?[2,3]:concentrated?focusCounters:[1,3,0];
   const covered=counters.reduce((n,r)=>n+counts[r],0);
-  const target=counters.slice().sort((a,b)=>counts[a]-counts[b]||costs[a]-costs[b])[0];
+  const target=uncoveredAir?4:uncoveredArmor?2:counters.slice().sort((a,b)=>counts[a]-counts[b]||costs[a]-costs[b])[0];
   if(target!==undefined&&covered<Math.max(2,Math.ceil(army*.72))){
    if(cash>=costs[target])return {kind:'unit',role:target};
    // When the emergency counter is still unaffordable, bank for that precise
