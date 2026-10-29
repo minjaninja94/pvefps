@@ -53,6 +53,6 @@ test('single-player win condition remains core destruction and lobby no longer a
  assert.doesNotMatch(lobby,/22웨이브 전투/);
  assert.doesNotMatch(html,/22웨이브 AI 전투/);
  assert.match(lobby,/무제한 웨이브/);
- assert.match(html,/무제한 AI 전투/);
+ assert.match(html,/무제한 웨이브 · 핵심 기지 파괴 시 종료/);
  assert.doesNotMatch(read('tri-lane-engine.js'),/seconds>=1200/);
 });
