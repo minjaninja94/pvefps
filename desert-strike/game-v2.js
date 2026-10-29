@@ -298,33 +298,30 @@ function upgrade(kind){
  }
  updateUI(true);
 }
-// Both sides share the same emergency footprint and 70%-HP / deep-invasion trigger.
-function emergencyTargets(defendingSide){
- return state.units.filter(u=>u.side!==defendingSide&&u.hp>0&&
-  (defendingSide===0?u.x<=550:u.x>=WORLD_W-550));
+// Global one-use nuclear strike: removes every living opponent soldier and
+// packed hero, not buildings. Both sides share the identical elimination rule.
+// Paid production returns on later waves; existing projectiles from the wiped
+// side are removed to avoid invisible post-strike damage.
+function nuclearPopulation(side){
+ return state.units.filter(u=>u.hp>0&&u.side===side)
+  .reduce((n,u)=>n+(window.DesertConsolidation?.strength?.(u)??1),0);
 }
-function emergencyEligible(defendingSide,targets){
- return targets.length>0&&(state.baseHP[defendingSide]<=MAX_BASE*.7||
-  targets.some(u=>defendingSide===0?u.x<370:u.x>WORLD_W-370));
-}
-function detonateEmergency(defendingSide,tacticalTargets=null){
+function detonateEmergency(defendingSide){
  const stock=defendingSide===0?'nukes':'enemyNukes';
  if(!state[stock])return false;
- const invaders=tacticalTargets||emergencyTargets(defendingSide);
- if(!invaders.length||(!tacticalTargets&&!emergencyEligible(defendingSide,invaders)))return false;
- state[stock]--;
- const soldiers=invaders.reduce((sum,u)=>sum+(window.DesertConsolidation?.strength?.(u)||1),0);
- const middle={x:invaders.reduce((s,u)=>s+u.x,0)/invaders.length,
-               y:invaders.reduce((s,u)=>s+u.y,0)/invaders.length};
- for(const u of invaders){killUnit(u);pulse(u.x,u.y,'#f2d489',45);}
- pulse(middle.x,middle.y,'#fff1ae',130);
+ const targets=state.units.filter(u=>u.hp>0&&u.side!==defendingSide);
+ if(!targets.length)return false;
+ const soldiers=nuclearPopulation(1-defendingSide);
+ state[stock]=0;
+ for(const u of targets){killUnit(u);pulse(u.x,u.y,'#f2d489',38);}
  state.units=state.units.filter(u=>u.hp>0);
  state.shots=state.shots.filter(p=>p.side===defendingSide);
+ pulse(WORLD_W/2,260,'#fff0a3',120);
  if(defendingSide===0){
-  setMessage('긴급 핵폭탄 발동! 적 '+soldiers+'명 상당을 제거했습니다.');
-  banner('☢ EMERGENCY STRIKE');
+  setMessage('아군 전장 핵폭탄 발사! 상대 유닛 '+soldiers+'기 상당 전체 제거 · 남은 핵 0회');
+  banner('☢ ALL ENEMY UNITS ELIMINATED');
  }else{
-  setMessage('하드 AI 핵폭탄 발동! 아군 '+soldiers+'명 상당 소멸 · 핵 1회 사용 완료');
+  setMessage('하드 AI 전장 핵폭탄! 아군 '+soldiers+'기 상당 전체 소멸 · AI 핵 사용 완료');
   banner('☢ ENEMY NUCLEAR STRIKE');
  }
  window.DesertCombatAudio?.cue('explosion');chirp(130,.3);updateUI(true);
@@ -332,27 +329,26 @@ function detonateEmergency(defendingSide,tacticalTargets=null){
 }
 function emergency(){
  if(!state.live||state.ended||state.paused||!state.nukes)return;
- if(!detonateEmergency(0))setMessage('핵폭탄은 기지가 위기일 때 침공한 적에게 사용할 수 있습니다.');
+ if(!detonateEmergency(0))setMessage('핵폭탄은 상대 유닛이 살아 있을 때 사용 가능합니다. 경기당 1회입니다.');
 }
+// Delay the AI's global strike until it can reverse a serious losing front.
+// The ≥100 equivalent threshold is preferred; below it, only a genuinely
+// critical base (≤15% HP) may justify spending the last charge.
 function hardEmergency(){
  if(!state.live||state.ended||state.paused||state.aiDifficulty!=='hard'||!state.enemyNukes)return false;
- // A core-only emergency trigger almost never fires against ranged/hero pushes.
- // Hard AI can also spend its one real nuke on a massed army that has entered
- // its half of the field. A hero counts as its living component soldiers.
- if(detonateEmergency(1))return true;
- if(state.wave<5)return false;
- const seen=state.units.filter(u=>u.side===0&&u.hp>0&&u.x>=WORLD_W*.62);
- if(!seen.length)return false;
- const power=u=>window.DesertConsolidation?.strength?.(u)||1;
- let victims=null,best=0;
- for(const center of seen){
-  const affected=seen.filter(u=>Math.hypot(u.x-center.x,u.y-center.y)<=240);
-  const pressure=affected.reduce((sum,u)=>sum+power(u),0);
-  if(pressure>best){best=pressure;victims=affected;}
- }
- // Minimum one consolidated hero / approximately twenty separate soldiers.
- if(best<20)return false;
- return detonateEmergency(1,victims);
+ const enemies=state.units.filter(u=>u.side===0&&u.hp>0),allies=state.units.filter(u=>u.side===1&&u.hp>0);
+ if(!enemies.length)return false;
+ const power=u=>window.DesertConsolidation?.strength?.(u)??1;
+ const total=enemies.reduce((s,u)=>s+power(u),0);
+ const pressure=enemies.filter(u=>u.x>=WORLD_W*.68).reduce((s,u)=>s+power(u),0);
+ const defenders=allies.filter(u=>u.x>=WORLD_W*.62).reduce((s,u)=>s+power(u),0);
+ const hpRatio=state.baseHP[1]/MAX_BASE;
+ const critical=hpRatio<=.15&&total>=20;
+ const pushed=pressure>=35&&pressure>=Math.max(18,defenders*1.25);
+ const danger=hpRatio<=.40||state.turretHP[1]<=MAX_TURRET*.16||pushed;
+ // Do not waste it on a harmless isolated hero; a losing frontline
+ // or dangerously weakened base is required, even with 100+ opponents.
+ return ((total>=100&&danger)||critical)?detonateEmergency(1):false;
 }
 // Hard-only paid barrage: the same 260 CR, cooldown, radius and damage as
 // the player's orbital strike. Visible enemy clumps and 20-man heroes count
