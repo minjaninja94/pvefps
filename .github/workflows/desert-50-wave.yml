@@ -1,0 +1,30 @@
+name: Desert Front 50-wave campaign benchmark
+on:
+  push:
+    paths:
+      - "desert-strike/game-v2.js"
+      - "desert-strike/tri-lane-engine.js"
+      - "desert-strike/benchmark-50-wave.cjs"
+      - "desert-strike/smoke-50-wave-rules.test.cjs"
+      - ".github/workflows/desert-50-wave.yml"
+  workflow_dispatch:
+jobs:
+  real-engine-50-wave:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify actual game rules across solo/multi and standard/augment
+        run: node desert-strike/smoke-50-wave-rules.test.cjs
+      - name: Simulate eight solo and two cooperative campaigns, up to 72 waves
+        run: node desert-strike/benchmark-50-wave.cjs | tee /tmp/desert-50-wave.jsonl
+      - name: Publish measured match outcomes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: desert-50-wave-campaign-results
+          path: /tmp/desert-50-wave.jsonl
+          if-no-files-found: warn
