@@ -92,7 +92,7 @@ assert.throws(()=>E.create({mode:'pvp',size:2,members:[human(0),human(0),human(1
   assert.ok(m.order('P0',{type:'build',lane,slot:0,role:0}).ok);
   assert.ok(m.order('P1',{type:'build',lane,slot:0,role:0}).ok);
  }
- m.wave();
+ m.state.seconds=24;m.wave(); // production is active at the first valid wave
  assert.equal(m.state.units.length,6);
  const a=m.state.units.filter(u=>u.lane===0),b=m.state.units.filter(u=>u.lane===2);
  for(const u of a){u.x=1500;u.y=250;u.cool=0;}
@@ -108,7 +108,7 @@ console.log('3x-area real-combat test passed: 1v1,2v2,3v3 and 2/3-player coop, c
 {
  const m=E.create({mode:'pvp',size:1,members:[human(0,0,3),human(1,1,0)]});
  assert.ok(m.order('P0',{type:'build',lane:0,slot:1,role:7}).ok);
- m.wave();
+ m.state.seconds=24;m.wave();
  assert.equal(m.state.marineStats.huangSpawns,1);
  assert.equal(m.state.marineSupports.length,2);
  for(let i=0;i<40;i++)m.tick(.2);
@@ -118,7 +118,7 @@ console.log('3x-area real-combat test passed: 1v1,2v2,3v3 and 2/3-player coop, c
  const killer=m.state.players[0],victim=m.state.players[1];
  assert.ok(m.order('P0',{type:'build',lane:0,slot:2,role:1}).ok);
  assert.ok(m.order('P1',{type:'build',lane:0,slot:2,role:3}).ok);
- m.wave();
+ m.state.seconds+=24;m.wave();
  const marine=m.state.units.find(u=>u.uid==='P0'&&u.role===1);
  const enemy=m.state.units.find(u=>u.uid==='P1'&&u.role===3);
  assert.ok(marine&&enemy);
@@ -146,11 +146,11 @@ console.log('3x-area real-combat test passed: 1v1,2v2,3v3 and 2/3-player coop, c
  assert.ok(match.snapshot('P0').players[1].buildings[0].every(role=>role===null));
  assert.ok(match.order('P1',{type:'build',lane:0,slot:5,role:6}).ok);
  assert.equal(match.snapshot('P0').players[1].buildings[0][5],null,'hidden construction never reaches guest snapshot');
- match.wave();
+ match.state.seconds=24;match.wave();
  assert.equal(match.snapshot('P0').units.some(u=>u.team===1&&u.role===6),false,'reinforcements in enemy spawn are hidden');
  const spy=match.state.units.find(u=>u.team===1&&u.role===6);
  const scout=match.state.players[0];assert.ok(match.order('P0',{type:'build',lane:0,slot:0,role:1}).ok);
- match.wave();
+ match.state.seconds+=24;match.wave();
  const our=match.state.units.find(u=>u.team===0&&u.role===1);
  our.x=2600;
  assert.equal(match.snapshot('P0').fog[0],false);
