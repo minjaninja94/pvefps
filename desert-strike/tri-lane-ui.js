@@ -332,7 +332,7 @@ function onSnapshot(v){
  if(me){
   $('mpMyResources').textContent=me.cash+' CR';
   const remaining=Math.max(0,(me.ecoReadyAt||0)-v.seconds);
-  $('mpMyIncome').textContent=remaining>0?'인컴 중단 '+Math.ceil(remaining)+'초':'+'+Number(E.incomePerTick(me.eco).toFixed(2))+' / 0.5초';
+  $('mpMyIncome').textContent=remaining>0?'인컴 중단 '+Math.ceil(remaining)+'초':'+'+Number((E.incomePerTick?.(me.eco)??((1+me.eco)*(me.eco>=5?.85:1))).toFixed(2))+' / 0.5초';
   $('mpBuiltCount').textContent=me.buildings.reduce((n,bs)=>n+bs.filter(x=>x!==null).length,0)+'개 건설';
   const cost=E.ecoPrice(me.eco);
   $('mpEco').textContent=me.eco>=7?'채취 건물 7 / 7':'자원채취 건물 · '+cost+' CR';
