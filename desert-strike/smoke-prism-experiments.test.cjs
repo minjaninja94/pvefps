@@ -115,7 +115,9 @@ test('host engine applies experimental reinforcements and bonus credits, indepen
  assert.ok(e.state.units.some(u=>u.uid==='a'&&u.role===3),'free armor reinforcements spawn during qualifying wave');
  assert.equal(window.DesertPrism.populationLimit(left.augments,75,true),87);
  const packet=e.snapshot('b');
- assert.deepEqual(Array.from(packet.players[0].augments),[],'enemy experimental card IDs stay hidden');
+ assert.deepEqual(Array.from(packet.players[0].augments),left.augments,'completed enemy Prism choices are public for tactical counterplay');
+  assert.equal(packet.players[0].cash,null,'enemy economy remains hidden');
+  assert.equal(packet.augmentChoice?.cards?.length||0,0,'opponent pending choices must not leak');
  assert.equal(e.state.ended,false);
  left.augments.push('exp-prism-0-0');
  const unitsBefore=e.state.units.filter(u=>u.uid==='a').length;
