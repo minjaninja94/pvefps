@@ -12,7 +12,15 @@ async function identity(){
  pending=(async()=>{
   const local=read();if(!global.IronFirebase)throw Error('온라인 연결 모듈이 준비되지 않았습니다.');
   const shared=await global.IronFirebase.ready(),sdk=global.DesertDeviceAuthSDK||await import(SDK+'firebase-auth.js');
-  authSDK=sdk;const auth=sdk.getAuth(shared.app);await sdk.setPersistence(auth,sdk.browserLocalPersistence);await auth.authStateReady();
+  authSDK=sdk;const auth=sdk.getAuth(shared.app);
+  await auth.authStateReady();
+  // New visitors may block durable storage (private windows / strict browsers).
+  // Keep an authenticated room session even when local persistence is unavailable.
+  try{await sdk.setPersistence(auth,sdk.browserLocalPersistence);}
+  catch(_){
+   try{await sdk.setPersistence(auth,sdk.browserSessionPersistence);}
+   catch(_){await sdk.setPersistence(auth,sdk.inMemoryPersistence);}
+  }
   const user=auth.currentUser||(await sdk.signInAnonymously(auth)).user;
   if(!user?.uid)throw Error('기기 인증을 완료하지 못했습니다.');
   // A typed/public account ID is never accepted in place of the authenticated UID.
