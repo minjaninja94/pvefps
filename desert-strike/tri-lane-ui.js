@@ -494,7 +494,7 @@ function init(){
    if(!snap||snap.ended)return;
    onSnapshot({...snap,ended:true,winner:data.winner_team});
    global.DesertBattleReport?.serverStatus?.('✓ Supabase 서버 탈주 판정 · 승패·RP 기록 완료');
-   message('서버 판정: 상대 연결 종료 · +(data.winner_team===my()?.team?'승리':'패배')+' 처리');
+   message('서버 판정: 상대 연결 종료 · '+(data.winner_team===my()?.team?'승리':'패배')+' 처리');
   }});
  uiButtons();
 }
