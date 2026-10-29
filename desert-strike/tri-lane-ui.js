@@ -304,6 +304,44 @@ function combatAudioSnapshot(v){
   if(!effects.has(id))audio.cue(['pollen','huanglong'].includes(effect.kind)?'heal':'explosion',effect.x);
  }
 }
+function renderBattleAugments(){
+ const root=$('mpAugmentBattleRoster');
+ if(!root)return;
+ if(!snap||snap.ruleset!=='augment'){root.hidden=true;root.replaceChildren();return;}
+ root.hidden=false;
+ const myTeam=my()?.team??0;
+ const signature=JSON.stringify([snap.players.map(p=>[p.uid,p.team,p.name,p.augments]),global.DesertAugments?.ready?.()]);
+ if(root.dataset.signature===signature)return;
+ root.dataset.signature=signature;
+ root.replaceChildren();
+ const header=document.createElement('div');header.className='mp-battle-aug-heading';
+ const title=document.createElement('strong');title.textContent='✦ 전투 증강 현황';
+ const button=document.createElement('button');button.type='button';button.className='btn outline';button.textContent='전체 효과 비교';
+ button.addEventListener('click',()=>$('mpAugmentOpen')?.click?.());
+ header.append(title,button);root.append(header);
+ const teams=document.createElement('div');teams.className='mp-battle-aug-teams';
+ for(const side of [myTeam,1-myTeam]){
+  const team=document.createElement('section');team.className='mp-battle-aug-team';
+  const all=snap.players.filter(p=>p.team===side);
+  const heading=document.createElement('strong');heading.textContent=(side===myTeam?'아군':'상대')+' · 선택 '+all.reduce((n,p)=>n+(p.augments?.length||0),0)+'개';team.append(heading);
+  for(const p of all){
+   const person=document.createElement('div');person.className='mp-battle-aug-person';
+   if(snap.players.length>2){const name=document.createElement('small');name.textContent=p.name||'지휘관';person.append(name);}
+   const picks=document.createElement('div');picks.className='mp-battle-aug-picks';
+   for(const [index,id] of (p.augments||[]).entries()){
+    const card=global.DesertAugments?.card?.(id);
+    const details=document.createElement('details'),summary=document.createElement('summary'),desc=document.createElement('p');
+    summary.textContent='W'+([1,18,36,54,72][index]||'?')+' '+(card?.name||'증강 '+id);
+    desc.textContent=card?.description||'카드 설명 로딩 중';
+    details.append(summary,desc);picks.append(details);
+   }
+   if(!picks.childElementCount){const empty=document.createElement('span');empty.textContent='아직 선택 없음';picks.append(empty);}
+   person.append(picks);team.append(person);
+  }
+  teams.append(team);
+ }
+ root.append(teams);
+}
 function renderAugmentRoster(){
  const panel=$('mpAugmentRoster'),trigger=$('mpAugmentOpen'),dialog=$('mpAugmentDialog');
  if(!panel||!trigger)return;
@@ -382,7 +420,7 @@ function renderAugment(){
  panel.append(history);
 }
 function onSnapshot(v){
- if(!v){snap=null;renderAugmentRoster();global.DesertCombatAudio?.stop?.();return;}if(v.width!==3300||![520,1560].includes(v.height)||!Array.isArray(v.players)||(v.lanes!==undefined&&v.lanes!==(v.mode==='classic'?1:3)))return;
+ if(!v){snap=null;renderAugmentRoster();renderBattleAugments();global.DesertCombatAudio?.stop?.();return;}if(v.width!==3300||![520,1560].includes(v.height)||!Array.isArray(v.players)||(v.lanes!==undefined&&v.lanes!==(v.mode==='classic'?1:3)))return;
  const fresh=!snap,modeChanged=!snap||snap.mode!==v.mode;
  if(!$('frontLobby').hidden)global.DesertLobby?.enterMatch?.();
  combatAudioSnapshot(v);
@@ -440,7 +478,7 @@ function onSnapshot(v){
    if(!practice)void NET.reportWinner?.(v.winner);
   }
  }
- renderAugment();renderAugmentRoster();unitCards();buildGrid();upgradeInfo();drawOverview();
+ renderAugment();renderAugmentRoster();renderBattleAugments();unitCards();buildGrid();upgradeInfo();drawOverview();
 }
 function order(cmd){
  if(!snap||snap.ended)return message('진행 중인 경기가 없습니다.');
@@ -472,7 +510,7 @@ async function leave(){
  else{await NET.leave();snap=null;$('mpCommand').hidden=true;}
  $('mpViewTabs').hidden=true;setView('base');
  lane=1;cameraX=1100;repairLane=1;role=0;demolish=false;gridKey='';cardsKey='';counterKey='';augmentKey='';augmentRosterKey='';$('mpAugmentPanel').hidden=true;
- renderAugmentRoster();
+ renderAugmentRoster();renderBattleAugments();
  delete document.body.dataset.multiArena;
  uiButtons();
 }
