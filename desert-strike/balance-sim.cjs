@@ -33,6 +33,7 @@ function simulateAI(){
  // Temporarily mirror all the data fields the stock AI expects for the human player.
  function mirror(){
   [state.built,state.enemyBuilt]=[state.enemyBuilt,state.built];
+  [state.buildReadyAt,state.enemyBuildReadyAt]=[state.enemyBuildReadyAt,state.buildReadyAt];
   [state.cash,state.enemyCash]=[state.enemyCash,state.cash];
   [state.eco,state.enemyEco]=[state.enemyEco,state.eco];
   [state.ecoReadyAt,state.enemyEcoReadyAt]=[state.enemyEcoReadyAt,state.ecoReadyAt];
@@ -53,6 +54,7 @@ window.__balance={
   state.cash=360;state.enemyCash=360;
   for(const [slot,role] of [[1,0],[17,1]]){
     state.built[slot]=role;state.enemyBuilt[slot]=role;
+    setFactoryReady(0,slot);setFactoryReady(1,slot);
     state.cash-=ROLE[role].cost;state.enemyCash-=ROLE[role].cost;
   }
  }
