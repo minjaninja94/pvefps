@@ -57,7 +57,7 @@ assert.ok(bot.buildings.flat().filter(r=>[1,3].includes(r)).length>=bot.building
 const elements=new Map(),noop=()=>{},g=new Proxy({createLinearGradient:()=>({addColorStop:noop})},{get:(o,k)=>o[k]||noop});
 const el=id=>{if(!elements.has(id))elements.set(id,{style:{},dataset:{},classList:{add:noop,remove:noop,toggle:noop},getContext:()=>g,querySelectorAll:()=>[],addEventListener:noop});return elements.get(id);};
 const env=environment(.01),sw=env.w;Object.assign(env.ctx,{document:{getElementById:el,querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>({getContext:()=>g})},requestAnimationFrame:noop,Date});sw.DesertLobby={aiDifficulty:()=> 'hard'};
-vm.runInNewContext(read('game-v2.js').replace('initFactions();wire();reset();','window.testHard={state:()=>state,reset,aiInitialBuild,hardInvest,tick};reset();'),env.ctx);
+vm.runInNewContext(read('game-v2.js').replace('initFactions();wire();reset();','window.testHard={state:()=>state,reset,aiInitialBuild,hardInvest,hardEmergency,constructExtractor,tick};reset();'),env.ctx);
 const api=sw.testHard;api.aiInitialBuild();
 const first=Array.from(api.state().enemyBuilt),cashOpening=api.state().enemyCash;api.reset();api.state().built.fill(6);api.aiInitialBuild();assert.deepEqual(Array.from(api.state().enemyBuilt),first,'hidden aircraft factories cannot alter the proactive opening');assert.equal(api.state().enemyCash,cashOpening);
 const s=api.state();s.live=true;s.next=100000;
@@ -70,6 +70,54 @@ assert.equal(s.enemyCash+s.hardBrain.spent,before+spent,'solo hard AI pays the s
 assert.ok(elements.get('enemyFactionLabel').textContent.includes('하드 AI'));
 const soloAI=sw.DesertHardAI;let soloIntel;sw.DesertHardAI={...soloAI,choose:(b,data)=>{soloIntel=data.intel;return soloAI.choose(b,data);}};
 s.units=[{side:0,faction:0,role:0,x:2000,y:260,hp:2000,maxHP:2000,heroCount:20}];api.hardInvest();assert.equal(soloIntel.roles[0],20,'solo scouts count an observed aggregate as twenty soldiers');
+
+// Solo hard AI reacts to a player extractor immediately, without gifted CR or
+// bypassing either side's paid blackout. It saves for unaffordable catch-up.
+api.reset();
+const mirror=api.state();mirror.live=true;mirror.enemyCash=1000;mirror.cash=1000;
+assert.equal(api.constructExtractor(0,0),true);
+assert.equal(mirror.eco,1);
+assert.equal(mirror.enemyEco,1,'hard AI must match the human extractor immediately when ready and funded');
+assert.equal(mirror.enemyCash,930,'hard AI pays the identical level-one 70 CR cost');
+assert.equal(mirror.enemyBuilt.filter(x=>x===8).length,1,'AI extractor occupies a real factory slot');
+assert.equal(mirror.enemyEcoReadyAt,mirror.ecoReadyAt,'both sides incur the same six-second blackout');
+assert.equal(api.constructExtractor(0,1),false,'human cannot bypass own stabilization');
+mirror.elapsed=mirror.ecoReadyAt+.01;
+assert.equal(api.constructExtractor(0,1),true);
+assert.equal(mirror.enemyEco,2,'next human upgrade is mirrored immediately after blackout');
+assert.equal(mirror.enemyCash,835,'level-two extractor costs 95 CR');
+mirror.elapsed=mirror.ecoReadyAt+.01;mirror.enemyCash=0;
+assert.equal(api.constructExtractor(0,2),true);
+assert.equal(mirror.enemyEco,2,'AI never buys the missing extractor with free money');
+const priorBuildings=mirror.enemyBuilt.filter(x=>x!==null).length;
+api.hardInvest();
+assert.equal(mirror.enemyBuilt.filter(x=>x!==null).length,priorBuildings,'AI saves for the exact missing extractor instead of spending on units');
+mirror.enemyCash=130;
+api.hardInvest();
+assert.equal(mirror.enemyEco,3,'AI resumes the queued upgrade when funds are available');
+assert.equal(mirror.enemyCash,0,'queued extractor consumes its actual 130 CR price');
+assert.equal(mirror.enemyMineCosts[2],130,'third level is recorded at its real cost');
+assert.ok(mirror.enemyEcoReadyAt>mirror.elapsed,'AI also suffers the third-level blackout');
+
+// Only the hard AI has one automatic, mirrored emergency nuke each match.
+api.reset();
+const bomb=api.state();bomb.live=true;bomb.aiDifficulty='hard';bomb.next=100000;
+const intruder={uid:9999,side:0,faction:0,role:0,x:3000,y:260,hp:100,maxHP:100,killed:false,heroCount:1};
+bomb.units.push(intruder);
+api.tick(.04);
+assert.equal(bomb.enemyNukes,0,'hard AI fires one automatic nuke against a deep invasion');
+assert.equal(bomb.units.length,0,'hard AI removes only attackers within its own defensive footprint');
+assert.equal(bomb.deadUnits.length,1);
+bomb.units.push({...intruder,uid:10000,hp:100,killed:false});
+assert.equal(api.hardEmergency(),false,'second AI nuke must be impossible');
+assert.equal(bomb.units.length,1);
+api.reset();
+const safe=api.state();safe.live=true;safe.aiDifficulty='hard';
+safe.units.push({...intruder,x:2850,uid:10001,hp:100,killed:false});
+assert.equal(api.hardEmergency(),false,'a shallow incursion cannot trigger the AI nuke at full base health');
+assert.equal(safe.enemyNukes,1);
+safe.baseHP[1]=5040;
+assert.equal(api.hardEmergency(),true,'base below 70 percent permits the same emergency trigger as the player');
 
 console.log('Hard AI passed: 20 four-minute ledgers, four proactive openings, ground special factions, regular paid economy, zero resource bonuses, actual slot/blackout costs, bounded next-purchase reserves, 32 scouted concentration responses, ground/air distinction, economy resumption, observed hero lane reinforcement, solo and three-line integration.');
 console.log(JSON.stringify(results.filter(x=>x.faction===0)));
