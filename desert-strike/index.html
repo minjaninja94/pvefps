@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=prism100a"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=battlestats2"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -223,14 +223,14 @@
   <div id="soloAugmentHistory" class="augment-history-mount" aria-label="이전에 획득한 증강 카드 기록"></div>
  </section>
 </div>
-<div id="endOverlay" class="modal-backdrop hidden"><div class="modal-panel end-panel"><span class="eyebrow">BATTLE REPORT</span><h2 id="endTitle">승리</h2><p id="endSummary"></p><div id="soloProductionStats" class="result-production" aria-label="경기 유닛 생산 통계"></div><button id="restartButton" class="btn start-cta">메인 로비로 돌아가기</button></div></div>
+<div id="endOverlay" class="modal-backdrop hidden"><div class="modal-panel end-panel"><span class="eyebrow">BATTLE REPORT</span><h2 id="endTitle">승리</h2><p id="endSummary"></p><div id="soloProductionStats" class="result-production" aria-label="경기 생산 및 전투 통계"></div><button id="restartButton" class="btn start-cta">메인 로비로 돌아가기</button></div></div>
 <div id="mpResultOverlay" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="mpResultTitle">
  <div class="modal-panel result-panel" tabindex="-1">
   <span class="eyebrow">AFTER ACTION REPORT / MATCH FINISHED</span>
   <h2 id="mpResultTitle" data-outcome="draw">경기 결과</h2>
   <p id="mpResultSummary" class="result-summary"></p>
-  <h3 class="result-production-heading">누적 유닛 생산량</h3>
-  <p class="result-detail-hint">생산 시설에서 출격한 병력의 총합입니다. 전투 중 사망하거나 합쳐진 유닛도 포함합니다.</p>
+  <h3 class="result-production-heading">생산·피해·처치·영웅 전투 기록</h3>
+  <p class="result-detail-hint">생산량은 누적 출격 수입니다. 피해는 적 유닛에 실제로 가한 피해이며, 처치·손실은 영웅을 구성하는 병사 수까지 합산합니다. 영웅 생성과 영웅 피해량도 표시합니다.</p>
   <div id="mpResultProduction" class="result-production" aria-label="아군 및 상대 생산 통계"></div>
   <p id="mpResultStatus" class="result-server-status" role="status">서버 결과 저장 확인 중…</p>
   <button id="mpResultRetry" type="button" class="btn outline" hidden>서버 기록 다시 시도</button>
@@ -264,8 +264,8 @@
 <script src="./tri-lane-network.js?v=augmented1" defer></script>
 <script src="./combat-audio.js?v=godotvoice1" defer></script>
 <script src="./tri-lane-ui.js?v=augment-history1" defer></script>
-<script src="./battle-report.js?v=results1" defer></script>
-<script src="./game-v2.js?v=prism100b" defer></script>
+<script src="./battle-report.js?v=battlestats2" defer></script>
+<script src="./game-v2.js?v=battlestats2" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=battlebgm1" defer></script>
