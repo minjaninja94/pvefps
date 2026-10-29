@@ -12,13 +12,13 @@ async function make(augmented=false){
  return w;
 }
 const members=[{uid:'left',team:0,faction:0,name:'A'},{uid:'right',team:1,faction:1,name:'B'}];
-test('online Prism-only schedule and fast draft do not change the legacy solo catalogue',async()=>{
+test('online Prism-only schedule with 30-second choice does not change solo catalogue',async()=>{
  const w=await make(true);
  const selected=w.DesertAugments.create(7);
  assert.equal(selected.schedule.length,5);
  const game=w.DesertTriEngine.create({mode:'pvp',size:1,members,ruleset:'augment',seed:7});
  assert.deepEqual(Array.from(game.state.augmentSchedule),['prismatic','prismatic','prismatic','prismatic','prismatic']);
- assert.equal(game.state.augmentChoice.remaining,12);
+ assert.equal(game.state.augmentChoice.remaining,30);
  assert.equal(game.state.augmentChoice.round,1);
  const initial=game.snapshot('left'),other=game.snapshot('right');
  assert.ok(initial.augmentChoice.cards.every(id=>w.DesertAugments.card(id)?.tier==='prismatic'));
@@ -38,29 +38,23 @@ test('online Prism-only schedule and fast draft do not change the legacy solo ca
   assert.ok(card.effects.length>=2,'faction '+i+' has a compound capstone');
  }
 });
-test('stalemate escalation is offensive, has no time cap and keeps core victory',async()=>{
- const w=await make();
- const e=w.DesertTriEngine.create({mode:'classic',size:1,members});
- assert.equal(e.snapshot('left').pressure,1);
- e.state.seconds=11*60;assert.ok(e.snapshot('left').pressure>1);
- e.state.seconds=20*60;assert.ok(e.snapshot('left').pressure>=2);
- e.state.seconds=5*3600;e.tick(.01);
- assert.equal(e.state.ended,false,'elapsed time alone never declares an arbitrary winner');
- assert.ok(e.snapshot('left').pressure>=2.7);
- // Two units cannot call artillery. Four forward units can.
- const defender=w.DesertTriEngine.create({mode:'classic',size:1,members});
- defender.state.players[0].buildings[0].fill(0,0,4);
- defender.state.seconds=13*60;defender.wave();
- for(const u of defender.state.units)if(u.team===0){u.x=1600;u.hp=10000;}
- const before=defender.state.forwardHP[0][1];
- defender.wave();assert.equal(defender.state.forwardHP[0][1],before,'no siege before 16 minutes');
- defender.state.seconds=17*60;
- defender.wave();
- assert.ok(defender.state.forwardHP[0][1]<before,'late frontline siege damages enemy tower');
- assert.equal(defender.state.forwardHP[0][0],1000,'no self-damage from own siege');
- const mirror=w.DesertTriEngine.create({mode:'classic',size:1,members});
+test('late match retains natural core-only victory without artillery or healing penalties',async()=>{
+ const w=await make(),E=w.DesertTriEngine;
+ const game=E.create({mode:'classic',size:1,members});
+ game.state.seconds=5*3600;game.tick(.01);
+ assert.equal(game.state.ended,false,'time alone cannot end a match');
+ assert.equal(game.snapshot('left').pressure,undefined);
+ assert.equal(game.snapshot('left').overtimeAt,undefined);
+ assert.equal(game.state.forwardHP[0][1],1000);
+ const source=read('tri-lane-engine.js');
+ assert.ok(!source.includes('warPressure'),'no time-ramped unit damage');
+ assert.ok(!source.includes("kind:'pressure'"),'no periodic frontline artillery');
+ assert.ok(!source.includes('OVERTIME_START'),'no hidden overtime modifier');
+ assert.ok(!source.includes("?.65:1"),'natural regen is not nerfed late');
+ assert.ok(!source.includes("?.75:1"),'support healing is not nerfed late');
+ const mirror=E.create({mode:'classic',size:1,members});
  mirror.state.cores[0][0]=0;mirror.state.cores[0][1]=0;mirror.tick(.01);
- assert.equal(mirror.state.winner,null,'simultaneous core destruction must result in a draw');
+ assert.equal(mirror.state.winner,null,'simultaneous core destruction remains a draw');
 });
 test('single-scale lane camera and selectable enemy cards remain in web UI',()=>{
  const html=read('index.html'),ui=read('tri-lane-ui.js'),css=read('style-v2.css');
@@ -68,6 +62,9 @@ test('single-scale lane camera and selectable enemy cards remain in web UI',()=>
  for(const id of ['mpBattleLaneSelect','mpPanLeft','mpPanCenter','mpPanRight','mpAugmentRoster'])
   assert.ok(html.includes('id="'+id+'"'),id);
  assert.match(ui,/function renderAugmentRoster\(/);
+ assert.match(ui,/mp-good-counter/);
+ assert.match(ui,/mp-bad-counter/);
+ assert.match(ui,/30초 후 자동 선택/);
  assert.match(ui,/function panCamera\(/);
  assert.match(ui,/mapCanvas\.addEventListener\('pointermove'/);
  assert.match(ui,/iso\.terrain\(ctx,E\.WIDTH,H,false/);
