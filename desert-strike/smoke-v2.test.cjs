@@ -48,7 +48,7 @@ controlledMath.random=()=>forcedMarineRoll===null?Math.random():forcedMarineRoll
 const sandbox={document:doc,window:{addEventListener(){}},requestAnimationFrame(fn){queue.push(fn);},console,Math:controlledMath,Number,String,Object,Array,Map,Set,Date};
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'sprite-animations.js'),'utf8'),sandbox,{timeout:4000,filename:'sprite-animations.js'});
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'hard-ai.js'),'utf8'),sandbox,{filename:'hard-ai.js'});
-vm.runInNewContext(code.replace('initFactions();wire();reset();','window.__gameTest={state:()=>state,createUnit,resolveStrike,ecoCostFor,aiInvest,wave,tick,upgrade,aiReadOpponent,aiChoose,aiCountersFor,structureDamage,aiAdaptFacilities,separateUnits,unitRadius,bongoImpact,getDef,damage,nearestUnit,marineSpoils,deployMarineSupports,heal,enemyBaseVisible,enemyUnitVisible};initFactions();wire();reset();'),sandbox,{timeout:3500,filename:'game-v2.js'});
+vm.runInNewContext(code.replace('initFactions();wire();reset();','window.__gameTest={state:()=>state,createUnit,resolveStrike,ecoCostFor,aiInvest,hardInvest,compactArmy,aiSlotFor,wave,tick,upgrade,aiReadOpponent,aiChoose,aiCountersFor,structureDamage,aiAdaptFacilities,separateUnits,unitRadius,bongoImpact,getDef,damage,nearestUnit,marineSpoils,deployMarineSupports,heal,enemyBaseVisible,enemyUnitVisible};initFactions();wire();reset();'),sandbox,{timeout:3500,filename:'game-v2.js'});
 assert.equal(el('cash').textContent,'360');
 assert.match(el('unitCards').innerHTML,/강점:/);
 assert.match(el('unitCards').innerHTML,/약점:/);
@@ -426,3 +426,27 @@ for(const aiDifficulty of ['normal','hard']){
  assert.ok(counters>=2,'AI must field multiple paid answers to the scouted wolf melee flood ('+aiDifficulty+')');
  assert.ok(pressure.baseHP[1]>0,'single-role wolves must not defeat the AI without mixing counter types ('+aiDifficulty+')');
 }
+
+// Confirm paid AI choices can actually produce a full 20-soldier hero.
+// An aggregate is not fabricated: twenty real factories must deploy near each other.
+{
+ click('restartButton');click('startButton');
+ const s=g.state();
+ s.aiDifficulty='hard';s.enemyFaction=4;s.enemyEco=5;s.enemyEcoReadyAt=0;
+ s.wave=10;s.elapsed=250;s.enemyCash=5000;s.enemyWeapon=5;s.enemyArmor=5;
+ s.built.fill(null);s.enemyBuilt.fill(null);s.units.length=0;s.deadUnits.length=0;
+ for(const [i,role] of [[0,0],[1,1],[2,3],[3,1],[4,0],[5,6]])s.enemyBuilt[i]=role;
+ s.hardBrain={plan:2,opening:3,heroRole:1,spent:0,economyPurchases:0};
+ const before=s.enemyCash;
+ for(let attempt=0;attempt<4;attempt++)g.hardInvest();
+ const cohort=s.enemyBuilt.filter(r=>r===1).length;
+ assert.ok(cohort>=20,'hard AI buys a twenty-factory same-role group instead of only diversifying');
+ assert.ok(s.enemyCash<before,'each AI hero factory costs ordinary player CR');
+ g.wave();
+ g.compactArmy();
+ const hero=s.units.find(u=>u.side===1&&u.role===1&&u.heroCount===20);
+ assert.ok(hero,'AI creates a genuine 20-soldier hero from its own nearby production');
+ assert.ok(s.combatStats[1].heroes[1]>=1,'result report credits the actual hero formation');
+ assert.ok(hero.hp>0&&hero.maxHP>=20*g.getDef(1,s.enemyFaction).hp);
+}
+console.log('Hard AI actual 20-factory clustered hero production and telemetry passed.');
