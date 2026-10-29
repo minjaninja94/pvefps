@@ -445,6 +445,9 @@ for(const aiDifficulty of ['normal','hard']){
  g.wave();
  g.compactArmy();
  const hero=s.units.find(u=>u.side===1&&u.role===1&&u.heroCount===20);
+ if(!hero)console.log('HERO_DIAGNOSTIC',JSON.stringify({cohort,slots:s.enemyBuilt.map((r,i)=>r===1?i:-1).filter(i=>i>=0),
+  units:s.units.filter(u=>u.side===1&&u.role===1).map(u=>[Math.round(u.x),Math.round(u.y),u.hp,u.maxHP,u.heroCount]),
+  totals:s.units.length,heroes:s.combatStats[1].heroes[1]}));
  assert.ok(hero,'AI creates a genuine 20-soldier hero from its own nearby production');
  assert.ok(s.combatStats[1].heroes[1]>=1,'result report credits the actual hero formation');
  assert.ok(hero.hp>0&&hero.maxHP>=20*g.getDef(1,s.enemyFaction).hp);
