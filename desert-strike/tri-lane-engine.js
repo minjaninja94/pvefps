@@ -203,14 +203,20 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   }
   if(kind==='nuke'){
    if(!p.nukes)return {ok:false,reason:'핵폭탄 사용 완료'};
-   const endangered=state.cores.some(row=>row[p.team]<=CORE_HP*.7);
-   const intrusion=state.units.some(u=>u.hp>0&&u.team!==p.team&&(p.team===0?u.x<370:u.x>WIDTH-370));
-   const targets=state.units.filter(u=>u.hp>0&&u.team!==p.team&&(p.team===0?u.x<=550:u.x>=WIDTH-550));
-   if((!endangered&&!intrusion)||!targets.length)return {ok:false,reason:'기지 위기 시 침공한 적에게만 사용 가능'};
+   const targets=state.units.filter(u=>u.hp>0&&u.team!==p.team);
+   if(!targets.length)return {ok:false,reason:'제거할 상대 유닛이 없습니다.'};
+   const count=targets.reduce((sum,u)=>sum+(global.DesertConsolidation?.strength?.(u)??1),0);
    p.nukes=0;
-   for(const u of targets){const before=u.hp;u.hp=0;combatHit(u,before);u.killed=true;state.effects.push({x:u.x,y:u.y,lane:u.lane,kind:'nuke',time:.9,team:p.team});}
+   for(const u of targets){
+    const before=u.hp;u.hp=0;combatHit(u,before);u.killed=true;
+   }
    state.units=state.units.filter(u=>u.hp>0);
-   return {ok:true,removed:targets.length};
+   // A small team-wide event list is enough to notify every client. The server
+   // actually kills all opponents; we must not emit thousands of effects.
+   for(let laneIndex=0;laneIndex<LANES;laneIndex++)
+    state.effects.push({x:WIDTH/2,y:(laneIndex+.5)*LANE_H,lane:laneIndex,
+     kind:'nuke',time:1.8,team:p.team,casualties:count});
+   return {ok:true,removed:targets.length,soldiers:count};
   }
   if(kind==='barrage'){
    if(p.cash<260)return {ok:false,reason:'폭격 비용 260 CR 부족'};
@@ -280,40 +286,28 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   if(major===0&&counts[0]>=3&&(bot.faction===3||bot.faction===4)&&bot.cash>=COST[6])return 6;
   return [[1,6,3],[3,5],[0,1],[2,6],[2,3],[0,6],[4,1],[0,5]][major][0];
  }
- function tacticNukeEligible(bot){
-  const endangered=state.cores.some(row=>row[bot.team]<=CORE_HP*.7);
-  const intrusion=state.units.some(u=>u.hp>0&&u.team!==bot.team&&
-   (bot.team===0?u.x<370:u.x>WIDTH-370));
-  return endangered||intrusion;
- }
+ // Hard AI spends its one global nuke after a 100-soldier-equivalent
+ // enemy accumulation and a losing front. Only a nearly lost core overrides
+ // the 100-soldier goal. Human users can fire whenever any opponent is alive.
  function hardBotPurchase(bot){
   const ai=global.DesertHardAI;if(!ai)return;
   const brain=bot.hardBrain||(bot.hardBrain=ai.create(bot.faction));
-  // Consume only one actual nuclear charge when the bot's core is endangered.
-  // The ordinary team-agnostic tactic validates the intrusion and targets.
   if(bot.nukes){
-   const enemy=state.units.filter(u=>u.hp>0&&u.team!==bot.team&&
-    (bot.team===1?u.x>=WIDTH*.62:u.x<=WIDTH*.38));
-   const threat=u=>global.DesertConsolidation?.strength?.(u)||1;
-   let blast=null,score=0;
-   if(state.wave>=5)for(const u of enemy){
-    const group=enemy.filter(v=>Math.hypot(u.x-v.x,u.y-v.y)<=240);
-    const threatCount=group.reduce((sum,v)=>sum+threat(v),0);
-    if(threatCount>score){score=threatCount;blast=group;}
-   }
-   // Regular emergency: same 70%-core / deep penetration restriction.
-   const emergency=tacticNukeEligible(bot);
-   if(emergency)tactic(bot,'nuke');
-   else if(score>=20&&blast?.length){
-    bot.nukes=0;
-    const taken=blast.reduce((sum,u)=>sum+threat(u),0);
-    for(const u of blast){
-     const hp=u.hp;u.hp=0;combatHit(u,hp);u.killed=true;
-     state.effects.push({x:u.x,y:u.y,lane:u.lane,kind:'nuke',time:1.2,team:bot.team});
-    }
-    state.units=state.units.filter(u=>u.hp>0);
-    state.effects.push({x:blast[0].x,y:blast[0].y,lane:blast[0].lane,kind:'nuke',time:1.6,team:bot.team,casualties:taken});
-   }
+   const opposing=state.units.filter(u=>u.hp>0&&u.team!==bot.team);
+   const power=u=>global.DesertConsolidation?.strength?.(u)??1;
+   const population=opposing.reduce((s,u)=>s+power(u),0);
+   const near=opposing.filter(u=>bot.team===1?u.x>=WIDTH*.68:u.x<=WIDTH*.32)
+    .reduce((s,u)=>s+power(u),0);
+   const guard=state.units.filter(u=>u.hp>0&&u.team===bot.team&&
+    (bot.team===1?u.x>=WIDTH*.62:u.x<=WIDTH*.38))
+    .reduce((s,u)=>s+power(u),0);
+   const cores=state.cores.map(row=>row[bot.team]);
+   const weakest=Math.min(...cores);
+   const critical=weakest<=CORE_HP*.15&&population>=20;
+   const losing=weakest<=CORE_HP*.40||
+    state.turrets.some(row=>row[bot.team]<=TOWER_HP*.16)||
+    (near>=35&&near>=Math.max(18,guard*1.25));
+   if((population>=100&&losing)||critical)tactic(bot,'nuke');
   }
   const ours=state.units.filter(u=>u.hp>0&&u.team===bot.team);
   const known=state.units.filter(u=>u.hp>0&&u.team!==bot.team&&((bot.team===1?u.x>=WIDTH*.56:u.x<=WIDTH*.44)||ours.some(v=>Math.hypot(v.x-u.x,v.y-u.y)<340)));
