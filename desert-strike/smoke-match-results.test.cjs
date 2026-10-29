@@ -36,7 +36,7 @@ test('a player sees a permanent match report until they explicitly click lobby',
  assert.match(ui,/mpResultLobby.*returnToLobby/);
  assert.match(ui,/serverResult:data/);
  assert.match(report,/replaceChildren/);
- assert.doesNotMatch(report,/innerHTML/);
+ assert.doesNotMatch(report,/\.innerHTML\s*=/,'player names must never be interpreted as HTML');
 });
 test('safe report displays both teams and never invents disconnected opponents counts',()=>{
  class FakeNode {

@@ -96,7 +96,22 @@ async function leave(){
 }
 function listenRoom(){
  roomUnsub=fs.onSnapshot(path(),snap=>{
-  if(!snap.exists()){status('방이 닫혔습니다.');resetLocal();notify('room',null);return;}
+  if(!snap.exists()){
+   if(room?.status==='playing'){
+    status('호스트 방이 종료되었습니다. Supabase 최종 승패 판정을 확인합니다.');
+    const pending=global.DesertMember?.pendingState?.();
+    if(pending)void pending.then(data=>{
+     if(data?.state==='done'||data?.state==='abandoned')notify('serverResult',data);
+     if(data?.state==='done'&&data.winner_team!==null&&!gameEndedLocally){
+      gameEndedLocally=true;notify('forcedResult',data);
+     }
+     if(!data){resetLocal();notify('room',null);}
+    }).catch(()=>status('서버 재연결 및 결과 확인 중…'));
+    else {resetLocal();notify('room',null);}
+    return;
+   }
+   status('방이 닫혔습니다.');resetLocal();notify('room',null);return;
+  }
   room=snap.data();notify('room',{id:roomId,room,uid,host,ready:everyoneReady(room)});
   if(room.status==='playing'){global.DesertMember?.markPlaying?.(roomId);beginServerHeartbeat();}
   if(host&&room.status==='lobby')for(const m of members())if(m.uid!==uid&&!pcs.has(m.uid))void makeOffer(m.uid).catch(e=>status('연결 제안 오류: '+msg(e)));
