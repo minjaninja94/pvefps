@@ -132,7 +132,7 @@ api.reset();const artillery=api.state();
 artillery.live=true;artillery.wave=5;artillery.aiDifficulty='hard';artillery.enemyCash=580;
 const packed={uid:10020,side:0,faction:0,role:0,x:2400,y:260,
  hp:2200,maxHP:2200,heroCount:20,killed:false};
-artillery.units.push(packed);
+artillery.units.push(packed,{...packed,uid:10021,x:2410},{...packed,uid:10022,x:2390});
 assert.equal(api.hardBarrage(),true,'hard AI uses a paid blast against a scouted packed hero');
 assert.equal(artillery.enemyCash,320,'AI barrage is charged the same 260 CR');
 assert.equal(artillery.enemyBarrageCd,32);
