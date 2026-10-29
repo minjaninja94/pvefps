@@ -27,8 +27,8 @@ test('real 300-card draft works inside the original single-player engine without
   querySelectorAll:q=>q==='.screen'?screens:q==='.tab'||q==='[data-view]'?tabs:[],
   addEventListener(){}
  };
- let chosenRuleset='augment';
- const w={addEventListener(){},DesertLobby:{selectedRuleset:()=>chosenRuleset,aiDifficulty:()=> 'normal',completeSolo(){}}};
+ let chosenRuleset='augment',chosenAiDifficulty='normal';
+ const w={addEventListener(){},DesertLobby:{selectedRuleset:()=>chosenRuleset,aiDifficulty:()=>chosenAiDifficulty,completeSolo(){}}};
  const sandbox={window:w,document,requestAnimationFrame:fn=>queue.push(fn),console,Math,Array,Number,String,Date,Map,Set,Object,JSON,Uint8ClampedArray,
   fetch:async()=>({ok:true,json:async()=>catalogue})};
  vm.runInNewContext(src('augment-rules.js'),sandbox,{filename:'augment-rules.js',timeout:3000});
@@ -60,7 +60,7 @@ test('real 300-card draft works inside the original single-player engine without
  const initialCard=w.DesertAugments.card(st.augments[0]);
  const effect=initialCard.effects?.find(x=>x.kind==='stat');
  if(effect){const role=effect.roles?.[0]??0,key=effect.stat;
-  const base=G.effectiveDef(role,st.faction,1),enhanced=G.effectiveDef(role,st.faction,0);
+  const base=G.getDef(role,st.faction),enhanced=G.effectiveDef(role,st.faction,0);
   if(key==='regen')assert.ok(enhanced.regen>0);
   else assert.notEqual(enhanced[key],base[key],'stat '+key+' from selected card must apply to allies');
  }
@@ -94,6 +94,7 @@ test('real 300-card draft works inside the original single-player engine without
  assert.equal(st.augmentChoice,null,'wave 41 does not create an unscheduled draft');
  assert.equal(st.augments.length,augmentsAt40,'past wave 40, selected augments persist');
  assert.equal(st.enemyAugments.length,5,'AI also retains all five cards after the final selection wave');
+ assert.ok(el('soloAugmentStatus').textContent.includes('AI 증강 5개'),'HUD reveals AI card count without revealing its identities');
  // Verify the enemy actually gets live stat bonuses, not merely card IDs.
  const expected=w.DesertAugments.apply(G.getDef(2,st.enemyFaction),st.enemyAugments,2);
  const actual=G.effectiveDef(2,st.enemyFaction,1);
@@ -128,6 +129,16 @@ test('real 300-card draft works inside the original single-player engine without
  assert.equal(st.wave,100,'single-player continues beyond wave 22 and wave 99');
  assert.equal(st.ended,false,'no artificial wave-limit victory');
  assert.equal(st.ruleset,'standard','unlimited wave count does not change mode');
+ // Hard difficulty uses the same independent AI draft, without leaking into classic mode.
+ chosenAiDifficulty='hard';chosenRuleset='augment';G.start();st=G.state();
+ assert.equal(st.aiDifficulty,'hard');
+ assert.equal(st.enemyAugments.length,1,'hard AI gets an augment on round 1');
+ assert.equal(w.DesertAugments.card(st.enemyAugments[0]).tier,st.augmentChoice.tier);
+ assert.ok(G.chooseSoloAugment(1));
+ st.wave=9;G.wave();
+ assert.equal(st.enemyAugments.length,2,'hard AI gets its second augment on round 10');
+ assert.ok(st.augmentChoice,'human still receives their own selectable cards');
+ G.reset();assert.equal(G.state().enemyAugments.length,0,'hard AI picks reset on a new match');
 });
 test('lobby labels single/online/practice choices and loads 300 cards before single deployment',()=>{
  const lobby=src('front-lobby.js'),html=src('index.html'),css=src('style-v2.css');
