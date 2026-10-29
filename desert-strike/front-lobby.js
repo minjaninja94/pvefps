@@ -12,6 +12,8 @@ const SKINS=[
 const KEY='desert-front-training-v2',empty=()=>({xp:0,wins:0,losses:0,mpWins:0,mpLosses:0,selectedFaction:0,selectedSkin:'default',aiDifficulty:'normal',nickname:'지휘관'});
 let progress=empty(),uid=null,active=false,lastMultiplayer='',authBusy=false;
 let selectedUnit=0,selectedAction='idle',animationStart=0,animationTick=0,onlineOpen=false;
+const RULESET_KEY='desert-front-ruleset-v1';
+let selectedRuleset='standard';
 function safeName(v){return String(v||'지휘관').trim().replace(/[<>\u0000-\u001f]/g,'').slice(0,16)||'지휘관';}
 function storageKey(){const uid=global.DesertMember?.account?.()?.userId;return uid?'desert-front-training-member-'+uid:KEY;}
 function load(){
@@ -27,6 +29,38 @@ function save(){try{localStorage.setItem(storageKey(),JSON.stringify(progress));
 function levelFromXP(xp){let level=1,left=xp;while(level<100&&left>=100+level*70){left-=100+level*70;level++;}return {level,within:left,needed:100+level*70};}
 function rank(){const score=progress.mpWins*3+progress.wins*.5;return score>=100?'플래티넘 연습생':score>=55?'골드 연습생':score>=24?'실버 연습생':score>=7?'브론즈 연습생':'훈련병';}
 function currentSkin(){const lv=levelFromXP(progress.xp).level;return SKINS.find(x=>x.id===progress.selectedSkin&&lv>=x.level)||SKINS[0];}
+function renderRuleset(){
+ const selected=selectedRuleset==='augment';
+ const roomActive=!!global.DesertTriNetwork?.current?.()?.roomId;
+ const native=$('mpRuleset');
+ if(native&&native.value!==selectedRuleset&&!roomActive)native.value=selectedRuleset;
+ for(const b of document.querySelectorAll('#lobbyRulesetPicker [data-ruleset]')){
+  const active=b.dataset.ruleset===selectedRuleset;
+  b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));
+  b.disabled=roomActive;
+ }
+ const description=$('lobbyRulesetDescription');
+ if(description)description.textContent=selected
+  ?'증강전 선택 중 · 1·10·20·30·40웨이브에 카드 3장 중 선택, 슬롯별 리롤 1회 · 300종 증강'
+  :'일반전 선택 중 · 기존 전투 규칙을 사용합니다.';
+ const multiplayer=$('lobbyMulti')?.querySelector('span');
+ if(multiplayer)multiplayer.textContent=selected?'✦ 증강전 · 1:1~3:3 PvP 및 협동':'1:1~3:3 경쟁 · 2~3인 협동';
+ const practice=$('lobbyPractice')?.querySelector('span');
+ if(practice)practice.textContent=selected?'✦ 증강전 · AI와 카드 선택 연습':'온라인 연결 없이 전장 연습';
+}
+function chooseRuleset(value){
+ if(value!=='augment'&&value!=='standard')return false;
+ if(global.DesertTriNetwork?.current?.()?.roomId||$('mpRuleset')?.disabled)return false;
+ selectedRuleset=value;
+ const select=$('mpRuleset');if(select){select.value=value;select.dispatchEvent(new Event('change',{bubbles:true}));}
+ try{global.localStorage.setItem(RULESET_KEY,value);}catch(_){}
+ renderRuleset();return true;
+}
+function restoreRuleset(){
+ try{selectedRuleset=global.localStorage.getItem(RULESET_KEY)==='augment'?'augment':'standard';}catch(_){}
+ if($('mpRuleset'))$('mpRuleset').value=selectedRuleset;
+ renderRuleset();
+}
 function filterForSkin(id){return SKINS.find(x=>x.id===id)?.filter||'none';}
 function stateChange(){save();render();if(uid)void syncProfile();}
 function updateUnitInfo(){
@@ -80,6 +114,7 @@ function render(){
  const fac=FACTIONS[progress.selectedFaction]||FACTIONS[0],l=levelFromXP(progress.xp),s=currentSkin();
  $('lobbyDifficulty')?.querySelectorAll('[data-difficulty]').forEach(b=>{const chosen=b.dataset.difficulty===progress.aiDifficulty;b.classList.toggle('selected',chosen);b.setAttribute('aria-pressed',String(chosen));});
  $('lobbySolo').querySelector('span').textContent=(progress.aiDifficulty==='hard'?'하드 AI':'일반 AI')+' · 22웨이브 전투';
+ renderRuleset();
  const account=global.DesertDeviceAccount?.status?.();
  $('lobbyAccountStatus').textContent=global.DesertMember?.account?.()?('회원 · '+global.DesertMember.account().nickname):'게스트 · 이 기기';
  if(account){$('lobbyUserId').value=account.accountId;$('lobbyDeviceId').value=account.deviceId;}
@@ -169,7 +204,7 @@ function setMultiplayerExpanded(open){
  $('lobbyMulti').classList.toggle('expanded',onlineOpen);
 }
 function openMultiplayer(){
- prepare();
+ prepare();renderRuleset();
  if(onlineOpen&&!global.DesertTriNetwork?.current()?.roomId){setMultiplayerExpanded(false);return;}
  setMultiplayerExpanded(true);
  $('lobbyMultiplayerConfig').scrollIntoView?.({behavior:'smooth',block:'nearest'});
@@ -214,6 +249,17 @@ function initialize(){
  $('lobbySkins').addEventListener('click',e=>{const b=e.target.closest('[data-skin]');if(b)chooseSkin(b.dataset.skin);});
  $('lobbySolo').addEventListener('click',single);
  $('lobbyMulti').addEventListener('click',openMultiplayer);
+ $('lobbyRulesetPicker')?.addEventListener('click',e=>{
+  const button=e.target.closest('[data-ruleset]');
+  if(button)chooseRuleset(button.dataset.ruleset);
+ });
+ $('mpRuleset')?.addEventListener('change',()=>{
+  if(global.DesertTriNetwork?.current?.()?.roomId)return;
+  const value=$('mpRuleset').value;if(value==='standard'||value==='augment'){
+   selectedRuleset=value;try{global.localStorage.setItem(RULESET_KEY,value);}catch(_){}renderRuleset();
+  }
+ });
+ restoreRuleset();
  $('lobbyPractice').addEventListener('click',practiceBattle);
  $('lobbyDifficulty').addEventListener('click',e=>{const b=e.target.closest('[data-difficulty]');if(b)chooseDifficulty(b.dataset.difficulty);});
  $('backToLobby').addEventListener('click',()=>{void returnToLobby();});
