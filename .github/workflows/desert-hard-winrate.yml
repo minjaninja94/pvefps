@@ -1,0 +1,21 @@
+name: Desert Front hard AI win-rate benchmark
+on:
+  push:
+    paths:
+      - 'desert-strike/hard-ai.js'
+      - 'desert-strike/game-v2.js'
+      - 'desert-strike/tri-lane-engine.js'
+      - 'desert-strike/hard-ai-winrate-benchmark.cjs'
+      - '.github/workflows/desert-hard-winrate.yml'
+  workflow_dispatch:
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Paired win-rate and production economy comparison
+        run: node desert-strike/hard-ai-winrate-benchmark.cjs
