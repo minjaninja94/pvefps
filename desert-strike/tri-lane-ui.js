@@ -96,12 +96,23 @@ function unitCards(){
   const cv=document.createElement('canvas');cv.width=cv.height=72;unitIcon(cv,fac,i);
   const name=document.createElement('strong');name.textContent=i===8?'자원채취 건물':global.DesertRoster?.FACTIONS[fac]?.units[i]||E.NAMES[i];
   const cost=document.createElement('small');cost.textContent=(i===8&&(me?.eco||0)>=7?'최대 단계':(i===8?E.ecoPrice(me?.eco||0):E.COST[i])+' CR')+' · '+(i===8?'슬롯 1칸':d?.kind==='air'?'비행':'지상');
-  b.title=i===8?ecoTooltip(me?.eco||0,snap?.seconds||0):d?.tips||'';
+  const advantage=i===8?[]:(d?.good||[]).map(r=>E.NAMES[r]);
+   const vulnerable=i===8?[]:(d?.bad||[]).map(r=>E.NAMES[r]);
+   b.title=i===8?ecoTooltip(me?.eco||0,snap?.seconds||0):
+    [d?.tips||'',(i===7?'시너지 ':'강점 ')+advantage.join(' · '),'약점 '+vulnerable.join(' · ')].filter(Boolean).join('\n');
   if(i===8)b.disabled=(me?.eco||0)>=7||(me?.ecoReadyAt||0)>(snap?.seconds||0);
-  b.append(cv,name,cost);out.append(b);
+  b.append(cv,name,cost);
+   if(d){const good=document.createElement('span'),bad=document.createElement('span');
+    good.className='mp-good-counter';good.textContent=(i===7?'시너지 ':'강점 ')+(d.good||[]).map(r=>ICONS[r]||E.NAMES[r]).join(' ');
+    bad.className='mp-bad-counter';bad.textContent='약점 '+(d.bad||[]).map(r=>ICONS[r]||E.NAMES[r]).join(' ');
+    b.append(good,bad);
+   }
+   out.append(b);
  }
  const d=role===8?null:global.DesertRoster?.getDef(role,fac);
- $('mpUnitDetails').textContent=role===8?ecoTooltip(me?.eco||0,snap?.seconds||0):d?.tips||'유닛을 선택하세요.';
+ $('mpUnitDetails').textContent=role===8?ecoTooltip(me?.eco||0,snap?.seconds||0):
+  d?[d.tips||'',(role===7?'시너지: ':'강점: ')+(d.good||[]).map(r=>E.NAMES[r]).join(' · '),
+   '약점: '+(d.bad||[]).map(r=>E.NAMES[r]).join(' · ')].filter(Boolean).join('  /  '):'유닛을 선택하세요.';
  }
  $('mpUnitCards').querySelectorAll('[data-role]').forEach(b=>b.classList.toggle('unaffordable',!!me&&me.cash<(Number(b.dataset.role)===8?E.ecoPrice(me.eco):E.COST[Number(b.dataset.role)])));
 }
@@ -324,7 +335,7 @@ function renderAugment(){
  panel.hidden=false;panel.replaceChildren();
  const heading=document.createElement('h3');
  heading.textContent=headingText();
- const description=document.createElement('p');description.textContent='프리즘 3장 중 1장 선택 · 카드마다 리롤 1회 · 12초 후 자동 선택';
+ const description=document.createElement('p');description.textContent='프리즘 3장 중 1장 선택 · 카드마다 리롤 1회 · 30초 후 자동 선택';
  const cards=document.createElement('div');cards.className='mp-augment-cards';
  for(let i=0;i<3;i++){
   const card=global.DesertAugments?.card(choice.cards[i]),slot=document.createElement('div');slot.className='mp-augment-card';
@@ -357,7 +368,7 @@ function onSnapshot(v){
  const preparation=!v.ended&&v.wave===0?Math.max(0,(v.preparationEndsAt??E.OPENING_PREP_SECONDS??10)-v.seconds):0;
  const opening=$('mpOpening');if(opening)opening.hidden=preparation<=1e-6;
  const openingNumber=$('mpOpeningSeconds');if(openingNumber)openingNumber.textContent=String(Math.max(0,Math.ceil(preparation-1e-6)));
- if(!v.ended)$('mpStateTag').textContent=preparation>0?'초기 배치 · '+Math.ceil(preparation-1e-6)+'초 뒤 첫 출격':(v.mode==='classic'?'클래식 1:1':practice?'3라인 AI 연습':'3라인 전투')+' · '+(v.seconds>=(v.overtimeAt??16*60)?'전선 압박 포격':v.pressure>1?'전선 격화 ×'+v.pressure.toFixed(2):'진행 중');
+ if(!v.ended)$('mpStateTag').textContent=preparation>0?'초기 배치 · '+Math.ceil(preparation-1e-6)+'초 뒤 첫 출격':(v.mode==='classic'?'클래식 1:1':practice?'3라인 AI 연습':'3라인 전투')+' · '+'진행 중';
  const battle=$('mpBattleCanvas');if(battle.height!==battleHeight())battle.height=battleHeight();
  if(fresh||lane>=laneCount()){lane=laneCount()===1?0:1;cameraX=1100;repairLane=lane;gridKey='';setView('base');}
  const me=my(),side=me?.team??0;
@@ -418,11 +429,11 @@ async function practiceStart(){
  if($('mpRuleset').value==='augment')await global.DesertAugments.load();
  if(lobby)return message('온라인 방에서 나간 뒤 연습할 수 있습니다.');
  myId='local';
- const hard=global.DesertLobby?.aiDifficulty?.()==='hard';
+ const difficulty=global.DesertLobby?.aiDifficulty?.()||'normal';
  const mode=$('mpMode').value==='classic'?'classic':'pvp';
- practice=E.create({mode,size:1,aiDifficulty:hard?'hard':'normal',ruleset:$('mpRuleset').value,seed:Date.now()>>>0,members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%10,bot:true}]});
- if(!hard){const row=mode==='classic'?0:1;practice.state.players[1].buildings[row][1]=0;practice.state.players[1].buildings[row][17]=1;practice.state.players[1].cash-=160;}
- $('mpStateTag').textContent=hard?'하드 AI 연습':'오프라인 연습';message((mode==='classic'?'클래식 1:1':'3라인')+' AI 연습 시작');
+ practice=E.create({mode,size:1,aiDifficulty:difficulty,ruleset:$('mpRuleset').value,seed:Date.now()>>>0,members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%10,bot:true}]});
+ if(['normal','hard'].includes(difficulty)){const row=mode==='classic'?0:1;practice.state.players[1].buildings[row][1]=0;practice.state.players[1].buildings[row][17]=1;practice.state.players[1].cash-=160;}
+ $('mpStateTag').textContent=(global.DesertLobby?.difficultyLabel?.(difficulty)||'보통')+' AI 연습';message((mode==='classic'?'클래식 1:1':'3라인')+' AI 연습 시작');
  let last=performance.now();
  practiceTimer=setInterval(()=>{const now=performance.now();practice.tick(Math.min(.16,(now-last)/1000));last=now;onSnapshot(practice.snapshot('local'));},100);
  onSnapshot(practice.snapshot('local'));uiButtons();
