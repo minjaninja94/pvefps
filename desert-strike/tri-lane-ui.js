@@ -410,8 +410,8 @@ function drawOverview(){
  for(let l=0;l<laneCount();l++){
   const band=96/laneCount(),y=3+l*band,p=snap.lanePressure[l]??.5,h=band-2;
   g.fillStyle=l===lane?'#314748':'#20303a';g.fillRect(0,y,1100,h);
-  g.fillStyle='#86deda';g.fillRect(0,y+h-7,1100*p,5);
-  g.fillStyle='#e28c77';g.fillRect(1100*p,y+h-7,1100*(1-p),5);
+  g.fillStyle=teamInk(0);g.fillRect(0,y+h-7,1100*p,5);
+  g.fillStyle=teamInk(1);g.fillRect(1100*p,y+h-7,1100*(1-p),5);
   g.font='bold 12px monospace';g.textAlign='left';g.fillStyle='#f5e2c7';
   g.fillText((l===lane?'▶ ':'')+laneName(l)+' 전선',13,y+16);
   for(const u of snap.units)if(u.lane===l){
