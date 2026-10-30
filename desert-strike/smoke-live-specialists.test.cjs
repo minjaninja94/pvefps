@@ -94,21 +94,16 @@ test('high-difficulty AI reserves scarce credits for scheduled specialists',()=>
  assert.equal(ai.choose(brain,{...args,wave:11,cash:330}).role,10);
 });
 
-test('specialist Korean speech is wired into the real battle audio player',()=>{
- const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
- const src=fs.readFileSync(path.join(__dirname,'combat-audio.js'),'utf8'),spoken=[];
- const speech={speaking:false,pending:false,getVoices:()=>[{lang:'ko-KR',name:'Korean'}],speak(u){spoken.push(u);},cancel(){}};
- const w={speechSynthesis:speech,SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},
-  localStorage:{getItem:()=>null},addEventListener(){}};
- const d={hidden:false,readyState:'loading',body:{dataset:{playMode:'solo'},classList:{contains:()=>false}},addEventListener(){}};
- vm.runInNewContext(src,{window:w,document:d,performance:{now:()=>10000},Audio:class{}},{filename:'combat-audio.js'});
- assert.ok(w.DesertCombatAudio);
- w.DesertCombatAudio.unit(3,9,'default','attack',1700);
- assert.equal(spoken.length,1);assert.match(spoken[0].text,/오도 대물탄/);
- spoken[0].onend();
- w.DesertCombatAudio.unit(3,10,'default','spawn',1500);
- assert.equal(spoken.length,2);assert.match(spoken[1].text,/견쌍섭/);
- assert.equal(spoken[1].lang,'ko-KR');
+test('specialist audio uses Japanese VOICEVOX Nemo atlases without browser TTS',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const src=fs.readFileSync(path.join(__dirname,'combat-audio.js'),'utf8');
+ assert.doesNotMatch(src,/speechSynthesis|SpeechSynthesisUtterance|speakSpecial/);
+ assert.match(src,/role<0 \|\| role>10/,'sniper and assassin voices are accepted');
+ assert.match(src,/spec-f\\d\+/,'generated Nemo specialist audio can be decoded');
+ assert.match(src,/backupRole=role===9\?2:role===10\?0:role/,'ship existing Nemo Japanese voices before new assets are ready');
+ const generator=fs.readFileSync(path.join(__dirname,'tools/generate-nemo-specialists.py'),'utf8');
+ assert.match(generator,/voice_index\.json/);
+ assert.match(generator,/spec-f\{faction\}\.ogg/);
 });
 
 test('stealth is visible, non-targetable outside detection, exposed while attacking and defeated by a living detector',()=>{
