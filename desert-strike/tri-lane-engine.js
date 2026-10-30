@@ -535,9 +535,10 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  }
  function applyHit(a,v,damage){
   const attacker=combatDef(a),defender=combatDef(v);
-  const mult=matchupMultiplier(attacker,v,state.wave,a.role);
+  const mult=a.role===9?global.DesertExpansion.precisionMultiplier(a,{...v,kind:definition(v.faction,v.role).kind}):matchupMultiplier(attacker,v,state.wave,a.role);
   if(v.hp<=0)return;
-  let hit=global.DesertConsolidation?.hit(damage*mult,defender.armor,v,a)??Math.max(3,damage*mult-defender.armor*.66);
+  const armor=defender.armor*(a.role===9?.5:1);
+   let hit=global.DesertConsolidation?.hit(damage*mult,armor,v,a)??Math.max(3,damage*mult-armor*.66);
   if(v.faction===4&&attacker.range>=48)hit*=1-BEAST_RANGED_DAMAGE_REDUCTION;
   if(v.faction===0&&[3,4].includes(v.role))hit*=.94;
   if(v.faction===2&&state.seconds-(v.lastWardAt??-999)>=10){v.lastWardAt=state.seconds;hit*=.82;}
@@ -594,6 +595,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  function attack(a,v){
   const d=combatDef(a,state.players);
   a.cool=Math.max(.3,d.rate);a.act='attack';a.attackAge=.33;
+   if(a.role===10)global.DesertExpansion.revealOnAttack(a,state.seconds);
   if(a.role===7)a.skillAge=.54;
   const dmg=d.damage;
   if(a.role!==7&&d.range>=48){
@@ -644,7 +646,10 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     const distance=Math.hypot(x.x-v.x,x.y-v.y);
     if(distance<=radius)applyHit(a,x,dmg*(1-.48*distance/radius)*(global.DesertConsolidation?.splashWeight?.(x,volley)||1));
    }
-  }else applyHit(a,v,dmg);
+  }else{
+   applyHit(a,v,dmg*(a.role===10&&!a.firstAssassinStrike?global.DesertExpansion.RULES.firstStrikeMultiplier:1));
+   if(a.role===10)a.firstAssassinStrike=true;
+  }
   if(a.faction===1)broodLay(a,v);
   if(state.effects.length>100)state.effects.shift();
   state.effects.push({x:v.x,y:v.y,lane:Math.min(LANES-1,Math.floor(v.y/LANE_H)),kind:a.role===5?'blast':'hit',time:.3,team:a.team});
@@ -667,6 +672,20 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   for(const u of state.units){
    if(u.hp<=0)continue;
    u.prismTime=state.seconds;
+   if(u.role===10){
+    const X=global.DesertExpansion;
+    if(!u.infiltrationUsed&&!u.expansionTransit){
+     const tr=X.infiltration(u,state.units.filter(v=>v.hp>0&&v.team!==u.team),state.seconds);
+     if(tr){u.infiltrationUsed=true;u.expansionTransit=tr;}
+    }
+    if(u.expansionTransit){
+     const tr=u.expansionTransit,t=clamp((state.seconds-tr.start-X.RULES.infiltrationWindup)/X.RULES.infiltrationTravel,0,1);
+     u.x=tr.from.x+(tr.to.x-tr.from.x)*t;u.y=tr.from.y+(tr.to.y-tr.from.y)*t;
+     u.phase=state.seconds<tr.landAt?'infiltrating':'landing';
+     if(state.seconds<tr.readyAt){u.lane=clamp(Math.floor(u.y/LANE_H),0,LANES-1);continue;}
+     u.expansionTransit=null;u.phase='normal';
+    }
+   }
    const d=combatDef(u,state.players),support=u.role===7,r=support?SUPPORT_RADIUS:AGGRO_RADIUS;
    if(!u.isHatchling&&d.regen>0)u.hp=Math.min(u.maxHP,u.hp+u.maxHP*d.regen*dt);
    const moveSpeed=d.speed*((u.inkUntil||0)>state.seconds?.80:1);
@@ -678,7 +697,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    u.spawnAge=Math.min(5,(u.spawnAge||0)+dt);u.hitAge=Math.max(0,(u.hitAge||0)-dt);u.skillAge=Math.max(0,(u.skillAge||0)-dt);
    const valid=v=>v&&v.hp>0&&v.id!==u.id&&(support?
      v.team===u.team&&!v.isHatchling&&v.hp<v.maxHP-10:
-     v.team!==u.team&&(d.airTarget||definition(v.faction,v.role).kind!=='air')&&(!u.guardian||global.DesertGuardian?.canTarget(u,v,d.range,{multiplayer:true})));
+     v.team!==u.team&&global.DesertExpansion.canTarget(u,v,state.units,state.seconds)&&(d.airTarget||definition(v.faction,v.role).kind!=='air')&&(!u.guardian||global.DesertGuardian?.canTarget(u,v,d.range,{multiplayer:true})));
    const priority=v=>(u.role===4&&definition(v.faction,v.role).kind==='air'?175:0)
     +(u.role===6&&[4,6].includes(u.faction)&&[5,7].includes(v.role)?80:0)
     +(d.good.includes(v.role)?Math.min(35,d.range*.2):0);
@@ -688,7 +707,8 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    for(const v of nearby(support?u.team:1-u.team,u.x,u.y,r)){
     if(!valid(v))continue;
     const distance=Math.hypot(v.x-u.x,v.y-u.y);
-    const score=distance-(support?0:priority(v));
+    const bonus=u.role===9?Math.min(130,unitCost(v.faction,v.role)*.2):0;
+     const score=distance-(support?0:priority(v)+bonus);
     if(score+36<targetScore){target=v;best=distance;targetScore=score;}
    }
    const currentLane=clamp(Math.floor(u.y/LANE_H),0,LANES-1);
@@ -868,7 +888,8 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     nukes:allied(p)?p.nukes:null,barrageCd:allied(p)?Math.ceil(p.barrageCd*10)/10:null,
     buildings:p.buildings.map((slots,lane)=>allied(p)||visible[lane]?slots:Array(SLOTS).fill(null)),
     buildingReadyAt:p.buildingReadyAt.map((row,lane)=>allied(p)||visible[lane]?row.slice():Array(SLOTS).fill(0))})),
-   units:state.units.filter(u=>!isHidden(u.team,u.lane,u.x)).map(u=>({id:u.id,uid:u.uid,team:u.team,faction:u.faction,skin:u.skin||'default',role:u.role,lane:u.lane,x:Math.round(u.x),y:Math.round(u.y),hp:Math.ceil(u.hp),maxHP:Math.ceil(u.maxHP),heroCount:u.heroCount===20?20:1,guardian:!!u.guardian,guardianLane:u.guardian?u.guardianLane:null,conscripted:!!u.conscripted,isHatchling:!!u.isHatchling,frame:Math.floor(u.frame),act:u.hitAge>0?'hit':u.spawnAge<.42?'spawn':u.skillAge>0?'skill':u.attackAge>0?'attack':u.act})),
+   units:state.units.filter(u=>!isHidden(u.team,u.lane,u.x)).map(u=>({id:u.id,uid:u.uid,team:u.team,faction:u.faction,skin:u.skin||'default',role:u.role,lane:u.lane,x:Math.round(u.x),y:Math.round(u.y),hp:Math.ceil(u.hp),maxHP:Math.ceil(u.maxHP),heroCount:u.heroCount===20?20:1,guardian:!!u.guardian,guardianLane:u.guardian?u.guardianLane:null,conscripted:!!u.conscripted,isHatchling:!!u.isHatchling,frame:Math.floor(u.frame),act:u.hitAge>0?'hit':u.spawnAge<.42?'spawn':u.skillAge>0?'skill':u.attackAge>0?'attack':u.act,
+     infiltrationUsed:!!u.infiltrationUsed,phase:u.phase||'normal',...global.DesertExpansion.presentation(u,state.units,state.seconds)})),
    effects:state.effects.filter(e=>!isHidden(e.team,e.lane,e.x)).map(e=>({...e,x:Math.round(e.x),y:Math.round(e.y)}))};
  }
  // Both bot difficulties use their real opening cash at second zero, just as
