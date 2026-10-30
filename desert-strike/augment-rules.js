@@ -10,9 +10,9 @@ const specialistCards=Object.freeze([
  {id:'special-assassin-speed',name:'어둠 속 질주',description:'암살자의 이동속도가 18% 증가합니다.',tier:'silver',scope:'common',effects:[{kind:'stat',roles:[10],stat:'speed',value:.18}]},
  {id:'special-assassin-hp',name:'초경량 잠행복',description:'암살자의 체력이 18% 증가합니다. 탐지되지 않은 상태는 그대로 유지됩니다.',tier:'silver',scope:'common',effects:[{kind:'stat',roles:[10],stat:'hp',value:.18}]},
  {id:'special-sniper-damage',name:'대물탄 정밀 개조',description:'저격병의 공격력이 26% 증가합니다. 장갑 관통 및 조준 시간은 변하지 않습니다.',tier:'gold',scope:'common',effects:[{kind:'stat',roles:[9],stat:'damage',value:.26}]},
- {id:'special-sniper-extra',name:'저격 2인조',description:'저격병 생산시설이 매 출격 때 저격병 1기를 추가 생산합니다.',tier:'gold',scope:'common',effects:[{kind:'extra_spawn',roles:[9],value:1}]},
+ {id:'special-sniper-extra',name:'전술적 재배치',description:'저격병 이동속도가 20% 증가하여 적 돌격을 피해 사격 위치를 다시 잡습니다.',tier:'gold',scope:'common',effects:[{kind:'stat',roles:[9],stat:'speed',value:.20}]},
  {id:'special-assassin-damage',name:'급소 노림수',description:'암살자의 공격력이 25% 증가합니다. 탐지 가능 범위는 그대로입니다.',tier:'gold',scope:'common',effects:[{kind:'stat',roles:[10],stat:'damage',value:.25}]},
- {id:'special-assassin-extra',name:'그림자 분신조',description:'암살자 생산시설이 매 출격 때 암살자 1기를 추가 생산합니다.',tier:'gold',scope:'common',effects:[{kind:'extra_spawn',roles:[10],value:1}]}
+ {id:'special-assassin-extra',name:'암영 생존술',description:'암살자 체력이 25% 증가하여 적진에서의 생존력이 높아집니다.',tier:'gold',scope:'common',effects:[{kind:'stat',roles:[10],stat:'hp',value:.25}]}
 ]);
 let cards=[],byId=new Map(),loading,baseReady=false;
 function load(){
