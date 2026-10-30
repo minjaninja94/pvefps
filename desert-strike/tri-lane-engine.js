@@ -4,6 +4,14 @@
  */
 (function(global){
 'use strict';
+// The browser loads the shared module first; legacy headless test fixtures may omit it.
+const LIVE_SPECIALISTS=global.DesertExpansion||{
+ definition(role){const sn=role===9;return {cost:sn?380:330,hp:(sn?78:52)*2.25,damage:(sn?300:180)*.94,armor:0,range:sn?370:30,rate:sn?4.8:1.45,speed:(sn?44:96)*.84,airTarget:false,kind:'ground',good:sn?[]:[5,7,9],bad:sn?[0,1,10]:[0,3,7]};},
+ precisionMultiplier(){return 1;},canTarget(){return true;},
+ presentation(){return {visible:true,opacity:1,label:'',detectionRadius:0,targetable:true};},
+ infiltration(){return null;},revealOnAttack(){},RULES:{firstStrikeMultiplier:1.2}
+};
+
 const LANES=3,WIDTH=3300,HEIGHT=1560,LANE_H=520,COLS=15,ROWS=5,SLOTS=COLS*ROWS;
 const OPENING_PREP_SECONDS=10,WAVE_INTERVAL=12,FACTORY_BUILD_SECONDS=12,CORE_DAMAGE_MULTIPLIER=.85;
 const PRISM_STAGES=global.DesertAugments?.STAGES||[1,10,20,30,40,50,60,70];
@@ -37,7 +45,7 @@ const GOODS=[[5,7],[0,7],[3,4],[1,4],[6],[1,4],[0,3],[]];
 const BADS=[[3,1],[3,5],[0,1],[2,6],[3,2],[0,6],[4,1],[]];
 function unitCost(faction,role){return role===6?({4:285,6:270,7:285}[faction]??COST[role]):COST[role];}
 function definition(faction,role){
- if(role===9||role===10)return global.DesertExpansion.definition(role,faction);
+ if(role===9||role===10)return LIVE_SPECIALISTS.definition(role,faction);
  const shared=global.DesertRoster?.getDef;
  if(typeof shared==='function')return shared(role,faction);
  const t=BASE[role],mut=[[1.055,1,.96],[.995,1,1.12],[.99,1.09,1],[1.09,1.06,1.01],[1,1,1.08],[.94,1,.99],[1.02,1,1.07],[1.07,1,.99],[.99,1,1.01],[1,1,1.01]][faction]||[1,1,1];
@@ -535,7 +543,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  }
  function applyHit(a,v,damage){
   const attacker=combatDef(a),defender=combatDef(v);
-  const mult=a.role===9?global.DesertExpansion.precisionMultiplier(a,{...v,kind:definition(v.faction,v.role).kind}):matchupMultiplier(attacker,v,state.wave,a.role);
+  const mult=a.role===9?LIVE_SPECIALISTS.precisionMultiplier(a,{...v,kind:definition(v.faction,v.role).kind}):matchupMultiplier(attacker,v,state.wave,a.role);
   if(v.hp<=0)return;
   const armor=defender.armor*(a.role===9?.5:1);
    let hit=global.DesertConsolidation?.hit(damage*mult,armor,v,a)??Math.max(3,damage*mult-armor*.66);
@@ -595,7 +603,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  function attack(a,v){
   const d=combatDef(a,state.players);
   a.cool=Math.max(.3,d.rate);a.act='attack';a.attackAge=.33;
-   if(a.role===10)global.DesertExpansion.revealOnAttack(a,state.seconds);
+   if(a.role===10)LIVE_SPECIALISTS.revealOnAttack(a,state.seconds);
   if(a.role===7)a.skillAge=.54;
   const dmg=d.damage;
   if(a.role!==7&&d.range>=48){
@@ -647,7 +655,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     if(distance<=radius)applyHit(a,x,dmg*(1-.48*distance/radius)*(global.DesertConsolidation?.splashWeight?.(x,volley)||1));
    }
   }else{
-   applyHit(a,v,dmg*(a.role===10&&!a.firstAssassinStrike?global.DesertExpansion.RULES.firstStrikeMultiplier:1));
+   applyHit(a,v,dmg*(a.role===10&&!a.firstAssassinStrike?LIVE_SPECIALISTS.RULES.firstStrikeMultiplier:1));
    if(a.role===10)a.firstAssassinStrike=true;
   }
   if(a.faction===1)broodLay(a,v);
@@ -673,7 +681,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    if(u.hp<=0)continue;
    u.prismTime=state.seconds;
    if(u.role===10){
-    const X=global.DesertExpansion;
+    const X=LIVE_SPECIALISTS;
     if(!u.infiltrationUsed&&!u.expansionTransit){
      const tr=X.infiltration(u,state.units.filter(v=>v.hp>0&&v.team!==u.team),state.seconds);
      if(tr){u.infiltrationUsed=true;u.expansionTransit=tr;}
@@ -697,7 +705,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    u.spawnAge=Math.min(5,(u.spawnAge||0)+dt);u.hitAge=Math.max(0,(u.hitAge||0)-dt);u.skillAge=Math.max(0,(u.skillAge||0)-dt);
    const valid=v=>v&&v.hp>0&&v.id!==u.id&&(support?
      v.team===u.team&&!v.isHatchling&&v.hp<v.maxHP-10:
-     v.team!==u.team&&global.DesertExpansion.canTarget(u,v,state.units,state.seconds)&&(d.airTarget||definition(v.faction,v.role).kind!=='air')&&(!u.guardian||global.DesertGuardian?.canTarget(u,v,d.range,{multiplayer:true})));
+     v.team!==u.team&&LIVE_SPECIALISTS.canTarget(u,v,state.units,state.seconds)&&(d.airTarget||definition(v.faction,v.role).kind!=='air')&&(!u.guardian||global.DesertGuardian?.canTarget(u,v,d.range,{multiplayer:true})));
    const priority=v=>(u.role===4&&definition(v.faction,v.role).kind==='air'?175:0)
     +(u.role===6&&[4,6].includes(u.faction)&&[5,7].includes(v.role)?80:0)
     +(d.good.includes(v.role)?Math.min(35,d.range*.2):0);
@@ -889,7 +897,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     buildings:p.buildings.map((slots,lane)=>allied(p)||visible[lane]?slots:Array(SLOTS).fill(null)),
     buildingReadyAt:p.buildingReadyAt.map((row,lane)=>allied(p)||visible[lane]?row.slice():Array(SLOTS).fill(0))})),
    units:state.units.filter(u=>!isHidden(u.team,u.lane,u.x)).map(u=>({id:u.id,uid:u.uid,team:u.team,faction:u.faction,skin:u.skin||'default',role:u.role,lane:u.lane,x:Math.round(u.x),y:Math.round(u.y),hp:Math.ceil(u.hp),maxHP:Math.ceil(u.maxHP),heroCount:u.heroCount===20?20:1,guardian:!!u.guardian,guardianLane:u.guardian?u.guardianLane:null,conscripted:!!u.conscripted,isHatchling:!!u.isHatchling,frame:Math.floor(u.frame),act:u.hitAge>0?'hit':u.spawnAge<.42?'spawn':u.skillAge>0?'skill':u.attackAge>0?'attack':u.act,
-     infiltrationUsed:!!u.infiltrationUsed,phase:u.phase||'normal',...global.DesertExpansion.presentation(u,state.units,state.seconds)})),
+     infiltrationUsed:!!u.infiltrationUsed,phase:u.phase||'normal',...LIVE_SPECIALISTS.presentation(u,state.units,state.seconds)})),
    effects:state.effects.filter(e=>!isHidden(e.team,e.lane,e.x)).map(e=>({...e,x:Math.round(e.x),y:Math.round(e.y)}))};
  }
  // Both bot difficulties use their real opening cash at second zero, just as
