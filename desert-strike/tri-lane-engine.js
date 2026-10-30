@@ -6,7 +6,7 @@
 'use strict';
 // The browser loads the shared module first; legacy headless test fixtures may omit it.
 const LIVE_SPECIALISTS=global.DesertExpansion||{
- definition(role){const sn=role===9;return {cost:sn?380:330,hp:(sn?78:52)*2.25,damage:(sn?300:180)*.94,armor:0,range:sn?370:30,rate:sn?4.8:1.45,speed:(sn?44:96)*.84,airTarget:false,kind:'ground',good:sn?[]:[5,7,9],bad:sn?[0,1,10]:[0,3,7]};},
+ definition(role){const sn=role===9;return {cost:sn?380:330,hp:(sn?78:52)*2.25,damage:(sn?300:180)*.94,armor:0,range:sn?370:30,rate:sn?4.8:1.45,speed:(sn?44:96)*.84,airTarget:false,kind:'ground',good:sn?[3]:[5,7,9],bad:sn?[0,1,10]:[0,3,7]};},
  precisionMultiplier(){return 1;},canTarget(){return true;},
  presentation(){return {visible:true,opacity:1,label:'',detectionRadius:0,targetable:true};},
  infiltration(){return null;},revealOnAttack(){},RULES:{firstStrikeMultiplier:1.2}
