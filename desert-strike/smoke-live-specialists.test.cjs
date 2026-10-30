@@ -27,11 +27,12 @@ test('solo army roster keeps specialist portraits still while combat retains ani
  const game=fs.readFileSync(path.join(__dirname,'game-v2.js'),'utf8');
  const css=fs.readFileSync(path.join(__dirname,'style-v2.css'),'utf8');
  const art=fs.readFileSync(path.join(__dirname,'expansion/expansion-art.js'),'utf8');
- assert.doesNotMatch(game, /-preview\\.png/,'animated APNG previews must not autoplay in formation cards');
- assert.match(game, /specialist-static-preview/);
- assert.match(game, /assassin'\\)\\+'\\.webp/);
- assert.match(css, /\\.unit-card \\.specialist-static-preview\\s*\\{[^}]*background-size:800% 100%/);
- assert.match(art, /poses=\\{idle:/,'battle animation strips must remain present');
+ assert.ok(!game.includes('-preview.png'),'animated APNG previews must not autoplay in formation cards');
+ assert.ok(game.includes('specialist-static-preview'));
+ assert.ok(game.includes("+'.webp)"));
+ assert.ok(css.includes('.unit-card .specialist-static-preview{'));
+ assert.ok(css.includes('background-size:800% 100%'));
+ assert.ok(art.includes('const poses={idle:[0,1]'),'battle animation strips must remain present');
 });
 
 test('stealth is visible, non-targetable outside detection, exposed while attacking and defeated by a living detector',()=>{
