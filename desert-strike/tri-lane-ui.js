@@ -112,7 +112,7 @@ function unitCards(){
   const d=i===8?null:global.DesertRoster?.getDef(i,fac),b=document.createElement('button');b.type='button';b.dataset.role=i;b.className='mp-unit-card'+(role===i?' active':'');b.setAttribute('aria-pressed',String(role===i));
   const cv=document.createElement('canvas');cv.width=cv.height=72;unitIcon(cv,fac,i);
   const name=document.createElement('strong');name.textContent=i===8?'자원채취 건물':global.DesertRoster?.FACTIONS[fac]?.units[i]||E.NAMES[i];
-  const cost=document.createElement('small');cost.textContent=(i===8&&(me?.eco||0)>=7?'최대 단계':(i===8?E.ecoPrice(me?.eco||0):E.COST[i])+' CR')+' · '+(i===8?'슬롯 1칸':d?.kind==='air'?'비행':'지상');
+  const cost=document.createElement('small');cost.textContent=(i===8&&(me?.eco||0)>=7?'최대 단계':(i===8?E.ecoPrice(me?.eco||0):(E.unitCost?.(fac,i)??E.COST[i]))+' CR')+' · '+(i===8?'슬롯 1칸':d?.kind==='air'?'비행':'지상');
   const advantage=i===8?[]:(d?.good||[]).map(r=>E.NAMES[r]);
    const vulnerable=i===8?[]:(d?.bad||[]).map(r=>E.NAMES[r]);
    b.title=i===8?ecoTooltip(me?.eco||0,snap?.seconds||0):
@@ -131,7 +131,7 @@ function unitCards(){
   d?[d.tips||'',(role===7?'시너지: ':'강점: ')+(d.good||[]).map(r=>E.NAMES[r]).join(' · '),
    '약점: '+(d.bad||[]).map(r=>E.NAMES[r]).join(' · ')].filter(Boolean).join('  /  '):'유닛을 선택하세요.';
  }
- $('mpUnitCards').querySelectorAll('[data-role]').forEach(b=>b.classList.toggle('unaffordable',!!me&&me.cash<(Number(b.dataset.role)===8?E.ecoPrice(me.eco):E.COST[Number(b.dataset.role)])));
+ $('mpUnitCards').querySelectorAll('[data-role]').forEach(b=>b.classList.toggle('unaffordable',!!me&&me.cash<(Number(b.dataset.role)===8?E.ecoPrice(me.eco):(E.unitCost?.(me.faction,Number(b.dataset.role))??E.COST[Number(b.dataset.role)]))));
 }
 function updateLanePicker(p){
  $('mpSelectedLane').textContent=laneName(lane);

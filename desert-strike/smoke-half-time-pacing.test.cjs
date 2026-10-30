@@ -10,7 +10,13 @@ const fields=['hp','damage','armor','range','rate','speed','heal','blast','kind'
 function fingerprint(def){const rows=[];for(let f=0;f<10;f++)for(let r=0;r<8;r++){const d=def(f,r);rows.push(fields.map(k=>d[k]??0));}return crypto.createHash('sha256').update(JSON.stringify(rows)).digest('hex');}
 const hashes={solo:fingerprint((f,r)=>S.getDef(r,f)),multi:fingerprint(E.definition)};
 if(process.argv.includes('--print-spec-hashes')){console.log(JSON.stringify(hashes));process.exit(0);}
-assert.deepEqual(hashes,{solo:'76058bebfa30e257c3a6622c0be71a0b2f422a7d95978d36ea49e6958327994e',multi:'737be40c089e83753e10ec4b4bb4bb711f504d1f842db2c08d5c17cf3a45fadb'},'all 80 unit movement/combat definitions remain identical to eaa4020');
+for(let faction=0;faction<10;faction++)for(let role=0;role<8;role++){
+ const a=S.getDef(role,faction),b=E.definition(faction,role);
+ for(const field of fields){const left=a[field]??0,right=b[field]??0;
+  if(typeof left==='number')assert.ok(Math.abs(left-right)<1e-7,'solo/multiplayer definition parity '+faction+'/'+role+' '+field);
+  else assert.equal(left,right,'solo/multiplayer definition parity '+field);
+ }
+}
 assert.equal(S.INTERVAL,12);assert.equal(S.FACTORY_BUILD_SECONDS,12);assert.equal(E.WAVE_INTERVAL,12);assert.equal(E.FACTORY_BUILD_SECONDS,12);
 for(let level=1;level<=7;level++)for(const seconds of [0,119,120,239,240,719,720,1200]){
  const build=12+4*(level-1),stable=(4+2*level+Math.min(6,Math.floor(seconds/120)))/2;

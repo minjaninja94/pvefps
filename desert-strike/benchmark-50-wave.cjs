@@ -55,7 +55,7 @@ async function run(){
      if(economic){G.setRole(8);G.place(slot);}
      else{
       const role=styles[roleIndex++%styles.length];
-      if(s.cash>=G.ROLE[role].cost){G.setRole(role);G.place(slot);}
+      if(s.cash>=w.DesertRoster.getDef(role,s.faction).cost){G.setRole(role);G.place(slot);}
      }
     }
    }
@@ -96,7 +96,7 @@ async function run(){
       if(slot>=0)match.order(p.uid,{type:'build',lane,slot,role:8});
      }else{
       const lane=(Math.floor(purchases/5)+h)%3,slot=p.buildings[lane].findIndex(r=>r===null);
-      if(slot>=0){const role=[0,1,3,5,2,4,6,7][(purchases+h)%8];if(p.cash>=E.COST[role])
+      if(slot>=0){const role=[0,1,3,5,2,4,6,7][(purchases+h)%8];if(p.cash>=E.unitCost(p.faction,role))
        match.order(p.uid,{type:'build',lane,slot,role});}
      }
     }

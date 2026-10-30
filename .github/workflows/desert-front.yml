@@ -43,6 +43,8 @@ jobs:
         run: node --test desert-strike/smoke-bgm.test.cjs
       - name: Unlimited waves in solo and PvP/co-op with core-only victory
         run: node --test desert-strike/smoke-endless-waves.test.cjs
+      - name: Combat parity, faction prices, anti-air targeting and special-role balance
+        run: node --test desert-strike/smoke-balance-parity.test.cjs
       - name: Mixed Prism offers and Prism-only rules across all modes
         run: node --test desert-strike/smoke-prism-mode.test.cjs
       - name: Experimental 100 Prism mechanics and 400-card integration
@@ -113,6 +115,10 @@ jobs:
         run: node desert-strike/smoke-strategy.test.cjs
       - name: Hard AI 30-pair comparative win-rate benchmark
         run: node desert-strike/hard-ai-winrate-benchmark.cjs | tee /tmp/desert-hard-winrate.log
+      - name: Faction-aware prices and 2400/7200 CR role engagements
+        run: |
+          node desert-strike/benchmark-unit-pricing.cjs > /tmp/desert-price-balance.json
+          node desert-strike/benchmark-role-balance.cjs > /tmp/desert-role-balance.json
       - name: Ten-faction seeded 180-match balance simulation
         run: node desert-strike/smoke-balance.test.cjs > /tmp/desert-balance.json
       - name: Beastgirls and elven mages full sprite coverage
@@ -128,6 +134,8 @@ jobs:
         with:
           name: desert-front-balance-report
           path: |
+            /tmp/desert-price-balance.json
+            /tmp/desert-role-balance.json
             /tmp/desert-balance.json
             /tmp/desert-skirmish.log
             /tmp/desert-campaign.log

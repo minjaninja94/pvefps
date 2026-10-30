@@ -17,12 +17,12 @@ function setFactoryReady(side,slot){(side===0?state.buildReadyAt:state.enemyBuil
 
 const TOWER_RANGE=285,TOWER_PERIOD=.31,TOWER_DAMAGE=28,FOG_END_WAVE=6,ENEMY_FOG_X=WORLD_W-770;
 const HEAL_WINDOW=1,HEAL_BUDGET=80;
-const BROOD_BIRTH_CHANCE=.20,BROOD_BIRTH_COOLDOWN=11,BROOD_BIRTH_CAP=8,BROOD_ALIVE_CAP=14;
+const BROOD_BIRTH_CHANCE=.15,BROOD_BIRTH_COOLDOWN=12,BROOD_BIRTH_CAP=8,BROOD_ALIVE_CAP=14;
 const OCTOPER_REGEN=.0006,ROBOT_REPAIR=.0015;
-const BEAST_RANGED_DAMAGE_REDUCTION=.06,FAIRY_CHAIN_HEAL_RATIO=.05,FAIRY_HEAL_MULTIPLIER=1.08;
-const INK_DURATION=2.5,INK_COOLDOWN=5;
+const BEAST_RANGED_DAMAGE_REDUCTION=.06,FAIRY_CHAIN_HEAL_RATIO=.05,FAIRY_HEAL_MULTIPLIER=1.15;
+const INK_DURATION=1.8,INK_COOLDOWN=6;
 // Marine-only logistics. Low-probability transfer + fragile capture, max two recruits each wave.
-const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=1,HUANGLONG_INTERVAL=INTERVAL/3;
+const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=2,HUANGLONG_INTERVAL=INTERVAL/3;
 const ROLE=[
  {key:'charge',name:'돌격',mark:'⚔',token:'⚔',cost:65,hp:115,damage:21,armor:1,range:29,rate:.77,speed:82,airTarget:false,kind:'ground',tips:'적 포병·지원병 후방을 빠르게 찌릅니다. 장갑 기지 공격력은 낮습니다.',good:[5,7],bad:[3,1]},
  {key:'rifle',name:'사격',mark:'⌖',token:'⌖',cost:100,hp:108,damage:17,armor:1,range:164,rate:.8,speed:60,airTarget:true,kind:'ground',tips:'저렴한 범용 원거리 병력. 공중도 공격합니다.',good:[0,7],bad:[3,5]},
@@ -35,15 +35,15 @@ const ROLE=[
 ];
 const FACTIONS=[
  {id:'forge',name:'철갑연합',tag:'FORGE UNION',logo:'▦',color:'#79ddea',bonus:'전열 방어 특화 · 전 병종 체력 5.5% 증가 · 장갑·대공병이 받는 피해 6% 감소',mut:{hp:1.055,dmg:1,speed:.96},units:['진격 보병','기관총병','관통 로켓','철갑 전차','복합 대공포','궤도 자주포','추적 비행기','전장 구호병'],slogan:'높은 체력과 장갑 방어로 전열 유지',secondary:'#224956'},
- {id:'brood',name:'심연군체',tag:'DUSK BROOD',logo:'♜',color:'#b9df8d',bonus:'기동·증원 특화 · 전 병종 이동속도 12% 증가 · 전투병 공격 시 20% 확률로 공생충 소환(개체당 11초 간격)',mut:{hp:.995,dmg:1,speed:1.12},units:['송곳 발톱','산성 침벌','부식 포자충','거대 갑각수','가시 포자탑','폭식 투석충','비행 포식자','치유 공생충'],slogan:'빠른 진격과 공생충 증원',secondary:'#344d2b'},
+ {id:'brood',name:'심연군체',tag:'DUSK BROOD',logo:'♜',color:'#b9df8d',bonus:'기동·증원 특화 · 전 병종 이동속도 12% 증가 · 전투병 공격 시 15% 확률로 공생충 소환(개체당 12초 간격 · 웨이브당 8기)',mut:{hp:.995,dmg:1,speed:1.12},units:['송곳 발톱','산성 침벌','부식 포자충','거대 갑각수','가시 포자탑','폭식 투석충','비행 포식자','치유 공생충'],slogan:'빠른 진격과 공생충 증원',secondary:'#344d2b'},
  {id:'astral',name:'성운결사',tag:'ASTRAL ORDER',logo:'✧',color:'#d6b8ff',bonus:'공격·치유 특화 · 전 병종 공격력·치유량 9% 증가 · 10초마다 1회 받는 피해 18% 감소',mut:{hp:.99,dmg:1.09,speed:1},units:['수호 창병','광자 사수','균열 파괴자','수정 방패병','영점 수호기','공명 투창대','섬광 비행체','생명 융합사'],slogan:'공격과 치유를 강화하는 비전 방벽',secondary:'#443257'},
- {id:'marine',name:'해병성채',tag:'MARINE FORTRESS',logo:'★',color:'#dba77c',bonus:'전열·지원 특화 · 오도봉고 제외 7병종 체력 9% 증가 · 6개 공격 병종 공격력 6% 증가 · 지원병 치유량 6% 증가 · 황룡 웨이브당 3회 출격',mut:{hp:1.09,dmg:1.06,speed:1.01},units:['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],	slogan:'튼튼한 병력과 황룡의 광역 회복',secondary:'#58412f'},
- {id:'beastkin',name:'월영 수인족',tag:'MOONFANG CLAN',logo:'♞',color:'#f0b4a6',bonus:'기동·근접 방어 특화 · 전 병종 이동속도 2% 증가 · 돌격·장갑병 공격력 8% 증가 · 장갑병 체력 5% 증가 · 원거리 병종 공격 피해 6% 감소',mut:{hp:1,dmg:1,speed:1.02},units:['백랑 검사','여우족 단검투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],slogan:'강한 근접 공격과 튼튼한 장갑병',secondary:'#603d46'},
+ {id:'marine',name:'해병성채',tag:'MARINE FORTRESS',logo:'★',color:'#dba77c',bonus:'전열·지원 특화 · 오도봉고 제외 7병종 체력 9% 증가 · 6개 공격 병종 공격력 6% 증가 · 지원병 치유량 6% 증가 · 황룡 웨이브당 3회 출격 · 자진입대 웨이브당 최대 2명',mut:{hp:1.09,dmg:1.06,speed:1.01},units:['무모칠 · 오도돌격','박철곤 · 중기관총','조조팔 · 대장갑포','황근출 · 배틀액스','톤톤정 · 대공 난사','마철두 · 포격특공','오도봉고 · 전우애 돌격','황룡 · 해병수육'],	slogan:'튼튼한 병력과 황룡의 광역 회복',secondary:'#58412f'},
+ {id:'beastkin',name:'월영 수인족',tag:'MOONFANG CLAN',logo:'♞',color:'#f0b4a6',bonus:'기동·근접 방어 특화 · 전 병종 이동속도 8% 증가 · 대장갑병 공격력 12% 증가 · 돌격·장갑병 공격력 8% 증가 · 장갑병 체력 5% 증가 · 원거리 병종 공격 피해 6% 감소',mut:{hp:1,dmg:1,speed:1.08},units:['백랑 검사','여우족 단검투척수','스라소니 창투사','맹호 방패기사','매의눈 사냥꾼','설표 돌도끼병','흑표 돌격기수','토끼족 치유사'],slogan:'강한 근접 공격과 튼튼한 장갑병',secondary:'#603d46'},
  {id:'elf',name:'은월 엘프족',tag:'SILVERWOOD ELVES',logo:'✦',color:'#b2e6cf',bonus:'원거리 정밀사격 특화 · 사격·대장갑·대공·포격·비행: 사거리 10% 증가, 12% 확률로 피해 25% 증가',mut:{hp:.94,dmg:1,speed:.99},units:['달빛 검호','실바람 궁수','별무리 관통궁','고목 수호기사','별빛 대공궁','숲의 대마법사','초승달 비행마녀','샘물 치유사'],slogan:'긴 사거리와 확률 추가 피해',secondary:'#375c52'},
- {id:'furry',name:'야월 퍼리족',tag:'WILDFUR PACK',logo:'♣',color:'#e8c392',bonus:'근접 협공 특화 · 돌격·장갑병 공격력 10% 증가 · 아군 퍼리가 165거리 안에 있으면 돌격·장갑·늑대기수 피해 6% 증가',mut:{hp:1.02,dmg:1,speed:1.07},units:['늑대 추적자','여우총 사냥꾼','송곳니 분쇄자','곰 털갑옷 수호자','하울 창투사','들소 포격수','알파 늑대 기수','달빛 무리치유사'],slogan:'아군과 함께 싸우는 근접 협공',secondary:'#634634'},
+ {id:'furry',name:'야월 퍼리족',tag:'WILDFUR PACK',logo:'♣',color:'#e8c392',bonus:'근접 협공 특화 · 대장갑병 공격력 12% 증가 · 돌격·장갑병 공격력 10% 증가 · 아군 퍼리가 165거리 안에 있으면 돌격·장갑·늑대기수 피해 6% 증가',mut:{hp:1.02,dmg:1,speed:1.07},units:['늑대 추적자','여우총 사냥꾼','송곳니 분쇄자','곰 털갑옷 수호자','하울 창투사','들소 포격수','알파 늑대 기수','달빛 무리치유사'],slogan:'아군과 함께 싸우는 근접 협공',secondary:'#634634'},
  {id:'robot',name:'크롬 로보족',tag:'CHROME SYNDICATE',logo:'⬡',color:'#83c5fd',bonus:'원거리·자가수리 특화 · 사격·대장갑·대공·포격 공격력 8% 증가 · 매초 최대 체력의 0.15% 회복',mut:{hp:1.07,dmg:1,speed:.99},units:['블레이드 오토마타','레이저 정찰기','레일 관통병기','티탄 실드 워커','플랙 대공드론','공성 캐논','전술 변형 메카','나노 정비유닛'],slogan:'원거리 화력과 전투 중 자가수리',secondary:'#264e67'},
- {id:'octoper',name:'옥토퍼 군체',tag:'ABYSSAL OCTOPER',logo:'✺',color:'#c5a0fa',bonus:'주술·재생 특화 · 대장갑·대공·포격 공격력 16% 증가 · 매초 최대 체력의 0.06% 회복',mut:{hp:.99,dmg:1,speed:1.01},units:['팔완 돌격체','먹물 주술사','심해 관통술사','갑각 문어수호자','팔완 대공술사','심연 의식술사','마력 비행수','군체 사제'],slogan:'강한 주술 화력과 지속 재생',secondary:'#4a3370'},
- {id:'fairy',name:'농농 페어리족',tag:'PETAL FAIRIES',logo:'❀',color:'#ffadd4',bonus:'치유 특화 · 지원병 기본 치유량 8% 증가 · 5초마다 주변 다른 아군 1기에 실제 회복량의 5% 추가 치유',mut:{hp:.84,dmg:1,speed:1.01},units:['꽃잎 소검사','이슬 마도사','씨앗 관통술사','버섯껍질 방패수','반딧불 대공술사','꽃가루 폭격사','별빛 나비정령','꽃샘 치유사'],slogan:'주변 아군에게 이어지는 연쇄치유',secondary:'#84577c'}
+ {id:'octoper',name:'옥토퍼 군체',tag:'ABYSSAL OCTOPER',logo:'✺',color:'#c5a0fa',bonus:'주술·재생 특화 · 대장갑·대공·포격 공격력 10% 증가 · 매초 최대 체력의 0.06% 회복 · 먹물: 6초마다 1.8초간 이동 20%·공격 10% 감소',mut:{hp:.99,dmg:1,speed:1.01},units:['팔완 돌격체','먹물 주술사','심해 관통술사','갑각 문어수호자','팔완 대공술사','심연 의식술사','마력 비행수','군체 사제'],slogan:'강한 주술 화력과 지속 재생',secondary:'#4a3370'},
+ {id:'fairy',name:'농농 페어리족',tag:'PETAL FAIRIES',logo:'❀',color:'#ffadd4',bonus:'치유 특화 · 지원병 기본 치유량 15% 증가 · 5초마다 주변 다른 아군 1기에 실제 회복량의 5% 추가 치유',mut:{hp:1,dmg:1,speed:1.01},units:['꽃잎 소검사','이슬 마도사','씨앗 관통술사','버섯껍질 방패수','반딧불 대공술사','꽃가루 폭격사','별빛 나비정령','꽃샘 치유사'],slogan:'주변 아군에게 이어지는 연쇄치유',secondary:'#84577c'}
 ];
 const RNAME=ROLE.map(r=>r.name),SPRITES=new Map();
 let selectedFaction=0,state=null,selectedRole=null,demolition=false,activeView='base',lastFrame=0,lastRenderAt=0,uiElapsed=0;
@@ -65,15 +65,16 @@ const SPECIAL_GUIDES={
 '3-3':'황근출. 지상 중장갑 도끼 전사로 전열을 지킵니다.',
 '3-6':'오도봉고. 지상 돌격 차량. 최대 3명의 지상 적을 충돌 공격하며 대장갑에 약합니다.',
 '3-7':'황룡. 매 웨이브 0·4·8초에 출격해 주변 아군을 한 번 크게 치료합니다.',
-'4-6':'흑표 돌격기수. 지상 기병. 빠른 돌진으로 적 최대 3명을 공격하며 대장갑에 약합니다.',
-'6-6':'알파 늑대 기수. 지상 야수 기병. 빠르게 접근해 적 후방을 압박합니다.',
-'7-6':'전술 변형 메카. 비행하지 않는 지상 중장갑. 지상·공중을 원거리 공격합니다.',
+'4-6':'흑표 돌격기수. 285 CR 지상 기병. 포격·지원병을 추격하고 적 최대 3명을 공격하며 대장갑·장갑병에 약합니다.',
+'6-6':'알파 늑대 기수. 270 CR 지상 야수 기병. 포격·지원병을 우선 추격하고 최대 2명에게 연속 공격(두 번째 65%)하며 대장갑·장갑병에 약합니다.',
+'7-6':'전술 변형 메카. 285 CR 지상 중장갑. 늘어난 체력과 사거리로 전열을 지원하고 지상·공중을 공격합니다. 대장갑·포격에 약합니다.',
 '8-5':'심연 의식술사. 넓은 범위의 주술 공격으로 지상 적을 공격합니다.',
 '8-6':'마력 비행수. 공중 생명체. 대공 공격에 약합니다.',
 '9-6':'별빛 나비정령. 공중 정령. 대공 공격에 약합니다.',
 '9-7':'꽃샘 치유사. 아군을 치료하며 가끔 주위 아군 한 명을 추가 회복합니다.'
 };
 function unitGuide(faction,role){return SPECIAL_GUIDES[faction+'-'+role]||BASIC_GUIDES[role];}
+function unitCost(role,faction=0){return role===6?({4:285,6:270,7:285}[faction]??ROLE[role].cost):ROLE[role]?.cost??Infinity;}
 function getDef(role,faction){
  const r=ROLE[role],f=FACTIONS[faction];
  const isBongo=faction===3&&role===6,isWolfRider=faction===6&&role===6;
@@ -81,15 +82,15 @@ function getDef(role,faction){
  const isBeast=faction===4,isElf=faction===5,isFurry=faction===6,isRobot=faction===7,isOcto=faction===8,isFairy=faction===9,isProwler=isBeast&&role===6;
  const melee=(isBeast||isFurry)&&(role===0||role===3||role===6);
  const rangeBoost=isElf&&[1,2,4,5,6].includes(role);
- return {...r,unitName:f.units[role],factionName:f.name,name:isBongo?'돌격 차량':isProwler?'돌격 기병':groundSpecial&&faction===6?'늑대 기병':groundSpecial&&faction===7?'지상 메카':r.name,mark:isBongo?'▰':isProwler?'♞':groundSpecial&&faction===6?'♞':groundSpecial&&faction===7?'⬡':r.mark,
-  hp:isBongo?565:r.hp*f.mut.hp*2.25*(isElf&&role===0?.88:isBeast&&role===3?1.05:1),
-  damage:isBongo?36:isProwler?33:isWolfRider?32:r.damage*f.mut.dmg*.94*(isBeast?(melee?1.08:.83):isElf?(rangeBoost?1.045:role===0?.84:1):isFurry?(melee?1.10:.93):isRobot&&[1,2,4,5].includes(role)?1.08:isOcto&&[2,4,5].includes(role)?1.16:1),
-  heal:(r.heal||0)*f.mut.dmg*1.5*(isRobot?.85:isFairy?FAIRY_HEAL_MULTIPLIER:1),blast:(r.blast||0)*(isOcto?1.15:1),speed:isBongo?77:isProwler?90:r.speed*f.mut.speed*.84*(melee?1.05:1),
-  kind:groundSpecial?'ground':r.kind,armor:isBongo?7:isProwler?3:groundSpecial&&faction===7?5:r.armor,
-  range:isBongo?43:isProwler?40:isWolfRider?42:r.range*(rangeBoost?1.10:isRobot&&[1,2,4,5].includes(role)?1.04:1),
-  rate:isBongo?1.45:isProwler?.95:isWolfRider?.9:r.rate,
+ return {...r,cost:unitCost(role,faction),unitName:f.units[role],factionName:f.name,name:isBongo?'돌격 차량':isProwler?'돌격 기병':groundSpecial&&faction===6?'늑대 기병':groundSpecial&&faction===7?'지상 메카':r.name,mark:isBongo?'▰':isProwler?'♞':groundSpecial&&faction===6?'♞':groundSpecial&&faction===7?'⬡':r.mark,
+  hp:isBongo?565:(isRobot&&role===6?210:isWolfRider?210:r.hp)*f.mut.hp*2.25*(isElf&&role===0?.88:isBeast&&role===3?1.05:1),
+  damage:isBongo?36:isProwler?33:isWolfRider?36:(isRobot&&role===6?27:r.damage)*f.mut.dmg*.94*(isBeast?(melee?1.08:role===2?1.12:.94):isElf?(rangeBoost?1.045:role===0?.84:1):isFurry?(melee?1.10:role===2?1.12:.93):isRobot&&[1,2,4,5].includes(role)?1.08:isOcto&&[2,4,5].includes(role)?1.10:1),
+  heal:(r.heal||0)*f.mut.dmg*1.5*(isRobot?.85:isFairy?FAIRY_HEAL_MULTIPLIER:1),blast:(r.blast||0)*(isOcto?1.08:1),speed:isBongo?77:isProwler?90:r.speed*f.mut.speed*.84*(melee?1.05:1),
+  kind:groundSpecial?'ground':r.kind,armor:isBongo?7:isProwler||isWolfRider?3:groundSpecial&&faction===7?5:r.armor,
+  range:isBongo?43:isProwler?40:isWolfRider?42:isRobot&&role===6?175:r.range*(rangeBoost?1.10:isRobot&&[1,2,4,5].includes(role)?1.04:1),
+  rate:isBongo?1.45:isProwler?.95:isWolfRider?.85:isRobot&&role===6?.8:r.rate,
   airTarget:groundSpecial&&faction!==7?false:r.airTarget,
-  good:isBongo?[0,7]:isProwler?[0,5,7]:groundSpecial&&faction===6?[0,7]:groundSpecial&&faction===7?[0,3]:r.good,bad:isBongo||isProwler?[2,3]:groundSpecial&&faction===6?[2,3]:groundSpecial&&faction===7?[2,5]:r.bad,
+  good:isBongo?[0,7]:isProwler?[0,5,7]:groundSpecial&&faction===6?[0,5,7]:groundSpecial&&faction===7?[0,3]:r.good,bad:isBongo||isProwler?[2,3]:groundSpecial&&faction===6?[2,3]:groundSpecial&&faction===7?[2,5]:r.bad,
   tips:unitGuide(faction,role),
   unitType:groundSpecial?'ground-special':r.kind
 };
@@ -141,7 +142,7 @@ function effectiveDef(role,faction,side=0){
 }
 function combatDef(u){
  const base=u.guardian?getDef(u.role,u.faction):effectiveDef(u.role,u.faction,u.side),d=window.DesertConsolidation?.definition(base,u)||base;
- return u.isHatchling?{...d,hp:1,damage:5,range:24,rate:1.28,speed:108,armor:0,airTarget:false,kind:'ground'}:d;
+ return u.isHatchling?{...d,hp:1,damage:4,range:24,rate:1.28,speed:108,armor:0,airTarget:false,kind:'ground'}:d;
 }
 function broodLay(parent,target,roll=Math.random){
  const limits=ownPrism()?.broodLimits?.(sideAugments(parent.side),BROOD_BIRTH_CAP,BROOD_ALIVE_CAP,BROOD_BIRTH_CHANCE)||
@@ -278,7 +279,7 @@ function place(index){
  const old=state.built[index];
  if(demolition){
   if(old!==null){
-   const refund=Math.floor((old===EXTRACTOR?state.mineCosts[index]:ROLE[old].cost)*.55);
+   const refund=Math.floor((old===EXTRACTOR?state.mineCosts[index]:unitCost(old,state.faction))*.55);
    state.cash+=refund;state.built[index]=null;state.buildReadyAt[index]=0;if(old===EXTRACTOR){state.eco--;delete state.mineCosts[index];delete state.mineTimings[index];}
    setMessage((old===EXTRACTOR?'자원채취 건물':FACTIONS[state.faction].units[old])+' 생산 시설 철거 · '+refund+' CR 반환');chirp(210,.11);
   }
@@ -291,7 +292,7 @@ function place(index){
  if(selectedRole===EXTRACTOR){
   const ok=constructExtractor(0,index);setMessage(ok?'자원채취 건설 '+ecoBuildSeconds(state.eco)+'초 + 안정화 '+ecoStabilize(state.eco,state.elapsed)+'초 · 전체 인컴 중단':ecoRemaining()>0?'채굴망 안정화가 끝난 뒤 추가 건설할 수 있습니다.':state.eco>=MAX_ECONOMY?'자원채취 건물은 최대 7개입니다.':'자원 부족');updateUI(true);return;
  }
- const price=ROLE[selectedRole].cost;
+ const price=unitCost(selectedRole,state.faction);
  if(price>state.cash){setMessage('자원 부족 · '+Math.ceil(price-state.cash)+' CR이 더 필요합니다.');return;}
  state.cash-=price;state.built[index]=selectedRole;setFactoryReady(0,index);
  setMessage(FACTIONS[state.faction].units[selectedRole]+(state.elapsed<OPENING_PREP_SECONDS?' 초기 배치 · '+Math.ceil(OPENING_PREP_SECONDS-state.elapsed)+'초 뒤 첫 출격':' 건설 시작 · '+FACTORY_BUILD_SECONDS+'초 후 출격 가능'));
@@ -376,7 +377,7 @@ function hardBarrage(){
  const visible=state.units.filter(u=>u.side===0&&u.hp>0&&
   (u.x>=WORLD_W*.54||scouts.some(v=>Math.hypot(v.x-u.x,v.y-u.y)<=420)));
  if(!visible.length)return false;
- const value=u=>ROLE[u.role].cost*(u.heroCount===20?(window.DesertConsolidation?.strength?.(u)??20):1);
+ const value=u=>unitCost(u.role,u.faction)*(u.heroCount===20?(window.DesertConsolidation?.strength?.(u)??20):1);
  let target=null,score=0;
  for(const u of visible){
   const clustered=visible.reduce((n,v)=>n+(Math.hypot(u.x-v.x,u.y-v.y)<110?value(v):0),0);
@@ -411,7 +412,7 @@ function barrage(){
  if(!enemies.length){setMessage('폭격할 적 병력이 없습니다.');return;}
  let target=enemies[0],best=-1;
  for(const u of enemies){
-  let score=0;for(const v of enemies){if(Math.hypot(u.x-v.x,u.y-v.y)<110)score+=ROLE[v.role].cost;}
+  let score=0;for(const v of enemies){if(Math.hypot(u.x-v.x,u.y-v.y)<110)score+=unitCost(v.role,v.faction);}
   if(score>best){best=score;target=u;}
  }
  state.cash-=260;state.barrageCd=32;
@@ -499,7 +500,7 @@ function aiCountersFor(role){
 }
 function aiChoose(budget=state.enemyCash){
  const intel=aiReadOpponent();
- const affordable=ROLE.map((role,id)=>id).filter(id=>ROLE[id].cost<=budget);
+ const affordable=ROLE.map((role,id)=>id).filter(id=>unitCost(id,state.enemyFaction)<=budget);
  if(!affordable.length)return null;
  const myCounts=Array(ROLE.length).fill(0);
  for(const role of state.enemyBuilt)if(role!==null&&role!==EXTRACTOR)myCounts[role]++;
@@ -529,14 +530,14 @@ function aiChoose(budget=state.enemyCash){
    matching.sort((a,b)=>{
     const ac=myCounts[a]/Math.max(1,Math.ceil(intel.counts[intel.dominant]*.55));
     const bc=myCounts[b]/Math.max(1,Math.ceil(intel.counts[intel.dominant]*.55));
-    return ac-bc || ROLE[a].cost-ROLE[b].cost;
+    return ac-bc || unitCost(a,state.enemyFaction)-unitCost(b,state.enemyFaction);
    });
    return matching[0];
   }
  }
  // A mixed army is answered with a diverse mixture weighted by real enemy roles.
  const scores=affordable.map(id=>{
-  const role=ROLE[id];
+  const role=getDef(id,state.enemyFaction);
   const matchup=intel.counts.reduce((score,n,enemyRole)=>
    score+n*(role.good.includes(enemyRole)?3.5:role.bad.includes(enemyRole)?-2.5:0),0);
   const antiSpam=myCounts[id]*2.5;
@@ -640,7 +641,7 @@ function hardInvest(){
  for(let purchase=0;purchase<12;purchase++){
   const counts=Array(8).fill(0);for(const role of state.enemyBuilt)if(role!==null&&role!==EXTRACTOR)counts[role]++;
   let slot=state.enemyBuilt.findIndex(v=>v===null);if(slot<0)break;
-  let action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,costs:ROLE.map(x=>x.cost),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded,roles}});
+  let action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,costs:ROLE.map((x,i)=>unitCost(i,state.enemyFaction)),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded,roles}});
   // After the planned opener, maintain factory output while waiting for a
   // costly specialist. Respect the extractor reserve and never buy for free.
   const total=counts.reduce((n,v)=>n+v,0);
@@ -654,13 +655,13 @@ function hardInvest(){
    (intel.armor>=3&&counts[2]<Math.max(2,intel.armor*.20));
   const commitHero=focus!==null&&!urgentDefense&&!ecoDue&&counts[focus]<20&&
    total<Math.min(SLOTS-state.enemyEco,Math.max(growTo,28));
-  if(commitHero)action=state.enemyCash>=ROLE[focus].cost?{kind:'unit',role:focus}:null;
+  if(commitHero)action=state.enemyCash>=unitCost(focus,state.enemyFaction)?{kind:'unit',role:focus}:null;
   if(!action&&!commitHero&&total<growTo&&!ecoDue&&brain.opening>=ai.plans[brain.plan].opening.length){
-   const candidates=ROLE.map((role,id)=>id).filter(id=>ROLE[id].cost<=state.enemyCash);
+   const candidates=ROLE.map((role,id)=>id).filter(id=>unitCost(id,state.enemyFaction)<=state.enemyCash);
    const counters=intel.dominant===null?[]:aiCountersFor(intel.dominant);
    const weights=ai.plans[brain.plan].weights;
    candidates.sort((a,b)=>{
-    const score=r=>(weights[r]+(counters.includes(r)?7:0))/(counts[r]+1)-(ROLE[r].cost/1000);
+    const score=r=>(weights[r]+(counters.includes(r)?7:0))/(counts[r]+1)-(unitCost(r,state.enemyFaction)/1000);
     return score(b)-score(a);
    });
    if(candidates.length)action={kind:'unit',role:candidates[0]};
@@ -671,11 +672,11 @@ function hardInvest(){
    const total=counts.reduce((sum,n)=>sum+n,0);
    if(current<Math.ceil(total*.75)){
     const role=counters.slice().sort((a,b)=>counts[a]-counts[b])[0];
-    if(state.enemyCash>=ROLE[role].cost)action={kind:'unit',role};
+    if(state.enemyCash>=unitCost(role,state.enemyFaction))action={kind:'unit',role};
     else if(action.kind==='unit')break;
    }
   }
-  const cost=action.kind==='econ'?ecoCostFor(state.enemyEco):ROLE[action.role].cost;
+  const cost=action.kind==='econ'?ecoCostFor(state.enemyEco):unitCost(action.role,state.enemyFaction);
   if(action.kind==='econ'){if(!constructExtractor(1,slot))break;}
   else {if(state.enemyCash<cost)break;slot=aiSlotFor(action.role);if(slot<0)break;state.enemyBuilt[slot]=action.role;setFactoryReady(1,slot);state.enemyCash-=cost;}
   ai.bought(brain,action,cost);
@@ -686,8 +687,8 @@ function aiInitialBuild(){
 
  // Equal starting resources. Both buildings are paid for out of the AI's 360 CR.
  for(const [slot,role] of [[1,0],[17,1]]){
-  if(state.enemyBuilt[slot]!==null||state.enemyCash<ROLE[role].cost)continue;
-  state.enemyBuilt[slot]=role;setFactoryReady(1,slot);state.enemyCash-=ROLE[role].cost;
+  if(state.enemyBuilt[slot]!==null||state.enemyCash<unitCost(role,state.enemyFaction))continue;
+  state.enemyBuilt[slot]=role;setFactoryReady(1,slot);state.enemyCash-=unitCost(role,state.enemyFaction);
  }
 }
 // Refit a wrong production lineup for the scouted counter plan. Both difficulties
@@ -705,14 +706,14 @@ function aiAdaptFacilities(intel){
     :army.filter(r=>counters.includes(r)).length>=goal)return false;
  const oldIndex=state.enemyBuilt.findIndex(role=>role!==null&&role!==EXTRACTOR&&!counters.includes(role));
  if(oldIndex<0)return false;
- const old=state.enemyBuilt[oldIndex],refund=Math.floor(ROLE[old].cost*.55);
- const options=counters.filter(role=>ROLE[role].cost-refund<=state.enemyCash);
+ const old=state.enemyBuilt[oldIndex],refund=Math.floor(unitCost(old,state.enemyFaction)*.55);
+ const options=counters.filter(role=>unitCost(role,state.enemyFaction)-refund<=state.enemyCash);
  const target=protectedSiege
   ?([3,1,6].find(role=>options.includes(role)&&
      current.filter(r=>r===role).length<Math.ceil(army.length*(role===3?.2:role===1?.14:.24))))
-  :options.sort((a,b)=>state.enemyBuilt.filter(r=>r===a).length-state.enemyBuilt.filter(r=>r===b).length||ROLE[a].cost-ROLE[b].cost)[0];
+  :options.sort((a,b)=>state.enemyBuilt.filter(r=>r===a).length-state.enemyBuilt.filter(r=>r===b).length||unitCost(a,state.enemyFaction)-unitCost(b,state.enemyFaction))[0];
  if(target===undefined)return false;
- state.enemyBuilt[oldIndex]=target;setFactoryReady(1,oldIndex);state.enemyCash+=refund-ROLE[target].cost;
+ state.enemyBuilt[oldIndex]=target;setFactoryReady(1,oldIndex);state.enemyCash+=refund-unitCost(target,state.enemyFaction);
  state.aiLastRefitAt=state.elapsed;return true;
 }
 function normalMirrorEconomy(){
@@ -743,12 +744,12 @@ function aiInvest(){
   if(state.wave>=5&&!intel.invaded&&intel.dominant===null&&army.length>=9){
    const popular=counts.indexOf(Math.max(...counts));
    if(counts[popular]>=5&&counts[popular]<20&&
-    counts[popular]<Math.min(20,Math.ceil((army.length+purchased)*.72))&&state.enemyCash>=ROLE[popular].cost)
+    counts[popular]<Math.min(20,Math.ceil((army.length+purchased)*.72))&&state.enemyCash>=unitCost(popular,state.enemyFaction))
     role=popular;
   }
   const slot=aiSlotFor(role);
   if(slot<0)break;
-  state.enemyBuilt[slot]=role;setFactoryReady(1,slot);state.enemyCash-=ROLE[role].cost;
+  state.enemyBuilt[slot]=role;setFactoryReady(1,slot);state.enemyCash-=unitCost(role,state.enemyFaction);
  }
 }
 function renderSoloAugment(){
@@ -982,7 +983,7 @@ function resolveStrike(u,hit){
 function marineSpoils(v,attacker,roll=Math.random){
  if(!attacker||attacker.faction!==3||attacker.side===v.side||attacker.conscripted||v.conscripted||v.isHatchling||v.guardian)return;
  if(roll()<MARINE_LOOT_CHANCE){
-  const amount=Math.min(24,Math.floor(ROLE[v.role].cost*.12));
+  const amount=Math.min(24,Math.floor(unitCost(v.role,v.faction)*.12));
   const key=v.side===0?'cash':'enemyCash',to=attacker.side===0?'cash':'enemyCash';
   const stolen=Math.min(amount,Math.max(0,Math.floor(state[key])));
   if(stolen>0){state[key]-=stolen;state[to]+=stolen;state.marineStats.loot++;state.marineStats.lootedCR+=stolen;floatText(v.x,v.y-28,'긴빠이 +'+stolen+' CR','#f8d292');}
@@ -1133,7 +1134,9 @@ function nearestUnit(u,def){
   if(v.hp<=0||v.side===u.side||(u.guardian&&!window.DesertGuardian?.canTarget(u,v,def.range))||(!def.airTarget&&getDef(v.role,v.faction).kind==='air'))continue;
   const dy=Math.abs(u.y-v.y);
   const d=Math.hypot(next,dy);
-  const bonus=(u.role===4&&getDef(v.role,v.faction).kind==='air'?175:0)+(def.good.includes(v.role)?Math.min(35,def.range*.2):0);
+  const bonus=(u.role===4&&getDef(v.role,v.faction).kind==='air'?175:0)
+   +(u.role===6&&[4,6].includes(u.faction)&&[5,7].includes(v.role)?80:0)
+   +(def.good.includes(v.role)?Math.min(35,def.range*.2):0);
   if(d-bonus<score){score=d-bonus;candidate=v;}
  }
  return candidate;
@@ -1214,15 +1217,11 @@ function fire(u,t=null,baseSide=null,structurePart=null){
  const fort=baseSide===null?null:defenseTarget(baseSide,structurePart);
  const def=combatDef(u),x=t?t.x:fort.x,y=t?t.y:260;
  if(def.range<48){
-  if(t && u.faction===3&&u.role===6){
-   // Armored bumper: splash up to three clustered ground enemies, not flying units.
-   let hits=0;
-   for(const v of state.units){
-    if(v.side===u.side||v.hp<=0||getDef(v.role,v.faction).kind==='air')continue;
-    if(Math.hypot(t.x-v.x,t.y-v.y)>48)continue;
-    damage(v,def.damage*(sideWeaponMultiplier(u.side))*(v.role===0?1.3:v.role===3?.55:1),null,u);
-    if(++hits>=3)break;
-   }
+  if(t && [3,4,6].includes(u.faction)&&u.role===6){
+   const targets=state.units.filter(v=>v.side!==u.side&&v.hp>0&&getDef(v.role,v.faction).kind==='ground'&&Math.hypot(t.x-v.x,t.y-v.y)<58)
+    .sort((a,b)=>Math.hypot(t.x-a.x,t.y-a.y)-Math.hypot(t.x-b.x,t.y-b.y)).slice(0,u.faction===6?2:3);
+   targets.forEach((v,i)=>damage(v,def.damage*sideWeaponMultiplier(u.side)*(u.faction===6?(i===0?1:.65):(v.role===0?1.3:v.role===3?.55:1))
+    *(window.DesertConsolidation?.splashWeight?.(v,window.DesertConsolidation?.strength(u)||1)||1),u.role,u));
    pulse(t.x,t.y,'#f1af72',23);
   }
   else if(t)damage(t,def.damage*(sideWeaponMultiplier(u.side)),u.role,u);
@@ -1507,12 +1506,12 @@ function updateUI(full=false){
    return '<button class="unit-card'+(selectedRole===i?' selected':'')+'" data-role="'+i+'" title="'+getDef(i,state.faction).tips+
     '"><span class="uc-top">'+getDef(i,state.faction).mark+' '+getDef(i,state.faction).name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
     '</span><span class="uc-name">'+f.units[i]+'</span><span class="uc-role">'+getDef(i,state.faction).name+' · '+(getDef(i,state.faction).kind==='air'?'공중':'지상')+'</span>'+
-    '<span class="uc-cost">'+r.cost+' CR</span><span class="good-counter">'+(i===7?'✚ 회복 전용':'강점: '+getDef(i,state.faction).good.map(x=>ROLE[x].mark).join(' '))+'</span><span class="bad-counter">'+(i===7?'위협: ⚔ ⌖':'약점: '+getDef(i,state.faction).bad.map(x=>ROLE[x].mark).join(' '))+'</span></button>';
+    '<span class="uc-cost">'+unitCost(i,state.faction)+' CR</span><span class="good-counter">'+(i===7?'✚ 회복 전용':'강점: '+getDef(i,state.faction).good.map(x=>ROLE[x].mark).join(' '))+'</span><span class="bad-counter">'+(i===7?'위협: ⚔ ⌖':'약점: '+getDef(i,state.faction).bad.map(x=>ROLE[x].mark).join(' '))+'</span></button>';
   }).join('')+'<button class="unit-card resource-card'+(selectedRole===EXTRACTOR?' selected':'')+'" data-role="8" title="'+ecoTooltip(state.eco,state.elapsed)+'" '+(state.eco>=7||ecoRemaining()>0?'disabled':'')+'><span class="uc-top">자원채취 · '+state.eco+'/7</span><span class="uc-sprite"><img class="pixel-preview" src="./assets/resource-extractor.webp" alt=""></span><span class="uc-name">자원채취 건물</span><span class="uc-role">'+(state.eco>=7?'수입 +'+showIncome(state.eco):'완료 후 +'+showIncome(state.eco+1))+' / 0.5초</span><span class="uc-cost">'+(state.eco>=7?'최대 단계':ecoCost()+' CR')+'</span><span class="bad-counter">'+(state.eco>=7?'7 / 7':'건설 '+ecoBuildSeconds(state.eco+1)+'초 · 안정화 '+ecoStabilize(state.eco+1,state.elapsed)+'초')+'</span></button>';
 
   $('demolishButton').classList.toggle('selected',demolition);
   $('unitDetails').innerHTML=selectedRole===EXTRACTOR?'<b>자원채취 건물</b> · 슬롯 1칸<br>'+ecoTooltip(state.eco,state.elapsed):selectedRole!==null?'<b>'+f.units[selectedRole]+'</b> · '+getDef(selectedRole,state.faction).name+
-    ' / '+ROLE[selectedRole].cost+' CR<br>'+getDef(selectedRole,state.faction).tips+'<div class="matchups">'+roleMatchupHtml(selectedRole,state.faction)+
+    ' / '+unitCost(selectedRole,state.faction)+' CR<br>'+getDef(selectedRole,state.faction).tips+'<div class="matchups">'+roleMatchupHtml(selectedRole,state.faction)+
     '</div><span>HP '+Math.round(selected.hp*(1+.09*state.armor))+' · '+(selected.heal?'치유 '+Math.round(selected.heal*sideWeaponMultiplier(0)):'공격 '+Math.round(selected.damage*sideWeaponMultiplier(0)))+
     ' · 사거리 '+Math.round(effectiveDef(selectedRole,state.faction).range)+' · '+(effectiveDef(selectedRole,state.faction).airTarget?'대공 가능':'지상 공격')+'</span>':
     '유닛을 선택하세요.';
@@ -2074,7 +2073,7 @@ function wire(){
    $('pauseButton').textContent=state.paused?'▶ 계속하기':'Ⅱ 일시정지';updateUI(true);}}
  });
 }
-window.DesertRoster=Object.freeze({OPENING_PREP_SECONDS,WAVE_INTERVAL:INTERVAL,FACTORY_BUILD_SECONDS,FACTIONS,ROLE,getDef,refreshChoices:initFactions,cost:(role)=>ROLE[role]?.cost??Infinity});
+window.DesertRoster=Object.freeze({OPENING_PREP_SECONDS,WAVE_INTERVAL:INTERVAL,FACTORY_BUILD_SECONDS,FACTIONS,ROLE,getDef,refreshChoices:initFactions,cost:unitCost});
 for(const readyEvent of ['desert-moe-ready','desert-real-sprites-ready'])window.addEventListener?.(readyEvent,()=>{if(state){state.lastCards=undefined;updateUI(true);}});initFactions();wire();reset();
 if(typeof window.addEventListener==='function')window.addEventListener('marine-art-ready',()=>updateUI(true));
 if(typeof window.addEventListener==='function')window.addEventListener('isometric-art-ready',()=>updateUI(true));

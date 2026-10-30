@@ -25,7 +25,7 @@ code=code.replace('initFactions();wire();reset();',
  .replaceAll('updateUI(true);','').replaceAll('updateUI(false);','');
 vm.runInNewContext(code,solo,{timeout:10000,filename:'game-v2.js'});
 const game=solo.window.__traitTest;
-near(game.getDef(7,9).heal/game.getDef(7,0).heal,1.08,'fairy heals 8% above standard unit');
+near(game.getDef(7,9).heal/game.getDef(7,0).heal,1.15,'fairy heals 15% above standard unit');
 game.reset();let state=game.state();state.faction=4;state.enemyFaction=0;
 game.createUnit(0,0,0);game.createUnit(1,0,1);
 const victim=state.units[0],shooter=state.units[1];
@@ -52,7 +52,7 @@ const triSource=read('tri-lane-engine.js'),tag='return {state,order,tick,wave,sn
 assert.equal(triSource.split(tag).length,2,'three-lane trait test hook must exist');
 vm.runInNewContext(triSource.replace(tag,'return {state,order,tick,wave,snapshot,definition,__test:{applyHit,attack}};'),tri,{timeout:10000,filename:'tri-lane-engine.js'});
 const E=tri.window.DesertTriEngine;
-near(E.definition(9,7).heal/E.definition(0,7).heal,1.08,'multiplayer fallback fairy healing bonus');
+near(E.definition(9,7).heal/E.definition(0,7).heal,1.15,'multiplayer fallback fairy healing bonus');
 const match=E.create({mode:'pvp',size:1,members:[{uid:'ally',team:0,faction:4},{uid:'enemy',team:1,faction:0}]});
 const a={id:10,uid:'enemy',team:1,faction:0,role:1,lane:0,x:530,y:260,hp:300,maxHP:300,radius:15};
 const v={id:11,uid:'ally',team:0,faction:4,role:0,lane:0,x:540,y:260,hp:300,maxHP:300,radius:15};
@@ -72,4 +72,4 @@ healGame.__test.attack(support,first);
 const received=first.hp-hp0;
 assert.ok(received>E.definition(0,7).heal,'multiplayer fairy healing bonus must be applied');
 near(second.hp-hp1,received*.05,'multiplayer fairy chain heal must equal 5% of recovery');
-console.log('Both engines: fairy +8% healing, 5% chain, beastkin 6% ranged protection, no melee mitigation passed.');
+console.log('Both engines: fairy +15% healing, 5% chain, beastkin 6% ranged protection, no melee mitigation passed.');

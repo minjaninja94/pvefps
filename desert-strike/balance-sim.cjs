@@ -79,7 +79,7 @@ function score(engagement){
     // Temporary broodlings and captured conscripts are free reinforcements, not full-cost producers.
     // One consolidated hero represents twenty purchased units, not a single purchased soldier.
     if(u.isHatchling||u.conscripted||u.guardian||u.hp<=0)continue;
-    points[u.side]+=u.hp/u.maxHP*core.ROLE[u.role].cost*(u.heroCount===20?20:1);
+    points[u.side]+=u.hp/u.maxHP*core.getDef(u.role,u.faction).cost*(u.heroCount===20?20:1);
    }
   return points;
  }
