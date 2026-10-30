@@ -5,7 +5,7 @@ const poses={idle:[0,1],move:[2,3],attack:[4,5],siege:[4,6],skill:[4,6],spawn:[0
 function pose(action,frame){const list=poses[action]||poses.idle,n=((Math.floor(frame)||0)%16+16)%16;return action==='idle'||action==='move'?list[Math.floor(n/2)%list.length]:list[Math.min(list.length-1,Math.floor(n/16*list.length))];}
 function source(faction,role,skin){
  const name=X.FACTIONS[faction],moe=skin==='moe',modern=role===9||role===10;
- const url=modern?'./assets/'+(moe?'moe':'base')+'-'+name+'-'+(role===9?'sniper':'assassin')+'.webp':moe?'../assets/sprites/moe-'+name+'-actions.webp':'../assets/sprites/uniform-'+name+'-'+role+'.webp';
+ const url=modern?'./expansion/assets/'+(moe?'moe':'base')+'-'+name+'-'+(role===9?'sniper':'assassin')+'.webp':moe?'../assets/sprites/moe-'+name+'-actions.webp':'../assets/sprites/uniform-'+name+'-'+role+'.webp';
  if(!cache.has(url)){const im=new Image();im.decoding='async';cache.set(url,im);im.src=url;}
  return {image:cache.get(url),row:!modern&&moe?role:0};
 }
@@ -18,4 +18,4 @@ function draw(g,{faction=0,role=9,skin='base',action='idle',frame=0,x=0,y=0,size
  g.drawImage(image,pose(action,frame)*96,row*96,96,96,-size/2,-size/2,size,size);g.restore();return true;
 }
 global.DesertExpansionArt=Object.freeze({draw,pose,paintedPoses:8,frames:16,status:()=>({requested:cache.size,ready:[...cache.values()].filter(i=>i.complete&&i.naturalWidth>0).length})});
-})(window);
+})(typeof window==='undefined'?globalThis:window);
