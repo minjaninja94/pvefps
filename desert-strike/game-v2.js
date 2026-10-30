@@ -4,7 +4,7 @@
 const LIVE_SPECIALISTS=window.DesertExpansion||{
  CANDIDATES:{9:{key:'sniper',name:'저격',cost:380,hp:78,damage:300,armor:0,range:370,rate:4.8,speed:44,airTarget:false,kind:'ground',good:[],bad:[0,1,10]},
   10:{key:'assassin',name:'암살',cost:330,hp:52,damage:180,armor:0,range:30,rate:1.45,speed:96,airTarget:false,kind:'ground',good:[5,7,9],bad:[0,3,7]}},
- NAMES:Array.from({length:10},()=>['저격병','암살자']),
+ NAMES:Array.from({length:10},(_,f)=>f===3?['쾌흥태','견쌍섭']:['저격병','암살자']),
  definition(role){const r=this.CANDIDATES[role];return {...r,hp:r.hp*2.25,damage:r.damage*.94,speed:r.speed*.84,heal:0,blast:0};},
  precisionMultiplier(){return 1;},canTarget(){return true;},presentation(){return {opacity:1,label:''};},
  infiltration(){return null;},revealOnAttack(){},RULES:{firstStrikeMultiplier:1.2}
