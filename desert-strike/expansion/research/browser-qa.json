@@ -1,0 +1,19 @@
+{
+  "verifiedUrl": "https://minjaninja94.github.io/pvefps/desert-strike/expansion/lab.html",
+  "sourceCommit": "cb1e12f18d3289d1fa947c79bfd8bc450f94562c",
+  "galleryCards": 40,
+  "galleryCanvases": 40,
+  "allFortyArtworkVisuallyInspected": true,
+  "desktopHorizontalOverflow": false,
+  "battleControlsAndPausedStealthPresentationVerified": true,
+  "detectorRingsAndLabelsVerified": true,
+  "rewardPreviewCards": 3,
+  "applicationConsoleErrorsObserved": 0,
+  "unrelatedBrowserExtensionMetadataErrorsIgnored": true,
+  "mobileViewportTested": false,
+  "screenshots": [
+    "browser-gallery-1793385746363.jpg",
+    "browser-stealth-1793385825962.jpg",
+    "browser-rewards-1793385885459.jpg"
+  ]
+}
