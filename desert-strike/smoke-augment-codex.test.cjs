@@ -52,7 +52,7 @@ test('existing shared catalogue exposes 728 read-only entries without changing g
  for(let i=0;i<10;i++)assert.equal(data.filter(c=>c.scope==='faction-'+i).length,67);
  assert.equal(data.find(c=>c.id===original.cards[0].id).description,original.cards[0].description);
  assert.ok(data.every(c=>typeof c.name==='string'&&typeof c.tier==='string'));
- assert.equal(w.DesertAugments.STAGES.join(','),'1,10,20,30,40,58,60,70');
+ assert.equal(w.DesertAugments.STAGES.join(','),'1,10,20,30,40,50,60,70');
  const again=w.DesertAugments.list();again.pop();assert.equal(w.DesertAugments.list().length,728);
 });
 test('popup opens from selected faction, filters by common/faction, tier, and search, then restores focus',async()=>{
