@@ -74,6 +74,7 @@ assert.equal(item('mpBattleCanvas').hidden,false,'selecting a row reveals compac
 assert.equal(item('mpAllBattleCanvas').hidden,true);
 item('mpBattleLaneSelect').dispatch('click',{target:{closest(query){return query==='[data-mp-scope="all"]'?{dataset:{mpScope:'all'}}:null;}}});
 assert.equal(item('mpAllBattleCanvas').hidden,false,'all-lane tab restores three-line overview');
+item('mpLaneTabs').dispatch('click',{target:{closest(){return buttons[1];}}}); // Restore center build lane after drilling into the top battle.
 assert.equal(item('mpBaseView').hidden,true,'battle tab hides production');
 assert.equal(item('mpBattleView').hidden,false,'battle tab shows battlefield');
 assert.equal(nav[1].attrs['aria-current'],'page');
