@@ -289,10 +289,59 @@ const extraCards=IDENTITIES.flatMap((concepts,faction)=>Array.from({length:30},(
  return Object.freeze({id:'exp-prism-'+faction+'-'+(index+10),scope:'faction-'+faction,tier:'prismatic',
   name:concept+' · '+epithet,description,experimental:true,effects});
 }));
+// Two class-defining transcendence powers per faction: sniper (9), assassin (10).
+// They use the same host-authoritative on-hit, kill, survival and healing APIs
+// in solo, classic, three-line PvP and co-op, without changing global unit stats.
+const specialistPrisms=[
+ [
+  ['강철 궤도 사수','저격병 3번째 명중이 중장갑을 파쇄하고 포탄 파편을 주변 2기에 연쇄시킵니다.',9,'shatter',3,.60,burst(9,1.25,4)],
+  ['철갑 성벽의 그림자','암살자 4번째 명중이 충격파를 전파하며 치명타 후 32초마다 30% 체력으로 한 차례 재기동합니다.',10,'shockwave',4,.46,reboot(10,.30,32)]
+ ],
+ [
+  ['군체 포자 저격수','저격병 3번째 탄환이 포자를 퍼뜨려 주변 적을 느리게 만들고 4번째 탄환은 추가 오염을 남깁니다.',9,'spores',3,.52,mark(9,3,4)],
+  ['공생체 잠식 암살자','암살자 3번째 명중이 적의 생기를 빼앗고 4번째 처치마다 돌격 공생체가 출격합니다.',10,'vampire',3,.45,revenge(10,1,4)]
+ ],
+ [
+  ['성운 심판선','저격병 3번째 탄환이 번개로 터지며 4번째 명중은 주변 3기에게 공허 전류를 전파합니다.',9,'shock',3,.52,chain(9,.40,200,4,3)],
+  ['위상 단절자','암살자 3번째 공격이 적을 속박하며 치명상 후 35초마다 체력 25%로 위상 복귀합니다.',10,'snare',3,.49,reboot(10,.25,35)]
+ ],
+ [
+  ['쾌흥태의 오도 대물탄','쾌흥태의 3번째 저격탄이 광역 폭발을 일으키고 4번째에는 추가 대물 화력이 폭발합니다.',9,'meteor',3,.57,burst(9,1.32,4)],
+  ['견쌍섭의 긴빠이 침투','견쌍섭의 3번째 암살이 체력을 탈취하고 4번째 명중도 추가 회복을 제공합니다.',10,'harvest',3,.55,leech(10,.30,4)]
+ ],
+ [
+  ['달빛 아래 맹수 표적','저격병 3번째 발사가 사냥감의 발을 묶고 4번째 명중은 추가 둔화를 남깁니다.',9,'snare',3,.53,mark(9,3,4)],
+  ['검은 표범의 목덜미','암살자 3번째 찌르기가 생명을 흡수하고 약해진 적에게 마무리 일격이 가해집니다.',10,'vampire',3,.42,execute(10,.35,.65)]
+ ],
+ [
+  ['월광 무한 관통화살','저격병 3번째 탄환이 주변 4기의 적을 관통하며 4번째 명중 시 3기에 추가 연쇄 사격합니다.',9,'pierce',3,.53,chain(9,.38,205,4,3)],
+  ['은월의 침묵 처형','암살자 3번째 일격이 무방비 적을 파쇄하고 4번째 명중에는 침묵의 둔화를 입힙니다.',10,'shatter',3,.52,mark(10,2.5,4)]
+ ],
+ [
+  ['들개 무리의 탄우','저격병 3번째 발사가 4기에게 폭풍 파편을 흩뿌리고 4번째 명중이 연쇄 타격합니다.',9,'storm',3,.44,chain(9,.37,180,4,2)],
+  ['늑대떼 밤사냥','암살자 3번째 일격에 생기 흡수가 발생하고 4번째 처치마다 돌격병이 무리에 합류합니다.',10,'vampire',3,.42,revenge(10,1,4)]
+ ],
+ [
+  ['레일건 신경망','저격병 3번째 사격이 방전되고 4번째 탄환이 더 강하게 폭발합니다.',9,'shock',3,.57,burst(9,1.28,4)],
+  ['영점 백도어 재부팅','암살자 3번째 기습이 전자 충격을 가하고 치명상 후 38초마다 체력 35%로 재부팅합니다.',10,'shock',3,.46,reboot(10,.35,38)]
+ ],
+ [
+  ['심해 압축 작살비','저격병 3번째 작살에서 독성 먹물이 터지고 4번째 명중에는 추가 파편이 연쇄됩니다.',9,'spores',3,.49,chain(9,.36,175,4,2)],
+  ['먹물 무형 잠행','암살자 3번째 침투 공격이 주변 적의 이동을 막으며 4번째 공격으로 체력을 흡수합니다.',10,'snare',3,.44,leech(10,.30,4)]
+ ],
+ [
+  ['백화일제 저격술','저격병 3번째 명중이 꽃가루 치유와 파편 공격을 일으키고 4번째 명중이 주변 적에게 꽃잎을 뿌립니다.',9,'bloom',3,.49,chain(9,.40,190,4,2)],
+  ['가시꽃 기사회생','암살자 3번째 습격이 주변 동료를 치료하고 치명상 후 38초마다 체력 28%로 부활합니다.',10,'bloom',3,.48,reboot(10,.28,38)]
+ ]
+];
+const specialistPrismCards=Object.freeze(specialistPrisms.flatMap((entries,faction)=>entries.map(([name,description,role,mode,every,ratio,passive],index)=>Object.freeze({
+ id:'exp-specialist-'+faction+'-'+role,scope:'faction-'+faction,tier:'prismatic',name,description,
+ experimental:true,effects:[{kind:'prism_anomaly',role,mode,every,ratio,radius:180},passive]
+}))));
 const cards=factionCards.flatMap((items,faction)=>items.map(([name,description,...effects],index)=>Object.freeze({
  id:'exp-prism-'+faction+'-'+index,scope:'faction-'+faction,tier:'prismatic',
  name,description,experimental:true,effects
-}))).concat(extraCards);
+}))).concat(extraCards,specialistPrismCards);
 const cardById=new Map(cards.map(c=>[c.id,c]));
 const enabled=()=>global.DesertPrismExperimentalEnabled!==false;
 function findEffects(selected=[],kind=null){
