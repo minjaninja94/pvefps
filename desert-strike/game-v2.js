@@ -443,7 +443,7 @@ function barrage(){
 }
 function banner(t){$('waveBanner').textContent=t;$('waveBanner').classList.add('show');bannerSeconds=2;}
 function createUnit(side,slot,role,fromProduction=true,overrideFaction=null){
- if(fromProduction&&role>=0&&role<11)state.produced[side][role]++;
+ if(fromProduction&&role>=0&&role<11&&role!==EXTRACTOR)state.produced[side][role]++;
  const faction=overrideFaction??(side===0?state.faction:state.enemyFaction),def=effectiveDef(role,faction,side);
  const row=Math.floor(slot/COLS),col=slot%COLS;
  const x=side===0?240+col*7:WORLD_W-240-col*7;
@@ -535,6 +535,9 @@ function aiChoose(budget=state.enemyCash){
  const tanks=intel.counts[3]+(groundVehicle?intel.counts[6]:0),air=intel.air,medics=intel.counts[7];
  if(intel.counts[10]>=1&&myCounts[7]<Math.max(1,Math.ceil(intel.counts[10]/3))&&affordable.includes(7))return 7;
   if(intel.counts[9]>=2&&myCounts[10]<Math.ceil(intel.counts[9]/3)&&affordable.includes(10))return 10;
+  const armyCount=myCounts.reduce((n,v)=>n+v,0);
+  if(state.wave>=6&&armyCount>=6&&!intel.invaded&&!intel.counts[10]&&affordable.includes(9)&&myCounts[9]<Math.max(1,Math.floor(armyCount*.09)))return 9;
+  if(state.wave>=8&&armyCount>=8&&!intel.invaded&&!intel.counts[10]&&affordable.includes(10)&&myCounts[10]<Math.max(1,Math.floor(armyCount*.08)))return 10;
   if(tanks>=2&&air>=2){
   if(affordable.includes(4)&&myCounts[4]<Math.ceil(air*.9))return 4;
   if(affordable.includes(2)&&myCounts[2]<Math.ceil(tanks*1.05))return 2;
@@ -685,7 +688,7 @@ function hardInvest(){
   const urgentDefense=reply.needed||action?.tactical||intel.invaded||
    (intel.air>=3&&counts[4]<Math.max(2,intel.air*.20))||
    (intel.armor>=3&&counts[2]<Math.max(2,intel.armor*.20));
-  const commitHero=focus!==null&&!urgentDefense&&!ecoDue&&counts[focus]<20&&
+  const commitHero=focus!==null&&!urgentDefense&&!ecoDue&&!(action?.kind==='unit'&&action.role>=9)&&counts[focus]<20&&
    total<Math.min(SLOTS-state.enemyEco,Math.max(growTo,28));
   if(commitHero)action=state.enemyCash>=unitCost(focus,state.enemyFaction)?{kind:'unit',role:focus}:null;
   if(!action&&!commitHero&&!reply.needed&&total<growTo&&!ecoDue&&brain.opening>=ai.plans[brain.plan].opening.length){
