@@ -673,7 +673,7 @@ function hardInvest(){
  for(let purchase=0;purchase<12;purchase++){
   const counts=Array(11).fill(0);for(const role of state.enemyBuilt)if(role!==null&&role!==EXTRACTOR)counts[role]++;
   let slot=state.enemyBuilt.findIndex(v=>v===null);if(slot<0)break;
-  let action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,difficulty:state.aiDifficulty,costs:ROLE.map((x,i)=>i===8?Infinity:unitCost(i,state.enemyFaction)),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded,roles,investment}});
+  let action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,difficulty:state.aiDifficulty,wave:state.wave,costs:ROLE.map((x,i)=>i===8?Infinity:unitCost(i,state.enemyFaction)),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded,roles,investment}});
   // After the planned opener, maintain factory output while waiting for a
   // costly specialist. Respect the extractor reserve and never buy for free.
   const total=counts.reduce((n,v)=>n+v,0);
@@ -786,10 +786,18 @@ function aiInvest(){
   Math.ceil(intel.total*(easy?.75:middle?1.5:1.35)),intel.invaded?army.length+(easy?2:middle?8:7):0));
  const slots=state.enemyBuilt.map((role,i)=>role===null?i:-1).filter(i=>i>=0);
  for(let purchased=0;slots.length&&purchased<(easy?2:middle?10:8)&&army.length+purchased<desired;purchased++){
-  let role=aiChoose(state.enemyCash);
-  if(role===null)break;
   const counts=Array(11).fill(0);for(const r of state.enemyBuilt)if(r!==null&&r!==EXTRACTOR)counts[r]++;
-  if(state.wave>=5&&!intel.invaded&&intel.dominant===null&&army.length>=9){
+  // Reserve real income for a specialist, rather than spending every 65 CR
+  // on infantry before a 330/380 CR factory can ever be afforded.
+  const urgent=intel.invaded||(intel.counts[10]>=1&&counts[7]<1)||
+   (intel.air>=2&&counts[4]<Math.ceil(intel.air*.65))||
+   (intel.armor>=2&&counts[2]<Math.ceil(intel.armor*.6))||
+   (intel.total>=Math.max(10,(army.length+purchased)*1.7));
+  const specialist=!urgent?LIVE_SPECIALISTS.plannedSpecialist?.(counts,state.wave,army.length+purchased):null;
+  let role=specialist!==null&&specialist!==undefined?
+   (state.enemyCash>=unitCost(specialist,state.enemyFaction)?specialist:null):aiChoose(state.enemyCash);
+  if(role===null)break;
+  if(role!==9&&role!==10&&state.wave>=5&&!intel.invaded&&intel.dominant===null&&army.length>=9){
    const popular=counts.indexOf(Math.max(...counts));
    if(counts[popular]>=5&&counts[popular]<20&&
     counts[popular]<Math.min(20,Math.ceil((army.length+purchased)*.72))&&state.enemyCash>=unitCost(popular,state.enemyFaction))
