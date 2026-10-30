@@ -85,7 +85,7 @@ async function open(){
   await global.DesertAugments.load();
   if(!dialog.open)return;
   cards=global.DesertAugments.list();
-  if(cards.length!==(global.DesertPrism?.enabled?.()?(global.DesertPrism?.cards?.length||0)+300:300))throw Error('증강 도감 데이터 개수가 일치하지 않습니다.');
+  if(cards.length!==(global.DesertPrism?.enabled?.()?(global.DesertPrism?.cards?.length||0)+308:308))throw Error('증강 도감 데이터 개수가 일치하지 않습니다.');
   ready=true;render();
  }catch(e){
   if(!dialog.open)return;
