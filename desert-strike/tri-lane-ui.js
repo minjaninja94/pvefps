@@ -45,7 +45,7 @@ function upgradeInfo(){
  // Do not inspect fog-redacted enemy units here: the authoritative host
  // decides whether any opponents exist when the order arrives.
  const nukeReady=!!me.nukes;
- $('mpNukeInfo').textContent=me.nukes?'1회 남음 · 상대 팀 전 병력 제거':'사용 완료';
+ $('mpNukeInfo').textContent=me.nukes?'1회 남음 · 상대 병력 제거 · 가디언 제외':'사용 완료';
  $('mpNukeButton').disabled=snap.ended||!nukeReady;
  $('mpRepairLanes').querySelectorAll('[data-repair-lane]').forEach(button=>button.classList.toggle('active',Number(button.dataset.repairLane)===repairLane));
 }

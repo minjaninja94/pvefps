@@ -232,8 +232,8 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   }
   if(kind==='nuke'){
    if(!p.nukes)return {ok:false,reason:'핵폭탄 사용 완료'};
-   const targets=state.units.filter(u=>u.hp>0&&u.team!==p.team);
-   if(!targets.length)return {ok:false,reason:'제거할 상대 유닛이 없습니다.'};
+   const targets=state.units.filter(u=>u.hp>0&&!u.guardian&&u.team!==p.team);
+   if(!targets.length)return {ok:false,reason:'제거할 상대 유닛이 없습니다. 가디언은 핵에 면역입니다.'};
    const count=targets.reduce((sum,u)=>sum+(global.DesertConsolidation?.strength?.(u)??1),0);
    p.nukes=0;
    for(const u of targets){
@@ -241,7 +241,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    }
    state.units=state.units.filter(u=>u.hp>0);
    // A small team-wide event list is enough to notify every client. The server
-   // actually kills all opponents; we must not emit thousands of effects.
+   // actually kills all eligible opponents; we must not emit thousands of effects.
    for(let laneIndex=0;laneIndex<LANES;laneIndex++)
     state.effects.push({x:WIDTH/2,y:(laneIndex+.5)*LANE_H,lane:laneIndex,
      kind:'nuke',time:1.8,team:p.team,casualties:count});
@@ -322,7 +322,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   const ai=global.DesertHardAI;if(!ai)return;
   const brain=bot.hardBrain||(bot.hardBrain=ai.create(bot.faction));
   if(bot.nukes){
-   const opposing=state.units.filter(u=>u.hp>0&&u.team!==bot.team);
+   const opposing=state.units.filter(u=>u.hp>0&&!u.guardian&&u.team!==bot.team);
    const power=u=>global.DesertConsolidation?.strength?.(u)??1;
    const population=opposing.reduce((s,u)=>s+power(u),0);
    const near=opposing.filter(u=>bot.team===1?u.x>=WIDTH*.68:u.x<=WIDTH*.32)

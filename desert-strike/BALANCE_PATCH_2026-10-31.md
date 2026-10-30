@@ -62,3 +62,7 @@ node desert-strike/benchmark-50-wave.cjs
 ```
 
 원문 결과: [combat-balance-2026-10-31.json](balance-reports/combat-balance-2026-10-31.json).
+
+## 후속 수정: 가디언 핵 면역
+
+싱글 양측과 클래식/3라인/협동 멀티에서 가디언은 핵 피해와 처치 수 집계에서 제외합니다. 가디언만 남았다면 핵을 소모하지 않습니다. AI의 핵 사용 인구 기준에서도 적 가디언을 제외하며, 핵 설명에 면역 대상을 표시합니다. 일반 합체 영웅은 기존처럼 핵으로 제거됩니다. `smoke-guardian-nuke.test.cjs`가 플레이어 양측·모든 라인·협동 AI·100기 판단 기준과 가디언 HP 보존을 검증합니다.

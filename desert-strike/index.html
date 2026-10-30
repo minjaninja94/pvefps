@@ -190,7 +190,7 @@
   <section class="mp-tab-screen mp-upgrade-section" id="mpUpgradeView" hidden>
    <div class="mp-production-title"><div><h2>업그레이드 · 전술 지원</h2></div><button type="button" class="btn outline mp-jump" data-mp-jump="base">생산 배치 →</button></div>
    <div class="special-grid mp-upgrade-grid">
-    <section class="feature-card orange"><span class="feat-symbol">☢</span><h2>비상 핵폭탄</h2><p>상대 팀 전 유닛 제거 · 지휘관당 1회 · 건물 제외</p><div class="feature-status" id="mpNukeInfo">사용 가능 · 상대 팀 전 병력 제거</div><button type="button" id="mpNukeButton" class="btn accent">☢ 비상 핵폭탄</button></section>
+    <section class="feature-card orange"><span class="feat-symbol">☢</span><h2>비상 핵폭탄</h2><p>상대 팀 전 유닛 제거 · 지휘관당 1회 · 건물·가디언 제외</p><div class="feature-status" id="mpNukeInfo">사용 가능 · 상대 병력 제거 · 가디언 제외</div><button type="button" id="mpNukeButton" class="btn accent">☢ 비상 핵폭탄</button></section>
     <section class="feature-card cyan"><span class="feat-symbol">✷</span><h2>궤도 폭격</h2><p>정찰된 적 밀집 지역에 범위 피해 · 260 CR · 재사용 32초</p><div class="feature-status" id="mpBarrageInfo">260 CR · 재사용 32초</div><button type="button" id="mpBarrageButton" class="btn blueaccent">✷ 폭격 요청</button></section>
     <section class="feature-card purple"><span class="feat-symbol">✦</span><h2>무기 강화</h2><p>내 병력 공격력·치유량 단계당 +8% · 최대 5단계</p><div class="feature-status" id="mpWeaponInfo">레벨 0 / 5</div><button type="button" id="mpWeaponButton" class="btn purpleaccent">무기 강화</button></section>
     <section class="feature-card steel"><span class="feat-symbol">⬟</span><h2>장갑 강화</h2><p>내 병력 최대 체력 단계당 +9% · 최대 5단계</p><div class="feature-status" id="mpArmorInfo">레벨 0 / 5</div><button type="button" id="mpArmorButton" class="btn outline">장갑 강화</button></section>
@@ -204,7 +204,7 @@
 <section id="upgradePanel" class="upgrade-layer" hidden role="dialog" aria-modal="false" aria-labelledby="upgradeTitle"><div id="view-special" class="upgrade-content">
  <div class="upgrade-toolbar"><div><h2 id="upgradeTitle">업그레이드 · 전술 지원</h2></div><button id="closeUpgrades" type="button" class="btn outline" aria-label="업그레이드 닫기">닫기 ✕</button></div>
  <div class="special-grid">
- <section class="feature-card orange"><span class="feat-symbol">☢</span><h2>비상 핵폭탄</h2><p>상대 유닛 전체 제거 · 경기당 1회 · 건물 제외</p><div class="feature-status" id="nukeInfo">준비 완료 · 상대 병력 전체 제거</div><button id="nukeButton" class="btn accent">☢ 핵폭탄 발동</button></section>
+ <section class="feature-card orange"><span class="feat-symbol">☢</span><h2>비상 핵폭탄</h2><p>상대 유닛 전체 제거 · 경기당 1회 · 건물·가디언 제외</p><div class="feature-status" id="nukeInfo">준비 완료 · 상대 병력 제거 · 가디언 제외</div><button id="nukeButton" class="btn accent">☢ 핵폭탄 발동</button></section>
  <section class="feature-card cyan"><span class="feat-symbol">✷</span><h2>궤도 폭격</h2><p>적 밀집 지역에 범위 피해 · 260 CR · 재사용 32초</p><div class="feature-status" id="barrageInfo">비용 260 CR · 재사용 32초</div><button id="barrageButton" class="btn blueaccent">✷ 폭격 요청 · 260 CR</button></section>
 
  <section class="feature-card purple"><span class="feat-symbol">✦</span><h2>무기 강화</h2><p>공격력·치유량 단계당 +8% · 최대 5단계</p><div class="feature-status" id="weaponInfo">레벨 0 / 5</div><button id="weaponButton" class="btn purpleaccent">무기 강화</button></section>
@@ -288,13 +288,13 @@
 <script src="./augment-rules.js?v=prism-mode-20261030" defer></script>
 <script src="./augment-history.js?v=history1" defer></script>
 <script src="./augment-codex.js?v=prism-mode-20261030" defer></script>
-<script src="./tri-lane-engine.js?v=prism-mode-20261030-balance20261031" defer></script>
+<script src="./tri-lane-engine.js?v=prism-mode-20261030-balance20261031-guardian-nuke" defer></script>
 <script src="./device-account.js?v=externalroom1" defer></script>
 <script src="./tri-lane-network.js?v=prism-mode-20261030" defer></script>
 <script src="./combat-audio.js?v=nukegear1" defer></script>
-<script src="./tri-lane-ui.js?v=prism-mode-20261030-balance20261031" defer></script>
+<script src="./tri-lane-ui.js?v=prism-mode-20261030-balance20261031-guardian-nuke" defer></script>
 <script src="./battle-report.js?v=battlestats2" defer></script>
-<script src="./game-v2.js?v=prism-mode-20261030-balance20261031" defer></script>
+<script src="./game-v2.js?v=prism-mode-20261030-balance20261031-guardian-nuke" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=nukegear1" defer></script>

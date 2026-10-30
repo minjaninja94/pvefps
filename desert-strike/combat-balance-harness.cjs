@@ -17,14 +17,14 @@ function environment(seed=1){
 }
 function solo(seed=1,source=null){
  const env=environment(seed);
- const hook='window.__balanceTest={reset,state:()=>state,getDef,unitCost:(r,f)=>getDef(r,f).cost,createUnit,tick,fire,damage,projectileImpact,nearestUnit,heal,broodLay,marineSpoils,selectRole,place,aiInitialBuild,aiInvest,combatDef,demolish:()=>{demolition=true;}};reset();';
+ const hook='window.__balanceTest={reset,state:()=>state,getDef,unitCost:(r,f)=>getDef(r,f).cost,createUnit,tick,fire,damage,projectileImpact,nearestUnit,heal,broodLay,marineSpoils,selectRole,place,aiInitialBuild,aiInvest,combatDef,detonateEmergency,nuclearPopulation,hardEmergency,demolish:()=>{demolition=true;}};reset();';
  vm.runInNewContext((source||read('game-v2.js')).replace('initFactions();wire();reset();',hook),env.sandbox,{filename:'game-v2.js'});
  return {...env,G:env.window.__balanceTest};
 }
 function multi(seed=1){
  const env=environment(seed),marker='return {state,order,tick,wave,snapshot,definition};';
  const source=read('tri-lane-engine.js');if(!source.includes(marker))throw Error('Multiplayer test hook missing');
- vm.runInNewContext(source.replace(marker,'return {state,order,tick,wave,snapshot,definition,__test:{applyHit,attack,spawn,broodLay,marineSpoils,combatDef}};'),env.sandbox,{filename:'tri-lane-engine.js'});
+ vm.runInNewContext(source.replace(marker,'return {state,order,tick,wave,snapshot,definition,__test:{applyHit,attack,spawn,broodLay,marineSpoils,combatDef,hardBotPurchase}};'),env.sandbox,{filename:'tri-lane-engine.js'});
  return {...env,E:env.window.DesertTriEngine};
 }
 module.exports={solo,multi};

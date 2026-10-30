@@ -316,17 +316,17 @@ function upgrade(kind){
  updateUI(true);
 }
 // Global one-use nuclear strike: removes every living opponent soldier and
-// packed hero, not buildings. Both sides share the identical elimination rule.
+// packed hero, excluding guardians and buildings. Both sides share this rule.
 // Paid production returns on later waves; existing projectiles from the wiped
 // side are removed to avoid invisible post-strike damage.
 function nuclearPopulation(side){
- return state.units.filter(u=>u.hp>0&&u.side===side)
+ return state.units.filter(u=>u.hp>0&&!u.guardian&&u.side===side)
   .reduce((n,u)=>n+(window.DesertConsolidation?.strength?.(u)??1),0);
 }
 function detonateEmergency(defendingSide){
  const stock=defendingSide===0?'nukes':'enemyNukes';
  if(!state[stock])return false;
- const targets=state.units.filter(u=>u.hp>0&&u.side!==defendingSide);
+ const targets=state.units.filter(u=>u.hp>0&&!u.guardian&&u.side!==defendingSide);
  if(!targets.length)return false;
  const soldiers=nuclearPopulation(1-defendingSide);
  state[stock]=0;
@@ -335,10 +335,10 @@ function detonateEmergency(defendingSide){
  state.shots=state.shots.filter(p=>p.side===defendingSide);
  pulse(WORLD_W/2,260,'#fff0a3',120);
  if(defendingSide===0){
-  setMessage('아군 전장 핵폭탄 발사! 상대 유닛 '+soldiers+'기 상당 전체 제거 · 남은 핵 0회');
-  banner('☢ ALL ENEMY UNITS ELIMINATED');
+  setMessage('아군 전장 핵폭탄 발사! 상대 유닛 '+soldiers+'기 상당 제거 · 가디언 제외 · 남은 핵 0회');
+  banner('☢ NUCLEAR STRIKE');
  }else{
-  setMessage('하드 AI 전장 핵폭탄! 아군 '+soldiers+'기 상당 전체 소멸 · AI 핵 사용 완료');
+  setMessage('하드 AI 전장 핵폭탄! 아군 '+soldiers+'기 상당 제거 · 가디언 제외 · AI 핵 사용 완료');
   banner('☢ ENEMY NUCLEAR STRIKE');
  }
  window.DesertCombatAudio?.cue('explosion');chirp(130,.3);updateUI(true);
@@ -346,14 +346,14 @@ function detonateEmergency(defendingSide){
 }
 function emergency(){
  if(!state.live||state.ended||state.paused||!state.nukes)return;
- if(!detonateEmergency(0))setMessage('핵폭탄은 상대 유닛이 살아 있을 때 사용 가능합니다. 경기당 1회입니다.');
+ if(!detonateEmergency(0))setMessage('핵폭탄은 가디언 외 상대 유닛이 살아 있을 때 사용 가능합니다. 경기당 1회입니다.');
 }
 // Delay the AI's global strike until it can reverse a serious losing front.
 // The ≥100 equivalent threshold is preferred; below it, only a genuinely
 // critical base (≤15% HP) may justify spending the last charge.
 function hardEmergency(){
  if(!state.live||state.ended||state.paused||!['veryhard','impossible'].includes(state.aiDifficulty)||!state.enemyNukes)return false;
- const enemies=state.units.filter(u=>u.side===0&&u.hp>0),allies=state.units.filter(u=>u.side===1&&u.hp>0);
+ const enemies=state.units.filter(u=>u.side===0&&u.hp>0&&!u.guardian),allies=state.units.filter(u=>u.side===1&&u.hp>0);
  if(!enemies.length)return false;
  const power=u=>window.DesertConsolidation?.strength?.(u)??1;
  const total=enemies.reduce((s,u)=>s+power(u),0);
@@ -1477,9 +1477,9 @@ function updateUI(full=false){
  $('hostileCount').textContent=state.units.filter(x=>x.side===1).length;
  $('frontStatus').textContent=inv?'⚠ 아군 기지 침공':state.units.some(x=>x.side===0&&x.x>WORLD_W-490)?'적 기지 압박':'중앙 전선';
  $('battleStatus').textContent=state.ended?'전투 종료':!state.live?'작전 대기':state.paused?'일시정지':preparation>0?'초기 배치 · '+Math.ceil(preparation-1e-6)+'초 뒤 첫 출격':inv?'⚠ 본진 침공':'전투 진행 중';
- const nukeTargets=state.units.filter(u=>u.side===1&&u.hp>0);
+ const nukeTargets=state.units.filter(u=>u.side===1&&u.hp>0&&!u.guardian);
  const nukeAllowed=nukeTargets.length>0;
- $('nukeInfo').textContent=state.nukes?'1회 남음 · '+(nukeAllowed?'상대 전 병력 제거 가능':'상대 병력 대기 중'):'사용 완료';
+ $('nukeInfo').textContent=state.nukes?'1회 남음 · '+(nukeAllowed?'상대 병력 제거 · 가디언 제외':'상대 병력 대기 중'):'사용 완료';
  $('nukeButton').disabled=!(state.nukes&&nukeAllowed&&state.live&&!state.paused&&!state.ended);
  $('barrageInfo').textContent=state.barrageCd>0?'재충전 '+Math.ceil(state.barrageCd)+'초':'비용 260 CR · 적 병력 필수';
  $('barrageButton').disabled=!(state.live&&!state.ended&&!state.paused&&state.barrageCd<=0&&state.cash>=260&&state.units.some(u=>u.side===1));
