@@ -1838,6 +1838,24 @@ function structure(g,x,y,side,turret=true,health=1,kind=turret?'turret':'core'){
  }
  g.restore();
 }
+// Battle HUD: numbers and bars for both sides' outposts, turrets and cores.
+function drawStructureHealth(g,x,side,kind,hp,maxHP){
+ const p=window.IsoWorld?.project?.(x,260)||{x,y:260};
+ const width=kind==='core'?104:112;
+ const y=p.y-(kind==='forward'?166:kind==='core'?154:145),left=p.x-width/2;
+ const value=Math.max(0,Math.ceil(hp)),ratio=Math.max(0,Math.min(1,hp/maxHP));
+ const name=kind==='forward'?'중간 타워':kind==='turret'?'본진 포탑':'핵심 기지';
+ g.save();
+ g.fillStyle='#0b1d28ed';g.fillRect(left,y,width,45);
+ g.strokeStyle=side===0?'#75c8d3':'#d99581';g.lineWidth=1;g.strokeRect(left+.5,y+.5,width-1,44);
+ g.textAlign='center';g.font='bold 11px sans-serif';g.fillStyle='#f1e8da';
+ g.fillText(value===0?name+' 파괴':name,p.x,y+13);
+ g.font='bold 12px monospace';g.fillStyle=value===0?'#ffb6ab':'#ffffff';
+ g.fillText(value+' / '+maxHP,p.x,y+28);
+ g.fillStyle='#263943';g.fillRect(left+6,y+34,width-12,6);
+ g.fillStyle=value===0?'#78636a':COLORS[side];g.fillRect(left+6,y+34,(width-12)*ratio,6);
+ g.restore();
+}
 function enemyBaseVisible(){
  return state.wave>=FOG_END_WAVE||state.units.some(u=>u.side===0&&u.hp>0&&u.x>=ENEMY_FOG_X-220);
 }
@@ -1855,7 +1873,6 @@ function drawBattle(){
  for(let side=0;side<2;side++){
   const x=side===0?WORLD_W/4:WORLD_W*3/4;
   structure(g,x,260,side,true,state.forwardHP[side],'forward');
-  const at=window.IsoWorld?window.IsoWorld.project(x,260):{x,y:260};g.fillStyle='#efdfab';g.font='bold 12px sans-serif';g.textAlign='center';g.fillText(state.forwardHP[side]>0?'중간 타워 · 파괴 보너스 150':'중간 타워 파괴',at.x,at.y-100);
  }
  for(const u of [...state.units,...state.deadUnits].filter(u=>u.x>=state.cameraX-85&&u.x<=state.cameraX+CW+85&&enemyUnitVisible(u)).sort((a,b)=>a.y-b.y))drawUnit(g,u,1);
  if(window.DesertSprites){
@@ -1905,6 +1922,14 @@ function drawBattle(){
   g.fillStyle='#07121af0';g.fillRect(ENEMY_FOG_X,-120,WORLD_W-ENEMY_FOG_X+180,CH+260);
   g.strokeStyle='#9bb6ba88';g.lineWidth=3;g.beginPath();g.moveTo(ENEMY_FOG_X,0);g.lineTo(ENEMY_FOG_X,CH);g.stroke();
   g.fillStyle='#bdd4d1';g.font='bold 14px monospace';g.textAlign='left';g.fillText('정찰 전 · 적 후방 미확인',ENEMY_FOG_X+24,58);
+ }
+ // Draw after combat sprites/effects to keep the current tower HP legible.
+ for(let side=0;side<2;side++){
+  const forwardX=side===0?WORLD_W/4:WORLD_W*3/4;
+  drawStructureHealth(g,forwardX,side,'forward',state.forwardHP[side],1000);
+  if(side===1&&!enemyBaseVisible())continue; // Do not reveal hidden enemy rear defenses.
+  drawStructureHealth(g,side===0?190:WORLD_W-190,side,'turret',state.turretHP[side],MAX_TURRET);
+  drawStructureHealth(g,side===0?90:WORLD_W-90,side,'core',state.baseHP[side],MAX_BASE);
  }
  g.restore();
  if(state.paused){g.fillStyle='#0c1d27b0';g.fillRect(0,0,CW,CH);
