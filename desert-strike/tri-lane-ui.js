@@ -327,7 +327,7 @@ function draw(){
  function fort(x,team,tower,hp,max,kind=tower?'turret':'core'){
   const faction=snap.players.find(p=>p.team===team)?.faction??0;
   if(iso?.structure)iso.structure(ctx,x,260,faction,tower,hp/max,kind);
-  else{ctx.fillStyle=team===0?'#87d7d2':'#e19b83';ctx.fillRect(x-20,225,40,70);}
+  else{ctx.fillStyle=teamInk(team);ctx.fillRect(x-20,225,40,70);}
  }
  for(let t=0;t<2;t++){
   fort(t===0?90:E.WIDTH-90,t,false,snap.cores[lane]?.[t]||0,snap.coreMaxHP||3000);
@@ -354,7 +354,7 @@ function draw(){
   const hpY=p.y-47*factor;
    if(u.label){ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#061722';ctx.strokeText(u.label,p.x,hpY-22);ctx.fillStyle=u.role===7?'#9efff0':'#e6caff';ctx.fillText(u.label,p.x,hpY-22);}
   if(u.heroCount===20){ctx.fillStyle=u.guardian?'#9affa8':'#ffd197';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText(u.guardian?'가디언 ×20':'★ ×20',p.x,hpY-9);}
-  if(u.hp<u.maxHP){ctx.fillStyle='#0c1b28';ctx.fillRect(p.x-16*factor,hpY-9,32*factor,5);ctx.fillStyle=u.team===0?'#83e4e0':'#f2a08c';ctx.fillRect(p.x-16*factor,hpY-9,32*factor*Math.max(0,u.hp/u.maxHP),5);}
+  if(u.hp<u.maxHP){ctx.fillStyle='#0c1b28';ctx.fillRect(p.x-16*factor,hpY-9,32*factor,5);ctx.fillStyle=teamInk(u.team);ctx.fillRect(p.x-16*factor,hpY-9,32*factor*Math.max(0,u.hp/u.maxHP),5);}
    // On-field unit roles, not floating counter matrices; production intel shows both team positions.
 
  }
@@ -370,7 +370,7 @@ function draw(){
    const angle=Math.atan2(landing.y-(muzzle?.y??pos(e.x,e.y-lane*E.LANE_H).y),landing.x-(muzzle?.x??pos(e.x,e.y-lane*E.LANE_H).x));
    if(muzzle){
     ctx.save();ctx.globalAlpha=.58*(1-pct);
-    ctx.strokeStyle=e.team===0?'#9ceaff':'#ffb7a4';ctx.lineWidth=2.5;
+    ctx.strokeStyle=teamInk(e.team);ctx.lineWidth=2.5;
     ctx.beginPath();ctx.moveTo(muzzle.x,muzzle.y);ctx.lineTo(point.x,point.y);ctx.stroke();ctx.restore();
    }
    if(!(muzzle?iso?.projectileAt?.(ctx,point.x,point.y,e.faction,e.role,Math.floor(pct*4),angle)
