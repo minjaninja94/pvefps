@@ -30,7 +30,7 @@ const ROLE=[
  {key:'antiair',name:'대공',mark:'✣',token:'✣',cost:185,hp:175,damage:16,armor:3,range:228,rate:.57,speed:47,airTarget:true,kind:'ground',tips:'비행체를 우선 공격하며 대공 피해량이 높습니다.',good:[6],bad:[3,2]},
  {key:'siege',name:'포격',mark:'✹',token:'✹',cost:360,hp:114,damage:69,armor:0,range:317,rate:2.55,speed:30,airTarget:false,kind:'ground',blast:58,tips:'후열 광역 화력. 근접 침투에는 취약합니다.',good:[1,4],bad:[0,6]},
  {key:'flyer',name:'비행',mark:'◇',token:'◇',cost:300,hp:160,damage:24,armor:1,range:149,rate:.86,speed:92,airTarget:true,kind:'air',tips:'대부분의 지상 공격을 회피합니다. 대공포를 조심하세요.',good:[0,3],bad:[4,1]},
- {key:'support',name:'지원',mark:'✚',token:'✚',cost:220,hp:136,damage:0,heal:36,armor:1,range:139,rate:1.24,speed:61,airTarget:false,kind:'ground',tips:'부상당한 전열을 치료하며 전투 지속력을 높입니다.',good:[3,1],bad:[0,5]}
+ {key:'support',name:'지원',mark:'✚',token:'✚',cost:220,hp:136,damage:0,heal:36,armor:1,range:139,rate:1.24,speed:61,airTarget:false,kind:'ground',tips:'공격하지 않고 부상한 아군만 치료합니다. 공격 상성은 없으며 적 돌격·사격병의 견제에 취약합니다.',good:[],bad:[]}
 ];
 const FACTIONS=[
  {id:'forge',name:'철갑연합',tag:'FORGE UNION',logo:'▦',color:'#79ddea',bonus:'전열 방어 특화 · 전 병종 체력 5.5% 증가 · 장갑·대공병이 받는 피해 6% 감소',mut:{hp:1.055,dmg:1,speed:.96},units:['진격 보병','기관총병','관통 로켓','철갑 전차','복합 대공포','궤도 자주포','추적 비행기','전장 구호병'],slogan:'높은 체력과 장갑 방어로 전열 유지',secondary:'#224956'},
@@ -58,7 +58,7 @@ const BASIC_GUIDES=[
 '대공 사격. 비행 유닛을 우선 공격합니다.',
 '장거리 광역 포격. 뭉친 지상 적에 강하지만 근접전에 약합니다.',
 '비행 유닛. 적 근접 공격을 피하지만 대공 무기에 약합니다.',
-'지원병. 부상한 아군을 치료합니다. 적 돌격병에 약합니다.'
+'지원병. 공격하지 않고 아군을 치료합니다. 공격 상성은 없으며 적 돌격·사격병에 약합니다.'
 ];
 const SPECIAL_GUIDES={
 '3-3':'황근출. 지상 중장갑 도끼 전사로 전열을 지킵니다.',
@@ -1303,7 +1303,17 @@ function tick(dt){
    continue;
   }
   const target=nearestUnit(u,def);
-  if(target){
+  // An intact forward tower screens reinforcements spawned *behind* it.
+  // Units already in front of that tower still take precedence.
+  const forward=defenseTarget(1-u.side),forwardDistance=Math.hypot(u.x-forward.x,u.y-forward.y);
+  const forwardAhead=u.side===0?u.x<=forward.x+45:u.x>=forward.x-45;
+  const interceptForward=!u.guardian&&forward.part==='forward'&&forwardAhead
+   &&forwardDistance<=Math.max(360,def.range+125)
+   &&(!target||forwardDistance+32<distance(u,target));
+  if(interceptForward){
+   if(forwardDistance>def.range+15)move(u,forward.x,forward.y,ds);
+   else if(u.cooldown<=0)beginStrike(u,null,1-u.side);
+  }else if(target){
    const reach=def.range<48?Math.max(def.range,unitRadius(u)+unitRadius(target)+7):def.range*(def.range>65?.88:1);
    if(distance(u,target)>reach)move(u,target.x,target.y,ds);
    else if(u.cooldown<=0)beginStrike(u,target);
@@ -1332,7 +1342,7 @@ function tick(dt){
   state['forwardCool'+side]=Math.max(0,(state['forwardCool'+side]||0)-ds);
   if(state['forwardCool'+side]>0)continue;
   const foe=state.units.filter(u=>u.hp>0&&u.side!==side&&Math.hypot(u.x-x,u.y-260)<=TOWER_RANGE).sort((a,b)=>Math.hypot(a.x-x,a.y-260)-Math.hypot(b.x-x,b.y-260))[0];
-  if(foe){damage(foe,TOWER_DAMAGE*.75,'turret');state['forwardCool'+side]=TOWER_PERIOD;state.towerShots.push({side,x,y:260,tx:foe.x,ty:foe.y,time:.14});}
+  if(foe){damage(foe,TOWER_DAMAGE*.75,'turret');state['forwardCool'+side]=TOWER_PERIOD;state.towerShots.push({side,kind:'forward',x,y:260,tx:foe.x,ty:foe.y,time:.22,duration:.22});}
  }
  // Rapid defensive single-target turret, per side; targets air and armor as well.
  for(let side=0;side<=1;side++){
@@ -1347,7 +1357,7 @@ function tick(dt){
   const target=near[0],def=getDef(target.role,target.faction);
   damage(target,TOWER_DAMAGE*(def.kind==='air'?1.25:target.role===3?1.12:1),'turret');
   state['cool'+side]=TOWER_PERIOD;
-  state.towerShots.push({side,x:origin.x,y:origin.y,tx:target.x,ty:target.y,time:.14});
+  state.towerShots.push({side,kind:'turret',x:origin.x,y:origin.y,tx:target.x,ty:target.y,time:.22,duration:.22});
  }
  for(const shot of state.towerShots)shot.time-=ds;
  state.towerShots=state.towerShots.filter(x=>x.time>0);
@@ -1788,13 +1798,18 @@ function drawBattle(){
  }
  for(const shot of state.towerShots){
   const faction=shot.side===0?state.faction:state.enemyFaction;
-  const progress=Math.max(0,Math.min(1,1-shot.time/.14));
-  const bx=shot.x+(shot.tx-shot.x)*progress,by=shot.y+(shot.ty-shot.y)*progress;
-  if(window.IsoWorld?.projectile?.(g,bx,by,faction,4,Math.floor(progress*4),Math.atan2(shot.ty-shot.y,shot.tx-shot.x)))continue;
+  const progress=Math.max(0,Math.min(1,1-shot.time/(shot.duration||.22)));
+  const start=window.IsoWorld?.towerMuzzle?.(shot.x,shot.y,faction,shot.kind,shot.side)
+   ||{x:shot.x,y:shot.y-66};
+  const end=window.IsoWorld?.project?.(shot.tx,shot.ty)||{x:shot.tx,y:shot.ty};
+  const sx=start.x+(end.x-start.x)*progress,sy=start.y+(end.y-start.y)*progress;
+  const angle=Math.atan2(end.y-start.y,end.x-start.x);
+  g.save();g.globalAlpha=Math.max(.18,1-progress*.65);
   g.strokeStyle=shot.side===0?'#91f2ea':'#ffc6aa';g.lineWidth=2.5;
-  const start=window.IsoWorld?window.IsoWorld.project(shot.x,shot.y):shot;
-  const end=window.IsoWorld?window.IsoWorld.project(shot.tx,shot.ty):{x:shot.tx,y:shot.ty};
-  g.beginPath();g.moveTo(start.x,start.y);g.lineTo(end.x,end.y);g.stroke();
+  g.beginPath();g.moveTo(start.x,start.y);g.lineTo(sx,sy);g.stroke();g.restore();
+  if(window.IsoWorld?.projectileAt?.(g,sx,sy,faction,4,Math.floor(progress*4),angle))continue;
+  g.fillStyle=shot.side===0?'#a6ffff':'#ffdac0';
+  g.beginPath();g.arc(sx,sy,3.5,0,Math.PI*2);g.fill();
  }
  for(const p of state.shots){
   if(p.side===1&&p.x>=ENEMY_FOG_X&&!enemyBaseVisible())continue;

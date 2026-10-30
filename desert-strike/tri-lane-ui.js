@@ -255,9 +255,18 @@ function draw(){
   if(e.kind==='projectile'){
    const pct=Math.max(.08,Math.min(1,1-(e.time||0)/.38+(performance.now()-lastSnapshotAt)/380));
    const px=e.x+(e.tx-e.x)*pct,py=e.y+(e.ty-e.y)*pct-lane*E.LANE_H;
-   const point=pos(px,py);
+   const muzzle=e.originKind?iso?.towerMuzzle?.(e.x,e.y-lane*E.LANE_H,e.faction,e.originKind,e.team):null;
+   const landing=pos(e.tx,e.ty-lane*E.LANE_H);
+   const point=muzzle?{x:muzzle.x+(landing.x-muzzle.x)*pct,y:muzzle.y+(landing.y-muzzle.y)*pct}:pos(px,py);
    if(point.x<cameraX-90||point.x>cameraX+1190)continue;
-   if(!iso?.projectile?.(ctx,px,py,e.faction,e.role,Math.floor(pct*4),Math.atan2(e.ty-e.y,e.tx-e.x))){
+   const angle=Math.atan2(landing.y-(muzzle?.y??pos(e.x,e.y-lane*E.LANE_H).y),landing.x-(muzzle?.x??pos(e.x,e.y-lane*E.LANE_H).x));
+   if(muzzle){
+    ctx.save();ctx.globalAlpha=.58*(1-pct);
+    ctx.strokeStyle=e.team===0?'#9ceaff':'#ffb7a4';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(muzzle.x,muzzle.y);ctx.lineTo(point.x,point.y);ctx.stroke();ctx.restore();
+   }
+   if(!(muzzle?iso?.projectileAt?.(ctx,point.x,point.y,e.faction,e.role,Math.floor(pct*4),angle)
+       :iso?.projectile?.(ctx,px,py,e.faction,e.role,Math.floor(pct*4),angle))){
     ctx.strokeStyle=e.team===0?'#9ceaff':'#ffb7a4';ctx.lineWidth=3;
     ctx.beginPath();ctx.moveTo(point.x-9,point.y);ctx.lineTo(point.x+9,point.y);ctx.stroke();
    }

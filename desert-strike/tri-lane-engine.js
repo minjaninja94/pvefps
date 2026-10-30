@@ -33,8 +33,8 @@ const BROOD_BIRTH_CHANCE=.20,BROOD_BIRTH_COOLDOWN=11,BROOD_BIRTH_CAP=10,BROOD_AL
 const OCTOPER_REGEN=.0006,ROBOT_REPAIR=.0015;
 const BEAST_RANGED_DAMAGE_REDUCTION=.06,FAIRY_CHAIN_HEAL_RATIO=.05,FAIRY_HEAL_MULTIPLIER=1.08;
 const INK_DURATION=2.5,INK_COOLDOWN=5;
-const GOODS=[[5,7],[0,7],[3,4],[1,4],[6],[1,4],[0,3],[3,1]];
-const BADS=[[3,1],[3,5],[0,1],[2,6],[3,2],[0,6],[4,1],[0,5]];
+const GOODS=[[5,7],[0,7],[3,4],[1,4],[6],[1,4],[0,3],[]];
+const BADS=[[3,1],[3,5],[0,1],[2,6],[3,2],[0,6],[4,1],[]];
 function definition(faction,role){
  const shared=global.DesertRoster?.getDef;
  if(typeof shared==='function')return shared(role,faction);
@@ -669,6 +669,13 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     const distance=Math.hypot(v.x-u.x,v.y-u.y);
     if(distance+36<best){target=v;best=distance;}
    }
+   const currentLane=clamp(Math.floor(u.y/LANE_H),0,LANES-1);
+   const forward=fort(currentLane,1-u.team),forwardDistance=Math.hypot(forward.x-u.x,forward.y-u.y);
+   const towerInFront=u.team===0?u.x<=forward.x+45:u.x>=forward.x-45;
+   const interceptForward=!support&&!u.guardian&&forward.part==='forward'&&towerInFront
+    &&forwardDistance<=Math.max(360,d.range+125)
+    &&(!target||forwardDistance+32<best);
+   if(interceptForward){target=null;best=Infinity;}
    if(target){
     u.targetId=target.id;
     const reach=support?d.range*.88:d.range<48?Math.max(d.range,u.radius+target.radius+6):d.range*.88;
@@ -766,7 +773,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    // Defensive towers also fire the same faction atlas as regular ranged units.
    const faction=state.players.find(p=>p.team===team)?.faction??0;
    if(state.effects.length>=160)state.effects.splice(0,state.effects.length-159);
-   state.effects.push({kind:'projectile',x,y,tx:v.x,ty:v.y,role:4,faction,team,lane,time:.38});
+   state.effects.push({kind:'projectile',originKind:forward?'forward':'turret',x,y,tx:v.x,ty:v.y,role:4,faction,team,lane,time:.38});
    state.effects.push({x:v.x,y:v.y,lane,kind:'tower',time:.16,team});
   }
   state.units=state.units.filter(u=>u.hp>0);

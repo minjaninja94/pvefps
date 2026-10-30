@@ -322,10 +322,15 @@ function structure(g,x,y,faction,turret,hpRatio=1,kind=turret?'turret':'core'){
  }
  paintStructure(g,x,y,faction,kind==='forward'?false:turret,hpRatio);
 }
-function projectile(g,x,y,faction,role,frame=0,angle=0,volley=1){
+function towerMuzzle(x,y,faction,kind='turret',side=0){
+ const z=worldToScreen(x,y);
+ const height=kind==='forward'?92:kind==='core'?86:62;
+ return {x:z.x+(side===0?12:-12),y:z.y-height};
+}
+function projectileAt(g,x,y,faction,role,frame=0,angle=0,volley=1){
  const art=actualArt();
  if(!art||!Number.isInteger(faction)||faction<0||faction>=10)return false;
- const z=worldToScreen(x,y);
+ const z={x,y};
  const size=role===5?51:role===2?41:role===4?35:role===6?43:38;
  const boosted=Math.min(1.5,1+Math.log2(Math.max(1,volley))*.07);
  const w=size*boosted,h=Math.max(14,w*.58);
@@ -333,6 +338,9 @@ function projectile(g,x,y,faction,role,frame=0,angle=0,volley=1){
  g.drawImage(art,faction*ORIGINAL_CELL,(6+((Math.floor(frame)%4+4)%4))*ORIGINAL_CELL,ORIGINAL_CELL,ORIGINAL_CELL,
   -w*.5,-h*.5,w,h);
  g.restore();return true;
+}
+function projectile(g,x,y,faction,role,frame=0,angle=0,volley=1){
+ const p=worldToScreen(x,y);return projectileAt(g,p.x,p.y,faction,role,frame,angle,volley);
 }
 function factory(g,x,y,faction,role,active){
  if(active&&role===8&&global.DesertResourceArt?.draw?.(g,x-26,y-40,56))return;
@@ -669,7 +677,7 @@ function broodlingFrame(mode='idle',frame=0){
 }
 global.IsoWorld=Object.freeze({
  SIZE,FRAMES,project:worldToScreen,unproject:screenToWorld,
- terrain,structure,structureSprite,projectile,factory,frame:renderFactionSprite,broodlingFrame,effect,
+ terrain,structure,structureSprite,towerMuzzle,projectile,projectileAt,factory,frame:renderFactionSprite,broodlingFrame,effect,
  portrait(f,role){return renderFactionSprite(f,role,'idle',4);},
  invalidateMaiden(){for(const k of [...cache.keys()])if(k.startsWith('4-')||k.startsWith('5-'))cache.delete(k);},
  invalidateSpriteFaction(f){for(const k of [...cache.keys()])if(k.startsWith(f+'-'))cache.delete(k);},
