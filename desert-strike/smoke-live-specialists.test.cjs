@@ -74,7 +74,7 @@ test('all five co-op AI difficulties purchase specialist factories and keep anti
  const {E}=multi(55);
  for(const difficulty of ['easy','normal','hard','veryhard','impossible']){
   const m=E.create({mode:'coop',size:2,members:[{uid:'human-a',team:0,faction:0},{uid:'human-b',team:0,faction:1}],aiDifficulty:difficulty});
-  m.state.wave=16;m.state.seconds=200;
+  m.state.wave=17;m.state.seconds=200; // even wave: beginner AI intentionally skips odd-wave purchases
   for(const bot of m.state.players.filter(p=>p.bot)){
    bot.cash=100000;bot.ecoReadyAt=Infinity;
    for(let lane=0;lane<m.state.lanes;lane++)for(let i=0;i<4;i++)bot.buildings[lane][i]=[0,1,3,5][i];
