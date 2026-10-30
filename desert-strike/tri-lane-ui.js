@@ -7,7 +7,7 @@ const NET=global.DesertTriNetwork,E=global.DesertTriEngine;
 if(!NET||!E)return;
 let snap=null,lane=1,role=0,demolish=false,practice=null,practiceTimer=null,practiceRecorded=false,view='base',repairLane=1;
 let myId='',lobby=null,host=false,gridKey='',cardsKey='',counterKey='',augmentKey='',lastSnapshotAt=0,lastDrawAt=0,resultKey='',augmentRosterKey='',cameraX=1100;
-const LANES=['상단','중앙','하단'],ICONS=['⚔','⌖','◆','▣','✣','✹','♞','✚'];
+const LANES=['상단','중앙','하단'],ICONS=['⚔','⌖','◆','▣','✣','✹','♞','✚','⬡','⌖','†'];
 function message(msg){$('mpStatus').textContent=msg;}
 function laneCount(){return snap?.lanes??3;}
 function laneName(i){return laneCount()===1?'단일 전장':LANES[i]+' 라인';}
@@ -92,7 +92,7 @@ function ecoTooltip(level,seconds){
 function renderCounterGuide(fac){
  const root=$('mpCounterMatrix');if(!root||counterKey===fac)return;
  counterKey=fac;const fragment=document.createDocumentFragment();
- for(let i=0;i<8;i++){
+ for(const i of [0,1,2,3,4,5,6,7,9,10]){
   const d=global.DesertRoster?.getDef?.(i,fac),item=document.createElement('div');
   item.className='mp-counter-item';
   const heading=document.createElement('strong'),good=document.createElement('span'),bad=document.createElement('span');
@@ -108,7 +108,7 @@ function unitCards(){
  const me=my(),fac=me?.faction??faction();renderCounterGuide(fac);
   const key=fac+':'+role+':'+skin()+':'+(me?.eco||0)+':'+((me?.ecoReadyAt||0)>(snap?.seconds||0))+':'+Math.floor((snap?.seconds||0)/120);
  if(cardsKey!==key){cardsKey=key;const out=$('mpUnitCards');out.replaceChildren();
- for(let i=0;i<9;i++){
+ for(let i=0;i<11;i++){
   const d=i===8?null:global.DesertRoster?.getDef(i,fac),b=document.createElement('button');b.type='button';b.dataset.role=i;b.className='mp-unit-card'+(role===i?' active':'');b.setAttribute('aria-pressed',String(role===i));
   const cv=document.createElement('canvas');cv.width=cv.height=72;unitIcon(cv,fac,i);
   const name=document.createElement('strong');name.textContent=i===8?'자원채취 건물':global.DesertRoster?.FACTIONS[fac]?.units[i]||E.NAMES[i];
@@ -225,6 +225,7 @@ function draw(){
  const phase=Math.floor((performance.now()-lastSnapshotAt)/84);
  for(const u of snap.units.filter(u=>u.lane===lane).sort((x,y)=>x.y-y.y)){
   const p=pos(u.x,u.y-lane*E.LANE_H);
+   if(u.role===7){ctx.save();ctx.strokeStyle='#79e8e455';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y+12,190,65,0,0,Math.PI*2);ctx.stroke();ctx.restore();}
   if(p.x<cameraX-110||p.x>cameraX+1210)continue;
   const factor=(u.isHatchling?.58:1)*(u.heroCount===20?2:1),size=(u.role===3?78:u.role===6?77:68)*factor;
   ctx.fillStyle='#0617229a';ctx.beginPath();ctx.ellipse(p.x,p.y+13,17*factor,4*factor,0,0,Math.PI*2);ctx.fill();
@@ -232,12 +233,13 @@ function draw(){
   const act=['idle','move','attack','siege','death'].includes(u.act)?u.act:'idle',frame=((u.frame||0)+phase)%16;
   const img=iso?.frame?.(u.faction,u.role,act,frame)||global.DesertSprites?.frame?.(u.faction,u.role,act,frame);
   const skin=u.skin||'default',filter=global.DesertLobby?.filterForSkin?.(skin)||'none';
-  ctx.save();ctx.translate(p.x,p.y);if(u.team===1)ctx.scale(-1,1);ctx.imageSmoothingEnabled=false;
+  ctx.save();ctx.globalAlpha*=u.opacity??1;ctx.translate(p.x,p.y);if(u.team===1)ctx.scale(-1,1);ctx.imageSmoothingEnabled=false;
   if(global.DesertUnitMotion)global.DesertUnitMotion.draw(ctx,{faction:u.faction,role:u.role,action:u.act||'move',frame,x:-size/2,y:-size/2,size,filter,skin,isHatchling:!!u.isHatchling});
   else if(img){ctx.filter=filter;ctx.drawImage(img,-size/2,-size/2,size,size);}
   else{ctx.fillStyle='#f3c193';ctx.fillRect(-8,-24,16,29);}
   ctx.restore();
   const hpY=p.y-47*factor;
+   if(u.label){ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#061722';ctx.strokeText(u.label,p.x,hpY-22);ctx.fillStyle=u.role===7?'#9efff0':'#e6caff';ctx.fillText(u.label,p.x,hpY-22);}
   if(u.heroCount===20){ctx.fillStyle=u.guardian?'#9affa8':'#ffd197';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText(u.guardian?'가디언 ×20':'★ ×20',p.x,hpY-9);}
   if(u.hp<u.maxHP){ctx.fillStyle='#0c1b28';ctx.fillRect(p.x-16*factor,hpY-9,32*factor,5);ctx.fillStyle=u.team===0?'#83e4e0':'#f2a08c';ctx.fillRect(p.x-16*factor,hpY-9,32*factor*Math.max(0,u.hp/u.maxHP),5);}
    // Single-player parity: strengths and weaknesses stay visible above every on-screen unit.
