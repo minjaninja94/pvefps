@@ -61,9 +61,12 @@ function drawAllBattle(){
    const x=left+width*u.x/E.WIDTH;
    const ry=Math.max(-18,Math.min(15,(u.y-l*E.LANE_H-260)*.11));
    const y=mid+ry+(isAlly(u.team)?-7:8);
-   g.fillStyle=teamInk(u.team);g.beginPath();g.arc(x,y,Math.min(11,4+Math.log2(u.count+1)*1.4),0,Math.PI*2);g.fill();
-   g.fillStyle='#0c202b';g.textAlign='center';g.font='bold 9px sans-serif';g.fillText(ICONS[u.role]||'●',x,y+3);
-   if(u.count>1){g.fillStyle='#fff5db';g.font='bold 10px monospace';g.fillText(String(u.count),x+12,y-9);}
+   g.fillStyle=teamInk(u.team);g.beginPath();g.arc(x,y+9,Math.min(13,6+Math.log2(u.count+1)*1.3),0,Math.PI*2);g.fill();
+   const frame=(u.frame||0)+Math.floor(performance.now()/220),act=['move','attack','idle'].includes(u.act)?u.act:'idle';
+   const sprite=global.IsoWorld?.frame?.(u.faction,u.role,act,frame%16)||global.DesertSprites?.frame?.(u.faction,u.role,act,frame%16);
+   if(sprite){g.imageSmoothingEnabled=false;g.drawImage(sprite,x-14,y-22,28,29);}
+   else{g.fillStyle='#10232b';g.textAlign='center';g.font='bold 11px sans-serif';g.fillText(ICONS[u.role]||'●',x,y+3);}
+   if(u.count>1){g.fillStyle='#fff5db';g.textAlign='center';g.font='bold 10px monospace';g.fillText(String(u.count),x+14,y-11);}
   }
   if(snap.fog?.[l]){
    const x=team===0?left+width*(E.WIDTH-770)/E.WIDTH:left;
@@ -93,7 +96,7 @@ function renderTacticalPositions(){
   const track=document.createElement('div');track.className='mp-position-track';
   const groups=new Map();
   for(const u of units){
-   const key=u.team+':'+u.role,part=groups.get(key),power=u.heroCount===20?20:1;
+   const key=u.team+':'+u.role+':'+Math.floor(u.x/250),part=groups.get(key),power=u.heroCount===20?20:1;
    if(part){part.x+=u.x*power;part.n+=power;}
    else groups.set(key,{team:u.team,role:u.role,x:u.x*power,n:power});
   }
