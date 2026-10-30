@@ -826,7 +826,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    const x=forward?(team===0?WIDTH/4:WIDTH*3/4):team===0?215:WIDTH-215,y=(lane+.5)*LANE_H;
    cool[lane][team]=Math.max(0,cool[lane][team]-dt);
    if(cool[lane][team]>0)continue;
-   const hostile=state.units.filter(u=>u.hp>0&&u.team!==team&&Math.hypot(u.x-x,u.y-y)<=TOWER_RANGE);
+   const hostile=state.units.filter(u=>u.hp>0&&u.team!==team&&LIVE_SPECIALISTS.canTarget({team,role:4,x,y},u,state.units,state.seconds)&&Math.hypot(u.x-x,u.y-y)<=TOWER_RANGE);
    if(!hostile.length)continue;
    hostile.sort((a,b)=>(Math.hypot(a.x-x,a.y-y)*.55+a.hp/a.maxHP*42-(a.role===7?35:0))
     -(Math.hypot(b.x-x,b.y-y)*.55+b.hp/b.maxHP*42-(b.role===7?35:0)));
