@@ -882,3 +882,24 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
 @media(max-width:750px){.lobby-mode-ranks{grid-template-columns:repeat(2,minmax(0,1fr))}.lobby-leaderboard-row{grid-template-columns:minmax(0,1fr) auto}.lobby-leaderboard-row small{grid-column:1/-1}.mp-battle-aug-teams{grid-template-columns:1fr}}
 
 @media(max-width:460px){.lobby-ruleset-options{grid-template-columns:1fr}.lobby-ruleset-options button{min-height:54px}}
+
+/* Shared practice/PvP/coop compact command display: full 3-lane map or one lane. */
+#mpBattleCanvas{aspect-ratio:1100/400;height:auto;max-height:440px}
+#mpAllBattleCanvas{display:block;width:100%;height:auto;aspect-ratio:1100/408;image-rendering:pixelated;cursor:crosshair;touch-action:manipulation}
+#mpBattleCanvas[hidden],#mpAllBattleCanvas[hidden]{display:none!important}
+.mp-battle-lane-select button[data-mp-scope="all"]{font-weight:900;border-color:#87d6dc}
+.mp-battle-lane-select button[data-mp-scope="all"].active{background:#244851;color:#bbf4ff}
+.mp-tactical-positions{background:#0d222d;border:1px solid #44636b;border-radius:8px;padding:10px;margin:8px 0 13px;color:#e2eeeb}
+.mp-position-legend{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px;margin-bottom:7px}
+.mp-position-legend strong{font-size:13px;color:#ecd7ad}
+.mp-position-legend .ally{color:#88dcf7;font-weight:900}
+.mp-position-legend .enemy{color:#ffaca4;font-weight:900}
+.mp-position-lane{border-top:1px solid #3d5460;padding:5px 0}
+.mp-position-lane header{display:flex;align-items:center;gap:8px;color:#d9d6b3;font-size:11px}
+.mp-position-lane header b{min-width:62px;font-size:12px}
+.mp-position-track{height:34px;position:relative;border-radius:5px;border:1px solid #385667;background:linear-gradient(90deg,#1d4755aa 0%,#18323a 44%,#362b30 56%,#522e31aa 100%);overflow:hidden}
+.mp-position-track:before{content:'';position:absolute;left:50%;top:0;bottom:0;border-left:1px dashed #c8d3be66}
+.mp-position-dot{position:absolute;top:3px;min-width:16px;height:25px;text-align:center;line-height:25px;color:#faffff;font-size:12px;font-weight:900;text-shadow:0 1px 3px #0b1318;transform:translateX(-50%);white-space:nowrap}
+.mp-position-dot.ally{color:#a0edff}.mp-position-dot.enemy{color:#ffaca4}
+.mp-position-fog{position:absolute;top:0;bottom:0;background:#0a1422ed;display:flex;align-items:center;justify-content:center;color:#8b9da7;font-size:10px}
+@media(max-width:680px){.mp-battle-lane-select{flex-wrap:wrap}.mp-battle-lane-select button{padding:7px 8px;min-width:45px}.mp-tactical-positions{padding:7px}.mp-position-lane header{font-size:10px}#mpAllBattleCanvas{min-height:230px;object-fit:fill}}
