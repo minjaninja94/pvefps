@@ -26,8 +26,9 @@ vm.runInNewContext(game.replace('initFactions();wire();reset();',''),{
  requestAnimationFrame(){},console,Math,Array,Object,Number,Map,Set,Date
 },{timeout:10000});
 assert.equal(engineWin.DesertRoster.FACTIONS.length,10);
-assert.equal(engineWin.DesertRoster.FACTIONS.map(f=>f.units.length).reduce((a,b)=>a+b),80);
-for(let f=0;f<10;f++)for(let r=0;r<8;r++){
+assert.equal(engineWin.DesertRoster.FACTIONS.map(f=>f.units.length).reduce((a,b)=>a+b),110);
+assert.equal(engineWin.DesertRoster.FACTIONS.reduce((n,f)=>n+f.units.filter((_,i)=>i!==8).length,0),100);
+for(let f=0;f<10;f++)for(const r of [0,1,2,3,4,5,6,7,9,10]){
  const u=engineWin.DesertRoster.getDef(r,f);
  for(const k of ['hp','damage','range','rate','speed'])assert.ok(Number.isFinite(u[k]),'finite '+f+'/'+r+'/'+k);
  assert.ok(u.hp>0&&u.range>0&&u.rate>0);
@@ -59,4 +60,4 @@ assert.match(fakeEl('lobbyRecord').textContent,/온라인 1승/,'duplicate repor
 assert.ok(store.has('desert-front-training-v2'),'guest progression saved locally');
 assert.match(read('front-lobby.js'),/async function restoreAccount\(/,'Google persistence restores on reload');
 assert.match(fs.readFileSync(path.join(root,'..','firebase-network.js'),'utf8'),/uid:auth\.currentUser\.uid/,'network identity follows changed Firebase sessions');
-console.log('Ten-faction test passed: 80 unique units, 1,920 generated 2.5D frames, 3 structures, lobby mode/UI, XP ranks, unlockable cosmetics.');
+console.log('Ten-faction test passed: 100 combat unit variants, 1,920 generated 2.5D frames, 3 structures, lobby mode/UI, XP ranks, unlockable cosmetics.');
