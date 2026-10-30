@@ -8,7 +8,9 @@ const ACTIONS=Object.freeze(LIST.map(([id,label,fps])=>({id,label,fps})));
 const byId=Object.fromEntries(ACTIONS.map(a=>[a.id,a])),BASE={hit:'attack',skill:'siege',spawn:'idle'};
 function frameAt(action,seconds){return Math.floor(Math.max(0,seconds)*(byId[action]||byId.idle).fps)%16;}
 function draw(ctx,{faction=0,role=0,action='idle',frame=0,x=0,y=0,size=72,filter='none',skin='default',isHatchling=false}={}){
- if(!ctx||!global.IsoWorld)return false;
+ if(!ctx)return false;
+ if((role===9||role===10)&&global.DesertExpansionArt)return global.DesertExpansionArt.draw(ctx,{faction,role,action,frame,x,y,size,filter,skin:skin==='moe'?'moe':'base'});
+ if(!global.IsoWorld)return false;
  if(!byId[action])action='idle';
  const t=((Math.floor(frame)%16)+16)%16/15;
  const source=isHatchling?global.IsoWorld.broodlingFrame?.(BASE[action]||action,Math.floor(t*15)):
