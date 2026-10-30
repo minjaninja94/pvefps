@@ -3,15 +3,26 @@
 'use strict';
 const TIERS=['silver','gold','prismatic'],STAGES=[1,10,20,30,40,50,60,70];
 const WEIGHTS=[[45,40,15],[35,40,25],[26,42,32],[22,38,40],[18,35,47],[14,32,54],[10,27,63],[8,22,70]];
+// Eight baseline boosts for the two live specialist classes (silver/gold).
+const specialistCards=Object.freeze([
+ {id:'special-sniper-range',name:'장거리 조준선',description:'저격병의 사거리가 12% 증가합니다.',tier:'silver',scope:'common',effects:[{kind:'stat',roles:[9],stat:'range',value:.12}]},
+ {id:'special-sniper-armor',name:'안정화 사격 자세',description:'저격병의 체력이 15% 증가하여 첫 돌격을 버팁니다.',tier:'silver',scope:'common',effects:[{kind:'stat',roles:[9],stat:'hp',value:.15}]},
+ {id:'special-assassin-speed',name:'어둠 속 질주',description:'암살자의 이동속도가 18% 증가합니다.',tier:'silver',scope:'common',effects:[{kind:'stat',roles:[10],stat:'speed',value:.18}]},
+ {id:'special-assassin-hp',name:'초경량 잠행복',description:'암살자의 체력이 18% 증가합니다. 탐지되지 않은 상태는 그대로 유지됩니다.',tier:'silver',scope:'common',effects:[{kind:'stat',roles:[10],stat:'hp',value:.18}]},
+ {id:'special-sniper-damage',name:'대물탄 정밀 개조',description:'저격병의 공격력이 26% 증가합니다. 장갑 관통 및 조준 시간은 변하지 않습니다.',tier:'gold',scope:'common',effects:[{kind:'stat',roles:[9],stat:'damage',value:.26}]},
+ {id:'special-sniper-extra',name:'저격 2인조',description:'저격병 생산시설이 매 출격 때 저격병 1기를 추가 생산합니다.',tier:'gold',scope:'common',effects:[{kind:'extra_spawn',roles:[9],value:1}]},
+ {id:'special-assassin-damage',name:'급소 노림수',description:'암살자의 공격력이 25% 증가합니다. 탐지 가능 범위는 그대로입니다.',tier:'gold',scope:'common',effects:[{kind:'stat',roles:[10],stat:'damage',value:.25}]},
+ {id:'special-assassin-extra',name:'그림자 분신조',description:'암살자 생산시설이 매 출격 때 암살자 1기를 추가 생산합니다.',tier:'gold',scope:'common',effects:[{kind:'extra_spawn',roles:[10],value:1}]}
+]);
 let cards=[],byId=new Map(),loading,baseReady=false;
 function load(){
  if(!loading)loading=fetch('./assets/audio/../augments.json').then(r=>{if(!r.ok)throw Error('증강 카드 파일을 불러올 수 없습니다.');return r.json();}).then(data=>{
   if(data.schema!==1||!Array.isArray(data.cards)||data.cards.length!==300)throw Error('증강 카드 300종 검증 실패');
-  baseReady=true;cards=data.cards.concat(global.DesertPrism?.enabled?.()?global.DesertPrism.cards:[]);byId=new Map(cards.map(x=>[x.id,x]));return data;
+  baseReady=true;cards=data.cards.concat(specialistCards,global.DesertPrism?.enabled?.()?global.DesertPrism.cards:[]);byId=new Map(cards.map(x=>[x.id,x]));return data;
  }).catch(e=>{loading=null;throw e;});
  return loading;
 }
-function ready(){return baseReady&&cards.length===(global.DesertPrism?.enabled?.()?300+(global.DesertPrism?.cards?.length||0):300);}
+function ready(){return baseReady&&cards.length===300+specialistCards.length+(global.DesertPrism?.enabled?.()?(global.DesertPrism?.cards?.length||0):0);}
 function rng(seed){
  let state=(seed>>>0)||1;
  return function(){state^=(state<<13);state^=state>>>17;state^=(state<<5);return (state>>>0)/4294967296;};
@@ -51,7 +62,7 @@ function extra(selected=[],role){
  return Math.max(0,Math.min(3,count));
 }
 const api=Object.freeze({load,ready,create,apply,extra,card:id=>byId.get(id)||null,
- list:()=>cards.map(c=>({id:c.id,name:c.name,description:c.description,tier:c.tier,scope:c.scope,experimental:!!c.experimental})),STAGES,TIERS});
+ list:()=>cards.map(c=>({id:c.id,name:c.name,description:c.description,tier:c.tier,scope:c.scope,experimental:!!c.experimental})),specialistCards,STAGES,TIERS});
 global.DesertAugments=api;
 if(typeof document!=='undefined')void load().catch(()=>{});
 })(typeof window==='undefined'?globalThis:window);
