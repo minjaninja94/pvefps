@@ -909,10 +909,10 @@ function structureDamage(role,amount){
 }
 // Wave 30+ rewards a correct unit counter instead of making every unit take more damage.
 function counterAdvantage(wave){return wave>=60?2:wave>=50?1.85:wave>=40?1.75:wave>=30?1.65:1.55;}
-function matchupMultiplier(attacker,target,wave){
+function matchupMultiplier(attacker,target,wave,attackRole=attacker.role){
  if(target.role===6&&[3,4,6,7].includes(target.faction)){
-  if(attacker.role===2)return 1.65*counterAdvantage(wave)/1.55;
-  return attacker.role===0?.68:attacker.role===4?.78:1;
+  if(attackRole===2)return 1.65*counterAdvantage(wave)/1.55;
+  return attackRole===0?.68:attackRole===4?.78:1;
  }
  return attacker.good.includes(target.role)?counterAdvantage(wave):attacker.bad.includes(target.role)?.7:1;
 }
@@ -920,7 +920,7 @@ function calcDamage(attacker,target,amount,unit=null,volley=null){
  let out=amount;
  if(attacker!==null){
   const role=unit&&Number.isInteger(unit.faction)?getDef(attacker,unit.faction):ROLE[attacker];
-  out*=matchupMultiplier(role,target,state.wave);
+  out*=matchupMultiplier(role,target,state.wave,attacker);
  }
  const armor=combatDef(target).armor;
  return window.DesertConsolidation?.hit(out,armor,target,unit,volley)??Math.max(3,out-armor*.66);

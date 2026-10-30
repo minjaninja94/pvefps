@@ -57,10 +57,10 @@ function definition(faction,role){
 }
 // Wave 30+ rewards a correct unit counter instead of making every unit take more damage.
 function counterAdvantage(wave){return wave>=60?2:wave>=50?1.85:wave>=40?1.75:wave>=30?1.65:1.55;}
-function matchupMultiplier(attacker,target,wave){
+function matchupMultiplier(attacker,target,wave,attackRole=attacker.role){
  if(target.role===6&&[3,4,6,7].includes(target.faction)){
-  if(attacker.role===2)return 1.65*counterAdvantage(wave)/1.55;
-  return attacker.role===0?.68:attacker.role===4?.78:1;
+  if(attackRole===2)return 1.65*counterAdvantage(wave)/1.55;
+  return attackRole===0?.68:attackRole===4?.78:1;
  }
  return attacker.good.includes(target.role)?counterAdvantage(wave):attacker.bad.includes(target.role)?.7:1;
 }
@@ -523,7 +523,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  }
  function applyHit(a,v,damage){
   const attacker=combatDef(a),defender=combatDef(v);
-  const mult=matchupMultiplier(attacker,v,state.wave);
+  const mult=matchupMultiplier(attacker,v,state.wave,a.role);
   if(v.hp<=0)return;
   let hit=global.DesertConsolidation?.hit(damage*mult,defender.armor,v,a)??Math.max(3,damage*mult-defender.armor*.66);
   if(v.faction===4&&attacker.range>=48)hit*=1-BEAST_RANGED_DAMAGE_REDUCTION;

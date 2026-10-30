@@ -49,8 +49,8 @@ test('solo and authoritative multiplayer use the same escalating advantage and u
   for(const d of definitions){
    const want=d.ground?1.65*advantage/1.55:d.beneficial?advantage:d.expected;
    const shooter=api.getDef(d.attack,0),target={role:d.target,faction:d.faction};
-   near(api.matchupMultiplier(shooter,target,wave),want,'solo matchup at W'+wave+': '+d.attack+' vs '+d.target);
-   near(E.matchupMultiplier(E.definition(0,d.attack),target,wave),want,'MP matchup at W'+wave+': '+d.attack+' vs '+d.target);
+   near(api.matchupMultiplier(shooter,target,wave,d.attack),want,'solo matchup at W'+wave+': '+d.attack+' vs '+d.target);
+   near(E.matchupMultiplier(E.definition(0,d.attack),target,wave,d.attack),want,'MP matchup at W'+wave+': '+d.attack+' vs '+d.target);
   }
  }
 });
