@@ -29,7 +29,15 @@ function rng(seed){
 }
 function create(seed=1,{prismOnly=false}={}){
  const roll=rng(seed),schedule=prismOnly?Array(STAGES.length).fill('prismatic'):WEIGHTS.map(w=>{const n=roll()*100;return TIERS[n<w[0]?0:n<w[0]+w[1]?1:2]});
- function draw(tier,scopes,blocked){const pool=cards.filter(c=>c.tier===tier&&scopes.includes(c.scope)&&!blocked.has(c.id));if(!pool.length)return '';const id=pool[Math.floor(roll()*pool.length)].id;blocked.add(id);return id;}
+ function draw(tier,scopes,blocked){
+  const pool=cards.filter(c=>c.tier===tier&&scopes.includes(c.scope)&&!blocked.has(c.id));if(!pool.length)return '';
+  // Make the two newly introduced class transcendences discoverable without
+  // excluding older Prism cards; every card remains available and unique.
+  const weights=pool.map(c=>tier==='prismatic'&&c.id.startsWith('exp-specialist-')?4:1);
+  let pick=roll()*weights.reduce((sum,n)=>sum+n,0),index=0;
+  while(index<pool.length-1&&pick>=weights[index])pick-=weights[index++];
+  const id=pool[index].id;blocked.add(id);return id;
+ }
  function offer(tier,faction,chosen=[]){const blocked=new Set(chosen),own='faction-'+faction;return tier==='prismatic'
   ?Array.from({length:3},()=>draw(tier,[own,'common'],blocked))
   :[draw(tier,[own],blocked),draw(tier,['common'],blocked),draw(tier,['common'],blocked)];}
