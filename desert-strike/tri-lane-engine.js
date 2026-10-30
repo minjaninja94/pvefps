@@ -484,7 +484,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    if(job.due>state.seconds+1e-6)return true;
    const p=byUid(job.uid);
    if(p&&p.faction===3&&p.buildings[job.lane][job.slot]===7&&state.seconds+1e-6>=p.buildingReadyAt[job.lane][job.slot]&&state.cores[job.lane][p.team]>0
-    &&(global.DesertConsolidation?.population(state.units,x=>x.lane===job.lane&&x.team===p.team)??state.units.filter(x=>x.hp>0&&x.lane===job.lane&&x.team===p.team).length)<Infinity)spawn(p,job.lane,job.slot,7);
+    &&true)spawn(p,job.lane,job.slot,7);
    return false;
   });
  }
@@ -532,7 +532,8 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   if((a.inkUntil||0)>state.seconds)hit*=.90;
   const before=v.hp;
   const prism=a.team!==v.team&&!a.guardian&&!a.isHatchling
-   ?global.DesertPrism?.hitEffects?.(chosenOf(a),a,v,hit,state.seconds,state.units.filter(x=>x.hp>0&&x.team!==a.team&&x!==v)):null;
+   ?global.DesertPrism?.hitEffects?.(chosenOf(a),a,v,hit,state.seconds,state.units.filter(x=>x.hp>0&&x.team!==a.team&&x!==v),
+      state.units.filter(x=>x.hp>0&&x.team===a.team&&x!==a)):null;
   if(prism)hit+=prism.bonus;
   v.hp-=hit;v.attackAge=.12;v.hitAge=.3;v.lastDamagedAt=state.seconds;
   if(v.hp<=0){
@@ -545,8 +546,11 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   if(prism){
    if(prism.heal>0&&a.hp>0)a.hp=Math.min(a.maxHP,a.hp+prism.heal);
    if(prism.marked)v.inkUntil=Math.max(v.inkUntil||0,state.seconds+prism.marked);
+    for(const echo of prism.allyHeal||[])if(echo.unit.hp>0){echo.unit.hp=Math.min(echo.unit.maxHP,echo.unit.hp+echo.amount);state.effects.push({x:echo.unit.x,y:echo.unit.y,lane:echo.unit.lane,kind:'pollen',time:.6,team:a.team});}
    for(const other of prism.secondary)if(other.target.hp>0){
-    const previous=other.target.hp;other.target.hp-=other.damage;combatHit(other.target,previous,a);
+    const previous=other.target.hp;other.target.hp-=other.damage;
+     if(other.marked)other.target.inkUntil=Math.max(other.target.inkUntil||0,state.seconds+other.marked);
+     combatHit(other.target,previous,a);
     if(other.target.hp<=0)other.target.killed=true;
     state.effects.push({x:other.target.x,y:other.target.y,lane:other.target.lane,kind:'blast',time:.4,team:a.team});
    }

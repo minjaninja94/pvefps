@@ -157,61 +157,138 @@ const factionCards=[
 ];
 
 const FACTION_NAMES=['철갑연합','심연군체','성운결사','해병성채','월영 수인족','은월 엘프족','야월 퍼리족','크롬 로보족','옥토퍼 군체','농농 페어리족'];
-const THEMES=[
- ['무쇠','기갑','초중량','강철','불도저','철벽','공성','방패','장갑','열차'],
- ['포식','점액','변종','촉수','산란','부화','세포','기생','육식','군집'],
- ['성운','유성','별가루','천체','차원','무중력','우주','광륜','천궁','초신성'],
- ['오도','황룡','긴빠이','해병','기열','기합','악기바리','자진입대','돌격','보급'],
- ['핏빛','야성','송곳니','사냥','광분','초원','늑대','호랑이','질주','월식'],
- ['달빛','은화살','저격','정령','사냥꾼','은월','숲','별화살','장궁','표적'],
- ['늑대왕','달의무리','붉은달','발톱','야수','질풍','맹수','그림자','포효','초승달'],
- ['나노','CPU','드론','회로','불꽃','재부팅','증식','메카','과부하','광자'],
- ['먹물','심해','문어','촉수','파도','수압','심연','소용돌이','해류','독먹물'],
- ['꽃비','요정','반짝','봄바람','생명나무','꽃가루','꿀단지','벚꽃','치유','마법']
+const ROLE_NAMES=['돌격','사격','대장갑','장갑','대공','포격','특수','지원'];
+// Designed around each faction's actual combat identity. Each row is a signature
+// ability family (name / affected unit role / on-hit mode), not a generic list of mercenary names.
+const IDENTITIES=[
+ [
+  ['움직이는 산성벽',3,'fortify'],['무쇠 증기기관차',0,'shockwave'],['대공 철조망',4,'snare'],
+  ['궤도 대포',5,'meteor'],['초중량 전차',3,'shatter'],['강철 벌집탄',1,'pierce'],
+  ['대장갑 망치',2,'shatter'],['방패 파열진',3,'shock'],['백색 포화',5,'storm'],['철의 최후통첩',2,'execute']
+ ],
+ [
+  ['살아있는 알집',0,'spores'],['흡혈 송곳니',0,'vampire'],['기생 점액탄',1,'snare'],
+  ['포식 장갑',3,'harvest'],['군체 촉수폭풍',5,'spores'],['공생충 폭식',0,'execute'],
+  ['유전자 붕괴',2,'shatter'],['피묻은 부화',6,'spores'],['무저갱 수확',0,'harvest'],['산란 여왕의 포효',1,'storm']
+ ],
+ [
+  ['성운 낙뢰',5,'meteor'],['유성 유탄',2,'meteor'],['별무리 산탄',1,'pierce'],
+  ['성좌 봉쇄',4,'snare'],['차원 균열',6,'storm'],['황금 성운폭발',5,'shockwave'],
+  ['별빛 파쇄',2,'shatter'],['천궁의 심판',1,'execute'],['밤하늘 반사경',3,'fortify'],['초신성의 후광',5,'meteor']
+ ],
+ [
+  ['오도 돌격',0,'shock'],['황룡의 기상나팔',6,'shockwave'],['긴빠이 폭약',5,'meteor'],
+  ['싸제 소총 연사',1,'pierce'],['해병식 탄막',0,'roulette'],['기합 포신',2,'shatter'],
+  ['포탄 낙하',5,'shockwave'],['악기바리 역공',3,'fortify'],['훈련소 대폭발',4,'storm'],['상륙함 돌격',6,'shock']
+ ],
+ [
+  ['발톱 회오리',6,'shockwave'],['달밤 포식',0,'harvest'],['송곳니 끝장',6,'execute'],
+  ['짐승 발목잡기',0,'snare'],['포식자의 맹습',3,'shatter'],['핏빛 갈기',6,'vampire'],
+  ['갈가리 찢기',2,'execute'],['매복 사냥꾼',0,'roulette'],['발굽의 지진',6,'shockwave'],['짐승왕의 식사',0,'harvest']
+ ],
+ [
+  ['월광 삼연시',1,'pierce'],['은월 저격궤도',2,'execute'],['잎새 관통화살',1,'split'],
+  ['숲의 속박',4,'snare'],['정령 화살비',5,'storm'],['초승달 궤적',6,'pierce'],
+  ['달빛 별똥별',5,'meteor'],['나무의 저주',2,'shatter'],['밤안개 유도탄',1,'pierce'],['정령왕의 화살통',1,'split']
+ ],
+ [
+  ['늑대떼 추격',6,'snare'],['피의 질주',0,'vampire'],['붉은달 살육',6,'execute'],
+  ['발톱 분열',0,'split'],['맹수의 목덜미',3,'harvest'],['무리 사냥',6,'shock'],
+  ['고속 기습',2,'execute'],['달빛 포효',0,'shockwave'],['그림자 추격',6,'roulette'],['야수왕 군림',6,'execute']
+ ],
+ [
+  ['CPU 과부하',1,'shock'],['드론 레이저망',4,'pierce'],['자동 조준포',2,'execute'],
+  ['플라즈마 쐐기',5,'meteor'],['나노 갑옷',3,'fortify'],['재조립 포화',1,'split'],
+  ['기계식 전류',4,'shockwave'],['광자빔 절단',2,'shatter'],['화염 방화벽',5,'storm'],['최종 프로토콜',6,'shock']
+ ],
+ [
+  ['암흑 먹물비',1,'spores'],['촉수의 족쇄',0,'snare'],['심연의 대포',5,'storm'],
+  ['수압 분쇄',2,'shatter'],['독가스 점착',4,'spores'],['심해 흡혈',0,'harvest'],
+  ['검은 해류',5,'shockwave'],['묵빛 집어등',1,'snare'],['바다 포식',3,'vampire'],['크라켄의 먹물',5,'spores']
+ ],
+ [
+  ['벚꽃 소나기',1,'bloom'],['요정의 반짝 화살',1,'split'],['수호 꽃잎',4,'fortify'],
+  ['봄바람 속박',2,'snare'],['생명나무 섬광',5,'bloom'],['별사탕 폭발',1,'roulette'],
+  ['꽃씨 퍼뜨리기',4,'spores'],['분홍빛 마법',2,'bloom'],['꽃밭의 대포',5,'shockwave'],['요정여왕의 축복탄',1,'bloom']
+ ]
 ];
-const EVENTS=[
- '차원 용병 계약','적군을 훔치는 초대장','다른 세계 파병','포획된 군대','평행 우주 징집','몰래 온 동맹',
- '탄환 분열','연쇄 감염','흡혈 로또','뒤집어진 처형','눈보라 폭격','광기의 슬롯머신',
- '불사 보험','피격 반송','역습 도박','보복 루프','생환 코어','유언 주문',
- '원군 차원문','교환된 전열','적성 무기 배송','소환 폭주','이계 투하','차원 전이',
- '최후의 이중계약','왕의 딸깍','우주 대혼란','외계인 난입','방어선 반전','초월 대환장'
-];
-const SIGNATURES=[[3,5,2,0,6,1,4,7],[0,6,3,2,1,5,7,4],[5,2,4,1,3,0,6,7],
- [0,6,7,5,3,2,1,4],[6,0,3,1,2,4,5,7],[1,2,5,4,7,3,0,6],
- [6,0,1,3,4,2,5,7],[3,4,1,6,5,2,0,7],[5,1,0,2,6,4,3,7],[7,1,4,2,0,5,3,6]];
-// Thirty additional, individually named mechanics per faction: 300 more cards.
-// Unlike periodic income/regen upgrades these trigger on real hits, kills or foreign-faction deployments.
-const extraCards=FACTION_NAMES.flatMap((factionName,faction)=>EVENTS.map((label,index)=>{
- const role=SIGNATURES[faction][index%8],donor=(faction+1+index%9)%10,allyRole=(index+role+2)%8;
- const every=2+index%3, effects=[];
- let description='';
- if(index<6){
-  effects.push({kind:'prism_foreign_kill',role,every,count:1+(index===5?1:0),faction:donor,allyRole});
-  effects.push(chain(role,.30+index*.04,125+index*12,4+index%2,1+(index%2)));
-  description='해당 병종이 적 '+every+'기를 직접 처치할 때 '+FACTION_NAMES[donor]+' 소속 지원군이 전장에 합류합니다. 공격은 주변 적에게 연쇄됩니다.';
- }else if(index<12){
-  const mode=['split','shock','vampire','execute','storm','roulette'][index-6];
-  effects.push({kind:'prism_anomaly',role,mode,every,ratio:.35+(index-6)*.07,radius:130+(index-6)*25});
-  description='해당 병종이 '+every+'번째 명중할 때 '+({split:'투사체 파편이 다수 적에게 튀는',shock:'적을 교란하고 연타하는',vampire:'체력을 빨아들이고 주변까지 찌르는',execute:'빈사 적을 마무리하는',storm:'광역 폭풍과 감속을 일으키는',roulette:'추가 타격·흡혈·연쇄 중 하나가 순환 발동하는'}[mode])+' 기묘한 공격을 발동합니다.';
- }else if(index<18){
-  const modes=[reboot(role,.26+index*.014,22),reflect(role,.34,3),leech(role,.28,3),
-   execute(role,.38,.62),reboot(role,.42,34),reflect(role,.48,4)];
-  effects.push(modes[index-12],{kind:'prism_foreign_kill',role,every:4,count:1,faction:donor,allyRole});
-  description='해당 병종은 '+['치명타를 버티고 재가동','피격을 적에게 되돌림','공격 적중 시 피흡','부상한 적을 처형','전투 중 재기동','기습 반격'][index-12]+'합니다. 적 4기 처치마다 '+FACTION_NAMES[donor]+' 지원군을 호출합니다.';
- }else if(index<24){
-  effects.push({kind:'prism_foreign_wave',role:allyRole,count:1+(index%3===0?1:0),every:3+index%3,faction:donor});
-  effects.push({kind:'prism_anomaly',role,mode:['storm','split','execute','shock','roulette','vampire'][index-18],every:3+index%2,ratio:.46,radius:185});
-  description=FACTION_NAMES[donor]+' 타종족 파병을 주기적으로 받고, 직접 명중할 때마다 '+['폭풍','파편','처형','교란','랜덤 폭발','흡혈'][index-18]+' 기믹이 추가 발동합니다.';
- }else{
-  effects.push({kind:'prism_foreign_kill',role,every:3,count:2,faction:donor,allyRole});
-  effects.push({kind:'prism_anomaly',role,mode:['roulette','storm','split','shock','execute','vampire'][index-24],every:3,ratio:.55,radius:195});
-  effects.push(index%2?reboot(role,.3,40):chain(role,.43,160,4,2));
-  description='3회 명중마다 비정상적인 공격이 발생하고, 적 3기 처치마다 '+FACTION_NAMES[donor]+' 지원군 2기가 난입합니다. '+(index%2?'치명상 재기동':'연쇄 폭발')+'도 결합됩니다.';
+const LINKED=[{faction:7,role:3},{faction:8,role:0},{faction:5,role:1},{faction:0,role:3},{faction:6,role:6},
+ {faction:2,role:5},{faction:4,role:6},{faction:0,role:3},{faction:1,role:0},{faction:5,role:1}];
+const MODE_TEXT={
+ fortify:'피격으로 무너진 전열을 재정비하듯 공격자가 자가 치유하고 반격합니다',
+ shockwave:'충격파가 주변 적까지 튀어나가 피해를 줍니다',
+ snare:'목표와 주변 적을 느리게 만들고 방해합니다',
+ meteor:'강한 직격 피해와 주변 폭발을 일으킵니다',
+ shatter:'장갑병과 영웅 유닛에게 추가 파쇄 피해를 줍니다',
+ pierce:'투사체가 주변 적 최대 4기까지 관통 분열합니다',
+ shock:'직격 피해를 증폭하고 목표를 감속시킵니다',
+ storm:'주변 적에게 연쇄 폭풍과 감속을 남깁니다',
+ execute:'체력이 부족한 적에게 마무리 피해를 줍니다',
+ spores:'먹물·포자가 이웃 적에게 전염돼 피해와 감속을 줍니다',
+ vampire:'명중 피해를 흡수하면서 인접 적도 찌릅니다',
+ harvest:'피해를 흡수하고 부상한 적을 강하게 마무리합니다',
+ roulette:'연쇄타격·치유·직격강화가 순환해서 발동합니다',
+ split:'투사체가 주변 최대 3명에게 갈라집니다',
+ bloom:'적을 공격할 때 자신과 부상한 아군에게 꽃잎 치유를 나눕니다'
+};
+function identityPassive(faction,role,index){
+ switch(faction){
+  case 0:return index%3===0?reflect(3,.4,3):index%3===1?chain(5,.5,165,4,2):execute(2,.37,.62);
+  case 1:return index%3===0?revenge(0,1,4):index%3===1?leech(0,.36,3):mark(1,3,4);
+  case 2:return index%3===0?chain(5,.56,190,4,3):index%3===1?reflect(3,.36,4):mark(4,3,3);
+  case 3:return index%3===0?revenge(0,1,4):index%3===1?chain(5,.48,170,4,2):reflect(3,.4,4);
+  case 4:return index%3===0?leech(6,.38,3):index%3===1?execute(6,.4,.65):mark(0,2.5,4);
+  case 5:return index%3===0?chain(1,.5,195,4,3):index%3===1?mark(2,3,3):execute(2,.4,.7);
+  case 6:return index%3===0?revenge(6,1,4):index%3===1?leech(0,.3,3):execute(6,.4,.65);
+  case 7:return index%3===0?reboot(3,.35,32):index%3===1?chain(4,.55,180,4,3):reflect(3,.38,4);
+  case 8:return index%3===0?mark(1,4,3):index%3===1?chain(5,.53,185,4,3):leech(0,.32,3);
+  case 9:return index%3===0?echo(7,.5,3,210,5):index%3===1?chain(1,.43,185,4,3):reflect(0,.38,3);
  }
+}
+function describePassive(e){
+ switch(e.kind){
+  case 'prism_reflect':return ROLE_NAMES[e.role]+'병이 '+e.every+'번째 피격마다 받은 피해를 반사';
+  case 'prism_chain':return ROLE_NAMES[e.role]+'병의 '+e.every+'번째 명중이 '+e.targets+'기에게 연쇄 피해';
+  case 'prism_revenge':return ROLE_NAMES[e.role]+'병이 적 '+e.every+'기 처치할 때 같은 종족 병력 '+e.count+'기 추가 출격';
+  case 'prism_leech':return ROLE_NAMES[e.role]+'병이 '+e.every+'번째 명중 때 피해 흡수';
+  case 'prism_execute':return ROLE_NAMES[e.role]+'병이 빈사 적을 처형';
+  case 'prism_mark':return ROLE_NAMES[e.role]+'병이 '+e.every+'번째 명중으로 감속';
+  case 'prism_reboot':return ROLE_NAMES[e.role]+'병이 치명상 후 재가동';
+  case 'prism_echo':return '지원병 치유가 부상 아군 '+e.count+'명에게 전파';
+  default:return '';
+ }
+}
+// Existing 10 per faction are preserved. The 30 new cards use faction-specific
+// hit, kill, survival or healing mechanics; only two themed alliances per faction.
+const extraCards=IDENTITIES.flatMap((concepts,faction)=>Array.from({length:30},(_,index)=>{
+ const stage=Math.floor(index/10),offset=index%10,[concept,role,mode]=concepts[offset];
+ const every=stage===0?3+(offset%2):stage===1?4+(offset%2):3;
+ const ratio=stage===0?.42+offset*.012:stage===1?.48+offset*.014:.58+offset*.013;
+ const radius=135+offset*9+stage*15;
+ const anomaly={kind:'prism_anomaly',role,mode,every,ratio,radius};
+ const effects=[anomaly],passive=identityPassive(faction,role,offset);
+ let description=ROLE_NAMES[role]+'병이 '+every+'번째 명중할 때 '+MODE_TEXT[mode]+'.';
+ if(stage>0){
+  effects.push(passive);description+=' '+describePassive(passive)+' 효과가 결합됩니다.';
+ }
+ if(stage===2&&offset<8){
+  const extra=identityPassive(faction,role,offset+1);
+  if(extra.kind!==passive.kind){effects.push(extra);description+=' '+describePassive(extra)+'도 추가됩니다.';}
+ }
+ if(stage===2&&offset>=8){
+  const ally=LINKED[faction],name=FACTION_NAMES[ally.faction];
+  if(offset===8){
+   effects.push({kind:'prism_foreign_wave',role:ally.role,count:1,every:4,faction:ally.faction});
+   description+=' 전쟁 동맹 '+name+'의 '+ROLE_NAMES[ally.role]+'병 1기가 4웨이브마다 지원 출격합니다.';
+  }else{
+   effects.push({kind:'prism_foreign_kill',role,every:5,count:1,faction:ally.faction,allyRole:ally.role});
+   description+=' 적 '+every+'기 처치 시 동맹 '+name+'의 '+ROLE_NAMES[ally.role]+'병 1기를 전장에 호출합니다.';
+  }
+ }
+ const epithet=stage===0?'특이점':stage===1?'전투각성':'초월폭주';
  return Object.freeze({id:'exp-prism-'+faction+'-'+(index+10),scope:'faction-'+faction,tier:'prismatic',
-  name:factionName+' '+THEMES[faction][index%10]+' · '+label,description,experimental:true,effects});
+  name:concept+' · '+epithet,description,experimental:true,effects});
 }));
-
 const cards=factionCards.flatMap((items,faction)=>items.map(([name,description,...effects],index)=>Object.freeze({
  id:'exp-prism-'+faction+'-'+index,scope:'faction-'+faction,tier:'prismatic',
  name:name+' · 초월 프리즘',description,experimental:true,effects
@@ -263,23 +340,39 @@ function trigger(selected,kind,role,unit,now){
  }
  return fired;
 }
-function hitEffects(selected,attacker,victim,damage,now,nearby=[]){
+function hitEffects(selected,attacker,victim,damage,now,nearby=[],allies=[]){
  if(!attacker||!victim||!Number.isFinite(damage)||damage<=0)return {bonus:0,heal:0,secondary:[],marked:false};
  const role=attacker.role;
- const result={bonus:0,heal:0,secondary:[],marked:false};
+ const result={bonus:0,heal:0,secondary:[],marked:false,allyHeal:[]};
  for(const e of trigger(selected,'prism_burst',role,attacker,now))result.bonus+=damage*(e.mult-1);
  for(const e of findEffects(selected,'prism_execute'))if(e.role===role&&victim.hp<=victim.maxHP*e.threshold)result.bonus+=damage*e.bonus;
  for(const e of trigger(selected,'prism_chain',role,attacker,now)){
   const targets=nearby.filter(x=>x!==victim&&x.hp>0&&Math.hypot(x.x-victim.x,x.y-victim.y)<=e.radius)
-   .slice(0,Math.max(1,Math.min(3,e.targets||1)));
+   .slice(0,Math.max(1,Math.min(5,e.targets||1)));
   for(const target of targets)result.secondary.push({target,damage:Math.min(300,damage*e.ratio)});
  }
  for(const e of trigger(selected,'prism_leech',role,attacker,now))result.heal+=Math.min(120,damage*e.pct);
  for(const e of trigger(selected,'prism_mark',role,attacker,now))result.marked=Math.max(result.marked||0,e.duration);
  for(const e of trigger(selected,'prism_anomaly',role,attacker,now)){
-  const nearbyTargets=nearby.filter(x=>x.hp>0&&Math.hypot(x.x-victim.x,x.y-victim.y)<=e.radius).slice(0,4);
-  const splash=(count,ratio)=>{for(const x of nearbyTargets.slice(0,count))result.secondary.push({target:x,damage:Math.min(260,damage*ratio)});};
+  const nearbyTargets=nearby.filter(x=>x!==victim&&x.hp>0&&Math.hypot(x.x-victim.x,x.y-victim.y)<=e.radius).slice(0,5);
+  const splash=(count,ratio,marked=0)=>{for(const x of nearbyTargets.slice(0,count))result.secondary.push({target:x,damage:Math.min(260,damage*ratio),marked});};
   if(e.mode==='split')splash(3,e.ratio);
+  else if(e.mode==='pierce')splash(4,e.ratio);
+  else if(e.mode==='shockwave'){result.bonus+=damage*e.ratio*.3;splash(3,e.ratio);}
+  else if(e.mode==='snare'){result.marked=Math.max(result.marked,4);splash(2,e.ratio*.45,3);}
+  else if(e.mode==='spores'){result.marked=Math.max(result.marked,3);splash(3,e.ratio*.65,3);}
+  else if(e.mode==='shatter'){if(victim.role===3||victim.heroCount===20)result.bonus+=damage*(e.ratio+.4);splash(1,e.ratio*.5);}
+  else if(e.mode==='meteor'){result.bonus+=damage*e.ratio*.6;splash(4,e.ratio*.65);}
+  else if(e.mode==='fortify'){result.bonus+=damage*e.ratio*.3;result.heal+=Math.min(100,damage*e.ratio);}
+  else if(e.mode==='harvest'){result.heal+=Math.min(120,damage*e.ratio);if(victim.hp/victim.maxHP<.4)result.bonus+=damage*.55;}
+  else if(e.mode==='bloom'){
+   result.heal+=Math.min(90,damage*.30);
+   for(const ally of allies)if(ally!==attacker&&ally.hp>0&&ally.hp<ally.maxHP
+      &&Math.hypot(ally.x-victim.x,ally.y-victim.y)<=e.radius*2){
+    result.allyHeal.push({unit:ally,amount:Math.min(65,Math.max(1,damage*e.ratio*.35))});
+    if(result.allyHeal.length>=3)break;
+   }
+  }
   else if(e.mode==='shock'){result.bonus+=damage*e.ratio;result.marked=Math.max(result.marked,2);}
   else if(e.mode==='vampire'){result.heal+=Math.min(125,damage*(e.ratio+.1));splash(1,.25);}
   else if(e.mode==='execute'){if(victim.hp/victim.maxHP<=.45)result.bonus+=damage*(.8+e.ratio);}

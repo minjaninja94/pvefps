@@ -1001,7 +1001,8 @@ function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
  const before=u.hp;
  const special=attacker&&!attacker.guardian&&!attacker.isHatchling&&state.ruleset==='augment'
   ?ownPrism()?.hitEffects?.(sideAugments(attacker.side),attacker,u,hit,state.elapsed,
-    state.units.filter(v=>v.hp>0&&v.side!==attacker.side&&v!==u)) : null;
+    state.units.filter(v=>v.hp>0&&v.side!==attacker.side&&v!==u),
+    state.units.filter(v=>v.hp>0&&v.side===attacker.side&&v!==attacker)) : null;
  if(special)hit+=special.bonus;
  u.hp-=hit;
  if(u.hp<=0&&state.ruleset==='augment'){
@@ -1011,8 +1012,10 @@ function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
  if(special){
   if(special.heal>0&&attacker.hp>0)attacker.hp=Math.min(attacker.maxHP,attacker.hp+special.heal);
   if(special.marked)u.inkUntil=Math.max(u.inkUntil||0,state.elapsed+special.marked);
+  for(const echo of special.allyHeal||[])if(echo.unit.hp>0)echo.unit.hp=Math.min(echo.unit.maxHP,echo.unit.hp+echo.amount);
   for(const secondary of special.secondary){const victim=secondary.target;if(victim.hp<=0)continue;
    const previous=victim.hp;victim.hp-=secondary.damage;
+   if(secondary.marked)victim.inkUntil=Math.max(victim.inkUntil||0,state.elapsed+secondary.marked);
    recordCombatHit(victim,previous,attacker);
    if(victim.hp<=0)killUnit(victim);
    pulse(victim.x,victim.y,'#d28cff',12);
