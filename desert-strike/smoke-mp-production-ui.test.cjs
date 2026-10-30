@@ -61,9 +61,19 @@ const snapshot={width:3300,height:1560,players:[{uid:'local',team:0,faction:0,ca
  turrets:[[1250,1250],[1250,1250],[1250,1250]],forwardHP:[[1000,1000],[1000,1000],[1000,1000]],
  lanePressure:[.5,.5,.5],units:[],effects:[],fog:[false,false,false],viewerTeam:0};
 window.DesertTriUI.onSnapshot(snapshot);
+assert.equal(item('mpAllBattleCanvas').hidden,false,'three-line matches default to the complete overview');
+assert.equal(item('mpBattleCanvas').hidden,true,'one-line canvas stays hidden while viewing three lanes');
+assert.equal(item('mpTacticalPositions').children.length,4,'production intel includes blue/red position rows for three lanes');
+assert.match(src,/function drawAllBattle\(/,'actual three-lane whole battlefield render exists');
+assert.doesNotMatch(src,/const matchup=global\.DesertRoster\?\.getDef\?\.\(u\.role,u\.faction\)/,'combat canvas no longer floats matchup charts above units');
 assert.match(item('mpSelectedLane').textContent,/중앙/,'central lane is default');
 assert.equal(nav[0].attrs['aria-current'],'page','multiplayer base tab starts selected');
 window.DesertTriUI.setView('battle');
+item('mpAllBattleCanvas').dispatch('click',{clientX:200,clientY:30});
+assert.equal(item('mpBattleCanvas').hidden,false,'selecting a row reveals compact detailed lane');
+assert.equal(item('mpAllBattleCanvas').hidden,true);
+item('mpBattleLaneSelect').dispatch('click',{target:{closest(query){return query==='[data-mp-scope="all"]'?{dataset:{mpScope:'all'}}:null;}}});
+assert.equal(item('mpAllBattleCanvas').hidden,false,'all-lane tab restores three-line overview');
 assert.equal(item('mpBaseView').hidden,true,'battle tab hides production');
 assert.equal(item('mpBattleView').hidden,false,'battle tab shows battlefield');
 assert.equal(nav[1].attrs['aria-current'],'page');
