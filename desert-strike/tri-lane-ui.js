@@ -300,6 +300,7 @@ function buildGrid(){
 }
 function draw(){
  if(!snap)return;
+ if(battleScope==='all'){drawAllBattle();return;}
  const ctx=$('mpBattleCanvas').getContext('2d'),iso=global.IsoWorld,W=1100,H=520;
  if(!ctx)return;
  const pos=(x,y)=>iso?.project?.(x,y)||{x,y};
@@ -309,16 +310,16 @@ function draw(){
   const value=Math.max(0,Math.ceil(hp)),ratio=Math.max(0,Math.min(1,hp/maxHP));
   const name=kind==='forward'?'중간 타워':kind==='turret'?'본진 포탑':'핵심 기지';
   ctx.save();ctx.fillStyle='#0b1d28ed';ctx.fillRect(left,y,width,45);
-  ctx.strokeStyle=team===0?'#75c8d3':'#d99581';ctx.lineWidth=1;ctx.strokeRect(left+.5,y+.5,width-1,44);
+  ctx.strokeStyle=isAlly(team)?'#75c8d3':'#d99581';ctx.lineWidth=1;ctx.strokeRect(left+.5,y+.5,width-1,44);
   ctx.textAlign='center';ctx.font='bold 11px sans-serif';ctx.fillStyle='#f1e8da';
   ctx.fillText(value===0?name+' 파괴':name,p.x,y+13);
   ctx.font='bold 12px monospace';ctx.fillStyle=value===0?'#ffb6ab':'#ffffff';
   ctx.fillText(value+' / '+maxHP,p.x,y+28);
   ctx.fillStyle='#263943';ctx.fillRect(left+6,y+34,width-12,6);
-  ctx.fillStyle=value===0?'#78636a':team===0?'#8be9e1':'#f7a58d';
+  ctx.fillStyle=value===0?'#78636a':teamInk(team);
   ctx.fillRect(left+6,y+34,(width-12)*ratio,6);ctx.restore();
  }
- ctx.clearRect(0,0,W,H);ctx.save();ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();ctx.translate(-cameraX,0);
+ ctx.clearRect(0,0,W,400);ctx.save();ctx.scale(1,400/H);ctx.save();ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();ctx.translate(-cameraX,0);
  if(iso?.terrain)iso.terrain(ctx,E.WIDTH,H,false,my()?.faction??faction());
  else{ctx.fillStyle='#43524a';ctx.fillRect(0,0,E.WIDTH,H);}
  const a=pos(E.WIDTH/2,35),b=pos(E.WIDTH/2,485);
@@ -354,16 +355,8 @@ function draw(){
    if(u.label){ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#061722';ctx.strokeText(u.label,p.x,hpY-22);ctx.fillStyle=u.role===7?'#9efff0':'#e6caff';ctx.fillText(u.label,p.x,hpY-22);}
   if(u.heroCount===20){ctx.fillStyle=u.guardian?'#9affa8':'#ffd197';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText(u.guardian?'가디언 ×20':'★ ×20',p.x,hpY-9);}
   if(u.hp<u.maxHP){ctx.fillStyle='#0c1b28';ctx.fillRect(p.x-16*factor,hpY-9,32*factor,5);ctx.fillStyle=u.team===0?'#83e4e0':'#f2a08c';ctx.fillRect(p.x-16*factor,hpY-9,32*factor*Math.max(0,u.hp/u.maxHP),5);}
-   // Single-player parity: strengths and weaknesses stay visible above every on-screen unit.
-   const matchup=global.DesertRoster?.getDef?.(u.role,u.faction);
-   if(matchup&&!u.isHatchling){
-    const good=(matchup.good||[]).slice(0,2).map(r=>ICONS[r]||E.NAMES[r]?.slice(0,1)||'?').join('');
-    const bad=(matchup.bad||[]).slice(0,2).map(r=>ICONS[r]||E.NAMES[r]?.slice(0,1)||'?').join('');
-    const info=u.role===7?'✚ 회복 전용':'▲'+good+'  ▼'+bad;
-    ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.lineWidth=3;
-    ctx.strokeStyle='#071722';ctx.strokeText(info,p.x,hpY-(u.heroCount===20?34:18));
-    ctx.fillStyle='#e8f5dc';ctx.fillText(info,p.x,hpY-(u.heroCount===20?34:18));
-   }
+   // On-field unit roles, not floating counter matrices; production intel shows both team positions.
+
  }
  for(const e of snap.effects||[]){
   if(e.lane!==lane)continue;
@@ -406,8 +399,9 @@ function draw(){
  ctx.restore();
  ctx.fillStyle='#081c27d9';ctx.fillRect(0,0,240,35);ctx.fillStyle='#f4db9e';ctx.font='bold 15px sans-serif';ctx.textAlign='left';ctx.fillText(laneName(lane),13,23);
  ctx.strokeStyle='#dabb8a88';ctx.strokeRect(1,1,W-2,H-2);
+ ctx.restore(); // Unscale the compact 400px viewport.
  const label=$('mpBattleCurrentLane');if(label)label.textContent=laneName(lane);
- $('mpBattleLaneSelect')?.querySelectorAll('[data-mp-lane]').forEach(b=>{const on=Number(b.dataset.mpLane)===lane;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
+ $('mpBattleLaneSelect')?.querySelectorAll('[data-mp-lane]').forEach(b=>{const on=battleScope==='lane'&&Number(b.dataset.mpLane)===lane;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
 }
 function drawOverview(){
  if(!snap)return;
@@ -421,7 +415,7 @@ function drawOverview(){
   g.font='bold 12px monospace';g.textAlign='left';g.fillStyle='#f5e2c7';
   g.fillText((l===lane?'▶ ':'')+laneName(l)+' 전선',13,y+16);
   for(const u of snap.units)if(u.lane===l){
-   g.fillStyle=u.team===0?'#86dedc':'#f5a28a';g.fillRect(u.x/3,y+h/2,3,Math.min(12,h/3));
+   g.fillStyle=teamInk(u.team);g.fillRect(u.x/3,y+h/2,3,Math.min(12,h/3));
   }
   if(snap.fog?.[l]){g.fillStyle='#071521e9';g.fillRect(snap.viewerTeam===0?1100-770/3:0,y,770/3,h);}
   if(l===lane){g.strokeStyle='#efcc9d';g.strokeRect(1,y+1,1098,h-1);g.strokeStyle='#ffe6ad';g.lineWidth=2;g.strokeRect(cameraX/3+1,y+2,1100/3-2,Math.max(5,h-5));g.lineWidth=1;}
