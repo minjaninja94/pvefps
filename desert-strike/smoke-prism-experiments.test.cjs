@@ -59,6 +59,43 @@ test('400 unique, valid per-faction Prism cards extend original 300 and can be d
  assert.equal(disabled.DesertAugments.list().length,308,'feature flag preserves original 300 and 8 specialist base cards');
  assert.equal(disabled.DesertPrism.populationLimit,undefined,'no population limit API even with experimental effects disabled');
 });
+test('eight specialist base augments apply to sniper and assassin stats and wave production',async()=>{
+ const {window}=setup(),A=window.DesertAugments;await A.load();
+ assert.equal(A.specialistCards.length,8);
+ const base={role:9,range:370,hp:175.5,damage:282,rate:4.8,speed:40};
+ const sniper=A.apply(base,['special-sniper-range','special-sniper-damage'],9);
+ assert.ok(sniper.range>base.range&&sniper.damage>base.damage);
+ assert.equal(A.apply(base,['special-assassin-speed'],9).speed,base.speed,'class effects do not leak into sniper');
+ assert.equal(A.extra(['special-sniper-extra'],9),1);
+ assert.equal(A.extra(['special-assassin-extra'],10),1);
+ assert.equal(A.extra(['special-sniper-extra'],10),0);
+ const assassin=A.apply({...base,role:10},['special-assassin-speed','special-assassin-damage'],10);
+ assert.ok(assassin.speed>base.speed&&assassin.damage>base.damage);
+ const deck=A.create(311);assert.ok(deck.offer('silver',3).some(id=>A.card(id)?.tier==='silver'));
+});
+
+test('twenty unique per-faction transcendences trigger real hit effects for both classes',()=>{
+ const P=setup().window.DesertPrism;
+ const ids=new Set();
+ for(let faction=0;faction<10;faction++)for(const role of [9,10]){
+  const id='exp-specialist-'+faction+'-'+role,card=P.cards.find(c=>c.id===id);
+  assert.ok(card,'missing specialist transcendence '+id);
+  assert.equal(card.scope,'faction-'+faction);assert.equal(card.tier,'prismatic');
+  assert.ok(card.effects.some(e=>e.kind==='prism_anomaly'&&e.role===role));
+  assert.ok(card.effects.some(e=>e.kind!=='prism_anomaly'));
+  assert.ok(!ids.has(id));ids.add(id);
+  const attacker={role,hp:160,maxHP:180,x:0,y:0},victim={role:3,hp:70,maxHP:170,x:60,y:0};
+  const neighbors=[{role:1,x:65,y:5,hp:160,maxHP:160},{role:5,x:75,y:8,hp:160,maxHP:160}];
+  let observed=false;
+  for(let shot=0;shot<8;shot++){
+   const r=P.hitEffects([id],attacker,victim,120,shot,neighbors,[]);
+   if(r.bonus>0||r.heal>0||r.marked||r.secondary.length>0)observed=true;
+  }
+  assert.ok(observed,'transcendent attack must affect the battle: '+id);
+ }
+ assert.equal(ids.size,20);
+});
+
 test('new mechanics alter brood skills, recruits, wave effects and attacks without a global population cap',()=>{
  const {window}=setup(),P=window.DesertPrism;
  assert.equal(P.populationLimit,undefined);
