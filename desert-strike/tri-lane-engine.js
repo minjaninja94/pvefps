@@ -99,7 +99,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   }
  }
 
- const laneCap=team=>Math.max(75,...state.players.filter(p=>p.team===team).map(p=>global.DesertPrism?.populationLimit?.(p.augments,75,true)||75));
+ const laneCap=()=>Infinity; // Production, specials and reinforcements never stop at a team/lane population ceiling.
  const chosenOf=u=>byUid(u?.uid)?.augments||[];
  function beginAugment(index){
   if(!aug||index<0||index>=augmentRounds.length||state.augmentChoice)return;
@@ -134,7 +134,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    ||{cap:BROOD_BIRTH_CAP,alive:BROOD_ALIVE_CAP,chance:BROOD_BIRTH_CHANCE};
   if(used>=lim.cap||state.seconds-(parent.lastBroodBirth??-999)<BROOD_BIRTH_COOLDOWN
    ||state.units.filter(u=>u.hp>0&&u.uid===uid&&u.isHatchling).length>=lim.alive
-   ||state.units.filter(u=>u.hp>0&&u.team===parent.team&&u.lane===parent.lane).length>=laneCap(parent.team)
+   
    ||roll()>=lim.chance)return;
   parent.lastBroodBirth=state.seconds;
   state.broodBirthsByUid.set(uid,used+1);
@@ -440,12 +440,12 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   for(const bot of state.players.filter(p=>p.bot))botPurchase(bot);
   for(let lane=0;lane<LANES;lane++)for(let team=0;team<2;team++){
    let count=(global.DesertConsolidation?.population(state.units,u=>u.lane===lane&&u.team===team)??state.units.filter(u=>u.lane===lane&&u.team===team&&u.hp>0).length);
-   for(const p of state.players)if(p.team===team)for(let slot=0;slot<SLOTS&&count<laneCap(team);slot++){
+   for(const p of state.players)if(p.team===team)for(let slot=0;slot<SLOTS;slot++){
     const role=p.buildings[lane][slot];
     if(role!==null&&role!==EXTRACTOR&&state.seconds+1e-6>=p.buildingReadyAt[lane][slot]){
      spawn(p,lane,slot,role);count++;
      const extra=augmented?global.DesertAugments.extra(p.augments,role):0;
-     for(let n=0;n<extra&&count<laneCap(team);n++){spawn(p,lane,slot,role);count++;}
+     for(let n=0;n<extra;n++){spawn(p,lane,slot,role);count++;}
      if(p.faction===3&&role===7)for(const t of [1,2])state.marineSupports.push({uid:p.uid,lane,slot,wave:state.wave,due:state.seconds+HUANGLONG_INTERVAL*t});
     }
    }
@@ -462,7 +462,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    for(const directive of special.spawns){
     let count=(global.DesertConsolidation?.population(state.units,x=>x.lane===lane&&x.team===p.team)
      ??state.units.filter(x=>x.hp>0&&x.lane===lane&&x.team===p.team).length);
-    for(let n=0;n<directive.count&&count<laneCap(p.team);n++,count++)spawn(p,lane,0,directive.role,true,directive.faction??null);
+    for(let n=0;n<directive.count;n++,count++)spawn(p,lane,0,directive.role,true,directive.faction??null);
    }
    if(!p.prismLastStandUsed)for(const last of special.laststands||[]){
     const danger=coresBeforeSpecial.map((hp,i)=>({lane:i,hp})).sort((a,b)=>a.hp-b.hp)[0];
@@ -471,7 +471,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     for(const core of state.cores)core[p.team]=Math.min(CORE_HP,core[p.team]+CORE_HP*last.repair);
     let count=(global.DesertConsolidation?.population(state.units,x=>x.lane===danger.lane&&x.team===p.team)
      ??state.units.filter(x=>x.hp>0&&x.lane===danger.lane&&x.team===p.team).length);
-    for(let n=0;n<last.count&&count<laneCap(p.team);n++,count++)spawn(p,danger.lane,0,last.role);
+    for(let n=0;n<last.count;n++,count++)spawn(p,danger.lane,0,last.role);
     state.effects.push({x:p.team===0?260:WIDTH-260,y:(danger.lane+.5)*LANE_H,lane:danger.lane,kind:'shield',time:1,team:p.team});
     break;
    }
@@ -484,7 +484,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    if(job.due>state.seconds+1e-6)return true;
    const p=byUid(job.uid);
    if(p&&p.faction===3&&p.buildings[job.lane][job.slot]===7&&state.seconds+1e-6>=p.buildingReadyAt[job.lane][job.slot]&&state.cores[job.lane][p.team]>0
-    &&(global.DesertConsolidation?.population(state.units,x=>x.lane===job.lane&&x.team===p.team)??state.units.filter(x=>x.hp>0&&x.lane===job.lane&&x.team===p.team).length)<75)spawn(p,job.lane,job.slot,7);
+    &&(global.DesertConsolidation?.population(state.units,x=>x.lane===job.lane&&x.team===p.team)??state.units.filter(x=>x.hp>0&&x.lane===job.lane&&x.team===p.team).length)<Infinity)spawn(p,job.lane,job.slot,7);
    return false;
   });
  }
@@ -503,7 +503,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   const recruits=state.marineRecruitCount.get(a.uid)||0;
   const lim=global.DesertPrism?.recruitLimits?.(owner.augments,MARINE_RECRUIT_CAP,MARINE_RECRUIT_CHANCE)||{cap:MARINE_RECRUIT_CAP,chance:MARINE_RECRUIT_CHANCE};
   if(recruits>=lim.cap||roll()>=lim.chance)return;
-  if(state.units.filter(x=>x.hp>0&&x.lane===v.lane&&x.team===a.team).length>=laneCap(a.team))return;
+  
   state.marineRecruitCount.set(a.uid,recruits+1);
   state.marineStats.recruits++;marineRecord(a.uid,'recruits');
   const capturedHP=v.maxHP/(v.heroCount===20?20:1);
@@ -568,7 +568,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    if(owner&&!a.isHatchling&&!a.guardian)for(const extra of global.DesertPrism?.deathEffects?.(owner.augments,a)||[]){
     let count=(global.DesertConsolidation?.population(state.units,x=>x.lane===v.lane&&x.team===a.team)
      ??state.units.filter(x=>x.hp>0&&x.lane===v.lane&&x.team===a.team).length);
-    for(let i=0;i<extra.count&&count<laneCap(a.team);i++,count++)spawn(owner,v.lane,0,extra.role,true,extra.faction??null);
+    for(let i=0;i<extra.count;i++,count++)spawn(owner,v.lane,0,extra.role,true,extra.faction??null);
    }
   }
  }

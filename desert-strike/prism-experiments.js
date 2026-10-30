@@ -9,7 +9,6 @@ const sp=(role,count=1,every=2)=>({kind:'prism_spawn',role,count,every});
 const cash=(amount,every=1)=>({kind:'prism_cash',amount,every});
 const heal=(pct,every=2)=>({kind:'prism_heal',pct,every});
 const repair=(pct,every=2)=>({kind:'prism_repair',pct,every});
-const limit=(bonus,multi)=>({kind:'prism_limit',bonus,multi});
 const brood=(extra,alive,proc=0)=>({kind:'prism_brood',extra,alive,proc});
 const recruit=(extra,proc=0)=>({kind:'prism_recruit',extra,proc});
 const burst=(role,mult=1.5,every=4)=>({kind:'prism_burst',role,mult,every});
@@ -28,9 +27,9 @@ const factionCards=[
  // 0 철갑연합: immovable line, anti-siege retaliation, fortress logistics
  [
  ['이동 요새화','매 2웨이브 본진 내구도 4% 복구. 본진 체력 50% 이하로 웨이브를 시작하면 장갑병 4기 긴급 출격 + 기지 8% 복구(경기당 1회).',repair(.04,2),laststand(.5,.08,3,4)],
- ['철갑 예비사단','매 3웨이브마다 장갑병 2기가 추가 출격합니다. 병력 상한 적용.',sp(3,2,3)],
+ ['철갑 예비사단','매 3웨이브마다 장갑병 2기가 추가 출격합니다. 생산 시설과 별개로 추가 출격합니다.',sp(3,2,3)],
  ['철의 역습','장갑병이 4번째 피격될 때마다 받은 피해의 45%를 공격자에게 반사합니다.',reflect(3,.45,4)],
- ['비상동원령','아군 병력 상한이 220→252(싱글), 라인당 75→87(멀티)로 해제됩니다.',limit(32,12)],
+ ['철갑 전선 고정','장갑병이 3번째 피격될 때 피해 55%를 반사하고 포격병의 4번째 명중은 주변 2기에 연쇄 폭발합니다.',reflect(3,.55,3),chain(5,.48,160,4,2)],
  ['포성 공명','포격병의 매 4번째 공격이 주변 적 한 명에게 50% 연쇄 피해를 줍니다.',chain(5,.5,145,4)],
  ['강철 심장','매 2웨이브마다 생존 아군 병력이 최대 체력의 9%를 회복합니다.',heal(.09,2)],
  ['최후의 기갑진','장갑병이 적 체력 30% 미만을 공격하면 피해량이 85% 추가됩니다.',execute(3,.30,.85)],
@@ -45,9 +44,9 @@ const factionCards=[
  ['포식의 전염','돌격병의 4번째 타격은 목표에게 2초 먹물 약화 상태를 남깁니다.',mark(0,2,4)],
  ['기생 재생','매 2웨이브마다 생존 군체 병력의 체력 12%를 복구합니다.',heal(.12,2)],
  ['산란 폭주','공생충 상한 +5, 동시 생존 상한 +6, 부화 확률 +18%p.',brood(5,6,.18)],
- ['무저갱 확장','아군 병력 상한을 싱글 +36, 멀티 라인당 +14 확장합니다.',limit(36,14)],
+ ['식육의 바다','적을 3기 처치하면 공생 돌격병 1기가 튀어나오고, 돌격병의 3번째 타격이 체력을 30% 흡수합니다.',revenge(0,1,3),leech(0,.3,3)],
  ['영양분 회수','돌격병이 3번째 타격을 할 때 피해의 35%를 흡수해 자가 치유합니다.',leech(0,.35,3)],
- ['변이 역류','적 처치 4회마다 돌격병 공생체 1기가 무료 출격합니다. 상한 적용.',revenge(0,1,4)],
+ ['변이 역류','적 처치 4회마다 돌격병 공생체 1기가 무료 출격합니다. 능력 자체의 발동 횟수만 제한됩니다.',revenge(0,1,4)],
  ['폭식의 군집','돌격병의 5번째 공격이 근처 적에게 60% 연쇄 피해를 입힙니다.',chain(0,.6,100,5)],
  ['우주를 먹는 산란장','군체 부화 상한 대폭 해제(+15/+24), 부화 확률 +25%p. 매 2웨이브 돌격병 5기 추가 탄생.',brood(15,24,.25),sp(0,5,2)]
  ],
@@ -71,7 +70,7 @@ const factionCards=[
  ['오도봉고 기갑행진','매 3웨이브 돌격 기수 2기가 추가 출격합니다.',sp(6,2,3)],
  ['황룡 무한지원','매 2웨이브 추가 지원병 2기가 출격합니다.',sp(7,2,2)],
  ['악기바리 역공','돌격병은 매 4번째 피격마다 피해의 60%를 반사합니다.',reflect(0,.6,4)],
- ['해병의 재배치','아군 병력 제한을 싱글 +30, 멀티 라인당 +12 상향합니다.',limit(30,12)],
+ ['해병 강제 징집령','처치 후 징집 확률 +10%p, 징집 한도 +2. 돌격병이 3기를 처치하면 추가 돌격병이 출격합니다.',recruit(2,.1),revenge(0,1,3)],
  ['싸제 포격','포격병의 4번째 타격이 인접한 적 1명에게 65% 연쇄 폭발을 발생시킵니다.',chain(5,.65,135,4)],
  ['부활한 전우','적 처치 4회마다 아군 돌격병 1기를 지원 생산합니다.',revenge(0,1,4)],
  ['해병수육 대잔치','매 2웨이브 생존 해병 전체 체력이 11% 회복됩니다.',heal(.11,2)],
@@ -87,7 +86,7 @@ const factionCards=[
  ['달빛 회복','매 2웨이브 생존 수인 병력이 체력 11%를 회복합니다.',heal(.11,2)],
  ['송곳니 추격','돌격병의 5번째 공격이 적에게 3초 감속을 남깁니다.',mark(0,3,5)],
  ['포식 본능','돌격병이 체력 30% 아래인 적에게 추가 80% 피해를 줍니다.',execute(0,.3,.8)],
- ['짐승왕의 부대','아군 한도를 싱글 +38, 멀티 라인당 +15 확장합니다.',limit(38,15)],
+ ['짐승왕의 대사냥','돌격 기수 공격 시 빈사 적에게 80% 추가 피해를 주고 3번째 적중마다 체력 40%를 흡수합니다.',execute(6,.34,.8),leech(6,.4,3)],
  ['짐승왕의 월식','웨이브 시작 15초간 돌격 기수 공격력 2.2배. 매 2웨이브 돌격 기수 4기 추가 돌진.',frenzy(6,2.2,15),sp(6,4,2)]
  ],
  // 5 은월 엘프족: focus fire, soft control, ranged punishment
@@ -99,7 +98,7 @@ const factionCards=[
  ['별빛 사수','매 3웨이브 사격병 3기 추가 소환합니다.',sp(1,3,3)],
  ['유성분열탄','포격병의 5번째 사격이 주변 적에게 80% 연쇄 피해.',chain(5,.8,185,5)],
  ['월광의 맹세','매 2웨이브 전체 엘프 병력이 8% 회복됩니다.',heal(.08,2)],
- ['끝없는 화살통','아군 인원 상한을 싱글 +32, 멀티 라인당 +12 확장합니다.',limit(32,12)],
+ ['끝없는 화살통','사격병 3번째 명중마다 월광 화살이 적 3명에게 분열해 55% 피해를 주고, 대장갑 궁수의 명중탄도 인접 적에게 튕깁니다.',{kind:'prism_anomaly',role:1,mode:'pierce',every:3,ratio:.55,radius:230},chain(2,.4,165,4,2)],
  ['정령의 반격','대공병이 매 4번째 피격될 때 공격자에게 받은 피해의 55%를 반사합니다.',reflect(4,.55,4)],
  ['달빛 유도탄 폭우','사격병 매 3번째 공격이 반경 240의 적 최대 4명에게 90% 연쇄 피해. 3웨이브마다 사격병 4명 지원.',chain(1,.9,240,3,4),sp(1,4,3)]
  ],
@@ -111,7 +110,7 @@ const factionCards=[
  ['무리의 치유','매 2웨이브 생존 병력 체력을 10% 복구합니다.',heal(.10,2)],
  ['질풍 추격','돌격 기수의 4번째 공격은 2초 감속을 부여합니다.',mark(6,2,4)],
  ['강철 송곳니','돌격병 체력 흡수: 3번째 공격마다 피해의 38%를 회복합니다.',leech(0,.38,3)],
- ['달의 군단','싱글 병력 상한 +40, 멀티 라인당 +15 확장합니다.',limit(40,15)],
+ ['달의 군단','돌격 기수의 적 3기 처치마다 기수 1기가 무리에서 뛰어들고, 체력 35% 미만의 적을 75% 더 세게 공격합니다.',revenge(6,1,3),execute(6,.35,.75)],
  ['두 번째 사냥','적 처치 3회마다 돌격 기수 1기가 지원 출격합니다.',revenge(6,1,3)],
  ['발톱의 응징','돌격병이 적 체력 35% 이하일 때 추가 피해 75%.',execute(0,.35,.75)],
  ['피의 초승달','적 처치 2회마다 돌격 기수 2기 출격. 근접병 3번째 공격마다 적에게 대량 흡혈.',revenge(6,2,2),leech(0,.55,3)]
@@ -124,7 +123,7 @@ const factionCards=[
  ['자동 반격 포탑','장갑병의 3번째 피격이 공격자에게 피해 60% 반사.',reflect(3,.6,3)],
  ['대공 방화벽','대공병의 4번째 공격이 인접 적에게 65% 연쇄 피해.',chain(4,.65,160,4)],
  ['CPU 오버클럭','웨이브 시작 13초 동안 사격병 공격력 1.7배.',frenzy(1,1.7,13)],
- ['생산 프로토콜 해제','싱글 한도 +40, 멀티 라인당 +15 확장.',limit(40,15)],
+ ['생산 프로토콜 해제','장갑 로봇이 치명상을 입으면 30초마다 체력 35%로 재부팅하며, 대공 드론의 네 번째 공격이 주변 적 2명에게 전류를 전이합니다.',reboot(3,.35,30),chain(4,.52,160,4,2)],
  ['전자 교란막','사격병 4번째 공격 적에게 3초 감속.',mark(1,3,4)],
  ['재생 코어','매 2웨이브 아군 핵심 기지 내구도 4.5% 복구.',repair(.045,2)],
  ['무한 복제 공장','적 처치 2회마다 로봇 돌격병 2기 복제. 장갑병은 치명타 후 체력 45%로 20초마다 재부팅.',revenge(0,2,2),reboot(3,.45,20)]
@@ -139,7 +138,7 @@ const factionCards=[
  ['심연 보급선','매 웨이브 보급 70 CR 확보.',cash(70)],
  ['촉수 증식','매 2웨이브 돌격병 3기 추가 출격.',sp(0,3,2)],
  ['암흑 포식','돌격병이 3번째 타격마다 피해 35% 흡혈.',leech(0,.35,3)],
- ['무저갱 영역','싱글 한도 +35, 멀티 라인당 +13 확장.',limit(35,13)],
+ ['무저갱 영역','촉수 사격의 세 번째 명중이 4초 먹물로 감속시키고, 포격병의 네 번째 공격이 주변 3기에게 먹물 폭발을 퍼뜨립니다.',mark(1,4,3),chain(5,.5,175,4,3)],
  ['촉수 대폭발','포격병 3번째 타격이 반경 260의 적 5명에게 100% 연쇄 피해. 2웨이브마다 포격병 3기 지원.',chain(5,1,260,3,5),sp(5,3,2)]
  ],
  // 9 페어리: bloom-healing, fairy chain, empathy
@@ -150,7 +149,7 @@ const factionCards=[
  ['요정 여왕의 사절','2웨이브마다 지원병 2기가 추가 출격.',sp(7,2,2)],
  ['봄바람 지원군','3웨이브마다 사격병 3기가 지원 출격.',sp(1,3,3)],
  ['꽃잎 방패','돌격병의 4번째 피격이 공격자에게 피해 50%를 반사.',reflect(0,.5,4)],
- ['요정계 확장','싱글 병력 +28, 멀티 라인당 +10 한도 상승.',limit(28,10)],
+ ['요정계 확장','치유사가 아군을 치유하면 근처 부상병 3명에게 치유의 55%가 꽃잎처럼 전파되고, 돌격 요정은 3회 피격마다 피해를 되돌립니다.',echo(7,.55,3,190,5),reflect(0,.4,3)],
  ['달콤한 덫','대공병 4번째 타격으로 적 3초 감속.',mark(4,3,4)],
  ['벚꽃의 심판','대장갑병이 체력 35% 아래의 적에게 80% 추가 피해.',execute(2,.35,.8)],
  ['요정계 무한 생명 폭발','2웨이브마다 전 병력 20% 치유. 지원병 치유는 부상 아군 4명에 85% 확산. 단, 전쟁 장기화 화력 압박에는 취약합니다.',heal(.20,2),echo(7,.85,4,280,4)]
@@ -224,13 +223,6 @@ function findEffects(selected=[],kind=null){
  const out=[];
  for(const id of selected){const card=cardById.get(id);if(card)for(const effect of card.effects)if(!kind||effect.kind===kind)out.push(effect);}
  return out;
-}
-function bonus(selected,kind){
- return findEffects(selected,kind).reduce((sum,e)=>sum+(e.bonus||0),0);
-}
-function populationLimit(selected,standard,multiplayer=false){
- // Existing limits remain intact unless the corresponding card is selected.
- return standard+(multiplayer?Math.min(18,findEffects(selected,'prism_limit').reduce((n,e)=>n+(e.multi||0),0)):Math.min(55,bonus(selected,'prism_limit')));
 }
 function broodLimits(selected,baseCap,baseAlive,baseChance){
  const x=findEffects(selected,'prism_brood');
@@ -336,7 +328,7 @@ function deathEffects(selected,attacker){
  for(const e of trigger(selected,'prism_foreign_kill',attacker.role,attacker,0))out.push({role:e.allyRole,count:e.count,faction:e.faction});
  return out;
 }
-const api=Object.freeze({cards,enabled,populationLimit,broodLimits,recruitLimits,augmentStats,waveEffects,hitEffects,reflectEffects,deathEffects,survival,healEcho,findEffects});
+const api=Object.freeze({cards,enabled,broodLimits,recruitLimits,augmentStats,waveEffects,hitEffects,reflectEffects,deathEffects,survival,healEcho,findEffects});
 global.DesertPrism=api;
 if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

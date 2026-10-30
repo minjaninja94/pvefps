@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
-const CW=1100,CH=520,WORLD_W=3300,HOME_H=340,MAX_BASE=8640,MAX_TURRET=1700,INTERVAL=12,COLS=15,ROWS=5,SLOTS=COLS*ROWS,INCOME_PERIOD=.5,SIDE_SUPPLY=220;
+const CW=1100,CH=520,WORLD_W=3300,HOME_H=340,MAX_BASE=8640,MAX_TURRET=1700,INTERVAL=12,COLS=15,ROWS=5,SLOTS=COLS*ROWS,INCOME_PERIOD=.5;
 const COLORS=['#79dfee','#ff9a79'],LANES=[110,180,260,340,410];
 const EXTRACTOR=8;
 const initialIncome=1,WAVE_STIPEND=24,MAX_ECONOMY=7;
@@ -95,10 +95,7 @@ function getDef(role,faction){
 }
 function armyPopulation(side){return window.DesertConsolidation?.population(state.units,u=>u.side===side)??state.units.filter(u=>u.hp>0&&u.side===side).length;}
 function sideAugments(side){return state?.ruleset==='augment'?(side===0?state.augments:state.enemyAugments):[];}
-function supplyCap(side){
- return state?.ruleset==='augment'
-  ?(window.DesertPrism?.populationLimit?.(sideAugments(side),SIDE_SUPPLY,false)??SIDE_SUPPLY):SIDE_SUPPLY;
-}
+function supplyCap(){return Infinity;} // No global troop population ceiling in any ruleset.
 function ownPrism(){return state.ruleset==='augment'?window.DesertPrism:null;}
 function combatRows(){
  return {damage:Array(8).fill(0),kills:Array(8).fill(0),losses:Array(8).fill(0),
@@ -151,7 +148,7 @@ function broodLay(parent,target,roll=Math.random){
  if(parent.guardian||parent.faction!==1||parent.isHatchling||parent.conscripted||parent.role===7||parent.hp<=0
    ||!target||target.side===parent.side||state.broodBirths[parent.side]>=limits.cap
    ||state.units.filter(v=>v.hp>0&&v.side===parent.side&&v.isHatchling).length>=limits.alive
-   ||armyPopulation(parent.side)>=supplyCap(parent.side)
+   
    ||state.elapsed-(parent.lastBroodBirth??-999)<BROOD_BIRTH_COOLDOWN||roll()>=limits.chance)return;
  parent.lastBroodBirth=state.elapsed;state.broodBirths[parent.side]++;state.broodBirthsTotal[parent.side]++;
  const x=clamp(parent.x+(parent.side===0?17:-17)+random(-12,12),30,WORLD_W-30),y=clamp(parent.y+random(-22,22),68,452);
@@ -852,19 +849,19 @@ function deployWave(){
  for(let i=0;i<SLOTS;i++){
   if(state.built[i]!==null&&state.built[i]!==EXTRACTOR&&factoryReady(0,i)){
    const role=state.built[i];
-   if(headcount[0]<supplyCap(0)){
+   {
     createUnit(0,i,role);headcount[0]++;
     const extra=state.ruleset==='augment'?window.DesertAugments.extra(sideAugments(0),role):0;
-    for(let n=0;n<extra&&headcount[0]<supplyCap(0);n++){createUnit(0,i,role);headcount[0]++;}
+    for(let n=0;n<extra;n++){createUnit(0,i,role);headcount[0]++;}
    }
    if(state.faction===3&&role===7)for(const interval of [1,2])state.marineSupports.push({side:0,slot:i,role,wave:state.wave,due:state.elapsed+HUANGLONG_INTERVAL*interval});
   }
   if(state.enemyBuilt[i]!==null&&state.enemyBuilt[i]!==EXTRACTOR&&factoryReady(1,i)){
    const role=state.enemyBuilt[i];
-   if(headcount[1]<supplyCap(1)){
+   {
     createUnit(1,i,role);headcount[1]++;
     const extra=state.ruleset==='augment'?window.DesertAugments.extra(sideAugments(1),role):0;
-    for(let n=0;n<extra&&headcount[1]<supplyCap(1);n++){createUnit(1,i,role);headcount[1]++;}
+    for(let n=0;n<extra;n++){createUnit(1,i,role);headcount[1]++;}
    }
    if(state.enemyFaction===3&&role===7)for(const interval of [1,2])state.marineSupports.push({side:1,slot:i,role,wave:state.wave,due:state.elapsed+HUANGLONG_INTERVAL*interval});
   }
@@ -878,12 +875,12 @@ function deployWave(){
   for(const pct of special.repairs)state.baseHP[side]=Math.min(MAX_BASE,state.baseHP[side]+MAX_BASE*pct);
   for(const pct of special.heals)for(const u of state.units)if(u.side===side&&u.hp>0&&!u.isHatchling&&!u.guardian)
    u.hp=Math.min(u.maxHP,u.hp+u.maxHP*pct);
-  for(const directive of special.spawns)for(let n=0;n<directive.count&&armyPopulation(side)<supplyCap(side);n++)
+  for(const directive of special.spawns)for(let n=0;n<directive.count;n++)
    createUnit(side,side===0?0:COLS-1,directive.role,true,directive.faction??null);
   if(!state[flag])for(const directive of special.laststands||[])if(hpBefore/MAX_BASE<=directive.pct){
    state[flag]=true;
    state.baseHP[side]=Math.min(MAX_BASE,state.baseHP[side]+MAX_BASE*directive.repair);
-   for(let n=0;n<directive.count&&armyPopulation(side)<supplyCap(side);n++)
+   for(let n=0;n<directive.count;n++)
     createUnit(side,side===0?0:COLS-1,directive.role);
    banner(side===0?'✦ 철갑 최후의 보루':'✦ 적군 최후의 보루');break;
   }
@@ -899,7 +896,7 @@ function deployMarineSupports(){
   if(job.due>state.elapsed+1e-6)return true;
   const buildings=job.side===0?state.built:state.enemyBuilt;
   const faction=job.side===0?state.faction:state.enemyFaction;
-  if(faction===3&&buildings[job.slot]===7&&factoryReady(job.side,job.slot)&&armyPopulation(job.side)<supplyCap(job.side))createUnit(job.side,job.slot,7);
+  if(faction===3&&buildings[job.slot]===7&&factoryReady(job.side,job.slot))createUnit(job.side,job.slot,7);
   return false;
  });
 }
@@ -982,7 +979,7 @@ function marineSpoils(v,attacker,roll=Math.random){
  }
  const recruitment=ownPrism()?.recruitLimits?.(sideAugments(attacker.side),MARINE_RECRUIT_CAP,MARINE_RECRUIT_CHANCE);
  if(state.marineRecruitCount[attacker.side]>=(recruitment?.cap??MARINE_RECRUIT_CAP)||roll()>=(recruitment?.chance??MARINE_RECRUIT_CHANCE))return;
- if(armyPopulation(attacker.side)>=supplyCap(attacker.side))return;
+ 
  state.marineRecruitCount[attacker.side]++;
  state.marineStats.recruits++;
  const capturedHP=v.maxHP/(v.heroCount===20?20:1);
@@ -1041,7 +1038,7 @@ function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
   killUnit(u);marineSpoils(u,attacker,roll);
   if(attacker&&attacker.side!==u.side&&!attacker.isHatchling&&!attacker.guardian&&state.ruleset==='augment')
    for(const reinforcements of ownPrism()?.deathEffects?.(sideAugments(attacker.side),attacker)||[])
-    for(let i=0;i<reinforcements.count&&armyPopulation(attacker.side)<supplyCap(attacker.side);i++)
+    for(let i=0;i<reinforcements.count;i++)
      createUnit(attacker.side,attacker.side===0?0:COLS-1,reinforcements.role,true,reinforcements.faction??null);
  }
 }
