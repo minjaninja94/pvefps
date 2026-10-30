@@ -99,7 +99,7 @@ test('heal-only support displays its real purpose, and no fake offensive armor m
  assert.match(solo,/회복 전용 · 공격 상성 없음/);
  assert.match(host,/const GOODS=.*\[\]\];/);
  assert.match(host,/const BADS=.*\[\]\];/);
- assert.match(ui,/const info=u\.role===7\?'✚ 회복 전용'/);
+ assert.match(ui,/i===7\?'✚ 회복 전용'/,'support stays labeled healing-only in the production roster, not floating over the battle');
  assert.match(ui,/위협: 돌격 · 사격/);
 });
 test('forward tower draws elevated muzzle-fired laser and intercepts enemy reinforcements behind it',()=>{
