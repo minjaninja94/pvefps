@@ -6,6 +6,8 @@ const PLANS=[
  {id:'pressure',name:'전열 압박',opening:[0,1,0],weights:[5,4,2,2,1,2,2,1]},
  {id:'siege',name:'장갑 공성',opening:[3,2],weights:[1,3,3,4,1,5,1,2]}
 ];
+const SPECIAL_COUNTERS=[[1,3],[3,5],[0,1],[2,6],[2,3],[0,6],[4,1],[0,5],[],[0,1,10],[7,0,3]];
+for(const p of PLANS)p.weights.push(0,p.id==='siege'?1.3:1.7,p.id==='air'?1.8:1.2);
 function create(faction=0,random=Math.random){
  const index=Math.min(PLANS.length-1,Math.max(0,Math.floor(random()*PLANS.length)));
  return {plan:index,faction,opening:0,nextThink:0,spent:0,economyPurchases:0};
@@ -27,6 +29,8 @@ function siegeResponse(brain,{counts,intel={},difficulty}){
 function response(brain,{counts,intel={},difficulty='veryhard'}){
  const siege=siegeResponse(brain,{counts,intel,difficulty});if(siege)return siege;
  const roles=intel.roles||[],seen=roles.reduce((a,b)=>a+b,0),army=counts.reduce((a,b)=>a+b,0);
+  if((roles[10]||0)>=1&&counts[7]<Math.max(1,Math.ceil(roles[10]/3)))
+   return {needed:true,role:7,counters:[7,0,3],major:10,stealthThreat:true};
  const major=roles.indexOf(Math.max(0,...roles)),fraction=seen?roles[major]/seen:0;
  if(seen<6)return {needed:false};
  const ground=[3,4,6,7].includes(brain.faction);
@@ -34,14 +38,16 @@ function response(brain,{counts,intel={},difficulty='veryhard'}){
   const counters=[6,3,1],shares=[.24,.22,.18],role=counters.find((r,i)=>counts[r]<Math.max(1,Math.ceil(army*shares[i])));
   if(role!==undefined)return {needed:true,role,counters,major};
  }
- const table=[[1,3],[3,5],[0,1],[2,ground?3:6],[2,3],[0,ground?1:6],(intel.air||0)>=roles[6]*.5?[4,1]:[2,3],[0,5]];
+ const table= SPECIAL_COUNTERS.map(x=>x.slice());
+  table[3]=[2,ground?3:6];table[5]=[0,ground?1:6];
+  table[6]=(intel.air||0)>=(roles[6]||0)*.5?[4,1]:[2,3];
  if(difficulty==='impossible'&&seen>=10&&fraction<.45){
-  const weights=Array(8).fill(0);roles.forEach((n,r)=>{weights[table[r][0]]+=n*.65;weights[table[r][1]]+=n*.35;});
+  const weights=Array(11).fill(0);roles.forEach((n,r)=>{if(r===8||!table[r]?.length)return;weights[table[r][0]]+=n*.65;weights[table[r][1]]+=n*.35;});
   const deficits=weights.map((n,r)=>({role:r,gap:(army+2)*.85*n/seen-counts[r]})).sort((a,b)=>b.gap-a.gap);
   return {needed:deficits[0].gap>=1.25,role:deficits[0].role,counters:deficits.filter(x=>x.gap>0).map(x=>x.role),major};
  }
  if(fraction<(difficulty==='impossible'?.45:.55))return {needed:false};
- const counters=table[major];
+ const counters=table[major]||[1,3];
  const share=difficulty==='impossible'?.85:.60,covered=counters.reduce((n,r)=>n+counts[r],0);
  const needed=covered<Math.ceil(Math.max(army,3)*share);
  const role=counters.slice().sort((a,b)=>counts[a]-counts[b])[0];
@@ -54,7 +60,7 @@ function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={},di
  const roles=intel.roles||[],seen=roles.reduce((a,b)=>a+b,0),major=roles.indexOf(Math.max(0,...roles));
  const concentrated=seen>=6&&major>=0&&roles[major]/seen>=.65;
  const groundSpecial=[3,4,6,7].includes(brain.faction);
- const focusCounters=concentrated?[[1,3],[3,5],[0,1],[2,groundSpecial?3:6],[2,3],[0,groundSpecial?1:6],(intel.air||0)>=roles[6]*.5?[4,1]:[2,3],[0,5]][major]:[];
+ const focusCounters=concentrated?(SPECIAL_COUNTERS[major]||[1,3]):[];
  const counterReady=army>=6&&focusCounters.reduce((n,r)=>n+counts[r],0)>=army*.6;
  // Siege supported by spear infantry is a two-role strategy, not a pure
  // 65%-dominance spam. A mobile assault needs armor to tie up the spears and
@@ -118,12 +124,12 @@ function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={},di
  }
  const sum=weights.reduce((a,b)=>a+b,0);
  const options=costs.map((cost,role)=>({role,cost,score:weights[role]/sum*(army+2)-counts[role]}))
-  .filter(x=>x.role<8&&weights[x.role]>0).sort((a,b)=>b.score-a.score||a.cost-b.cost);
+  .filter(x=>x.role!==8&&x.role<11&&weights[x.role]>0).sort((a,b)=>b.score-a.score||a.cost-b.cost);
  if(!options.length)return null;
  // Commit to a real next purchase, otherwise buying a cheap trooper every
  // time 65 CR arrives would permanently starve armor/air/siege production.
  if(intel.invaded){const emergency=options.find(x=>x.cost<=cash);return emergency?{kind:'unit',role:emergency.role}:null;}
- const threat=(air>=2?'air':'')+(armor>=2?'armor':'')+(concentrated?'focus'+major+':'+focusCounters.join(','):'');
+ const threat=(air>=2?'air':'')+(armor>=2?'armor':'')+(concentrated?'focus'+major+':'+focusCounters.join(','):'')+((roles[10]||0)>0?'stealth':'');
  if(brain.lastThreat!==threat){brain.nextRole=null;brain.lastThreat=threat;}
  const role=brain.nextRole??options[0].role;brain.nextRole=role;
  // Hold for a quality counter unless the frontline is under active pressure.
