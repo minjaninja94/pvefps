@@ -1387,7 +1387,7 @@ function constructionBar(slot){
 let soloBattleAugmentKey='';
 function renderSoloBattleAugments(){
  const root=$('soloBattleAugmentRoster');
- if(root&&typeof root.replaceChildren!=='function')return;
+ if(root&&(typeof root.replaceChildren!=='function'||typeof document.createElement('div').append!=='function'))return;
  if(!root||!state||!state.live||state.ruleset!=='augment'){
   if(root){root.hidden=true;root.replaceChildren();root.dataset.signature='';}
   return;

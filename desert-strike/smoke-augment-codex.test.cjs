@@ -68,7 +68,7 @@ test('popup opens from selected faction, filters by common/faction, tier, and se
  assert.equal($('augmentCodexResults').children.reduce((n,sec)=>n+sec.children[1].children.length,0),50);
  $('augmentCodexTabs').fire('click',faction);
  assert.equal($('augmentCodexFactionLabel').hidden,false);
- assert.match($('augmentCodexStatus').textContent,/테스트종족7 전용 · 35 \/ 65종/);
+ assert.match($('augmentCodexStatus').textContent,/테스트종족7 전용 · 65 \/ 65종/);
  assert.equal($('augmentCodexResults').children.reduce((n,sec)=>n+sec.children[1].children.length,0),65);
  $('augmentCodexTiers').fire('click',tiers[2]);
  assert.match($('augmentCodexStatus').textContent,/\/ 65종/);
