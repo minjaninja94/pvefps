@@ -16,7 +16,7 @@ const AGGRO_RADIUS=590,AGGRO_LEASH=740,SUPPORT_RADIUS=615,CONTACT_CELL=64;
 const EXTRACTOR=8,ecoPrice=level=>Math.round(70*Math.pow(1.36,level)),ecoStabilize=(level,seconds)=>(4+2*level+Math.min(6,Math.floor(Math.max(0,seconds)/120)))/2;
 const ecoBuildSeconds=level=>12+4*Math.max(0,level-1);
 const WEAPON_COST=n=>Math.round(200*Math.pow(1.65,n)),ARMOR_COST=n=>Math.round(190*Math.pow(1.63,n));
-const COST=[65,100,185,285,185,360,300,220,70], NAMES=['돌격','사격','대장갑','장갑','대공','포격','특수','지원','자원채취'];
+const COST=[65,100,185,285,185,360,300,220,70,380,330], NAMES=['돌격','사격','대장갑','장갑','대공','포격','특수','지원','자원채취','저격','암살'];
 const BASE=[
  [115,21,1,29,.77,82,false,'ground'],
  [108,17,1,164,.8,60,true,'ground'],
@@ -37,6 +37,7 @@ const GOODS=[[5,7],[0,7],[3,4],[1,4],[6],[1,4],[0,3],[]];
 const BADS=[[3,1],[3,5],[0,1],[2,6],[3,2],[0,6],[4,1],[]];
 function unitCost(faction,role){return role===6?({4:285,6:270,7:285}[faction]??COST[role]):COST[role];}
 function definition(faction,role){
+ if(role===9||role===10)return global.DesertExpansion.definition(role,faction);
  const shared=global.DesertRoster?.getDef;
  if(typeof shared==='function')return shared(role,faction);
  const t=BASE[role],mut=[[1.055,1,.96],[.995,1,1.12],[.99,1.09,1],[1.09,1.06,1.01],[1,1,1.08],[.94,1,.99],[1.02,1,1.07],[1.07,1,.99],[.99,1,1.01],[1,1,1.01]][faction]||[1,1,1];
@@ -90,19 +91,19 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  const players=humans.concat(mode==='coop'?Array.from({length:size},(_,i)=>({uid:'AI_'+i,name:'적 AI '+(i+1),team:1,faction:(i+3)%10,bot:true})):[]);
  const state={mode,size,ruleset:augmented?ruleset:'standard',augmentStage:-1,augmentChoice:null,augmentSchedule:aug?.schedule||[],aiDifficulty:AI_LEVELS.includes(aiDifficulty)?aiDifficulty:'normal',seconds:0,wave:0,next:OPENING_PREP_SECONDS,ended:false,winner:null,
   width:WIDTH,height:HEIGHT,lanes:LANES,
-  cores:Array.from({length:LANES},()=>[CORE_HP,CORE_HP]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),forwardHP:Array.from({length:LANES},()=>[1000,1000]),forwardClaimed:Array.from({length:LANES},()=>[false,false]),forwardCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,nextConsolidation:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,augments:[],produced:Array(8).fill(0),combatStats:{damage:Array(8).fill(0),kills:Array(8).fill(0),
-  losses:Array(8).fill(0),heroDamage:Array(8).fill(0),heroes:Array(8).fill(0)},cash:360,eco:0,ecoReadyAt:0,weapon:0,armor:0,nukes:1,barrageCd:0,mineCosts:{},mineTimings:{},buildings:Array.from({length:LANES},()=>Array(SLOTS).fill(null)),buildingReadyAt:Array.from({length:LANES},()=>Array(SLOTS).fill(0))})),lanePressure:Array(LANES).fill(.5)};
+  cores:Array.from({length:LANES},()=>[CORE_HP,CORE_HP]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),forwardHP:Array.from({length:LANES},()=>[1000,1000]),forwardClaimed:Array.from({length:LANES},()=>[false,false]),forwardCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,nextConsolidation:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,augments:[],produced:Array(11).fill(0),combatStats:{damage:Array(11).fill(0),kills:Array(11).fill(0),
+  losses:Array(11).fill(0),heroDamage:Array(11).fill(0),heroes:Array(11).fill(0)},cash:360,eco:0,ecoReadyAt:0,weapon:0,armor:0,nukes:1,barrageCd:0,mineCosts:{},mineTimings:{},buildings:Array.from({length:LANES},()=>Array(SLOTS).fill(null)),buildingReadyAt:Array.from({length:LANES},()=>Array(SLOTS).fill(0))})),lanePressure:Array(LANES).fill(.5)};
  const byUid=uid=>state.players.find(p=>p.uid===uid);
  function combatLife(u){return u.heroCount===20?Math.max(0,Math.min(20,Math.ceil(Math.max(0,u.hp)/(u.maxHP/20)-1e-9))):(u.hp>0?1:0);}
  function combatHit(v,before,a=null){
-  if(!v||!Number.isInteger(v.role)||v.role<0||v.role>=8)return;
+  if(!v||!Number.isInteger(v.role)||v.role<0||v.role>=11)return;
   const previous=v._combatLife??(v.heroCount===20?20:(before>0?1:0)),remaining=combatLife(v);
   v._combatLife=remaining;
   const casualties=Math.max(0,previous-remaining),eligible=!v.guardian&&!v.conscripted&&!v.isHatchling;
   const defender=byUid(v.uid);
   if(defender&&eligible)defender.combatStats.losses[v.role]+=casualties;
   const attacker=byUid(a?.uid);
-  if(a?.team!==undefined&&attacker&&a.team!==v.team&&Number.isInteger(a.role)&&a.role>=0&&a.role<8){
+  if(a?.team!==undefined&&attacker&&a.team!==v.team&&Number.isInteger(a.role)&&a.role>=0&&a.role<11){
    const dealt=Math.max(0,Math.min(before,before-Math.max(0,v.hp)));
    attacker.combatStats.damage[a.role]+=dealt;
    if(a.heroCount===20)attacker.combatStats.heroDamage[a.role]+=dealt;
@@ -199,7 +200,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  }
  function productionReadyAt(){return state.seconds<OPENING_PREP_SECONDS?OPENING_PREP_SECONDS:state.seconds+FACTORY_BUILD_SECONDS;}
  function spawn(p,lane,slot,role,fromProduction=true,overrideFaction=null){
-  if(fromProduction&&role>=0&&role<8)p.produced[role]++;
+  if(fromProduction&&role>=0&&role<11&&role!==EXTRACTOR)p.produced[role]++;
   const actualFaction=overrideFaction??p.faction;
   const d=global.DesertAugments?.apply?.(definition(actualFaction,role),p.augments,role)||definition(actualFaction,role),hp=d.hp*(1+.09*p.armor);
   const x=p.team===0?235+(slot%15)*4:WIDTH-235-(slot%15)*4;
@@ -299,7 +300,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  }
  function selectCounter(lane,bot){
   // Observed frontline units only: AI must not inspect unscouted human facilities.
-  const counts=Array(8).fill(0),ours=state.units.filter(u=>u.hp>0&&u.team===1&&u.lane===lane);
+  const counts=Array(11).fill(0),ours=state.units.filter(u=>u.hp>0&&u.team===1&&u.lane===lane);
   for(const u of state.units)if(u.hp>0&&u.team===0&&u.lane===lane
     &&(u.x>=WIDTH*.56||ours.some(s=>Math.hypot(s.x-u.x,s.y-u.y)<340)))counts[u.role]++;
   const known=counts.reduce((a,b)=>a+b,0);
@@ -309,11 +310,13 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   const mine=role=>bot.buildings[lane].filter(x=>x===role).length;
   if(air>=2&&mine(4)<Math.ceil(air*.85))return 4;
   if(tanks>=2&&mine(2)<Math.ceil(tanks*.95))return 2;
+   if(counts[10]>=1&&mine(7)<Math.max(1,Math.ceil(counts[10]/3)))return 7;
+   if(counts[9]>=2&&mine(10)<Math.max(1,Math.ceil(counts[9]/3)))return 10;
   if(healers>=2&&tanks>=1&&mine(5)<2)return 5;
   const major=counts.indexOf(Math.max(...counts));
   if(major===6&&state.units.some(u=>u.lane===lane&&u.team===0&&u.role===6&&[3,4,6,7].includes(u.faction)))return 2;
   if(major===0&&counts[0]>=3&&(bot.faction===3||bot.faction===4)&&bot.cash>=unitCost(bot.faction,6))return 6;
-  return [[1,6,3],[3,5],[0,1],[2,6],[2,3],[0,6],[4,1],[0,5]][major][0];
+  return [[1,6,3],[3,5],[0,1],[2,6],[2,3],[0,6],[4,1],[0,5],[],[0,1,10],[7,0,3]][major]?.[0]??1;
  }
  // Hard AI spends its one global nuke after a 100-soldier-equivalent
  // enemy accumulation and a losing front. Only a nearly lost core overrides
@@ -343,14 +346,14 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   const power=u=>u.heroCount===20?(global.DesertConsolidation?.strength?.(u)??20):1;
   let air=known.filter(u=>definition(u.faction,u.role).kind==='air').reduce((n,u)=>n+power(u),0);
   let armor=known.filter(u=>u.role===3||(u.role===6&&definition(u.faction,u.role).kind!=='air')).reduce((n,u)=>n+power(u),0);
-  let roles=Array(8).fill(0),investment=Array(8).fill(0);for(const u of known)if(!u.guardian){roles[u.role]+=power(u);if(!u.isHatchling&&!u.conscripted)investment[u.role]+=power(u)*unitCost(u.faction,u.role);}
+  let roles=Array(11).fill(0),investment=Array(11).fill(0);for(const u of known)if(!u.guardian){roles[u.role]+=power(u);if(!u.isHatchling&&!u.conscripted)investment[u.role]+=power(u)*unitCost(u.faction,u.role);}
   // Re-use previously scouted threats for two waves; hidden factory contents
   // remain unknown, and the memory expires if no fresh units reappear.
   const seen=roles.reduce((n,v)=>n+v,0);
   if(seen){brain.lastRecon={at:state.seconds,roles:roles.slice(),investment:investment.slice(),air,armor};}
   else if(brain.lastRecon&&state.seconds-brain.lastRecon.at<48){
    roles=brain.lastRecon.roles.map(v=>Math.ceil(v*.7));
-   investment=(brain.lastRecon.investment||Array(8).fill(0)).map(v=>v*.7);
+   investment=(brain.lastRecon.investment||Array(11).fill(0)).map(v=>v*.7);
    air=Math.ceil(brain.lastRecon.air*.7);armor=Math.ceil(brain.lastRecon.armor*.7);
   }
   const lanePressure=Array(LANES).fill(0);for(const u of known)if(!u.guardian)lanePressure[Math.floor(u.y/LANE_H)]+=u.heroCount===20?20:1;
@@ -381,8 +384,8 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    }
   }
   for(let purchase=0;purchase<(state.aiDifficulty==='impossible'?16:12);purchase++){
-   const counts=Array(8).fill(0);for(const row of bot.buildings)for(const r of row)if(r!==null&&r!==EXTRACTOR)counts[r]++;
-   let action=ai.choose(brain,{cash:bot.cash,counts,eco:bot.eco,readyAt:bot.ecoReadyAt,seconds:state.seconds,difficulty:state.aiDifficulty,costs:COST.slice(0,8).map((_,r)=>unitCost(bot.faction,r)),ecoCost:ecoPrice(bot.eco),intel:{air,armor,invaded,roles,investment}});
+   const counts=Array(11).fill(0);for(const row of bot.buildings)for(const r of row)if(r!==null&&r!==EXTRACTOR)counts[r]++;
+   let action=ai.choose(brain,{cash:bot.cash,counts,eco:bot.eco,readyAt:bot.ecoReadyAt,seconds:state.seconds,difficulty:state.aiDifficulty,costs:COST.map((_,r)=>r===8?Infinity:unitCost(bot.faction,r)),ecoCost:ecoPrice(bot.eco),intel:{air,armor,invaded,roles,investment}});
    const sizes=bot.buildings.map(row=>row.filter(r=>r!==null&&r!==EXTRACTOR).length),focus=brain.plan%LANES;
    // Twenty soldiers only form one hero if built by the same owner, in the
    // same lane, close to one another, and healthy. Keep a funded lane-specific
@@ -434,7 +437,9 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     const desired=Math.min(cap,1+Math.floor((state.wave+1)/(state.aiDifficulty==='easy'?5:3))+Math.floor(Math.max(0,state.wave-7)/(state.aiDifficulty==='hard'?2:3)));
    let count=Math.max(0,desired-existing);
    while(count-->0){
-    let role=state.aiDifficulty==='easy'?[0,1,0,3][(state.wave+lane)%4]:selectCounter(lane,bot);
+    let role=state.aiDifficulty==='easy'
+     ?(state.wave>4&&(state.wave+lane)%7===0?9:state.wave>6&&(state.wave+lane)%9===0?10:selectCounter(lane,bot))
+     :selectCounter(lane,bot);
     if(bot.cash<unitCost(bot.faction,role))role=bot.cash>=COST[1]?1:0;
     if(bot.cash<unitCost(bot.faction,role))break;
     const slot=bot.buildings[lane].findIndex(x=>x===null);if(slot<0)break;
@@ -727,7 +732,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
        const step=Math.min(moveSpeed*dt,dist);
        u.x+=(tx-u.x)/Math.max(dist,1)*step;u.y+=(ty-u.y)/Math.max(dist,1)*step;u.act='move';
       }else if(u.cool<=0){
-       const damage=d.damage*([.52,.88,1.12,1.08,.82,1.55,.87,.4][u.role]||1);
+       const damage=d.damage*([.52,.88,1.12,1.08,.82,1.55,.87,.4,0,.28,.25][u.role]??1);
        hitFort(lane,defender,damage,targetFort.part);
        u.cool=d.rate;u.act='attack';u.attackAge=.28;
       }
