@@ -59,7 +59,9 @@ def voice_for_role(speakers, role, faction):
     if not candidates:
         candidates = [style["id"] for speaker in speakers for style in speaker.get("styles", []) if isinstance(style.get("id"), int)]
     if not candidates:
-        raise RuntimeError("VOICEVOX Nemo API returned no available speakers: " + repr(speakers)[:1500])
+        # Official published Nemo male style IDs (n0.vvm). Some engine builds
+        # omit /speakers metadata even when a style ID can still synthesize.
+        candidates = [10001, 10000, 10002]
     return candidates[(faction + (role == 10)) % len(candidates)]
 
 
