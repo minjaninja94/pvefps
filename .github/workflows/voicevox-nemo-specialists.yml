@@ -1,0 +1,63 @@
+name: VOICEVOX Nemo Japanese specialist voices
+on:
+  push:
+    paths:
+      - .github/workflows/voicevox-nemo-specialists.yml
+      - desert-strike/tools/generate-nemo-specialists.py
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: voicevox-nemo-specialist-generation
+  cancel-in-progress: false
+jobs:
+  generate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Start official VOICEVOX Nemo Japanese CPU engine
+        run: |
+          docker run -d --rm --name voicevox-nemo -p 127.0.0.1:50121:50121 voicevox/voicevox_nemo_engine:cpu-latest
+          for i in $(seq 1 150); do
+            if curl -fsS http://127.0.0.1:50121/speakers > /tmp/nemo-speakers.json; then exit 0; fi
+            sleep 2
+          done
+          docker logs voicevox-nemo
+          exit 1
+      - name: Render Japanese sniper/assassin lines and merge ten OGG atlases
+        run: python desert-strike/tools/generate-nemo-specialists.py
+      - name: Confirm 160 default and moe specialist index entries
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path('desert-strike/assets/audio')
+          clips=json.loads((root/'voice_index.json').read_text(encoding='utf-8'))['clips']
+          for faction in range(10):
+            assert (root/'voices'/f'spec-f{faction}.ogg').stat().st_size>1000
+            for role in (9,10):
+              for event in ('spawn','attack','hit','death'):
+                for skin in ('default','moe'):
+                  assert clips[f'{skin}/{faction}-{role}-{event}']['atlas']==f'spec-f{faction}.ogg'
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voicevox-nemo-specialists-japanese
+          path: |
+            desert-strike/assets/audio/voices/spec-f*.ogg
+            desert-strike/assets/audio/voice_index.json
+      - name: Commit generated Japanese Nemo audio assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add desert-strike/assets/audio/voices/spec-f*.ogg desert-strike/assets/audio/voice_index.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "audio(desert): render original Japanese VOICEVOX Nemo sniper and assassin lines"
+          git pull --rebase origin main
+          git push origin HEAD:main
