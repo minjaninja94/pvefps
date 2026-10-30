@@ -426,9 +426,9 @@ function barrage(){
  chirp(180,.23);updateUI(true);
 }
 function banner(t){$('waveBanner').textContent=t;$('waveBanner').classList.add('show');bannerSeconds=2;}
-function createUnit(side,slot,role,fromProduction=true){
+function createUnit(side,slot,role,fromProduction=true,overrideFaction=null){
  if(fromProduction&&role>=0&&role<8)state.produced[side][role]++;
- const faction=side===0?state.faction:state.enemyFaction,def=effectiveDef(role,faction,side);
+ const faction=overrideFaction??(side===0?state.faction:state.enemyFaction),def=effectiveDef(role,faction,side);
  const row=Math.floor(slot/COLS),col=slot%COLS;
  const x=side===0?240+col*7:WORLD_W-240-col*7;
  const y=LANES[row]+(col-7)*3+random(-7,7);
@@ -879,7 +879,7 @@ function deployWave(){
   for(const pct of special.heals)for(const u of state.units)if(u.side===side&&u.hp>0&&!u.isHatchling&&!u.guardian)
    u.hp=Math.min(u.maxHP,u.hp+u.maxHP*pct);
   for(const directive of special.spawns)for(let n=0;n<directive.count&&armyPopulation(side)<supplyCap(side);n++)
-   createUnit(side,side===0?0:COLS-1,directive.role);
+   createUnit(side,side===0?0:COLS-1,directive.role,true,directive.faction??null);
   if(!state[flag])for(const directive of special.laststands||[])if(hpBefore/MAX_BASE<=directive.pct){
    state[flag]=true;
    state.baseHP[side]=Math.min(MAX_BASE,state.baseHP[side]+MAX_BASE*directive.repair);
@@ -1042,7 +1042,7 @@ function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
   if(attacker&&attacker.side!==u.side&&!attacker.isHatchling&&!attacker.guardian&&state.ruleset==='augment')
    for(const reinforcements of ownPrism()?.deathEffects?.(sideAugments(attacker.side),attacker)||[])
     for(let i=0;i<reinforcements.count&&armyPopulation(attacker.side)<supplyCap(attacker.side);i++)
-     createUnit(attacker.side,attacker.side===0?0:COLS-1,reinforcements.role);
+     createUnit(attacker.side,attacker.side===0?0:COLS-1,reinforcements.role,true,reinforcements.faction??null);
  }
 }
 function heal(u,amount,burst=false,healer=null){
@@ -1228,7 +1228,7 @@ function fire(u,t=null,baseSide=null,structurePart=null){
 }
 function projectileImpact(p){
  const x=p.tx,y=p.ty;
- const shooter=state.units.find(u=>u.uid===p.sourceUnit)||p;
+ const shooter=state.units.find(u=>u.uid===p.sourceUnit)||{...p,role:p.source,maxHP:1,hp:1};
  pulse(x,y,p.source===4?'#8cebf4':'#ffc88d',p.blast?45:12);
  if(p.baseSide!==null){structureHit(p.baseSide,structureDamage(p.source,p.damage),p.structurePart);return;}
  if(p.blast){

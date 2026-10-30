@@ -9,26 +9,26 @@ function setup(){
  vm.runInNewContext(read('augment-rules.js'),ctx,{filename:'augment-rules.js'});
  return {window,ctx};
 }
-test('100 unique, valid per-faction Prism cards extend original 300 and can be disabled independently',async()=>{
+test('400 unique, valid per-faction Prism cards extend original 300 and can be disabled independently',async()=>{
  const {window}=setup();
  const P=window.DesertPrism,A=window.DesertAugments;
- assert.equal(P.cards.length,100);assert.equal(new Set(P.cards.map(c=>c.id)).size,100);
+ assert.equal(P.cards.length,400);assert.equal(new Set(P.cards.map(c=>c.id)).size,400);
  for(let f=0;f<10;f++){
   const cards=P.cards.filter(c=>c.scope==='faction-'+f);
-  assert.equal(cards.length,10,'ten specials for faction '+f);
+  assert.equal(cards.length,40,'forty specials for faction '+f);
   assert.ok(cards.every(c=>c.tier==='prismatic'&&c.experimental===true));
   assert.ok(cards.every(c=>c.effects.length>0&&c.effects.every(e=>e.kind.startsWith('prism_'))));
-  assert.ok(new Set(cards.map(c=>c.name)).size===10,'ten unique powers per faction');
+  assert.ok(new Set(cards.map(c=>c.name)).size===40,'forty unique powers per faction');
  }
  const kinds=new Set(P.cards.flatMap(c=>c.effects.map(x=>x.kind)));
  for(const kind of ['prism_limit','prism_brood','prism_recruit','prism_spawn','prism_cash',
   'prism_heal','prism_repair','prism_burst','prism_chain','prism_leech','prism_mark',
   'prism_execute','prism_frenzy','prism_revenge','prism_reflect'])
   assert.ok(kinds.has(kind),'missing interactive mechanic: '+kind);
- await A.load();assert.equal(A.list().length,400);
- assert.equal(A.list().filter(c=>c.tier==='prismatic'&&c.experimental).length,100,'all 100 experimental Prism cards are identifiable in the codex');
+ await A.load();assert.equal(A.list().length,700);
+ assert.equal(A.list().filter(c=>c.tier==='prismatic'&&c.experimental).length,400,'all 400 experimental Prism cards are identifiable in the codex');
  assert.equal(A.list().filter(c=>c.scope==='common').length,50);
- for(let f=0;f<10;f++)assert.equal(A.list().filter(c=>c.scope==='faction-'+f).length,35);
+ for(let f=0;f<10;f++)assert.equal(A.list().filter(c=>c.scope==='faction-'+f).length,65);
  assert.equal(A.ready(),true);
  const disabled={};
  vm.runInNewContext(read('prism-experiments.js'),{window:disabled,Math,Array,Object,Number,Set},{filename:'prism-experiments.js'});

@@ -77,7 +77,7 @@ test('real 300-card draft works inside the original single-player engine without
  assert.equal(st.augments.length,2);
  assert.ok(st.produced[0][0]>count,'wave 10 spawns exactly after card selection');
  assert.equal(st.wave,10,'no duplicated wave');
- for(const round of [20,30,40]){
+ for(const round of [20,30,40,50,60,70]){
   st.wave=round-1;G.wave();
   assert.equal(st.augmentChoice.round,round,'human is offered a draft on every scheduled wave');
   assert.equal(st.enemyAugments.length,st.augments.length+1,'AI independently takes a card at the same round');
@@ -85,16 +85,16 @@ test('real 300-card draft works inside the original single-player engine without
   assert.ok(G.chooseSoloAugment(1),'human can still select the same round');
   assert.equal(st.enemyAugments.length,st.augments.length);
  }
- const augmentsAt40=st.augments.length;
- assert.equal(augmentsAt40,5,'all five augment rounds are collected');
- assert.equal(new Set(st.enemyAugments).size,5,'AI never drafts duplicate cards');
+ const augmentsAt70=st.augments.length;
+ assert.equal(augmentsAt70,8,'all eight augment rounds are collected');
+ assert.equal(new Set(st.enemyAugments).size,8,'AI never drafts duplicate cards');
  G.wave();
- assert.equal(st.wave,41,'augment single-player must continue after the last offered draft at wave 40');
+ assert.equal(st.wave,71,'augment single-player continues after final draft at wave 70');
  assert.equal(st.ended,false,'augment game cannot end at its last card schedule');
  assert.equal(st.augmentChoice,null,'wave 41 does not create an unscheduled draft');
- assert.equal(st.augments.length,augmentsAt40,'past wave 40, selected augments persist');
- assert.equal(st.enemyAugments.length,5,'AI also retains all five cards after the final selection wave');
- assert.ok(el('soloAugmentStatus').title.includes('AI 증강 5개'),'tooltip reveals AI card count without revealing its identities');
+ assert.equal(st.augments.length,augmentsAt70,'past wave 40, selected augments persist');
+ assert.equal(st.enemyAugments.length,8,'AI also retains all five cards after the final selection wave');
+ assert.ok(el('soloAugmentStatus').title.includes('AI 증강 8개'),'tooltip reveals AI card count without revealing its identities');
  // Verify the enemy actually gets live stat bonuses, not merely card IDs.
  const expected=w.DesertAugments.apply(G.getDef(2,st.enemyFaction),st.enemyAugments,2);
  const actual=G.effectiveDef(2,st.enemyFaction,1);

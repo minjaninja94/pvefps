@@ -1,4 +1,4 @@
-/* EXPERIMENTAL: Ten legendary Prism powers per faction (100 cards).
+/* EXPERIMENTAL: Forty legendary Prism powers per faction (400 cards).
  * To remove the experiment later, set window.DesertPrismExperimentalEnabled=false
  * before this file loads. Original 300 cards and balance are then untouched.
  * All combat effects execute in the existing simulation/authoritative P2P host.
@@ -156,15 +156,73 @@ const factionCards=[
  ['요정계 무한 생명 폭발','2웨이브마다 전 병력 20% 치유. 지원병 치유는 부상 아군 4명에 85% 확산. 단, 전쟁 장기화 화력 압박에는 취약합니다.',heal(.20,2),echo(7,.85,4,280,4)]
  ]
 ];
+
+const FACTION_NAMES=['철갑연합','심연군체','성운결사','해병성채','월영 수인족','은월 엘프족','야월 퍼리족','크롬 로보족','옥토퍼 군체','농농 페어리족'];
+const THEMES=[
+ ['무쇠','기갑','초중량','강철','불도저','철벽','공성','방패','장갑','열차'],
+ ['포식','점액','변종','촉수','산란','부화','세포','기생','육식','군집'],
+ ['성운','유성','별가루','천체','차원','무중력','우주','광륜','천궁','초신성'],
+ ['오도','황룡','긴빠이','해병','기열','기합','악기바리','자진입대','돌격','보급'],
+ ['핏빛','야성','송곳니','사냥','광분','초원','늑대','호랑이','질주','월식'],
+ ['달빛','은화살','저격','정령','사냥꾼','은월','숲','별화살','장궁','표적'],
+ ['늑대왕','달의무리','붉은달','발톱','야수','질풍','맹수','그림자','포효','초승달'],
+ ['나노','CPU','드론','회로','불꽃','재부팅','증식','메카','과부하','광자'],
+ ['먹물','심해','문어','촉수','파도','수압','심연','소용돌이','해류','독먹물'],
+ ['꽃비','요정','반짝','봄바람','생명나무','꽃가루','꿀단지','벚꽃','치유','마법']
+];
+const EVENTS=[
+ '차원 용병 계약','적군을 훔치는 초대장','다른 세계 파병','포획된 군대','평행 우주 징집','몰래 온 동맹',
+ '탄환 분열','연쇄 감염','흡혈 로또','뒤집어진 처형','눈보라 폭격','광기의 슬롯머신',
+ '불사 보험','피격 반송','역습 도박','보복 루프','생환 코어','유언 주문',
+ '원군 차원문','교환된 전열','적성 무기 배송','소환 폭주','이계 투하','차원 전이',
+ '최후의 이중계약','왕의 딸깍','우주 대혼란','외계인 난입','방어선 반전','초월 대환장'
+];
+const SIGNATURES=[[3,5,2,0,6,1,4,7],[0,6,3,2,1,5,7,4],[5,2,4,1,3,0,6,7],
+ [0,6,7,5,3,2,1,4],[6,0,3,1,2,4,5,7],[1,2,5,4,7,3,0,6],
+ [6,0,1,3,4,2,5,7],[3,4,1,6,5,2,0,7],[5,1,0,2,6,4,3,7],[7,1,4,2,0,5,3,6]];
+// Thirty additional, individually named mechanics per faction: 300 more cards.
+// Unlike periodic income/regen upgrades these trigger on real hits, kills or foreign-faction deployments.
+const extraCards=FACTION_NAMES.flatMap((factionName,faction)=>EVENTS.map((label,index)=>{
+ const role=SIGNATURES[faction][index%8],donor=(faction+1+index%9)%10,allyRole=(index+role+2)%8;
+ const every=2+index%3, effects=[];
+ let description='';
+ if(index<6){
+  effects.push({kind:'prism_foreign_kill',role,every,count:1+(index===5?1:0),faction:donor,allyRole});
+  effects.push(chain(role,.30+index*.04,125+index*12,4+index%2,1+(index%2)));
+  description='해당 병종이 적 '+every+'기를 직접 처치할 때 '+FACTION_NAMES[donor]+' 소속 지원군이 전장에 합류합니다. 공격은 주변 적에게 연쇄됩니다.';
+ }else if(index<12){
+  const mode=['split','shock','vampire','execute','storm','roulette'][index-6];
+  effects.push({kind:'prism_anomaly',role,mode,every,ratio:.35+(index-6)*.07,radius:130+(index-6)*25});
+  description='해당 병종이 '+every+'번째 명중할 때 '+({split:'투사체 파편이 다수 적에게 튀는',shock:'적을 교란하고 연타하는',vampire:'체력을 빨아들이고 주변까지 찌르는',execute:'빈사 적을 마무리하는',storm:'광역 폭풍과 감속을 일으키는',roulette:'추가 타격·흡혈·연쇄 중 하나가 순환 발동하는'}[mode])+' 기묘한 공격을 발동합니다.';
+ }else if(index<18){
+  const modes=[reboot(role,.26+index*.014,22),reflect(role,.34,3),leech(role,.28,3),
+   execute(role,.38,.62),reboot(role,.42,34),reflect(role,.48,4)];
+  effects.push(modes[index-12],{kind:'prism_foreign_kill',role,every:4,count:1,faction:donor,allyRole});
+  description='해당 병종은 '+['치명타를 버티고 재가동','피격을 적에게 되돌림','공격 적중 시 피흡','부상한 적을 처형','전투 중 재기동','기습 반격'][index-12]+'합니다. 적 4기 처치마다 '+FACTION_NAMES[donor]+' 지원군을 호출합니다.';
+ }else if(index<24){
+  effects.push({kind:'prism_foreign_wave',role:allyRole,count:1+(index%3===0?1:0),every:3+index%3,faction:donor});
+  effects.push({kind:'prism_anomaly',role,mode:['storm','split','execute','shock','roulette','vampire'][index-18],every:3+index%2,ratio:.46,radius:185});
+  description=FACTION_NAMES[donor]+' 타종족 파병을 주기적으로 받고, 직접 명중할 때마다 '+['폭풍','파편','처형','교란','랜덤 폭발','흡혈'][index-18]+' 기믹이 추가 발동합니다.';
+ }else{
+  effects.push({kind:'prism_foreign_kill',role,every:3,count:2,faction:donor,allyRole});
+  effects.push({kind:'prism_anomaly',role,mode:['roulette','storm','split','shock','execute','vampire'][index-24],every:3,ratio:.55,radius:195});
+  effects.push(index%2?reboot(role,.3,40):chain(role,.43,160,4,2));
+  description='3회 명중마다 비정상적인 공격이 발생하고, 적 3기 처치마다 '+FACTION_NAMES[donor]+' 지원군 2기가 난입합니다. '+(index%2?'치명상 재기동':'연쇄 폭발')+'도 결합됩니다.';
+ }
+ return Object.freeze({id:'exp-prism-'+faction+'-'+(index+10),scope:'faction-'+faction,tier:'prismatic',
+  name:factionName+' '+THEMES[faction][index%10]+' · '+label,description,experimental:true,effects});
+}));
+
 const cards=factionCards.flatMap((items,faction)=>items.map(([name,description,...effects],index)=>Object.freeze({
  id:'exp-prism-'+faction+'-'+index,scope:'faction-'+faction,tier:'prismatic',
  name:name+' · 초월 프리즘',description,experimental:true,effects
-})));
+}))).concat(extraCards);
+const cardById=new Map(cards.map(c=>[c.id,c]));
 const enabled=()=>global.DesertPrismExperimentalEnabled!==false;
 function findEffects(selected=[],kind=null){
  if(!enabled()||!selected?.length)return [];
- const ids=new Set(selected),out=[];
- for(const card of cards)if(ids.has(card.id))for(const effect of card.effects)if(!kind||effect.kind===kind)out.push(effect);
+ const out=[];
+ for(const id of selected){const card=cardById.get(id);if(card)for(const effect of card.effects)if(!kind||effect.kind===kind)out.push(effect);}
  return out;
 }
 function bonus(selected,kind){
@@ -199,6 +257,7 @@ function waveEffects(selected,wave){
   if(e.kind==='prism_heal')result.heals.push(e.pct);
   if(e.kind==='prism_repair')result.repairs.push(e.pct);
   if(e.kind==='prism_spawn')result.spawns.push({role:e.role,count:e.count});
+  if(e.kind==='prism_foreign_wave')result.spawns.push({role:e.role,count:e.count,faction:e.faction});
  }
  return result;
 }
@@ -225,6 +284,21 @@ function hitEffects(selected,attacker,victim,damage,now,nearby=[]){
  }
  for(const e of trigger(selected,'prism_leech',role,attacker,now))result.heal+=Math.min(120,damage*e.pct);
  for(const e of trigger(selected,'prism_mark',role,attacker,now))result.marked=Math.max(result.marked||0,e.duration);
+ for(const e of trigger(selected,'prism_anomaly',role,attacker,now)){
+  const nearbyTargets=nearby.filter(x=>x.hp>0&&Math.hypot(x.x-victim.x,x.y-victim.y)<=e.radius).slice(0,4);
+  const splash=(count,ratio)=>{for(const x of nearbyTargets.slice(0,count))result.secondary.push({target:x,damage:Math.min(260,damage*ratio)});};
+  if(e.mode==='split')splash(3,e.ratio);
+  else if(e.mode==='shock'){result.bonus+=damage*e.ratio;result.marked=Math.max(result.marked,2);}
+  else if(e.mode==='vampire'){result.heal+=Math.min(125,damage*(e.ratio+.1));splash(1,.25);}
+  else if(e.mode==='execute'){if(victim.hp/victim.maxHP<=.45)result.bonus+=damage*(.8+e.ratio);}
+  else if(e.mode==='storm'){splash(4,e.ratio);result.marked=Math.max(result.marked,1.5);}
+  else if(e.mode==='roulette'){
+   attacker.prismRoulette=(attacker.prismRoulette||0)+1;
+   if(attacker.prismRoulette%3===0)result.heal+=Math.min(120,damage*.55);
+   else if(attacker.prismRoulette%3===1)splash(2,.55);
+   else result.bonus+=damage*.9;
+  }
+ }
  return result;
 }
 function survival(selected,unit,now,afterHp){
@@ -259,6 +333,7 @@ function deathEffects(selected,attacker){
  if(!attacker)return [];
  const out=[];
  for(const e of trigger(selected,'prism_revenge',attacker.role,attacker,0))out.push({role:e.role,count:e.count});
+ for(const e of trigger(selected,'prism_foreign_kill',attacker.role,attacker,0))out.push({role:e.allyRole,count:e.count,faction:e.faction});
  return out;
 }
 const api=Object.freeze({cards,enabled,populationLimit,broodLimits,recruitLimits,augmentStats,waveEffects,hitEffects,reflectEffects,deathEffects,survival,healEcho,findEffects});
