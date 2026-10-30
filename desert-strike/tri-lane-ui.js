@@ -585,7 +585,7 @@ function onSnapshot(v){
  const openingNumber=$('mpOpeningSeconds');if(openingNumber)openingNumber.textContent=String(Math.max(0,Math.ceil(preparation-1e-6)));
  if(!v.ended)$('mpStateTag').textContent=preparation>0?'초기 배치 · '+Math.ceil(preparation-1e-6)+'초 뒤 첫 출격':(v.mode==='classic'?'클래식 1:1':practice?'3라인 AI 연습':'3라인 전투')+' · '+'진행 중';
  const battle=$('mpBattleCanvas');if(battle.height!==battleHeight())battle.height=battleHeight();
- $('mpBattleLaneSelect').querySelector('[data-mp-scope="all"]').hidden=laneCount()===1;
+ const allButton=$('mpBattleLaneSelect')?.querySelector?.('[data-mp-scope="all"]');if(allButton)allButton.hidden=laneCount()===1;
  if(fresh||lane>=laneCount()){lane=laneCount()===1?0:1;cameraX=1100;repairLane=lane;gridKey='';setView('base');setBattleScope(laneCount()===1?'lane':'all');}
  else if(modeChanged)setBattleScope(laneCount()===1?'lane':'all');
  const me=my(),side=me?.team??0;
