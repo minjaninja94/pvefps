@@ -201,6 +201,21 @@ function draw(){
  const ctx=$('mpBattleCanvas').getContext('2d'),iso=global.IsoWorld,W=1100,H=520;
  if(!ctx)return;
  const pos=(x,y)=>iso?.project?.(x,y)||{x,y};
+ function drawStructureHealth(x,team,kind,hp,maxHP){
+  const p=pos(x,260),width=kind==='core'?104:112;
+  const y=p.y-(kind==='forward'?166:kind==='core'?154:145),left=p.x-width/2;
+  const value=Math.max(0,Math.ceil(hp)),ratio=Math.max(0,Math.min(1,hp/maxHP));
+  const name=kind==='forward'?'중간 타워':kind==='turret'?'본진 포탑':'핵심 기지';
+  ctx.save();ctx.fillStyle='#0b1d28ed';ctx.fillRect(left,y,width,45);
+  ctx.strokeStyle=team===0?'#75c8d3':'#d99581';ctx.lineWidth=1;ctx.strokeRect(left+.5,y+.5,width-1,44);
+  ctx.textAlign='center';ctx.font='bold 11px sans-serif';ctx.fillStyle='#f1e8da';
+  ctx.fillText(value===0?name+' 파괴':name,p.x,y+13);
+  ctx.font='bold 12px monospace';ctx.fillStyle=value===0?'#ffb6ab':'#ffffff';
+  ctx.fillText(value+' / '+maxHP,p.x,y+28);
+  ctx.fillStyle='#263943';ctx.fillRect(left+6,y+34,width-12,6);
+  ctx.fillStyle=value===0?'#78636a':team===0?'#8be9e1':'#f7a58d';
+  ctx.fillRect(left+6,y+34,(width-12)*ratio,6);ctx.restore();
+ }
  ctx.clearRect(0,0,W,H);ctx.save();ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();ctx.translate(-cameraX,0);
  if(iso?.terrain)iso.terrain(ctx,E.WIDTH,H,false,my()?.faction??faction());
  else{ctx.fillStyle='#43524a';ctx.fillRect(0,0,E.WIDTH,H);}
@@ -210,17 +225,12 @@ function draw(){
   const faction=snap.players.find(p=>p.team===team)?.faction??0;
   if(iso?.structure)iso.structure(ctx,x,260,faction,tower,hp/max,kind);
   else{ctx.fillStyle=team===0?'#87d7d2':'#e19b83';ctx.fillRect(x-20,225,40,70);}
-  const p=pos(x,260),width=tower?48:68;
-  ctx.fillStyle='#13232a';ctx.fillRect(p.x-width/2,p.y-104,width,6);
-  ctx.fillStyle=team===0?'#8be9e1':'#f7a58d';ctx.fillRect(p.x-width/2,p.y-104,width*Math.max(0,hp/max),6);
  }
  for(let t=0;t<2;t++){
   fort(t===0?90:E.WIDTH-90,t,false,snap.cores[lane]?.[t]||0,snap.coreMaxHP||3000);
   fort(t===0?190:E.WIDTH-190,t,true,snap.turrets?.[lane]?.[t]||0,1250);
   const x=t===0?E.WIDTH/4:E.WIDTH*3/4,hp=snap.forwardHP?.[lane]?.[t]||0;
   fort(x,t,true,hp,1000,'forward');
-  const p=pos(x,260);ctx.font='bold 12px sans-serif';ctx.fillStyle='#edddac';ctx.textAlign='center';
-  ctx.fillText(hp>0?'중간 타워':'타워 파괴',p.x,p.y-112);
  }
  const phase=Math.floor((performance.now()-lastSnapshotAt)/84);
  for(const u of snap.units.filter(u=>u.lane===lane).sort((x,y)=>x.y-y.y)){
@@ -280,6 +290,17 @@ function draw(){
   ctx.strokeStyle=e.kind==='nuke'?'#fff2af':'#f7d09c';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,e.kind==='nuke'?50:18,e.kind==='nuke'?26:7,0,0,Math.PI*2);ctx.stroke();
  }
  if(snap.fog?.[lane]){ctx.fillStyle='#071525ed';ctx.fillRect(snap.viewerTeam===0?E.WIDTH-770:0,0,770,H);}
+ // Keep tower HP above units/effects but never expose defenses behind enemy fog.
+ const hiddenTower=(team,x)=>snap.fog?.[lane]&&team!==snap.viewerTeam&&
+  (snap.viewerTeam===0?x>=E.WIDTH-770:x<=770);
+ for(let team=0;team<2;team++){
+  const forwardX=team===0?E.WIDTH/4:E.WIDTH*3/4;
+  if(!hiddenTower(team,forwardX))drawStructureHealth(forwardX,team,'forward',snap.forwardHP?.[lane]?.[team]??0,1000);
+  const turretX=team===0?190:E.WIDTH-190;
+  if(!hiddenTower(team,turretX))drawStructureHealth(turretX,team,'turret',snap.turrets?.[lane]?.[team]??0,1250);
+  const coreX=team===0?90:E.WIDTH-90;
+  if(!hiddenTower(team,coreX))drawStructureHealth(coreX,team,'core',snap.cores?.[lane]?.[team]??0,snap.coreMaxHP||3000);
+ }
  ctx.restore();
  ctx.fillStyle='#081c27d9';ctx.fillRect(0,0,240,35);ctx.fillStyle='#f4db9e';ctx.font='bold 15px sans-serif';ctx.textAlign='left';ctx.fillText(laneName(lane),13,23);
  ctx.strokeStyle='#dabb8a88';ctx.strokeRect(1,1,W-2,H-2);
