@@ -393,7 +393,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   }
   for(let purchase=0;purchase<(state.aiDifficulty==='impossible'?16:12);purchase++){
    const counts=Array(11).fill(0);for(const row of bot.buildings)for(const r of row)if(r!==null&&r!==EXTRACTOR)counts[r]++;
-   let action=ai.choose(brain,{cash:bot.cash,counts,eco:bot.eco,readyAt:bot.ecoReadyAt,seconds:state.seconds,difficulty:state.aiDifficulty,costs:COST.map((_,r)=>r===8?Infinity:unitCost(bot.faction,r)),ecoCost:ecoPrice(bot.eco),intel:{air,armor,invaded,roles,investment}});
+   let action=ai.choose(brain,{cash:bot.cash,counts,eco:bot.eco,readyAt:bot.ecoReadyAt,seconds:state.seconds,difficulty:state.aiDifficulty,wave:state.wave,costs:COST.map((_,r)=>r===8?Infinity:unitCost(bot.faction,r)),ecoCost:ecoPrice(bot.eco),intel:{air,armor,invaded,roles,investment}});
    const sizes=bot.buildings.map(row=>row.filter(r=>r!==null&&r!==EXTRACTOR).length),focus=brain.plan%LANES;
    // Twenty soldiers only form one hero if built by the same owner, in the
    // same lane, close to one another, and healthy. Keep a funded lane-specific
@@ -438,6 +438,34 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   if(state.aiDifficulty==='veryhard'||state.aiDifficulty==='impossible'){hardBotPurchase(bot);return;}
    if(state.aiDifficulty==='easy'&&state.wave%2===1&&state.wave>1)return;
 
+  // Earned-credit specialists are planned globally, not once per lane. Save
+  // for one real factory instead of spending all available cash on rifles.
+  const allCounts=Array(11).fill(0);
+  for(const row of bot.buildings)for(const role of row)if(role!==null&&role!==EXTRACTOR)allCounts[role]++;
+  const army=allCounts.reduce((n,v)=>n+v,0);
+  const ours=state.units.filter(u=>u.hp>0&&u.team===bot.team);
+  const visibleEnemy=state.units.filter(u=>u.hp>0&&u.team!==bot.team&&
+   ((bot.team===1?u.x>=WIDTH*.56:u.x<=WIDTH*.44)||ours.some(v=>Math.hypot(v.x-u.x,v.y-u.y)<340)));
+  const invaded=visibleEnemy.some(u=>bot.team===1?u.x>WIDTH-580:u.x<580);
+  const missingDetector=visibleEnemy.some(u=>u.role===10&&!bot.buildings[u.lane]?.includes(7));
+  const specialist=!invaded&&!missingDetector?
+   global.DesertExpansion?.plannedSpecialist?.(allCounts,state.wave,army):null;
+  if(specialist!==null&&specialist!==undefined){
+   const lanes=Array.from({length:LANES},(_,lane)=>lane).filter(lane=>bot.buildings[lane].includes(null))
+    .sort((a,b)=>{
+     const score=lane=>bot.buildings[lane].filter(r=>r===specialist).length*100+
+      bot.buildings[lane].filter(r=>r!==null&&r!==EXTRACTOR).length;
+     return score(a)-score(b);
+    });
+   if(lanes.length){
+    const cost=unitCost(bot.faction,specialist);
+    if(bot.cash<cost)return; // Reserve money; never spawn an unpaid specialist.
+    const lane=lanes[0],slot=bot.buildings[lane].findIndex(r=>r===null);
+    bot.cash-=cost;bot.buildings[lane][slot]=specialist;
+    bot.buildingReadyAt[lane][slot]=productionReadyAt();
+   }
+  }
+
   // A paid early army deters players from investing everything in economy.
   for(let lane=0;lane<LANES;lane++){
    const existing=bot.buildings[lane].filter(x=>x!==null).length;
@@ -445,16 +473,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     const desired=Math.min(cap,1+Math.floor((state.wave+1)/(state.aiDifficulty==='easy'?5:3))+Math.floor(Math.max(0,state.wave-7)/(state.aiDifficulty==='hard'?2:3)));
    let count=Math.max(0,desired-existing);
    while(count-->0){
-    let role=state.aiDifficulty==='easy'
-     ?(state.wave>4&&(state.wave+lane)%7===0?9:state.wave>6&&(state.wave+lane)%9===0?10:selectCounter(lane,bot))
-     :selectCounter(lane,bot);
-     const laneFactories=bot.buildings[lane].filter(r=>r!==null&&r!==EXTRACTOR);
-     const counterNeeded=state.units.some(u=>u.hp>0&&u.team!==bot.team&&u.role===10&&u.lane===lane)
-       &&laneFactories.filter(r=>r===7).length<1;
-     if(!counterNeeded&&state.wave>=6&&laneFactories.length>=3&&bot.cash>=380&&
-        laneFactories.filter(r=>r===9).length<Math.max(1,Math.floor(laneFactories.length*.1)))role=9;
-     else if(!counterNeeded&&state.wave>=8&&laneFactories.length>=4&&bot.cash>=330&&
-        laneFactories.filter(r=>r===10).length<Math.max(1,Math.floor(laneFactories.length*.08)))role=10;
+    let role=selectCounter(lane,bot);
     if(role===7&&bot.cash<unitCost(bot.faction,role)&&state.units.some(u=>u.hp>0&&u.team!==bot.team&&u.role===10))
       return; // Bank for an actual detector when assassins are scouted.
      if(bot.cash<unitCost(bot.faction,role))role=bot.cash>=COST[1]?1:0;
