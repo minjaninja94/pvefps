@@ -455,7 +455,9 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
         laneFactories.filter(r=>r===9).length<Math.max(1,Math.floor(laneFactories.length*.1)))role=9;
      else if(!counterNeeded&&state.wave>=8&&laneFactories.length>=4&&bot.cash>=330&&
         laneFactories.filter(r=>r===10).length<Math.max(1,Math.floor(laneFactories.length*.08)))role=10;
-    if(bot.cash<unitCost(bot.faction,role))role=bot.cash>=COST[1]?1:0;
+    if(role===7&&bot.cash<unitCost(bot.faction,role)&&state.units.some(u=>u.hp>0&&u.team!==bot.team&&u.role===10))
+      return; // Bank for an actual detector when assassins are scouted.
+     if(bot.cash<unitCost(bot.faction,role))role=bot.cash>=COST[1]?1:0;
     if(bot.cash<unitCost(bot.faction,role))break;
     const slot=bot.buildings[lane].findIndex(x=>x===null);if(slot<0)break;
     bot.buildings[lane][slot]=role;bot.buildingReadyAt[lane][slot]=productionReadyAt();bot.cash-=unitCost(bot.faction,role);
