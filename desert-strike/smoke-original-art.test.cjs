@@ -1,13 +1,13 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const read=p=>fs.readFileSync(path.join(__dirname,p),'utf8');
-const asset=path.join(__dirname,'assets/desert-original-buildings-shots.webp');
+const asset=path.join(__dirname,'assets/desert-generated-sharp-48.webp');
 test('real image raster atlas from the original PNGs is present, small, and shipped for mobile',()=>{
  const bytes=fs.readFileSync(asset);
  assert.equal(bytes.subarray(0,4).toString(),'RIFF');
  assert.equal(bytes.subarray(8,12).toString(),'WEBP');
  assert.ok(bytes.length>=5000&&bytes.length<40000,'mobile atlas must be packed, not a placeholder');
- assert.match(read('isometric-world.js'),/desert-original-buildings-shots\.webp/);
+ assert.match(read('isometric-world.js'),/desert-generated-sharp-48\.webp/);
 });
 test('original 10-faction art is sampled at six building states plus four projectile frames',()=>{
  const painted=[];
@@ -16,7 +16,7 @@ test('original 10-faction art is sampled at six building states plus four projec
  }
  const canvas={getContext:context,width:0,height:0},window={};
  class ImageMock{
-  set src(value){this.source=value;this.complete=true;this.naturalWidth=320;this.naturalHeight=320;this.onload?.();}
+  set src(value){this.source=value;this.complete=true;this.naturalWidth=480;this.naturalHeight=480;this.onload?.();}
  }
  window.Image=ImageMock;
  const document={createElement:()=>({...canvas})};
@@ -26,14 +26,14 @@ test('original 10-faction art is sampled at six building states plus four projec
   const pic=iso.structureSprite(f,kind,destroyed);
   assert.ok(pic);
   const last=painted.at(-1),row=(kind==='core'?0:kind==='forward'?2:4)+(destroyed?1:0);
-  assert.equal(last[1],f*32);assert.equal(last[2],row*32);
-  assert.equal(last[3],32);assert.equal(last[4],32);
+  assert.equal(last[1],f*48);assert.equal(last[2],row*48);
+  assert.equal(last[3],48);assert.equal(last[4],48);
  }
  const g=context(),prior=painted.length;
  for(let f=0;f<10;f++)for(let frame=0;frame<4;frame++){
   assert.equal(iso.projectile(g,800,260,f,1,frame,0),true);
   const last=painted.at(-1);
-  assert.equal(last[1],f*32);assert.equal(last[2],(6+frame)*32);
+  assert.equal(last[1],f*48);assert.equal(last[2],(6+frame)*48);
  }
  assert.equal(painted.length-prior,40,'every original projectile cell is used');
 });

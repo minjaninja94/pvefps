@@ -6,15 +6,15 @@
 'use strict';
 const SIZE=72,FRAMES=16, cache=new Map(), terrainCache=new Map(), structureCache=new Map();
 let realAtlas=null,marineAtlas=null;
-// Original user-created 10-faction buildings and four-frame projectile artwork.
-// WebP atlas layout: 10 faction columns × 10 rows, each 32px; 0–1 core,
+// Newly generated ten-faction building artwork and four-frame projectile visuals.
+// Sharper WebP atlas: 10 faction columns × 10 rows, each 48px; 0–1 core,
 // 2–3 forward tower, 4–5 defensive turret, 6–9 projectile frames.
-const ORIGINAL_CELL=32;
+const ORIGINAL_CELL=48;
 let originalBuildings=null,originalBuildingsReady=false;
 if(typeof global.Image==='function'){
  originalBuildings=new global.Image();
  originalBuildings.onload=()=>{
-  originalBuildingsReady=originalBuildings.naturalWidth===320&&originalBuildings.naturalHeight===320;
+  originalBuildingsReady=originalBuildings.naturalWidth===480&&originalBuildings.naturalHeight===480;
   if(originalBuildingsReady){
    structureCache.clear();
    if(typeof global.dispatchEvent==='function'&&typeof global.Event==='function')
@@ -22,7 +22,7 @@ if(typeof global.Image==='function'){
   }
  };
  originalBuildings.onerror=()=>{originalBuildingsReady=false;};
- originalBuildings.src='./assets/desert-original-buildings-shots.webp?v=20261030-original';
+ originalBuildings.src='./assets/desert-generated-sharp-48.webp?v=20261030-sharp48';
 }
 function actualArt(){return originalBuildingsReady&&originalBuildings?.complete?originalBuildings:null;}
 
