@@ -86,7 +86,7 @@ function renderUnitGallery(){
  const f=FACTIONS[progress.selectedFaction];
  if(!f||!$('lobbyUnitGrid'))return;
  const R=global.DesertRoster;
- $('lobbyUnitGrid').innerHTML=f.units.map((name,i)=>'<button type="button" class="lobby-unit-card'+(selectedUnit===i?' selected':'')+'" data-unit="'+i+'"><canvas width="72" height="72" data-motion-role="'+i+'" aria-label="'+name+' 이동 애니메이션"></canvas><strong>'+name+'</strong><small>'+(R.getDef?.(i,progress.selectedFaction)?.name||'')+'</small></button>').join('');
+ $('lobbyUnitGrid').innerHTML=f.units.map((name,i)=>i===8?'':'<button type="button" class="lobby-unit-card'+(selectedUnit===i?' selected':'')+'" data-unit="'+i+'"><canvas width="72" height="72" data-motion-role="'+i+'" aria-label="'+name+' 이동 애니메이션"></canvas><strong>'+name+'</strong><small>'+(R.getDef?.(i,progress.selectedFaction)?.name||'')+'</small></button>').join('');
  updateUnitInfo();
 }
 function drawUnitAnimations(ts){
@@ -107,7 +107,7 @@ function drawUnitAnimations(ts){
  // Headquarters canvas is a static cover, not the animated unit preview.
 }
 function chooseUnit(i){
- if(!Number.isInteger(i)||i<0||i>=8)return;
+ if(!Number.isInteger(i)||i<0||i>=11||i===8)return;
  selectedUnit=i;selectedAction='idle';animationStart=performance.now();
  renderUnitGallery();
 }
