@@ -50,6 +50,9 @@
     const result = context.resume();
     if (result && result.catch) result.catch(() => {});
    }
+   // Fetch the versioned Nemo voice index on the first player gesture so
+   // specialist voices are ready by the first production wave.
+   if(context)loadIndex();
   } catch (_) {}
  }
  function loadIndex() {
