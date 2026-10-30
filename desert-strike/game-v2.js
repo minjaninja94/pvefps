@@ -458,7 +458,7 @@ function aiReadOpponent(){
  // scouted threat briefly after a wave is wiped out so counter-building can continue.
  const sightings=state.aiSight||(state.aiSight=new Set());
  if(sightings.size===0)state.aiIntelMemory=null;
- const now=state.elapsed,live=Array(8).fill(0),airCount=Array(8).fill(0),armorCount=Array(8).fill(0);
+ const now=state.elapsed,live=Array(8).fill(0),airCount=Array(8).fill(0),armorCount=Array(8).fill(0),liveInvestment=Array(8).fill(0);
  const scouts=state.units.filter(u=>u.side===1&&u.hp>0);
  for(const foe of state.units){
   if(foe.side!==0||foe.hp<=0||sightings.has(foe.uid))continue;
@@ -468,14 +468,19 @@ function aiReadOpponent(){
   const strength=foe.heroCount===20?(window.DesertConsolidation?.strength?.(foe)??20):1;
   const count=Number.isFinite(strength)?strength:20;
   live[foe.role]+=count;
+  if(!foe.guardian&&!foe.isHatchling&&!foe.conscripted)liveInvestment[foe.role]+=count*unitCost(foe.role,foe.faction);
   const type=getDef(foe.role,foe.faction).kind;
   if(type==='air')airCount[foe.role]+=count;
   if(foe.role===3||(foe.role===6&&type==='ground'))armorCount[foe.role]+=count;
  }
  let memory=state.aiIntelMemory;
  if(!memory)memory=state.aiIntelMemory={counts:Array(8).fill(0),lastSeen:Array(8).fill(-Infinity),air:0,armor:0};
- const counts=live.slice();
+ const counts=live.slice(),investment=liveInvestment.slice();
+ memory.investment??=Array(8).fill(0);memory.investmentSeen??=Array(8).fill(-Infinity);
  for(let i=0;i<8;i++){
+  if(liveInvestment[i]){memory.investment[i]=Math.max(liveInvestment[i],memory.investment[i]*.83);memory.investmentSeen[i]=now;}
+  if(now-memory.investmentSeen[i]<=INTERVAL*3)investment[i]=Math.max(investment[i],memory.investment[i]*.75);
+  else memory.investment[i]=0;
   if(live[i]){memory.counts[i]=Math.max(live[i],memory.counts[i]*.83);memory.lastSeen[i]=now;}
   if(now-memory.lastSeen[i]<=INTERVAL*3)counts[i]=Math.max(counts[i],Math.ceil(memory.counts[i]*.75));
   else memory.counts[i]=0;
@@ -486,7 +491,7 @@ function aiReadOpponent(){
  const dominant=total>=3&&counts[major]/total>=.65?major:null;
  const air=airCount.reduce((a,b)=>a+b,0),armor=armorCount.reduce((a,b)=>a+b,0);
  if(air)memory.air=air;if(armor)memory.armor=armor;
- return {counts,total,dominant,major,air:air||((now-memory.lastSeen[6]<=INTERVAL*3)?memory.air:0),armor:armor||((now-memory.lastSeen[3]<=INTERVAL*3)?memory.armor:0),
+ return {counts,investment,total,dominant,major,air:air||((now-memory.lastSeen[6]<=INTERVAL*3)?memory.air:0),armor:armor||((now-memory.lastSeen[3]<=INTERVAL*3)?memory.armor:0),
   invaded:state.units.some(u=>u.side===0&&u.hp>0&&u.x>=WORLD_W-560)};
 }
 function aiCountersFor(role){
@@ -636,18 +641,18 @@ function hardInvest(){
  if(!emergencyCounter&&factoryCount>=Math.min(13,8+Math.floor(state.elapsed/70))&&
   state.enemyCash>=320&&hardResearch())return;
  const brain=state.hardBrain||(state.hardBrain=ai.create(state.enemyFaction));
- const roles=intel.counts;
+ const roles=intel.counts,investment=intel.investment;
  const air=intel.air,armor=intel.armor,invaded=intel.invaded;
  for(let purchase=0;purchase<12;purchase++){
   const counts=Array(8).fill(0);for(const role of state.enemyBuilt)if(role!==null&&role!==EXTRACTOR)counts[role]++;
   let slot=state.enemyBuilt.findIndex(v=>v===null);if(slot<0)break;
-  let action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,difficulty:state.aiDifficulty,costs:ROLE.map((x,i)=>unitCost(i,state.enemyFaction)),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded,roles}});
+  let action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,difficulty:state.aiDifficulty,costs:ROLE.map((x,i)=>unitCost(i,state.enemyFaction)),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded,roles,investment}});
   // After the planned opener, maintain factory output while waiting for a
   // costly specialist. Respect the extractor reserve and never buy for free.
   const total=counts.reduce((n,v)=>n+v,0);
   const ecoDue=state.enemyEco<Math.min(MAX_ECONOMY,1+Math.floor(state.elapsed/65))&&
    total>=2+state.enemyEco*2&&ecoRemaining(1)<=0;
-  const reply=ai.response(brain,{counts,intel:{roles,air,armor,invaded},difficulty:state.aiDifficulty});
+  const reply=ai.response(brain,{counts,intel:{roles,air,armor,invaded,investment},difficulty:state.aiDifficulty});
   if(reply.needed&&state.elapsed-(brain.lastCounterSwitch??-Infinity)>=(state.aiDifficulty==='impossible'?8:16)){
    brain.heroRole=reply.role;brain.secondHeroRole=undefined;brain.lastCounterSwitch=state.elapsed;
   }
@@ -671,7 +676,7 @@ function hardInvest(){
    if(candidates.length)action={kind:'unit',role:candidates[0]};
   }
   if(!action)break;
-  if(emergencyCounter&&!(focus!==null&&!urgentDefense)&&!(roles[5]>=intel.total*.38&&roles[0]>=intel.total*.16)&&brain.opening>=((ai.plans[brain.plan]?.opening?.length)||0)){
+  if(emergencyCounter&&!reply.guardedSiege&&!(focus!==null&&!urgentDefense)&&!(roles[5]>=intel.total*.38&&roles[0]>=intel.total*.16)&&brain.opening>=((ai.plans[brain.plan]?.opening?.length)||0)){
    const counters=aiCountersFor(intel.dominant),current=counts.reduce((sum,n,i)=>sum+(counters.includes(i)?n:0),0);
    const total=counts.reduce((sum,n)=>sum+n,0);
    if(current<Math.ceil(total*.75)){
@@ -698,6 +703,18 @@ function aiInitialBuild(){
 // Refit a wrong production lineup for the scouted counter plan. Both difficulties
 // pay the same 55% sale refund and full new unit price as the human player.
 function aiAdaptFacilities(intel){
+ const counts=Array(8).fill(0);for(const r of state.enemyBuilt)if(r!==null&&r!==EXTRACTOR)counts[r]++;
+ const siege=window.DesertHardAI?.siegeResponse({faction:state.enemyFaction},{counts,
+  intel:{roles:intel.counts,investment:intel.investment,air:intel.air},difficulty:state.aiDifficulty});
+ if(siege){
+  if(!siege.needed||state.elapsed-(state.aiLastRefitAt??-Infinity)<5)return false;
+  const slot=state.enemyBuilt.findIndex(r=>r!==null&&r!==EXTRACTOR&&!siege.counters.includes(r));
+  if(slot<0)return false;
+  const refund=Math.floor(unitCost(state.enemyBuilt[slot],state.enemyFaction)*.55),price=unitCost(siege.role,state.enemyFaction);
+  if(state.enemyCash+refund<price)return false;
+  state.enemyCash+=refund-price;state.enemyBuilt[slot]=siege.role;setFactoryReady(1,slot);
+  state.aiLastRefitAt=state.elapsed;return true;
+ }
  const protectedSiege=intel.total>=8&&intel.counts[5]>=intel.total*.38&&intel.counts[0]>=intel.total*.16;
  if((intel.dominant===null&&!protectedSiege)||intel.total<5||state.wave<1||
   state.elapsed-(state.aiLastRefitAt??-Infinity)<(['veryhard','impossible'].includes(state.aiDifficulty)?5:state.aiDifficulty==='hard'?6:7))return false;

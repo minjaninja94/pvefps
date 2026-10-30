@@ -29,7 +29,7 @@ const strategies={
  rifle:[1],charge:[0],armorRifle:[3,1,1],siegeScreen:[0,0,5,1],air:[6],breakerScreen:[0,2,1],balanced:[0,1,3,2,5,7],airHeal:[6,6,7],rifleHeal:[1,1,1,7],siegeArmor:[3,5,7],siegeRush:[0,5],cavalry:[6,0,1]
 };
 function run(faction,enemy,name,salt,opts={}){
- mode='impossible';seed=(0xcafe2012+faction*19349+enemy*3341+salt*1777)>>>0;G.reset();const s=G.state();
+ mode=opts.difficulty||'impossible';seed=(0xcafe2012+faction*19349+enemy*3341+salt*1777)>>>0;G.reset();const s=G.state();
  Object.assign(s,{faction,enemyFaction:enemy,live:true,followFront:false});G.aiInitialBuild();
  if(opts.initOnly)return {faction,enemy,salt,plan:s.hardBrain?.plan};
  const seq=strategies[name];let cursor=0;
@@ -57,7 +57,7 @@ function run(faction,enemy,name,salt,opts={}){
   G.tick(opts.dt||.24);
   if(s.cash<-.001||s.enemyCash<-.001)throw Error('overdraft');
  }
- return {faction,enemy,strategy:name,seed:salt,options:opts,winner:s.baseHP[1]<=0?'human':s.baseHP[0]<=0?'ai':'timeout',wave:s.wave,hp:s.baseHP.map(Math.round),cash:Math.round(s.cash),eco:s.eco,roster:Array.from({length:8},(_,r)=>s.built.filter(x=>x===r).length),plan:s.hardBrain?.plan,nukeUsed:s.nukes===0};
+ return {faction,enemy,strategy:name,seed:salt,options:opts,winner:s.baseHP[1]<=0?'human':s.baseHP[0]<=0?'ai':'timeout',wave:s.wave,hp:s.baseHP.map(Math.round),cash:Math.round(s.cash),eco:s.eco,roster:Array.from({length:8},(_,r)=>s.built.filter(x=>x===r).length),plan:s.hardBrain?.plan,nukeUsed:s.nukes===0,enemyRoster:Array.from({length:8},(_,r)=>s.enemyBuilt.filter(x=>x===r).length),enemyCash:Math.round(s.enemyCash),enemyEco:s.enemyEco};
 }
 const results=[];
 const config=JSON.parse(process.argv[2]||'[[3,1,"siegeScreen",3000,{"waves":110,"eco":3,"nuke":true,"dt":0.03}]]');

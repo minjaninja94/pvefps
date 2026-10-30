@@ -10,7 +10,22 @@ function create(faction=0,random=Math.random){
  const index=Math.min(PLANS.length-1,Math.max(0,Math.floor(random()*PLANS.length)));
  return {plan:index,faction,opening:0,nextThink:0,spent:0,economyPurchases:0};
 }
+// Narrow exception: cheap infantry screens a majority of the scouted CR in siege.
+function screenedSiege(intel={},difficulty){
+ if(difficulty!=='impossible'||!intel.investment)return false;
+ const roles=intel.roles||[],seen=roles.reduce((a,b)=>a+b,0),value=intel.investment.reduce((a,b)=>a+b,0);
+ return seen>=8&&roles[5]>=2&&roles[0]>=2&&value>0&&
+  roles[0]+roles[1]+roles[5]>=seen*.85&&intel.investment[5]>=value*.5&&
+  (intel.investment[4]||0)<=value*.08&&(intel.air||0)<3;
+}
+function siegeResponse(brain,{counts,intel={},difficulty}){
+ if(!screenedSiege(intel,difficulty)||[3,4,6,7].includes(brain.faction))return null;
+ const counters=[6],army=counts.reduce((a,b)=>a+b,0);
+ const needed=counts[6]<Math.ceil(Math.max(army,3)*.95);
+ return {needed,role:6,counters,guardedSiege:true};
+}
 function response(brain,{counts,intel={},difficulty='veryhard'}){
+ const siege=siegeResponse(brain,{counts,intel,difficulty});if(siege)return siege;
  const roles=intel.roles||[],seen=roles.reduce((a,b)=>a+b,0),army=counts.reduce((a,b)=>a+b,0);
  const major=roles.indexOf(Math.max(0,...roles)),fraction=seen?roles[major]/seen:0;
  if(seen<6)return {needed:false};
@@ -34,6 +49,8 @@ function response(brain,{counts,intel={},difficulty='veryhard'}){
 }
 function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={},difficulty='veryhard'}){
  const plan=PLANS[brain.plan],army=counts.reduce((a,b)=>a+b,0);
+ const siege=siegeResponse(brain,{counts,intel,difficulty});
+ if(siege?.needed)return cash>=costs[siege.role]?{kind:'unit',role:siege.role,tactical:true}:null;
  const roles=intel.roles||[],seen=roles.reduce((a,b)=>a+b,0),major=roles.indexOf(Math.max(0,...roles));
  const concentrated=seen>=6&&major>=0&&roles[major]/seen>=.65;
  const groundSpecial=[3,4,6,7].includes(brain.faction);
@@ -118,6 +135,6 @@ function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={},di
  return null;
 }
 function bought(brain,action,cost){brain.spent+=cost;if(action.opening)brain.opening++;if(action.kind==='unit')brain.nextRole=null;if(action.kind==='econ')brain.economyPurchases++;}
-const api=Object.freeze({create,choose,response,bought,plans:PLANS});global.DesertHardAI=api;
+const api=Object.freeze({create,choose,response,siegeResponse,screenedSiege,bought,plans:PLANS});global.DesertHardAI=api;
 if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

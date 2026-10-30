@@ -1,0 +1,1381 @@
+{
+  "baselineCommit": "a760c297eb343d501a7ed9d617bc012c751a4daf",
+  "scope": "impossible only, scouted cost-dominant infantry-screened siege; true flying factions only; no global cost-weight rewrite",
+  "regressionTests": 59,
+  "unchangedDecisionComparisons": 320,
+  "cohorts": {
+    "beforeNineFactions": [
+      {
+        "faction": 3,
+        "enemy": 0,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "human",
+        "wave": 47,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 91,
+        "eco": 3,
+        "roster": [
+          18,
+          8,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0
+        ],
+        "plan": 1,
+        "nukeUsed": false,
+        "enemyRoster": [
+          4,
+          3,
+          0,
+          3,
+          0,
+          0,
+          3,
+          0
+        ],
+        "enemyCash": 145,
+        "enemyEco": 4
+      },
+      {
+        "faction": 3,
+        "enemy": 4,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "human",
+        "wave": 46,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 17,
+        "eco": 3,
+        "roster": [
+          16,
+          8,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0
+        ],
+        "plan": 1,
+        "nukeUsed": false,
+        "enemyRoster": [
+          3,
+          4,
+          0,
+          4,
+          0,
+          0,
+          4,
+          0
+        ],
+        "enemyCash": 101,
+        "enemyEco": 4
+      },
+      {
+        "faction": 3,
+        "enemy": 7,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "human",
+        "wave": 46,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 27,
+        "eco": 3,
+        "roster": [
+          18,
+          8,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0
+        ],
+        "plan": 2,
+        "nukeUsed": false,
+        "enemyRoster": [
+          7,
+          6,
+          0,
+          5,
+          0,
+          0,
+          0,
+          0
+        ],
+        "enemyCash": 30,
+        "enemyEco": 4
+      },
+      {
+        "faction": 3,
+        "enemy": 1,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "human",
+        "wave": 56,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 183,
+        "eco": 3,
+        "roster": [
+          22,
+          10,
+          0,
+          0,
+          0,
+          10,
+          0,
+          0
+        ],
+        "plan": 1,
+        "nukeUsed": false,
+        "enemyRoster": [
+          6,
+          4,
+          0,
+          5,
+          1,
+          0,
+          5,
+          0
+        ],
+        "enemyCash": 314,
+        "enemyEco": 5
+      },
+      {
+        "faction": 3,
+        "enemy": 5,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "human",
+        "wave": 41,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 32,
+        "eco": 3,
+        "roster": [
+          15,
+          7,
+          0,
+          0,
+          0,
+          7,
+          0,
+          0
+        ],
+        "plan": 2,
+        "nukeUsed": false,
+        "enemyRoster": [
+          4,
+          2,
+          1,
+          3,
+          1,
+          1,
+          2,
+          0
+        ],
+        "enemyCash": 197,
+        "enemyEco": 4
+      },
+      {
+        "faction": 3,
+        "enemy": 8,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "human",
+        "wave": 43,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 177,
+        "eco": 3,
+        "roster": [
+          16,
+          7,
+          0,
+          0,
+          0,
+          7,
+          0,
+          0
+        ],
+        "plan": 2,
+        "nukeUsed": false,
+        "enemyRoster": [
+          4,
+          4,
+          0,
+          3,
+          1,
+          0,
+          4,
+          0
+        ],
+        "enemyCash": 78,
+        "enemyEco": 4
+      },
+      {
+        "faction": 3,
+        "enemy": 2,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "human",
+        "wave": 46,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 314,
+        "eco": 3,
+        "roster": [
+          16,
+          7,
+          0,
+          0,
+          0,
+          7,
+          0,
+          0
+        ],
+        "plan": 1,
+        "nukeUsed": false,
+        "enemyRoster": [
+          4,
+          3,
+          0,
+          3,
+          0,
+          0,
+          3,
+          0
+        ],
+        "enemyCash": 271,
+        "enemyEco": 4
+      },
+      {
+        "faction": 3,
+        "enemy": 6,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "human",
+        "wave": 46,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 25,
+        "eco": 3,
+        "roster": [
+          16,
+          8,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0
+        ],
+        "plan": 2,
+        "nukeUsed": false,
+        "enemyRoster": [
+          3,
+          6,
+          0,
+          6,
+          0,
+          0,
+          2,
+          0
+        ],
+        "enemyCash": 122,
+        "enemyEco": 5
+      },
+      {
+        "faction": 3,
+        "enemy": 9,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "human",
+        "wave": 45,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 250,
+        "eco": 3,
+        "roster": [
+          16,
+          7,
+          0,
+          0,
+          0,
+          7,
+          0,
+          0
+        ],
+        "plan": 2,
+        "nukeUsed": false,
+        "enemyRoster": [
+          6,
+          3,
+          0,
+          4,
+          0,
+          0,
+          2,
+          0
+        ],
+        "enemyCash": 58,
+        "enemyEco": 3
+      }
+    ],
+    "afterNineFactions": [
+      {
+        "faction": 3,
+        "enemy": 0,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "ai",
+        "wave": 65,
+        "hp": [
+          0,
+          8640
+        ],
+        "cash": 83,
+        "eco": 3,
+        "roster": [
+          24,
+          11,
+          0,
+          0,
+          0,
+          11,
+          0,
+          0
+        ],
+        "plan": 1,
+        "nukeUsed": true,
+        "enemyRoster": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          14,
+          0
+        ],
+        "enemyCash": 242,
+        "enemyEco": 6
+      },
+      {
+        "faction": 3,
+        "enemy": 2,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "ai",
+        "wave": 70,
+        "hp": [
+          0,
+          8640
+        ],
+        "cash": 152,
+        "eco": 3,
+        "roster": [
+          26,
+          12,
+          0,
+          0,
+          0,
+          12,
+          0,
+          0
+        ],
+        "plan": 1,
+        "nukeUsed": true,
+        "enemyRoster": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          18,
+          0
+        ],
+        "enemyCash": 75,
+        "enemyEco": 5
+      },
+      {
+        "faction": 3,
+        "enemy": 8,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "human",
+        "wave": 62,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 143,
+        "eco": 3,
+        "roster": [
+          24,
+          11,
+          0,
+          0,
+          0,
+          11,
+          0,
+          0
+        ],
+        "plan": 2,
+        "nukeUsed": true,
+        "enemyRoster": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          13,
+          0
+        ],
+        "enemyCash": 112,
+        "enemyEco": 4
+      },
+      {
+        "faction": 3,
+        "enemy": 1,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "ai",
+        "wave": 44,
+        "hp": [
+          0,
+          8640
+        ],
+        "cash": 338,
+        "eco": 3,
+        "roster": [
+          14,
+          6,
+          0,
+          0,
+          0,
+          6,
+          0,
+          0
+        ],
+        "plan": 1,
+        "nukeUsed": true,
+        "enemyRoster": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          11,
+          0
+        ],
+        "enemyCash": 61,
+        "enemyEco": 5
+      },
+      {
+        "faction": 3,
+        "enemy": 5,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "ai",
+        "wave": 70,
+        "hp": [
+          0,
+          8640
+        ],
+        "cash": 28,
+        "eco": 3,
+        "roster": [
+          26,
+          12,
+          0,
+          0,
+          0,
+          13,
+          0,
+          0
+        ],
+        "plan": 2,
+        "nukeUsed": true,
+        "enemyRoster": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          18,
+          0
+        ],
+        "enemyCash": 125,
+        "enemyEco": 5
+      },
+      {
+        "faction": 3,
+        "enemy": 9,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "human",
+        "wave": 66,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 30,
+        "eco": 3,
+        "roster": [
+          24,
+          12,
+          0,
+          0,
+          0,
+          12,
+          0,
+          0
+        ],
+        "plan": 2,
+        "nukeUsed": true,
+        "enemyRoster": [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          15,
+          0
+        ],
+        "enemyCash": 168,
+        "enemyEco": 5
+      },
+      {
+        "faction": 3,
+        "enemy": 4,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "human",
+        "wave": 46,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 17,
+        "eco": 3,
+        "roster": [
+          16,
+          8,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0
+        ],
+        "plan": 1,
+        "nukeUsed": false,
+        "enemyRoster": [
+          3,
+          4,
+          0,
+          4,
+          0,
+          0,
+          4,
+          0
+        ],
+        "enemyCash": 101,
+        "enemyEco": 4
+      },
+      {
+        "faction": 3,
+        "enemy": 6,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "human",
+        "wave": 46,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 25,
+        "eco": 3,
+        "roster": [
+          16,
+          8,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0
+        ],
+        "plan": 2,
+        "nukeUsed": false,
+        "enemyRoster": [
+          3,
+          6,
+          0,
+          6,
+          0,
+          0,
+          2,
+          0
+        ],
+        "enemyCash": 122,
+        "enemyEco": 5
+      },
+      {
+        "faction": 3,
+        "enemy": 7,
+        "strategy": "siegeScreen",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "human",
+        "wave": 46,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 27,
+        "eco": 3,
+        "roster": [
+          18,
+          8,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0
+        ],
+        "plan": 2,
+        "nukeUsed": false,
+        "enemyRoster": [
+          7,
+          6,
+          0,
+          5,
+          0,
+          0,
+          0,
+          0
+        ],
+        "enemyCash": 30,
+        "enemyEco": 4
+      }
+    ],
+    "beforeFourOpenersFineStep": [
+      {
+        "faction": 3,
+        "enemy": 1,
+        "strategy": "siegeScreen",
+        "seed": 0,
+        "options": {
+          "waves": 110,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.03
+        },
+        "winner": "human",
+        "wave": 55,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 153,
+        "eco": 3,
+        "roster": [
+          22,
+          10,
+          0,
+          0,
+          0,
+          10,
+          0,
+          0
+        ],
+        "plan": 1,
+        "nukeUsed": false
+      },
+      {
+        "faction": 3,
+        "enemy": 1,
+        "strategy": "siegeScreen",
+        "seed": 1000,
+        "options": {
+          "waves": 110,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.03
+        },
+        "winner": "human",
+        "wave": 45,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 340,
+        "eco": 3,
+        "roster": [
+          16,
+          7,
+          0,
+          0,
+          0,
+          7,
+          0,
+          0
+        ],
+        "plan": 3,
+        "nukeUsed": false
+      },
+      {
+        "faction": 3,
+        "enemy": 1,
+        "strategy": "siegeScreen",
+        "seed": 2000,
+        "options": {
+          "waves": 110,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.03
+        },
+        "winner": "human",
+        "wave": 45,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 27,
+        "eco": 3,
+        "roster": [
+          16,
+          8,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0
+        ],
+        "plan": 2,
+        "nukeUsed": false
+      },
+      {
+        "faction": 3,
+        "enemy": 1,
+        "strategy": "siegeScreen",
+        "seed": 3000,
+        "options": {
+          "waves": 110,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.03
+        },
+        "winner": "human",
+        "wave": 46,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 125,
+        "eco": 3,
+        "roster": [
+          16,
+          7,
+          0,
+          0,
+          0,
+          7,
+          0,
+          0
+        ],
+        "plan": 0,
+        "nukeUsed": false
+      }
+    ],
+    "afterFourOpenersFineStep": [
+      {
+        "faction": 3,
+        "enemy": 1,
+        "strategy": "siegeScreen",
+        "seed": 0,
+        "options": {
+          "waves": 110,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.03
+        },
+        "winner": "ai",
+        "wave": 45,
+        "hp": [
+          0,
+          8640
+        ],
+        "cash": 48,
+        "eco": 3,
+        "roster": [
+          14,
+          7,
+          0,
+          0,
+          0,
+          7,
+          0,
+          0
+        ],
+        "plan": 1,
+        "nukeUsed": true,
+        "enemyRoster": [
+          0,
+          1,
+          0,
+          1,
+          0,
+          0,
+          10,
+          0
+        ],
+        "enemyCash": 87,
+        "enemyEco": 5
+      },
+      {
+        "faction": 3,
+        "enemy": 1,
+        "strategy": "siegeScreen",
+        "seed": 2000,
+        "options": {
+          "waves": 110,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.03
+        },
+        "winner": "ai",
+        "wave": 55,
+        "hp": [
+          0,
+          8640
+        ],
+        "cash": 35,
+        "eco": 3,
+        "roster": [
+          20,
+          9,
+          0,
+          0,
+          0,
+          9,
+          0,
+          0
+        ],
+        "plan": 2,
+        "nukeUsed": true,
+        "enemyRoster": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          13,
+          0
+        ],
+        "enemyCash": 147,
+        "enemyEco": 5
+      },
+      {
+        "faction": 3,
+        "enemy": 1,
+        "strategy": "siegeScreen",
+        "seed": 1000,
+        "options": {
+          "waves": 110,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.03
+        },
+        "winner": "human",
+        "wave": 54,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 360,
+        "eco": 3,
+        "roster": [
+          20,
+          9,
+          0,
+          0,
+          0,
+          9,
+          0,
+          0
+        ],
+        "plan": 3,
+        "nukeUsed": false,
+        "enemyRoster": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          11,
+          0
+        ],
+        "enemyCash": 145,
+        "enemyEco": 4
+      },
+      {
+        "faction": 3,
+        "enemy": 1,
+        "strategy": "siegeScreen",
+        "seed": 3000,
+        "options": {
+          "waves": 110,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.03
+        },
+        "winner": "human",
+        "wave": 54,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 324,
+        "eco": 3,
+        "roster": [
+          20,
+          9,
+          0,
+          0,
+          0,
+          9,
+          0,
+          0
+        ],
+        "plan": 0,
+        "nukeUsed": false,
+        "enemyRoster": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          12,
+          0
+        ],
+        "enemyCash": 173,
+        "enemyEco": 4
+      }
+    ],
+    "beforeUnrelatedControls": [
+      {
+        "faction": 3,
+        "enemy": 0,
+        "strategy": "rifle",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "human",
+        "wave": 32,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 102,
+        "eco": 3,
+        "roster": [
+          0,
+          28,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "plan": 1,
+        "nukeUsed": false,
+        "enemyRoster": [
+          1,
+          0,
+          0,
+          3,
+          0,
+          0,
+          0,
+          0
+        ],
+        "enemyCash": 189,
+        "enemyEco": 3
+      },
+      {
+        "faction": 3,
+        "enemy": 1,
+        "strategy": "charge",
+        "seed": 17,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "ai",
+        "wave": 71,
+        "hp": [
+          0,
+          8640
+        ],
+        "cash": 3274,
+        "eco": 3,
+        "roster": [
+          72,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "plan": 1,
+        "nukeUsed": true,
+        "enemyRoster": [
+          1,
+          6,
+          0,
+          17,
+          0,
+          0,
+          1,
+          0
+        ],
+        "enemyCash": 15,
+        "enemyEco": 7
+      },
+      {
+        "faction": 3,
+        "enemy": 7,
+        "strategy": "air",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "ai",
+        "wave": 83,
+        "hp": [
+          0,
+          8640
+        ],
+        "cash": 161,
+        "eco": 3,
+        "roster": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          31,
+          0
+        ],
+        "plan": 2,
+        "nukeUsed": true,
+        "enemyRoster": [
+          3,
+          1,
+          13,
+          10,
+          0,
+          0,
+          0,
+          0
+        ],
+        "enemyCash": 230,
+        "enemyEco": 6
+      }
+    ],
+    "afterUnrelatedControls": [
+      {
+        "faction": 3,
+        "enemy": 0,
+        "strategy": "rifle",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "human",
+        "wave": 32,
+        "hp": [
+          8640,
+          0
+        ],
+        "cash": 102,
+        "eco": 3,
+        "roster": [
+          0,
+          28,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "plan": 1,
+        "nukeUsed": false,
+        "enemyRoster": [
+          1,
+          0,
+          0,
+          3,
+          0,
+          0,
+          0,
+          0
+        ],
+        "enemyCash": 189,
+        "enemyEco": 3
+      },
+      {
+        "faction": 3,
+        "enemy": 1,
+        "strategy": "charge",
+        "seed": 17,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "ai",
+        "wave": 71,
+        "hp": [
+          0,
+          8640
+        ],
+        "cash": 3274,
+        "eco": 3,
+        "roster": [
+          72,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "plan": 1,
+        "nukeUsed": true,
+        "enemyRoster": [
+          1,
+          6,
+          0,
+          17,
+          0,
+          0,
+          1,
+          0
+        ],
+        "enemyCash": 15,
+        "enemyEco": 7
+      },
+      {
+        "faction": 3,
+        "enemy": 7,
+        "strategy": "air",
+        "seed": 83,
+        "options": {
+          "waves": 100,
+          "eco": 3,
+          "nuke": true,
+          "dt": 0.06
+        },
+        "winner": "ai",
+        "wave": 83,
+        "hp": [
+          0,
+          8640
+        ],
+        "cash": 161,
+        "eco": 3,
+        "roster": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          31,
+          0
+        ],
+        "plan": 2,
+        "nukeUsed": true,
+        "enemyRoster": [
+          3,
+          1,
+          13,
+          10,
+          0,
+          0,
+          0,
+          0
+        ],
+        "enemyCash": 230,
+        "enemyEco": 6
+      }
+    ]
+  },
+  "limits": "Scripted standard solo, not a player win-rate estimate; coop host tested by integration, not these campaign win rates. Ground-only faction response unchanged."
+}
