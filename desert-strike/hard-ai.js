@@ -78,6 +78,8 @@ function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={},di
  }
  const reply=response(brain,{counts,intel,difficulty});
  if(reply.needed)return cash>=costs[reply.role]?{kind:'unit',role:reply.role,tactical:true}:null;
+  if(army>=8&&seconds>=70&&!intel.invaded&&cash>=costs[9]&&counts[9]<Math.max(1,Math.floor(army*.08)))return {kind:'unit',role:9};
+  if(army>=10&&seconds>=85&&!intel.invaded&&cash>=costs[10]&&counts[10]<Math.max(1,Math.floor(army*.07)))return {kind:'unit',role:10};
  const pending=plan.opening[brain.opening];
  // An exposed rush takes precedence over a scripted opener. A blocked expensive
  // opener must never leave an affordable, useful defender unbuilt.
