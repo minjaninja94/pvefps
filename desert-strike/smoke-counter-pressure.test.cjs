@@ -90,5 +90,5 @@ test('both battle HUDs disclose only the current strength of the advantage, not 
  assert.match(solo,/counterTempo.*counterAdvantage/);
  assert.match(multi,/mpCounterTempo.*counterAdvantage/);
  assert.match(html,/유리한 병종 상성 피해/);
- assert.match(html,/original-shots-20261030/);
+ assert.match(html,/tower-aggro-20261030/);
 });
