@@ -763,6 +763,10 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     if(reboot>0){v.hp=reboot;v.killed=false;state.effects.push({x:v.x,y:v.y,lane:v.lane,kind:'shield',time:.8,team:v.team});}
    }
    cool[lane][team]=TOWER_PERIOD;
+   // Defensive towers also fire the same faction atlas as regular ranged units.
+   const faction=state.players.find(p=>p.team===team)?.faction??0;
+   if(state.effects.length>=160)state.effects.splice(0,state.effects.length-159);
+   state.effects.push({kind:'projectile',x,y,tx:v.x,ty:v.y,role:4,faction,team,lane,time:.38});
    state.effects.push({x:v.x,y:v.y,lane,kind:'tower',time:.16,team});
   }
   state.units=state.units.filter(u=>u.hp>0);

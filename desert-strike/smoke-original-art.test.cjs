@@ -43,4 +43,7 @@ test('solo and multiplayer render real sprite projectiles without altering autho
  assert.match(host,/kind:'projectile',x:a\.x,y:a\.y,tx:v\.x,ty:v\.y/);
  assert.match(ui,/e\.kind==='projectile'/);
  assert.match(ui,/iso\?\.projectile\?\.\(ctx,px,py,e\.faction,e\.role/);
+ assert.match(solo,/for\(const shot of state\.towerShots\)/);
+ assert.match(solo,/IsoWorld\?\.projectile\?\.\(g,bx,by,faction,4/);
+ assert.match(host,/role:4,faction,team,lane,time:\.38/);
 });

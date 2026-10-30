@@ -1787,6 +1787,10 @@ function drawBattle(){
   }
  }
  for(const shot of state.towerShots){
+  const faction=shot.side===0?state.faction:state.enemyFaction;
+  const progress=Math.max(0,Math.min(1,1-shot.time/.14));
+  const bx=shot.x+(shot.tx-shot.x)*progress,by=shot.y+(shot.ty-shot.y)*progress;
+  if(window.IsoWorld?.projectile?.(g,bx,by,faction,4,Math.floor(progress*4),Math.atan2(shot.ty-shot.y,shot.tx-shot.x)))continue;
   g.strokeStyle=shot.side===0?'#91f2ea':'#ffc6aa';g.lineWidth=2.5;
   const start=window.IsoWorld?window.IsoWorld.project(shot.x,shot.y):shot;
   const end=window.IsoWorld?window.IsoWorld.project(shot.tx,shot.ty):{x:shot.tx,y:shot.ty};
