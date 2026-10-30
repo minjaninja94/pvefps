@@ -1,8 +1,8 @@
 /* Shared native-Godot augment catalogue, applied by the existing host-authoritative JS engine. */
 (function(global){
 'use strict';
-const TIERS=['silver','gold','prismatic'],STAGES=[1,10,20,30,40];
-const WEIGHTS=[[75,23,2],[55,38,7],[35,50,15],[20,55,25],[10,50,40]];
+const TIERS=['silver','gold','prismatic'],STAGES=[1,10,20,30,40,50,60,70];
+const WEIGHTS=[[45,40,15],[35,40,25],[26,42,32],[22,38,40],[18,35,47],[14,32,54],[10,27,63],[8,22,70]];
 let cards=[],byId=new Map(),loading,baseReady=false;
 function load(){
  if(!loading)loading=fetch('./assets/audio/../augments.json').then(r=>{if(!r.ok)throw Error('증강 카드 파일을 불러올 수 없습니다.');return r.json();}).then(data=>{
@@ -17,7 +17,7 @@ function rng(seed){
  return function(){state^=(state<<13);state^=state>>>17;state^=(state<<5);return (state>>>0)/4294967296;};
 }
 function create(seed=1,{prismOnly=false}={}){
- const roll=rng(seed),schedule=prismOnly?Array(5).fill('prismatic'):WEIGHTS.map(w=>{const n=roll()*100;return TIERS[n<w[0]?0:n<w[0]+w[1]?1:2]});
+ const roll=rng(seed),schedule=prismOnly?Array(STAGES.length).fill('prismatic'):WEIGHTS.map(w=>{const n=roll()*100;return TIERS[n<w[0]?0:n<w[0]+w[1]?1:2]});
  function draw(tier,scope,blocked){const pool=cards.filter(c=>c.tier===tier&&c.scope===scope&&!blocked.has(c.id));if(!pool.length)return '';const id=pool[Math.floor(roll()*pool.length)].id;blocked.add(id);return id;}
  function offer(tier,faction,chosen=[]){const blocked=new Set(chosen);return [draw(tier,'faction-'+faction,blocked),draw(tier,'common',blocked),draw(tier,'common',blocked)];}
  function reroll(tier,chosen,offered,slot){const prev=byId.get(offered[slot]);if(!prev)return '';return draw(tier,prev.scope,new Set([...chosen,...offered]));}

@@ -331,7 +331,7 @@ function renderBattleAugments(){
    for(const [index,id] of (p.augments||[]).entries()){
     const card=global.DesertAugments?.card?.(id);
     const details=document.createElement('details'),summary=document.createElement('summary'),desc=document.createElement('p');
-    summary.textContent='W'+([1,18,36,54,72][index]||'?')+' '+(card?.name||'증강 '+id);
+    summary.textContent='W'+((global.DesertAugments?.STAGES||[])[index]||'?')+' '+(card?.name||'증강 '+id);
     desc.textContent=card?.description||'카드 설명 로딩 중';
     details.append(summary,desc);picks.append(details);
    }

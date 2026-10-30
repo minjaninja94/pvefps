@@ -6,7 +6,7 @@
 'use strict';
 const LANES=3,WIDTH=3300,HEIGHT=1560,LANE_H=520,COLS=15,ROWS=5,SLOTS=COLS*ROWS;
 const OPENING_PREP_SECONDS=10,WAVE_INTERVAL=12,FACTORY_BUILD_SECONDS=12,CORE_DAMAGE_MULTIPLIER=.85;
-const PRISM_STAGES=[1,18,36,54,72];
+const PRISM_STAGES=global.DesertAugments?.STAGES||[1,10,20,30,40,50,60,70];
 const AI_LEVELS=['easy','normal','hard','veryhard','impossible'];
 const INCOME_STEPS=[1.2,1,.85,.75,.65,.55,.45];
 const incomePerTick=level=>Number((1+INCOME_STEPS.slice(0,Math.min(7,Math.max(0,Math.floor(level)))).reduce((sum,x)=>sum+x,0)).toFixed(2));
@@ -102,7 +102,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  const laneCap=team=>Math.max(75,...state.players.filter(p=>p.team===team).map(p=>global.DesertPrism?.populationLimit?.(p.augments,75,true)||75));
  const chosenOf=u=>byUid(u?.uid)?.augments||[];
  function beginAugment(index){
-  if(!aug||index<0||index>=5||state.augmentChoice)return;
+  if(!aug||index<0||index>=augmentRounds.length||state.augmentChoice)return;
   const tier=state.augmentSchedule[index],offers={};
   for(const p of state.players)offers[p.uid]={cards:aug.offer(tier,p.faction,p.augments),rerolls:[false,false,false],selected:''};
   state.augmentStage=index;state.augmentChoice={round:augmentRounds[index],tier,remaining:30,offers};
