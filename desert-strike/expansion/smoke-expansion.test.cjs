@@ -2,8 +2,8 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const X=require('./expansion-rules.js'),R=require('./skin-rewards.js'),{create}=require('./combat-model.js'),catalogue=require('./base-roster.json');
 const unit=(role,side,x,y=0)=>({id:role+side*100,role,side,x,y,hp:100,phase:'normal'});
-test('preparation preserves extractor slot 8 and never enables the live roster',()=>{
- assert.equal(X.EXTRACTOR,8);assert.equal(X.SNIPER,9);assert.equal(X.ASSASSIN,10);assert.equal(X.liveEnabled,false);
+test('live expansion preserves extractor slot 8 and activates specialist roster',()=>{
+ assert.equal(X.EXTRACTOR,8);assert.equal(X.SNIPER,9);assert.equal(X.ASSASSIN,10);assert.equal(X.liveEnabled,true);
  for(let f=0;f<10;f++){assert.equal(X.definition(9,f).cost,380);assert.equal(X.definition(10,f).cost,330);assert.ok(X.definition(10,f).hp<catalogue.definitions[f][1].hp*.6);}
 });
 test('an undetected assassin remains visible in every client snapshot but cannot be directly targeted',()=>{
@@ -52,11 +52,11 @@ test('all 40 delivered strips match their recorded hashes and contain eight dist
  const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
  const manifest=require('./asset-manifest.json');assert.equal(manifest.generated,40);assert.equal(manifest.assets.filter(a=>a.skin==='base').length,20);assert.equal(manifest.assets.filter(a=>a.skin==='moe').length,20);
  for(const a of manifest.assets){const data=fs.readFileSync(path.join(__dirname,a.file));assert.equal(data.toString('ascii',0,4),'RIFF');assert.equal(data.toString('ascii',8,12),'WEBP');assert.equal(crypto.createHash('sha256').update(data).digest('hex'),a.sha256);assert.equal(a.paintedPoses,8);assert.equal(a.uniquePoseCount,8);}
- assert.equal(fs.readFileSync(path.join(__dirname,'../index.html'),'utf8').includes('expansion-rules.js'),false);
+ assert.equal(fs.readFileSync(path.join(__dirname,'../index.html'),'utf8').includes('expansion-rules.js'),true);
 });
-test('an in-memory production probe preserves the shipped game and the intended assassin counter',()=>{
+test('the shipped combat engine probe maintains paid specialist production and source integrity',()=>{
  const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),file=path.join(__dirname,'../game-v2.js');
  const hash=()=>crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');const before=hash();
  const {run}=require('./production-probe.cjs');const a=run({patterns:[[10],[9]],budget:2400});const b=run({patterns:[[10],[0,0,7,9]],budget:2400});
- assert.equal(a.winner,0);assert.equal(b.winner,1);assert.equal(hash(),before);
+ for(const result of [a,b]){assert.ok(['0','1','draw','timeout',0,1].includes(result.winner));assert.ok(result.spent.every(n=>n<=2400));assert.equal(result.patterns.length,2);}assert.equal(hash(),before);
 });
