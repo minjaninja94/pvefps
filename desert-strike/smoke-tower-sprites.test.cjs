@@ -62,7 +62,7 @@ test('battle tower HP HUD paints current / maximum for both engines and respects
  const labels=[],rects=[],g={save(){},restore(){},strokeRect(){},fillText(s){labels.push(s);},fillRect(x,y,w,h){rects.push([x,y,w,h]);}};
  // The helper is evaluated in isolation with a projected tower center and team colors.
  const isolatedSolo=vm.runInNewContext(soloCode+'\ndrawStructureHealth',{window:{IsoWorld:{project:(x,y)=>({x,y})}},COLORS:['cyan','orange'],Math});
- const isolatedMulti=vm.runInNewContext('(function(ctx){const pos=(x,y)=>({x,y});'+multiCode+';return drawStructureHealth;})',{Math});
+ const isolatedMulti=vm.runInNewContext('(function(ctx){const pos=(x,y)=>({x,y});'+multiCode+';return drawStructureHealth;})',{Math,isAlly:(team)=>team===0,teamInk:(team)=>team===0?'cyan':'orange'});
  for(const kind of ['forward','turret','core']){
   const max=kind==='forward'?1000:kind==='turret'?1250:8640;
   for(const team of [0,1]){
