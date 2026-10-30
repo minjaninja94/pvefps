@@ -23,8 +23,8 @@ test('real factory deployment counts persist, even when units consolidate or die
  const result=engine.snapshot('me');
  assert.equal(result.players[1].produced[1],2,'enemy totals available after final result');
  assert.equal(result.players[0].produced[0],2);
- assert.equal(result.players[1].combatStats.damage.length,8,'battle report includes full 8-role telemetry for enemy');
- assert.equal(result.players[0].combatStats.heroes.length,8);
+ assert.equal(result.players[1].combatStats.damage.length,11,'battle report includes all 10 combat roles plus reserved extractor index');
+ assert.equal(result.players[0].combatStats.heroes.length,11);
 });
 test('a player sees a permanent match report until they explicitly click lobby',()=>{
  const html=load('index.html'),game=load('game-v2.js'),ui=load('tri-lane-ui.js'),report=load('battle-report.js');
