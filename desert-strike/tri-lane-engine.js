@@ -736,13 +736,22 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    if(target){
     u.targetId=target.id;
     const reach=support?d.range*.88:d.range<48?Math.max(d.range,u.radius+target.radius+6):d.range*.88;
-    if(best<=reach){if(u.cool<=0)attack(u,target);}
+    if(best<=reach){
+     if(u.role===9&&u.cool<=0){
+      if(u.aimTargetId!==target.id||u.aimStartedAt==null){u.aimTargetId=target.id;u.aimStartedAt=state.seconds;}
+      if(state.seconds-u.aimStartedAt>=LIVE_SPECIALISTS.definition(9,u.faction).aim){
+       attack(u,target);u.aimStartedAt=null;
+      }else u.act='skill';
+     }else if(u.cool<=0)attack(u,target);
+    }
     else{
      const distance=Math.max(1,best),move=Math.min(moveSpeed*dt,Math.max(0,best-reach*.68));
      u.x+=(target.x-u.x)/distance*move;u.y+=(target.y-u.y)/distance*move;u.act='move';
+     if(u.role===9)u.aimStartedAt=null;
     }
    }else{
     u.targetId=null;
+    if(u.role===9)u.aimStartedAt=null;
     if(support){
      // Healers regroup with any allied front, not just the lane they were built in.
      let friend=null,dist=Infinity;
@@ -768,8 +777,12 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
        u.x+=(tx-u.x)/Math.max(dist,1)*step;u.y+=(ty-u.y)/Math.max(dist,1)*step;u.act='move';
       }else if(u.cool<=0){
        const damage=d.damage*([.52,.88,1.12,1.08,.82,1.55,.87,.4,0,.28,.25][u.role]??1);
-       hitFort(lane,defender,damage,targetFort.part);
-       u.cool=d.rate;u.act='attack';u.attackAge=.28;
+       if(u.role!==9||(u.aimTargetId==='fort:'+lane+':'+defender&&
+         state.seconds-(u.aimStartedAt??state.seconds)>=LIVE_SPECIALISTS.definition(9,u.faction).aim)){
+        hitFort(lane,defender,damage,targetFort.part);
+        u.cool=d.rate;u.act='attack';u.attackAge=.28;u.aimStartedAt=null;
+       }else{if(u.aimTargetId!=='fort:'+lane+':'+defender||u.aimStartedAt==null){
+        u.aimTargetId='fort:'+lane+':'+defender;u.aimStartedAt=state.seconds;}u.act='skill';}
       }
      }else{
       // Fort cleared: cross the map vertically to assault another surviving fort.
