@@ -1794,6 +1794,8 @@ function drawBattle(){
  }
  for(const p of state.shots){
   if(p.side===1&&p.x>=ENEMY_FOG_X&&!enemyBaseVisible())continue;
+  const artShot=window.IsoWorld?.projectile?.(g,p.x,p.y,p.faction,p.source,Math.floor((3.5-p.ttl)*15),Math.atan2(p.ty-p.y,p.tx-p.x),p.volley);
+  if(artShot)continue;
   g.strokeStyle=p.side===0?'#a7eaff':'#ffbaa4';g.lineWidth=p.blast?4:2.5;
   const src=window.IsoWorld?window.IsoWorld.project(p.x,p.y):p;
   const dest=window.IsoWorld?window.IsoWorld.project(p.x+(p.tx-p.x)*.17,p.y+(p.ty-p.y)*.17):{x:p.x+(p.tx-p.x)*.17,y:p.y+(p.ty-p.y)*.17};

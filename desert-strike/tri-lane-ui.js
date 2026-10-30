@@ -252,6 +252,17 @@ function draw(){
  }
  for(const e of snap.effects||[]){
   if(e.lane!==lane)continue;
+  if(e.kind==='projectile'){
+   const pct=Math.max(.08,Math.min(1,1-(e.time||0)/.38+(performance.now()-lastSnapshotAt)/380));
+   const px=e.x+(e.tx-e.x)*pct,py=e.y+(e.ty-e.y)*pct-lane*E.LANE_H;
+   const point=pos(px,py);
+   if(point.x<cameraX-90||point.x>cameraX+1190)continue;
+   if(!iso?.projectile?.(ctx,px,py,e.faction,e.role,Math.floor(pct*4),Math.atan2(e.ty-e.y,e.tx-e.x))){
+    ctx.strokeStyle=e.team===0?'#9ceaff':'#ffb7a4';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(point.x-9,point.y);ctx.lineTo(point.x+9,point.y);ctx.stroke();
+   }
+   continue;
+  }
   const p=pos(e.x,e.y-lane*E.LANE_H);
   if(p.x<cameraX-50||p.x>cameraX+1150)continue;
   ctx.strokeStyle=e.kind==='nuke'?'#fff2af':'#f7d09c';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,e.kind==='nuke'?50:18,e.kind==='nuke'?26:7,0,0,Math.PI*2);ctx.stroke();

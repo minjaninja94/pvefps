@@ -584,6 +584,12 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   a.cool=Math.max(.3,d.rate);a.act='attack';a.attackAge=.33;
   if(a.role===7)a.skillAge=.54;
   const dmg=d.damage*((a.inkUntil||0)>state.seconds?.90:1);
+  if(a.role!==7&&d.range>=48){
+   // Server-authoritative damage is unchanged; clients animate only these visible shots.
+   if(state.effects.length>=160)state.effects.splice(0,state.effects.length-159);
+   state.effects.push({kind:'projectile',x:a.x,y:a.y,tx:v.x,ty:v.y,role:a.role,
+    faction:a.faction,team:a.team,lane:a.lane,time:.38});
+  }
   if(a.role===7){
    if(v.isHatchling)return;
    if(a.faction===3){

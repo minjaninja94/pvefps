@@ -6,6 +6,26 @@
 'use strict';
 const SIZE=72,FRAMES=16, cache=new Map(), terrainCache=new Map(), structureCache=new Map();
 let realAtlas=null,marineAtlas=null;
+// Original user-created 10-faction buildings and four-frame projectile artwork.
+// WebP atlas layout: 10 faction columns × 10 rows, each 32px; 0–1 core,
+// 2–3 forward tower, 4–5 defensive turret, 6–9 projectile frames.
+const ORIGINAL_CELL=32;
+let originalBuildings=null,originalBuildingsReady=false;
+if(typeof global.Image==='function'){
+ originalBuildings=new global.Image();
+ originalBuildings.onload=()=>{
+  originalBuildingsReady=originalBuildings.naturalWidth===320&&originalBuildings.naturalHeight===320;
+  if(originalBuildingsReady){
+   structureCache.clear();
+   if(typeof global.dispatchEvent==='function'&&typeof global.Event==='function')
+    global.dispatchEvent(new global.Event('isometric-art-ready'));
+  }
+ };
+ originalBuildings.onerror=()=>{originalBuildingsReady=false;};
+ originalBuildings.src='./assets/desert-original-buildings-shots.webp?v=20261030-original';
+}
+function actualArt(){return originalBuildingsReady&&originalBuildings?.complete?originalBuildings:null;}
+
 function imageAtlas(data,group){
  if(typeof global.Image!=='function'||typeof data!=='string')return null;
  const img=new global.Image();
@@ -253,6 +273,15 @@ function structureSprite(faction,kind='turret',destroyed=false){
  if(!canvas||typeof canvas.getContext!=='function')return null;
  canvas.width=STRUCTURE_W;canvas.height=STRUCTURE_H;
  const ctx=canvas.getContext('2d');if(!ctx)return null;
+ const art=actualArt();
+ if(art){
+  const row=(kind==='core'?0:kind==='forward'?2:4)+(destroyed?1:0);
+  const [width,height]=kind==='core'?[133,141]:kind==='forward'?[107,136]:[93,94];
+  ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(art,faction*ORIGINAL_CELL,row*ORIGINAL_CELL,ORIGINAL_CELL,ORIGINAL_CELL,
+   STRUCTURE_BASE_X-width/2,STRUCTURE_BASE_Y+9-height,width,height);
+  structureCache.set(key,canvas);return canvas;
+ }
  ctx.save();ctx.translate(STRUCTURE_BASE_X,STRUCTURE_BASE_Y-260);
  paintStructure(ctx,0,260,faction,kind!=='core'&&kind!=='forward',destroyed?0:1);
  if(kind==='forward'){
@@ -292,6 +321,18 @@ function structure(g,x,y,faction,turret,hpRatio=1,kind=turret?'turret':'core'){
   return;
  }
  paintStructure(g,x,y,faction,kind==='forward'?false:turret,hpRatio);
+}
+function projectile(g,x,y,faction,role,frame=0,angle=0,volley=1){
+ const art=actualArt();
+ if(!art||!Number.isInteger(faction)||faction<0||faction>=10)return false;
+ const z=worldToScreen(x,y);
+ const size=role===5?51:role===2?41:role===4?35:role===6?43:38;
+ const boosted=Math.min(1.5,1+Math.log2(Math.max(1,volley))*.07);
+ const w=size*boosted,h=Math.max(14,w*.58);
+ g.save();g.translate(z.x,z.y);g.rotate(angle);g.imageSmoothingEnabled=false;
+ g.drawImage(art,faction*ORIGINAL_CELL,(6+((Math.floor(frame)%4+4)%4))*ORIGINAL_CELL,ORIGINAL_CELL,ORIGINAL_CELL,
+  -w*.5,-h*.5,w,h);
+ g.restore();return true;
 }
 function factory(g,x,y,faction,role,active){
  if(active&&role===8&&global.DesertResourceArt?.draw?.(g,x-26,y-40,56))return;
@@ -628,7 +669,7 @@ function broodlingFrame(mode='idle',frame=0){
 }
 global.IsoWorld=Object.freeze({
  SIZE,FRAMES,project:worldToScreen,unproject:screenToWorld,
- terrain,structure,structureSprite,factory,frame:renderFactionSprite,broodlingFrame,effect,
+ terrain,structure,structureSprite,projectile,factory,frame:renderFactionSprite,broodlingFrame,effect,
  portrait(f,role){return renderFactionSprite(f,role,'idle',4);},
  invalidateMaiden(){for(const k of [...cache.keys()])if(k.startsWith('4-')||k.startsWith('5-'))cache.delete(k);},
  invalidateSpriteFaction(f){for(const k of [...cache.keys()])if(k.startsWith(f+'-'))cache.delete(k);},
