@@ -459,6 +459,7 @@ function onSnapshot(v){
   $('mpEco').disabled=me.eco>=7||me.cash<cost||remaining>0||v.ended;
  }
  $('mpWave').textContent='WAVE '+String(v.wave).padStart(2,'0');
+ const tempo=$('mpCounterTempo');if(tempo){const power=E.counterAdvantage?.(v.wave)??1.55;tempo.textContent='▲ 상성 '+power.toFixed(2)+'×';tempo.dataset.phase=v.wave>=60?'finish':v.wave>=30?'boost':'normal';tempo.title='유리한 병종 상성만 강화됩니다. 기본 피해와 건물 공격 피해는 그대로입니다.';}
  $('mpCountdown').textContent=Math.max(0,v.next).toFixed(1)+'초';
  const traitHud=$('mpFactionTraits');
  if(traitHud){const myTrait=(v.factionTraits||[]).find(x=>x.uid===myId),faction=global.DesertRoster?.FACTIONS?.[me?.faction];

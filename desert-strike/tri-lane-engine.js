@@ -55,6 +55,15 @@ function definition(faction,role){
   good:bongo?[0,7]:prowler?[0,5,7]:groundSpecial&&furry?[0,7]:groundSpecial&&robot?[0,3]:GOODS[role],bad:bongo||prowler?[2,3]:groundSpecial&&furry?[2,3]:groundSpecial&&robot?[2,5]:BADS[role]
  };
 }
+// Wave 30+ rewards a correct unit counter instead of making every unit take more damage.
+function counterAdvantage(wave){return wave>=60?2:wave>=50?1.85:wave>=40?1.75:wave>=30?1.65:1.55;}
+function matchupMultiplier(attacker,target,wave){
+ if(target.role===6&&[3,4,6,7].includes(target.faction)){
+  if(attacker.role===2)return 1.65*counterAdvantage(wave)/1.55;
+  return attacker.role===0?.68:attacker.role===4?.78:1;
+ }
+ return attacker.good.includes(target.role)?counterAdvantage(wave):attacker.bad.includes(target.role)?.7:1;
+}
 function combatDef(u,players=null){
  const base=global.DesertAugments?.apply?.(definition(u.faction,u.role),u.augments||[],u.role)||definition(u.faction,u.role);
  const prism=global.DesertPrism?.augmentStats?.(base,u.augments||[],u.role,u.prismTime||0,u.prismWaveAt??-Infinity)||base;
@@ -514,13 +523,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  }
  function applyHit(a,v,damage){
   const attacker=combatDef(a),defender=combatDef(v);
-  let mult=1;
-  if(v.role===6&&[3,4,6,7].includes(v.faction)){
-   mult=a.role===2?1.65:a.role===0?.68:a.role===4?.78:1;
-  }else{
-   if(attacker.good.includes(v.role))mult*=1.55;
-   if(attacker.bad.includes(v.role))mult*=.7;
-  }
+  const mult=matchupMultiplier(attacker,v,state.wave);
   if(v.hp<=0)return;
   let hit=global.DesertConsolidation?.hit(damage*mult,defender.armor,v,a)??Math.max(3,damage*mult-defender.armor*.66);
   if(v.faction===4&&attacker.range>=48)hit*=1-BEAST_RANGED_DAMAGE_REDUCTION;
@@ -835,5 +838,5 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  for(const bot of state.players.filter(p=>p.bot))botPurchase(bot);
  return {state,order,tick,wave,snapshot,definition};
 }
-global.DesertTriEngine=Object.freeze({create,definition,WIDTH,HEIGHT,LANE_H,LANES,COLS,ROWS,SLOTS,COST,NAMES,EXTRACTOR,ecoPrice,ecoBuildSeconds,ecoStabilize,incomePerTick,OPENING_PREP_SECONDS,WAVE_INTERVAL,FACTORY_BUILD_SECONDS,WEAPON_COST,ARMOR_COST});
+global.DesertTriEngine=Object.freeze({create,definition,counterAdvantage,matchupMultiplier,WIDTH,HEIGHT,LANE_H,LANES,COLS,ROWS,SLOTS,COST,NAMES,EXTRACTOR,ecoPrice,ecoBuildSeconds,ecoStabilize,incomePerTick,OPENING_PREP_SECONDS,WAVE_INTERVAL,FACTORY_BUILD_SECONDS,WEAPON_COST,ARMOR_COST});
 })(typeof window==='undefined'?globalThis:window);

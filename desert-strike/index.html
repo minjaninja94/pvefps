@@ -99,7 +99,7 @@
   </section>
  </div><span id="factionLabel" class="faction-pill">진영 미선택</span><button id="helpButton" class="btn outline">? 도움말</button></div>
 </header>
-<div class="stats"><div><small>자원</small><strong id="cash">360</strong><em>CR</em></div><div><small>자원 수입</small><strong id="income">+1</strong><em>/ 0.5초</em></div><div><small>웨이브</small><strong id="wave">00</strong></div><div><small>다음 출격</small><strong id="timer">10.0</strong><em>초</em></div><div class="compact-status"><span id="battleStatus">작전 대기</span><span id="enemyFactionLabel"></span></div></div>
+<div class="stats"><div><small>자원</small><strong id="cash">360</strong><em>CR</em></div><div><small>자원 수입</small><strong id="income">+1</strong><em>/ 0.5초</em></div><div><small>웨이브</small><strong id="wave">00</strong></div><div title="상대 병종을 카운터할 때 적용되는 피해 배율"><small>유리 상성</small><strong id="counterTempo">1.55×</strong></div><div><small>다음 출격</small><strong id="timer">10.0</strong><em>초</em></div><div class="compact-status"><span id="battleStatus">작전 대기</span><span id="enemyFactionLabel"></span></div></div>
 <div id="factionTraitStatus" class="marine-ops faction-trait-banner" hidden role="status" aria-live="off"></div>
 <div id="soloAugmentStatus" class="solo-augment-status" hidden role="status" aria-live="off">✦ 싱글 증강전 · 첫 증강 선택 대기</div>
 <div id="marineAbilityStatus" class="marine-ops" hidden role="status" aria-live="off">★ 해병성채 · 긴빠이 · 자진입대 · 황룡 · 오도봉고</div>
@@ -115,7 +115,7 @@
 
  </section>
   <div class="mp-overview"><canvas id="mpOverviewCanvas" width="1100" height="96" aria-label="3라인 전황 미니맵. 원하는 라인을 눌러 이동합니다."></canvas></div>
-  <div class="mp-command-bar"><div><strong id="mpMyResources">360 CR</strong> <span id="mpMyIncome">+1 / 0.5초</span></div><div><b id="mpWave">웨이브 0</b> · <span id="mpCountdown">10초</span></div><button id="mpEco" class="btn outline">경제 강화</button><button id="mpAugmentOpen" class="btn outline mp-augment-trigger" type="button" hidden aria-haspopup="dialog" aria-controls="mpAugmentDialog" aria-label="아군 및 상대가 선택 완료한 증강 보기">✦ 양측 증강 <span id="mpAugmentCounts">아군 0 · 상대 0</span></button></div>
+  <div class="mp-command-bar"><div><strong id="mpMyResources">360 CR</strong> <span id="mpMyIncome">+1 / 0.5초</span></div><div><b id="mpWave">웨이브 0</b> · <span id="mpCountdown">10초</span> · <span id="mpCounterTempo" title="병종 상성으로 얻는 피해 보너스">▲ 상성 1.55×</span></div><button id="mpEco" class="btn outline">경제 강화</button><button id="mpAugmentOpen" class="btn outline mp-augment-trigger" type="button" hidden aria-haspopup="dialog" aria-controls="mpAugmentDialog" aria-label="아군 및 상대가 선택 완료한 증강 보기">✦ 양측 증강 <span id="mpAugmentCounts">아군 0 · 상대 0</span></button></div>
   <nav class="mp-main-tabs" id="mpViewTabs" aria-label="멀티플레이 화면 전환" hidden>
    <button type="button" class="tab active" data-mp-view="base" aria-current="page"><span class="tab-no">01</span><span>내 기지 · 건설</span></button>
    <button type="button" class="tab" data-mp-view="battle"><span class="tab-no">02</span><span>전장</span></button>
@@ -262,7 +262,7 @@
 <dialog id="helpDialog"><div class="help-inner"><h2>도움말</h2>
 <p><b>출격</b> 시작 10초 뒤 첫 출격, 이후 12초 간격입니다. 초기 배치 중 지은 병력 시설은 첫 출격에 참여하며, 이후 건설은 12초가 걸립니다. 철거 시 건설비의 55%를 돌려받습니다.</p>
 <p><b>채취 시설</b> 최대 7개입니다. 건설은 12초부터 증설마다 4초씩 늘고, 완공 후 안정화가 필요합니다. 두 기간 모두 기본·채굴 인컴과 웨이브 지원금이 중단됩니다. 철거해도 남은 중단 시간은 유지됩니다. 5~7단계 총수입에는 15% 감소가 적용되며, 다음 수입과 대기 시간은 채취 시설 툴팁에서 확인할 수 있습니다.</p>
-<p><b>전투</b> 싱글·클래식은 상대 핵심 기지 1개, 3라인은 2개를 파괴하면 승리합니다. 시간·웨이브 제한은 없습니다. 중간 타워 파괴 시 공격 팀에 150 CR, 수비 팀에 가디언이 지급됩니다. 가디언은 자기 진영만 지키며 외부 치유를 25%, 최근 3초 내 피격 시 10%만 받습니다.</p>
+<p><b>전투</b> 유리한 병종 상성 피해는 1~29웨이브 1.55배 → 30웨이브 1.65배 → 40웨이브 1.75배 → 50웨이브 1.85배 → 60웨이브 이후 2배입니다. 불리 상성 0.7배와 일반 피해, 기지 공격은 변하지 않습니다.</p><p>싱글·클래식은 상대 핵심 기지 1개, 3라인은 2개를 파괴하면 승리합니다. 시간·웨이브 제한은 없습니다. 중간 타워 파괴 시 공격 팀에 150 CR, 수비 팀에 가디언이 지급됩니다. 가디언은 자기 진영만 지키며 외부 치유를 25%, 최근 3초 내 피격 시 10%만 받습니다.</p>
 <p><b>영웅</b> 같은 종류의 풀피 병력 20기가 합쳐집니다. 전투력은 남은 병력 수에 따라 감소합니다.</p>
 <p><b>조작</b> 1–8 병종 선택 · Alt+1 건설 · Alt+2 전장 · Alt+3 업그레이드 · Space 일시정지 · Esc 선택 해제. 전장 유닛을 누르면 상세 정보를 봅니다.</p>
 <button class="btn start-cta" id="helpClose">닫기</button></div></dialog>
@@ -287,13 +287,13 @@
 <script src="./augment-rules.js?v=prism400a" defer></script>
 <script src="./augment-history.js?v=history1" defer></script>
 <script src="./augment-codex.js?v=prism400a" defer></script>
-<script src="./tri-lane-engine.js?v=uncapped-factions20261030" defer></script>
+<script src="./tri-lane-engine.js?v=counterphase20261030" defer></script>
 <script src="./device-account.js?v=externalroom1" defer></script>
 <script src="./tri-lane-network.js?v=rankincome20261030" defer></script>
 <script src="./combat-audio.js?v=nukegear1" defer></script>
-<script src="./tri-lane-ui.js?v=prism400a" defer></script>
+<script src="./tri-lane-ui.js?v=counterphase20261030" defer></script>
 <script src="./battle-report.js?v=battlestats2" defer></script>
-<script src="./game-v2.js?v=uncapped-factions20261030" defer></script>
+<script src="./game-v2.js?v=counterphase20261030" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=nukegear1" defer></script>

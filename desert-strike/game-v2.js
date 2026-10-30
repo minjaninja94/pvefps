@@ -885,8 +885,8 @@ function deployWave(){
    banner(side===0?'✦ 철갑 최후의 보루':'✦ 적군 최후의 보루');break;
   }
  }
- banner('WAVE '+String(state.wave).padStart(2,'0')+' · DEPLOYED');
- setMessage('웨이브 '+state.wave+' 출격');
+ banner('WAVE '+String(state.wave).padStart(2,'0')+(state.wave>=30&&state.wave%10===0?' · 상성 강화 ×'+counterAdvantage(state.wave).toFixed(2):' · DEPLOYED'));
+ setMessage('웨이브 '+state.wave+' 출격'+(state.wave>=30&&state.wave%10===0?' · 강점 상성 피해 ×'+counterAdvantage(state.wave).toFixed(2):''));
  chirp(430,.17);updateUI(true);
 }
 function deployMarineSupports(){
@@ -907,12 +907,20 @@ function structureDamage(role,amount){
  const factor=[.52,.88,1.12,1.08,.82,1.55,.87,.4][role]??1;
  return amount*factor;
 }
+// Wave 30+ rewards a correct unit counter instead of making every unit take more damage.
+function counterAdvantage(wave){return wave>=60?2:wave>=50?1.85:wave>=40?1.75:wave>=30?1.65:1.55;}
+function matchupMultiplier(attacker,target,wave){
+ if(target.role===6&&[3,4,6,7].includes(target.faction)){
+  if(attacker.role===2)return 1.65*counterAdvantage(wave)/1.55;
+  return attacker.role===0?.68:attacker.role===4?.78:1;
+ }
+ return attacker.good.includes(target.role)?counterAdvantage(wave):attacker.bad.includes(target.role)?.7:1;
+}
 function calcDamage(attacker,target,amount,unit=null,volley=null){
  let out=amount;
  if(attacker!==null){
   const role=unit&&Number.isInteger(unit.faction)?getDef(attacker,unit.faction):ROLE[attacker];
-  if(target.role===6&&[3,4,6,7].includes(target.faction)){if(attacker===2)out*=1.65;else if(attacker===0)out*=.68;else if(attacker===4)out*=.78;}
-  else{if(role.good.includes(target.role))out*=1.55;if(role.bad.includes(target.role))out*=.7;}
+  out*=matchupMultiplier(role,target,state.wave);
  }
  const armor=combatDef(target).armor;
  return window.DesertConsolidation?.hit(out,armor,target,unit,volley)??Math.max(3,out-armor*.66);
@@ -1427,6 +1435,7 @@ function updateUI(full=false){
  $('cash').textContent=money(state.cash);
  $('income').textContent=ecoRemaining()>0?'중단 '+Math.ceil(ecoRemaining())+'초':'+'+showIncome(state.eco);
  $('wave').textContent=String(state.wave).padStart(2,'0');
+ const tempo=$('counterTempo');if(tempo){tempo.textContent=counterAdvantage(state.wave).toFixed(2)+'×';tempo.title='유리 상성 피해 배율 · 30/40/50/60웨이브에 강화 · 일반/불리 상성 및 기지 피해는 유지';tempo.dataset.phase=state.wave>=60?'finish':state.wave>=30?'boost':'normal';}
  $('timer').textContent=Math.max(0,state.next).toFixed(1);
  $('myHealth').textContent=Math.ceil(state.baseHP[0])+' / '+MAX_BASE;
  $('enemyHealth').textContent=enemyBaseVisible()?Math.ceil(state.baseHP[1])+' / '+MAX_BASE:'정찰 전';
