@@ -49,7 +49,7 @@ test('single base, single battle and multiplayer battle all use one faction-awar
  assert.match(iso,/structureCache\.set\(key,canvas\)/,'render once, reuse the bitmap');
  assert.match(html,/isometric-world\.js\?v=desktop-original-png-20261030/,'browser receives current building art');
  assert.match(html,/game-v2\.js\?v=[^" ]+/,'browser loads a versioned solo game script');
- assert.match(html,/tri-lane-ui\.js\?v=stealth-counter-live2/);
+ assert.match(html,/tri-lane-ui\.js\?v=[^" ]+/,'browser loads a versioned multiplayer UI script');
 });
 
 test('battle tower HP HUD paints current / maximum for both engines and respects enemy fog',()=>{
