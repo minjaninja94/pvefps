@@ -54,12 +54,12 @@ def voice_for_role(speakers, role, faction):
         for speaker in speakers
         if "男性" in speaker.get("name", "") or "男声" in speaker.get("name", "")
         for style in speaker.get("styles", [])
-        if style.get("type", "talk") == "talk"
+        if isinstance(style.get("id"), int)
     ]
     if not candidates:
-        candidates = [style["id"] for speaker in speakers for style in speaker.get("styles", []) if style.get("type", "talk") == "talk"]
+        candidates = [style["id"] for speaker in speakers for style in speaker.get("styles", []) if isinstance(style.get("id"), int)]
     if not candidates:
-        raise RuntimeError("VOICEVOX Nemo API returned no available speakers")
+        raise RuntimeError("VOICEVOX Nemo API returned no available speakers: " + repr(speakers)[:1500])
     return candidates[(faction + (role == 10)) % len(candidates)]
 
 
