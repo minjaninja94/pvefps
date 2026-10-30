@@ -55,7 +55,7 @@ test('single base, single battle and multiplayer battle all use one faction-awar
 test('battle tower HP HUD paints current / maximum for both engines and respects enemy fog',()=>{
  const solo=read('game-v2.js'),multi=read('tri-lane-ui.js'),host=read('tri-lane-engine.js');
  const soloStart=solo.indexOf('function drawStructureHealth('),soloEnd=solo.indexOf('\nfunction enemyBaseVisible(){',soloStart);
- const multiStart=multi.indexOf(' function drawStructureHealth('),multiEnd=multi.indexOf('\n ctx.clearRect(0,0,W,H);',multiStart);
+ const multiStart=multi.indexOf(' function drawStructureHealth('),multiEnd=multi.indexOf('\n ctx.clearRect(0,0,W,400);',multiStart);
  assert.ok(soloStart>=0&&soloEnd>soloStart,'solo battle health painter is present');
  assert.ok(multiStart>=0&&multiEnd>multiStart,'multiplayer battle health painter is present');
  const soloCode=solo.slice(soloStart,soloEnd),multiCode=multi.slice(multiStart,multiEnd);
