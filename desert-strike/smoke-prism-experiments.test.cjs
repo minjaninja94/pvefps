@@ -12,10 +12,10 @@ function setup(){
 test('400 unique, valid per-faction Prism cards extend original 300 and can be disabled independently',async()=>{
  const {window}=setup();
  const P=window.DesertPrism,A=window.DesertAugments;
- assert.equal(P.cards.length,400);assert.equal(new Set(P.cards.map(c=>c.id)).size,400);
- assert.equal(new Set(P.cards.map(c=>c.name)).size,400,'distinct names for all 400 signature Prisms');
+ assert.equal(P.cards.length,420);assert.equal(new Set(P.cards.map(c=>c.id)).size,420);
+ assert.equal(new Set(P.cards.map(c=>c.name)).size,420,'distinct names for all 420 signature Prisms');
  for(let f=0;f<10;f++){
-  const cards=P.cards.filter(c=>c.scope==='faction-'+f);
+  const cards=P.cards.filter(c=>c.scope==='faction-'+f&&c.id.startsWith('exp-prism-'));
   assert.equal(cards.filter(c=>Number(c.id.split('-').at(-1))>=10).length,30,'30 newly added Prisms per faction');
   assert.ok(cards.slice(10).every(c=>c.effects.some(e=>['prism_foreign_kill','prism_foreign_wave','prism_anomaly'].includes(e.kind))),'new powers must alter battles, not only income');
  }
@@ -23,7 +23,7 @@ test('400 unique, valid per-faction Prism cards extend original 300 and can be d
  for(let i=0;i<5;i++)summons.push(...P.deathEffects(foreign,killer));
  assert.ok(summons.some(s=>s.faction===7&&s.role===3),'thematic Iron/Robot partnership recruits only allies');
  for(let faction=0;faction<10;faction++){
-  const newCards=P.cards.filter(c=>c.scope==='faction-'+faction&&Number(c.id.split('-').at(-1))>=10);
+  const newCards=P.cards.filter(c=>c.scope==='faction-'+faction&&c.id.startsWith('exp-prism-')&&Number(c.id.split('-').at(-1))>=10);
   const alliances=newCards.filter(c=>c.effects.some(e=>e.kind.startsWith('prism_foreign')));
   assert.equal(alliances.length,2,'foreign reinforcements are rare, not a generic perk');
   assert.ok(newCards.every(c=>c.effects.some(e=>e.kind==='prism_anomaly')),'every new Prism activates on actual hits');
@@ -35,20 +35,20 @@ test('400 unique, valid per-faction Prism cards extend original 300 and can be d
  assert.ok(hit.secondary.length>0,'projectile impact secondary effects must be applied');
  for(let f=0;f<10;f++){
   const cards=P.cards.filter(c=>c.scope==='faction-'+f);
-  assert.equal(cards.length,40,'forty specials for faction '+f);
+  assert.equal(cards.length,42,'forty original plus two class transcensions for faction '+f);
   assert.ok(cards.every(c=>c.tier==='prismatic'&&c.experimental===true));
   assert.ok(cards.every(c=>c.effects.length>0&&c.effects.every(e=>e.kind.startsWith('prism_'))));
-  assert.ok(new Set(cards.map(c=>c.name)).size===40,'forty unique powers per faction');
+  assert.ok(new Set(cards.map(c=>c.name)).size===42,'forty-two unique powers per faction');
  }
  const kinds=new Set(P.cards.flatMap(c=>c.effects.map(x=>x.kind)));
  for(const kind of ['prism_brood','prism_recruit','prism_spawn','prism_cash',
   'prism_heal','prism_repair','prism_burst','prism_chain','prism_leech','prism_mark',
   'prism_execute','prism_frenzy','prism_revenge','prism_reflect'])
   assert.ok(kinds.has(kind),'missing interactive mechanic: '+kind);
- await A.load();assert.equal(A.list().length,700);
- assert.equal(A.list().filter(c=>c.tier==='prismatic'&&c.experimental).length,400,'all 400 experimental Prism cards are identifiable in the codex');
- assert.equal(A.list().filter(c=>c.scope==='common').length,50);
- for(let f=0;f<10;f++)assert.equal(A.list().filter(c=>c.scope==='faction-'+f).length,65);
+ await A.load();assert.equal(A.list().length,728);
+ assert.equal(A.list().filter(c=>c.tier==='prismatic'&&c.experimental).length,420,'all 400 experimental Prism cards are identifiable in the codex');
+ assert.equal(A.list().filter(c=>c.scope==='common').length,58);
+ for(let f=0;f<10;f++)assert.equal(A.list().filter(c=>c.scope==='faction-'+f).length,67);
  assert.equal(A.ready(),true);
  const disabled={};
  vm.runInNewContext(read('prism-experiments.js'),{window:disabled,Math,Array,Object,Number,Set},{filename:'prism-experiments.js'});
@@ -56,7 +56,7 @@ test('400 unique, valid per-faction Prism cards extend original 300 and can be d
  const ctx={window:disabled,Math,Array,Object,Number,Set,Map,JSON,fetch:async()=>({ok:true,json:async()=>original})};
  vm.runInNewContext(read('augment-rules.js'),ctx,{filename:'augment-rules.js'});
  await disabled.DesertAugments.load();
- assert.equal(disabled.DesertAugments.list().length,300,'feature flag restores original catalogue');
+ assert.equal(disabled.DesertAugments.list().length,308,'feature flag preserves original 300 and 8 specialist base cards');
  assert.equal(disabled.DesertPrism.populationLimit,undefined,'no population limit API even with experimental effects disabled');
 });
 test('new mechanics alter brood skills, recruits, wave effects and attacks without a global population cap',()=>{
