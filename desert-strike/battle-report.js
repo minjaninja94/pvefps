@@ -4,8 +4,8 @@
 (function(global){
 'use strict';
 const $=id=>document.getElementById(id);
-const roles=['돌격','사격','대장갑','장갑','대공','포격','특수','지원'];
-const zero=()=>Array(8).fill(0);
+const roles=['돌격','사격','대장갑','장갑','대공','포격','특수','지원','자원채취','저격','암살'];
+const zero=()=>Array(11).fill(0);
 const normalized=a=>roles.map((_,i)=>Number.isFinite(a?.[i])?Math.max(0,Math.floor(a[i])):0);
 const count=a=>normalized(a).reduce((s,v)=>s+v,0);
 const METRIC_KEYS=['damage','kills','losses','heroes','heroDamage'];
@@ -34,7 +34,7 @@ function unitStats(target,groups){
 
   if(g.unavailable){panel.append(make('p','result-detail-hint','상대 연결이 끊겨 생산 통계를 수신하지 못했습니다.'));target.append(panel);continue;}
   const grid=make('div','result-production-grid');
-  for(let i=0;i<8;i++){
+  for(const i of [0,1,2,3,4,5,6,7,9,10]){
    const detail=global.DesertRoster?.getDef?.(i,g.faction)?.unitName;
    const row=make('div','result-production-row');
    row.append(make('span','result-unit-role',detail||roles[i]),make('strong','result-unit-count',list[i]+'기'));
