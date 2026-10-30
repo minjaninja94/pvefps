@@ -1,5 +1,15 @@
 (()=>{
 'use strict';
+// Standalone test harnesses may load this engine without the optional specialist script.
+const LIVE_SPECIALISTS=window.DesertExpansion||{
+ CANDIDATES:{9:{key:'sniper',name:'저격',cost:380,hp:78,damage:300,armor:0,range:370,rate:4.8,speed:44,airTarget:false,kind:'ground',good:[],bad:[0,1,10]},
+  10:{key:'assassin',name:'암살',cost:330,hp:52,damage:180,armor:0,range:30,rate:1.45,speed:96,airTarget:false,kind:'ground',good:[5,7,9],bad:[0,3,7]}},
+ NAMES:Array.from({length:10},()=>['저격병','암살자']),
+ definition(role){const r=this.CANDIDATES[role];return {...r,hp:r.hp*2.25,damage:r.damage*.94,speed:r.speed*.84,heal:0,blast:0};},
+ precisionMultiplier(){return 1;},canTarget(){return true;},presentation(){return {opacity:1,label:''};},
+ infiltration(){return null;},revealOnAttack(){},RULES:{firstStrikeMultiplier:1.2}
+};
+
 const $=id=>document.getElementById(id);
 const isAugmented=ruleset=>ruleset==='augment'||ruleset==='prism';
 const CW=1100,CH=520,WORLD_W=3300,HOME_H=340,MAX_BASE=8640,MAX_TURRET=1700,INTERVAL=12,COLS=15,ROWS=5,SLOTS=COLS*ROWS,INCOME_PERIOD=.5;
@@ -46,8 +56,8 @@ const FACTIONS=[
  {id:'fairy',name:'농농 페어리족',tag:'PETAL FAIRIES',logo:'❀',color:'#ffadd4',bonus:'치유 특화 · 지원병 기본 치유량 15% 증가 · 5초마다 주변 다른 아군 1기에 실제 회복량의 5% 추가 치유',mut:{hp:1,dmg:1,speed:1.01},units:['꽃잎 소검사','이슬 마도사','씨앗 관통술사','버섯껍질 방패수','반딧불 대공술사','꽃가루 폭격사','별빛 나비정령','꽃샘 치유사'],slogan:'주변 아군에게 이어지는 연쇄치유',secondary:'#84577c'}
 ];
 ROLE[8]={key:'extractor',name:'자원채취',mark:'⬡',token:'⬡',cost:70,hp:1,damage:0,armor:0,range:0,rate:1,speed:0,kind:'ground',good:[],bad:[]};
-for(const r of [9,10])ROLE[r]={...window.DesertExpansion.CANDIDATES[r],mark:r===9?'⌖':'†',token:r===9?'⌖':'†',tips:r===9?'장거리 단일 저격 · 장갑 50% 관통 · 근접 호위에 취약':'은신 침투 · 지원병 탐지 범위에서 표적 지정 가능 · 매우 낮은 체력'};
-FACTIONS.forEach((f,i)=>f.units.push('자원채취',...window.DesertExpansion.NAMES[i]));
+for(const r of [9,10])ROLE[r]={...LIVE_SPECIALISTS.CANDIDATES[r],mark:r===9?'⌖':'†',token:r===9?'⌖':'†',tips:r===9?'장거리 단일 저격 · 장갑 50% 관통 · 근접 호위에 취약':'은신 침투 · 지원병 탐지 범위에서 표적 지정 가능 · 매우 낮은 체력'};
+FACTIONS.forEach((f,i)=>f.units.push('자원채취',...LIVE_SPECIALISTS.NAMES[i]));
 const COMBAT_ROLES=[0,1,2,3,4,5,6,7,9,10];
 const RNAME=ROLE.map(r=>r.name),SPRITES=new Map();
 let selectedFaction=0,state=null,selectedRole=null,demolition=false,activeView='base',lastFrame=0,lastRenderAt=0,uiElapsed=0;
@@ -80,7 +90,7 @@ const SPECIAL_GUIDES={
 function unitGuide(faction,role){return SPECIAL_GUIDES[faction+'-'+role]||BASIC_GUIDES[role];}
 function unitCost(role,faction=0){return role===6?({4:285,6:270,7:285}[faction]??ROLE[role].cost):ROLE[role]?.cost??Infinity;}
 function getDef(role,faction){
- if(role===9||role===10){const r=ROLE[role],d=window.DesertExpansion.definition(role,faction);
+ if(role===9||role===10){const r=ROLE[role],d=LIVE_SPECIALISTS.definition(role,faction);
   return {...d,mark:r.mark,token:r.token,heal:0,blast:0,unitType:'ground',factionName:FACTIONS[faction].name,tips:r.tips};}
  const r=ROLE[role],f=FACTIONS[faction];
  const isBongo=faction===3&&role===6,isWolfRider=faction===6&&role===6;
@@ -957,7 +967,7 @@ function calcDamage(attacker,target,amount,unit=null,volley=null){
  let out=amount;
  if(attacker!==null){
   const role=unit&&Number.isInteger(unit.faction)?getDef(attacker,unit.faction):ROLE[attacker];
-  out*=attacker===9?window.DesertExpansion.precisionMultiplier({role:9},{...target,kind:getDef(target.role,target.faction).kind}):matchupMultiplier(role,target,state.wave,attacker);
+  out*=attacker===9?LIVE_SPECIALISTS.precisionMultiplier({role:9},{...target,kind:getDef(target.role,target.faction).kind}):matchupMultiplier(role,target,state.wave,attacker);
  }
  const armor=combatDef(target).armor*(attacker===9?.5:1);
  return window.DesertConsolidation?.hit(out,armor,target,unit,volley)??Math.max(3,out-armor*.66);
@@ -976,7 +986,7 @@ function beginStrike(u,target=null,baseSide=null,healing=false){
  if(u.strike)return;
  const def=combatDef(u);
  const duration=u.role===9?Math.max(.65/.47,clamp(def.rate*.75,.5,.83)):clamp(def.rate*.75,.5,.83);
- if(u.role===10&&!healing)window.DesertExpansion.revealOnAttack(u,state.elapsed);
+ if(u.role===10&&!healing)LIVE_SPECIALISTS.revealOnAttack(u,state.elapsed);
  u.strike={mode:baseSide!==null?'siege':'attack',target,baseSide,structurePart:baseSide===null?null:defenseTarget(baseSide).part,healing,age:0,duration,hit:false};
  if(healing)u.skillAge=.62;
  u.cooldown=def.rate*random(.92,1.07);
@@ -1166,14 +1176,14 @@ function nearestUnit(u,def){
   const next=Math.min(dxA,dxB);
   if(candidate&&next>(score+175))break;
   const v=dxA<=dxB?targets[a--]:targets[b++];
-  if(v.hp<=0||v.side===u.side||!window.DesertExpansion.canTarget(u,v,state.units,state.elapsed)||(u.guardian&&!window.DesertGuardian?.canTarget(u,v,def.range))||(!def.airTarget&&getDef(v.role,v.faction).kind==='air'))continue;
+  if(v.hp<=0||v.side===u.side||!LIVE_SPECIALISTS.canTarget(u,v,state.units,state.elapsed)||(u.guardian&&!window.DesertGuardian?.canTarget(u,v,def.range))||(!def.airTarget&&getDef(v.role,v.faction).kind==='air'))continue;
   const dy=Math.abs(u.y-v.y);
   const d=Math.hypot(next,dy);
   const bonus=(u.role===4&&getDef(v.role,v.faction).kind==='air'?175:0)
    +(u.role===6&&[4,6].includes(u.faction)&&[5,7].includes(v.role)?80:0)
    +(def.good.includes(v.role)?Math.min(35,def.range*.2):0);
   const precision=u.role===9?Math.min(130,unitCost(v.role,v.faction)*.2):0;
-  const reserved=u.role===9?state.units.reduce((n,a)=>n+(a.side===u.side&&a.role===9&&a.strike?.target===v&&!a.strike.hit?combatDef(a).damage*window.DesertExpansion.precisionMultiplier(a,{...v,kind:getDef(v.role,v.faction).kind}):0),0):0;
+  const reserved=u.role===9?state.units.reduce((n,a)=>n+(a.side===u.side&&a.role===9&&a.strike?.target===v&&!a.strike.hit?combatDef(a).damage*LIVE_SPECIALISTS.precisionMultiplier(a,{...v,kind:getDef(v.role,v.faction).kind}):0),0):0;
   if(d-bonus-precision+(reserved>=v.hp?10000:0)<score){score=d-bonus-precision+(reserved>=v.hp?10000:0);candidate=v;}
  }
  return candidate;
@@ -1261,7 +1271,7 @@ function fire(u,t=null,baseSide=null,structurePart=null){
     *(window.DesertConsolidation?.splashWeight?.(v,window.DesertConsolidation?.strength(u)||1)||1),u.role,u));
    pulse(t.x,t.y,'#f1af72',23);
   }
-  else if(t){damage(t,def.damage*sideWeaponMultiplier(u.side)*(u.role===10&&!u.firstAssassinStrike?window.DesertExpansion.RULES.firstStrikeMultiplier:1),u.role,u);
+  else if(t){damage(t,def.damage*sideWeaponMultiplier(u.side)*(u.role===10&&!u.firstAssassinStrike?LIVE_SPECIALISTS.RULES.firstStrikeMultiplier:1),u.role,u);
    if(u.role===10)u.firstAssassinStrike=true;}
   else structureHit(baseSide,structureDamage(u.role,def.damage*(sideWeaponMultiplier(u.side))),fort.part);
   pulse(x,y,'#ffdbae',6);
@@ -1316,7 +1326,7 @@ function tick(dt){
  for(const u of state.units){
   if(u.hp<=0)continue;
   if(u.role===10){
-   const X=window.DesertExpansion;
+   const X=LIVE_SPECIALISTS;
    if(!u.infiltrationUsed&&!u.expansionTransit){const tr=X.infiltration(u,state.units.filter(v=>v.hp>0&&v.side!==u.side),state.elapsed);if(tr){u.infiltrationUsed=true;u.expansionTransit=tr;}}
    if(u.expansionTransit){
     const tr=u.expansionTransit,t=clamp((state.elapsed-tr.start-X.RULES.infiltrationWindup)/X.RULES.infiltrationTravel,0,1);
@@ -1688,7 +1698,7 @@ function drawUnit(g,u,scale=1){
  if(u.facing<0)g.scale(-1,1);
  g.imageSmoothingEnabled=false;
  const filter=u.side===0?window.DesertLobby?.skinFilter?.(u.faction)||'none':'none';
- const pres=window.DesertExpansion.presentation(u,state.units,state.elapsed);
+ const pres=LIVE_SPECIALISTS.presentation(u,state.units,state.elapsed);
   g.globalAlpha*=pres.opacity;
   if(iso&&window.DesertUnitMotion)window.DesertUnitMotion.draw(g,{faction:u.faction,role:u.role,action:mode,frame,x:-w/2,y:-h/2-(flying?9+Math.sin(u.anim)*2:0),size:w,filter,skin:u.side===0?window.DesertLobby?.selectedSkin?.()||'default':'default',isHatchling:!!u.isHatchling});
  else{g.filter=filter;g.drawImage(artwork,-w/2,-h/2-(flying?9+Math.sin(u.anim)*2:0),w,h);g.filter='none';}
