@@ -1665,8 +1665,8 @@ function ground(g,w,h,base=false){
   g.fillStyle='#f2d79d99';g.font='900 13px monospace';g.textAlign='center';g.fillText('FRONT LINE',WORLD_W/2,36);
  }
 }
-function structure(g,x,y,side,turret=true,health=1){
- if(window.IsoWorld){window.IsoWorld.structure(g,x,y,side===0?state.faction:state.enemyFaction,turret,health/(turret?MAX_TURRET:MAX_BASE));return;}
+function structure(g,x,y,side,turret=true,health=1,kind=turret?'turret':'core'){
+ if(window.IsoWorld){window.IsoWorld.structure(g,x,y,side===0?state.faction:state.enemyFaction,turret,health/(kind==='forward'?1000:turret?MAX_TURRET:MAX_BASE),kind);return;}
  g.save();g.translate(x,y);
  g.imageSmoothingEnabled=false;
  const faction=side===0?state.faction:state.enemyFaction;
@@ -1775,7 +1775,7 @@ function drawBattle(){
  structure(g,190,260,0,true,state.turretHP[0]);structure(g,WORLD_W-190,260,1,true,state.turretHP[1]);
  for(let side=0;side<2;side++){
   const x=side===0?WORLD_W/4:WORLD_W*3/4;
-  structure(g,x,260,side,true,state.forwardHP[side]/1000*MAX_TURRET);
+  structure(g,x,260,side,true,state.forwardHP[side],'forward');
   const at=window.IsoWorld?window.IsoWorld.project(x,260):{x,y:260};g.fillStyle='#efdfab';g.font='bold 12px sans-serif';g.textAlign='center';g.fillText(state.forwardHP[side]>0?'중간 타워 · 파괴 보너스 150':'중간 타워 파괴',at.x,at.y-100);
  }
  for(const u of [...state.units,...state.deadUnits].filter(u=>u.x>=state.cameraX-85&&u.x<=state.cameraX+CW+85&&enemyUnitVisible(u)).sort((a,b)=>a.y-b.y))drawUnit(g,u,1);
@@ -1863,6 +1863,20 @@ function drawBase(){
    g.fillText(Math.ceil(factoryReadyAt(0,i)-state.elapsed)+'s',x,y+4);
   }
  }
+ // Local base view: the forward outpost is a tactical miniature, not a duplicate gun turret.
+ // It uses exactly the same faction sprite and destruction state as the battlefield.
+ const outpost=window.IsoWorld?.structureSprite?.(state.faction,'forward',state.forwardHP[0]<=0);
+ if(outpost){
+  g.imageSmoothingEnabled=false;
+  g.drawImage(outpost,886,199,124,114);
+ }else{
+  structure(g,942,288,0,true,state.forwardHP[0]/1000*MAX_TURRET);
+ }
+ g.fillStyle='#fbefdb';g.font='900 11px monospace';g.textAlign='center';
+ g.fillText(state.forwardHP[0]>0?'중간 타워':'중간 타워 파괴',949,198);
+ g.fillStyle='#122631';g.fillRect(906,316,85,8);
+ g.fillStyle=state.forwardHP[0]>0?'#f0d69c':'#674c46';
+ g.fillRect(906,316,85*Math.max(0,state.forwardHP[0])/1000,8);
  // Defensive turret is destructible. Production zone itself stays protected.
  structure(g,138,196,0,false,state.baseHP[0]);
  structure(g,260,270,0,true,state.turretHP[0]);
@@ -1886,7 +1900,7 @@ function drawBase(){
  // Turret destruction is shown as damage, production buildings aren't falsely destructible.
  if(window.DesertSprites){
   for(const impact of state.structureFX)if(impact.side===0)
-   window.DesertSprites.structureImpact(g,impact.part==='turret'?260:138,impact.part==='turret'?270:196,state.faction,impact.mode,impact.age/impact.duration);
+   window.DesertSprites.structureImpact(g,impact.part==='forward'?949:impact.part==='turret'?260:138,impact.part==='forward'?288:impact.part==='turret'?270:196,state.faction,impact.mode,impact.age/impact.duration);
  }
  if(state.turretHP[0]<=0){
   g.fillStyle='#ffba90';g.font='900 17px monospace';g.textAlign='center';g.fillText('포탑 파괴',250,198);

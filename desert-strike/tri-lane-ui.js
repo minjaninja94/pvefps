@@ -205,10 +205,9 @@ function draw(){
  else{ctx.fillStyle='#43524a';ctx.fillRect(0,0,E.WIDTH,H);}
  const a=pos(E.WIDTH/2,35),b=pos(E.WIDTH/2,485);
  ctx.strokeStyle='#f2d7a777';ctx.lineWidth=2;ctx.setLineDash([8,10]);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);
- function fort(x,team,tower,hp,max){
-  if(hp<=0)return;
+ function fort(x,team,tower,hp,max,kind=tower?'turret':'core'){
   const faction=snap.players.find(p=>p.team===team)?.faction??0;
-  if(iso?.structure)iso.structure(ctx,x,260,faction,tower,hp/max);
+  if(iso?.structure)iso.structure(ctx,x,260,faction,tower,hp/max,kind);
   else{ctx.fillStyle=team===0?'#87d7d2':'#e19b83';ctx.fillRect(x-20,225,40,70);}
   const p=pos(x,260),width=tower?48:68;
   ctx.fillStyle='#13232a';ctx.fillRect(p.x-width/2,p.y-104,width,6);
@@ -218,7 +217,7 @@ function draw(){
   fort(t===0?90:E.WIDTH-90,t,false,snap.cores[lane]?.[t]||0,snap.coreMaxHP||3000);
   fort(t===0?190:E.WIDTH-190,t,true,snap.turrets?.[lane]?.[t]||0,1250);
   const x=t===0?E.WIDTH/4:E.WIDTH*3/4,hp=snap.forwardHP?.[lane]?.[t]||0;
-  fort(x,t,true,hp,1000);
+  fort(x,t,true,hp,1000,'forward');
   const p=pos(x,260);ctx.font='bold 12px sans-serif';ctx.fillStyle='#edddac';ctx.textAlign='center';
   ctx.fillText(hp>0?'중간 타워':'타워 파괴',p.x,p.y-112);
  }

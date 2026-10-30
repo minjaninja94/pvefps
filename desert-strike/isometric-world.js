@@ -4,7 +4,7 @@
  */
 (function(global){
 'use strict';
-const SIZE=72,FRAMES=16, cache=new Map(), terrainCache=new Map();
+const SIZE=72,FRAMES=16, cache=new Map(), terrainCache=new Map(), structureCache=new Map();
 let realAtlas=null,marineAtlas=null;
 function imageAtlas(data,group){
  if(typeof global.Image!=='function'||typeof data!=='string')return null;
@@ -137,7 +137,7 @@ function terrain(g,w,h,base=false,faction=0){
  }
  g.drawImage(cv,0,0);
 }
-function structure(g,x,y,faction,turret,hpRatio=1){
+function paintStructure(g,x,y,faction,turret,hpRatio=1){
  const z=worldToScreen(x,y);
  g.save();g.translate(z.x,z.y);g.imageSmoothingEnabled=false;
  const a=PAL[faction]||PAL[0];
@@ -239,6 +239,59 @@ function structure(g,x,y,faction,turret,hpRatio=1){
   g.fillStyle='#d76b43';g.fillRect(-8,-35,13,6);
  }
  g.restore();
+}
+// A per-faction sprite for each actual battlefield structure. Reusing a sprite
+// prevents repainting hundreds of individual polygons on every animation frame.
+const STRUCTURE_W=240,STRUCTURE_H=220,STRUCTURE_BASE_X=120,STRUCTURE_BASE_Y=164;
+function structureSprite(faction,kind='turret',destroyed=false){
+ if(!Number.isInteger(faction)||faction<0||faction>=PAL.length)return null;
+ if(!['core','turret','forward'].includes(kind))return null;
+ const key=faction+'|'+kind+'|'+(destroyed?'ruined':'intact');
+ if(structureCache.has(key))return structureCache.get(key);
+ if(typeof document==='undefined'||typeof document.createElement!=='function')return null;
+ const canvas=document.createElement('canvas');
+ if(!canvas||typeof canvas.getContext!=='function')return null;
+ canvas.width=STRUCTURE_W;canvas.height=STRUCTURE_H;
+ const ctx=canvas.getContext('2d');if(!ctx)return null;
+ ctx.save();ctx.translate(STRUCTURE_BASE_X,STRUCTURE_BASE_Y-260);
+ paintStructure(ctx,0,260,faction,kind!=='core'&&kind!=='forward',destroyed?0:1);
+ if(kind==='forward'){
+  // A taller forward watchtower, not the short defensive gun turret.
+  // The tower inherits its faction's original architecture underneath.
+  const a=PAL[faction];
+  ctx.save();ctx.translate(0,260);ctx.imageSmoothingEnabled=false;
+  box(ctx,-21,-105,42,28,15,a.high,a.low,a.shadow);
+  p(ctx,[[-26,-105],[0,-134],[26,-105],[0,-112]],a.outline);
+  p(ctx,[[-20,-106],[0,-128],[0,-110]],a.base);
+  p(ctx,[[0,-128],[20,-106],[0,-110]],a.trim);
+  ctx.fillStyle=a.dark;ctx.fillRect(-13,-91,26,12);
+  ctx.fillStyle=destroyed?'#7b4539':a.glow;ctx.fillRect(-8,-87,16,6);
+  for(const xx of [-35,31]){
+   ctx.fillStyle=a.shadow;ctx.fillRect(xx,-69,8,73);
+   ctx.fillStyle=a.trim;ctx.fillRect(xx+1,-72,6,8);
+   ctx.fillStyle=a.low;ctx.fillRect(xx,-13,8,12);
+  }
+  ctx.fillStyle=a.outline;ctx.fillRect(-24,-62,48,6);
+  ctx.fillStyle=a.glow;ctx.fillRect(-22,-60,12,2);
+  if(destroyed){
+   p(ctx,[[-25,-107],[-5,-93],[17,-110],[22,-92],[-24,-86]],a.dark);
+   ctx.fillStyle='#e47c51';ctx.fillRect(-4,-82,8,5);
+  }
+  ctx.restore();
+ }
+ ctx.restore();
+ structureCache.set(key,canvas);return canvas;
+}
+function structure(g,x,y,faction,turret,hpRatio=1,kind=turret?'turret':'core'){
+ const sprite=structureSprite(faction,kind,hpRatio<=0);
+ if(sprite&&typeof g.drawImage==='function'){
+  const z=worldToScreen(x,y);
+  const smoothing=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;
+  g.drawImage(sprite,Math.round(z.x-STRUCTURE_BASE_X),Math.round(z.y-STRUCTURE_BASE_Y));
+  g.imageSmoothingEnabled=smoothing;
+  return;
+ }
+ paintStructure(g,x,y,faction,kind==='forward'?false:turret,hpRatio);
 }
 function factory(g,x,y,faction,role,active){
  if(active&&role===8&&global.DesertResourceArt?.draw?.(g,x-26,y-40,56))return;
@@ -575,7 +628,7 @@ function broodlingFrame(mode='idle',frame=0){
 }
 global.IsoWorld=Object.freeze({
  SIZE,FRAMES,project:worldToScreen,unproject:screenToWorld,
- terrain,structure,factory,frame:renderFactionSprite,broodlingFrame,effect,
+ terrain,structure,structureSprite,factory,frame:renderFactionSprite,broodlingFrame,effect,
  portrait(f,role){return renderFactionSprite(f,role,'idle',4);},
  invalidateMaiden(){for(const k of [...cache.keys()])if(k.startsWith('4-')||k.startsWith('5-'))cache.delete(k);},
  invalidateSpriteFaction(f){for(const k of [...cache.keys()])if(k.startsWith(f+'-'))cache.delete(k);},
