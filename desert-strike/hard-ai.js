@@ -53,7 +53,7 @@ function response(brain,{counts,intel={},difficulty='veryhard'}){
  const role=counters.slice().sort((a,b)=>counts[a]-counts[b])[0];
  return {needed,role,counters,major};
 }
-function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={},difficulty='veryhard'}){
+function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={},difficulty='veryhard',wave=0}){
  const plan=PLANS[brain.plan],army=counts.reduce((a,b)=>a+b,0);
  const siege=siegeResponse(brain,{counts,intel,difficulty});
  if(siege?.needed)return cash>=costs[siege.role]?{kind:'unit',role:siege.role,tactical:true}:null;
@@ -78,8 +78,6 @@ function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={},di
  }
  const reply=response(brain,{counts,intel,difficulty});
  if(reply.needed)return cash>=costs[reply.role]?{kind:'unit',role:reply.role,tactical:true}:null;
-  if(army>=8&&seconds>=70&&!intel.invaded&&cash>=costs[9]&&counts[9]<Math.max(1,Math.floor(army*.08)))return {kind:'unit',role:9};
-  if(army>=10&&seconds>=85&&!intel.invaded&&cash>=costs[10]&&counts[10]<Math.max(1,Math.floor(army*.07)))return {kind:'unit',role:10};
  const pending=plan.opening[brain.opening];
  // An exposed rush takes precedence over a scripted opener. A blocked expensive
  // opener must never leave an affordable, useful defender unbuilt.
@@ -108,6 +106,11 @@ function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={},di
   if(cash>=ecoCost)return {kind:'econ'};
   return null;
  }
+ // Only after the opener, urgent counters and extractor timing: bank earned
+ // credits until a 330/380 CR specialist can actually be purchased.
+ const specialist=!urgent?global.DesertExpansion?.plannedSpecialist?.(counts,wave,army):null;
+ if(specialist!==null&&specialist!==undefined)
+  return cash>=costs[specialist]?{kind:'unit',role:specialist,specialist:true}:null;
  const weights=plan.weights.slice();
  if(army<4)weights[7]=0;
  if(army<3)weights[5]*=.35;
