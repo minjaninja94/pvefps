@@ -1383,6 +1383,38 @@ function constructionBar(slot){
  const label=(building?(opening?'배치 준비 ':'건설 '):'안정화 ')+Math.ceil(end-now-1e-6)+'초';
  return '<span class="build-progress'+(stabilizing?' stabilizing':'')+'" role="progressbar" aria-label="'+label+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.floor(progress)+'"><span class="build-progress-fill" style="width:'+progress+'%"></span><span class="build-progress-label">'+label+'</span></span>';
 }
+
+let soloBattleAugmentKey='';
+function renderSoloBattleAugments(){
+ const root=$('soloBattleAugmentRoster');
+ if(!root||!state||!state.live||state.ruleset!=='augment'){
+  if(root){root.hidden=true;root.replaceChildren();root.dataset.signature='';}
+  return;
+ }
+ root.hidden=false;
+ const signature=JSON.stringify([state.faction,state.enemyFaction,state.augments,state.enemyAugments,window.DesertAugments?.ready?.()]);
+ if(root.dataset.signature===signature)return;
+ root.dataset.signature=signature;root.replaceChildren();
+ const heading=document.createElement('div');heading.className='mp-battle-aug-heading';
+ const title=document.createElement('strong');title.textContent='✦ 양측 증강 현황 · 싱글';heading.append(title);root.append(heading);
+ const teams=document.createElement('div');teams.className='mp-battle-aug-teams';
+ for(const [side,ids,caption] of [[0,state.augments,'내 증강'],[1,state.enemyAugments,'AI 증강']]){
+  const group=document.createElement('section');group.className='mp-battle-aug-team';
+  const head=document.createElement('strong');head.textContent=caption+' · '+FACTIONS[side===0?state.faction:state.enemyFaction].name+' · '+ids.length+'개';group.append(head);
+  const picks=document.createElement('div');picks.className='mp-battle-aug-picks';
+  for(const [index,id] of ids.entries()){
+   const card=window.DesertAugments?.card?.(id);
+   const details=document.createElement('details'),summary=document.createElement('summary'),description=document.createElement('p');
+   summary.textContent='W'+(window.DesertAugments?.STAGES?.[index]||'?')+' · '+(card?.name||'증강 '+id);
+   description.textContent=card?.description||'증강 정보 확인 중';
+   details.title=description.textContent;details.append(summary,description);picks.append(details);
+  }
+  if(!ids.length){const empty=document.createElement('span');empty.textContent='선택 전';picks.append(empty);}
+  group.append(picks);teams.append(group);
+ }
+ root.append(teams);
+}
+
 function updateUI(full=false){
  if(!state)return;
  const preparation=state.live&&!state.ended&&state.wave===0?Math.max(0,OPENING_PREP_SECONDS-state.elapsed):0;
@@ -1407,9 +1439,10 @@ function updateUI(full=false){
   activeAug.hidden=state.ruleset!=='augment'||!state.live;
   if(!activeAug.hidden){
    const names=state.augments.map(id=>window.DesertAugments?.card?.(id)?.name||'증강 카드');
-   activeAug.textContent='증강 '+state.augments.length+'개';activeAug.title='AI 증강 '+state.enemyAugments.length+'개'+(names.length?' · '+names.join(' · '):'');
+   activeAug.textContent='내 증강 '+state.augments.length+'개 · AI 증강 '+state.enemyAugments.length+'개';activeAug.title='AI 증강 '+state.enemyAugments.length+'개 · '+state.enemyAugments.map(id=>window.DesertAugments?.card?.(id)?.name||id).join(' / ')+(names.length?' | 내 증강: '+names.join(' / '):'');
   }
  }
+ renderSoloBattleAugments();
  const marineOps=$('marineAbilityStatus');
  if(marineOps){marineOps.hidden=true; if(state.faction===3)$('factionLabel').title+=' · '+'★ 해병성채 | 긴빠이 '+state.marineStats.loot+'회 (+'+state.marineStats.lootedCR+' CR) | 자진입대 '+state.marineStats.recruits+'회 · 이번 웨이브 '+state.marineRecruitCount[0]+'/'+MARINE_RECRUIT_CAP+' | 황룡 '+state.marineStats.huangSpawns+'기 소환 | 오도봉고 '+(state.marineStats.bongoCharges||0)+'회 돌진';}
  $('enemyFactionLabel').textContent=(window.DesertLobby?.difficultyLabel?.(state.aiDifficulty)||'보통')+' AI · VS '+FACTIONS[state.enemyFaction].name;

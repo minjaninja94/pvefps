@@ -135,7 +135,7 @@
 <div class="screen" id="view-battle">
  <div class="section-head"><div><h1>실시간 전장</h1></div><div class="controls"><button class="btn outline" id="pauseButton">Ⅱ 일시정지</button><button class="btn outline" id="speedButton">▶ 1×</button></div></div>
  <div class="battle-nav"><button id="panLeft" class="btn outline" type="button">◀ 내 기지</button><span id="cameraStatus">전선 자동 추적</span><button id="followFront" class="btn outline" type="button">◎ 전선 추적</button><button id="panRight" class="btn outline" type="button">적 기지 ▶</button></div><div class="canvas-wrap battlefield"><canvas id="battleCanvas" width="1100" height="520" aria-label="확장된 자동 전투 전장. 드래그로 이동할 수 있습니다."></canvas><div id="soloBattleOpening" class="opening-countdown" role="status" aria-label="초기 배치 카운트다운" hidden><span>초기 배치 시간</span><div><strong id="soloBattleOpeningSeconds">10</strong><b>초 뒤 첫 웨이브</b></div><small>지금 배치한 병력 시설은 준비 종료와 함께 첫 출격합니다.</small></div><div class="battle-top"><span>아군 병력 <b id="friendlyCount">0</b></span><span id="frontStatus">전선 중앙</span><span>적 병력 <b id="hostileCount">0</b></span></div><div id="waveBanner" class="wave-banner"></div></div>
- <div class="mini-wrap"><div class="mini-heading"><b title="누르면 해당 위치로 이동합니다">전장 미니맵</b></div><canvas id="battleMinimap" width="1100" height="82" aria-label="전장 미니맵, 클릭해서 시야 이동"></canvas></div><div class="battle-bottom"><div class="legend"><span>⚔ 돌격</span><span>⌖ 사격</span><span>◆ 대장갑</span><span>▣ 장갑</span><span>✣ 대공</span><span>✹ 포격</span><span>◇ 비행</span><span>✚ 지원</span></div><div id="inspect" class="inspect">전장 유닛을 클릭하면 능력과 상성을 볼 수 있습니다.</div></div>
+ <section id="soloBattleAugmentRoster" class="mp-augment-battle-roster" hidden aria-label="싱글 아군 및 AI 선택 완료 증강 상세 공개"></section><div class="mini-wrap"><div class="mini-heading"><b title="누르면 해당 위치로 이동합니다">전장 미니맵</b></div><canvas id="battleMinimap" width="1100" height="82" aria-label="전장 미니맵, 클릭해서 시야 이동"></canvas></div><div class="battle-bottom"><div class="legend"><span>⚔ 돌격</span><span>⌖ 사격</span><span>◆ 대장갑</span><span>▣ 장갑</span><span>✣ 대공</span><span>✹ 포격</span><span>◇ 비행</span><span>✚ 지원</span></div><div id="inspect" class="inspect">전장 유닛을 클릭하면 능력과 상성을 볼 수 있습니다.</div></div>
 </div>
 
 <div class="screen" id="view-multiplayer">
@@ -283,17 +283,17 @@
 <script src="./unit-consolidation.js?v=battlestats3" defer></script>
 <script src="./defense-guardian.js?v=guardianheal1" defer></script>
 <script src="./hard-ai.js?v=battlestats3" defer></script>
-<script src="./prism-experiments.js?v=mp20min1" defer></script>
-<script src="./augment-rules.js?v=mp20min1" defer></script>
+<script src="./prism-experiments.js?v=prism400a" defer></script>
+<script src="./augment-rules.js?v=prism400a" defer></script>
 <script src="./augment-history.js?v=history1" defer></script>
-<script src="./augment-codex.js?v=copy-clean1-prism100a" defer></script>
-<script src="./tri-lane-engine.js?v=rankincome20261030" defer></script>
+<script src="./augment-codex.js?v=prism400a" defer></script>
+<script src="./tri-lane-engine.js?v=prism400a" defer></script>
 <script src="./device-account.js?v=externalroom1" defer></script>
 <script src="./tri-lane-network.js?v=rankincome20261030" defer></script>
 <script src="./combat-audio.js?v=nukegear1" defer></script>
-<script src="./tri-lane-ui.js?v=rankincome20261030" defer></script>
+<script src="./tri-lane-ui.js?v=prism400a" defer></script>
 <script src="./battle-report.js?v=battlestats2" defer></script>
-<script src="./game-v2.js?v=rankincome20261030" defer></script>
+<script src="./game-v2.js?v=prism400a" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=nukegear1" defer></script>

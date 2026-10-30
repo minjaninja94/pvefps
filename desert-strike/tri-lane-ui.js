@@ -240,6 +240,16 @@ function draw(){
   const hpY=p.y-47*factor;
   if(u.heroCount===20){ctx.fillStyle=u.guardian?'#9affa8':'#ffd197';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText(u.guardian?'가디언 ×20':'★ ×20',p.x,hpY-9);}
   if(u.hp<u.maxHP){ctx.fillStyle='#0c1b28';ctx.fillRect(p.x-16*factor,hpY-9,32*factor,5);ctx.fillStyle=u.team===0?'#83e4e0':'#f2a08c';ctx.fillRect(p.x-16*factor,hpY-9,32*factor*Math.max(0,u.hp/u.maxHP),5);}
+   // Single-player parity: strengths and weaknesses stay visible above every on-screen unit.
+   const matchup=global.DesertRoster?.getDef?.(u.role,u.faction);
+   if(matchup&&!u.isHatchling){
+    const good=(matchup.good||[]).slice(0,2).map(r=>ICONS[r]||E.NAMES[r]?.slice(0,1)||'?').join('');
+    const bad=(matchup.bad||[]).slice(0,2).map(r=>ICONS[r]||E.NAMES[r]?.slice(0,1)||'?').join('');
+    const info='▲'+good+'  ▼'+bad;
+    ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.lineWidth=3;
+    ctx.strokeStyle='#071722';ctx.strokeText(info,p.x,hpY-(u.heroCount===20?34:18));
+    ctx.fillStyle='#e8f5dc';ctx.fillText(info,p.x,hpY-(u.heroCount===20?34:18));
+   }
  }
  for(const e of snap.effects||[]){
   if(e.lane!==lane)continue;

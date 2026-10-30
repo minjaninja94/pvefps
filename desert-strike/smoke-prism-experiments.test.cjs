@@ -13,6 +13,19 @@ test('400 unique, valid per-faction Prism cards extend original 300 and can be d
  const {window}=setup();
  const P=window.DesertPrism,A=window.DesertAugments;
  assert.equal(P.cards.length,400);assert.equal(new Set(P.cards.map(c=>c.id)).size,400);
+ assert.equal(new Set(P.cards.map(c=>c.name)).size,400,'distinct names for all 400 signature Prisms');
+ for(let f=0;f<10;f++){
+  const cards=P.cards.filter(c=>c.scope==='faction-'+f);
+  assert.equal(cards.filter(c=>Number(c.id.split('-').at(-1))>=10).length,30,'30 newly added Prisms per faction');
+  assert.ok(cards.slice(10).every(c=>c.effects.some(e=>['prism_foreign_kill','prism_foreign_wave','prism_anomaly'].includes(e.kind))),'new powers must alter battles, not only income');
+ }
+ const foreign=['exp-prism-0-10'],killer={role:3},summons=[];
+ for(let i=0;i<2;i++)summons.push(...P.deathEffects(foreign,killer));
+ assert.ok(summons.some(s=>s.faction===1&&Number.isInteger(s.role)),'kills summon units from another faction');
+ const shot={role:3,x:0,y:0,hp:100,maxHP:100},victim={hp:80,maxHP:100,x:30,y:0},others=[{hp:50,maxHP:50,x:35,y:0}];
+ const anomaly=['exp-prism-0-16'];
+ let hit;for(let i=0;i<2;i++)hit=P.hitEffects(anomaly,shot,victim,100,i,others);
+ assert.ok(hit.secondary.length>0,'projectile impact secondary effects must be applied');
  for(let f=0;f<10;f++){
   const cards=P.cards.filter(c=>c.scope==='faction-'+f);
   assert.equal(cards.length,40,'forty specials for faction '+f);
