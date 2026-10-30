@@ -957,9 +957,9 @@ function calcDamage(attacker,target,amount,unit=null,volley=null){
  let out=amount;
  if(attacker!==null){
   const role=unit&&Number.isInteger(unit.faction)?getDef(attacker,unit.faction):ROLE[attacker];
-  out*=matchupMultiplier(role,target,state.wave,attacker);
+  out*=attacker===9?window.DesertExpansion.precisionMultiplier({role:9},{...target,kind:getDef(target.role,target.faction).kind}):matchupMultiplier(role,target,state.wave,attacker);
  }
- const armor=combatDef(target).armor;
+ const armor=combatDef(target).armor*(attacker===9?.5:1);
  return window.DesertConsolidation?.hit(out,armor,target,unit,volley)??Math.max(3,out-armor*.66);
 }
 function killUnit(u){
@@ -975,7 +975,8 @@ function killUnit(u){
 function beginStrike(u,target=null,baseSide=null,healing=false){
  if(u.strike)return;
  const def=combatDef(u);
- const duration=clamp(def.rate*.75,.5,.83);
+ const duration=u.role===9?Math.max(.65/.47,clamp(def.rate*.75,.5,.83)):clamp(def.rate*.75,.5,.83);
+ if(u.role===10&&!healing)window.DesertExpansion.revealOnAttack(u,state.elapsed);
  u.strike={mode:baseSide!==null?'siege':'attack',target,baseSide,structurePart:baseSide===null?null:defenseTarget(baseSide).part,healing,age:0,duration,hit:false};
  if(healing)u.skillAge=.62;
  u.cooldown=def.rate*random(.92,1.07);
@@ -1165,13 +1166,15 @@ function nearestUnit(u,def){
   const next=Math.min(dxA,dxB);
   if(candidate&&next>(score+175))break;
   const v=dxA<=dxB?targets[a--]:targets[b++];
-  if(v.hp<=0||v.side===u.side||(u.guardian&&!window.DesertGuardian?.canTarget(u,v,def.range))||(!def.airTarget&&getDef(v.role,v.faction).kind==='air'))continue;
+  if(v.hp<=0||v.side===u.side||!window.DesertExpansion.canTarget(u,v,state.units,state.elapsed)||(u.guardian&&!window.DesertGuardian?.canTarget(u,v,def.range))||(!def.airTarget&&getDef(v.role,v.faction).kind==='air'))continue;
   const dy=Math.abs(u.y-v.y);
   const d=Math.hypot(next,dy);
   const bonus=(u.role===4&&getDef(v.role,v.faction).kind==='air'?175:0)
    +(u.role===6&&[4,6].includes(u.faction)&&[5,7].includes(v.role)?80:0)
    +(def.good.includes(v.role)?Math.min(35,def.range*.2):0);
-  if(d-bonus<score){score=d-bonus;candidate=v;}
+  const precision=u.role===9?Math.min(130,unitCost(v.role,v.faction)*.2):0;
+  const reserved=u.role===9?state.units.reduce((n,a)=>n+(a.side===u.side&&a.role===9&&a.strike?.target===v&&!a.strike.hit?combatDef(a).damage*window.DesertExpansion.precisionMultiplier(a,{...v,kind:getDef(v.role,v.faction).kind}):0),0):0;
+  if(d-bonus-precision+(reserved>=v.hp?10000:0)<score){score=d-bonus-precision+(reserved>=v.hp?10000:0);candidate=v;}
  }
  return candidate;
 }
@@ -1258,7 +1261,8 @@ function fire(u,t=null,baseSide=null,structurePart=null){
     *(window.DesertConsolidation?.splashWeight?.(v,window.DesertConsolidation?.strength(u)||1)||1),u.role,u));
    pulse(t.x,t.y,'#f1af72',23);
   }
-  else if(t)damage(t,def.damage*(sideWeaponMultiplier(u.side)),u.role,u);
+  else if(t){damage(t,def.damage*sideWeaponMultiplier(u.side)*(u.role===10&&!u.firstAssassinStrike?window.DesertExpansion.RULES.firstStrikeMultiplier:1),u.role,u);
+   if(u.role===10)u.firstAssassinStrike=true;}
   else structureHit(baseSide,structureDamage(u.role,def.damage*(sideWeaponMultiplier(u.side))),fort.part);
   pulse(x,y,'#ffdbae',6);
  }else{
@@ -1311,6 +1315,17 @@ function tick(dt){
  state.sortedTeams=[state.units.filter(u=>u.side===0).sort((a,b)=>a.x-b.x),state.units.filter(u=>u.side===1).sort((a,b)=>a.x-b.x)];
  for(const u of state.units){
   if(u.hp<=0)continue;
+  if(u.role===10){
+   const X=window.DesertExpansion;
+   if(!u.infiltrationUsed&&!u.expansionTransit){const tr=X.infiltration(u,state.units.filter(v=>v.hp>0&&v.side!==u.side),state.elapsed);if(tr){u.infiltrationUsed=true;u.expansionTransit=tr;}}
+   if(u.expansionTransit){
+    const tr=u.expansionTransit,t=clamp((state.elapsed-tr.start-X.RULES.infiltrationWindup)/X.RULES.infiltrationTravel,0,1);
+    u.x=tr.from.x+(tr.to.x-tr.from.x)*t;u.y=tr.from.y+(tr.to.y-tr.from.y)*t;
+    u.phase=state.elapsed<tr.landAt?'infiltrating':'landing';
+    if(state.elapsed<tr.readyAt)continue;
+    u.expansionTransit=null;u.phase='normal';state.sortedTeams=null;
+   }
+  }
   const def=combatDef(u);
   if(!u.isHatchling){
    if(u.faction===8)u.hp=Math.min(u.maxHP,u.hp+u.maxHP*OCTOPER_REGEN*ds);
@@ -1673,13 +1688,17 @@ function drawUnit(g,u,scale=1){
  if(u.facing<0)g.scale(-1,1);
  g.imageSmoothingEnabled=false;
  const filter=u.side===0?window.DesertLobby?.skinFilter?.(u.faction)||'none':'none';
- if(iso&&window.DesertUnitMotion)window.DesertUnitMotion.draw(g,{faction:u.faction,role:u.role,action:mode,frame,x:-w/2,y:-h/2-(flying?9+Math.sin(u.anim)*2:0),size:w,filter,skin:u.side===0?window.DesertLobby?.selectedSkin?.()||'default':'default',isHatchling:!!u.isHatchling});
+ const pres=window.DesertExpansion.presentation(u,state.units,state.elapsed);
+  g.globalAlpha*=pres.opacity;
+  if(iso&&window.DesertUnitMotion)window.DesertUnitMotion.draw(g,{faction:u.faction,role:u.role,action:mode,frame,x:-w/2,y:-h/2-(flying?9+Math.sin(u.anim)*2:0),size:w,filter,skin:u.side===0?window.DesertLobby?.selectedSkin?.()||'default':'default',isHatchling:!!u.isHatchling});
  else{g.filter=filter;g.drawImage(artwork,-w/2,-h/2-(flying?9+Math.sin(u.anim)*2:0),w,h);g.filter='none';}
  g.restore();
  if(dead)return;
+ if(u.role===7&&u.hp>0){g.strokeStyle='#6ef3ef55';g.lineWidth=1.5;g.beginPath();g.ellipse(at.x,at.y+10*scale,190*scale,65*scale,0,0,Math.PI*2);g.stroke();}
  if(u.isHatchling){g.strokeStyle='#c0f78c';g.lineWidth=2*scale;g.beginPath();g.ellipse(at.x,at.y+10*scale,13*scale,5*scale,0,0,Math.PI*2);g.stroke();}
  if(u.conscripted){g.strokeStyle='#f7d277';g.lineWidth=2*scale;g.beginPath();g.ellipse(at.x,at.y+10*scale,17*scale,5*scale,0,0,Math.PI*2);g.stroke();}
  const role=ROLE[u.role],y=at.y-47*scale-(flying?9:0);
+ if(u.role===10||u.role===7){const label=pres.label;if(label){g.font='bold 12px sans-serif';g.textAlign='center';g.strokeStyle='#05141c';g.lineWidth=3;g.strokeText(label,at.x,y-20*scale);g.fillStyle=u.role===7?'#91fff6':'#ebd2ff';g.fillText(label,at.x,y-20*scale);}}
  g.fillStyle='#07161cd8';g.fillRect(at.x-10*scale,y-8*scale,20*scale,16*scale);
  g.strokeStyle=u.side===0?'#85e9fa':'#fdad92';g.lineWidth=1;g.strokeRect(at.x-10*scale,y-8*scale,20*scale,16*scale);
  g.fillStyle=u.side===0?'#d0f9ff':'#ffe4d0';g.textAlign='center';g.font='900 '+Math.round(13*scale)+'px monospace';
