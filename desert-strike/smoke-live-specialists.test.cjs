@@ -106,6 +106,61 @@ test('specialist audio uses Japanese VOICEVOX Nemo atlases without browser TTS',
  assert.match(generator,/spec-f\{faction\}\.ogg/);
 });
 
+test('all 80 Japanese Nemo specialist clips are packaged and indexed for both skins',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const root=path.join(__dirname,'assets/audio'),idx=JSON.parse(fs.readFileSync(path.join(root,'voice_index.json'),'utf8'));
+ const events=['spawn','attack','hit','death'];
+ let total=0;
+ for(let faction=0;faction<10;faction++){
+  const file=path.join(root,'voices','spec-f'+faction+'.ogg'),ogg=fs.readFileSync(file);
+  assert.ok(ogg.length>1000,'VOICEVOX Nemo atlas must contain actual audio: '+file);
+  assert.equal(ogg.toString('ascii',0,4),'OggS','must be a real OGG file: '+file);
+  for(const role of [9,10])for(const event of events){
+   const first=idx.clips['default/'+faction+'-'+role+'-'+event];
+   const second=idx.clips['moe/'+faction+'-'+role+'-'+event];
+   assert.ok(first&&second,'Nemo clip missing: '+faction+' '+role+' '+event);
+   assert.equal(first.atlas,'spec-f'+faction+'.ogg');
+   assert.deepEqual(second,first,'both skins must play the same new line');
+   assert.ok(first.start>=0&&first.duration>.1,'clip offset and duration must be usable');
+   total++;
+  }
+ }
+ assert.equal(total,80);
+});
+
+test('actual battle audio plays the new Japanese specialist atlas rather than generic fallback or TTS',async()=>{
+ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+ const root=path.join(__dirname,'assets/audio');
+ const code=fs.readFileSync(path.join(__dirname,'combat-audio.js'),'utf8');
+ const index=JSON.parse(fs.readFileSync(path.join(root,'voice_index.json'),'utf8'));
+ const fetched=[],played=[],listeners={};
+ class Context{
+  constructor(){this.state='running';this.destination={};}
+  createGain(){return {gain:{value:0},connect(){},disconnect(){}};}
+  createBufferSource(){return {connect(){},disconnect(){},start(...args){played.push(args);},stop(){}};}
+  async decodeAudioData(buffer){assert.ok(buffer.byteLength>1000);return {duration:300};}
+ }
+ const global={AudioContext:Context,localStorage:{getItem(){return null;},setItem(){}},
+  addEventListener(){},fetch:async url=>{
+   fetched.push(url);const filename=url.replace('./assets/audio/','');
+   return {ok:true,json:async()=>index,arrayBuffer:async()=>fs.readFileSync(path.join(root,filename))};
+  }};
+ const document={hidden:false,readyState:'complete',body:{dataset:{playMode:'solo'},classList:{contains(){return false;}}},
+  getElementById(){return null;},addEventListener(name,cb){listeners[name]=cb;}};
+ vm.runInNewContext(code,{window:global,document,performance:{now:()=>20000},Audio:class{}});
+ assert.equal(typeof listeners.pointerdown,'function');
+ listeners.pointerdown(); // Simulated player gesture unlocks browser WebAudio.
+ const clip=index.clips['default/3-9-attack'];
+ global.DesertCombatAudio.unit(3,9,'default','attack',1700);
+ for(let i=0;i<10&&!played.length;i++)await new Promise(resolve=>setImmediate(resolve));
+ assert.ok(fetched.some(x=>x.includes('voice_index.json')));
+ assert.ok(fetched.some(x=>x.includes('voices/spec-f3.ogg')),'must retrieve the new specialist audio, not the role-2 fallback');
+ assert.equal(played.length,1);
+ assert.ok(Math.abs(played[0][1]-clip.start)<.0001);
+ assert.ok(Math.abs(played[0][2]-clip.duration)<.0001);
+ global.DesertCombatAudio.stop();
+});
+
 test('stealth is visible, non-targetable outside detection, exposed while attacking and defeated by a living detector',()=>{
  const knife={id:10,team:1,role:10,x:201,y:0,hp:100},rifle={id:1,team:0,role:1,x:0,y:0,hp:100},medic={id:7,team:0,role:7,x:10,y:0,hp:100};
  const units=[knife,rifle,medic];
