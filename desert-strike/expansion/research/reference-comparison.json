@@ -1,0 +1,52 @@
+{
+  "checked": "2026-10-31 Asia/Seoul",
+  "sources": "Primary project-owned game configuration files retrieved through the GitHub API. Public web search returned errors. Dark Templar is a user-provided concept reference; no unverified current StarCraft stat is claimed.",
+  "references": [
+    {
+      "name": "OpenRA Tiberian Dawn Commando",
+      "url": "https://github.com/OpenRA/OpenRA/blob/bleed/mods/cnc/rules/infantry.yaml",
+      "cost": 1500,
+      "hp": 15000,
+      "weapon": "Sniper",
+      "rifleCost": 100,
+      "rifleHp": 5000,
+      "lesson": "Specialist cost premium; currencies are not directly transferable."
+    },
+    {
+      "name": "OpenRA Tiberian Dawn Stealth Tank",
+      "url": "https://github.com/OpenRA/OpenRA/blob/bleed/mods/cnc/rules/vehicles.yaml",
+      "cost": 900,
+      "hp": 15000,
+      "armor": "Light",
+      "cloakDelayTicks": 85,
+      "uncloakOn": [
+        "Attack",
+        "Unload",
+        "Dock",
+        "Damage",
+        "Heal"
+      ],
+      "lesson": "Attack and recloak windows allow retaliation."
+    },
+    {
+      "name": "Wesnoth Elvish Sharpshooter",
+      "url": "https://github.com/wesnoth/wesnoth/blob/master/data/core/units/elves/Sharpshooter.cfg",
+      "cost": 55,
+      "hp": 47,
+      "rangedDamage": 10,
+      "rangedStrikes": 5,
+      "meleeDamage": 7,
+      "meleeStrikes": 2,
+      "special": "marksman",
+      "lesson": "Precision specialization retains a weaker melee profile."
+    },
+    {
+      "name": "Wesnoth Elvish Ranger",
+      "url": "https://github.com/wesnoth/wesnoth/blob/master/data/core/units/elves/Ranger.cfg",
+      "cost": 31,
+      "hp": 42,
+      "special": "ambush",
+      "lesson": "Concealment should have explicit rules and readable presentation."
+    }
+  ]
+}

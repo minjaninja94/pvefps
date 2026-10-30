@@ -1,0 +1,11 @@
+{
+  "strips": 40,
+  "animatedPreviews": 40,
+  "paintedPoses": 320,
+  "validTransparentStrips": 40,
+  "validAnimatedPreviews": 40,
+  "minAnimatedFrames": 16,
+  "maxAnimatedFrames": 16,
+  "allFramesFitWithFourPixelMargin": true,
+  "sourceBoundaryNotes": 200
+}

@@ -65,6 +65,8 @@ jobs:
         run: node --test desert-strike/smoke-mp-20min.test.cjs
       - name: Tactical counters take priority over hero production
         run: node --test desert-strike/smoke-ai-adaptation.test.cjs
+      - name: Prepared sniper and assassin rules, 40 sprite strips and source-injected combat
+        run: node --test desert-strike/expansion/smoke-expansion.test.cjs
       - name: Scoped cost-aware response to infantry-screened siege
         run: node --test desert-strike/smoke-ai-screened-siege.test.cjs
       - name: Five AI difficulty levels and multiplayer counters

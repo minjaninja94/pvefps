@@ -1,0 +1,3316 @@
+{
+  "method": "Actual game-v2.js fixed-roster experiment with in-memory experimental unit/visibility/infiltration/aim/piercing hooks. Existing projectile, damage, healing and race triggers execute. Equal budget, no AI purchasing, structures, waves or hero consolidation. Not a production integration, full campaign, multiplayer test or player win rate.",
+  "baseline": "1f9a59dbeb217947e33abeb74e0451d64f32d89d",
+  "summary": [
+    {
+      "scenario": "assassin_sniper",
+      "games": 20,
+      "leftWins": 20,
+      "rightWins": 0,
+      "timeouts": 0
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "games": 20,
+      "leftWins": 0,
+      "rightWins": 20,
+      "timeouts": 0
+    },
+    {
+      "scenario": "sniper_armor",
+      "games": 20,
+      "leftWins": 20,
+      "rightWins": 0,
+      "timeouts": 0
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "games": 20,
+      "leftWins": 8,
+      "rightWins": 12,
+      "timeouts": 0
+    }
+  ],
+  "records": [
+    {
+      "scenario": "assassin_sniper",
+      "faction": 0,
+      "enemy": 0,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.95,
+      "survivors": [
+        13,
+        0
+      ],
+      "infiltrators": [
+        13,
+        0
+      ],
+      "remainingValue": [
+        4290,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 0,
+      "enemy": 0,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.95,
+      "survivors": [
+        13,
+        0
+      ],
+      "infiltrators": [
+        13,
+        0
+      ],
+      "remainingValue": [
+        4290,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 0,
+      "enemy": 0,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 12.6,
+      "survivors": [
+        0,
+        15
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2635
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 0,
+      "enemy": 0,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 12.6,
+      "survivors": [
+        0,
+        15
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2635
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 0,
+      "enemy": 0,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 30.48,
+      "survivors": [
+        5,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        1900,
+        0
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 0,
+      "enemy": 0,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 30.48,
+      "survivors": [
+        5,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        1900,
+        0
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 0,
+      "enemy": 0,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 1,
+      "seconds": 40.71,
+      "survivors": [
+        0,
+        10
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2676
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 0,
+      "enemy": 0,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 1,
+      "seconds": 43.32,
+      "survivors": [
+        0,
+        10
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2906
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 1,
+      "enemy": 1,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 8.07,
+      "survivors": [
+        14,
+        0
+      ],
+      "infiltrators": [
+        14,
+        0
+      ],
+      "remainingValue": [
+        3825,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 1,
+      "enemy": 1,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 8.07,
+      "survivors": [
+        14,
+        0
+      ],
+      "infiltrators": [
+        14,
+        0
+      ],
+      "remainingValue": [
+        3825,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 1,
+      "enemy": 1,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 8.31,
+      "survivors": [
+        0,
+        22
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        3348
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 1,
+      "enemy": 1,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 8.31,
+      "survivors": [
+        0,
+        22
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        3348
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 1,
+      "enemy": 1,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 21.12,
+      "survivors": [
+        11,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        3787,
+        0
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 1,
+      "enemy": 1,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 21.12,
+      "survivors": [
+        11,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        3787,
+        0
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 1,
+      "enemy": 1,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 0,
+      "seconds": 44.4,
+      "survivors": [
+        4,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        1440,
+        0
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 1,
+      "enemy": 1,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 0,
+      "seconds": 39.96,
+      "survivors": [
+        6,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        2160,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 2,
+      "enemy": 2,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.77,
+      "survivors": [
+        13,
+        0
+      ],
+      "infiltrators": [
+        13,
+        0
+      ],
+      "remainingValue": [
+        4290,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 2,
+      "enemy": 2,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.77,
+      "survivors": [
+        13,
+        0
+      ],
+      "infiltrators": [
+        13,
+        0
+      ],
+      "remainingValue": [
+        4290,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 2,
+      "enemy": 2,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 8.49,
+      "survivors": [
+        0,
+        18
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2945
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 2,
+      "enemy": 2,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 8.49,
+      "survivors": [
+        0,
+        18
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2945
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 2,
+      "enemy": 2,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 20.37,
+      "survivors": [
+        12,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        3751,
+        0
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 2,
+      "enemy": 2,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 20.37,
+      "survivors": [
+        12,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        3751,
+        0
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 2,
+      "enemy": 2,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 1,
+      "seconds": 49.02,
+      "survivors": [
+        0,
+        8
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2319
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 2,
+      "enemy": 2,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 1,
+      "seconds": 47.46,
+      "survivors": [
+        0,
+        5
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        1590
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 3,
+      "enemy": 3,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.74,
+      "survivors": [
+        15,
+        0
+      ],
+      "infiltrators": [
+        13,
+        0
+      ],
+      "remainingValue": [
+        4365,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 3,
+      "enemy": 3,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.74,
+      "survivors": [
+        15,
+        0
+      ],
+      "infiltrators": [
+        13,
+        0
+      ],
+      "remainingValue": [
+        4365,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 3,
+      "enemy": 3,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 9.51,
+      "survivors": [
+        0,
+        17
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2851
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 3,
+      "enemy": 3,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 9.51,
+      "survivors": [
+        0,
+        17
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2851
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 3,
+      "enemy": 3,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 25.62,
+      "survivors": [
+        8,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        2470,
+        0
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 3,
+      "enemy": 3,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 25.62,
+      "survivors": [
+        8,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        2470,
+        0
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 3,
+      "enemy": 3,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 0,
+      "seconds": 41.07,
+      "survivors": [
+        2,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        720,
+        0
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 3,
+      "enemy": 3,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 0,
+      "seconds": 41.16,
+      "survivors": [
+        7,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        2520,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 4,
+      "enemy": 4,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.83,
+      "survivors": [
+        13,
+        0
+      ],
+      "infiltrators": [
+        13,
+        0
+      ],
+      "remainingValue": [
+        4290,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 4,
+      "enemy": 4,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.83,
+      "survivors": [
+        13,
+        0
+      ],
+      "infiltrators": [
+        13,
+        0
+      ],
+      "remainingValue": [
+        4290,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 4,
+      "enemy": 4,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 8.16,
+      "survivors": [
+        0,
+        21
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2903
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 4,
+      "enemy": 4,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 8.16,
+      "survivors": [
+        0,
+        21
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2903
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 4,
+      "enemy": 4,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 30.36,
+      "survivors": [
+        4,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        1189,
+        0
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 4,
+      "enemy": 4,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 30.36,
+      "survivors": [
+        4,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        1189,
+        0
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 4,
+      "enemy": 4,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 1,
+      "seconds": 43.56,
+      "survivors": [
+        0,
+        9
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2634
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 4,
+      "enemy": 4,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 1,
+      "seconds": 40.41,
+      "survivors": [
+        0,
+        9
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2663
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 5,
+      "enemy": 5,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.8,
+      "survivors": [
+        12,
+        0
+      ],
+      "infiltrators": [
+        12,
+        0
+      ],
+      "remainingValue": [
+        3960,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 5,
+      "enemy": 5,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.8,
+      "survivors": [
+        12,
+        0
+      ],
+      "infiltrators": [
+        12,
+        0
+      ],
+      "remainingValue": [
+        3960,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 5,
+      "enemy": 5,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 17.55,
+      "survivors": [
+        0,
+        3
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        1140
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 5,
+      "enemy": 5,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 17.55,
+      "survivors": [
+        0,
+        3
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        1140
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 5,
+      "enemy": 5,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 20.01,
+      "survivors": [
+        12,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        3867,
+        0
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 5,
+      "enemy": 5,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 20.01,
+      "survivors": [
+        12,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        3867,
+        0
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 5,
+      "enemy": 5,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 1,
+      "seconds": 42.33,
+      "survivors": [
+        0,
+        12
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        3296
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 5,
+      "enemy": 5,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 1,
+      "seconds": 42.45,
+      "survivors": [
+        0,
+        11
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        3168
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 6,
+      "enemy": 6,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.5,
+      "survivors": [
+        11,
+        0
+      ],
+      "infiltrators": [
+        11,
+        0
+      ],
+      "remainingValue": [
+        3630,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 6,
+      "enemy": 6,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.5,
+      "survivors": [
+        11,
+        0
+      ],
+      "infiltrators": [
+        11,
+        0
+      ],
+      "remainingValue": [
+        3630,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 6,
+      "enemy": 6,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 8.25,
+      "survivors": [
+        0,
+        21
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        3155
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 6,
+      "enemy": 6,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 8.25,
+      "survivors": [
+        0,
+        21
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        3155
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 6,
+      "enemy": 6,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 20.31,
+      "survivors": [
+        10,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        3055,
+        0
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 6,
+      "enemy": 6,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 20.31,
+      "survivors": [
+        10,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        3055,
+        0
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 6,
+      "enemy": 6,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 1,
+      "seconds": 43.98,
+      "survivors": [
+        0,
+        8
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2288
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 6,
+      "enemy": 6,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 1,
+      "seconds": 42.27,
+      "survivors": [
+        0,
+        9
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2646
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 7,
+      "enemy": 7,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.8,
+      "survivors": [
+        12,
+        0
+      ],
+      "infiltrators": [
+        12,
+        0
+      ],
+      "remainingValue": [
+        3960,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 7,
+      "enemy": 7,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.8,
+      "survivors": [
+        12,
+        0
+      ],
+      "infiltrators": [
+        12,
+        0
+      ],
+      "remainingValue": [
+        3960,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 7,
+      "enemy": 7,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 12.33,
+      "survivors": [
+        0,
+        14
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2718
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 7,
+      "enemy": 7,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 12.33,
+      "survivors": [
+        0,
+        14
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2718
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 7,
+      "enemy": 7,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 30.75,
+      "survivors": [
+        5,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        1900,
+        0
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 7,
+      "enemy": 7,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 30.75,
+      "survivors": [
+        5,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        1900,
+        0
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 7,
+      "enemy": 7,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 1,
+      "seconds": 41.1,
+      "survivors": [
+        0,
+        9
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2365
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 7,
+      "enemy": 7,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 0,
+      "seconds": 45.57,
+      "survivors": [
+        2,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        720,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 8,
+      "enemy": 8,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.74,
+      "survivors": [
+        13,
+        0
+      ],
+      "infiltrators": [
+        13,
+        0
+      ],
+      "remainingValue": [
+        4290,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 8,
+      "enemy": 8,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.74,
+      "survivors": [
+        13,
+        0
+      ],
+      "infiltrators": [
+        13,
+        0
+      ],
+      "remainingValue": [
+        4290,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 8,
+      "enemy": 8,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 10.38,
+      "survivors": [
+        0,
+        17
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2929
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 8,
+      "enemy": 8,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 10.38,
+      "survivors": [
+        0,
+        17
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2929
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 8,
+      "enemy": 8,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 20.19,
+      "survivors": [
+        11,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        3789,
+        0
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 8,
+      "enemy": 8,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 20.19,
+      "survivors": [
+        11,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        3789,
+        0
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 8,
+      "enemy": 8,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 0,
+      "seconds": 44.28,
+      "survivors": [
+        2,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        720,
+        0
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 8,
+      "enemy": 8,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 0,
+      "seconds": 40.68,
+      "survivors": [
+        4,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        1440,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 9,
+      "enemy": 9,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.74,
+      "survivors": [
+        13,
+        0
+      ],
+      "infiltrators": [
+        13,
+        0
+      ],
+      "remainingValue": [
+        4290,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_sniper",
+      "faction": 9,
+      "enemy": 9,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 7.74,
+      "survivors": [
+        13,
+        0
+      ],
+      "infiltrators": [
+        13,
+        0
+      ],
+      "remainingValue": [
+        4290,
+        0
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 9,
+      "enemy": 9,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 10.38,
+      "survivors": [
+        0,
+        17
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2930
+      ]
+    },
+    {
+      "scenario": "assassin_guarded_sniper",
+      "faction": 9,
+      "enemy": 9,
+      "patterns": [
+        [
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 10.38,
+      "survivors": [
+        0,
+        17
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2930
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 9,
+      "enemy": 9,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 20.19,
+      "survivors": [
+        11,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        3789,
+        0
+      ]
+    },
+    {
+      "scenario": "sniper_armor",
+      "faction": 9,
+      "enemy": 9,
+      "patterns": [
+        [
+          9
+        ],
+        [
+          3
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4560,
+        4560
+      ],
+      "winner": 0,
+      "seconds": 20.19,
+      "survivors": [
+        11,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        3789,
+        0
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 9,
+      "enemy": 9,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 1,
+      "seconds": 41.94,
+      "survivors": [
+        0,
+        8
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2255
+      ]
+    },
+    {
+      "scenario": "legacy_cheese_sniper_defense",
+      "faction": 9,
+      "enemy": 9,
+      "patterns": [
+        [
+          0,
+          0,
+          5,
+          1
+        ],
+        [
+          3,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 17,
+      "wave": 60,
+      "detectors": true,
+      "spent": [
+        4785,
+        4710
+      ],
+      "winner": 0,
+      "seconds": 43.62,
+      "survivors": [
+        2,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        720,
+        0
+      ]
+    },
+    {
+      "scenario": "detector_comparison",
+      "faction": 0,
+      "enemy": 0,
+      "patterns": [
+        [
+          0,
+          1,
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 83,
+      "wave": 20,
+      "detectors": false,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 28.71,
+      "survivors": [
+        0,
+        5
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        1459
+      ]
+    },
+    {
+      "scenario": "detector_comparison",
+      "faction": 3,
+      "enemy": 3,
+      "patterns": [
+        [
+          0,
+          1,
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 83,
+      "wave": 20,
+      "detectors": false,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 0,
+      "seconds": 29.7,
+      "survivors": [
+        3,
+        0
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        289,
+        0
+      ]
+    },
+    {
+      "scenario": "detector_comparison",
+      "faction": 5,
+      "enemy": 5,
+      "patterns": [
+        [
+          0,
+          1,
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 83,
+      "wave": 20,
+      "detectors": false,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 0,
+      "seconds": 12.81,
+      "survivors": [
+        17,
+        0
+      ],
+      "infiltrators": [
+        2,
+        0
+      ],
+      "remainingValue": [
+        1801,
+        0
+      ]
+    },
+    {
+      "scenario": "detector_comparison",
+      "faction": 9,
+      "enemy": 9,
+      "patterns": [
+        [
+          0,
+          1,
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 83,
+      "wave": 20,
+      "detectors": false,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 28.05,
+      "survivors": [
+        0,
+        5
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        1796
+      ]
+    },
+    {
+      "scenario": "detector_comparison",
+      "faction": 0,
+      "enemy": 0,
+      "patterns": [
+        [
+          0,
+          1,
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 83,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 29.22,
+      "survivors": [
+        0,
+        6
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2280
+      ]
+    },
+    {
+      "scenario": "detector_comparison",
+      "faction": 3,
+      "enemy": 3,
+      "patterns": [
+        [
+          0,
+          1,
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 83,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 25.11,
+      "survivors": [
+        0,
+        6
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2246
+      ]
+    },
+    {
+      "scenario": "detector_comparison",
+      "faction": 5,
+      "enemy": 5,
+      "patterns": [
+        [
+          0,
+          1,
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 83,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 31.86,
+      "survivors": [
+        0,
+        5
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        1506
+      ]
+    },
+    {
+      "scenario": "detector_comparison",
+      "faction": 9,
+      "enemy": 9,
+      "patterns": [
+        [
+          0,
+          1,
+          10
+        ],
+        [
+          0,
+          0,
+          7,
+          9
+        ]
+      ],
+      "budget": 4800,
+      "seed": 83,
+      "wave": 20,
+      "detectors": true,
+      "spent": [
+        4620,
+        4730
+      ],
+      "winner": 1,
+      "seconds": 27.69,
+      "survivors": [
+        0,
+        6
+      ],
+      "infiltrators": [
+        0,
+        0
+      ],
+      "remainingValue": [
+        0,
+        2072
+      ]
+    }
+  ]
+}

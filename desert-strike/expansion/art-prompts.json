@@ -1,0 +1,488 @@
+{
+  "version": 1,
+  "generator": "built-in imagegen",
+  "reference": "existing faction sprites, uniform and moe",
+  "assets": [
+    {
+      "id": "base-forge-sniper",
+      "skin": "base",
+      "faction": "forge",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production game sprite animation sheet for Desert Front. Reference image is STYLE ONLY, not an edit target. Subject: Forge Union SNIPER, a fully original steel-armored human marksman with cyan visor, ochre-gold armor, huge unmistakable long scoped precision rail rifle and folded tripod. 1990s isometric RTS detailed pixel sprite, strong silhouette, top-left light, facing RIGHT in every living pose, entire body and weapon visible. TRANSPARENT background. Exactly 4 columns by 2 rows of equal square cells in a square image, 8 poses total, one character in each cell with generous transparent padding, no pose crossing its cell. Reading order: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim crouched with rifle braced, fire with small cyan muzzle flash and recoil, skill targeting with scope glint, death lying fallen. Identical equipment, proportions, scale and palette across poses. Feet baseline consistent per cell. No labels, no borders, no ground tiles, no text, no checkerboard. Sprite subject occupies at most 75 percent of its cell so the very long rifle fits.",
+      "reference": "desert-strike/assets/sprites/uniform-forge-1.webp"
+    },
+    {
+      "id": "base-forge-assassin",
+      "skin": "base",
+      "faction": "forge",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction forge, role assassin, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled forge character as the matching faction reference. Subject design: slender human infiltration specialist in a dark graphite cloak suit with two short cyan energy knives, no gun. Palette: ochre-gold industrial armor, cyan visor, dark steel. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-brood-sniper",
+      "skin": "base",
+      "faction": "brood",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction brood, role sniper, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled brood character as the matching faction reference. Subject design: long-bodied insectoid needle marksman creature with an enormous straight biological precision needle launcher growing from its forearms. Palette: purple chitin, burgundy flesh, bright lime bioenergy. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-brood-assassin",
+      "skin": "base",
+      "faction": "brood",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction brood, role assassin, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled brood character as the matching faction reference. Subject design: very slender mantis-like shadow stalker with two long sickle forearms and a low predatory silhouette. Palette: purple chitin, burgundy flesh, bright lime bioenergy. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-astral-sniper",
+      "skin": "base",
+      "faction": "astral",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction astral, role sniper, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled astral character as the matching faction reference. Subject design: robed crystal sentinel wielding a very long straight prismatic precision staff with a visible lens sight. Palette: gold-white crystal armor, purple cloth, cyan arcane light. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-astral-assassin",
+      "skin": "base",
+      "faction": "astral",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction astral, role assassin, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled astral character as the matching faction reference. Subject design: slender hooded void duelist with two violet-white crescent energy daggers and a flowing short cape. Palette: gold-white crystal armor, purple cloth, cyan arcane light. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-marine-sniper",
+      "skin": "base",
+      "faction": "marine",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction marine, role sniper, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled marine character as the matching faction reference. Subject design: burly adult male commando in a red beret holding an extremely long black scoped anti-materiel rifle. Palette: black military uniform, red beret and red insignia, weathered gunmetal. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-marine-assassin",
+      "skin": "base",
+      "faction": "marine",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction marine, role assassin, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled marine character as the matching faction reference. Subject design: lean adult male night commando with a black beret, face camouflage, light tactical harness, two combat knives, no gun. Palette: black military uniform, red beret and red insignia, weathered gunmetal. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-beastkin-sniper",
+      "skin": "base",
+      "faction": "beastkin",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction beastkin, role sniper, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled beastkin character as the matching faction reference. Subject design: adult lynx-eared beastkin woman with a heavy bronze precision crossbow, hooded snow camouflage cape and long tail. Palette: warm bronze, tan leather, snow-white fur accents. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-beastkin-assassin",
+      "skin": "base",
+      "faction": "beastkin",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction beastkin, role assassin, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled beastkin character as the matching faction reference. Subject design: adult black-panther-eared beastkin woman, light dark leather cloak and two narrow curved daggers. Palette: warm bronze, tan leather, snow-white fur accents. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-elf-sniper",
+      "skin": "base",
+      "faction": "elf",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction elf, role sniper, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled elf character as the matching faction reference. Subject design: adult silver-haired elf woman using a gigantic elegant moon-shaped precision longbow, quiver and leaf cloak. Palette: ivory hair, emerald and gold forest armor, teal magic. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-elf-assassin",
+      "skin": "base",
+      "faction": "elf",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction elf, role assassin, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled elf character as the matching faction reference. Subject design: adult silver-haired elf woman with an emerald hood and two thin silver crescent blades. Palette: ivory hair, emerald and gold forest armor, teal magic. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-furry-sniper",
+      "skin": "base",
+      "faction": "furry",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction furry, role sniper, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled furry character as the matching faction reference. Subject design: adult anthropomorphic red fox marksman, bushy tail, rugged dark leather coat, very long scoped rifle. Palette: rust-red and charcoal fur, dark leather, crimson cloth. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-furry-assassin",
+      "skin": "base",
+      "faction": "furry",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction furry, role assassin, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled furry character as the matching faction reference. Subject design: adult anthropomorphic gray wolf shadow hunter in light charcoal wraps, long tail and two red-edged daggers. Palette: rust-red and charcoal fur, dark leather, crimson cloth. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-robot-sniper",
+      "skin": "base",
+      "faction": "robot",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction robot, role sniper, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled robot character as the matching faction reference. Subject design: thin bipedal precision android with one huge long scoped railgun arm and a small sensor head. Palette: white and graphite steel, cobalt blue panels, electric cyan light. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-robot-assassin",
+      "skin": "base",
+      "faction": "robot",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction robot, role assassin, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled robot character as the matching faction reference. Subject design: extremely slender dark stealth android with white armor slivers and twin cyan wrist blades. Palette: white and graphite steel, cobalt blue panels, electric cyan light. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-octoper-sniper",
+      "skin": "base",
+      "faction": "octoper",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction octoper, role sniper, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled octoper character as the matching faction reference. Subject design: octopus-headed alien precision caster with tentacle legs and a long straight arcane harpoon staff held in its arms. Palette: vivid violet, magenta suckers, black-purple robes, orange luminous eyes. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-octoper-assassin",
+      "skin": "base",
+      "faction": "octoper",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction octoper, role assassin, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled octoper character as the matching faction reference. Subject design: slender hooded octopus shadow lurker with four small arms, two curved daggers and curling tentacle feet. Palette: vivid violet, magenta suckers, black-purple robes, orange luminous eyes. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-fairy-sniper",
+      "skin": "base",
+      "faction": "fairy",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction fairy, role sniper, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled fairy character as the matching faction reference. Subject design: adult flower fairy precision sorceress with an enormously long floral crystal bow-staff, small delicate wings. Palette: pink hair, green leaves, gold flower trim, pale pink translucent wings. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "base-fairy-assassin",
+      "skin": "base",
+      "faction": "fairy",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction fairy, role assassin, skin base. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled fairy character as the matching faction reference. Subject design: adult thorn fairy shadow dancer with a dark rose hood, delicate small wings and two sharp thorn daggers. Palette: pink hair, green leaves, gold flower trim, pale pink translucent wings. Default uniform skin. Match the larger reference examples for this faction, detailed old-school 1990s isometric RTS pixel art; creature factions stay creatures and robot stays machine. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-forge-sniper",
+      "skin": "moe",
+      "faction": "forge",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction forge, role sniper, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled forge character as the matching faction reference. Subject design: armored human railgun marksman with an extremely long scoped rifle and folded bipod. Palette: ochre-gold industrial armor, cyan visor, dark steel. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-forge-assassin",
+      "skin": "moe",
+      "faction": "forge",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction forge, role assassin, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled forge character as the matching faction reference. Subject design: slender human infiltration specialist in a dark graphite cloak suit with two short cyan energy knives, no gun. Palette: ochre-gold industrial armor, cyan visor, dark steel. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-brood-sniper",
+      "skin": "moe",
+      "faction": "brood",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction brood, role sniper, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled brood character as the matching faction reference. Subject design: long-bodied insectoid needle marksman creature with an enormous straight biological precision needle launcher growing from its forearms. Palette: purple chitin, burgundy flesh, bright lime bioenergy. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-brood-assassin",
+      "skin": "moe",
+      "faction": "brood",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction brood, role assassin, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled brood character as the matching faction reference. Subject design: very slender mantis-like shadow stalker with two long sickle forearms and a low predatory silhouette. Palette: purple chitin, burgundy flesh, bright lime bioenergy. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-astral-sniper",
+      "skin": "moe",
+      "faction": "astral",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction astral, role sniper, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled astral character as the matching faction reference. Subject design: robed crystal sentinel wielding a very long straight prismatic precision staff with a visible lens sight. Palette: gold-white crystal armor, purple cloth, cyan arcane light. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-astral-assassin",
+      "skin": "moe",
+      "faction": "astral",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction astral, role assassin, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled astral character as the matching faction reference. Subject design: slender hooded void duelist with two violet-white crescent energy daggers and a flowing short cape. Palette: gold-white crystal armor, purple cloth, cyan arcane light. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-marine-sniper",
+      "skin": "moe",
+      "faction": "marine",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction marine, role sniper, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled marine character as the matching faction reference. Subject design: burly adult male commando in a red beret holding an extremely long black scoped anti-materiel rifle. Palette: black military uniform, red beret and red insignia, weathered gunmetal. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-marine-assassin",
+      "skin": "moe",
+      "faction": "marine",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction marine, role assassin, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled marine character as the matching faction reference. Subject design: lean adult male night commando with a black beret, face camouflage, light tactical harness, two combat knives, no gun. Palette: black military uniform, red beret and red insignia, weathered gunmetal. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-beastkin-sniper",
+      "skin": "moe",
+      "faction": "beastkin",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction beastkin, role sniper, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled beastkin character as the matching faction reference. Subject design: adult lynx-eared beastkin woman with a heavy bronze precision crossbow, hooded snow camouflage cape and long tail. Palette: warm bronze, tan leather, snow-white fur accents. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-beastkin-assassin",
+      "skin": "moe",
+      "faction": "beastkin",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction beastkin, role assassin, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled beastkin character as the matching faction reference. Subject design: adult black-panther-eared beastkin woman, light dark leather cloak and two narrow curved daggers. Palette: warm bronze, tan leather, snow-white fur accents. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-elf-sniper",
+      "skin": "moe",
+      "faction": "elf",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction elf, role sniper, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled elf character as the matching faction reference. Subject design: adult silver-haired elf woman using a gigantic elegant moon-shaped precision longbow, quiver and leaf cloak. Palette: ivory hair, emerald and gold forest armor, teal magic. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-elf-assassin",
+      "skin": "moe",
+      "faction": "elf",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction elf, role assassin, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled elf character as the matching faction reference. Subject design: adult silver-haired elf woman with an emerald hood and two thin silver crescent blades. Palette: ivory hair, emerald and gold forest armor, teal magic. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-furry-sniper",
+      "skin": "moe",
+      "faction": "furry",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction furry, role sniper, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled furry character as the matching faction reference. Subject design: adult anthropomorphic red fox marksman, bushy tail, rugged dark leather coat, very long scoped rifle. Palette: rust-red and charcoal fur, dark leather, crimson cloth. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-furry-assassin",
+      "skin": "moe",
+      "faction": "furry",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction furry, role assassin, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled furry character as the matching faction reference. Subject design: adult anthropomorphic gray wolf shadow hunter in light charcoal wraps, long tail and two red-edged daggers. Palette: rust-red and charcoal fur, dark leather, crimson cloth. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-robot-sniper",
+      "skin": "moe",
+      "faction": "robot",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction robot, role sniper, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled robot character as the matching faction reference. Subject design: thin bipedal precision android with one huge long scoped railgun arm and a small sensor head. Palette: white and graphite steel, cobalt blue panels, electric cyan light. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-robot-assassin",
+      "skin": "moe",
+      "faction": "robot",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction robot, role assassin, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled robot character as the matching faction reference. Subject design: extremely slender dark stealth android with white armor slivers and twin cyan wrist blades. Palette: white and graphite steel, cobalt blue panels, electric cyan light. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-octoper-sniper",
+      "skin": "moe",
+      "faction": "octoper",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction octoper, role sniper, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled octoper character as the matching faction reference. Subject design: octopus-headed alien precision caster with tentacle legs and a long straight arcane harpoon staff held in its arms. Palette: vivid violet, magenta suckers, black-purple robes, orange luminous eyes. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-octoper-assassin",
+      "skin": "moe",
+      "faction": "octoper",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction octoper, role assassin, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled octoper character as the matching faction reference. Subject design: slender hooded octopus shadow lurker with four small arms, two curved daggers and curling tentacle feet. Palette: vivid violet, magenta suckers, black-purple robes, orange luminous eyes. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-fairy-sniper",
+      "skin": "moe",
+      "faction": "fairy",
+      "role": "sniper",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction fairy, role sniper, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled fairy character as the matching faction reference. Subject design: adult flower fairy precision sorceress with an enormously long floral crystal bow-staff, small delicate wings. Palette: pink hair, green leaves, gold flower trim, pale pink translucent wings. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B subtle breathing, walk left leg forward, walk right leg forward, aim braced/crouched with weapon raised, fire with restrained muzzle flash or released projectile and recoil, skill precise targeting glint, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    },
+    {
+      "id": "moe-fairy-assassin",
+      "skin": "moe",
+      "faction": "fairy",
+      "role": "assassin",
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "poses": 8
+      },
+      "prompt": "Create ONE production sprite animation sheet for Desert Front, faction fairy, role assassin, skin moe. Reference image is STYLE and FACTION PALETTE reference only, not an edit target. Use its labeled fairy character as the matching faction reference. Subject design: adult thorn fairy shadow dancer with a dark rose hood, delicate small wings and two sharp thorn daggers. Palette: pink hair, green leaves, gold flower trim, pale pink translucent wings. Alternate MOE skin: clearly adult female character redesigned as an expressive high-detail anime chibi tactical sprite, silver/pink/colored hair appropriate to this faction, modest fully clothed military/fantasy outfit. Even insect/robot/octopus factions become original adult female humanoid personifications with their antennae/chitin/robot ears/tentacle accessories. Match the small female reference examples. Entire figure faces RIGHT, 3/4 side isometric view, same character identity and equipment in all eight poses. Exactly 4 columns by 2 rows of equal square cells in a square image, one complete character per cell. Reading order of 8 poses: idle A, idle B breathing, sneaking walk left leg forward, sneaking walk right leg forward, blade attack windup, blade slash impact with SMALL energy arc, infiltration skill lunging low with a short violet afterimage, death lying fallen. All poses rendered OPAQUE: stealth transparency will be applied by the game. TRUE TRANSPARENT BACKGROUND, no checkerboard, no labels, no borders, no ground tile, no scene, no text. Fixed subject scale across all cells. Keep all body, weapon and effects inside each cell with at least 12 percent empty padding; never overlap a neighboring cell. The sniper's weapon must read unmistakably as a long precision weapon; the assassin must have an agile lightly armored, fragile silhouette. All art must be original."
+    }
+  ]
+}

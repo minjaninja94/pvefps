@@ -1,0 +1,2289 @@
+{
+  "baseline": "1f9a59dbeb217947e33abeb74e0451d64f32d89d",
+  "factions": [
+    "forge",
+    "brood",
+    "astral",
+    "marine",
+    "beastkin",
+    "elf",
+    "furry",
+    "robot",
+    "octoper",
+    "fairy"
+  ],
+  "definitions": [
+    [
+      {
+        "key": "charge",
+        "name": "돌격",
+        "mark": "⚔",
+        "token": "⚔",
+        "cost": 65,
+        "hp": 272.98125,
+        "damage": 19.74,
+        "armor": 1,
+        "range": 29,
+        "rate": 0.77,
+        "speed": 66.1248,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 돌격. 적 사격병과 포격병에게 빠르게 접근합니다. 장갑병에는 약합니다.",
+        "good": [
+          5,
+          7
+        ],
+        "bad": [
+          3,
+          1
+        ],
+        "unitName": "진격 보병",
+        "factionName": "철갑연합",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "rifle",
+        "name": "사격",
+        "mark": "⌖",
+        "token": "⌖",
+        "cost": 100,
+        "hp": 256.365,
+        "damage": 15.979999999999999,
+        "armor": 1,
+        "range": 164,
+        "rate": 0.8,
+        "speed": 48.38399999999999,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "원거리 사격. 뒤에서 공격하고 비행 유닛도 공격합니다.",
+        "good": [
+          0,
+          7
+        ],
+        "bad": [
+          3,
+          5
+        ],
+        "unitName": "기관총병",
+        "factionName": "철갑연합",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "breaker",
+        "name": "대장갑",
+        "mark": "◆",
+        "token": "◆",
+        "cost": 185,
+        "hp": 223.13249999999996,
+        "damage": 44.18,
+        "armor": 0,
+        "range": 208,
+        "rate": 1.76,
+        "speed": 39.5136,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대장갑 무기. 전차와 중장갑을 파괴합니다. 근접병에게 약합니다.",
+        "good": [
+          3,
+          4
+        ],
+        "bad": [
+          0,
+          1
+        ],
+        "unitName": "관통 로켓",
+        "factionName": "철갑연합",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "armor",
+        "name": "장갑",
+        "mark": "▣",
+        "token": "▣",
+        "cost": 285,
+        "hp": 925.7624999999999,
+        "damage": 30.08,
+        "armor": 9,
+        "range": 120,
+        "rate": 1.27,
+        "speed": 28.224,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 중장갑. 앞에서 피해를 받아 아군을 보호합니다. 대장갑에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          2,
+          6
+        ],
+        "unitName": "철갑 전차",
+        "factionName": "철갑연합",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "antiair",
+        "name": "대공",
+        "mark": "✣",
+        "token": "✣",
+        "cost": 185,
+        "hp": 415.40625,
+        "damage": 15.04,
+        "armor": 3,
+        "range": 228,
+        "rate": 0.57,
+        "speed": 37.9008,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대공 사격. 비행 유닛을 우선 공격합니다.",
+        "good": [
+          6
+        ],
+        "bad": [
+          3,
+          2
+        ],
+        "unitName": "복합 대공포",
+        "factionName": "철갑연합",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "siege",
+        "name": "포격",
+        "mark": "✹",
+        "token": "✹",
+        "cost": 360,
+        "hp": 270.6075,
+        "damage": 64.86,
+        "armor": 0,
+        "range": 317,
+        "rate": 2.55,
+        "speed": 24.191999999999997,
+        "airTarget": false,
+        "kind": "ground",
+        "blast": 58,
+        "tips": "장거리 광역 포격. 뭉친 지상 적에 강하지만 근접전에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          0,
+          6
+        ],
+        "unitName": "궤도 자주포",
+        "factionName": "철갑연합",
+        "heal": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "flyer",
+        "name": "비행",
+        "mark": "◇",
+        "token": "◇",
+        "cost": 300,
+        "hp": 379.79999999999995,
+        "damage": 22.56,
+        "armor": 1,
+        "range": 149,
+        "rate": 0.86,
+        "speed": 74.18879999999999,
+        "airTarget": true,
+        "kind": "air",
+        "tips": "비행 유닛. 적 근접 공격을 피하지만 대공 무기에 약합니다.",
+        "good": [
+          0,
+          3
+        ],
+        "bad": [
+          4,
+          1
+        ],
+        "unitName": "추적 비행기",
+        "factionName": "철갑연합",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "air"
+      },
+      {
+        "key": "support",
+        "name": "지원",
+        "mark": "✚",
+        "token": "✚",
+        "cost": 220,
+        "hp": 322.83,
+        "damage": 0,
+        "heal": 54,
+        "armor": 1,
+        "range": 139,
+        "rate": 1.24,
+        "speed": 49.1904,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지원병. 공격하지 않고 아군을 치료합니다. 공격 상성은 없으며 적 돌격·사격병에 약합니다.",
+        "good": [],
+        "bad": [],
+        "unitName": "전장 구호병",
+        "factionName": "철갑연합",
+        "blast": 0,
+        "unitType": "ground"
+      }
+    ],
+    [
+      {
+        "key": "charge",
+        "name": "돌격",
+        "mark": "⚔",
+        "token": "⚔",
+        "cost": 65,
+        "hp": 257.45625,
+        "damage": 19.74,
+        "armor": 1,
+        "range": 29,
+        "rate": 0.77,
+        "speed": 77.1456,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 돌격. 적 사격병과 포격병에게 빠르게 접근합니다. 장갑병에는 약합니다.",
+        "good": [
+          5,
+          7
+        ],
+        "bad": [
+          3,
+          1
+        ],
+        "unitName": "송곳 발톱",
+        "factionName": "심연군체",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "rifle",
+        "name": "사격",
+        "mark": "⌖",
+        "token": "⌖",
+        "cost": 100,
+        "hp": 241.785,
+        "damage": 15.979999999999999,
+        "armor": 1,
+        "range": 164,
+        "rate": 0.8,
+        "speed": 56.448,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "원거리 사격. 뒤에서 공격하고 비행 유닛도 공격합니다.",
+        "good": [
+          0,
+          7
+        ],
+        "bad": [
+          3,
+          5
+        ],
+        "unitName": "산성 침벌",
+        "factionName": "심연군체",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "breaker",
+        "name": "대장갑",
+        "mark": "◆",
+        "token": "◆",
+        "cost": 185,
+        "hp": 210.4425,
+        "damage": 44.18,
+        "armor": 0,
+        "range": 208,
+        "rate": 1.76,
+        "speed": 46.0992,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대장갑 무기. 전차와 중장갑을 파괴합니다. 근접병에게 약합니다.",
+        "good": [
+          3,
+          4
+        ],
+        "bad": [
+          0,
+          1
+        ],
+        "unitName": "부식 포자충",
+        "factionName": "심연군체",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "armor",
+        "name": "장갑",
+        "mark": "▣",
+        "token": "▣",
+        "cost": 285,
+        "hp": 873.1125000000001,
+        "damage": 30.08,
+        "armor": 9,
+        "range": 120,
+        "rate": 1.27,
+        "speed": 32.928000000000004,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 중장갑. 앞에서 피해를 받아 아군을 보호합니다. 대장갑에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          2,
+          6
+        ],
+        "unitName": "거대 갑각수",
+        "factionName": "심연군체",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "antiair",
+        "name": "대공",
+        "mark": "✣",
+        "token": "✣",
+        "cost": 185,
+        "hp": 391.78125,
+        "damage": 15.04,
+        "armor": 3,
+        "range": 228,
+        "rate": 0.57,
+        "speed": 44.217600000000004,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대공 사격. 비행 유닛을 우선 공격합니다.",
+        "good": [
+          6
+        ],
+        "bad": [
+          3,
+          2
+        ],
+        "unitName": "가시 포자탑",
+        "factionName": "심연군체",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "siege",
+        "name": "포격",
+        "mark": "✹",
+        "token": "✹",
+        "cost": 360,
+        "hp": 255.21749999999997,
+        "damage": 64.86,
+        "armor": 0,
+        "range": 317,
+        "rate": 2.55,
+        "speed": 28.224,
+        "airTarget": false,
+        "kind": "ground",
+        "blast": 58,
+        "tips": "장거리 광역 포격. 뭉친 지상 적에 강하지만 근접전에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          0,
+          6
+        ],
+        "unitName": "폭식 투석충",
+        "factionName": "심연군체",
+        "heal": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "flyer",
+        "name": "비행",
+        "mark": "◇",
+        "token": "◇",
+        "cost": 300,
+        "hp": 358.2,
+        "damage": 22.56,
+        "armor": 1,
+        "range": 149,
+        "rate": 0.86,
+        "speed": 86.5536,
+        "airTarget": true,
+        "kind": "air",
+        "tips": "비행 유닛. 적 근접 공격을 피하지만 대공 무기에 약합니다.",
+        "good": [
+          0,
+          3
+        ],
+        "bad": [
+          4,
+          1
+        ],
+        "unitName": "비행 포식자",
+        "factionName": "심연군체",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "air"
+      },
+      {
+        "key": "support",
+        "name": "지원",
+        "mark": "✚",
+        "token": "✚",
+        "cost": 220,
+        "hp": 304.46999999999997,
+        "damage": 0,
+        "heal": 54,
+        "armor": 1,
+        "range": 139,
+        "rate": 1.24,
+        "speed": 57.3888,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지원병. 공격하지 않고 아군을 치료합니다. 공격 상성은 없으며 적 돌격·사격병에 약합니다.",
+        "good": [],
+        "bad": [],
+        "unitName": "치유 공생충",
+        "factionName": "심연군체",
+        "blast": 0,
+        "unitType": "ground"
+      }
+    ],
+    [
+      {
+        "key": "charge",
+        "name": "돌격",
+        "mark": "⚔",
+        "token": "⚔",
+        "cost": 65,
+        "hp": 256.16249999999997,
+        "damage": 21.5166,
+        "armor": 1,
+        "range": 29,
+        "rate": 0.77,
+        "speed": 68.88,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 돌격. 적 사격병과 포격병에게 빠르게 접근합니다. 장갑병에는 약합니다.",
+        "good": [
+          5,
+          7
+        ],
+        "bad": [
+          3,
+          1
+        ],
+        "unitName": "수호 창병",
+        "factionName": "성운결사",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "rifle",
+        "name": "사격",
+        "mark": "⌖",
+        "token": "⌖",
+        "cost": 100,
+        "hp": 240.57,
+        "damage": 17.4182,
+        "armor": 1,
+        "range": 164,
+        "rate": 0.8,
+        "speed": 50.4,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "원거리 사격. 뒤에서 공격하고 비행 유닛도 공격합니다.",
+        "good": [
+          0,
+          7
+        ],
+        "bad": [
+          3,
+          5
+        ],
+        "unitName": "광자 사수",
+        "factionName": "성운결사",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "breaker",
+        "name": "대장갑",
+        "mark": "◆",
+        "token": "◆",
+        "cost": 185,
+        "hp": 209.385,
+        "damage": 48.1562,
+        "armor": 0,
+        "range": 208,
+        "rate": 1.76,
+        "speed": 41.16,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대장갑 무기. 전차와 중장갑을 파괴합니다. 근접병에게 약합니다.",
+        "good": [
+          3,
+          4
+        ],
+        "bad": [
+          0,
+          1
+        ],
+        "unitName": "균열 파괴자",
+        "factionName": "성운결사",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "armor",
+        "name": "장갑",
+        "mark": "▣",
+        "token": "▣",
+        "cost": 285,
+        "hp": 868.725,
+        "damage": 32.7872,
+        "armor": 9,
+        "range": 120,
+        "rate": 1.27,
+        "speed": 29.4,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 중장갑. 앞에서 피해를 받아 아군을 보호합니다. 대장갑에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          2,
+          6
+        ],
+        "unitName": "수정 방패병",
+        "factionName": "성운결사",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "antiair",
+        "name": "대공",
+        "mark": "✣",
+        "token": "✣",
+        "cost": 185,
+        "hp": 389.8125,
+        "damage": 16.3936,
+        "armor": 3,
+        "range": 228,
+        "rate": 0.57,
+        "speed": 39.48,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대공 사격. 비행 유닛을 우선 공격합니다.",
+        "good": [
+          6
+        ],
+        "bad": [
+          3,
+          2
+        ],
+        "unitName": "영점 수호기",
+        "factionName": "성운결사",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "siege",
+        "name": "포격",
+        "mark": "✹",
+        "token": "✹",
+        "cost": 360,
+        "hp": 253.935,
+        "damage": 70.6974,
+        "armor": 0,
+        "range": 317,
+        "rate": 2.55,
+        "speed": 25.2,
+        "airTarget": false,
+        "kind": "ground",
+        "blast": 58,
+        "tips": "장거리 광역 포격. 뭉친 지상 적에 강하지만 근접전에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          0,
+          6
+        ],
+        "unitName": "공명 투창대",
+        "factionName": "성운결사",
+        "heal": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "flyer",
+        "name": "비행",
+        "mark": "◇",
+        "token": "◇",
+        "cost": 300,
+        "hp": 356.40000000000003,
+        "damage": 24.590400000000002,
+        "armor": 1,
+        "range": 149,
+        "rate": 0.86,
+        "speed": 77.28,
+        "airTarget": true,
+        "kind": "air",
+        "tips": "비행 유닛. 적 근접 공격을 피하지만 대공 무기에 약합니다.",
+        "good": [
+          0,
+          3
+        ],
+        "bad": [
+          4,
+          1
+        ],
+        "unitName": "섬광 비행체",
+        "factionName": "성운결사",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "air"
+      },
+      {
+        "key": "support",
+        "name": "지원",
+        "mark": "✚",
+        "token": "✚",
+        "cost": 220,
+        "hp": 302.93999999999994,
+        "damage": 0,
+        "heal": 58.86,
+        "armor": 1,
+        "range": 139,
+        "rate": 1.24,
+        "speed": 51.239999999999995,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지원병. 공격하지 않고 아군을 치료합니다. 공격 상성은 없으며 적 돌격·사격병에 약합니다.",
+        "good": [],
+        "bad": [],
+        "unitName": "생명 융합사",
+        "factionName": "성운결사",
+        "blast": 0,
+        "unitType": "ground"
+      }
+    ],
+    [
+      {
+        "key": "charge",
+        "name": "돌격",
+        "mark": "⚔",
+        "token": "⚔",
+        "cost": 65,
+        "hp": 282.0375,
+        "damage": 20.9244,
+        "armor": 1,
+        "range": 29,
+        "rate": 0.77,
+        "speed": 69.56880000000001,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 돌격. 적 사격병과 포격병에게 빠르게 접근합니다. 장갑병에는 약합니다.",
+        "good": [
+          5,
+          7
+        ],
+        "bad": [
+          3,
+          1
+        ],
+        "unitName": "무모칠 · 오도돌격",
+        "factionName": "해병성채",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "rifle",
+        "name": "사격",
+        "mark": "⌖",
+        "token": "⌖",
+        "cost": 100,
+        "hp": 264.87,
+        "damage": 16.938799999999997,
+        "armor": 1,
+        "range": 164,
+        "rate": 0.8,
+        "speed": 50.903999999999996,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "원거리 사격. 뒤에서 공격하고 비행 유닛도 공격합니다.",
+        "good": [
+          0,
+          7
+        ],
+        "bad": [
+          3,
+          5
+        ],
+        "unitName": "박철곤 · 중기관총",
+        "factionName": "해병성채",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "breaker",
+        "name": "대장갑",
+        "mark": "◆",
+        "token": "◆",
+        "cost": 185,
+        "hp": 230.53500000000003,
+        "damage": 46.830799999999996,
+        "armor": 0,
+        "range": 208,
+        "rate": 1.76,
+        "speed": 41.571600000000004,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대장갑 무기. 전차와 중장갑을 파괴합니다. 근접병에게 약합니다.",
+        "good": [
+          3,
+          4
+        ],
+        "bad": [
+          0,
+          1
+        ],
+        "unitName": "조조팔 · 대장갑포",
+        "factionName": "해병성채",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "armor",
+        "name": "장갑",
+        "mark": "▣",
+        "token": "▣",
+        "cost": 285,
+        "hp": 956.475,
+        "damage": 31.8848,
+        "armor": 9,
+        "range": 120,
+        "rate": 1.27,
+        "speed": 29.694,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "황근출. 지상 중장갑 도끼 전사로 전열을 지킵니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          2,
+          6
+        ],
+        "unitName": "황근출 · 배틀액스",
+        "factionName": "해병성채",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "antiair",
+        "name": "대공",
+        "mark": "✣",
+        "token": "✣",
+        "cost": 185,
+        "hp": 429.1875,
+        "damage": 15.9424,
+        "armor": 3,
+        "range": 228,
+        "rate": 0.57,
+        "speed": 39.8748,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대공 사격. 비행 유닛을 우선 공격합니다.",
+        "good": [
+          6
+        ],
+        "bad": [
+          3,
+          2
+        ],
+        "unitName": "톤톤정 · 대공 난사",
+        "factionName": "해병성채",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "siege",
+        "name": "포격",
+        "mark": "✹",
+        "token": "✹",
+        "cost": 360,
+        "hp": 279.58500000000004,
+        "damage": 68.7516,
+        "armor": 0,
+        "range": 317,
+        "rate": 2.55,
+        "speed": 25.451999999999998,
+        "airTarget": false,
+        "kind": "ground",
+        "blast": 58,
+        "tips": "장거리 광역 포격. 뭉친 지상 적에 강하지만 근접전에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          0,
+          6
+        ],
+        "unitName": "마철두 · 포격특공",
+        "factionName": "해병성채",
+        "heal": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "flyer",
+        "name": "돌격 차량",
+        "mark": "▰",
+        "token": "◇",
+        "cost": 300,
+        "hp": 565,
+        "damage": 36,
+        "armor": 7,
+        "range": 43,
+        "rate": 1.45,
+        "speed": 77,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "오도봉고. 지상 돌격 차량. 최대 3명의 지상 적을 충돌 공격하며 대장갑에 약합니다.",
+        "good": [
+          0,
+          7
+        ],
+        "bad": [
+          2,
+          3
+        ],
+        "unitName": "오도봉고 · 전우애 돌격",
+        "factionName": "해병성채",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground-special"
+      },
+      {
+        "key": "support",
+        "name": "지원",
+        "mark": "✚",
+        "token": "✚",
+        "cost": 220,
+        "hp": 333.54,
+        "damage": 0,
+        "heal": 57.24000000000001,
+        "armor": 1,
+        "range": 139,
+        "rate": 1.24,
+        "speed": 51.752399999999994,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "황룡. 매 웨이브 0·4·8초에 출격해 주변 아군을 한 번 크게 치료합니다.",
+        "good": [],
+        "bad": [],
+        "unitName": "황룡 · 해병수육",
+        "factionName": "해병성채",
+        "blast": 0,
+        "unitType": "ground"
+      }
+    ],
+    [
+      {
+        "key": "charge",
+        "name": "돌격",
+        "mark": "⚔",
+        "token": "⚔",
+        "cost": 65,
+        "hp": 258.75,
+        "damage": 21.3192,
+        "armor": 1,
+        "range": 29,
+        "rate": 0.77,
+        "speed": 78.10992,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 돌격. 적 사격병과 포격병에게 빠르게 접근합니다. 장갑병에는 약합니다.",
+        "good": [
+          5,
+          7
+        ],
+        "bad": [
+          3,
+          1
+        ],
+        "unitName": "백랑 검사",
+        "factionName": "월영 수인족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "rifle",
+        "name": "사격",
+        "mark": "⌖",
+        "token": "⌖",
+        "cost": 100,
+        "hp": 243,
+        "damage": 15.021199999999999,
+        "armor": 1,
+        "range": 164,
+        "rate": 0.8,
+        "speed": 54.43200000000001,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "원거리 사격. 뒤에서 공격하고 비행 유닛도 공격합니다.",
+        "good": [
+          0,
+          7
+        ],
+        "bad": [
+          3,
+          5
+        ],
+        "unitName": "여우족 단검투척수",
+        "factionName": "월영 수인족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "breaker",
+        "name": "대장갑",
+        "mark": "◆",
+        "token": "◆",
+        "cost": 185,
+        "hp": 211.5,
+        "damage": 49.48160000000001,
+        "armor": 0,
+        "range": 208,
+        "rate": 1.76,
+        "speed": 44.452799999999996,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대장갑 무기. 전차와 중장갑을 파괴합니다. 근접병에게 약합니다.",
+        "good": [
+          3,
+          4
+        ],
+        "bad": [
+          0,
+          1
+        ],
+        "unitName": "스라소니 창투사",
+        "factionName": "월영 수인족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "armor",
+        "name": "장갑",
+        "mark": "▣",
+        "token": "▣",
+        "cost": 285,
+        "hp": 921.375,
+        "damage": 32.4864,
+        "armor": 9,
+        "range": 120,
+        "rate": 1.27,
+        "speed": 33.339600000000004,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 중장갑. 앞에서 피해를 받아 아군을 보호합니다. 대장갑에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          2,
+          6
+        ],
+        "unitName": "맹호 방패기사",
+        "factionName": "월영 수인족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "antiair",
+        "name": "대공",
+        "mark": "✣",
+        "token": "✣",
+        "cost": 185,
+        "hp": 393.75,
+        "damage": 14.137599999999999,
+        "armor": 3,
+        "range": 228,
+        "rate": 0.57,
+        "speed": 42.638400000000004,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대공 사격. 비행 유닛을 우선 공격합니다.",
+        "good": [
+          6
+        ],
+        "bad": [
+          3,
+          2
+        ],
+        "unitName": "매의눈 사냥꾼",
+        "factionName": "월영 수인족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "siege",
+        "name": "포격",
+        "mark": "✹",
+        "token": "✹",
+        "cost": 360,
+        "hp": 256.5,
+        "damage": 60.968399999999995,
+        "armor": 0,
+        "range": 317,
+        "rate": 2.55,
+        "speed": 27.216000000000005,
+        "airTarget": false,
+        "kind": "ground",
+        "blast": 58,
+        "tips": "장거리 광역 포격. 뭉친 지상 적에 강하지만 근접전에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          0,
+          6
+        ],
+        "unitName": "설표 돌도끼병",
+        "factionName": "월영 수인족",
+        "heal": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "flyer",
+        "name": "돌격 기병",
+        "mark": "♞",
+        "token": "◇",
+        "cost": 285,
+        "hp": 360,
+        "damage": 33,
+        "armor": 3,
+        "range": 40,
+        "rate": 0.95,
+        "speed": 90,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "흑표 돌격기수. 285 CR 지상 기병. 포격·지원병을 추격하고 적 최대 3명을 공격하며 대장갑·장갑병에 약합니다.",
+        "good": [
+          0,
+          5,
+          7
+        ],
+        "bad": [
+          2,
+          3
+        ],
+        "unitName": "흑표 돌격기수",
+        "factionName": "월영 수인족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground-special"
+      },
+      {
+        "key": "support",
+        "name": "지원",
+        "mark": "✚",
+        "token": "✚",
+        "cost": 220,
+        "hp": 306,
+        "damage": 0,
+        "heal": 54,
+        "armor": 1,
+        "range": 139,
+        "rate": 1.24,
+        "speed": 55.339200000000005,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지원병. 공격하지 않고 아군을 치료합니다. 공격 상성은 없으며 적 돌격·사격병에 약합니다.",
+        "good": [],
+        "bad": [],
+        "unitName": "토끼족 치유사",
+        "factionName": "월영 수인족",
+        "blast": 0,
+        "unitType": "ground"
+      }
+    ],
+    [
+      {
+        "key": "charge",
+        "name": "돌격",
+        "mark": "⚔",
+        "token": "⚔",
+        "cost": 65,
+        "hp": 214.03799999999998,
+        "damage": 16.581599999999998,
+        "armor": 1,
+        "range": 29,
+        "rate": 0.77,
+        "speed": 68.1912,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 돌격. 적 사격병과 포격병에게 빠르게 접근합니다. 장갑병에는 약합니다.",
+        "good": [
+          5,
+          7
+        ],
+        "bad": [
+          3,
+          1
+        ],
+        "unitName": "달빛 검호",
+        "factionName": "은월 엘프족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "rifle",
+        "name": "사격",
+        "mark": "⌖",
+        "token": "⌖",
+        "cost": 100,
+        "hp": 228.42,
+        "damage": 16.699099999999998,
+        "armor": 1,
+        "range": 180.4,
+        "rate": 0.8,
+        "speed": 49.895999999999994,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "원거리 사격. 뒤에서 공격하고 비행 유닛도 공격합니다.",
+        "good": [
+          0,
+          7
+        ],
+        "bad": [
+          3,
+          5
+        ],
+        "unitName": "실바람 궁수",
+        "factionName": "은월 엘프족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "breaker",
+        "name": "대장갑",
+        "mark": "◆",
+        "token": "◆",
+        "cost": 185,
+        "hp": 198.81,
+        "damage": 46.168099999999995,
+        "armor": 0,
+        "range": 228.8,
+        "rate": 1.76,
+        "speed": 40.7484,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대장갑 무기. 전차와 중장갑을 파괴합니다. 근접병에게 약합니다.",
+        "good": [
+          3,
+          4
+        ],
+        "bad": [
+          0,
+          1
+        ],
+        "unitName": "별무리 관통궁",
+        "factionName": "은월 엘프족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "armor",
+        "name": "장갑",
+        "mark": "▣",
+        "token": "▣",
+        "cost": 285,
+        "hp": 824.8499999999999,
+        "damage": 30.08,
+        "armor": 9,
+        "range": 120,
+        "rate": 1.27,
+        "speed": 29.105999999999998,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 중장갑. 앞에서 피해를 받아 아군을 보호합니다. 대장갑에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          2,
+          6
+        ],
+        "unitName": "고목 수호기사",
+        "factionName": "은월 엘프족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "antiair",
+        "name": "대공",
+        "mark": "✣",
+        "token": "✣",
+        "cost": 185,
+        "hp": 370.125,
+        "damage": 15.716799999999997,
+        "armor": 3,
+        "range": 250.8,
+        "rate": 0.57,
+        "speed": 39.0852,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대공 사격. 비행 유닛을 우선 공격합니다.",
+        "good": [
+          6
+        ],
+        "bad": [
+          3,
+          2
+        ],
+        "unitName": "별빛 대공궁",
+        "factionName": "은월 엘프족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "siege",
+        "name": "포격",
+        "mark": "✹",
+        "token": "✹",
+        "cost": 360,
+        "hp": 241.10999999999999,
+        "damage": 67.7787,
+        "armor": 0,
+        "range": 348.70000000000005,
+        "rate": 2.55,
+        "speed": 24.947999999999997,
+        "airTarget": false,
+        "kind": "ground",
+        "blast": 58,
+        "tips": "장거리 광역 포격. 뭉친 지상 적에 강하지만 근접전에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          0,
+          6
+        ],
+        "unitName": "숲의 대마법사",
+        "factionName": "은월 엘프족",
+        "heal": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "flyer",
+        "name": "비행",
+        "mark": "◇",
+        "token": "◇",
+        "cost": 300,
+        "hp": 338.4,
+        "damage": 23.5752,
+        "armor": 1,
+        "range": 163.9,
+        "rate": 0.86,
+        "speed": 76.5072,
+        "airTarget": true,
+        "kind": "air",
+        "tips": "비행 유닛. 적 근접 공격을 피하지만 대공 무기에 약합니다.",
+        "good": [
+          0,
+          3
+        ],
+        "bad": [
+          4,
+          1
+        ],
+        "unitName": "초승달 비행마녀",
+        "factionName": "은월 엘프족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "air"
+      },
+      {
+        "key": "support",
+        "name": "지원",
+        "mark": "✚",
+        "token": "✚",
+        "cost": 220,
+        "hp": 287.64,
+        "damage": 0,
+        "heal": 54,
+        "armor": 1,
+        "range": 139,
+        "rate": 1.24,
+        "speed": 50.727599999999995,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지원병. 공격하지 않고 아군을 치료합니다. 공격 상성은 없으며 적 돌격·사격병에 약합니다.",
+        "good": [],
+        "bad": [],
+        "unitName": "샘물 치유사",
+        "factionName": "은월 엘프족",
+        "blast": 0,
+        "unitType": "ground"
+      }
+    ],
+    [
+      {
+        "key": "charge",
+        "name": "돌격",
+        "mark": "⚔",
+        "token": "⚔",
+        "cost": 65,
+        "hp": 263.925,
+        "damage": 21.714,
+        "armor": 1,
+        "range": 29,
+        "rate": 0.77,
+        "speed": 77.38668,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 돌격. 적 사격병과 포격병에게 빠르게 접근합니다. 장갑병에는 약합니다.",
+        "good": [
+          5,
+          7
+        ],
+        "bad": [
+          3,
+          1
+        ],
+        "unitName": "늑대 추적자",
+        "factionName": "야월 퍼리족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "rifle",
+        "name": "사격",
+        "mark": "⌖",
+        "token": "⌖",
+        "cost": 100,
+        "hp": 247.85999999999999,
+        "damage": 14.8614,
+        "armor": 1,
+        "range": 164,
+        "rate": 0.8,
+        "speed": 53.928,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "원거리 사격. 뒤에서 공격하고 비행 유닛도 공격합니다.",
+        "good": [
+          0,
+          7
+        ],
+        "bad": [
+          3,
+          5
+        ],
+        "unitName": "여우총 사냥꾼",
+        "factionName": "야월 퍼리족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "breaker",
+        "name": "대장갑",
+        "mark": "◆",
+        "token": "◆",
+        "cost": 185,
+        "hp": 215.73,
+        "damage": 49.48160000000001,
+        "armor": 0,
+        "range": 208,
+        "rate": 1.76,
+        "speed": 44.041199999999996,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대장갑 무기. 전차와 중장갑을 파괴합니다. 근접병에게 약합니다.",
+        "good": [
+          3,
+          4
+        ],
+        "bad": [
+          0,
+          1
+        ],
+        "unitName": "송곳니 분쇄자",
+        "factionName": "야월 퍼리족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "armor",
+        "name": "장갑",
+        "mark": "▣",
+        "token": "▣",
+        "cost": 285,
+        "hp": 895.0500000000001,
+        "damage": 33.088,
+        "armor": 9,
+        "range": 120,
+        "rate": 1.27,
+        "speed": 33.0309,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 중장갑. 앞에서 피해를 받아 아군을 보호합니다. 대장갑에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          2,
+          6
+        ],
+        "unitName": "곰 털갑옷 수호자",
+        "factionName": "야월 퍼리족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "antiair",
+        "name": "대공",
+        "mark": "✣",
+        "token": "✣",
+        "cost": 185,
+        "hp": 401.625,
+        "damage": 13.9872,
+        "armor": 3,
+        "range": 228,
+        "rate": 0.57,
+        "speed": 42.2436,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대공 사격. 비행 유닛을 우선 공격합니다.",
+        "good": [
+          6
+        ],
+        "bad": [
+          3,
+          2
+        ],
+        "unitName": "하울 창투사",
+        "factionName": "야월 퍼리족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "siege",
+        "name": "포격",
+        "mark": "✹",
+        "token": "✹",
+        "cost": 360,
+        "hp": 261.63,
+        "damage": 60.3198,
+        "armor": 0,
+        "range": 317,
+        "rate": 2.55,
+        "speed": 26.964,
+        "airTarget": false,
+        "kind": "ground",
+        "blast": 58,
+        "tips": "장거리 광역 포격. 뭉친 지상 적에 강하지만 근접전에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          0,
+          6
+        ],
+        "unitName": "들소 포격수",
+        "factionName": "야월 퍼리족",
+        "heal": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "flyer",
+        "name": "늑대 기병",
+        "mark": "♞",
+        "token": "◇",
+        "cost": 270,
+        "hp": 481.95000000000005,
+        "damage": 36,
+        "armor": 3,
+        "range": 42,
+        "rate": 0.85,
+        "speed": 86.82408000000002,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "알파 늑대 기수. 270 CR 지상 야수 기병. 포격·지원병을 우선 추격하고 최대 2명에게 연속 공격(두 번째 65%)하며 대장갑·장갑병에 약합니다.",
+        "good": [
+          0,
+          5,
+          7
+        ],
+        "bad": [
+          2,
+          3
+        ],
+        "unitName": "알파 늑대 기수",
+        "factionName": "야월 퍼리족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground-special"
+      },
+      {
+        "key": "support",
+        "name": "지원",
+        "mark": "✚",
+        "token": "✚",
+        "cost": 220,
+        "hp": 312.12,
+        "damage": 0,
+        "heal": 54,
+        "armor": 1,
+        "range": 139,
+        "rate": 1.24,
+        "speed": 54.826800000000006,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지원병. 공격하지 않고 아군을 치료합니다. 공격 상성은 없으며 적 돌격·사격병에 약합니다.",
+        "good": [],
+        "bad": [],
+        "unitName": "달빛 무리치유사",
+        "factionName": "야월 퍼리족",
+        "blast": 0,
+        "unitType": "ground"
+      }
+    ],
+    [
+      {
+        "key": "charge",
+        "name": "돌격",
+        "mark": "⚔",
+        "token": "⚔",
+        "cost": 65,
+        "hp": 276.8625,
+        "damage": 19.74,
+        "armor": 1,
+        "range": 29,
+        "rate": 0.77,
+        "speed": 68.1912,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 돌격. 적 사격병과 포격병에게 빠르게 접근합니다. 장갑병에는 약합니다.",
+        "good": [
+          5,
+          7
+        ],
+        "bad": [
+          3,
+          1
+        ],
+        "unitName": "블레이드 오토마타",
+        "factionName": "크롬 로보족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "rifle",
+        "name": "사격",
+        "mark": "⌖",
+        "token": "⌖",
+        "cost": 100,
+        "hp": 260.01,
+        "damage": 17.258399999999998,
+        "armor": 1,
+        "range": 170.56,
+        "rate": 0.8,
+        "speed": 49.895999999999994,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "원거리 사격. 뒤에서 공격하고 비행 유닛도 공격합니다.",
+        "good": [
+          0,
+          7
+        ],
+        "bad": [
+          3,
+          5
+        ],
+        "unitName": "레이저 정찰기",
+        "factionName": "크롬 로보족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "breaker",
+        "name": "대장갑",
+        "mark": "◆",
+        "token": "◆",
+        "cost": 185,
+        "hp": 226.30500000000004,
+        "damage": 47.714400000000005,
+        "armor": 0,
+        "range": 216.32,
+        "rate": 1.76,
+        "speed": 40.7484,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대장갑 무기. 전차와 중장갑을 파괴합니다. 근접병에게 약합니다.",
+        "good": [
+          3,
+          4
+        ],
+        "bad": [
+          0,
+          1
+        ],
+        "unitName": "레일 관통병기",
+        "factionName": "크롬 로보족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "armor",
+        "name": "장갑",
+        "mark": "▣",
+        "token": "▣",
+        "cost": 285,
+        "hp": 938.9250000000001,
+        "damage": 30.08,
+        "armor": 9,
+        "range": 120,
+        "rate": 1.27,
+        "speed": 29.105999999999998,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 중장갑. 앞에서 피해를 받아 아군을 보호합니다. 대장갑에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          2,
+          6
+        ],
+        "unitName": "티탄 실드 워커",
+        "factionName": "크롬 로보족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "antiair",
+        "name": "대공",
+        "mark": "✣",
+        "token": "✣",
+        "cost": 185,
+        "hp": 421.3125,
+        "damage": 16.2432,
+        "armor": 3,
+        "range": 237.12,
+        "rate": 0.57,
+        "speed": 39.0852,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대공 사격. 비행 유닛을 우선 공격합니다.",
+        "good": [
+          6
+        ],
+        "bad": [
+          3,
+          2
+        ],
+        "unitName": "플랙 대공드론",
+        "factionName": "크롬 로보족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "siege",
+        "name": "포격",
+        "mark": "✹",
+        "token": "✹",
+        "cost": 360,
+        "hp": 274.455,
+        "damage": 70.0488,
+        "armor": 0,
+        "range": 329.68,
+        "rate": 2.55,
+        "speed": 24.947999999999997,
+        "airTarget": false,
+        "kind": "ground",
+        "blast": 58,
+        "tips": "장거리 광역 포격. 뭉친 지상 적에 강하지만 근접전에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          0,
+          6
+        ],
+        "unitName": "공성 캐논",
+        "factionName": "크롬 로보족",
+        "heal": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "flyer",
+        "name": "지상 메카",
+        "mark": "⬡",
+        "token": "◇",
+        "cost": 285,
+        "hp": 505.57500000000005,
+        "damage": 25.38,
+        "armor": 5,
+        "range": 175,
+        "rate": 0.8,
+        "speed": 76.5072,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "전술 변형 메카. 285 CR 지상 중장갑. 늘어난 체력과 사거리로 전열을 지원하고 지상·공중을 공격합니다. 대장갑·포격에 약합니다.",
+        "good": [
+          0,
+          3
+        ],
+        "bad": [
+          2,
+          5
+        ],
+        "unitName": "전술 변형 메카",
+        "factionName": "크롬 로보족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground-special"
+      },
+      {
+        "key": "support",
+        "name": "지원",
+        "mark": "✚",
+        "token": "✚",
+        "cost": 220,
+        "hp": 327.42,
+        "damage": 0,
+        "heal": 45.9,
+        "armor": 1,
+        "range": 139,
+        "rate": 1.24,
+        "speed": 50.727599999999995,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지원병. 공격하지 않고 아군을 치료합니다. 공격 상성은 없으며 적 돌격·사격병에 약합니다.",
+        "good": [],
+        "bad": [],
+        "unitName": "나노 정비유닛",
+        "factionName": "크롬 로보족",
+        "blast": 0,
+        "unitType": "ground"
+      }
+    ],
+    [
+      {
+        "key": "charge",
+        "name": "돌격",
+        "mark": "⚔",
+        "token": "⚔",
+        "cost": 65,
+        "hp": 256.16249999999997,
+        "damage": 19.74,
+        "armor": 1,
+        "range": 29,
+        "rate": 0.77,
+        "speed": 69.56880000000001,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 돌격. 적 사격병과 포격병에게 빠르게 접근합니다. 장갑병에는 약합니다.",
+        "good": [
+          5,
+          7
+        ],
+        "bad": [
+          3,
+          1
+        ],
+        "unitName": "팔완 돌격체",
+        "factionName": "옥토퍼 군체",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "rifle",
+        "name": "사격",
+        "mark": "⌖",
+        "token": "⌖",
+        "cost": 100,
+        "hp": 240.57,
+        "damage": 15.979999999999999,
+        "armor": 1,
+        "range": 164,
+        "rate": 0.8,
+        "speed": 50.903999999999996,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "원거리 사격. 뒤에서 공격하고 비행 유닛도 공격합니다.",
+        "good": [
+          0,
+          7
+        ],
+        "bad": [
+          3,
+          5
+        ],
+        "unitName": "먹물 주술사",
+        "factionName": "옥토퍼 군체",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "breaker",
+        "name": "대장갑",
+        "mark": "◆",
+        "token": "◆",
+        "cost": 185,
+        "hp": 209.385,
+        "damage": 48.598000000000006,
+        "armor": 0,
+        "range": 208,
+        "rate": 1.76,
+        "speed": 41.571600000000004,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대장갑 무기. 전차와 중장갑을 파괴합니다. 근접병에게 약합니다.",
+        "good": [
+          3,
+          4
+        ],
+        "bad": [
+          0,
+          1
+        ],
+        "unitName": "심해 관통술사",
+        "factionName": "옥토퍼 군체",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "armor",
+        "name": "장갑",
+        "mark": "▣",
+        "token": "▣",
+        "cost": 285,
+        "hp": 868.725,
+        "damage": 30.08,
+        "armor": 9,
+        "range": 120,
+        "rate": 1.27,
+        "speed": 29.694,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 중장갑. 앞에서 피해를 받아 아군을 보호합니다. 대장갑에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          2,
+          6
+        ],
+        "unitName": "갑각 문어수호자",
+        "factionName": "옥토퍼 군체",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "antiair",
+        "name": "대공",
+        "mark": "✣",
+        "token": "✣",
+        "cost": 185,
+        "hp": 389.8125,
+        "damage": 16.544,
+        "armor": 3,
+        "range": 228,
+        "rate": 0.57,
+        "speed": 39.8748,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대공 사격. 비행 유닛을 우선 공격합니다.",
+        "good": [
+          6
+        ],
+        "bad": [
+          3,
+          2
+        ],
+        "unitName": "팔완 대공술사",
+        "factionName": "옥토퍼 군체",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "siege",
+        "name": "포격",
+        "mark": "✹",
+        "token": "✹",
+        "cost": 360,
+        "hp": 253.935,
+        "damage": 71.346,
+        "armor": 0,
+        "range": 317,
+        "rate": 2.55,
+        "speed": 25.451999999999998,
+        "airTarget": false,
+        "kind": "ground",
+        "blast": 62.64,
+        "tips": "심연 의식술사. 넓은 범위의 주술 공격으로 지상 적을 공격합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          0,
+          6
+        ],
+        "unitName": "심연 의식술사",
+        "factionName": "옥토퍼 군체",
+        "heal": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "flyer",
+        "name": "비행",
+        "mark": "◇",
+        "token": "◇",
+        "cost": 300,
+        "hp": 356.40000000000003,
+        "damage": 22.56,
+        "armor": 1,
+        "range": 149,
+        "rate": 0.86,
+        "speed": 78.0528,
+        "airTarget": true,
+        "kind": "air",
+        "tips": "마력 비행수. 공중 생명체. 대공 공격에 약합니다.",
+        "good": [
+          0,
+          3
+        ],
+        "bad": [
+          4,
+          1
+        ],
+        "unitName": "마력 비행수",
+        "factionName": "옥토퍼 군체",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "air"
+      },
+      {
+        "key": "support",
+        "name": "지원",
+        "mark": "✚",
+        "token": "✚",
+        "cost": 220,
+        "hp": 302.93999999999994,
+        "damage": 0,
+        "heal": 54,
+        "armor": 1,
+        "range": 139,
+        "rate": 1.24,
+        "speed": 51.752399999999994,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지원병. 공격하지 않고 아군을 치료합니다. 공격 상성은 없으며 적 돌격·사격병에 약합니다.",
+        "good": [],
+        "bad": [],
+        "unitName": "군체 사제",
+        "factionName": "옥토퍼 군체",
+        "blast": 0,
+        "unitType": "ground"
+      }
+    ],
+    [
+      {
+        "key": "charge",
+        "name": "돌격",
+        "mark": "⚔",
+        "token": "⚔",
+        "cost": 65,
+        "hp": 258.75,
+        "damage": 19.74,
+        "armor": 1,
+        "range": 29,
+        "rate": 0.77,
+        "speed": 69.56880000000001,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 돌격. 적 사격병과 포격병에게 빠르게 접근합니다. 장갑병에는 약합니다.",
+        "good": [
+          5,
+          7
+        ],
+        "bad": [
+          3,
+          1
+        ],
+        "unitName": "꽃잎 소검사",
+        "factionName": "농농 페어리족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "rifle",
+        "name": "사격",
+        "mark": "⌖",
+        "token": "⌖",
+        "cost": 100,
+        "hp": 243,
+        "damage": 15.979999999999999,
+        "armor": 1,
+        "range": 164,
+        "rate": 0.8,
+        "speed": 50.903999999999996,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "원거리 사격. 뒤에서 공격하고 비행 유닛도 공격합니다.",
+        "good": [
+          0,
+          7
+        ],
+        "bad": [
+          3,
+          5
+        ],
+        "unitName": "이슬 마도사",
+        "factionName": "농농 페어리족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "breaker",
+        "name": "대장갑",
+        "mark": "◆",
+        "token": "◆",
+        "cost": 185,
+        "hp": 211.5,
+        "damage": 44.18,
+        "armor": 0,
+        "range": 208,
+        "rate": 1.76,
+        "speed": 41.571600000000004,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대장갑 무기. 전차와 중장갑을 파괴합니다. 근접병에게 약합니다.",
+        "good": [
+          3,
+          4
+        ],
+        "bad": [
+          0,
+          1
+        ],
+        "unitName": "씨앗 관통술사",
+        "factionName": "농농 페어리족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "armor",
+        "name": "장갑",
+        "mark": "▣",
+        "token": "▣",
+        "cost": 285,
+        "hp": 877.5,
+        "damage": 30.08,
+        "armor": 9,
+        "range": 120,
+        "rate": 1.27,
+        "speed": 29.694,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "지상 중장갑. 앞에서 피해를 받아 아군을 보호합니다. 대장갑에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          2,
+          6
+        ],
+        "unitName": "버섯껍질 방패수",
+        "factionName": "농농 페어리족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "antiair",
+        "name": "대공",
+        "mark": "✣",
+        "token": "✣",
+        "cost": 185,
+        "hp": 393.75,
+        "damage": 15.04,
+        "armor": 3,
+        "range": 228,
+        "rate": 0.57,
+        "speed": 39.8748,
+        "airTarget": true,
+        "kind": "ground",
+        "tips": "대공 사격. 비행 유닛을 우선 공격합니다.",
+        "good": [
+          6
+        ],
+        "bad": [
+          3,
+          2
+        ],
+        "unitName": "반딧불 대공술사",
+        "factionName": "농농 페어리족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "siege",
+        "name": "포격",
+        "mark": "✹",
+        "token": "✹",
+        "cost": 360,
+        "hp": 256.5,
+        "damage": 64.86,
+        "armor": 0,
+        "range": 317,
+        "rate": 2.55,
+        "speed": 25.451999999999998,
+        "airTarget": false,
+        "kind": "ground",
+        "blast": 58,
+        "tips": "장거리 광역 포격. 뭉친 지상 적에 강하지만 근접전에 약합니다.",
+        "good": [
+          1,
+          4
+        ],
+        "bad": [
+          0,
+          6
+        ],
+        "unitName": "꽃가루 폭격사",
+        "factionName": "농농 페어리족",
+        "heal": 0,
+        "unitType": "ground"
+      },
+      {
+        "key": "flyer",
+        "name": "비행",
+        "mark": "◇",
+        "token": "◇",
+        "cost": 300,
+        "hp": 360,
+        "damage": 22.56,
+        "armor": 1,
+        "range": 149,
+        "rate": 0.86,
+        "speed": 78.0528,
+        "airTarget": true,
+        "kind": "air",
+        "tips": "별빛 나비정령. 공중 정령. 대공 공격에 약합니다.",
+        "good": [
+          0,
+          3
+        ],
+        "bad": [
+          4,
+          1
+        ],
+        "unitName": "별빛 나비정령",
+        "factionName": "농농 페어리족",
+        "heal": 0,
+        "blast": 0,
+        "unitType": "air"
+      },
+      {
+        "key": "support",
+        "name": "지원",
+        "mark": "✚",
+        "token": "✚",
+        "cost": 220,
+        "hp": 306,
+        "damage": 0,
+        "heal": 62.099999999999994,
+        "armor": 1,
+        "range": 139,
+        "rate": 1.24,
+        "speed": 51.752399999999994,
+        "airTarget": false,
+        "kind": "ground",
+        "tips": "꽃샘 치유사. 아군을 치료하며 가끔 주위 아군 한 명을 추가 회복합니다.",
+        "good": [],
+        "bad": [],
+        "unitName": "꽃샘 치유사",
+        "factionName": "농농 페어리족",
+        "blast": 0,
+        "unitType": "ground"
+      }
+    ]
+  ]
+}

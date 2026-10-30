@@ -1,0 +1,4146 @@
+{
+  "version": 1,
+  "expected": 40,
+  "generated": 40,
+  "cell": 96,
+  "poses": [
+    "idle-a",
+    "idle-b",
+    "move-a",
+    "move-b",
+    "windup",
+    "impact",
+    "skill",
+    "death"
+  ],
+  "frames": 16,
+  "frameMapping": "same 8-pose to 16-frame mapping as existing uniform/moe atlases",
+  "assets": [
+    {
+      "id": "base-forge-sniper",
+      "faction": "forge",
+      "role": "sniper",
+      "skin": "base",
+      "file": "assets/base-forge-sniper.webp",
+      "animatedPreview": "assets/base-forge-sniper-preview.png",
+      "previewSha256": "8fe7538b8601f451929f5d6ef5e84a9b700ccc9746c1acddb6c3915591f12167",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "e7a7e3274426ef7427c2fd858fbe787d1242a0252b1a76b97317e03e6059818b",
+      "sha256": "0e3fb7a87006b73cacd37c890bcf1b9e56a4badb1077758441ce8ebbde9231df",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        696,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          39,
+          333,
+          307,
+          606
+        ],
+        [
+          38,
+          333,
+          305,
+          606
+        ],
+        [
+          35,
+          338,
+          313,
+          606
+        ],
+        [
+          50,
+          338,
+          302,
+          606
+        ],
+        [
+          19,
+          87,
+          307,
+          263
+        ],
+        [
+          16,
+          87,
+          313,
+          264
+        ],
+        [
+          18,
+          87,
+          303,
+          263
+        ],
+        [
+          0,
+          179,
+          300,
+          279
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-forge-assassin",
+      "faction": "forge",
+      "role": "assassin",
+      "skin": "base",
+      "file": "assets/base-forge-assassin.webp",
+      "animatedPreview": "assets/base-forge-assassin-preview.png",
+      "previewSha256": "df82761fead3692f1f68902cd55f6f9586e3dbc1a4e03236bfb70e821e1e694b",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "7f48fb62b5b857ed2dda24effcd9e3cf6bc9310b6c834f1ac2d2252cc513d03a",
+      "sha256": "81f79e112785f47a2ecf1f3dbbc131cc1891fa5b63f03cecce9f0d6c08c46879",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        664,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          34,
+          251,
+          306,
+          551
+        ],
+        [
+          29,
+          251,
+          302,
+          551
+        ],
+        [
+          11,
+          263,
+          296,
+          551
+        ],
+        [
+          8,
+          268,
+          272,
+          551
+        ],
+        [
+          28,
+          106,
+          313,
+          432
+        ],
+        [
+          7,
+          134,
+          313,
+          424
+        ],
+        [
+          0,
+          196,
+          313,
+          417
+        ],
+        [
+          16,
+          310,
+          298,
+          429
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-brood-sniper",
+      "faction": "brood",
+      "role": "sniper",
+      "skin": "base",
+      "file": "assets/base-brood-sniper.webp",
+      "animatedPreview": "assets/base-brood-sniper-preview.png",
+      "previewSha256": "f8c65543a8c50807b172dabbb34d723e24741412536591624c7dc16b944b6cec",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "c6127b5d2c33187dbc92dfe4287628c946f4eb26e2829eb0c2e5a8c47b0897d6",
+      "sha256": "9d21840959fe51de20f208877c9f845635ebdc7fa71aaec5c38c72d3dde8ec01",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        716,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          47,
+          368,
+          314,
+          615
+        ],
+        [
+          50,
+          365,
+          313,
+          616
+        ],
+        [
+          35,
+          361,
+          313,
+          626
+        ],
+        [
+          43,
+          382,
+          314,
+          628
+        ],
+        [
+          40,
+          94,
+          314,
+          303
+        ],
+        [
+          25,
+          98,
+          313,
+          307
+        ],
+        [
+          48,
+          83,
+          313,
+          307
+        ],
+        [
+          0,
+          170,
+          296,
+          311
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-brood-assassin",
+      "faction": "brood",
+      "role": "assassin",
+      "skin": "base",
+      "file": "assets/base-brood-assassin.webp",
+      "animatedPreview": "assets/base-brood-assassin-preview.png",
+      "previewSha256": "59b7b5e0ad5966a834b85daaf495fd4484fceb9b7083e1c926ef692060947df7",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "6592c4efcc5a5bf67f5959650930eb99d95eca6648fb3fd60c2af4b639c03f5f",
+      "sha256": "cb7f4cfa9c7b1f2f36e93ab58ccd809405cf7a12137f2253db1fb4b5bd39b308",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        616,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          21,
+          302,
+          283,
+          579
+        ],
+        [
+          21,
+          302,
+          278,
+          579
+        ],
+        [
+          16,
+          321,
+          312,
+          558
+        ],
+        [
+          30,
+          308,
+          297,
+          571
+        ],
+        [
+          22,
+          37,
+          285,
+          380
+        ],
+        [
+          0,
+          115,
+          313,
+          343
+        ],
+        [
+          9,
+          175,
+          313,
+          350
+        ],
+        [
+          0,
+          244,
+          305,
+          370
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-astral-sniper",
+      "faction": "astral",
+      "role": "sniper",
+      "skin": "base",
+      "file": "assets/base-astral-sniper.webp",
+      "animatedPreview": "assets/base-astral-sniper-preview.png",
+      "previewSha256": "58ddeaa0ee3ac61597f7ce61d4fddcc1fbbfd0d28bb39ada89b3cff494464730",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "41170a4409b6d59131d48625b1e5ed9062e62df031367eb6d9b77e063988c2c9",
+      "sha256": "26aca6c35ee95e94485e38af9cacd57499c146e2e17987618d2aaee434980de2",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        640,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          25,
+          204,
+          314,
+          505
+        ],
+        [
+          54,
+          205,
+          313,
+          509
+        ],
+        [
+          30,
+          216,
+          313,
+          509
+        ],
+        [
+          51,
+          211,
+          313,
+          509
+        ],
+        [
+          19,
+          201,
+          314,
+          422
+        ],
+        [
+          0,
+          201,
+          313,
+          420
+        ],
+        [
+          0,
+          117,
+          313,
+          441
+        ],
+        [
+          0,
+          283,
+          305,
+          427
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-astral-assassin",
+      "faction": "astral",
+      "role": "assassin",
+      "skin": "base",
+      "file": "assets/base-astral-assassin.webp",
+      "animatedPreview": "assets/base-astral-assassin-preview.png",
+      "previewSha256": "cb679e8cdcc00bf3bc8934fd9f503d8ef7a7435f80eb982323716060836ae6ed",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "269f20370304c198d90d38fbd991601267d299b604eb9d242af6ae5ab9121dab",
+      "sha256": "2e9e2f8b04d7bdbce85714eba83b27d2f40cddc18159a7dcb4bed4bc65920107",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        662,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          25,
+          282,
+          311,
+          587
+        ],
+        [
+          18,
+          282,
+          307,
+          587
+        ],
+        [
+          23,
+          327,
+          313,
+          582
+        ],
+        [
+          27,
+          314,
+          307,
+          582
+        ],
+        [
+          10,
+          78,
+          311,
+          388
+        ],
+        [
+          0,
+          98,
+          312,
+          372
+        ],
+        [
+          7,
+          136,
+          313,
+          361
+        ],
+        [
+          0,
+          257,
+          298,
+          379
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-marine-sniper",
+      "faction": "marine",
+      "role": "sniper",
+      "skin": "base",
+      "file": "assets/base-marine-sniper.webp",
+      "animatedPreview": "assets/base-marine-sniper-preview.png",
+      "previewSha256": "652488359d5d75b1809c7ab520799063d95e71a1583b54fad606872d1d3b07da",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "b1f884e6e078f3ed4be40c9559d13de6b9b450996cb6bcbadb6ca3d9f642bf3b",
+      "sha256": "e626685ea5cbe88c1480f0a090d49949e460e0cef2762e5453c4ec30d30423d9",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        670,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          40,
+          331,
+          314,
+          590
+        ],
+        [
+          53,
+          328,
+          313,
+          590
+        ],
+        [
+          39,
+          330,
+          313,
+          599
+        ],
+        [
+          56,
+          330,
+          307,
+          599
+        ],
+        [
+          20,
+          74,
+          314,
+          266
+        ],
+        [
+          12,
+          74,
+          313,
+          267
+        ],
+        [
+          28,
+          74,
+          312,
+          267
+        ],
+        [
+          0,
+          134,
+          294,
+          299
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-marine-assassin",
+      "faction": "marine",
+      "role": "assassin",
+      "skin": "base",
+      "file": "assets/base-marine-assassin.webp",
+      "animatedPreview": "assets/base-marine-assassin-preview.png",
+      "previewSha256": "31cdf4ea70801d2ced36475afea7e7ea00530d24566f6dd9af98dba45749df54",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "bdb851687e600f9df98f0a9294e06177d920308bccc4f4095fd9f2e1266e5d49",
+      "sha256": "19315b06695d83d3b57cec0898f3a3f47d7353ee574e12ef98505d0489229157",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        658,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          47,
+          277,
+          292,
+          604
+        ],
+        [
+          45,
+          277,
+          300,
+          604
+        ],
+        [
+          24,
+          302,
+          295,
+          597
+        ],
+        [
+          41,
+          302,
+          279,
+          597
+        ],
+        [
+          23,
+          53,
+          304,
+          413
+        ],
+        [
+          0,
+          141,
+          313,
+          411
+        ],
+        [
+          0,
+          184,
+          313,
+          415
+        ],
+        [
+          8,
+          290,
+          300,
+          427
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-beastkin-sniper",
+      "faction": "beastkin",
+      "role": "sniper",
+      "skin": "base",
+      "file": "assets/base-beastkin-sniper.webp",
+      "animatedPreview": "assets/base-beastkin-sniper-preview.png",
+      "previewSha256": "26f234bdd49593f2d871c2c7fd16fab223f0fbb5e37eb7bed49721e1a35a826b",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "ae8f812d466b39776fea6a21ab6579f8a40f9e85391cfd1d3d74d5b600e20e7f",
+      "sha256": "895def16cd95c674e8f182ea1084acfe92d11999e06b924ef97eb1d82808e77d",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        678,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          13,
+          251,
+          314,
+          569
+        ],
+        [
+          30,
+          249,
+          313,
+          569
+        ],
+        [
+          22,
+          254,
+          313,
+          567
+        ],
+        [
+          36,
+          253,
+          309,
+          570
+        ],
+        [
+          14,
+          154,
+          314,
+          389
+        ],
+        [
+          25,
+          156,
+          313,
+          386
+        ],
+        [
+          23,
+          101,
+          313,
+          396
+        ],
+        [
+          0,
+          270,
+          305,
+          399
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-beastkin-assassin",
+      "faction": "beastkin",
+      "role": "assassin",
+      "skin": "base",
+      "file": "assets/base-beastkin-assassin.webp",
+      "animatedPreview": "assets/base-beastkin-assassin-preview.png",
+      "previewSha256": "89c5bf620364f3434b21385ace5d47766891018cb06b57c107d0be7786531801",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "fb06fbf5fa19b067cf6cd14fe6eb58ef7550fa4b27555daa33b13eb4824331d1",
+      "sha256": "3c45a2395afc57f598b2e273fbb0617075b9dfc62ba17c8fd6ee3a196856c482",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        644,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          28,
+          250,
+          314,
+          572
+        ],
+        [
+          25,
+          251,
+          313,
+          572
+        ],
+        [
+          22,
+          291,
+          313,
+          570
+        ],
+        [
+          25,
+          276,
+          307,
+          564
+        ],
+        [
+          26,
+          72,
+          314,
+          398
+        ],
+        [
+          0,
+          140,
+          313,
+          404
+        ],
+        [
+          12,
+          149,
+          313,
+          398
+        ],
+        [
+          11,
+          275,
+          304,
+          415
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-elf-sniper",
+      "faction": "elf",
+      "role": "sniper",
+      "skin": "base",
+      "file": "assets/base-elf-sniper.webp",
+      "animatedPreview": "assets/base-elf-sniper-preview.png",
+      "previewSha256": "e1fce1cb397fa4ef3bd069b8032d755762a02576d8cef142060d75d922759c21",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "70b093158884504a7027c4eea7e0c7d8f41ebd7af6b8622140184997c4e42e26",
+      "sha256": "984bd682055f8455d7c8dfaeb93e0525fcc42114c89f79993009a0a6451a05e3",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        640,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          26,
+          186,
+          297,
+          587
+        ],
+        [
+          6,
+          177,
+          297,
+          586
+        ],
+        [
+          6,
+          193,
+          313,
+          586
+        ],
+        [
+          5,
+          193,
+          300,
+          583
+        ],
+        [
+          14,
+          125,
+          314,
+          443
+        ],
+        [
+          0,
+          53,
+          313,
+          437
+        ],
+        [
+          27,
+          67,
+          313,
+          466
+        ],
+        [
+          0,
+          141,
+          303,
+          448
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-elf-assassin",
+      "faction": "elf",
+      "role": "assassin",
+      "skin": "base",
+      "file": "assets/base-elf-assassin.webp",
+      "animatedPreview": "assets/base-elf-assassin-preview.png",
+      "previewSha256": "3b09041cd2cd7177fe8ed45c3b1b357bcd6e5f61f92bd6a8862525b9d9174e58",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "05a3916e8968928503199a9cf2bbad83744362dbec18c10bcdbdc045972fdc89",
+      "sha256": "9081456df4a8c63ea60c40f524f202dc60f5ac14d2ef5b8094d31600172cfe38",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        621,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          35,
+          239,
+          284,
+          567
+        ],
+        [
+          33,
+          241,
+          282,
+          567
+        ],
+        [
+          12,
+          265,
+          294,
+          567
+        ],
+        [
+          29,
+          271,
+          292,
+          566
+        ],
+        [
+          12,
+          52,
+          287,
+          409
+        ],
+        [
+          0,
+          110,
+          313,
+          412
+        ],
+        [
+          0,
+          184,
+          313,
+          409
+        ],
+        [
+          9,
+          279,
+          302,
+          415
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-furry-sniper",
+      "faction": "furry",
+      "role": "sniper",
+      "skin": "base",
+      "file": "assets/base-furry-sniper.webp",
+      "animatedPreview": "assets/base-furry-sniper-preview.png",
+      "previewSha256": "b3acbebc318ceba7664790747dcbea4751dfadb83eefd17b8a09fe21b90e8f2e",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "f93454fa733f698822a99f1a4e30c7733a31f12e1b7562438be122c7bcb3faa9",
+      "sha256": "72d8c7c92fbfe55945b6e38a90a57230e1b50fcf064839af76009ba1c9c9eb23",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        650,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          17,
+          282,
+          314,
+          574
+        ],
+        [
+          15,
+          287,
+          313,
+          575
+        ],
+        [
+          6,
+          293,
+          313,
+          574
+        ],
+        [
+          17,
+          284,
+          299,
+          573
+        ],
+        [
+          14,
+          129,
+          314,
+          329
+        ],
+        [
+          0,
+          117,
+          313,
+          319
+        ],
+        [
+          14,
+          51,
+          313,
+          343
+        ],
+        [
+          0,
+          204,
+          300,
+          360
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-furry-assassin",
+      "faction": "furry",
+      "role": "assassin",
+      "skin": "base",
+      "file": "assets/base-furry-assassin.webp",
+      "animatedPreview": "assets/base-furry-assassin-preview.png",
+      "previewSha256": "7ad61ec5cae39d828cd9f7c68aa5113fb5245926cb541a604e8c94cb0dc2f5de",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "f01d12125fec088bcee75551112b7b80e46715c0d8e9d790edd4c3ccf2e6a336",
+      "sha256": "eb86164fd09e196f4e2891af3616a1ef2a7f4421c49f96fab2954701308ebd77",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        648,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          24,
+          239,
+          307,
+          554
+        ],
+        [
+          29,
+          239,
+          294,
+          554
+        ],
+        [
+          9,
+          270,
+          303,
+          555
+        ],
+        [
+          14,
+          281,
+          295,
+          550
+        ],
+        [
+          12,
+          91,
+          311,
+          425
+        ],
+        [
+          0,
+          140,
+          313,
+          425
+        ],
+        [
+          5,
+          182,
+          313,
+          410
+        ],
+        [
+          7,
+          303,
+          309,
+          421
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-robot-sniper",
+      "faction": "robot",
+      "role": "sniper",
+      "skin": "base",
+      "file": "assets/base-robot-sniper.webp",
+      "animatedPreview": "assets/base-robot-sniper-preview.png",
+      "previewSha256": "b7e8744005a1a6369d0d37766bf9ca14697a85e1ae39826004fb189d70291fd9",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "788ee281d20a0038696e32b27eeb3ebc243cd1c645ffc2c068f21925667783dc",
+      "sha256": "be43d9f68b63f1e656b51c196be6f48ae11a7376a4d6eccd3e34f002238361aa",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        672,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          26,
+          206,
+          314,
+          574
+        ],
+        [
+          31,
+          206,
+          313,
+          574
+        ],
+        [
+          20,
+          229,
+          313,
+          573
+        ],
+        [
+          25,
+          206,
+          304,
+          569
+        ],
+        [
+          27,
+          171,
+          314,
+          403
+        ],
+        [
+          16,
+          180,
+          313,
+          403
+        ],
+        [
+          42,
+          94,
+          313,
+          435
+        ],
+        [
+          0,
+          300,
+          303,
+          447
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-robot-assassin",
+      "faction": "robot",
+      "role": "assassin",
+      "skin": "base",
+      "file": "assets/base-robot-assassin.webp",
+      "animatedPreview": "assets/base-robot-assassin-preview.png",
+      "previewSha256": "3e5ff9c3a714106a8e8e41b498a5919d26833b548b7a6512dbf51147a0c6acfb",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "31c0a42ecea4bbbbb3f5a33ff602b310812c5da1d5f0c31abffd643c7418721d",
+      "sha256": "32cabc723188f8a23e0f61efaa8e7c18c72bb512143c3622dd7516c33868f2be",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        684,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          44,
+          312,
+          267,
+          641
+        ],
+        [
+          34,
+          310,
+          269,
+          640
+        ],
+        [
+          45,
+          329,
+          308,
+          636
+        ],
+        [
+          57,
+          336,
+          277,
+          636
+        ],
+        [
+          31,
+          35,
+          288,
+          358
+        ],
+        [
+          0,
+          71,
+          313,
+          349
+        ],
+        [
+          16,
+          108,
+          313,
+          320
+        ],
+        [
+          0,
+          225,
+          313,
+          347
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-octoper-sniper",
+      "faction": "octoper",
+      "role": "sniper",
+      "skin": "base",
+      "file": "assets/base-octoper-sniper.webp",
+      "animatedPreview": "assets/base-octoper-sniper-preview.png",
+      "previewSha256": "76c98bf322bf1b604b712e48a6e27f0d40d00ce00838e2d97fd43ca705e64e71",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "d6dab37be031a6b44b11e16a1ba92b25c7a76ff9a2893d878c4b82ffdf457af4",
+      "sha256": "73c1818d7b79396e057b0e89c89b15091256bb867560474859e9b773b6aa658a",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        663,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          18,
+          325,
+          314,
+          577
+        ],
+        [
+          26,
+          323,
+          313,
+          576
+        ],
+        [
+          31,
+          323,
+          313,
+          573
+        ],
+        [
+          39,
+          323,
+          312,
+          586
+        ],
+        [
+          13,
+          93,
+          314,
+          328
+        ],
+        [
+          2,
+          100,
+          313,
+          325
+        ],
+        [
+          12,
+          48,
+          313,
+          328
+        ],
+        [
+          19,
+          176,
+          294,
+          339
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-octoper-assassin",
+      "faction": "octoper",
+      "role": "assassin",
+      "skin": "base",
+      "file": "assets/base-octoper-assassin.webp",
+      "animatedPreview": "assets/base-octoper-assassin-preview.png",
+      "previewSha256": "1c7ff45b4886e53b93e0654b31833d0c47a38924327c55068901629150779c14",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "084352a0439ef95848a411d29e404c3f54a32f2a349070ed69a3361ab69602a2",
+      "sha256": "d68323c8832a9ca220c5e715712c4333e0afe8df7c73f71850bf7a042ad1f11c",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        689,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          24,
+          422,
+          308,
+          672
+        ],
+        [
+          36,
+          421,
+          292,
+          672
+        ],
+        [
+          24,
+          433,
+          309,
+          672
+        ],
+        [
+          35,
+          429,
+          307,
+          672
+        ],
+        [
+          13,
+          15,
+          297,
+          339
+        ],
+        [
+          0,
+          85,
+          309,
+          339
+        ],
+        [
+          15,
+          131,
+          313,
+          326
+        ],
+        [
+          19,
+          204,
+          306,
+          341
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-fairy-sniper",
+      "faction": "fairy",
+      "role": "sniper",
+      "skin": "base",
+      "file": "assets/base-fairy-sniper.webp",
+      "animatedPreview": "assets/base-fairy-sniper-preview.png",
+      "previewSha256": "d6817273f61a45db1030bf3f62d2842ef74dc6a26ac2156d63596d5db7c1b85b",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "2723ffde27758fe57a69727fee5b55a98f380888ed94644bb4a35ba46c2c94b4",
+      "sha256": "187e95423c57ca54522b28989be1d4ed279a1eb97d4154817579864141f93bdc",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        631,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          46,
+          258,
+          314,
+          550
+        ],
+        [
+          49,
+          258,
+          313,
+          550
+        ],
+        [
+          37,
+          257,
+          313,
+          550
+        ],
+        [
+          26,
+          258,
+          311,
+          550
+        ],
+        [
+          11,
+          186,
+          314,
+          380
+        ],
+        [
+          2,
+          184,
+          313,
+          379
+        ],
+        [
+          0,
+          75,
+          313,
+          389
+        ],
+        [
+          0,
+          246,
+          295,
+          426
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "base-fairy-assassin",
+      "faction": "fairy",
+      "role": "assassin",
+      "skin": "base",
+      "file": "assets/base-fairy-assassin.webp",
+      "animatedPreview": "assets/base-fairy-assassin-preview.png",
+      "previewSha256": "4bbd41263ad49726892644c6bab170d113ba989838b2b4ff28c7d831072ed0fc",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "8482c41d252aed87ba5f78a315b0650e9321f1ab7bc883594644fc177ebd38dd",
+      "sha256": "df0307cc8c0c1e83575cbe63acb63f6fba676e165e2c590f6a98abbdbaca99c7",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        662,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          36,
+          342,
+          300,
+          618
+        ],
+        [
+          31,
+          341,
+          287,
+          619
+        ],
+        [
+          15,
+          365,
+          313,
+          617
+        ],
+        [
+          42,
+          365,
+          300,
+          619
+        ],
+        [
+          22,
+          39,
+          308,
+          366
+        ],
+        [
+          8,
+          89,
+          313,
+          368
+        ],
+        [
+          17,
+          130,
+          313,
+          356
+        ],
+        [
+          5,
+          215,
+          300,
+          364
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-forge-sniper",
+      "faction": "forge",
+      "role": "sniper",
+      "skin": "moe",
+      "file": "assets/moe-forge-sniper.webp",
+      "animatedPreview": "assets/moe-forge-sniper-preview.png",
+      "previewSha256": "5675494dfec06a13f9b622b6aa54f81f662bc334c55c91b04ff523d8896e3c28",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "e7fdaa6af1a2dcb0b8313fafe7f443c9e194e0b30a4de5daa4ebfd35a8e2569b",
+      "sha256": "1cd7afb9b6add64592b009fc6a24c69c88699a47b67ee8a2f9f7ca45e0722e38",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        641,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          24,
+          280,
+          314,
+          589
+        ],
+        [
+          10,
+          281,
+          313,
+          590
+        ],
+        [
+          0,
+          286,
+          313,
+          591
+        ],
+        [
+          17,
+          286,
+          307,
+          590
+        ],
+        [
+          11,
+          126,
+          314,
+          352
+        ],
+        [
+          0,
+          113,
+          313,
+          348
+        ],
+        [
+          0,
+          43,
+          311,
+          354
+        ],
+        [
+          0,
+          219,
+          301,
+          390
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-forge-assassin",
+      "faction": "forge",
+      "role": "assassin",
+      "skin": "moe",
+      "file": "assets/moe-forge-assassin.webp",
+      "animatedPreview": "assets/moe-forge-assassin-preview.png",
+      "previewSha256": "d4a2437f8f907a96b3d3ac28088ac35cb26bc4086dc535ffb68ff122cb610a88",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "cbe8f8e287c7f3ac7b6b0ee9674332fc4f98c072f074c3d75339d265fbbac770",
+      "sha256": "ddb416e6aedb55c5ae27eca4a6388498c16753345b9a79c4b5a8f6ded1c61fec",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        644,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          31,
+          188,
+          294,
+          577
+        ],
+        [
+          17,
+          185,
+          293,
+          577
+        ],
+        [
+          0,
+          224,
+          302,
+          577
+        ],
+        [
+          9,
+          235,
+          293,
+          574
+        ],
+        [
+          12,
+          66,
+          314,
+          446
+        ],
+        [
+          9,
+          107,
+          313,
+          427
+        ],
+        [
+          0,
+          169,
+          313,
+          434
+        ],
+        [
+          0,
+          261,
+          305,
+          454
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-brood-sniper",
+      "faction": "brood",
+      "role": "sniper",
+      "skin": "moe",
+      "file": "assets/moe-brood-sniper.webp",
+      "animatedPreview": "assets/moe-brood-sniper-preview.png",
+      "previewSha256": "148aa8cd6c5e8072c6929b9e7df5619561e1fbcd1764eb02a3a1c5a17d68594b",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "c98df261348452e9b8ecea0fc71cf027e27bcde1e5994c09073950df22155656",
+      "sha256": "67310fc8a3004e18964f1b6850181b666725b676d57e8eb78b5c1887d6dcdd22",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        674,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          20,
+          240,
+          314,
+          578
+        ],
+        [
+          29,
+          242,
+          313,
+          583
+        ],
+        [
+          19,
+          242,
+          313,
+          588
+        ],
+        [
+          24,
+          240,
+          314,
+          588
+        ],
+        [
+          19,
+          119,
+          314,
+          387
+        ],
+        [
+          0,
+          117,
+          313,
+          391
+        ],
+        [
+          0,
+          88,
+          313,
+          413
+        ],
+        [
+          0,
+          252,
+          309,
+          404
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-brood-assassin",
+      "faction": "brood",
+      "role": "assassin",
+      "skin": "moe",
+      "file": "assets/moe-brood-assassin.webp",
+      "animatedPreview": "assets/moe-brood-assassin-preview.png",
+      "previewSha256": "d2fcbcb6dbbd38fd3d1a989b7afec4437da0e054e0e9615f555a1ac601eff552",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "ac8594eefcd60ca9ae6a69056c8534ac5885139a608b696fa1dd56d2c1f1cf8a",
+      "sha256": "9bea7b0323ccfc4c8ddc4afb7c9b4301141e707c374ec14abb4a3638137eee4a",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        630,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          30,
+          220,
+          290,
+          593
+        ],
+        [
+          22,
+          215,
+          288,
+          594
+        ],
+        [
+          12,
+          266,
+          303,
+          593
+        ],
+        [
+          9,
+          269,
+          297,
+          596
+        ],
+        [
+          25,
+          33,
+          303,
+          390
+        ],
+        [
+          0,
+          73,
+          305,
+          379
+        ],
+        [
+          0,
+          161,
+          313,
+          378
+        ],
+        [
+          14,
+          231,
+          293,
+          401
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-astral-sniper",
+      "faction": "astral",
+      "role": "sniper",
+      "skin": "moe",
+      "file": "assets/moe-astral-sniper.webp",
+      "animatedPreview": "assets/moe-astral-sniper-preview.png",
+      "previewSha256": "3ffb948fe15fb449d8aa78670b15bd8da720d05a18693aa60315c5cbeddcb0c4",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "a31b21d6baf37a1819cab46383385586ac5f4d88580a2e3aab5757ee88518991",
+      "sha256": "4edc9a7e861bf73b2566694869c61dee0708da4b4272e3ca81fb301e60a986e6",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        667,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          13,
+          253,
+          313,
+          598
+        ],
+        [
+          12,
+          258,
+          313,
+          597
+        ],
+        [
+          14,
+          257,
+          313,
+          601
+        ],
+        [
+          37,
+          254,
+          312,
+          598
+        ],
+        [
+          8,
+          113,
+          314,
+          379
+        ],
+        [
+          0,
+          109,
+          313,
+          380
+        ],
+        [
+          0,
+          45,
+          313,
+          382
+        ],
+        [
+          0,
+          159,
+          305,
+          400
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-astral-assassin",
+      "faction": "astral",
+      "role": "assassin",
+      "skin": "moe",
+      "file": "assets/moe-astral-assassin.webp",
+      "animatedPreview": "assets/moe-astral-assassin-preview.png",
+      "previewSha256": "1d91d45982a903b14ce55c7867e00ce7a03fc9852bb4ecbd361547b574aeabcc",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "c354f85848b3d3a594e56664d1e40063f60d1e9021b51fa8f063e20e7334bf33",
+      "sha256": "20fcf91d1aa9f5a08a10433c4474dc8cee651be8b03f63d65d9037d72db9fa30",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        608,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          12,
+          183,
+          307,
+          526
+        ],
+        [
+          11,
+          176,
+          304,
+          527
+        ],
+        [
+          0,
+          212,
+          294,
+          520
+        ],
+        [
+          13,
+          203,
+          309,
+          518
+        ],
+        [
+          7,
+          80,
+          286,
+          481
+        ],
+        [
+          0,
+          174,
+          313,
+          473
+        ],
+        [
+          0,
+          192,
+          313,
+          447
+        ],
+        [
+          10,
+          325,
+          310,
+          475
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-marine-sniper",
+      "faction": "marine",
+      "role": "sniper",
+      "skin": "moe",
+      "file": "assets/moe-marine-sniper.webp",
+      "animatedPreview": "assets/moe-marine-sniper-preview.png",
+      "previewSha256": "548f506cea37af6621c9a6c05608fd5898d6ff88d37fb2b3710e4a486cefd935",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "8f5724638677e2aef7f9493b19335c43a43fae631964a15dc5d68feeefae1866",
+      "sha256": "3fc1771b6088fd24773a3cdfc1aa1038c8bcd6b9a2b1e930f3df79e35102239e",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 4,
+      "selectedStartRow": 2,
+      "rowBounds": [
+        0,
+        397,
+        703,
+        1006,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          12,
+          21,
+          314,
+          277
+        ],
+        [
+          25,
+          17,
+          313,
+          277
+        ],
+        [
+          26,
+          19,
+          313,
+          281
+        ],
+        [
+          32,
+          22,
+          311,
+          283
+        ],
+        [
+          13,
+          24,
+          314,
+          212
+        ],
+        [
+          25,
+          26,
+          313,
+          211
+        ],
+        [
+          0,
+          20,
+          313,
+          212
+        ],
+        [
+          25,
+          79,
+          305,
+          229
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-marine-assassin",
+      "faction": "marine",
+      "role": "assassin",
+      "skin": "moe",
+      "file": "assets/moe-marine-assassin.webp",
+      "animatedPreview": "assets/moe-marine-assassin-preview.png",
+      "previewSha256": "72d0cedeca1b95a0691cca9ad5b0548f870ccae8b8841988184a0746633f5866",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "9f42f0550010ee5dddd6515eca5268e578a075ae131f7d3f5b541f70cf88536d",
+      "sha256": "72196d14a1e5004c5e5db7bdfedd9de293629c38274e1cdcb569a3f0b280b96a",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 4,
+      "selectedStartRow": 2,
+      "rowBounds": [
+        0,
+        384,
+        716,
+        1014,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          42,
+          23,
+          290,
+          293
+        ],
+        [
+          18,
+          17,
+          293,
+          293
+        ],
+        [
+          41,
+          51,
+          292,
+          292
+        ],
+        [
+          51,
+          58,
+          295,
+          293
+        ],
+        [
+          30,
+          0,
+          289,
+          230
+        ],
+        [
+          12,
+          6,
+          313,
+          230
+        ],
+        [
+          8,
+          32,
+          313,
+          230
+        ],
+        [
+          5,
+          64,
+          305,
+          194
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-beastkin-sniper",
+      "faction": "beastkin",
+      "role": "sniper",
+      "skin": "moe",
+      "file": "assets/moe-beastkin-sniper.webp",
+      "animatedPreview": "assets/moe-beastkin-sniper-preview.png",
+      "previewSha256": "e282aee67e536622a3567876b016b14b0e6c9b04eb48ac7cfdb600135d4a54e8",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "9fef9963ac2b1988230f97fbe325a0c81ffba750245e681859ee47a609b2435e",
+      "sha256": "9b0e28415e35b68d65240189f21069f8ac8f0defa1c6ca7648830a10241be209",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        699,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          11,
+          285,
+          314,
+          643
+        ],
+        [
+          20,
+          286,
+          312,
+          644
+        ],
+        [
+          13,
+          286,
+          313,
+          640
+        ],
+        [
+          31,
+          291,
+          314,
+          643
+        ],
+        [
+          3,
+          74,
+          314,
+          345
+        ],
+        [
+          20,
+          61,
+          313,
+          345
+        ],
+        [
+          11,
+          50,
+          313,
+          363
+        ],
+        [
+          0,
+          191,
+          309,
+          355
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-beastkin-assassin",
+      "faction": "beastkin",
+      "role": "assassin",
+      "skin": "moe",
+      "file": "assets/moe-beastkin-assassin.webp",
+      "animatedPreview": "assets/moe-beastkin-assassin-preview.png",
+      "previewSha256": "847eca5c18521a0c49127b9c6da27f0d84cecdc20a6c1e4f78391aa3c27691db",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "ddb6acf89f6f4a76c1c7a414c5aad7e66b25857c004aa61f010267084085e669",
+      "sha256": "f6386f0f267b25e7f140d1d6cda5bb2e5fc7e56336b81f0b32f9e716e0c7a260",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        692,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          22,
+          237,
+          314,
+          623
+        ],
+        [
+          18,
+          239,
+          306,
+          622
+        ],
+        [
+          8,
+          276,
+          286,
+          623
+        ],
+        [
+          4,
+          293,
+          301,
+          623
+        ],
+        [
+          19,
+          68,
+          314,
+          446
+        ],
+        [
+          0,
+          82,
+          313,
+          445
+        ],
+        [
+          0,
+          175,
+          313,
+          442
+        ],
+        [
+          0,
+          184,
+          314,
+          469
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-elf-sniper",
+      "faction": "elf",
+      "role": "sniper",
+      "skin": "moe",
+      "file": "assets/moe-elf-sniper.webp",
+      "animatedPreview": "assets/moe-elf-sniper-preview.png",
+      "previewSha256": "5df0823cec957cacab548c26a2ea84ed3d56dfca6d7c4b999eb7a84bb9d4705b",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "551ab8e5bbb4d86b323cbb026a1e433aa20d17358819e2c5489839ea480db951",
+      "sha256": "11dcfc920fd78626a2472375fb06f7d372e26fdd9ffabed1788b34e465da7d41",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        658,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          20,
+          219,
+          314,
+          596
+        ],
+        [
+          36,
+          219,
+          313,
+          597
+        ],
+        [
+          28,
+          218,
+          313,
+          600
+        ],
+        [
+          24,
+          218,
+          306,
+          599
+        ],
+        [
+          9,
+          70,
+          314,
+          422
+        ],
+        [
+          0,
+          56,
+          313,
+          430
+        ],
+        [
+          23,
+          63,
+          313,
+          433
+        ],
+        [
+          0,
+          309,
+          307,
+          455
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-elf-assassin",
+      "faction": "elf",
+      "role": "assassin",
+      "skin": "moe",
+      "file": "assets/moe-elf-assassin.webp",
+      "animatedPreview": "assets/moe-elf-assassin-preview.png",
+      "previewSha256": "97047534c8dbc0d548941e125d4d8be401293a09e5276c7c07c9fd67f6a4f577",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "41bbdc61bf0386b3d4866a80617fa858b66553b36bd3d1686e8fc2d98e7805e7",
+      "sha256": "7f0c8b093e71c616a331c25d97d99b004fdbdecf1d0f31b83103e7329a7f3a49",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        638,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          16,
+          258,
+          313,
+          594
+        ],
+        [
+          8,
+          258,
+          309,
+          594
+        ],
+        [
+          1,
+          282,
+          310,
+          594
+        ],
+        [
+          4,
+          285,
+          304,
+          594
+        ],
+        [
+          7,
+          42,
+          301,
+          380
+        ],
+        [
+          0,
+          70,
+          313,
+          376
+        ],
+        [
+          2,
+          86,
+          313,
+          341
+        ],
+        [
+          0,
+          201,
+          309,
+          379
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-furry-sniper",
+      "faction": "furry",
+      "role": "sniper",
+      "skin": "moe",
+      "file": "assets/moe-furry-sniper.webp",
+      "animatedPreview": "assets/moe-furry-sniper-preview.png",
+      "previewSha256": "c749b40f489d22ccd90fc473d4a9218b63aaee6d5ef0e039b51e7da3919ac0e0",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "a33d65b8109c284753b536b57549b714a64d09286533d3393874709be4a3b27b",
+      "sha256": "2db4de6b4dc5a34fe5fed4c1d1e73b6a1014ae73bf7ebfbcb4e08cbdcc709e86",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        678,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          22,
+          272,
+          314,
+          612
+        ],
+        [
+          24,
+          267,
+          313,
+          612
+        ],
+        [
+          10,
+          274,
+          313,
+          612
+        ],
+        [
+          21,
+          278,
+          309,
+          612
+        ],
+        [
+          12,
+          79,
+          314,
+          343
+        ],
+        [
+          0,
+          84,
+          313,
+          338
+        ],
+        [
+          0,
+          60,
+          313,
+          339
+        ],
+        [
+          0,
+          197,
+          310,
+          354
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-furry-assassin",
+      "faction": "furry",
+      "role": "assassin",
+      "skin": "moe",
+      "file": "assets/moe-furry-assassin.webp",
+      "animatedPreview": "assets/moe-furry-assassin-preview.png",
+      "previewSha256": "a721b1c51e8282428781f574336b1eae96b04160c7a440e5151ea64c8ba3e5a1",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "0e77e380c84b63e6d3bfabc29e09cbc045bccee1ddea4636e5620d31ccd195fc",
+      "sha256": "2fb82f6d6c65e2de1e8807763c184a84792405e2375c27fd9266c8be9787e758",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        634,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          16,
+          174,
+          306,
+          553
+        ],
+        [
+          20,
+          174,
+          302,
+          553
+        ],
+        [
+          13,
+          216,
+          300,
+          541
+        ],
+        [
+          13,
+          230,
+          301,
+          542
+        ],
+        [
+          11,
+          77,
+          299,
+          457
+        ],
+        [
+          0,
+          121,
+          313,
+          459
+        ],
+        [
+          7,
+          161,
+          313,
+          422
+        ],
+        [
+          7,
+          269,
+          308,
+          442
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-robot-sniper",
+      "faction": "robot",
+      "role": "sniper",
+      "skin": "moe",
+      "file": "assets/moe-robot-sniper.webp",
+      "animatedPreview": "assets/moe-robot-sniper-preview.png",
+      "previewSha256": "d697fafaf7a83561d594cc58769f8683db0518a25880211390da0ff4d502db01",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "ab6f648f32959f27dc19138372eb0a280ef023c4237867c162a933f1bde649da",
+      "sha256": "218b4345418e59aae1a75a24628bbf708de217af56f8f3d2f6914fe77888dd4b",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        684,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          7,
+          267,
+          314,
+          604
+        ],
+        [
+          14,
+          267,
+          313,
+          604
+        ],
+        [
+          15,
+          287,
+          313,
+          600
+        ],
+        [
+          24,
+          273,
+          311,
+          599
+        ],
+        [
+          8,
+          82,
+          314,
+          342
+        ],
+        [
+          0,
+          78,
+          313,
+          342
+        ],
+        [
+          0,
+          74,
+          313,
+          342
+        ],
+        [
+          7,
+          186,
+          308,
+          350
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-robot-assassin",
+      "faction": "robot",
+      "role": "assassin",
+      "skin": "moe",
+      "file": "assets/moe-robot-assassin.webp",
+      "animatedPreview": "assets/moe-robot-assassin-preview.png",
+      "previewSha256": "d009c57a1e598864fd09dc3693b1a4a27b7793c23895558bff7984804a206f15",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "d487e279e61668409bff1dbd270da79d7c6cfeac0d5eb4aca621873962f709ae",
+      "sha256": "00c2ca6aa263655787cd4b6b6200c4924ac1bcf51456f6a455cf0b2d373b1af8",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        663,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          37,
+          231,
+          298,
+          601
+        ],
+        [
+          20,
+          234,
+          269,
+          599
+        ],
+        [
+          10,
+          242,
+          313,
+          598
+        ],
+        [
+          23,
+          238,
+          291,
+          598
+        ],
+        [
+          11,
+          57,
+          304,
+          461
+        ],
+        [
+          0,
+          95,
+          313,
+          444
+        ],
+        [
+          6,
+          185,
+          313,
+          417
+        ],
+        [
+          7,
+          294,
+          307,
+          453
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-octoper-sniper",
+      "faction": "octoper",
+      "role": "sniper",
+      "skin": "moe",
+      "file": "assets/moe-octoper-sniper.webp",
+      "animatedPreview": "assets/moe-octoper-sniper-preview.png",
+      "previewSha256": "cea8ae141b8c507d8109b3c21faa692e3187d2ce64250feccb77340be0dddd05",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "f5105ad7f631603bd4b26619545d646cea9f16a91a99439f96a101cc05234ecd",
+      "sha256": "89186d333c0fe130a2c6bb96ec363a0c42776f06156f1451431dac9e8a454843",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        634,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          18,
+          278,
+          314,
+          558
+        ],
+        [
+          34,
+          281,
+          313,
+          558
+        ],
+        [
+          29,
+          284,
+          313,
+          558
+        ],
+        [
+          38,
+          284,
+          303,
+          558
+        ],
+        [
+          14,
+          144,
+          314,
+          383
+        ],
+        [
+          17,
+          149,
+          313,
+          382
+        ],
+        [
+          27,
+          62,
+          313,
+          397
+        ],
+        [
+          10,
+          253,
+          303,
+          406
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-octoper-assassin",
+      "faction": "octoper",
+      "role": "assassin",
+      "skin": "moe",
+      "file": "assets/moe-octoper-assassin.webp",
+      "animatedPreview": "assets/moe-octoper-assassin-preview.png",
+      "previewSha256": "be6a1f38936b738954b0f322458c935786b2bbf4a951f6e796392a83290fd91e",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "5fd12dfedc7e1eb6cc89b2c8c7aee26ff67f09d72d9f5494db00a1f43c6152fe",
+      "sha256": "e51f2841c383d88ecd0a84649490b28f10a0d14382ca646e459ecb4c6d295e9e",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        643,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          19,
+          202,
+          294,
+          563
+        ],
+        [
+          15,
+          199,
+          295,
+          563
+        ],
+        [
+          10,
+          214,
+          311,
+          563
+        ],
+        [
+          23,
+          229,
+          296,
+          561
+        ],
+        [
+          13,
+          84,
+          303,
+          453
+        ],
+        [
+          0,
+          110,
+          313,
+          451
+        ],
+        [
+          3,
+          167,
+          313,
+          441
+        ],
+        [
+          5,
+          294,
+          307,
+          455
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-fairy-sniper",
+      "faction": "fairy",
+      "role": "sniper",
+      "skin": "moe",
+      "file": "assets/moe-fairy-sniper.webp",
+      "animatedPreview": "assets/moe-fairy-sniper-preview.png",
+      "previewSha256": "35e4e8f0269711f63f7255e23ed673b744399d9cc168fc0d2f054b85943935e5",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "1bda7dcc8079a0a3ce9988895d2238e5cc2aa3740e4e7b1858d663b64e8c9e0e",
+      "sha256": "1d2fc19509d451c5bdc8fd0373fb5b103f398ca9063f9f1e9aed631b2ab87ece",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        708,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          15,
+          359,
+          314,
+          663
+        ],
+        [
+          11,
+          358,
+          313,
+          666
+        ],
+        [
+          25,
+          362,
+          313,
+          666
+        ],
+        [
+          31,
+          357,
+          314,
+          665
+        ],
+        [
+          8,
+          130,
+          314,
+          364
+        ],
+        [
+          0,
+          121,
+          313,
+          363
+        ],
+        [
+          0,
+          46,
+          313,
+          375
+        ],
+        [
+          0,
+          131,
+          308,
+          420
+        ]
+      ],
+      "uniquePoseCount": 8
+    },
+    {
+      "id": "moe-fairy-assassin",
+      "faction": "fairy",
+      "role": "assassin",
+      "skin": "moe",
+      "file": "assets/moe-fairy-assassin.webp",
+      "animatedPreview": "assets/moe-fairy-assassin-preview.png",
+      "previewSha256": "82e162c46555964a5684a5581f9315df35051784aa87a24718725e2514055733",
+      "cell": 96,
+      "columns": 8,
+      "rows": 1,
+      "paintedPoses": 8,
+      "animationFrames": 16,
+      "sourceSha256": "7ffc644325784a272cb391bc4873bb40f8f2661ea249a181837c20e26bfc4933",
+      "sha256": "e33f0ebf52237d8780f556fa79eec1ef0d8de4059f649f7ac5f89c6af52a871e",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceRows": 2,
+      "selectedStartRow": 0,
+      "rowBounds": [
+        0,
+        619,
+        1254
+      ],
+      "sourcePoseBoxes": [
+        [
+          25,
+          248,
+          314,
+          572
+        ],
+        [
+          47,
+          248,
+          297,
+          572
+        ],
+        [
+          11,
+          266,
+          313,
+          570
+        ],
+        [
+          19,
+          268,
+          306,
+          566
+        ],
+        [
+          15,
+          46,
+          303,
+          434
+        ],
+        [
+          8,
+          96,
+          313,
+          416
+        ],
+        [
+          7,
+          170,
+          312,
+          417
+        ],
+        [
+          16,
+          254,
+          304,
+          432
+        ]
+      ],
+      "uniquePoseCount": 8
+    }
+  ],
+  "reviewIssues": [
+    {
+      "id": "base-forge-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-forge-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-forge-sniper",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-forge-assassin",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-forge-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-forge-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-brood-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-brood-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-brood-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-brood-sniper",
+      "pose": 3,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-brood-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-brood-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-brood-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-brood-sniper",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-brood-assassin",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-brood-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-brood-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-brood-assassin",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-astral-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-astral-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-astral-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-astral-sniper",
+      "pose": 3,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-astral-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-astral-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-astral-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-astral-sniper",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-astral-assassin",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-astral-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-astral-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-astral-assassin",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-marine-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-marine-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-marine-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-marine-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-marine-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-marine-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-marine-sniper",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-marine-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-marine-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-beastkin-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-beastkin-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-beastkin-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-beastkin-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-beastkin-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-beastkin-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-beastkin-sniper",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-beastkin-assassin",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-beastkin-assassin",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-beastkin-assassin",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-beastkin-assassin",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-beastkin-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-beastkin-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-elf-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-elf-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-elf-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-elf-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-elf-sniper",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-elf-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-elf-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-furry-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-furry-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-furry-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-furry-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-furry-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-furry-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-furry-sniper",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-furry-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-furry-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-robot-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-robot-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-robot-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-robot-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-robot-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-robot-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-robot-sniper",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-robot-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-robot-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-robot-assassin",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-octoper-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-octoper-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-octoper-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-octoper-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-octoper-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-octoper-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-octoper-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-octoper-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-fairy-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-fairy-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-fairy-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-fairy-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-fairy-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-fairy-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-fairy-sniper",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-fairy-assassin",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-fairy-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "base-fairy-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-forge-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-forge-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-forge-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-forge-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-forge-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-forge-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-forge-sniper",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-forge-assassin",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-forge-assassin",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-forge-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-forge-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-forge-assassin",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-brood-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-brood-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-brood-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-brood-sniper",
+      "pose": 3,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-brood-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-brood-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-brood-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-brood-sniper",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-brood-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-brood-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-astral-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-astral-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-astral-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-astral-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-astral-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-astral-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-astral-sniper",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-astral-assassin",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-astral-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-astral-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-marine-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-marine-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-marine-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-marine-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-marine-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-marine-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-marine-assassin",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-marine-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-marine-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-beastkin-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-beastkin-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-beastkin-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-beastkin-sniper",
+      "pose": 3,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-beastkin-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-beastkin-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-beastkin-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-beastkin-sniper",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-beastkin-assassin",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-beastkin-assassin",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-beastkin-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-beastkin-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-beastkin-assassin",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-elf-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-elf-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-elf-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-elf-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-elf-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-elf-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-elf-sniper",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-elf-assassin",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-elf-assassin",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-elf-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-elf-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-elf-assassin",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-furry-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-furry-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-furry-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-furry-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-furry-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-furry-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-furry-sniper",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-furry-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-furry-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-robot-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-robot-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-robot-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-robot-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-robot-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-robot-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-robot-assassin",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-robot-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-robot-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-octoper-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-octoper-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-octoper-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-octoper-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-octoper-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-octoper-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-octoper-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-octoper-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-fairy-sniper",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-fairy-sniper",
+      "pose": 1,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-fairy-sniper",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-fairy-sniper",
+      "pose": 3,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-fairy-sniper",
+      "pose": 4,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-fairy-sniper",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-fairy-sniper",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-fairy-sniper",
+      "pose": 7,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-fairy-assassin",
+      "pose": 0,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-fairy-assassin",
+      "pose": 2,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-fairy-assassin",
+      "pose": 5,
+      "issue": "source touches cell edge"
+    },
+    {
+      "id": "moe-fairy-assassin",
+      "pose": 6,
+      "issue": "source touches cell edge"
+    }
+  ]
+}
