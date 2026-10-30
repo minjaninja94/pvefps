@@ -11,7 +11,7 @@ function load(){
  }).catch(e=>{loading=null;throw e;});
  return loading;
 }
-function ready(){return baseReady&&cards.length===(global.DesertPrism?.enabled?.()?400:300);}
+function ready(){return baseReady&&cards.length===(global.DesertPrism?.enabled?.()?300+(global.DesertPrism?.cards?.length||0):300);}
 function rng(seed){
  let state=(seed>>>0)||1;
  return function(){state^=(state<<13);state^=state>>>17;state^=(state<<5);return (state>>>0)/4294967296;};
