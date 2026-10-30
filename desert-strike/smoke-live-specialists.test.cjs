@@ -35,6 +35,65 @@ test('solo army roster keeps specialist portraits still while combat retains ani
  assert.ok(art.includes('const poses={idle:[0,1]'),'battle animation strips must remain present');
 });
 
+test('sniper shows a real armor matchup without falsely claiming airborne role-six weakness',()=>{
+ const {G}=solo(91),{E}=multi(91);
+ for(let f=0;f<10;f++){
+  assert.deepEqual(Array.from(G.getDef(9,f).good),[3]);
+  assert.deepEqual(Array.from(E.definition(f,9).good),[3]);
+ }
+ const sniper={role:9},armor={role:3,kind:'ground'},groundSpecial={role:6,kind:'ground'},airSpecial={role:6,kind:'air'};
+ assert.equal(X.precisionMultiplier(sniper,armor),1.6);
+ assert.equal(X.precisionMultiplier(sniper,groundSpecial),1.6);
+ assert.equal(X.precisionMultiplier(sniper,airSpecial),1);
+ assert.equal(E.matchupMultiplier(E.definition(0,9),armor,30),1.65);
+ assert.equal(X.plannedSpecialist(Array(11).fill(0),7,6),9);
+});
+
+test('solo AI saves real credits for sniper and assassin instead of buying cheap fillers',()=>{
+ const {G}=solo(92),s=G.state();s.aiDifficulty='normal';s.wave=8;s.elapsed=120;s.enemyEco=7;
+ s.enemyBuilt=Array(75).fill(null);for(let i=0;i<8;i++)s.enemyBuilt[i]=[0,1,0,1,2,3,5,7][i];
+ s.enemyCash=130;G.aiInvest();
+ assert.equal(s.enemyBuilt.filter(r=>r===9).length,0);
+ assert.equal(s.enemyCash,130,'bank stays untouched for the planned sniper');
+ s.enemyCash=380;G.aiInvest();
+ assert.equal(s.enemyBuilt.filter(r=>r===9).length,1);
+ assert.equal(s.enemyCash,0,'sniper costs its full 380 CR');
+ s.wave=11;s.elapsed=160;s.enemyCash=330;G.aiInvest();
+ assert.equal(s.enemyBuilt.filter(r=>r===10).length,1);
+ assert.equal(s.enemyCash,0,'assassin costs its full 330 CR');
+});
+
+test('multiplayer regular bots bank paid specialist costs under realistic limited budgets',()=>{
+ const {E}=multi(93);
+ const m=E.create({mode:'coop',size:2,members:[{uid:'h1',team:0,faction:0},{uid:'h2',team:0,faction:1}],aiDifficulty:'normal'});
+ const bot=m.state.players.find(p=>p.bot);assert.ok(bot);
+ for(let i=0;i<8;i++)bot.buildings[Math.floor(i/3)][i%3]=[0,1,0,1,2,3,5,7][i];
+ m.state.wave=6;m.state.seconds=100;bot.cash=120;
+ m.wave();
+ assert.equal(bot.buildings.flat().filter(r=>r===9).length,0);
+ assert.equal(bot.cash,144,'bot saves 120 CR plus the earned 24 CR wave stipend');
+ bot.cash=356;m.wave();
+ assert.equal(bot.buildings.flat().filter(r=>r===9).length,1);
+ assert.equal(bot.cash,0,'only the earned 380 CR pays for sniper');
+ m.state.wave=9;bot.cash=306;m.wave();
+ assert.equal(bot.buildings.flat().filter(r=>r===10).length,1);
+ assert.equal(bot.cash,0,'only the earned 330 CR pays for assassin');
+});
+
+test('high-difficulty AI reserves scarce credits for scheduled specialists',()=>{
+ const {window}=solo(94),ai=window.DesertHardAI,brain=ai.create(0,()=>0);
+ brain.opening=ai.plans[brain.plan].opening.length;
+ const costs=[65,100,185,285,185,360,300,220,Infinity,380,330];
+ const counts=Array(11).fill(0);counts[0]=3;counts[1]=3;counts[2]=1;counts[3]=1;
+ const intel={roles:Array(11).fill(0),air:0,armor:0,invaded:false};
+ const args={counts,eco:7,readyAt:Infinity,seconds:120,wave:8,difficulty:'veryhard',costs,ecoCost:1000,intel};
+ assert.equal(ai.choose(brain,{...args,cash:150}),null,'wait for the real 380 CR');
+ assert.equal(ai.choose(brain,{...args,cash:380}).role,9);
+ counts[9]=1;
+ assert.equal(ai.choose(brain,{...args,wave:11,cash:170}),null,'wait for the real 330 CR');
+ assert.equal(ai.choose(brain,{...args,wave:11,cash:330}).role,10);
+});
+
 test('stealth is visible, non-targetable outside detection, exposed while attacking and defeated by a living detector',()=>{
  const knife={id:10,team:1,role:10,x:201,y:0,hp:100},rifle={id:1,team:0,role:1,x:0,y:0,hp:100},medic={id:7,team:0,role:7,x:10,y:0,hp:100};
  const units=[knife,rifle,medic];
