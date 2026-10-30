@@ -203,7 +203,7 @@ function draw(){
  const pos=(x,y)=>iso?.project?.(x,y)||{x,y};
  function drawStructureHealth(x,team,kind,hp,maxHP){
   const p=pos(x,260),width=kind==='core'?104:112;
-  const y=p.y-(kind==='forward'?166:kind==='core'?154:145),left=p.x-width/2;
+  const y=p.y-(kind==='forward'?166:kind==='core'?189:140),left=p.x-width/2;
   const value=Math.max(0,Math.ceil(hp)),ratio=Math.max(0,Math.min(1,hp/maxHP));
   const name=kind==='forward'?'중간 타워':kind==='turret'?'본진 포탑':'핵심 기지';
   ctx.save();ctx.fillStyle='#0b1d28ed';ctx.fillRect(left,y,width,45);
