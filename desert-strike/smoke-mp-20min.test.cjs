@@ -32,7 +32,7 @@ test('online Prism-only schedule with 30-second choice does not change solo cata
  game.state.wave=9;game.wave();assert.equal(game.state.augmentChoice.round,10);
  game.state.augmentChoice=null;
  game.state.wave=19;game.wave();assert.equal(game.state.augmentChoice.round,20);
- assert.equal(w.DesertPrism.cards.length,400,'forty special Prisms per faction including thirty additions');
+ assert.equal(w.DesertPrism.cards.length,420,'forty original Prisms plus two specialist transcendences per faction');
  for(let i=0;i<10;i++){
   const card=w.DesertPrism.cards.find(card=>card.id==='exp-prism-'+i+'-9');
   assert.ok(card.effects.length>=2,'faction '+i+' has a compound capstone');
@@ -58,7 +58,8 @@ test('late match retains natural core-only victory without artillery or healing 
 });
 test('single-scale lane camera and selectable enemy cards remain in web UI',()=>{
  const html=read('index.html'),ui=read('tri-lane-ui.js'),css=read('style-v2.css');
- assert.match(html,/id="mpBattleCanvas" width="1100" height="520"/);
+ assert.match(html,/id="mpBattleCanvas" width="1100" height="400"/);
+ assert.match(html,/id="mpAllBattleCanvas" width="1100" height="408"/,'three lanes must be visible on one overview');
  for(const id of ['mpBattleLaneSelect','mpPanLeft','mpPanCenter','mpPanRight','mpAugmentRoster'])
   assert.ok(html.includes('id="'+id+'"'),id);
  assert.match(ui,/function renderAugmentRoster\(/);
@@ -69,5 +70,5 @@ test('single-scale lane camera and selectable enemy cards remain in web UI',()=>
  assert.match(ui,/mapCanvas\.addEventListener\('pointermove'/);
  assert.match(ui,/iso\.terrain\(ctx,E\.WIDTH,H,false/);
  assert.match(ui,/iso\.structure\(ctx,x,260,faction,tower,hp\/max,kind\)/);
- assert.match(css,/#mpBattleCanvas\{width:100%;height:auto;aspect-ratio:1100\/520/);
+ assert.match(css,/#mpBattleCanvas\{aspect-ratio:1100\/400/,'compact single-line viewport should be 400px high');
 });
