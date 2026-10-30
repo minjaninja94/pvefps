@@ -28,7 +28,8 @@ assert.ok(source.includes('window.__pace='),'solo injection succeeded');
 vm.runInNewContext(source,ctx,{filename:'game-v2.js'});
 const S=w.__pace;
 const expectedPrices=[65,100,185,285,185,360,300,220];
-assert.deepEqual(Array.from(w.DesertRoster.ROLE,r=>r.cost),expectedPrices,'published role prices');
+ const fullPrices=[...expectedPrices,70,380,330];
+assert.deepEqual(Array.from(w.DesertRoster.ROLE,r=>r.cost),fullPrices,'published role prices');
 for(const ruleset of ['standard','augment']){
  S.reset();const st=S.state();Object.assign(st,{live:true,ruleset,cash:10000,aiNextThink:Infinity});
  for(let role=0;role<8;role++){
@@ -83,7 +84,7 @@ const multiCode=read('tri-lane-engine.js').replace(marker,'return {state,order,t
 assert.ok(multiCode.includes('__test:{hitFort}'));
 vm.runInNewContext(multiCode,multiContext,{filename:'tri-lane-engine.js'});
 const E=multiContext.window.DesertTriEngine;
-assert.deepEqual(Array.from(E.COST).slice(0,8),expectedPrices,'standalone authoritative host and solo catalogue agree');
+assert.deepEqual(Array.from(E.COST),fullPrices,'standalone authoritative host and solo catalogue agree');
 for(const ruleset of ['standard','augment'])for(const mode of ['pvp','classic']){
  const game=E.create({mode,size:1,ruleset,members:[{uid:'a',team:0,faction:0},{uid:'b',team:1,faction:3}]});
  if(ruleset==='augment')for(const p of game.state.players)assert.equal(game.order(p.uid,{type:'augment_pick',slot:1}).ok,true);
