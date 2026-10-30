@@ -22,6 +22,18 @@ test('live sniper/assassin catalogue matches both engines for all ten factions',
  }
 });
 
+test('solo army roster keeps specialist portraits still while combat retains animated strips',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const game=fs.readFileSync(path.join(__dirname,'game-v2.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'style-v2.css'),'utf8');
+ const art=fs.readFileSync(path.join(__dirname,'expansion/expansion-art.js'),'utf8');
+ assert.doesNotMatch(game, /-preview\\.png/,'animated APNG previews must not autoplay in formation cards');
+ assert.match(game, /specialist-static-preview/);
+ assert.match(game, /assassin'\\)\\+'\\.webp/);
+ assert.match(css, /\\.unit-card \\.specialist-static-preview\\s*\\{[^}]*background-size:800% 100%/);
+ assert.match(art, /poses=\\{idle:/,'battle animation strips must remain present');
+});
+
 test('stealth is visible, non-targetable outside detection, exposed while attacking and defeated by a living detector',()=>{
  const knife={id:10,team:1,role:10,x:201,y:0,hp:100},rifle={id:1,team:0,role:1,x:0,y:0,hp:100},medic={id:7,team:0,role:7,x:10,y:0,hp:100};
  const units=[knife,rifle,medic];
