@@ -68,10 +68,10 @@ test('battle tower HP HUD paints current / maximum for both engines and respects
   for(const team of [0,1]){
    labels.length=0;rects.length=0;isolatedSolo(g,team===0?825:2475,team,kind,max/2,max);
    assert.ok(labels.includes(Math.ceil(max/2)+' / '+max),'solo '+kind+' '+team+' numeric health');
-   assert.ok(rects.some(v=>v[2]===50&&v[3]===6),'solo '+kind+' proportional bar');
+   assert.ok(rects.some(v=>v[2]===(kind==='core'?46:50)&&v[3]===6),'solo '+kind+' proportional bar');
    labels.length=0;rects.length=0;isolatedMulti(g)(team===0?825:2475,team,kind,max/2,max);
    assert.ok(labels.includes(Math.ceil(max/2)+' / '+max),'multi '+kind+' '+team+' numeric health');
-   assert.ok(rects.some(v=>v[2]===50&&v[3]===6),'multi '+kind+' proportional bar');
+   assert.ok(rects.some(v=>v[2]===(kind==='core'?46:50)&&v[3]===6),'multi '+kind+' proportional bar');
   }
  }
  labels.length=0;rects.length=0;isolatedSolo(g,825,0,'forward',0,1000);
