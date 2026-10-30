@@ -2,7 +2,7 @@
 'use strict';
 // Standalone test harnesses may load this engine without the optional specialist script.
 const LIVE_SPECIALISTS=window.DesertExpansion||{
- CANDIDATES:{9:{key:'sniper',name:'저격',cost:380,hp:78,damage:300,armor:0,range:370,rate:4.8,speed:44,airTarget:false,kind:'ground',good:[],bad:[0,1,10]},
+ CANDIDATES:{9:{key:'sniper',name:'저격',cost:380,hp:78,damage:300,armor:0,range:370,rate:4.8,speed:44,airTarget:false,kind:'ground',good:[3],bad:[0,1,10]},
   10:{key:'assassin',name:'암살',cost:330,hp:52,damage:180,armor:0,range:30,rate:1.45,speed:96,airTarget:false,kind:'ground',good:[5,7,9],bad:[0,3,7]}},
  NAMES:Array.from({length:10},(_,f)=>f===3?['쾌흥태','견쌍섭']:['저격병','암살자']),
  definition(role){const r=this.CANDIDATES[role];return {...r,hp:r.hp*2.25,damage:r.damage*.94,speed:r.speed*.84,heal:0,blast:0};},
@@ -56,7 +56,7 @@ const FACTIONS=[
  {id:'fairy',name:'농농 페어리족',tag:'PETAL FAIRIES',logo:'❀',color:'#ffadd4',bonus:'치유 특화 · 지원병 기본 치유량 15% 증가 · 5초마다 주변 다른 아군 1기에 실제 회복량의 5% 추가 치유',mut:{hp:1,dmg:1,speed:1.01},units:['꽃잎 소검사','이슬 마도사','씨앗 관통술사','버섯껍질 방패수','반딧불 대공술사','꽃가루 폭격사','별빛 나비정령','꽃샘 치유사'],slogan:'주변 아군에게 이어지는 연쇄치유',secondary:'#84577c'}
 ];
 ROLE[8]={key:'extractor',name:'자원채취',mark:'⬡',token:'⬡',cost:70,hp:1,damage:0,armor:0,range:0,rate:1,speed:0,kind:'ground',good:[],bad:[]};
-for(const r of [9,10])ROLE[r]={...LIVE_SPECIALISTS.CANDIDATES[r],mark:r===9?'⌖':'†',token:r===9?'⌖':'†',tips:r===9?'장거리 단일 저격 · 장갑 50% 관통 · 근접 호위에 취약':'은신 침투 · 지원병 탐지 범위에서 표적 지정 가능 · 매우 낮은 체력'};
+for(const r of [9,10])ROLE[r]={...LIVE_SPECIALISTS.CANDIDATES[r],mark:r===9?'⌖':'†',token:r===9?'⌖':'†',tips:r===9?'장거리 단일 저격 · 장갑병 및 지상 특수병(비행 제외)에 정밀 피해 1.6배 · 장갑 50% 관통 · 근접 호위에 취약':'은신 침투 · 지원병 탐지 범위에서 표적 지정 가능 · 매우 낮은 체력'};
 FACTIONS.forEach((f,i)=>f.units.push('자원채취',...LIVE_SPECIALISTS.NAMES[i]));
 const COMBAT_ROLES=[0,1,2,3,4,5,6,7,9,10];
 const RNAME=ROLE.map(r=>r.name),SPRITES=new Map();
