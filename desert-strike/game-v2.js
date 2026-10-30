@@ -1387,6 +1387,7 @@ function endMatch(win){
  setMessage(win?'적군 핵심 기지 파괴 · 승리':'아군 핵심 기지 파괴 · 패배');
 }
 function roleMatchupHtml(role,faction=state?.faction??0){
+ if(role===7)return '<span class="tag strong">회복 전용 · 공격 상성 없음</span><span class="tag weak">위협: 돌격 · 사격 · 기병</span>';
  const r=getDef(role,faction);
  return '<span class="tag strong">'+(role===7?'시너지 ':'강점 ')+r.good.map(i=>ROLE[i].mark+ROLE[i].name).join(' · ')+'</span>'+
  '<span class="tag weak">약점 '+r.bad.map(i=>ROLE[i].mark+ROLE[i].name).join(' · ')+'</span>';
@@ -1504,7 +1505,7 @@ function updateUI(full=false){
    return '<button class="unit-card'+(selectedRole===i?' selected':'')+'" data-role="'+i+'" title="'+getDef(i,state.faction).tips+
     '"><span class="uc-top">'+getDef(i,state.faction).mark+' '+getDef(i,state.faction).name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
     '</span><span class="uc-name">'+f.units[i]+'</span><span class="uc-role">'+getDef(i,state.faction).name+' · '+(getDef(i,state.faction).kind==='air'?'공중':'지상')+'</span>'+
-    '<span class="uc-cost">'+r.cost+' CR</span><span class="good-counter">'+(i===7?'지원':'강점')+': '+getDef(i,state.faction).good.map(x=>ROLE[x].mark).join(' ')+'</span><span class="bad-counter">약점: '+getDef(i,state.faction).bad.map(x=>ROLE[x].mark).join(' ')+'</span></button>';
+    '<span class="uc-cost">'+r.cost+' CR</span><span class="good-counter">'+(i===7?'✚ 회복 전용':'강점: '+getDef(i,state.faction).good.map(x=>ROLE[x].mark).join(' '))+'</span><span class="bad-counter">'+(i===7?'위협: ⚔ ⌖':'약점: '+getDef(i,state.faction).bad.map(x=>ROLE[x].mark).join(' '))+'</span></button>';
   }).join('')+'<button class="unit-card resource-card'+(selectedRole===EXTRACTOR?' selected':'')+'" data-role="8" title="'+ecoTooltip(state.eco,state.elapsed)+'" '+(state.eco>=7||ecoRemaining()>0?'disabled':'')+'><span class="uc-top">자원채취 · '+state.eco+'/7</span><span class="uc-sprite"><img class="pixel-preview" src="./assets/resource-extractor.webp" alt=""></span><span class="uc-name">자원채취 건물</span><span class="uc-role">'+(state.eco>=7?'수입 +'+showIncome(state.eco):'완료 후 +'+showIncome(state.eco+1))+' / 0.5초</span><span class="uc-cost">'+(state.eco>=7?'최대 단계':ecoCost()+' CR')+'</span><span class="bad-counter">'+(state.eco>=7?'7 / 7':'건설 '+ecoBuildSeconds(state.eco+1)+'초 · 안정화 '+ecoStabilize(state.eco+1,state.elapsed)+'초')+'</span></button>';
 
   $('demolishButton').classList.toggle('selected',demolition);
@@ -1539,8 +1540,8 @@ function initFactions(){
   if(portrait)c.getContext('2d')?.drawImage(portrait,0,0,72,72);
  });
  $('counterMatrix').innerHTML=ROLE.map((r,i)=>'<div class="matrix-item"><b>'+r.mark+' '+r.name+'</b>'+
- '<div class="good">'+(i===7?'조합 시너지: ':'강점: ')+r.good.map(x=>ROLE[x].mark+ROLE[x].name).join(' / ')+'</div>'+
- '<div class="bad">약점: '+r.bad.map(x=>ROLE[x].mark+ROLE[x].name).join(' / ')+'</div></div>').join('');
+ '<div class="good">'+(i===7?'회복 전용 · 공격 상성 없음':'강점: '+r.good.map(x=>ROLE[x].mark+ROLE[x].name).join(' / '))+'</div>'+
+ '<div class="bad">'+(i===7?'위협: 돌격 · 사격 · 돌격기병':'약점: '+r.bad.map(x=>ROLE[x].mark+ROLE[x].name).join(' / '))+'</div></div>').join('');
 }
 function px(ctx,x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h);}
 function buildSprite(faction,role,phase){

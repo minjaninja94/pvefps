@@ -96,8 +96,8 @@ function renderCounterGuide(fac){
   item.className='mp-counter-item';
   const heading=document.createElement('strong'),good=document.createElement('span'),bad=document.createElement('span');
   heading.textContent=(ICONS[i]||'')+' '+(global.DesertRoster?.FACTIONS?.[fac]?.units?.[i]||E.NAMES[i]);
-  good.textContent=(i===7?'시너지: ':'강점: ')+(d?.good||[]).map(r=>E.NAMES[r]).join(' · ');
-  bad.textContent='약점: '+(d?.bad||[]).map(r=>E.NAMES[r]).join(' · ');
+  good.textContent=i===7?'회복 전용 · 공격 상성 없음':'강점: '+(d?.good||[]).map(r=>E.NAMES[r]).join(' · ');
+  bad.textContent=i===7?'위협: 돌격 · 사격 · 기병':'약점: '+(d?.bad||[]).map(r=>E.NAMES[r]).join(' · ');
   good.className='mp-counter-good';bad.className='mp-counter-bad';
   item.append(heading,good,bad);fragment.append(item);
  }
@@ -115,12 +115,12 @@ function unitCards(){
   const advantage=i===8?[]:(d?.good||[]).map(r=>E.NAMES[r]);
    const vulnerable=i===8?[]:(d?.bad||[]).map(r=>E.NAMES[r]);
    b.title=i===8?ecoTooltip(me?.eco||0,snap?.seconds||0):
-    [d?.tips||'',(i===7?'시너지 ':'강점 ')+advantage.join(' · '),'약점 '+vulnerable.join(' · ')].filter(Boolean).join('\n');
+    [d?.tips||'',i===7?'회복 전용 · 공격 상성 없음':'강점 '+advantage.join(' · '),i===7?'위협: 돌격 · 사격 · 기병':'약점 '+vulnerable.join(' · ')].filter(Boolean).join('\n');
   if(i===8)b.disabled=(me?.eco||0)>=7||(me?.ecoReadyAt||0)>(snap?.seconds||0);
   b.append(cv,name,cost);
    if(d){const good=document.createElement('span'),bad=document.createElement('span');
-    good.className='mp-good-counter';good.textContent=(i===7?'시너지 ':'강점 ')+(d.good||[]).map(r=>ICONS[r]||E.NAMES[r]).join(' ');
-    bad.className='mp-bad-counter';bad.textContent='약점 '+(d.bad||[]).map(r=>ICONS[r]||E.NAMES[r]).join(' ');
+    good.className='mp-good-counter';good.textContent=i===7?'✚ 회복 전용':'강점 '+(d.good||[]).map(r=>ICONS[r]||E.NAMES[r]).join(' ');
+    bad.className='mp-bad-counter';bad.textContent=i===7?'위협 ⚔ ⌖':'약점 '+(d.bad||[]).map(r=>ICONS[r]||E.NAMES[r]).join(' ');
     b.append(good,bad);
    }
    out.append(b);
@@ -244,7 +244,7 @@ function draw(){
    if(matchup&&!u.isHatchling){
     const good=(matchup.good||[]).slice(0,2).map(r=>ICONS[r]||E.NAMES[r]?.slice(0,1)||'?').join('');
     const bad=(matchup.bad||[]).slice(0,2).map(r=>ICONS[r]||E.NAMES[r]?.slice(0,1)||'?').join('');
-    const info='▲'+good+'  ▼'+bad;
+    const info=u.role===7?'✚ 회복 전용':'▲'+good+'  ▼'+bad;
     ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.lineWidth=3;
     ctx.strokeStyle='#071722';ctx.strokeText(info,p.x,hpY-(u.heroCount===20?34:18));
     ctx.fillStyle='#e8f5dc';ctx.fillText(info,p.x,hpY-(u.heroCount===20?34:18));

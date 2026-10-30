@@ -92,3 +92,25 @@ test('both battle HUDs disclose only the current strength of the advantage, not 
  assert.match(html,/유리한 병종 상성 피해/);
  assert.match(html,/tower-aggro-20261030/);
 });
+test('heal-only support displays its real purpose, and no fake offensive armor matchup',()=>{
+ const solo=read('game-v2.js'),host=read('tri-lane-engine.js'),ui=read('tri-lane-ui.js');
+ assert.match(solo,/damage:0,heal:36/);
+ assert.match(solo,/good:\[\],bad:\[\]/);
+ assert.match(solo,/회복 전용 · 공격 상성 없음/);
+ assert.match(host,/const GOODS=.*\[\]\];/);
+ assert.match(host,/const BADS=.*\[\]\];/);
+ assert.match(ui,/const info=u\.role===7\?'✚ 회복 전용'/);
+ assert.match(ui,/위협: 돌격 · 사격/);
+});
+test('forward tower draws elevated muzzle-fired laser and intercepts enemy reinforcements behind it',()=>{
+ const solo=read('game-v2.js'),multi=read('tri-lane-engine.js'),ui=read('tri-lane-ui.js'),iso=read('isometric-world.js');
+ assert.match(solo,/const interceptForward=!u\.guardian&&forward\.part==='forward'/);
+ assert.match(solo,/forwardDistance\+32<distance\(u,target\)/);
+ assert.match(multi,/const interceptForward=!support&&!u\.guardian&&forward\.part==='forward'/);
+ assert.match(multi,/forwardDistance\+32<best/);
+ assert.match(iso,/function towerMuzzle\(/);
+ assert.match(iso,/kind==='forward'\?92/);
+ assert.match(solo,/IsoWorld\?\.towerMuzzle\?\.\(shot\.x,shot\.y,faction,shot\.kind,shot\.side\)/);
+ assert.match(multi,/originKind:forward\?'forward':'turret'/);
+ assert.match(ui,/iso\?\.towerMuzzle\?\.\(e\.x,e\.y-lane\*E\.LANE_H,e\.faction,e\.originKind,e\.team\)/);
+});
