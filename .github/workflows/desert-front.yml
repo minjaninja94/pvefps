@@ -63,6 +63,8 @@ jobs:
         run: node --test desert-strike/smoke-original-art.test.cjs
       - name: No artillery or regen penalty, 30-second Prism, solo-like multiplayer view
         run: node --test desert-strike/smoke-mp-20min.test.cjs
+      - name: Tactical counters take priority over hero production
+        run: node --test desert-strike/smoke-ai-adaptation.test.cjs
       - name: Five AI difficulty levels and multiplayer counters
         run: node --test desert-strike/smoke-five-ai-levels.test.cjs
       - name: Godot 300-card augment parity and sandboxed host decisions

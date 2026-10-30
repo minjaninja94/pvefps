@@ -641,22 +641,26 @@ function hardInvest(){
  for(let purchase=0;purchase<12;purchase++){
   const counts=Array(8).fill(0);for(const role of state.enemyBuilt)if(role!==null&&role!==EXTRACTOR)counts[role]++;
   let slot=state.enemyBuilt.findIndex(v=>v===null);if(slot<0)break;
-  let action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,costs:ROLE.map((x,i)=>unitCost(i,state.enemyFaction)),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded,roles}});
+  let action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,difficulty:state.aiDifficulty,costs:ROLE.map((x,i)=>unitCost(i,state.enemyFaction)),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded,roles}});
   // After the planned opener, maintain factory output while waiting for a
   // costly specialist. Respect the extractor reserve and never buy for free.
   const total=counts.reduce((n,v)=>n+v,0);
   const ecoDue=state.enemyEco<Math.min(MAX_ECONOMY,1+Math.floor(state.elapsed/65))&&
    total>=2+state.enemyEco*2&&ecoRemaining(1)<=0;
+  const reply=ai.response(brain,{counts,intel:{roles,air,armor,invaded},difficulty:state.aiDifficulty});
+  if(reply.needed&&state.elapsed-(brain.lastCounterSwitch??-Infinity)>=(state.aiDifficulty==='impossible'?8:16)){
+   brain.heroRole=reply.role;brain.secondHeroRole=undefined;brain.lastCounterSwitch=state.elapsed;
+  }
   const focus=aiHeroFocus(counts,intel,brain);
   // Keep crucial anti-air / anti-armor defenses and a paid extractor ahead of
   // the long-term hero plan. Otherwise complete an actual 20-factory cohort.
-  const urgentDefense=intel.invaded||
+  const urgentDefense=reply.needed||action?.tactical||intel.invaded||
    (intel.air>=3&&counts[4]<Math.max(2,intel.air*.20))||
    (intel.armor>=3&&counts[2]<Math.max(2,intel.armor*.20));
   const commitHero=focus!==null&&!urgentDefense&&!ecoDue&&counts[focus]<20&&
    total<Math.min(SLOTS-state.enemyEco,Math.max(growTo,28));
   if(commitHero)action=state.enemyCash>=unitCost(focus,state.enemyFaction)?{kind:'unit',role:focus}:null;
-  if(!action&&!commitHero&&total<growTo&&!ecoDue&&brain.opening>=ai.plans[brain.plan].opening.length){
+  if(!action&&!commitHero&&!reply.needed&&total<growTo&&!ecoDue&&brain.opening>=ai.plans[brain.plan].opening.length){
    const candidates=ROLE.map((role,id)=>id).filter(id=>unitCost(id,state.enemyFaction)<=state.enemyCash);
    const counters=intel.dominant===null?[]:aiCountersFor(intel.dominant);
    const weights=ai.plans[brain.plan].weights;

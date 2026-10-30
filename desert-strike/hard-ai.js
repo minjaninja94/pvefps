@@ -10,7 +10,29 @@ function create(faction=0,random=Math.random){
  const index=Math.min(PLANS.length-1,Math.max(0,Math.floor(random()*PLANS.length)));
  return {plan:index,faction,opening:0,nextThink:0,spent:0,economyPurchases:0};
 }
-function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={}}){
+function response(brain,{counts,intel={},difficulty='veryhard'}){
+ const roles=intel.roles||[],seen=roles.reduce((a,b)=>a+b,0),army=counts.reduce((a,b)=>a+b,0);
+ const major=roles.indexOf(Math.max(0,...roles)),fraction=seen?roles[major]/seen:0;
+ if(seen<6)return {needed:false};
+ const ground=[3,4,6,7].includes(brain.faction);
+ if(seen>=8&&roles[5]>=Math.max(4,seen*.38)&&roles[0]>=Math.max(2,seen*.16)){
+  const counters=[6,3,1],shares=[.24,.22,.18],role=counters.find((r,i)=>counts[r]<Math.max(1,Math.ceil(army*shares[i])));
+  if(role!==undefined)return {needed:true,role,counters,major};
+ }
+ const table=[[1,3],[3,5],[0,1],[2,ground?3:6],[2,3],[0,ground?1:6],(intel.air||0)>=roles[6]*.5?[4,1]:[2,3],[0,5]];
+ if(difficulty==='impossible'&&seen>=10&&fraction<.45){
+  const weights=Array(8).fill(0);roles.forEach((n,r)=>{weights[table[r][0]]+=n*.65;weights[table[r][1]]+=n*.35;});
+  const deficits=weights.map((n,r)=>({role:r,gap:(army+2)*.72*n/seen-counts[r]})).sort((a,b)=>b.gap-a.gap);
+  return {needed:deficits[0].gap>=1.25,role:deficits[0].role,counters:deficits.filter(x=>x.gap>0).map(x=>x.role),major};
+ }
+ if(fraction<(difficulty==='impossible'?.45:.55))return {needed:false};
+ const counters=table[major];
+ const share=difficulty==='impossible'?.72:.60,covered=counters.reduce((n,r)=>n+counts[r],0);
+ const needed=covered<Math.ceil(Math.max(army,3)*share);
+ const role=counters.slice().sort((a,b)=>counts[a]-counts[b])[0];
+ return {needed,role,counters,major};
+}
+function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={},difficulty='veryhard'}){
  const plan=PLANS[brain.plan],army=counts.reduce((a,b)=>a+b,0);
  const roles=intel.roles||[],seen=roles.reduce((a,b)=>a+b,0),major=roles.indexOf(Math.max(0,...roles));
  const concentrated=seen>=6&&major>=0&&roles[major]/seen>=.65;
@@ -31,6 +53,8 @@ function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={}}){
    }
   }
  }
+ const reply=response(brain,{counts,intel,difficulty});
+ if(reply.needed)return cash>=costs[reply.role]?{kind:'unit',role:reply.role,tactical:true}:null;
  const pending=plan.opening[brain.opening];
  // An exposed rush takes precedence over a scripted opener. A blocked expensive
  // opener must never leave an affordable, useful defender unbuilt.
@@ -94,6 +118,6 @@ function choose(brain,{cash,counts,eco,readyAt,seconds,costs,ecoCost,intel={}}){
  return null;
 }
 function bought(brain,action,cost){brain.spent+=cost;if(action.opening)brain.opening++;if(action.kind==='unit')brain.nextRole=null;if(action.kind==='econ')brain.economyPurchases++;}
-const api=Object.freeze({create,choose,bought,plans:PLANS});global.DesertHardAI=api;
+const api=Object.freeze({create,choose,response,bought,plans:PLANS});global.DesertHardAI=api;
 if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

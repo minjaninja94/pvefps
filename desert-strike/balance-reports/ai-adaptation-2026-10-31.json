@@ -1,0 +1,542 @@
+{
+  "baseline": "5bb14af5b8e843f1c2d5c2dd43dfeffd0fff6b9c",
+  "before": {
+    "method": "12 paired solo campaigns; actual funded purchases and build timers; current veryhard vs impossible; 3 seeds x 2 faction matchups",
+    "results": [
+      {
+        "mode": "solo",
+        "difficulty": "veryhard",
+        "ruleset": "standard",
+        "faction": 0,
+        "wave": 29,
+        "seconds": 355,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          11,
+          12
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "veryhard",
+        "ruleset": "standard",
+        "faction": 4,
+        "wave": 46,
+        "seconds": 561.2,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          22,
+          17
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "impossible",
+        "ruleset": "standard",
+        "faction": 0,
+        "wave": 27,
+        "seconds": 333.7,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          11,
+          11
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "impossible",
+        "ruleset": "standard",
+        "faction": 4,
+        "wave": 46,
+        "seconds": 558,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          22,
+          17
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "veryhard",
+        "ruleset": "standard",
+        "faction": 0,
+        "wave": 48,
+        "seconds": 585.4,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          8640,
+          0
+        ],
+        "factories": [
+          22,
+          14
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "veryhard",
+        "ruleset": "standard",
+        "faction": 4,
+        "wave": 55,
+        "seconds": 669.2,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          8640,
+          0
+        ],
+        "factories": [
+          26,
+          38
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "impossible",
+        "ruleset": "standard",
+        "faction": 0,
+        "wave": 55,
+        "seconds": 668.2,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          8640,
+          0
+        ],
+        "factories": [
+          26,
+          33
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "impossible",
+        "ruleset": "standard",
+        "faction": 4,
+        "wave": 54,
+        "seconds": 656.6,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          8640,
+          0
+        ],
+        "factories": [
+          26,
+          32
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "veryhard",
+        "ruleset": "standard",
+        "faction": 0,
+        "wave": 28,
+        "seconds": 345.6,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          11,
+          13
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "veryhard",
+        "ruleset": "standard",
+        "faction": 4,
+        "wave": 56,
+        "seconds": 679,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          8640,
+          0
+        ],
+        "factories": [
+          27,
+          35
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "impossible",
+        "ruleset": "standard",
+        "faction": 0,
+        "wave": 28,
+        "seconds": 345.6,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          11,
+          13
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "impossible",
+        "ruleset": "standard",
+        "faction": 4,
+        "wave": 56,
+        "seconds": 671,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          8640,
+          0
+        ],
+        "factories": [
+          26,
+          36
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "after": {
+    "method": "12 paired solo campaigns; actual funded purchases and build timers; current veryhard vs impossible; 3 seeds x 2 faction matchups",
+    "results": [
+      {
+        "mode": "solo",
+        "difficulty": "veryhard",
+        "ruleset": "standard",
+        "faction": 0,
+        "wave": 30,
+        "seconds": 367.2,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          12,
+          10
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "veryhard",
+        "ruleset": "standard",
+        "faction": 4,
+        "wave": 71,
+        "seconds": 861.8,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          8640,
+          0
+        ],
+        "factories": [
+          36,
+          48
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "impossible",
+        "ruleset": "standard",
+        "faction": 0,
+        "wave": 28,
+        "seconds": 344.9,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          11,
+          11
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "impossible",
+        "ruleset": "standard",
+        "faction": 4,
+        "wave": 40,
+        "seconds": 489.2,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          18,
+          14
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "veryhard",
+        "ruleset": "standard",
+        "faction": 0,
+        "wave": 45,
+        "seconds": 547.2,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          19,
+          15
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "veryhard",
+        "ruleset": "standard",
+        "faction": 4,
+        "wave": 55,
+        "seconds": 669.2,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          8640,
+          0
+        ],
+        "factories": [
+          26,
+          38
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "impossible",
+        "ruleset": "standard",
+        "faction": 0,
+        "wave": 37,
+        "seconds": 451.1,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          15,
+          14
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "impossible",
+        "ruleset": "standard",
+        "faction": 4,
+        "wave": 55,
+        "seconds": 666,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          8640,
+          0
+        ],
+        "factories": [
+          26,
+          26
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "veryhard",
+        "ruleset": "standard",
+        "faction": 0,
+        "wave": 29,
+        "seconds": 356.4,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          12,
+          12
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "veryhard",
+        "ruleset": "standard",
+        "faction": 4,
+        "wave": 56,
+        "seconds": 679,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          8640,
+          0
+        ],
+        "factories": [
+          27,
+          35
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "impossible",
+        "ruleset": "standard",
+        "faction": 0,
+        "wave": 30,
+        "seconds": 368.6,
+        "ended": true,
+        "victor": "AI",
+        "bases": [
+          0,
+          8640
+        ],
+        "factories": [
+          14,
+          10
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "solo",
+        "difficulty": "impossible",
+        "ruleset": "standard",
+        "faction": 4,
+        "wave": 48,
+        "seconds": 585,
+        "ended": true,
+        "victor": "human",
+        "bases": [
+          8640,
+          0
+        ],
+        "factories": [
+          23,
+          15
+        ],
+        "augments": [
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "limits": "Three seeds and two faction matchups, standard solo only; prescribed paid human strategy. Not a population win-rate estimate."
+}

@@ -18,7 +18,7 @@ const w={addEventListener(){},DesertLobby:{aiDifficulty:()=>mode,selectedRuleset
 const ctx={document,window:w,requestAnimationFrame(){},Math:random,Date,Number,String,Object,Array,Map,Set,console};
 for(const script of ['unit-consolidation.js','defense-guardian.js','hard-ai.js'])
  vm.runInNewContext(load(script),ctx,{filename:script});
-const inject='window.__benchmark={reset,state:()=>state,aiInitialBuild,tick,constructExtractor,ecoCostFor,upgrade,ROLE};reset();';
+const inject='window.__benchmark={reset,state:()=>state,aiInitialBuild,tick,constructExtractor,ecoCostFor,upgrade,ROLE,getDef,place,setRole:r=>{selectedRole=r}};reset();';
 const source=load('game-v2.js').replace('initFactions();wire();reset();',inject);
 assert.ok(source.includes(inject));
 vm.runInNewContext(source,ctx,{filename:'game-v2.js',timeout:20000});
@@ -38,8 +38,8 @@ function run(faction,pattern,difficulty,salt){
    if(free>=0){
     if(need&&s.cash>=G.ecoCostFor(level)+80&&s.elapsed>=s.ecoReadyAt)G.constructExtractor(0,free);
     else{
-     const role=primary[Math.floor(i/8)%primary.length],cost=G.ROLE[role].cost;
-     if(s.cash>=cost){s.cash-=cost;s.built[free]=role;}
+     const role=primary[Math.floor(i/8)%primary.length],cost=G.getDef(role,s.faction).cost;
+     if(s.cash>=cost){G.setRole(role);G.place(free);}
     }
    }
   }
@@ -56,7 +56,7 @@ function run(faction,pattern,difficulty,salt){
   produced:[s.produced[0].reduce((a,b)=>a+b,0),s.produced[1].reduce((a,b)=>a+b,0)]};
 }
 const data=[],factions=[0,1,2,3,4,5,6,7,8,9];
-for(const faction of factions)for(const pattern of [0,1,2])for(const difficulty of ['normal','hard'])
+for(const faction of factions)for(const pattern of [0,1,2])for(const difficulty of ['normal','hard','veryhard','impossible'])
  data.push(run(faction,pattern,difficulty,20261029));
 function summary(difficulty){
  const x=data.filter(z=>z.difficulty===difficulty);
@@ -67,6 +67,6 @@ function summary(difficulty){
   averageTroopsProduced:avg(z=>z.produced[1])};
 }
 console.log('HARD_AI_WINRATE_BENCHMARK '+JSON.stringify({
- method:'30 paired scenarios, real single-player simulation, 324 seconds per match, no AI free cash; 10 opposing factions x 3 funded human build strategies',
- normal:summary('normal'),hard:summary('hard'),matches:data}));
-assert.equal(data.length,60);
+ method:'30 scenarios across all four non-beginner levels, real paid construction and single-player simulation, 324 seconds per match, no AI free cash; 10 opposing factions x 3 funded human build strategies',
+ normal:summary('normal'),hard:summary('hard'),veryhard:summary('veryhard'),impossible:summary('impossible'),matches:data}));
+assert.equal(data.length,120);

@@ -381,12 +381,16 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   }
   for(let purchase=0;purchase<(state.aiDifficulty==='impossible'?16:12);purchase++){
    const counts=Array(8).fill(0);for(const row of bot.buildings)for(const r of row)if(r!==null&&r!==EXTRACTOR)counts[r]++;
-   let action=ai.choose(brain,{cash:bot.cash,counts,eco:bot.eco,readyAt:bot.ecoReadyAt,seconds:state.seconds,costs:COST.slice(0,8).map((_,r)=>unitCost(bot.faction,r)),ecoCost:ecoPrice(bot.eco),intel:{air,armor,invaded,roles}});
+   let action=ai.choose(brain,{cash:bot.cash,counts,eco:bot.eco,readyAt:bot.ecoReadyAt,seconds:state.seconds,difficulty:state.aiDifficulty,costs:COST.slice(0,8).map((_,r)=>unitCost(bot.faction,r)),ecoCost:ecoPrice(bot.eco),intel:{air,armor,invaded,roles}});
    const sizes=bot.buildings.map(row=>row.filter(r=>r!==null&&r!==EXTRACTOR).length),focus=brain.plan%LANES;
    // Twenty soldiers only form one hero if built by the same owner, in the
    // same lane, close to one another, and healthy. Keep a funded lane-specific
    // cohort after each lane has two real defensive factories.
-   const heroSafe=state.wave>=6&&!invaded&&air<5&&armor<5&&sizes.every(n=>n>=2);
+   const reply=ai.response(brain,{counts,intel:{roles,air,armor,invaded},difficulty:state.aiDifficulty});
+   if(reply.needed&&state.seconds-(brain.lastCounterSwitch??-Infinity)>=(state.aiDifficulty==='impossible'?8:16)){
+    brain.heroRole=reply.role;brain.lastCounterSwitch=state.seconds;
+   }
+   const heroSafe=!reply.needed&&!action?.tactical&&state.wave>=6&&!invaded&&air<5&&armor<5&&sizes.every(n=>n>=2);
    const heroRole=brain.heroRole??([3,6,1,5][brain.plan]||1);
    if(brain.heroRole===undefined)brain.heroRole=heroRole;
    if(brain.heroLane===undefined)brain.heroLane=focus;
