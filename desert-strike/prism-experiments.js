@@ -269,11 +269,11 @@ const extraCards=IDENTITIES.flatMap((concepts,faction)=>Array.from({length:30},(
  const effects=[anomaly],passive=identityPassive(faction,role,offset);
  let description=ROLE_NAMES[role]+'병이 '+every+'번째 명중할 때 '+MODE_TEXT[mode]+'.';
  if(stage>0){
-  effects.push(passive);description+=' '+describePassive(passive)+' 효과가 결합됩니다.';
+  effects.push(passive);description+=' '+describePassive(passive)+' 효과도 발동합니다.';
  }
  if(stage===2&&offset<8){
   const extra=identityPassive(faction,role,offset+1);
-  if(extra.kind!==passive.kind){effects.push(extra);description+=' '+describePassive(extra)+'도 추가됩니다.';}
+  if(extra.kind!==passive.kind){effects.push(extra);description+=' 또한 '+describePassive(extra)+' 효과가 발생합니다.';}
  }
  if(stage===2&&offset>=8){
   const ally=LINKED[faction],name=FACTION_NAMES[ally.faction];
@@ -282,7 +282,7 @@ const extraCards=IDENTITIES.flatMap((concepts,faction)=>Array.from({length:30},(
    description+=' 전쟁 동맹 '+name+'의 '+ROLE_NAMES[ally.role]+'병 1기가 4웨이브마다 지원 출격합니다.';
   }else{
    effects.push({kind:'prism_foreign_kill',role,every:5,count:1,faction:ally.faction,allyRole:ally.role});
-   description+=' 적 '+every+'기 처치 시 동맹 '+name+'의 '+ROLE_NAMES[ally.role]+'병 1기를 전장에 호출합니다.';
+   description+=' 적 5기 처치 시 동맹 '+name+'의 '+ROLE_NAMES[ally.role]+'병 1기를 전장에 호출합니다.';
   }
  }
  const epithet=stage===0?'특이점':stage===1?'전투각성':'초월폭주';

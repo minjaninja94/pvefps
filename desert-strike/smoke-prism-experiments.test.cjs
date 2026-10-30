@@ -19,12 +19,19 @@ test('400 unique, valid per-faction Prism cards extend original 300 and can be d
   assert.equal(cards.filter(c=>Number(c.id.split('-').at(-1))>=10).length,30,'30 newly added Prisms per faction');
   assert.ok(cards.slice(10).every(c=>c.effects.some(e=>['prism_foreign_kill','prism_foreign_wave','prism_anomaly'].includes(e.kind))),'new powers must alter battles, not only income');
  }
- const foreign=['exp-prism-0-10'],killer={role:3},summons=[];
- for(let i=0;i<2;i++)summons.push(...P.deathEffects(foreign,killer));
- assert.ok(summons.some(s=>s.faction===1&&Number.isInteger(s.role)),'kills summon units from another faction');
- const shot={role:4,x:0,y:0,hp:100,maxHP:100},victim={hp:80,maxHP:100,x:30,y:0},others=[{hp:50,maxHP:50,x:35,y:0}];
- const anomaly=['exp-prism-0-16'];
- let hit;for(let i=0;i<2;i++)hit=P.hitEffects(anomaly,shot,victim,100,i,others);
+ const foreign=['exp-prism-0-39'],killer={role:2},summons=[];
+ for(let i=0;i<5;i++)summons.push(...P.deathEffects(foreign,killer));
+ assert.ok(summons.some(s=>s.faction===7&&s.role===3),'thematic Iron/Robot partnership recruits only allies');
+ for(let faction=0;faction<10;faction++){
+  const newCards=P.cards.filter(c=>c.scope==='faction-'+faction&&Number(c.id.split('-').at(-1))>=10);
+  const alliances=newCards.filter(c=>c.effects.some(e=>e.kind.startsWith('prism_foreign')));
+  assert.equal(alliances.length,2,'foreign reinforcements are rare, not a generic perk');
+  assert.ok(newCards.every(c=>c.effects.some(e=>e.kind==='prism_anomaly')),'every new Prism activates on actual hits');
+  assert.ok(!newCards.some(c=>c.effects.some(e=>e.kind==='prism_limit')),'population is unlimited, no dead cap perks');
+ }
+ const shot={role:1,x:0,y:0,hp:100,maxHP:100},victim={hp:80,maxHP:100,x:30,y:0},others=[{hp:50,maxHP:50,x:35,y:0}];
+ const anomaly=['exp-prism-5-10'];
+ let hit;for(let i=0;i<3;i++)hit=P.hitEffects(anomaly,shot,victim,100,i,others);
  assert.ok(hit.secondary.length>0,'projectile impact secondary effects must be applied');
  for(let f=0;f<10;f++){
   const cards=P.cards.filter(c=>c.scope==='faction-'+f);
@@ -34,7 +41,7 @@ test('400 unique, valid per-faction Prism cards extend original 300 and can be d
   assert.ok(new Set(cards.map(c=>c.name)).size===40,'forty unique powers per faction');
  }
  const kinds=new Set(P.cards.flatMap(c=>c.effects.map(x=>x.kind)));
- for(const kind of ['prism_limit','prism_brood','prism_recruit','prism_spawn','prism_cash',
+ for(const kind of ['prism_brood','prism_recruit','prism_spawn','prism_cash',
   'prism_heal','prism_repair','prism_burst','prism_chain','prism_leech','prism_mark',
   'prism_execute','prism_frenzy','prism_revenge','prism_reflect'])
   assert.ok(kinds.has(kind),'missing interactive mechanic: '+kind);
@@ -50,13 +57,14 @@ test('400 unique, valid per-faction Prism cards extend original 300 and can be d
  vm.runInNewContext(read('augment-rules.js'),ctx,{filename:'augment-rules.js'});
  await disabled.DesertAugments.load();
  assert.equal(disabled.DesertAugments.list().length,300,'feature flag restores original catalogue');
- assert.equal(disabled.DesertPrism.populationLimit(['exp-prism-0-3'],220),220);
+ assert.equal(disabled.DesertPrism.populationLimit,undefined,'no population limit API even with experimental effects disabled');
 });
-test('new mechanics actually change population, brood, recruits, wave effects and attacks',()=>{
+test('new mechanics alter brood skills, recruits, wave effects and attacks without a global population cap',()=>{
  const {window}=setup(),P=window.DesertPrism;
- assert.equal(P.populationLimit(['exp-prism-0-3'],220),252);
- assert.equal(P.populationLimit(['exp-prism-0-3'],75,true),87,'increases per-lane cap within safety clamp');
- assert.equal(P.populationLimit(['exp-prism-0-3'],220,false),252);
+ assert.equal(P.populationLimit,undefined);
+ assert.ok(P.cards.every(c=>c.effects.every(e=>e.kind!=='prism_limit')),'all ten factions replace cap-only augments');
+ const elven=P.cards.find(c=>c.id==='exp-prism-5-7');
+ assert.ok(elven.effects.some(e=>e.kind==='prism_anomaly'),'Endless Quiver now splits real arrows');
  const brood=P.broodLimits(['exp-prism-1-0'],8,14,.2);
  assert.equal(brood.cap,16);assert.equal(brood.alive,24);assert.equal(brood.chance,.32);
  const marine=P.recruitLimits(['exp-prism-3-0'],1,.23);
@@ -126,7 +134,7 @@ test('host engine applies experimental reinforcements and bonus credits, indepen
  assert.equal(left.cash-before,70*3+3*24,'first player gets wave-by-wave bonus credits');
  assert.equal(right.cash-rightCash,3*24,'opponent gets baseline wave income only');
  assert.ok(e.state.units.some(u=>u.uid==='a'&&u.role===3),'free armor reinforcements spawn during qualifying wave');
- assert.equal(window.DesertPrism.populationLimit(left.augments,75,true),87);
+ assert.equal(window.DesertPrism.populationLimit,undefined,'no cap to boost in any mode');
  const packet=e.snapshot('b');
  assert.deepEqual(Array.from(packet.players[0].augments),Array.from(left.augments),'completed enemy Prism choices are public for tactical counterplay');
   assert.equal(packet.players[0].cash,null,'enemy economy remains hidden');
@@ -142,7 +150,16 @@ test('host engine applies experimental reinforcements and bonus credits, indepen
  const after=e.state.units.filter(u=>u.uid==='a').length;
  e.wave();assert.equal(e.state.units.filter(u=>u.uid==='a').length,after,'one-time last stand cannot repeat next wave');
 });
-test('solo and authoritative multiplayer engines integrate limit and special combat hooks',()=>{
+test('multiplayer production passes the former 75 units per lane without a hidden cap',async()=>{
+ const {window,ctx}=setup();await window.DesertAugments.load();
+ window.DesertConsolidation=require('./unit-consolidation.js');
+ vm.runInNewContext(read('tri-lane-engine.js'),ctx,{filename:'tri-lane-engine.js'});
+ const e=window.DesertTriEngine.create({mode:'pvp',size:1,members:[{uid:'a',team:0,faction:5},{uid:'b',team:1,faction:0}],ruleset:'augment'});
+ const p=e.state.players[0];p.buildings[0].fill(1);
+ e.state.augmentChoice=null;e.wave();e.wave();
+ assert.ok(e.state.units.filter(u=>u.uid==='a'&&u.lane===0&&u.hp>0).length>=150,'the same lane can exceed 75 soldiers');
+});
+test('solo and authoritative multiplayer engines integrate special combat hooks without a population ceiling',()=>{
  const single=read('game-v2.js'),multi=read('tri-lane-engine.js'),html=read('index.html');
  assert.match(single,/ownPrism\(\)\?\.waveEffects/);
  assert.match(single,/ownPrism\(\)\?\.survival/);
@@ -150,8 +167,9 @@ test('solo and authoritative multiplayer engines integrate limit and special com
  assert.match(single,/ownPrism\(\)\?\.hitEffects/);
  assert.match(single,/ownPrism\(\)\?\.reflectEffects/);
  assert.match(single,/ownPrism\(\)\?\.deathEffects/);
- assert.match(single,/DesertPrism\?\.populationLimit/);
- for(const name of ['waveEffects','hitEffects','reflectEffects','deathEffects','populationLimit','survival','healEcho'])
+ assert.doesNotMatch(single,/SIDE_SUPPLY|DesertPrism\?\.populationLimit/);
+ assert.doesNotMatch(multi,/Math\.max\(75,\.\.\.state\.players/);
+ for(const name of ['waveEffects','hitEffects','reflectEffects','deathEffects','survival','healEcho'])
   assert.ok(multi.includes('DesertPrism?.'+name),'missing multiplayer '+name);
  assert.ok(html.indexOf('prism-experiments.js')<html.indexOf('augment-rules.js'));
  assert.match(html,/웨이브별 증강 선택/);

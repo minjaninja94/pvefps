@@ -104,7 +104,7 @@ test('real 300-card draft works inside the original single-player engine without
  vm.runInNewContext(src('prism-experiments.js'),sandbox,{filename:'prism-experiments.js'});
  st.enemyFaction=0;st.enemyAugments=['exp-prism-0-1','exp-prism-0-7','exp-prism-0-3','exp-prism-0-0'];
  st.enemyBuilt.fill(null);st.enemyCash=0;st.enemyEcoReadyAt=0;st.units=[];st.baseHP[1]=7200*.49;
- assert.equal(G.supplyCap(1),252,'AI prism population cap increases just like the human cap');
+ assert.equal(G.supplyCap(1),Infinity,'AI and player have no population cap');
  const previousSpawn=st.produced[1][3];
  st.wave=41;G.wave();
  assert.equal(st.wave,42);
@@ -119,7 +119,7 @@ test('real 300-card draft works inside the original single-player engine without
  for(let i=0;i<4;i++)G.damage(humanTank,1,2,enemyAttack);
  assert.equal(enemyAttack._prismCounter['prism-prism_burst-2-0'],4,'AI attack applies periodic prism burst counters');
  st.enemyAugments=['exp-prism-0-3'];
- assert.equal(G.supplyCap(1),252);
+ assert.equal(G.supplyCap(1),Infinity);
  G.reset();st=G.state();assert.equal(st.augments.length,0,'restarting forgets prior cards');assert.equal(st.enemyAugments.length,0,'AI cards reset too');
  chosenRuleset='standard';G.start();st=G.state();
  assert.equal(st.ruleset,'standard');assert.equal(st.augmentChoice,null);assert.equal(st.enemyAugments.length,0,'classic AI receives no augments');
@@ -129,6 +129,10 @@ test('real 300-card draft works inside the original single-player engine without
  assert.equal(st.wave,100,'single-player continues beyond wave 22 and wave 99');
  assert.equal(st.ended,false,'no artificial wave-limit victory');
  assert.equal(st.ruleset,'standard','unlimited wave count does not change mode');
+ st.built.fill(0);st.buildReadyAt.fill(0);
+ const prevCount=st.units.filter(u=>u.side===0&&u.hp>0).length;
+ for(let i=0;i<4;i++)G.wave();
+ assert.ok(st.units.filter(u=>u.side===0&&u.hp>0).length>=prevCount+300,'solo standard mode can field well over 220 living troops');
  // Hard difficulty uses the same independent AI draft, without leaking into classic mode.
  w.DesertPrismExperimentalEnabled=false;chosenAiDifficulty='hard';chosenRuleset='augment';G.start();st=G.state();
  assert.equal(st.aiDifficulty,'hard');
