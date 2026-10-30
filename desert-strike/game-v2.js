@@ -1404,7 +1404,7 @@ function tick(dt){
   const x=side===0?WORLD_W/4:WORLD_W*3/4;
   state['forwardCool'+side]=Math.max(0,(state['forwardCool'+side]||0)-ds);
   if(state['forwardCool'+side]>0)continue;
-  const foe=state.units.filter(u=>u.hp>0&&u.side!==side&&Math.hypot(u.x-x,u.y-260)<=TOWER_RANGE).sort((a,b)=>Math.hypot(a.x-x,a.y-260)-Math.hypot(b.x-x,b.y-260))[0];
+  const foe=state.units.filter(u=>u.hp>0&&u.side!==side&&LIVE_SPECIALISTS.canTarget({side,role:4,x,y:260},u,state.units,state.elapsed)&&Math.hypot(u.x-x,u.y-260)<=TOWER_RANGE).sort((a,b)=>Math.hypot(a.x-x,a.y-260)-Math.hypot(b.x-x,b.y-260))[0];
   if(foe){damage(foe,TOWER_DAMAGE*.75,'turret');state['forwardCool'+side]=TOWER_PERIOD;state.towerShots.push({side,kind:'forward',x,y:260,tx:foe.x,ty:foe.y,time:.22,duration:.22});}
  }
  // Rapid defensive single-target turret, per side; targets air and armor as well.
@@ -1413,7 +1413,7 @@ function tick(dt){
   const origin={x:side===0?190:WORLD_W-190,y:260};
   state['cool'+side]=Math.max(0,(state['cool'+side]||0)-ds);
   if(state['cool'+side]>0)continue;
-  const near=state.units.filter(u=>u.side!==side&&u.hp>0&&distance(u,origin)<=TOWER_RANGE);
+  const near=state.units.filter(u=>u.side!==side&&u.hp>0&&LIVE_SPECIALISTS.canTarget({side,role:4,x:origin.x,y:origin.y},u,state.units,state.elapsed)&&distance(u,origin)<=TOWER_RANGE);
   if(!near.length)continue;
   near.sort((a,b)=>distance(a,origin)*.55+a.hp/a.maxHP*42-(a.role===7?35:0)
    -(distance(b,origin)*.55+b.hp/b.maxHP*42-(b.role===7?35:0)));
