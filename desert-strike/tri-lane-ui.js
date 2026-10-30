@@ -578,14 +578,16 @@ function onSnapshot(v){
  if(modeChanged){
   const classic=v.mode==='classic';
   $('mpBaseDescription').textContent=classic?'단일 전장 · 75칸':'라인 선택 → 유닛 선택 → 빈 칸에 건설';
-  $('mpBattleDescription').textContent=classic?'싱글 크기 전장 · 좌우 드래그':'싱글 크기 전장 · 라인 선택 및 좌우 드래그';
+  $('mpBattleDescription').textContent=classic?'싱글 크기 전장 · 좌우 드래그':'전체보기 또는 라인 선택 · 파랑 아군 / 빨강 적군 · 좌우 드래그';
  }
  const preparation=!v.ended&&v.wave===0?Math.max(0,(v.preparationEndsAt??E.OPENING_PREP_SECONDS??10)-v.seconds):0;
  const opening=$('mpOpening');if(opening)opening.hidden=preparation<=1e-6;
  const openingNumber=$('mpOpeningSeconds');if(openingNumber)openingNumber.textContent=String(Math.max(0,Math.ceil(preparation-1e-6)));
  if(!v.ended)$('mpStateTag').textContent=preparation>0?'초기 배치 · '+Math.ceil(preparation-1e-6)+'초 뒤 첫 출격':(v.mode==='classic'?'클래식 1:1':practice?'3라인 AI 연습':'3라인 전투')+' · '+'진행 중';
  const battle=$('mpBattleCanvas');if(battle.height!==battleHeight())battle.height=battleHeight();
- if(fresh||lane>=laneCount()){lane=laneCount()===1?0:1;cameraX=1100;repairLane=lane;gridKey='';setView('base');}
+ $('mpBattleLaneSelect').querySelector('[data-mp-scope="all"]').hidden=laneCount()===1;
+ if(fresh||lane>=laneCount()){lane=laneCount()===1?0:1;cameraX=1100;repairLane=lane;gridKey='';setView('base');setBattleScope(laneCount()===1?'lane':'all');}
+ else if(modeChanged)setBattleScope(laneCount()===1?'lane':'all');
  const me=my(),side=me?.team??0;
  if(me){
   $('mpMyResources').textContent=me.cash+' CR';
@@ -628,7 +630,7 @@ function onSnapshot(v){
    if(!practice)void NET.reportWinner?.(v.winner);
   }
  }
- renderAugment();renderAugmentRoster();renderBattleAugments();unitCards();buildGrid();upgradeInfo();drawOverview();
+ renderAugment();renderAugmentRoster();renderBattleAugments();unitCards();buildGrid();upgradeInfo();renderTacticalPositions();drawOverview();
 }
 function order(cmd){
  if(!snap||snap.ended)return message('진행 중인 경기가 없습니다.');
@@ -648,7 +650,7 @@ async function practiceStart(){
  const difficulty=global.DesertLobby?.aiDifficulty?.()||'normal';
  const mode=$('mpMode').value==='classic'?'classic':'pvp';
  practice=E.create({mode,size:1,aiDifficulty:difficulty,ruleset:$('mpRuleset').value,seed:Date.now()>>>0,members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%10,bot:true}]});
- if(['normal','hard'].includes(difficulty)){const row=mode==='classic'?0:1;practice.state.players[1].buildings[row][1]=0;practice.state.players[1].buildings[row][17]=1;practice.state.players[1].cash-=160;}
+ // Use untouched authoritative bot setup, matching live host-created bot teams.
  $('mpStateTag').textContent=(global.DesertLobby?.difficultyLabel?.(difficulty)||'보통')+' AI 연습';message((mode==='classic'?'클래식 1:1':'3라인')+' AI 연습 시작');
  let last=performance.now();
  practiceTimer=setInterval(()=>{const now=performance.now();practice.tick(Math.min(.16,(now-last)/1000));last=now;onSnapshot(practice.snapshot('local'));},100);
@@ -659,7 +661,7 @@ async function leave(){
  if(practice){clearInterval(practiceTimer);practiceTimer=null;practice=null;practiceRecorded=false;myId='';snap=null;$('mpCommand').hidden=true;$('mpStateTag').textContent='연결 전';message('연습 종료');}
  else{await NET.leave();snap=null;$('mpCommand').hidden=true;}
  $('mpViewTabs').hidden=true;setView('base');
- lane=1;cameraX=1100;repairLane=1;role=0;demolish=false;gridKey='';cardsKey='';counterKey='';augmentKey='';augmentRosterKey='';$('mpAugmentPanel').hidden=true;
+ lane=1;cameraX=1100;repairLane=1;battleScope='all';role=0;demolish=false;gridKey='';cardsKey='';counterKey='';augmentKey='';augmentRosterKey='';$('mpAugmentPanel').hidden=true;
  renderAugmentRoster();renderBattleAugments();
  delete document.body.dataset.multiArena;
  uiButtons();
@@ -701,7 +703,7 @@ function init(){
  $('mpNextLane').addEventListener('click',()=>pickLane(lane+1));
  $('mpOverviewCanvas').addEventListener('click',e=>{
   const r=e.currentTarget.getBoundingClientRect();
-  pickLane(Math.floor((e.clientY-r.top)/r.height*laneCount()),true);
+  pickLane(Math.floor((e.clientY-r.top)/r.height*laneCount()),true);setBattleScope('lane');
  });
  const mapCanvas=$('mpBattleCanvas');
  let drag=null,suppressMapClick=false;
@@ -730,7 +732,20 @@ function init(){
    $('mpInspect').textContent=(closest.team===my()?.team?'아군':'적군')+' · '+name+' · HP '+Math.ceil(closest.hp)+' / '+Math.ceil(closest.maxHP)+' · '+laneName(lane)+(closest.guardian?' · 가디언':'');
   }else $('mpInspect').textContent=laneName(lane)+' 전장 · 드래그로 좌우 이동';
  });
- $('mpBattleLaneSelect')?.addEventListener('click',e=>{const b=e.target.closest('[data-mp-lane]');if(b)pickLane(Number(b.dataset.mpLane));});
+ $('mpBattleLaneSelect')?.addEventListener('click',e=>{
+  const all=e.target.closest('[data-mp-scope="all"]');
+  if(all&&laneCount()>1){setBattleScope('all');return;}
+  const b=e.target.closest('[data-mp-lane]');
+  if(b){pickLane(Number(b.dataset.mpLane));setBattleScope('lane');}
+ });
+ $('mpAllBattleCanvas')?.addEventListener('click',e=>{
+  if(!snap)return;
+  const r=e.currentTarget.getBoundingClientRect();
+  const chosen=Math.min(laneCount()-1,Math.max(0,Math.floor((e.clientY-r.top)/r.height*laneCount())));
+  const focus=((e.clientX-r.left)/r.width)*E.WIDTH;
+  cameraX=Math.max(0,Math.min(E.WIDTH-1100,focus-550));
+  pickLane(chosen);setBattleScope('lane');
+ });
  $('mpPanLeft')?.addEventListener('click',()=>panCamera(-500));
  $('mpPanRight')?.addEventListener('click',()=>panCamera(500));
  $('mpPanCenter')?.addEventListener('click',()=>{cameraX=1100;draw();});
