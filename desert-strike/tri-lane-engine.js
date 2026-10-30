@@ -74,9 +74,9 @@ function combatDef(u,players=null){
 }
 function roomPlayers(input){const x=Array.isArray(input)?input:Object.values(input||{});return x.map(p=>({uid:String(p.uid||p.id||''),name:String(p.name||'지휘관').slice(0,16),team:Number(p.team),faction:Number(p.faction),skin:['default','moe','twilight','aurora','gold'].includes(p.skin)?p.skin:'default',bot:!!p.bot}));}
 function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='standard',seed=1}={}){
- const augmented=ruleset==='augment';
+ const augmented=ruleset==='augment'||ruleset==='prism';
  if(augmented&&!global.DesertAugments?.ready?.())throw Error('증강 카드 준비 전입니다. 새로고침 후 다시 시도하세요.');
- const aug=augmented?global.DesertAugments.create(seed,{prismOnly:true}):null;
+ const aug=augmented?global.DesertAugments.create(seed,{prismOnly:ruleset==='prism'}):null;
   const augmentRounds=augmented?PRISM_STAGES:[];
  if(!['pvp','coop','classic'].includes(mode)||!Number.isInteger(size)||size<1||size>3||(mode==='coop'&&size<2)||(mode==='classic'&&size!==1))throw Error('경기 모드/인원 오류');
  // Classic duel reuses the multiplayer combat kernel on the solo-sized world.
@@ -86,7 +86,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  if(mode==='coop'&&(humans.length!==size||humans.some(p=>p.team!==0)))throw Error('협동 인원과 팀이 일치하지 않습니다');
  if(mode!=='coop'&&(humans.filter(p=>p.team===0).length!==size||humans.filter(p=>p.team===1).length!==size))throw Error('경쟁 양 팀 인원이 일치하지 않습니다');
  const players=humans.concat(mode==='coop'?Array.from({length:size},(_,i)=>({uid:'AI_'+i,name:'적 AI '+(i+1),team:1,faction:(i+3)%10,bot:true})):[]);
- const state={mode,size,ruleset:augmented?'augment':'standard',augmentStage:-1,augmentChoice:null,augmentSchedule:aug?.schedule||[],aiDifficulty:AI_LEVELS.includes(aiDifficulty)?aiDifficulty:'normal',seconds:0,wave:0,next:OPENING_PREP_SECONDS,ended:false,winner:null,
+ const state={mode,size,ruleset:augmented?ruleset:'standard',augmentStage:-1,augmentChoice:null,augmentSchedule:aug?.schedule||[],aiDifficulty:AI_LEVELS.includes(aiDifficulty)?aiDifficulty:'normal',seconds:0,wave:0,next:OPENING_PREP_SECONDS,ended:false,winner:null,
   width:WIDTH,height:HEIGHT,lanes:LANES,
   cores:Array.from({length:LANES},()=>[CORE_HP,CORE_HP]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),forwardHP:Array.from({length:LANES},()=>[1000,1000]),forwardClaimed:Array.from({length:LANES},()=>[false,false]),forwardCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,nextConsolidation:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,augments:[],produced:Array(8).fill(0),combatStats:{damage:Array(8).fill(0),kills:Array(8).fill(0),
   losses:Array(8).fill(0),heroDamage:Array(8).fill(0),heroes:Array(8).fill(0)},cash:360,eco:0,ecoReadyAt:0,weapon:0,armor:0,nukes:1,barrageCd:0,mineCosts:{},mineTimings:{},buildings:Array.from({length:LANES},()=>Array(SLOTS).fill(null)),buildingReadyAt:Array.from({length:LANES},()=>Array(SLOTS).fill(0))})),lanePressure:Array(LANES).fill(.5)};
@@ -162,7 +162,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
   if(data.type==='augment_reroll'){
    const choice=state.augmentChoice,entry=choice?.offers?.[p.uid],slot=data.slot;
    if(!entry||entry.selected||!Number.isInteger(slot)||slot<0||slot>2||entry.rerolls[slot])return {ok:false,reason:'리롤 권한이나 횟수가 없습니다.'};
-   const card=aug.reroll(choice.tier,p.augments,entry.cards,slot);
+   const card=aug.reroll(choice.tier,p.augments,entry.cards,slot,p.faction);
    if(!card)return {ok:false,reason:'교체할 카드가 없습니다.'};
    entry.cards[slot]=card;entry.rerolls[slot]=true;return {ok:true,id:card};
   }

@@ -48,6 +48,6 @@ test('single base, single battle and multiplayer battle all use one faction-awar
  assert.match(multi,/fort\(x,t,true,hp,1000,'forward'\)/,'multiplayer and practice use the same special sprite');
  assert.match(iso,/structureCache\.set\(key,canvas\)/,'render once, reuse the bitmap');
  assert.match(html,/isometric-world\.js\?v=desktop-original-png-20261030/,'browser receives current building art');
- assert.match(html,/game-v2\.js\?v=tower-aggro-20261030/);
- assert.match(html,/tri-lane-ui\.js\?v=tower-muzzle-20261030/);
+ assert.match(html,/game-v2\.js\?v=prism-mode-20261030/);
+ assert.match(html,/tri-lane-ui\.js\?v=prism-mode-20261030/);
 });

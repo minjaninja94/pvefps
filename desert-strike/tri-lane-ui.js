@@ -2,6 +2,7 @@
 (function(global){
 'use strict';
 const $=id=>document.getElementById(id);
+const isAugmented=ruleset=>ruleset==='augment'||ruleset==='prism';
 const NET=global.DesertTriNetwork,E=global.DesertTriEngine;
 if(!NET||!E)return;
 let snap=null,lane=1,role=0,demolish=false,practice=null,practiceTimer=null,practiceRecorded=false,view='base',repairLane=1;
@@ -336,7 +337,7 @@ function combatAudioSnapshot(v){
 function renderBattleAugments(){
  const root=$('mpAugmentBattleRoster');
  if(!root)return;
- if(!snap||snap.ruleset!=='augment'){root.hidden=true;root.replaceChildren();return;}
+ if(!snap||!isAugmented(snap.ruleset)){root.hidden=true;root.replaceChildren();return;}
  root.hidden=false;
  const myTeam=my()?.team??0;
  const signature=JSON.stringify([snap.players.map(p=>[p.uid,p.team,p.name,p.augments]),global.DesertAugments?.ready?.()]);
@@ -374,7 +375,7 @@ function renderBattleAugments(){
 function renderAugmentRoster(){
  const panel=$('mpAugmentRoster'),trigger=$('mpAugmentOpen'),dialog=$('mpAugmentDialog');
  if(!panel||!trigger)return;
- const enabled=!!snap&&snap.ruleset==='augment';
+ const enabled=!!snap&&isAugmented(snap.ruleset);
  trigger.hidden=!enabled;
  if(!enabled){
   panel.hidden=true;augmentRosterKey='';
@@ -522,7 +523,7 @@ function order(cmd){
 }
 async function practiceStart(){
  practiceRecorded=false;resultKey='';global.DesertBattleReport?.hideMulti?.();
- if($('mpRuleset').value==='augment')await global.DesertAugments.load();
+ if(isAugmented($('mpRuleset').value))await global.DesertAugments.load();
  if(lobby)return message('온라인 방에서 나간 뒤 연습할 수 있습니다.');
  myId='local';
  const difficulty=global.DesertLobby?.aiDifficulty?.()||'normal';
@@ -548,7 +549,7 @@ function runClick(fn){return ()=>Promise.resolve().then(fn).catch(e=>message(glo
 function init(){
  $('mpViewTabs').addEventListener('click',e=>{const target=e.target.closest('[data-mp-view]');if(target)setView(target.dataset.mpView,true);});
  $('mpAugmentOpen')?.addEventListener('click',()=>{
-  if(snap?.ruleset!=='augment')return;
+  if(!isAugmented(snap?.ruleset))return;
   renderAugmentRoster();
   const dialog=$('mpAugmentDialog');
   if(dialog&&!dialog.open)dialog.showModal();
@@ -654,7 +655,7 @@ function init(){
  $('mpPractice').addEventListener('click',runClick(practiceStart));
  $('mpCreate').addEventListener('click',runClick(async()=>{
   message('방을 만드는 중…');
-  if($('mpRuleset').value==='augment')await global.DesertAugments.load();
+  if(isAugmented($('mpRuleset').value))await global.DesertAugments.load();
   await NET.create({mode:$('mpMode').value,size:Number($('mpSize').value),ruleset:$('mpRuleset').value,publicRoom:$('mpPublicCheck').checked,name:$('mpName').value,faction:faction(),skin:skin()});
  }));
  $('mpJoin').addEventListener('click',runClick(async()=>{
@@ -668,7 +669,7 @@ function init(){
   const rooms=await NET.browse(),select=$('mpPublicList');select.replaceChildren();
   const empty=document.createElement('option');empty.value='';empty.textContent=rooms.length?'참가할 공개방 선택':'대기 중인 공개방 없음';select.append(empty);
   for(const room of rooms){const opt=document.createElement('option');opt.value=room.code;
-   opt.textContent=room.code+' · '+(room.mode==='classic'?'클래식':room.mode==='coop'?'협동':'3라인 PvP')+' · '+(room.ruleset==='augment'?'증강전':'일반전')+' · '+room.members+'/'+room.capacity;
+   opt.textContent=room.code+' · '+(room.mode==='classic'?'클래식':room.mode==='coop'?'협동':'3라인 PvP')+' · '+(room.ruleset==='prism'?'프리즘 모드':room.ruleset==='augment'?'증강전':'일반전')+' · '+room.members+'/'+room.capacity;
    select.append(opt);
   }
   $('mpBrowseStatus').textContent=rooms.length+'개 공개방 검색 완료';

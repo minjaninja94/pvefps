@@ -1,6 +1,7 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
+const isAugmented=ruleset=>ruleset==='augment'||ruleset==='prism';
 const CW=1100,CH=520,WORLD_W=3300,HOME_H=340,MAX_BASE=8640,MAX_TURRET=1700,INTERVAL=12,COLS=15,ROWS=5,SLOTS=COLS*ROWS,INCOME_PERIOD=.5;
 const COLORS=['#79dfee','#ff9a79'],LANES=[110,180,260,340,410];
 const EXTRACTOR=8;
@@ -94,9 +95,9 @@ function getDef(role,faction){
 };
 }
 function armyPopulation(side){return window.DesertConsolidation?.population(state.units,u=>u.side===side)??state.units.filter(u=>u.hp>0&&u.side===side).length;}
-function sideAugments(side){return state?.ruleset==='augment'?(side===0?state.augments:state.enemyAugments):[];}
+function sideAugments(side){return isAugmented(state?.ruleset)?(side===0?state.augments:state.enemyAugments):[];}
 function supplyCap(){return Infinity;} // No global troop population ceiling in any ruleset.
-function ownPrism(){return state.ruleset==='augment'?window.DesertPrism:null;}
+function ownPrism(){return isAugmented(state.ruleset)?window.DesertPrism:null;}
 function combatRows(){
  return {damage:Array(8).fill(0),kills:Array(8).fill(0),losses:Array(8).fill(0),
   heroDamage:Array(8).fill(0),heroes:Array(8).fill(0)};
@@ -225,8 +226,9 @@ function reset(){
  updateUI(true);setMessage('진영을 선택하고 전투를 시작하세요.');
 }
 function start(){
- const ruleset=window.DesertLobby?.selectedRuleset?.()==='augment'?'augment':'standard';
- if(ruleset==='augment'&&!window.DesertAugments?.ready?.()){
+ const selected=window.DesertLobby?.selectedRuleset?.();
+ const ruleset=isAugmented(selected)?selected:'standard';
+ if(isAugmented(ruleset)&&!window.DesertAugments?.ready?.()){
   setMessage('증강 카드를 불러오는 중입니다. 잠시 후 출격하세요.');
   return;
  }
@@ -236,10 +238,10 @@ function start(){
  state.enemyFaction=(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length;
  state.live=true;
  state.ruleset=ruleset;
- if(ruleset==='augment'){
+ if(isAugmented(ruleset)){
   const seed=Date.now()>>>0;
-  soloAug=window.DesertAugments.create(seed);
-  enemyAug=window.DesertAugments.create((seed^0x9e3779b9)>>>0);
+  soloAug=window.DesertAugments.create(seed,{prismOnly:ruleset==='prism'});
+  enemyAug=window.DesertAugments.create((seed^0x9e3779b9)>>>0,{prismOnly:ruleset==='prism'});
   state.augmentSchedule=soloAug.schedule.slice();
  }
  aiInitialBuild();
@@ -247,7 +249,7 @@ function start(){
  changeView('base');
  setMessage('10초 뒤 첫 출격 · 병력을 배치하세요.');
  updateUI(true);chirp(530,.16);
- if(ruleset==='augment')beginSoloAugment(0);
+ if(isAugmented(ruleset))beginSoloAugment(0);
 }
 function changeView(id){
  const mode=document.body?.dataset?.playMode;
@@ -789,14 +791,14 @@ function applySoloAugment(side,id){
  }
 }
 function enemyChooseAugment(index){
- if(state.ruleset!=='augment'||!enemyAug||state.enemyAugments.length>index)return false;
+ if(!isAugmented(state.ruleset)||!enemyAug||state.enemyAugments.length>index)return false;
  const tier=state.augmentSchedule[index],cards=enemyAug.offer(tier,state.enemyFaction,state.enemyAugments);
  if(cards.some(id=>!id))return false;
  applySoloAugment(1,cards[enemyAug.pick()]);
  return true;
 }
 function beginSoloAugment(index,deferWave=false){
- if(state?.ruleset!=='augment'||!soloAug||state.augmentChoice||index<=state.augmentStage||index<0||index>=window.DesertAugments.STAGES.length)return false;
+ if(!isAugmented(state?.ruleset)||!soloAug||state.augmentChoice||index<=state.augmentStage||index<0||index>=window.DesertAugments.STAGES.length)return false;
  const tier=state.augmentSchedule[index],cards=soloAug.offer(tier,state.faction,state.augments);
  if(cards.some(id=>!id)){setMessage('증강 카드 편성에 문제가 있습니다.');return false;}
  state.augmentStage=index;
@@ -820,7 +822,7 @@ function chooseSoloAugment(slot){
 function rerollSoloAugment(slot){
  const choice=state?.augmentChoice;
  if(!choice||!Number.isInteger(slot)||slot<0||slot>2||choice.rerolls[slot])return false;
- const card=soloAug.reroll(choice.tier,state.augments,choice.cards,slot);
+ const card=soloAug.reroll(choice.tier,state.augments,choice.cards,slot,state.faction);
  if(!card)return false;
  choice.cards[slot]=card;choice.rerolls[slot]=true;
  renderSoloAugment();return true;
@@ -851,7 +853,7 @@ function deployWave(){
    const role=state.built[i];
    {
     createUnit(0,i,role);headcount[0]++;
-    const extra=state.ruleset==='augment'?window.DesertAugments.extra(sideAugments(0),role):0;
+    const extra=isAugmented(state.ruleset)?window.DesertAugments.extra(sideAugments(0),role):0;
     for(let n=0;n<extra;n++){createUnit(0,i,role);headcount[0]++;}
    }
    if(state.faction===3&&role===7)for(const interval of [1,2])state.marineSupports.push({side:0,slot:i,role,wave:state.wave,due:state.elapsed+HUANGLONG_INTERVAL*interval});
@@ -860,7 +862,7 @@ function deployWave(){
    const role=state.enemyBuilt[i];
    {
     createUnit(1,i,role);headcount[1]++;
-    const extra=state.ruleset==='augment'?window.DesertAugments.extra(sideAugments(1),role):0;
+    const extra=isAugmented(state.ruleset)?window.DesertAugments.extra(sideAugments(1),role):0;
     for(let n=0;n<extra;n++){createUnit(1,i,role);headcount[1]++;}
    }
    if(state.enemyFaction===3&&role===7)for(const interval of [1,2])state.marineSupports.push({side:1,slot:i,role,wave:state.wave,due:state.elapsed+HUANGLONG_INTERVAL*interval});
@@ -1007,13 +1009,13 @@ function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
     a!==attacker&&a.hp>0&&a.side===attacker.side&&a.faction===6&&Math.hypot(a.x-attacker.x,a.y-attacker.y)<165))hit*=1.06;
  if(attacker&&(attacker.inkUntil||0)>state.elapsed)hit*=.90;
  const before=u.hp;
- const special=attacker&&!attacker.guardian&&!attacker.isHatchling&&state.ruleset==='augment'
+ const special=attacker&&!attacker.guardian&&!attacker.isHatchling&&isAugmented(state.ruleset)
   ?ownPrism()?.hitEffects?.(sideAugments(attacker.side),attacker,u,hit,state.elapsed,
     state.units.filter(v=>v.hp>0&&v.side!==attacker.side&&v!==u),
     state.units.filter(v=>v.hp>0&&v.side===attacker.side&&v!==attacker)) : null;
  if(special)hit+=special.bonus;
  u.hp-=hit;
- if(u.hp<=0&&state.ruleset==='augment'){
+ if(u.hp<=0&&isAugmented(state.ruleset)){
   const reboot=ownPrism()?.survival?.(sideAugments(u.side),u,state.elapsed,u.hp)||0;
   if(reboot>0){u.hp=reboot;pulse(u.x,u.y,'#93dff3',35);floatText(u.x,u.y-25,'자동 재부팅!','#9ff2ff');}
  }
@@ -1029,7 +1031,7 @@ function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
    pulse(victim.x,victim.y,'#d28cff',12);
   }
  }
- if(attacker&&attacker.side!==u.side&&!u.guardian&&state.ruleset==='augment'){
+ if(attacker&&attacker.side!==u.side&&!u.guardian&&isAugmented(state.ruleset)){
   const reflected=ownPrism()?.reflectEffects?.(sideAugments(u.side),u,attacker,hit)||0;
   if(reflected>0&&attacker.hp>0){const previous=attacker.hp;attacker.hp-=reflected;recordCombatHit(attacker,previous,u);if(attacker.hp<=0)killUnit(attacker);}
  }
@@ -1047,7 +1049,7 @@ function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
   window.DesertCombatAudio?.cue('death',u.x);
   window.DesertCombatAudio?.unit(u.faction,u.role,u.side===0?window.DesertLobby?.selectedSkin?.():'default','death',u.x);
   killUnit(u);marineSpoils(u,attacker,roll);
-  if(attacker&&attacker.side!==u.side&&!attacker.isHatchling&&!attacker.guardian&&state.ruleset==='augment')
+  if(attacker&&attacker.side!==u.side&&!attacker.isHatchling&&!attacker.guardian&&isAugmented(state.ruleset))
    for(const reinforcements of ownPrism()?.deathEffects?.(sideAugments(attacker.side),attacker)||[])
     for(let i=0;i<reinforcements.count;i++)
      createUnit(attacker.side,attacker.side===0?0:COLS-1,reinforcements.role,true,reinforcements.faction??null);
@@ -1065,7 +1067,7 @@ function heal(u,amount,burst=false,healer=null){
  const recovered=Math.min(amount,u.maxHP-u.hp);
  if(recovered>0)window.DesertCombatAudio?.cue('heal',u.x);
  u.hp=Math.min(u.maxHP,u.hp+amount);pulse(u.x,u.y,'#94f7a9',11);
- if(healer&&recovered>0&&state.ruleset==='augment')
+ if(healer&&recovered>0&&isAugmented(state.ruleset))
   for(const echo of ownPrism()?.healEcho?.(sideAugments(healer.side),healer,u,recovered,state.units,state.elapsed)||[]){
    echo.unit.hp=Math.min(echo.unit.maxHP,echo.unit.hp+echo.amount);
    pulse(echo.unit.x,echo.unit.y,'#ffc7e8',14);
@@ -1407,7 +1409,7 @@ let soloBattleAugmentKey='';
 function renderSoloBattleAugments(){
  const root=$('soloBattleAugmentRoster');
  if(root&&(typeof root.replaceChildren!=='function'||typeof document.createElement('div').append!=='function'))return;
- if(!root||!state||!state.live||state.ruleset!=='augment'){
+ if(!root||!state||!state.live||!isAugmented(state.ruleset)){
   if(root){root.hidden=true;root.replaceChildren();root.dataset.signature='';}
   return;
  }
@@ -1457,7 +1459,7 @@ function updateUI(full=false){
  const traitStatus=$('factionTraitStatus');if(traitStatus)traitStatus.hidden=true;
  const activeAug=$('soloAugmentStatus');
  if(activeAug){
-  activeAug.hidden=state.ruleset!=='augment'||!state.live;
+  activeAug.hidden=!isAugmented(state.ruleset)||!state.live;
   if(!activeAug.hidden){
    const names=state.augments.map(id=>window.DesertAugments?.card?.(id)?.name||'증강 카드');
    activeAug.textContent='내 증강 '+state.augments.length+'개 · AI 증강 '+state.enemyAugments.length+'개';activeAug.title='AI 증강 '+state.enemyAugments.length+'개 · '+state.enemyAugments.map(id=>window.DesertAugments?.card?.(id)?.name||id).join(' / ')+(names.length?' | 내 증강: '+names.join(' / '):'');

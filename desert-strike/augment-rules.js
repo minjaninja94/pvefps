@@ -18,9 +18,12 @@ function rng(seed){
 }
 function create(seed=1,{prismOnly=false}={}){
  const roll=rng(seed),schedule=prismOnly?Array(STAGES.length).fill('prismatic'):WEIGHTS.map(w=>{const n=roll()*100;return TIERS[n<w[0]?0:n<w[0]+w[1]?1:2]});
- function draw(tier,scope,blocked){const pool=cards.filter(c=>c.tier===tier&&c.scope===scope&&!blocked.has(c.id));if(!pool.length)return '';const id=pool[Math.floor(roll()*pool.length)].id;blocked.add(id);return id;}
- function offer(tier,faction,chosen=[]){const blocked=new Set(chosen);return [draw(tier,'faction-'+faction,blocked),draw(tier,'common',blocked),draw(tier,'common',blocked)];}
- function reroll(tier,chosen,offered,slot){const prev=byId.get(offered[slot]);if(!prev)return '';return draw(tier,prev.scope,new Set([...chosen,...offered]));}
+ function draw(tier,scopes,blocked){const pool=cards.filter(c=>c.tier===tier&&scopes.includes(c.scope)&&!blocked.has(c.id));if(!pool.length)return '';const id=pool[Math.floor(roll()*pool.length)].id;blocked.add(id);return id;}
+ function offer(tier,faction,chosen=[]){const blocked=new Set(chosen),own='faction-'+faction;return tier==='prismatic'
+  ?Array.from({length:3},()=>draw(tier,[own,'common'],blocked))
+  :[draw(tier,[own],blocked),draw(tier,['common'],blocked),draw(tier,['common'],blocked)];}
+ function reroll(tier,chosen,offered,slot,faction){const prev=byId.get(offered[slot]);if(!prev)return '';const own=Number.isInteger(faction)?'faction-'+faction:offered.map(id=>byId.get(id)?.scope).find(s=>s?.startsWith('faction-'));
+  return draw(tier,tier==='prismatic'?[...(own?[own]:[]),'common']:[prev.scope],new Set([...chosen,...offered]));}
  function pick(){return Math.floor(roll()*3);}
  return {schedule,offer,reroll,pick};
 }

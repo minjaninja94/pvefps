@@ -588,7 +588,7 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
 .lobby-ruleset-picker{margin:15px 0 10px;padding:13px;border:1px solid #527789;border-radius:12px;background:linear-gradient(130deg,#102c3b,#172535)}
 .lobby-ruleset-heading{display:flex;align-items:center;justify-content:space-between;gap:9px;margin:0 0 9px;color:#f5dba6}
 .lobby-ruleset-heading strong{font-size:13px}.lobby-ruleset-heading small{font-size:10px;color:#aac6d5}
-.lobby-ruleset-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.lobby-ruleset-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
 .lobby-ruleset-options button{display:grid;gap:5px;text-align:left;align-content:center;cursor:pointer;padding:10px 13px;min-height:68px;border-radius:9px;border:1px solid #57768a;background:#213c4c;color:#e2eaf0;font:inherit}
 .lobby-ruleset-options button strong{font-size:16px}.lobby-ruleset-options button small{font-size:11px;color:#b8c9d2;line-height:1.35}
 .lobby-ruleset-options button.selected{border:2px solid #e4c787;background:linear-gradient(125deg,#55503b,#284a53);box-shadow:inset 0 0 0 1px #e4c78755,0 0 12px #dfb76b29}
@@ -878,3 +878,5 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
 .lobby-leaderboard-row span{color:#dcd9e8}
 .lobby-leaderboard-row small{color:#a4d1d6}
 @media(max-width:750px){.lobby-mode-ranks{grid-template-columns:repeat(2,minmax(0,1fr))}.lobby-leaderboard-row{grid-template-columns:minmax(0,1fr) auto}.lobby-leaderboard-row small{grid-column:1/-1}.mp-battle-aug-teams{grid-template-columns:1fr}}
+
+@media(max-width:460px){.lobby-ruleset-options{grid-template-columns:1fr}.lobby-ruleset-options button{min-height:54px}}

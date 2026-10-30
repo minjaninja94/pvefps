@@ -66,14 +66,17 @@ class FakePeer {
 function buildClient(uid){
  const w={addEventListener(){},DesertGuardian:require('./defense-guardian.js'),DesertConsolidation:require('./unit-consolidation.js')},env={
   window:w,crypto:webcrypto,RTCPeerConnection:FakePeer,
+  fetch:async()=>({ok:true,json:async()=>JSON.parse(fsNode.readFileSync(path.join(__dirname,'assets/augments.json'),'utf8'))}),
   setInterval,clearInterval,setTimeout,clearTimeout,performance,Date,Math,Number,String,Object,Array,Map,Set,console
  };
  w.IronFirebase={async identity(){return {db:{},fs:firestore,uid};},message:e=>e?.message||String(e)};
+ for(const file of ['prism-experiments.js','augment-rules.js'])vm.runInNewContext(fsNode.readFileSync(path.join(__dirname,file),'utf8'),env,{filename:file});
  vm.runInNewContext(engineSource,env,{filename:'tri-lane-engine.js'});
  vm.runInNewContext(networkSource,env,{filename:'tri-lane-network.js'});
  const events={room:[],status:[],snap:[],peers:[]};
  w.DesertTriNetwork.configure({room:x=>events.room.push(x),status:x=>events.status.push(x),snapshot:x=>events.snap.push(x),peers:x=>events.peers.push(x)});
- return {network:w.DesertTriNetwork,events};
+ return {network:w.DesertTriNetwork,augments:w.DesertAugments,events};
+
 }
 async function until(fn,ms=1800){
  const end=Date.now()+ms;
@@ -148,5 +151,30 @@ async function main(){
   console.log('Mocked '+mode+' '+size+'-per-team P2P room passed: '+count+' people, '+actual+' commanders/AI');
  }
 
+ for(const ruleset of ['augment','prism']){
+  const leader=buildClient('draftHost_'+ruleset),guest=buildClient('draftGuest_'+ruleset);
+  const id=await leader.network.create({mode:'classic',size:1,ruleset,name:'방장',faction:0,publicRoom:false});
+  assert.equal(records.get('desertRooms/'+id).ruleset,ruleset);
+  await guest.network.join({code:id,name:'손님',faction:1,team:1});
+  await until(()=>leader.network.current().peers.size===1);
+  assert.equal(guest.network.current().room.ruleset,ruleset);
+  await leader.network.ready(true);await guest.network.ready(true);
+  await until(()=>Object.values(leader.network.current().room.players).every(p=>p.ready));
+  await leader.network.start();
+  await until(()=>guest.events.snap.some(s=>s?.augmentChoice));
+  const draft=guest.events.snap.at(-1);
+  assert.equal(draft.ruleset,ruleset);
+  if(ruleset==='prism')assert.equal(draft.augmentChoice.tier,'prismatic');
+  assert.ok(draft.augmentChoice.cards.every(id=>leader.augments.card(id)?.tier===draft.augmentChoice.tier));
+  const previous=draft.augmentChoice.cards[1];
+  guest.network.sendOrder({type:'augment_reroll',slot:1});
+  await until(()=>guest.events.snap.at(-1)?.augmentChoice?.cards[1]!==previous);
+  guest.network.sendOrder({type:'augment_pick',slot:1});
+  assert.equal(leader.network.sendOrder({type:'augment_pick',slot:0}).ok,true);
+  await until(()=>guest.events.snap.some(s=>s.augmentChoice===null&&s.players.every(p=>p.augments.length===1)));
+  await leader.network.leave();await guest.network.leave();
+  assert.ok(!records.has('desertRooms/'+id));
+  console.log('Mocked '+ruleset+' room passed: persisted rule, P2P draft, reroll, picks, cleanup');
+ }
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});

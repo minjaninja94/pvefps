@@ -42,7 +42,7 @@ async function retryResult(){
 
 function status(s){notify('status',s);}
 function validateName(s){return String(s||'지휘관').trim().replace(/[<>]/g,'').slice(0,16)||'지휘관';}
-function validateRuleset(s){return s==='augment'?'augment':'standard';}
+function validateRuleset(s){return s==='augment'||s==='prism'?s:'standard';}
 function validateSkin(s){return ['default','moe','twilight','aurora','gold'].includes(s)?s:'default';}
 function code(){const bytes=new Uint8Array(6);crypto.getRandomValues(bytes);return Array.from(bytes,n=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[n%32]).join('');}
 const path=()=>fs.doc(db,'desertRooms',roomId);
@@ -295,7 +295,7 @@ async function start(){
  const guests=members().filter(m=>m.uid!==uid);
  if(guests.some(g=>channels.get(g.uid)?.readyState!=='open'))throw Error('모든 참가자의 P2P 연결이 완료되지 않았습니다.');
  if(!global.DesertTriEngine)throw Error('3라인 전투 엔진이 준비되지 않았습니다.');
- if(room.ruleset==='augment')await global.DesertAugments.load();
+ if(room.ruleset==='augment'||room.ruleset==='prism')await global.DesertAugments.load();
  engine=global.DesertTriEngine.create({mode:room.mode,size:room.size,members:members(),ruleset:validateRuleset(room.ruleset),seed:room.seed||1,aiDifficulty:global.DesertLobby?.aiDifficulty?.()||'normal'});
  // The guest's Supabase registration can finish after Firebase signaling.
  // Retry registration before beginning the battle so normal online wins count.

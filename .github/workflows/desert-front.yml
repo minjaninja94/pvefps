@@ -43,6 +43,8 @@ jobs:
         run: node --test desert-strike/smoke-bgm.test.cjs
       - name: Unlimited waves in solo and PvP/co-op with core-only victory
         run: node --test desert-strike/smoke-endless-waves.test.cjs
+      - name: Mixed Prism offers and Prism-only rules across all modes
+        run: node --test desert-strike/smoke-prism-mode.test.cjs
       - name: Experimental 100 Prism mechanics and 400-card integration
         run: node --test desert-strike/smoke-prism-experiments.test.cjs
       - name: Lobby 300-card augment codex by common, faction, tier and search

@@ -28,7 +28,6 @@ function formatCard(card){
  const tag=make('span','augment-codex-tier '+card.tier,LABELS[card.tier]||card.tier);
  const origin=make('small','augment-codex-origin',card.scope==='common'?'공통 카드':factionName(card.scope.split('-')[1])+' 전용');
  meta.append(tag,origin);
- if(card.experimental)item.classList.add('is-experimental'),meta.append(make('small','augment-codex-experiment','초월 프리즘'));
  item.append(meta,make('h4','augment-codex-card-title',card.name),make('p','augment-codex-card-effect',card.description||'효과 설명 없음'));
  return item;
 }

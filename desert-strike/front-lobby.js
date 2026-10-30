@@ -11,6 +11,7 @@ const KEY='desert-front-training-v2',empty=()=>({xp:0,wins:0,losses:0,mpWins:0,m
 let progress=empty(),uid=null,active=false,lastMultiplayer='',authBusy=false;
 let selectedUnit=0,selectedAction='idle',animationStart=0,animationTick=0,onlineOpen=false;
 const RULESET_KEY='desert-front-ruleset-v1';
+const RULESETS=['standard','augment','prism'];
 const AI_LEVELS=['easy','normal','hard','veryhard','impossible'];
 const AI_NAMES={easy:'쉬움',normal:'보통',hard:'어려움',veryhard:'아주 어려움',impossible:'임파서블'};
 const difficultyLabel=value=>AI_NAMES[value]||AI_NAMES.normal;
@@ -32,7 +33,7 @@ function levelFromXP(xp){let level=1,left=xp;while(level<100&&left>=100+level*70
 function rank(){const score=progress.mpWins*3+progress.wins*.5;return score>=100?'플래티넘 연습생':score>=55?'골드 연습생':score>=24?'실버 연습생':score>=7?'브론즈 연습생':'훈련병';}
 function currentSkin(){const lv=levelFromXP(progress.xp).level;return SKINS.find(x=>x.id===progress.selectedSkin&&lv>=x.level)||SKINS[0];}
 function renderRuleset(){
- const selected=selectedRuleset==='augment';
+ const selected=selectedRuleset!=='standard',label=selectedRuleset==='prism'?'프리즘 모드':'증강전';
  const roomActive=!!global.DesertTriNetwork?.current?.()?.roomId;
  const native=$('mpRuleset');
  if(native&&native.value!==selectedRuleset&&!roomActive)native.value=selectedRuleset;
@@ -43,17 +44,17 @@ function renderRuleset(){
  }
  const description=$('lobbyRulesetDescription');
  if(description)description.textContent=selected
-  ?'1·10·20·30·40웨이브에 증강을 선택합니다.'
+  ?'1·10·20·30·40·50·60·70웨이브에 '+(selectedRuleset==='prism'?'프리즘 증강만 선택합니다.':'증강을 선택합니다.')
    :'핵심 기지 파괴로 승리 · 웨이브 무제한';
  const solo=$('lobbySolo')?.querySelector('span');
- if(solo)solo.textContent=selected?'증강전 · 웨이브 무제한':difficultyLabel(progress.aiDifficulty)+' AI · 웨이브 무제한';
+ if(solo)solo.textContent=selected?label+' · 웨이브 무제한':difficultyLabel(progress.aiDifficulty)+' AI · 웨이브 무제한';
  const multiplayer=$('lobbyMulti')?.querySelector('span');
- if(multiplayer)multiplayer.textContent=selected?'증강전 · 1:1 / 3라인 / 협동':'1:1 / 3라인 / 협동';
+ if(multiplayer)multiplayer.textContent=selected?label+' · 1:1 / 3라인 / 협동':'1:1 / 3라인 / 협동';
  const practice=$('lobbyPractice')?.querySelector('span');
- if(practice)practice.textContent=selected?'증강전 · AI 연습':'AI 연습';
+ if(practice)practice.textContent=selected?label+' · AI 연습':'AI 연습';
 }
 function chooseRuleset(value){
- if(value!=='augment'&&value!=='standard')return false;
+ if(!RULESETS.includes(value))return false;
  if(global.DesertTriNetwork?.current?.()?.roomId||$('mpRuleset')?.disabled)return false;
  selectedRuleset=value;
  const select=$('mpRuleset');if(select){select.value=value;select.dispatchEvent(new Event('change',{bubbles:true}));}
@@ -61,12 +62,12 @@ function chooseRuleset(value){
  renderRuleset();return true;
 }
 function restoreRuleset(){
- try{selectedRuleset=global.localStorage.getItem(RULESET_KEY)==='augment'?'augment':'standard';}catch(_){}
+ try{const value=global.localStorage.getItem(RULESET_KEY);selectedRuleset=RULESETS.includes(value)?value:'standard';}catch(_){}
  if($('mpRuleset'))$('mpRuleset').value=selectedRuleset;
  renderRuleset();
 }
 function syncRulesetFromRoom(value){
- if(value!=='augment'&&value!=='standard'){restoreRuleset();return;}
+ if(!RULESETS.includes(value)){restoreRuleset();return;}
  selectedRuleset=value;
  renderRuleset();
 }
@@ -205,7 +206,7 @@ function single(){
   $('mpStatus').textContent='먼저 참여 중인 방에서 나가야 싱글플레이를 시작할 수 있습니다.';
   return;
  }
- if(selectedRuleset==='augment'&&!global.DesertAugments?.ready?.()){
+ if(selectedRuleset!=='standard'&&!global.DesertAugments?.ready?.()){
   if(soloAugLoadPending)return;
   if(!global.DesertAugments?.load){$('lobbyRulesetDescription').textContent='증강전을 시작할 수 없습니다. 카드를 불러오는 스크립트를 확인하세요.';return;}
   soloAugLoadPending=true;$('lobbySolo').disabled=true;
@@ -280,7 +281,7 @@ function initialize(){
  });
  $('mpRuleset')?.addEventListener('change',()=>{
   if(global.DesertTriNetwork?.current?.()?.roomId)return;
-  const value=$('mpRuleset').value;if(value==='standard'||value==='augment'){
+  const value=$('mpRuleset').value;if(RULESETS.includes(value)){
    selectedRuleset=value;try{global.localStorage.setItem(RULESET_KEY,value);}catch(_){}renderRuleset();
   }
  });

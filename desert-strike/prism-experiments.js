@@ -291,7 +291,7 @@ const extraCards=IDENTITIES.flatMap((concepts,faction)=>Array.from({length:30},(
 }));
 const cards=factionCards.flatMap((items,faction)=>items.map(([name,description,...effects],index)=>Object.freeze({
  id:'exp-prism-'+faction+'-'+index,scope:'faction-'+faction,tier:'prismatic',
- name:name+' · 초월 프리즘',description,experimental:true,effects
+ name,description,experimental:true,effects
 }))).concat(extraCards);
 const cardById=new Map(cards.map(c=>[c.id,c]));
 const enabled=()=>global.DesertPrismExperimentalEnabled!==false;

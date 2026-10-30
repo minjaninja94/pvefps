@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=__dirname,src=p=>fs.readFileSync(path.join(root,p),'utf8');
-test('real 300-card draft works inside the original single-player engine without changing classic rules',async()=>{
+for(const initialRuleset of ['augment','prism'])test(initialRuleset+' draft works inside the original single-player engine without changing classic rules',async()=>{
  const catalogue=JSON.parse(src('assets/augments.json'));
  const sprites=new Map(),nodes=new Map(),queue=[];
  const ctx=new Proxy({createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}})},
@@ -27,7 +27,7 @@ test('real 300-card draft works inside the original single-player engine without
   querySelectorAll:q=>q==='.screen'?screens:q==='.tab'||q==='[data-view]'?tabs:[],
   addEventListener(){}
  };
- let chosenRuleset='augment',chosenAiDifficulty='normal';
+ let chosenRuleset=initialRuleset,chosenAiDifficulty='normal';
  const w={addEventListener(){},DesertLobby:{selectedRuleset:()=>chosenRuleset,aiDifficulty:()=>chosenAiDifficulty,completeSolo(){}}};
  const sandbox={window:w,document,requestAnimationFrame:fn=>queue.push(fn),console,Math,Array,Number,String,Date,Map,Set,Object,JSON,Uint8ClampedArray,
   fetch:async()=>({ok:true,json:async()=>catalogue})};
@@ -40,7 +40,8 @@ test('real 300-card draft works inside the original single-player engine without
  vm.runInNewContext(game,sandbox,{filename:'game-v2.js',timeout:9000});
  const G=w.__soloTest;G.start();
  let st=G.state();
- assert.equal(st.ruleset,'augment');
+ assert.equal(st.ruleset,initialRuleset);
+ if(initialRuleset==='prism')assert.ok(st.augmentSchedule.every(t=>t==='prismatic'));
  assert.equal(st.wave,0);
  assert.equal(st.augmentChoice.round,1);
  assert.equal(st.augmentChoice.cards.length,3);
@@ -149,7 +150,7 @@ test('lobby labels single/online/practice choices and loads 300 cards before sin
  assert.match(lobby,/selectedRuleset:\(\)=>selectedRuleset/);
  assert.match(lobby,/DesertAugments\?\.ready/);
  assert.match(lobby,/DesertAugments\.load\(\)/);
- assert.match(lobby,/증강전 · 웨이브 무제한/);
+ assert.match(lobby,/label\+' · 웨이브 무제한'/);
  for(const id of ['soloAugmentOverlay','soloAugmentHeading','soloAugmentCards','soloAugmentTime','soloAugmentCurrent'])
   assert.ok(html.includes('id="'+id+'"'),'missing single draft element: '+id);
  assert.match(html,/싱글, 멀티플레이 및 3라인 연습 전투 규칙/);

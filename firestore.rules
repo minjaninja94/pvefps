@@ -214,7 +214,7 @@ service cloud.firestore {
       }
       function shape(r) {
         return r.keys().hasOnly(['version','host','mode','size','status','created','expires','players','ruleset','seed','publicRoom'])
-          && (!('ruleset' in r) || r.ruleset in ['standard','augment'])
+          && (!('ruleset' in r) || r.ruleset in ['standard','augment','prism'])
           && (!('seed' in r) || r.seed is int)
           && (!('publicRoom' in r) || r.publicRoom is bool)
           && r.version == 1 && r.host is string && r.host.size() > 0

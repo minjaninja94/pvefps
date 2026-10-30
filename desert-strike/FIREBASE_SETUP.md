@@ -54,3 +54,9 @@ FireStore Rules console: https://console.firebase.google.com/project/pvefps/fire
 Firebase Email/Password auth: https://console.firebase.google.com/project/pvefps/authentication/providers
 
 Browser-only, automated Node simulations cannot validate deployed Firebase security rules, real network traversal or actual sign-in. Test on separate real accounts after publishing the rules.
+
+## 프리즘 모드 (2026-10-30)
+
+일반 증강전(`augment`)은 실버·골드·프리즘을 추첨하고, 프리즘 모드(`prism`)는 1·10·20·30·40·50·60·70웨이브의 8회 선택이 모두 프리즘입니다. 싱글·3라인 연습·1:1·팀전·협동에서 동일하게 적용됩니다. 프리즘의 세 카드와 재추첨은 공통 카드와 자기 종족 전용 카드 전체에서 중복 없이 추첨하며, 기존 초월 프리즘도 같은 등급으로 포함됩니다.
+
+온라인 프리즘 방은 `desertRooms.ruleset`에 `prism`을 저장하므로 갱신된 최상위 `firestore.rules`의 배포가 필요합니다. GitHub 커밋과 웹 배포만으로 Firestore 규칙이 변경되지는 않습니다.

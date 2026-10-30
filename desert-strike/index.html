@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=rankincome20261030"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=prism-mode-20261030"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -16,6 +16,7 @@
      <div class="lobby-ruleset-options">
       <button type="button" id="lobbyRulesetStandard" data-ruleset="standard" class="selected" aria-pressed="true"><strong>일반전</strong><small>기본 규칙으로 전투</small></button>
       <button type="button" id="lobbyRulesetAugment" data-ruleset="augment" aria-pressed="false"><strong>✦ 증강전</strong><small>웨이브별 증강 선택</small></button>
+      <button type="button" id="lobbyRulesetPrism" data-ruleset="prism" aria-pressed="false"><strong>✦ 프리즘 모드</strong><small>프리즘 증강만 등장</small></button>
      </div>
      <p id="lobbyRulesetDescription" aria-live="polite">핵심 기지 파괴로 승리 · 웨이브 무제한</p>
     </div>
@@ -143,7 +144,7 @@
  <section class="panel mp-lobby" id="mpLobby">
   <div class="mp-lobby-grid">
    <label>지휘관 이름<input id="mpName" maxlength="16" placeholder="지휘관" value="지휘관"></label>
-   <label class="mp-public-option"><input type="checkbox" id="mpPublicCheck" checked> 공개방으로 등록 (체크 해제 시 초대 코드 전용)</label><label>경기 규칙<select id="mpRuleset"><option value="standard">일반전</option><option value="augment">증강전 · 프리즘 8회</option></select></label>
+   <label class="mp-public-option"><input type="checkbox" id="mpPublicCheck" checked> 공개방으로 등록 (체크 해제 시 초대 코드 전용)</label><label>경기 규칙<select id="mpRuleset"><option value="standard">일반전</option><option value="augment">증강전 · 증강 8회</option><option value="prism">프리즘 모드 · 프리즘만 8회</option></select></label>
    <label>경기 방식<select id="mpMode"><option value="pvp">3라인 팀 경쟁 PvP</option><option value="classic">클래식 1:1 · 싱글 전장</option><option value="coop">3라인 협동 대 AI</option></select></label>
    <label>팀당 인원<select id="mpSize"><option value="1">1명 (1:1)</option><option value="2">2명 (2:2)</option><option value="3">3명 (3:3)</option></select></label>
    <label>사용 종족<select id="mpFaction"><option value="0">철갑연합</option><option value="1">심연군체</option><option value="2">성운결사</option><option value="3">해병성채</option><option value="4">월영 수인족</option><option value="5">은월 엘프족</option><option value="6">야월 퍼리족</option><option value="7">크롬 로보족</option><option value="8">옥토퍼 군체</option><option value="9">농농 페어리족</option></select></label>
@@ -283,22 +284,22 @@
 <script src="./unit-consolidation.js?v=battlestats3" defer></script>
 <script src="./defense-guardian.js?v=guardianheal1" defer></script>
 <script src="./hard-ai.js?v=battlestats3" defer></script>
-<script src="./prism-experiments.js?v=uncapped-factions20261030" defer></script>
-<script src="./augment-rules.js?v=prism400a" defer></script>
+<script src="./prism-experiments.js?v=prism-mode-20261030" defer></script>
+<script src="./augment-rules.js?v=prism-mode-20261030" defer></script>
 <script src="./augment-history.js?v=history1" defer></script>
-<script src="./augment-codex.js?v=prism400a" defer></script>
-<script src="./tri-lane-engine.js?v=tower-aggro-20261030" defer></script>
+<script src="./augment-codex.js?v=prism-mode-20261030" defer></script>
+<script src="./tri-lane-engine.js?v=prism-mode-20261030" defer></script>
 <script src="./device-account.js?v=externalroom1" defer></script>
-<script src="./tri-lane-network.js?v=rankincome20261030" defer></script>
+<script src="./tri-lane-network.js?v=prism-mode-20261030" defer></script>
 <script src="./combat-audio.js?v=nukegear1" defer></script>
-<script src="./tri-lane-ui.js?v=tower-muzzle-20261030" defer></script>
+<script src="./tri-lane-ui.js?v=prism-mode-20261030" defer></script>
 <script src="./battle-report.js?v=battlestats2" defer></script>
-<script src="./game-v2.js?v=tower-aggro-20261030" defer></script>
+<script src="./game-v2.js?v=prism-mode-20261030" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=nukegear1" defer></script>
 <script src="./desert-member.js?v=rankincome20261030" defer></script>
 <script src="./career-profile.js?v=rankincome20261030" defer></script>
 <script src="./audio-settings.js?v=nukegear1" defer></script>
-<script src="./front-lobby.js?v=ailevels2" defer></script>
+<script src="./front-lobby.js?v=prism-mode-20261030" defer></script>
 </body></html>

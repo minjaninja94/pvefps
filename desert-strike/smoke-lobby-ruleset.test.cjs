@@ -6,7 +6,7 @@ test('main lobby directly exposes both standard and augment choices',()=>{
  const picker=html.indexOf('id="lobbyRulesetPicker"'),solo=html.indexOf('id="lobbySolo"');
  const expanded=html.indexOf('id="lobbyMultiplayerConfig"');
  assert.ok(picker>0&&picker<solo&&expanded>solo,'rule choices must be visible above multiplayer controls');
- for(const id of ['lobbyRulesetStandard','lobbyRulesetAugment','lobbyRulesetDescription','mpRuleset'])
+ for(const id of ['lobbyRulesetStandard','lobbyRulesetAugment','lobbyRulesetPrism','lobbyRulesetDescription','mpRuleset'])
   assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,'unique control '+id);
  assert.match(html,/증강전.*웨이브별 증강 선택/);
  assert.match(src,/RULESET_KEY/);
@@ -20,7 +20,7 @@ test('main lobby directly exposes both standard and augment choices',()=>{
 });
 test('switching to augment updates multiplayer and offline practice, persists, and locks during a room',()=>{
  const saved=new Map(),ruleset={value:'standard',disabled:false,dispatchEvent(){this.events=(this.events||0)+1;}};
- let room=null;const buttons=['standard','augment'].map(v=>({dataset:{ruleset:v},disabled:false,selected:false,attrs:{},
+ let room=null;const buttons=['standard','augment','prism'].map(v=>({dataset:{ruleset:v},disabled:false,selected:false,attrs:{},
   classList:{toggle(_k,value){this._active=!!value;}},setAttribute(key,value){this.attrs[key]=value;}}));
  const description={textContent:''},mp={querySelector:()=>mpSpan},practice={querySelector:()=>practiceSpan},
   mpSpan={textContent:''},practiceSpan={textContent:''};
@@ -36,9 +36,14 @@ test('switching to augment updates multiplayer and offline practice, persists, a
  assert.equal(ruleset.value,'augment');assert.equal(saved.get('desert-front-ruleset-v1'),'augment');
  assert.equal(buttons[1].attrs['aria-pressed'],'true');assert.match(mpSpan.textContent,/증강전/);
  assert.match(practiceSpan.textContent,/증강전/);assert.match(description.textContent,/1·10·20·30·40/);
+ assert.equal(helper.chooseRuleset('prism'),true);
+ assert.equal(ruleset.value,'prism');assert.equal(buttons[2].attrs['aria-pressed'],'true');
+ assert.match(description.textContent,/프리즘 증강만/);assert.match(description.textContent,/50·60·70/);
+ assert.match(mpSpan.textContent,/프리즘 모드/);assert.match(practiceSpan.textContent,/프리즘 모드/);
+ helper.restoreRuleset();assert.equal(ruleset.value,'prism','restore Prism preference');
  room='ROOM01';assert.equal(helper.chooseRuleset('standard'),false,'joined rooms cannot switch ruleset');
- assert.equal(ruleset.value,'augment');
+ assert.equal(ruleset.value,'prism');
  helper.renderRuleset();assert.equal(buttons[0].disabled,true);assert.equal(buttons[1].disabled,true);
  helper.syncRulesetFromRoom('standard');assert.equal(buttons[0].attrs['aria-pressed'],'true','show joined room ruleset');
- room=null;ruleset.disabled=false;helper.syncRulesetFromRoom(null);assert.equal(ruleset.value,'augment','restore preferred mode after leaving');
+ room=null;ruleset.disabled=false;helper.syncRulesetFromRoom(null);assert.equal(ruleset.value,'prism','restore preferred mode after leaving');
 });

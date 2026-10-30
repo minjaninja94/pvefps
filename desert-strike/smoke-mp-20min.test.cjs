@@ -16,7 +16,7 @@ test('online Prism-only schedule with 30-second choice does not change solo cata
  const w=await make(true);
  const selected=w.DesertAugments.create(7);
  assert.equal(selected.schedule.length,8);
- const game=w.DesertTriEngine.create({mode:'pvp',size:1,members,ruleset:'augment',seed:7});
+ const game=w.DesertTriEngine.create({mode:'pvp',size:1,members,ruleset:'prism',seed:7});
  assert.deepEqual(Array.from(game.state.augmentSchedule),Array(8).fill('prismatic'));
  assert.equal(game.state.augmentChoice.remaining,30);
  assert.equal(game.state.augmentChoice.round,1);
