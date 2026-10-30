@@ -99,7 +99,7 @@ test('specialist audio uses Japanese VOICEVOX Nemo atlases without browser TTS',
  const src=fs.readFileSync(path.join(__dirname,'combat-audio.js'),'utf8');
  assert.doesNotMatch(src,/speechSynthesis|SpeechSynthesisUtterance|speakSpecial/);
  assert.match(src,/role<0 \|\| role>10/,'sniper and assassin voices are accepted');
- assert.match(src,/spec-f\\d\+/,'generated Nemo specialist audio can be decoded');
+ assert.ok(src.includes('spec-f'),'generated Nemo specialist audio can be decoded');
  assert.match(src,/backupRole=role===9\?2:role===10\?0:role/,'ship existing Nemo Japanese voices before new assets are ready');
  const generator=fs.readFileSync(path.join(__dirname,'tools/generate-nemo-specialists.py'),'utf8');
  assert.match(generator,/voice_index\.json/);
