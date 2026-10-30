@@ -1,12 +1,12 @@
-/* Opt-in preparation module. Never registers units in the live roster. */
+/* Shared live specialist rules for single and multiplayer engines. */
 (function(global){'use strict';
-const VERSION=1,EXTRACTOR=8,SNIPER=9,ASSASSIN=10;
+const VERSION=2,EXTRACTOR=8,SNIPER=9,ASSASSIN=10;
 const FACTIONS=['forge','brood','astral','marine','beastkin','elf','furry','robot','octoper','fairy'];
 const MUT=[[1.055,1,.96],[.995,1,1.12],[.99,1.09,1],[1.09,1.06,1.01],[1,1,1.08],[.94,1,.99],[1.02,1,1.07],[1.07,1,.99],[.99,1,1.01],[1,1,1.01]];
 const NAMES=[['원점 저격수','망령 침투병'],['심연 침저격충','그림자 절단충'],['성운 관측자','공허 위상검사'],['황병장 · 대물저격','야간 잠행 해병'],['설원 살쾡이 사수','흑표 그림자'],['월광 장궁수','은월 그림자무희'],['붉은여우 명사수','밤늑대 추적자'],['분광 저격 드론','영점 암살기'],['심해 작살술사','먹물 잠행자'],['이슬 정밀술사','가시 그림자']];
 const CANDIDATES={
- [SNIPER]:{key:'sniper',name:'저격',cost:380,hp:78,damage:300,armor:0,range:370,rate:4.8,speed:44,kind:'ground',airTarget:false,aim:.65,armorPierce:.5,good:[],bad:[0,10]},
- [ASSASSIN]:{key:'assassin',name:'암살',cost:330,hp:52,damage:180,armor:0,range:30,rate:1.45,speed:96,kind:'ground',airTarget:false,aim:.18,armorPierce:0,good:[],bad:[0,3],stealth:true}
+ [SNIPER]:{key:'sniper',name:'저격',cost:380,hp:78,damage:300,armor:0,range:370,rate:4.8,speed:44,kind:'ground',airTarget:false,aim:.65,armorPierce:.5,good:[],bad:[0,1,10]},
+ [ASSASSIN]:{key:'assassin',name:'암살',cost:330,hp:52,damage:180,armor:0,range:30,rate:1.45,speed:96,kind:'ground',airTarget:false,aim:.18,armorPierce:0,good:[5,7,9],bad:[0,3,7],stealth:true}
 };
 const RULES=Object.freeze({detectionRadius:190,attackRevealSeconds:1.05,stealthOpacity:.58,infiltrationTrigger:250,infiltrationReach:380,infiltrationWindup:.35,infiltrationTravel:.45,landingRecovery:.45,firstStrikeMultiplier:1.2});
 function definition(role,faction=0){
@@ -31,10 +31,10 @@ function infiltration(unit,enemies,now=0){
  const known=enemies.filter(v=>v.hp>0&&distance(unit,v)<=420);
  const rear=known.filter(v=>[SNIPER,5,7,1].includes(v.role));
  if(!rear.length)return null;
- rear.sort((a,b)=>(([SNIPER,5,7,1].indexOf(a.role)-[SNIPER,5,7,1].indexOf(b.role))||a.id-b.id));
- const target=rear[Math.abs(unit.id||0)%rear.length],rawX=target.x+direction*20;
+ rear.sort((a,b)=>(([SNIPER,5,7,1].indexOf(a.role)-[SNIPER,5,7,1].indexOf(b.role))||(a.id??a.uid)-(b.id??b.uid)));
+ const target=rear[Math.abs(unit.id??unit.uid??0)%rear.length],rawX=target.x+direction*20;
  const dx=rawX-unit.x,dy=target.y-unit.y,len=Math.hypot(dx,dy)||1,scale=Math.min(1,RULES.infiltrationReach/len);
- return {from:{x:unit.x,y:unit.y},to:{x:unit.x+dx*scale,y:unit.y+dy*scale},start:now,landAt:now+RULES.infiltrationWindup+RULES.infiltrationTravel,readyAt:now+RULES.infiltrationWindup+RULES.infiltrationTravel+RULES.landingRecovery,target:target.id};
+ return {from:{x:unit.x,y:unit.y},to:{x:unit.x+dx*scale,y:unit.y+dy*scale},start:now,landAt:now+RULES.infiltrationWindup+RULES.infiltrationTravel,readyAt:now+RULES.infiltrationWindup+RULES.infiltrationTravel+RULES.landingRecovery,target:target.id??target.uid};
 }
 function revealOnAttack(unit,now){if(unit.role===ASSASSIN)unit.revealedUntil=Math.max(unit.revealedUntil||0,now+RULES.attackRevealSeconds);}
 function snapshot(unit,units,now){
@@ -46,6 +46,6 @@ function precisionMultiplier(attacker,target){
  const kind=target.def?.kind||target.kind;
  return target.role===3||(target.role===6&&kind==='ground')?1.6:target.heroCount===20?1.25:1;
 }
-const api=Object.freeze({VERSION,EXTRACTOR,SNIPER,ASSASSIN,FACTIONS,NAMES,RULES,CANDIDATES,definition,precisionMultiplier,detected,canTarget,presentation,infiltration,revealOnAttack,snapshot,liveEnabled:false});
+const api=Object.freeze({VERSION,EXTRACTOR,SNIPER,ASSASSIN,FACTIONS,NAMES,RULES,CANDIDATES,definition,precisionMultiplier,detected,canTarget,presentation,infiltration,revealOnAttack,snapshot,liveEnabled:true});
 global.DesertExpansion=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
