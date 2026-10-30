@@ -45,6 +45,10 @@ const FACTIONS=[
  {id:'octoper',name:'옥토퍼 군체',tag:'ABYSSAL OCTOPER',logo:'✺',color:'#c5a0fa',bonus:'주술·재생 특화 · 대장갑·대공·포격 공격력 10% 증가 · 매초 최대 체력의 0.06% 회복 · 먹물: 6초마다 1.8초간 이동 20%·공격 10% 감소',mut:{hp:.99,dmg:1,speed:1.01},units:['팔완 돌격체','먹물 주술사','심해 관통술사','갑각 문어수호자','팔완 대공술사','심연 의식술사','마력 비행수','군체 사제'],slogan:'강한 주술 화력과 지속 재생',secondary:'#4a3370'},
  {id:'fairy',name:'농농 페어리족',tag:'PETAL FAIRIES',logo:'❀',color:'#ffadd4',bonus:'치유 특화 · 지원병 기본 치유량 15% 증가 · 5초마다 주변 다른 아군 1기에 실제 회복량의 5% 추가 치유',mut:{hp:1,dmg:1,speed:1.01},units:['꽃잎 소검사','이슬 마도사','씨앗 관통술사','버섯껍질 방패수','반딧불 대공술사','꽃가루 폭격사','별빛 나비정령','꽃샘 치유사'],slogan:'주변 아군에게 이어지는 연쇄치유',secondary:'#84577c'}
 ];
+ROLE[8]={key:'extractor',name:'자원채취',mark:'⬡',token:'⬡',cost:70,hp:1,damage:0,armor:0,range:0,rate:1,speed:0,kind:'ground',good:[],bad:[]};
+for(const r of [9,10])ROLE[r]={...window.DesertExpansion.CANDIDATES[r],mark:r===9?'⌖':'†',token:r===9?'⌖':'†',tips:r===9?'장거리 단일 저격 · 장갑 50% 관통 · 근접 호위에 취약':'은신 침투 · 지원병 탐지 범위에서 표적 지정 가능 · 매우 낮은 체력'};
+FACTIONS.forEach((f,i)=>f.units.push('자원채취',...window.DesertExpansion.NAMES[i]));
+const COMBAT_ROLES=[0,1,2,3,4,5,6,7,9,10];
 const RNAME=ROLE.map(r=>r.name),SPRITES=new Map();
 let selectedFaction=0,state=null,selectedRole=null,demolition=false,activeView='base',lastFrame=0,lastRenderAt=0,uiElapsed=0;
 let audio=null,bannerSeconds=0,barrageSeconds=0,stamp=0,soloAug=null,enemyAug=null;
@@ -76,6 +80,8 @@ const SPECIAL_GUIDES={
 function unitGuide(faction,role){return SPECIAL_GUIDES[faction+'-'+role]||BASIC_GUIDES[role];}
 function unitCost(role,faction=0){return role===6?({4:285,6:270,7:285}[faction]??ROLE[role].cost):ROLE[role]?.cost??Infinity;}
 function getDef(role,faction){
+ if(role===9||role===10){const r=ROLE[role],d=window.DesertExpansion.definition(role,faction);
+  return {...d,mark:r.mark,token:r.token,heal:0,blast:0,unitType:'ground',factionName:FACTIONS[faction].name,tips:r.tips};}
  const r=ROLE[role],f=FACTIONS[faction];
  const isBongo=faction===3&&role===6,isWolfRider=faction===6&&role===6;
  const groundSpecial=role===6&&[3,4,6,7].includes(faction);
@@ -100,8 +106,8 @@ function sideAugments(side){return isAugmented(state?.ruleset)?(side===0?state.a
 function supplyCap(){return Infinity;} // No global troop population ceiling in any ruleset.
 function ownPrism(){return isAugmented(state.ruleset)?window.DesertPrism:null;}
 function combatRows(){
- return {damage:Array(8).fill(0),kills:Array(8).fill(0),losses:Array(8).fill(0),
-  heroDamage:Array(8).fill(0),heroes:Array(8).fill(0)};
+ return {damage:Array(11).fill(0),kills:Array(11).fill(0),losses:Array(11).fill(0),
+  heroDamage:Array(11).fill(0),heroes:Array(11).fill(0)};
 }
 // A consolidated hero counts as surviving soldier equivalents, not one cheap
 // casualty. Damage is capped at HP actually removed, excluding overkill.
@@ -109,13 +115,13 @@ function combatLife(u){
  return u.heroCount===20?Math.max(0,Math.min(20,Math.ceil(Math.max(0,u.hp)/(u.maxHP/20)-1e-9))):(u.hp>0?1:0);
 }
 function recordCombatHit(v,before,attacker=null,volley=1){
- if(!state.combatStats||!v||!Number.isInteger(v.role)||v.role<0||v.role>=8)return;
+ if(!state.combatStats||!v||!Number.isInteger(v.role)||v.role<0||v.role>=11)return;
  const prior=v._combatLife??(v.heroCount===20?20:(before>0?1:0)),after=combatLife(v);
  v._combatLife=after;
  const losses=Math.max(0,prior-after),counted=!v.guardian&&!v.isHatchling&&!v.conscripted;
  if(counted)state.combatStats[v.side].losses[v.role]+=losses;
  const role=attacker?.role??attacker?.source;
- if(attacker&&attacker.side!==v.side&&Number.isInteger(role)&&role>=0&&role<8){
+ if(attacker&&attacker.side!==v.side&&Number.isInteger(role)&&role>=0&&role<11){
   const stats=state.combatStats[attacker.side],dealt=Math.max(0,Math.min(before,before-Math.max(0,v.hp)));
   stats.damage[role]+=dealt;
   if(attacker.heroCount===20||volley>1)stats.heroDamage[role]+=dealt;
@@ -215,7 +221,7 @@ function reset(){
  $('soloAugmentOverlay')?.classList.add('hidden');
  state={live:false,ended:false,paused:false,rate:1,cash:360,enemyCash:360,eco:0,enemyEco:0,ecoReadyAt:0,enemyEcoReadyAt:0,mineCosts:{},enemyMineCosts:{},mineTimings:{},enemyMineTimings:{},weapon:0,armor:0,enemyWeapon:0,enemyArmor:0,incomeClock:0,cameraX:1100,followFront:true,
  wave:0,next:OPENING_PREP_SECONDS,elapsed:0,baseHP:[MAX_BASE,MAX_BASE],turretHP:[MAX_TURRET,MAX_TURRET],forwardHP:[1000,1000],forwardClaimed:[false,false],
- built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),buildReadyAt:Array(SLOTS).fill(0),enemyBuildReadyAt:Array(SLOTS).fill(0),produced:[Array(8).fill(0),Array(8).fill(0)],combatStats:[combatRows(),combatRows()],units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
+ built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),buildReadyAt:Array(SLOTS).fill(0),enemyBuildReadyAt:Array(SLOTS).fill(0),produced:[Array(11).fill(0),Array(11).fill(0)],combatStats:[combatRows(),combatRows()],units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},
  broodBirths:[0,0],broodBirthsTotal:[0,0],
  towerShots:[],aiSight:new Set(),nukes:1,enemyNukes:1,barrageCd:0,enemyBarrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
@@ -268,7 +274,7 @@ function getSelectedRoleButton(){
  return selectedRole!==null?ROLE[selectedRole]:null;
 }
 function selectRole(i){
- if(i<0||i>EXTRACTOR)return;
+ if(i<0||i>10)return;
  selectedRole=(selectedRole===i?null:i);demolition=false;
  updateUI(true);
  if(selectedRole!==null)setMessage((selectedRole===EXTRACTOR?'자원채취 건물':FACTIONS[state.faction].units[selectedRole])+' 선택 · 빈 생산 슬롯을 클릭하세요.');
@@ -427,7 +433,7 @@ function barrage(){
 }
 function banner(t){$('waveBanner').textContent=t;$('waveBanner').classList.add('show');bannerSeconds=2;}
 function createUnit(side,slot,role,fromProduction=true,overrideFaction=null){
- if(fromProduction&&role>=0&&role<8)state.produced[side][role]++;
+ if(fromProduction&&role>=0&&role<11)state.produced[side][role]++;
  const faction=overrideFaction??(side===0?state.faction:state.enemyFaction),def=effectiveDef(role,faction,side);
  const row=Math.floor(slot/COLS),col=slot%COLS;
  const x=side===0?240+col*7:WORLD_W-240-col*7;
@@ -451,14 +457,17 @@ const AI_COUNTER_ROLES=[
  [2,3],   // anti-air -> armor breaker/armor
  [0,6],   // artillery -> charge/air
  [4,1],   // flier -> anti-air/rifle
- [0,5]    // medic -> charge/siege
+ [0,5],   // medic -> charge/siege
+ [],
+ [0,1,10],
+ [7,0,3]
 ];
 function aiReadOpponent(){
  // Scout visible troops only; never inspect hidden production slots. Preserve the
  // scouted threat briefly after a wave is wiped out so counter-building can continue.
  const sightings=state.aiSight||(state.aiSight=new Set());
  if(sightings.size===0)state.aiIntelMemory=null;
- const now=state.elapsed,live=Array(8).fill(0),airCount=Array(8).fill(0),armorCount=Array(8).fill(0),liveInvestment=Array(8).fill(0);
+ const now=state.elapsed,live=Array(11).fill(0),airCount=Array(11).fill(0),armorCount=Array(11).fill(0),liveInvestment=Array(11).fill(0);
  const scouts=state.units.filter(u=>u.side===1&&u.hp>0);
  for(const foe of state.units){
   if(foe.side!==0||foe.hp<=0||sightings.has(foe.uid))continue;
@@ -474,10 +483,10 @@ function aiReadOpponent(){
   if(foe.role===3||(foe.role===6&&type==='ground'))armorCount[foe.role]+=count;
  }
  let memory=state.aiIntelMemory;
- if(!memory)memory=state.aiIntelMemory={counts:Array(8).fill(0),lastSeen:Array(8).fill(-Infinity),air:0,armor:0};
+ if(!memory)memory=state.aiIntelMemory={counts:Array(11).fill(0),lastSeen:Array(11).fill(-Infinity),air:0,armor:0};
  const counts=live.slice(),investment=liveInvestment.slice();
- memory.investment??=Array(8).fill(0);memory.investmentSeen??=Array(8).fill(-Infinity);
- for(let i=0;i<8;i++){
+ memory.investment??=Array(11).fill(0);memory.investmentSeen??=Array(11).fill(-Infinity);
+ for(let i=0;i<11;i++){
   if(liveInvestment[i]){memory.investment[i]=Math.max(liveInvestment[i],memory.investment[i]*.83);memory.investmentSeen[i]=now;}
   if(now-memory.investmentSeen[i]<=INTERVAL*3)investment[i]=Math.max(investment[i],memory.investment[i]*.75);
   else memory.investment[i]=0;
@@ -495,6 +504,8 @@ function aiReadOpponent(){
   invaded:state.units.some(u=>u.side===0&&u.hp>0&&u.x>=WORLD_W-560)};
 }
 function aiCountersFor(role){
+ if(role===10)return [7,0,3];
+ if(role===9)return [0,1,10];
  if(role===0){
   // Factions 3/4/6/7 field ground cavalry or robots in slot 6, not aircraft.
   return state.enemyFaction===3?[6,1,3,5]:[4,6,7].includes(state.enemyFaction)?[1,3,5]:[6,1,3,5];
@@ -505,14 +516,16 @@ function aiCountersFor(role){
 }
 function aiChoose(budget=state.enemyCash){
  const intel=aiReadOpponent();
- const affordable=ROLE.map((role,id)=>id).filter(id=>unitCost(id,state.enemyFaction)<=budget);
+ const affordable=COMBAT_ROLES.filter(id=>unitCost(id,state.enemyFaction)<=budget);
  if(!affordable.length)return null;
  const myCounts=Array(ROLE.length).fill(0);
  for(const role of state.enemyBuilt)if(role!==null&&role!==EXTRACTOR)myCounts[role]++;
  // Mixed heavy/air/healer compositions require two real counter types, not a random counter.
  const groundVehicle=[3,4,6,7].includes(state.faction);
  const tanks=intel.counts[3]+(groundVehicle?intel.counts[6]:0),air=intel.air,medics=intel.counts[7];
- if(tanks>=2&&air>=2){
+ if(intel.counts[10]>=1&&myCounts[7]<Math.max(1,Math.ceil(intel.counts[10]/3))&&affordable.includes(7))return 7;
+  if(intel.counts[9]>=2&&myCounts[10]<Math.ceil(intel.counts[9]/3)&&affordable.includes(10))return 10;
+  if(tanks>=2&&air>=2){
   if(affordable.includes(4)&&myCounts[4]<Math.ceil(air*.9))return 4;
   if(affordable.includes(2)&&myCounts[2]<Math.ceil(tanks*1.05))return 2;
   if(medics>=2&&affordable.includes(5)&&myCounts[5]<Math.ceil(medics*.5))return 5;
@@ -644,9 +657,9 @@ function hardInvest(){
  const roles=intel.counts,investment=intel.investment;
  const air=intel.air,armor=intel.armor,invaded=intel.invaded;
  for(let purchase=0;purchase<12;purchase++){
-  const counts=Array(8).fill(0);for(const role of state.enemyBuilt)if(role!==null&&role!==EXTRACTOR)counts[role]++;
+  const counts=Array(11).fill(0);for(const role of state.enemyBuilt)if(role!==null&&role!==EXTRACTOR)counts[role]++;
   let slot=state.enemyBuilt.findIndex(v=>v===null);if(slot<0)break;
-  let action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,difficulty:state.aiDifficulty,costs:ROLE.map((x,i)=>unitCost(i,state.enemyFaction)),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded,roles,investment}});
+  let action=ai.choose(brain,{cash:state.enemyCash,counts,eco:state.enemyEco,readyAt:state.enemyEcoReadyAt,seconds:state.elapsed,difficulty:state.aiDifficulty,costs:ROLE.map((x,i)=>i===8?Infinity:unitCost(i,state.enemyFaction)),ecoCost:ecoCostFor(state.enemyEco),intel:{air,armor,invaded,roles,investment}});
   // After the planned opener, maintain factory output while waiting for a
   // costly specialist. Respect the extractor reserve and never buy for free.
   const total=counts.reduce((n,v)=>n+v,0);
@@ -666,7 +679,7 @@ function hardInvest(){
    total<Math.min(SLOTS-state.enemyEco,Math.max(growTo,28));
   if(commitHero)action=state.enemyCash>=unitCost(focus,state.enemyFaction)?{kind:'unit',role:focus}:null;
   if(!action&&!commitHero&&!reply.needed&&total<growTo&&!ecoDue&&brain.opening>=ai.plans[brain.plan].opening.length){
-   const candidates=ROLE.map((role,id)=>id).filter(id=>unitCost(id,state.enemyFaction)<=state.enemyCash);
+   const candidates=COMBAT_ROLES.filter(id=>unitCost(id,state.enemyFaction)<=state.enemyCash);
    const counters=intel.dominant===null?[]:aiCountersFor(intel.dominant);
    const weights=ai.plans[brain.plan].weights;
    candidates.sort((a,b)=>{
@@ -703,7 +716,7 @@ function aiInitialBuild(){
 // Refit a wrong production lineup for the scouted counter plan. Both difficulties
 // pay the same 55% sale refund and full new unit price as the human player.
 function aiAdaptFacilities(intel){
- const counts=Array(8).fill(0);for(const r of state.enemyBuilt)if(r!==null&&r!==EXTRACTOR)counts[r]++;
+ const counts=Array(11).fill(0);for(const r of state.enemyBuilt)if(r!==null&&r!==EXTRACTOR)counts[r]++;
  const siege=window.DesertHardAI?.siegeResponse({faction:state.enemyFaction},{counts,
   intel:{roles:intel.counts,investment:intel.investment,air:intel.air},difficulty:state.aiDifficulty});
  if(siege){
@@ -761,7 +774,7 @@ function aiInvest(){
  for(let purchased=0;slots.length&&purchased<(easy?2:middle?10:8)&&army.length+purchased<desired;purchased++){
   let role=aiChoose(state.enemyCash);
   if(role===null)break;
-  const counts=Array(8).fill(0);for(const r of state.enemyBuilt)if(r!==null&&r!==EXTRACTOR)counts[r]++;
+  const counts=Array(11).fill(0);for(const r of state.enemyBuilt)if(r!==null&&r!==EXTRACTOR)counts[r]++;
   if(state.wave>=5&&!intel.invaded&&intel.dominant===null&&army.length>=9){
    const popular=counts.indexOf(Math.max(...counts));
    if(counts[popular]>=5&&counts[popular]<20&&
@@ -928,7 +941,7 @@ function distance(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
 function structureDamage(role,amount){
  // Buildings are armored structures: light melee cannot be the strongest base breaker.
  // Exactly the same modifiers apply to player and AI troops.
- const factor=[.52,.88,1.12,1.08,.82,1.55,.87,.4][role]??1;
+ const factor=[.52,.88,1.12,1.08,.82,1.55,.87,.4,0,.28,.25][role]??1;
  return amount*factor;
 }
 // Wave 30+ rewards a correct unit counter instead of making every unit take more damage.
@@ -1519,11 +1532,11 @@ function updateUI(full=false){
  const ecoKey=[state.eco,ecoRemaining()>0,Math.floor(state.elapsed/120)].join(":");
  if(full||state.lastEcoKey!==ecoKey||state.lastCards===undefined||Math.floor(state.cash/30)!==state.lastCards){state.lastEcoKey=ecoKey;
   const f=FACTIONS[state.faction],selected=selectedRole!==null&&selectedRole!==EXTRACTOR?effectiveDef(selectedRole,state.faction):null;
-  $('unitCards').innerHTML=ROLE.map((r,i)=>{
+  $('unitCards').innerHTML=COMBAT_ROLES.map(i=>{const r=ROLE[i];
    const portrait=window.IsoWorld?.portrait(state.faction,i)||window.DesertSprites?.portrait(state.faction,i)||sprite(state.faction,i,0);
    const skin=window.DesertLobby?.selectedSkin?.()||'default';
    const actual=skin==='moe'?window.DesertMoeArt?.frame(state.faction,i,'idle',4)||portrait:portrait;
-   const icon=typeof actual?.toDataURL==='function'?'<img class="pixel-preview" src="'+actual.toDataURL('image/png')+'" alt="" aria-hidden="true">':r.token;
+   const icon=i>=9?'<img class="pixel-preview" src="./expansion/assets/'+(skin==='moe'?'moe':'base')+'-'+f.id+'-'+(i===9?'sniper':'assassin')+'-preview.png" alt="">':typeof actual?.toDataURL==='function'?'<img class="pixel-preview" src="'+actual.toDataURL('image/png')+'" alt="" aria-hidden="true">':r.token;
    return '<button class="unit-card'+(selectedRole===i?' selected':'')+'" data-role="'+i+'" title="'+getDef(i,state.faction).tips+
     '"><span class="uc-top">'+getDef(i,state.faction).mark+' '+getDef(i,state.faction).name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
     '</span><span class="uc-name">'+f.units[i]+'</span><span class="uc-role">'+getDef(i,state.faction).name+' · '+(getDef(i,state.faction).kind==='air'?'공중':'지상')+'</span>'+
@@ -1561,9 +1574,9 @@ function initFactions(){
   const f=Number(c.dataset.artFaction),portrait=window.IsoWorld?.portrait(f,f===8?5:f===7?1:0);
   if(portrait)c.getContext('2d')?.drawImage(portrait,0,0,72,72);
  });
- $('counterMatrix').innerHTML=ROLE.map((r,i)=>'<div class="matrix-item"><b>'+r.mark+' '+r.name+'</b>'+
+ $('counterMatrix').innerHTML=COMBAT_ROLES.map(i=>{const r=ROLE[i];return '<div class="matrix-item"><b>'+r.mark+' '+r.name+'</b>'+
  '<div class="good">'+(i===7?'회복 전용 · 공격 상성 없음':'강점: '+r.good.map(x=>ROLE[x].mark+ROLE[x].name).join(' / '))+'</div>'+
- '<div class="bad">'+(i===7?'위협: 돌격 · 사격 · 돌격기병':'약점: '+r.bad.map(x=>ROLE[x].mark+ROLE[x].name).join(' / '))+'</div></div>').join('');
+ '<div class="bad">'+(i===7?'위협: 돌격 · 사격 · 돌격기병':'약점: '+r.bad.map(x=>ROLE[x].mark+ROLE[x].name).join(' / '))+'</div></div>';}).join('');
 }
 function px(ctx,x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h);}
 function buildSprite(faction,role,phase){
