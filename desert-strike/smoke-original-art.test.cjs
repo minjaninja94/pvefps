@@ -44,6 +44,35 @@ test('solo and multiplayer render real sprite projectiles without altering autho
  assert.match(ui,/e\.kind==='projectile'/);
  assert.match(ui,/iso\?\.projectile\?\.\(ctx,px,py,e\.faction,e\.role/);
  assert.match(solo,/for\(const shot of state\.towerShots\)/);
- assert.match(solo,/IsoWorld\?\.projectile\?\.\(g,bx,by,faction,4/);
+ assert.match(solo,/IsoWorld\?\.projectileAt\?\.\(g,sx,sy,faction,4/);
  assert.match(host,/role:4,faction,team,lane,time:\.38/);
+});
+
+test('PC mode samples the original transparent full-size PNGs, mobile the small WebP',()=>{
+ const painted=[];
+ const draw=()=>new Proxy({drawImage(...args){painted.push(args);},createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}})},{get:(o,k)=>k in o?o[k]:()=>{}});
+ const run=width=>{
+  const window={innerWidth:width};
+  class MockImage{set src(value){
+   this.complete=true;
+   [this.naturalWidth,this.naturalHeight]=value.includes('buildings-original-pc')?[1536,1024]:value.includes('projectiles-original-pc')?[1024,1536]:[480,480];
+   this.onload?.();
+  }}
+  window.Image=MockImage;
+  const document={createElement:()=>({getContext:draw})};
+  vm.runInNewContext(read('isometric-world.js'),{window,document,Math,Map,Set,Array,Number,String,console});
+  return window.IsoWorld;
+ };
+ let iso=run(1100);
+ iso.structureSprite(2,'core',false);
+ assert.equal(painted.at(-1)[0].naturalWidth,1536);
+ assert.ok(painted.at(-1)[3]>=153);
+ iso.projectile(draw(),830,260,3,1,0);
+ assert.equal(painted.at(-1)[0].naturalHeight,1536);
+ assert.equal(painted.at(-1)[3],256);
+ iso=run(380);
+ iso.structureSprite(2,'core',false);
+ assert.equal(painted.at(-1)[0].naturalWidth,480);
+ iso.projectile(draw(),830,260,3,1,0);
+ assert.equal(painted.at(-1)[3],48);
 });

@@ -25,6 +25,48 @@ if(typeof global.Image==='function'){
  originalBuildings.src='./assets/desert-generated-sharp-48.webp?v=20261030-sharp48';
 }
 function actualArt(){return originalBuildingsReady&&originalBuildings?.complete?originalBuildings:null;}
+// Desktop uses the exact transparent 1536x1024/1024x1536 PNG originals.
+// Mobile downloads only the 480x480, 48px-per-cell lightweight fallback.
+let desktopBuildings=null,desktopProjectiles=null,desktopBuildingsReady=false,desktopProjectilesReady=false;
+function wantsDesktopArt(){
+ return typeof global.matchMedia==='function'
+  ?!!global.matchMedia('(min-width: 800px)').matches:(global.innerWidth||0)>=800;
+}
+function requestDesktopArt(){
+ if(!wantsDesktopArt()||typeof global.Image!=='function')return;
+ if(!desktopBuildings){
+  desktopBuildings=new global.Image();
+  desktopBuildings.onload=()=>{
+   desktopBuildingsReady=desktopBuildings.naturalWidth===1536&&desktopBuildings.naturalHeight===1024;
+   structureCache.clear();
+   if(global.dispatchEvent&&global.Event)global.dispatchEvent(new global.Event('isometric-art-ready'));
+  };
+  desktopBuildings.onerror=()=>{desktopBuildingsReady=false;};
+  desktopBuildings.src='./assets/desert-buildings-original-pc.png?v=desktop-original-20261030';
+ }
+ if(!desktopProjectiles){
+  desktopProjectiles=new global.Image();
+  desktopProjectiles.onload=()=>{
+   desktopProjectilesReady=desktopProjectiles.naturalWidth===1024&&desktopProjectiles.naturalHeight===1536;
+   if(global.dispatchEvent&&global.Event)global.dispatchEvent(new global.Event('isometric-art-ready'));
+  };
+  desktopProjectiles.onerror=()=>{desktopProjectilesReady=false;};
+  desktopProjectiles.src='./assets/desert-projectiles-original-pc.png?v=desktop-original-20261030';
+ }
+}
+requestDesktopArt();
+global.addEventListener?.('resize',()=>{
+ structureCache.clear();requestDesktopArt();
+ if(global.dispatchEvent&&global.Event)global.dispatchEvent(new global.Event('isometric-art-ready'));
+});
+function buildingAtlas(){
+ return wantsDesktopArt()&&desktopBuildingsReady&&desktopBuildings?.complete
+  ?{image:desktopBuildings,high:true}:{image:actualArt(),high:false};
+}
+function projectileAtlas(){
+ return wantsDesktopArt()&&desktopProjectilesReady&&desktopProjectiles?.complete
+  ?{image:desktopProjectiles,high:true}:{image:actualArt(),high:false};
+}
 
 function imageAtlas(data,group){
  if(typeof global.Image!=='function'||typeof data!=='string')return null;
@@ -273,13 +315,20 @@ function structureSprite(faction,kind='turret',destroyed=false){
  if(!canvas||typeof canvas.getContext!=='function')return null;
  canvas.width=STRUCTURE_W;canvas.height=STRUCTURE_H;
  const ctx=canvas.getContext('2d');if(!ctx)return null;
- const art=actualArt();
- if(art){
+ const art=buildingAtlas();
+ if(art.image){
   const row=(kind==='core'?0:kind==='forward'?2:4)+(destroyed?1:0);
   const [width,height]=kind==='core'?[133,141]:kind==='forward'?[107,136]:[93,94];
-  ctx.imageSmoothingEnabled=false;
-  ctx.drawImage(art,faction*ORIGINAL_CELL,row*ORIGINAL_CELL,ORIGINAL_CELL,ORIGINAL_CELL,
-   STRUCTURE_BASE_X-width/2,STRUCTURE_BASE_Y+9-height,width,height);
+  ctx.imageSmoothingEnabled=art.high;
+  if(art.high){
+   const sourceRow=kind==='core'?(destroyed?1:0):(destroyed?3:2);
+   const sx=Math.floor(faction*1536/10),sw=Math.floor((faction+1)*1536/10)-sx;
+   ctx.drawImage(art.image,sx,sourceRow*256,sw,256,
+    STRUCTURE_BASE_X-width/2,STRUCTURE_BASE_Y+9-height,width,height);
+  }else{
+   ctx.drawImage(art.image,faction*ORIGINAL_CELL,row*ORIGINAL_CELL,ORIGINAL_CELL,ORIGINAL_CELL,
+    STRUCTURE_BASE_X-width/2,STRUCTURE_BASE_Y+9-height,width,height);
+  }
   structureCache.set(key,canvas);return canvas;
  }
  ctx.save();ctx.translate(STRUCTURE_BASE_X,STRUCTURE_BASE_Y-260);
@@ -315,7 +364,7 @@ function structure(g,x,y,faction,turret,hpRatio=1,kind=turret?'turret':'core'){
  const sprite=structureSprite(faction,kind,hpRatio<=0);
  if(sprite&&typeof g.drawImage==='function'){
   const z=worldToScreen(x,y);
-  const smoothing=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;
+  const smoothing=g.imageSmoothingEnabled;g.imageSmoothingEnabled=buildingAtlas().high;
   g.drawImage(sprite,Math.round(z.x-STRUCTURE_BASE_X),Math.round(z.y-STRUCTURE_BASE_Y));
   g.imageSmoothingEnabled=smoothing;
   return;
@@ -328,15 +377,21 @@ function towerMuzzle(x,y,faction,kind='turret',side=0){
  return {x:z.x+(side===0?12:-12),y:z.y-height};
 }
 function projectileAt(g,x,y,faction,role,frame=0,angle=0,volley=1){
- const art=actualArt();
- if(!art||!Number.isInteger(faction)||faction<0||faction>=10)return false;
+ const art=projectileAtlas();
+ if(!art.image||!Number.isInteger(faction)||faction<0||faction>=10)return false;
  const z={x,y};
  const size=role===5?51:role===2?41:role===4?35:role===6?43:38;
  const boosted=Math.min(1.5,1+Math.log2(Math.max(1,volley))*.07);
  const w=size*boosted,h=Math.max(14,w*.58);
- g.save();g.translate(z.x,z.y);g.rotate(angle);g.imageSmoothingEnabled=false;
- g.drawImage(art,faction*ORIGINAL_CELL,(6+((Math.floor(frame)%4+4)%4))*ORIGINAL_CELL,ORIGINAL_CELL,ORIGINAL_CELL,
-  -w*.5,-h*.5,w,h);
+ g.save();g.translate(z.x,z.y);g.rotate(angle);g.imageSmoothingEnabled=art.high;
+ if(art.high){
+  const frameIndex=((Math.floor(frame)%4+4)%4);
+  const sy=Math.floor(faction*1536/10),sh=Math.floor((faction+1)*1536/10)-sy;
+  g.drawImage(art.image,frameIndex*256,sy,256,sh,-w*.5,-h*.5,w,h);
+ }else{
+  g.drawImage(art.image,faction*ORIGINAL_CELL,(6+((Math.floor(frame)%4+4)%4))*ORIGINAL_CELL,ORIGINAL_CELL,ORIGINAL_CELL,
+   -w*.5,-h*.5,w,h);
+ }
  g.restore();return true;
 }
 function projectile(g,x,y,faction,role,frame=0,angle=0,volley=1){
