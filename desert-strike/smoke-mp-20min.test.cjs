@@ -68,6 +68,6 @@ test('single-scale lane camera and selectable enemy cards remain in web UI',()=>
  assert.match(ui,/function panCamera\(/);
  assert.match(ui,/mapCanvas\.addEventListener\('pointermove'/);
  assert.match(ui,/iso\.terrain\(ctx,E\.WIDTH,H,false/);
- assert.match(ui,/iso\.structure\(ctx,x,260,faction,tower,hp\/max\)/);
+ assert.match(ui,/iso\.structure\(ctx,x,260,faction,tower,hp\/max,kind\)/);
  assert.match(css,/#mpBattleCanvas\{width:100%;height:auto;aspect-ratio:1100\/520/);
 });

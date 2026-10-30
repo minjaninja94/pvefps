@@ -53,6 +53,8 @@ jobs:
         run: node --test desert-strike/smoke-solo-augments.test.cjs
       - name: Match report, per-unit production totals and server result callbacks
         run: node --test desert-strike/smoke-match-results.test.cjs
+      - name: All ten faction tower sprites in solo and multiplayer
+        run: node --test desert-strike/smoke-tower-sprites.test.cjs
       - name: No artillery or regen penalty, 30-second Prism, solo-like multiplayer view
         run: node --test desert-strike/smoke-mp-20min.test.cjs
       - name: Five AI difficulty levels and multiplayer counters
