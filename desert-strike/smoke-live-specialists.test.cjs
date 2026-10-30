@@ -7,6 +7,11 @@ test('live sniper/assassin catalogue matches both engines for all ten factions',
  const {G}=solo(13),{E}=multi(13);
  assert.equal(X.liveEnabled,true);
  assert.equal(E.EXTRACTOR,8);
+ assert.deepEqual(X.NAMES[3],['쾌흥태','견쌍섭']);
+ assert.equal(G.getDef(9,3).unitName,'쾌흥태');
+ assert.equal(G.getDef(10,3).unitName,'견쌍섭');
+ assert.equal(E.definition(3,9).unitName,'쾌흥태');
+ assert.equal(E.definition(3,10).unitName,'견쌍섭');
  assert.deepEqual([...E.COST].slice(8),[70,380,330]);
  for(let faction=0;faction<10;faction++)for(const role of [9,10]){
   const s=G.getDef(role,faction),m=E.definition(faction,role);
