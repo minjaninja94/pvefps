@@ -5,13 +5,115 @@ const $=id=>document.getElementById(id);
 const isAugmented=ruleset=>ruleset==='augment'||ruleset==='prism';
 const NET=global.DesertTriNetwork,E=global.DesertTriEngine;
 if(!NET||!E)return;
-let snap=null,lane=1,role=0,demolish=false,practice=null,practiceTimer=null,practiceRecorded=false,view='base',repairLane=1;
+let snap=null,lane=1,role=0,demolish=false,practice=null,practiceTimer=null,practiceRecorded=false,view='base',repairLane=1,battleScope='all';
 let myId='',lobby=null,host=false,gridKey='',cardsKey='',counterKey='',augmentKey='',lastSnapshotAt=0,lastDrawAt=0,resultKey='',augmentRosterKey='',cameraX=1100;
 const LANES=['상단','중앙','하단'],ICONS=['⚔','⌖','◆','▣','✣','✹','♞','✚','⬡','⌖','†'];
 function message(msg){$('mpStatus').textContent=msg;}
 function laneCount(){return snap?.lanes??3;}
 function laneName(i){return laneCount()===1?'단일 전장':LANES[i]+' 라인';}
-function battleHeight(){return 520;}
+function battleHeight(){return 400;}
+function isAlly(team){return team===(snap?.viewerTeam??my()?.team??0);}
+function teamInk(team){return isAlly(team)?'#7fddf8':'#ff9c91';}
+function setBattleScope(scope){
+ battleScope=laneCount()===1?'lane':scope==='all'?'all':'lane';
+ $('mpBattleCanvas').hidden=battleScope==='all';
+ $('mpAllBattleCanvas').hidden=battleScope!=='all';
+ $('mpBattleCurrentLane').textContent=battleScope==='all'?'전체 전장':laneName(lane);
+ $('mpBattleLaneSelect').querySelectorAll('[data-mp-lane],[data-mp-scope]').forEach(b=>{
+  const active=b.dataset.mpScope==='all'?battleScope==='all':battleScope==='lane'&&Number(b.dataset.mpLane)===lane;
+  b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));
+ });
+ if(snap&&view==='battle')draw();
+}
+function drawAllBattle(){
+ if(!snap)return;
+ const c=$('mpAllBattleCanvas'),g=c?.getContext('2d');if(!g)return;
+ const lanes=laneCount(),band=c.height/lanes,left=54,right=1070,width=right-left,team=snap.viewerTeam??my()?.team??0;
+ g.clearRect(0,0,c.width,c.height);g.fillStyle='#0a1b24';g.fillRect(0,0,c.width,c.height);
+ for(let l=0;l<lanes;l++){
+  const top=l*band,mid=top+band*.57;
+  g.fillStyle=l%2?'#1b2e37':'#182c35';g.fillRect(0,top,c.width,band-2);
+  g.strokeStyle='#7c8e8066';g.lineWidth=1;g.beginPath();g.moveTo(left,mid+18);g.lineTo(right,mid+18);g.stroke();
+  g.setLineDash([6,6]);g.strokeStyle='#c9c9b45a';g.beginPath();g.moveTo(left+width/2,top+27);g.lineTo(left+width/2,top+band-9);g.stroke();g.setLineDash([]);
+  const status=(snap.lanePressure?.[l]??.5),self=team===0?status:1-status;
+  g.textAlign='left';g.font='bold 15px sans-serif';g.fillStyle='#f2d6aa';g.fillText(laneName(l),12,top+21);
+  g.font='bold 11px sans-serif';g.fillStyle=self>.57?'#85edcf':self<.43?'#ffaea1':'#d3d7d6';
+  g.fillText(self>.57?'아군 우세':self<.43?'적군 우세':'교착',115,top+20);
+  for(let side=0;side<2;side++){
+   const ink=teamInk(side),hx=x=>left+width*x/E.WIDTH;
+   const core=snap.cores?.[l]?.[side]??0,coreMax=snap.coreMaxHP||3000;
+   for(const [x,hp,max,shape] of [[side===0?90:E.WIDTH-90,core,coreMax,'■'],[side===0?190:E.WIDTH-190,snap.turrets?.[l]?.[side]??0,1250,'▣'],[side===0?E.WIDTH/4:E.WIDTH*3/4,snap.forwardHP?.[l]?.[side]??0,1000,'◆']]){
+    const hidden=snap.fog?.[l]&&side!==team&&(team===0?x>=E.WIDTH-770:x<=770);
+    if(hidden)continue;
+    g.fillStyle=hp>0?ink:'#5d646b';g.font='bold 13px sans-serif';g.textAlign='center';g.fillText(shape,hx(x),top+43);
+    g.fillStyle='#30414b';g.fillRect(hx(x)-12,top+46,24,4);
+    g.fillStyle=ink;g.fillRect(hx(x)-12,top+46,24*Math.max(0,Math.min(1,hp/max)),4);
+   }
+  }
+  const units=snap.units.filter(u=>u.lane===l&&u.hp>0);
+  const rows=new Map();
+  for(const u of units){
+   const cell=Math.round(u.x/31),key=u.team+':'+cell+':'+u.role,prev=rows.get(key);
+   if(prev)prev.count+=(u.heroCount===20?20:1);
+   else rows.set(key,{...u,count:u.heroCount===20?20:1});
+  }
+  for(const u of rows.values()){
+   const x=left+width*u.x/E.WIDTH;
+   const ry=Math.max(-18,Math.min(15,(u.y-l*E.LANE_H-260)*.11));
+   const y=mid+ry+(isAlly(u.team)?-7:8);
+   g.fillStyle=teamInk(u.team);g.beginPath();g.arc(x,y,Math.min(11,4+Math.log2(u.count+1)*1.4),0,Math.PI*2);g.fill();
+   g.fillStyle='#0c202b';g.textAlign='center';g.font='bold 9px sans-serif';g.fillText(ICONS[u.role]||'●',x,y+3);
+   if(u.count>1){g.fillStyle='#fff5db';g.font='bold 10px monospace';g.fillText(String(u.count),x+12,y-9);}
+  }
+  if(snap.fog?.[l]){
+   const x=team===0?left+width*(E.WIDTH-770)/E.WIDTH:left;
+   g.fillStyle='#071524d7';g.fillRect(x,top+24,width*770/E.WIDTH,band-30);
+   g.fillStyle='#a7bac6';g.font='bold 11px sans-serif';g.textAlign='center';
+   g.fillText('정찰 전',x+width*770/E.WIDTH/2,top+band-15);
+  }
+  g.strokeStyle='#7893a666';g.strokeRect(1,top+.5,c.width-2,band-2);
+ }
+ g.font='bold 11px sans-serif';g.textAlign='right';g.fillStyle='#a8e9ff';g.fillText('● 아군',c.width-98,19);
+ g.fillStyle='#ffa89b';g.fillText('● 적군',c.width-18,19);
+}
+function renderTacticalPositions(){
+ const root=$('mpTacticalPositions');if(!root||!snap)return;
+ const fragment=document.createDocumentFragment(),legend=document.createElement('div');legend.className='mp-position-legend';
+ const title=document.createElement('strong');title.textContent='실시간 병력 위치 · 종족별 생산 대응';
+ const blue=document.createElement('span');blue.className='ally';blue.textContent='● 아군 (파랑)';
+ const red=document.createElement('span');red.className='enemy';red.textContent='● 적군 (빨강)';
+ legend.append(title,blue,red);fragment.append(legend);
+ for(let l=0;l<laneCount();l++){
+  const band=document.createElement('section');band.className='mp-position-lane';
+  const heading=document.createElement('header'),name=document.createElement('b'),detail=document.createElement('span');
+  const units=snap.units.filter(u=>u.lane===l&&u.hp>0),ally=units.filter(u=>isAlly(u.team)),enemy=units.filter(u=>!isAlly(u.team));
+  const population=a=>a.reduce((sum,u)=>sum+(u.heroCount===20?20:1),0);
+  name.textContent=laneName(l);detail.textContent='아군 '+population(ally)+'기 · 적군 '+population(enemy)+'기'+(snap.fog?.[l]?' · 적 후방 미정찰':'');
+  heading.append(name,detail);band.append(heading);
+  const track=document.createElement('div');track.className='mp-position-track';
+  const groups=new Map();
+  for(const u of units){
+   const key=u.team+':'+u.role,part=groups.get(key),power=u.heroCount===20?20:1;
+   if(part){part.x+=u.x*power;part.n+=power;}
+   else groups.set(key,{team:u.team,role:u.role,x:u.x*power,n:power});
+  }
+  for(const g of groups.values()){
+   const tag=document.createElement('span');tag.className='mp-position-dot '+(isAlly(g.team)?'ally':'enemy');
+   const location=g.x/g.n;tag.style.left=(3+94*location/E.WIDTH)+'%';tag.style.top=(isAlly(g.team)?0:8)+'px';
+   tag.textContent=(ICONS[g.role]||'●')+(g.n>1?g.n:'');
+   tag.title=(isAlly(g.team)?'아군 ':'적군 ')+(E.NAMES[g.role]||'')+' '+g.n+'기 · 전장 '+Math.round(location/E.WIDTH*100)+'%';
+   track.append(tag);
+  }
+  if(snap.fog?.[l]){
+   const fog=document.createElement('div');fog.className='mp-position-fog';
+   const hideRight=(snap.viewerTeam??0)===0;
+   fog.style.left=hideRight?(3+94*(E.WIDTH-770)/E.WIDTH)+'%':'0%';
+   fog.style.width=(94*770/E.WIDTH+3)+'%';fog.textContent='미정찰';track.append(fog);
+  }
+  band.append(track);fragment.append(band);
+ }
+ root.replaceChildren(fragment);
+}
 function panCamera(delta){cameraX=Math.max(0,Math.min(E.WIDTH-1100,cameraX+delta));if(snap)draw();}
 function setView(id,scrollToTop=false){
  if(!['base','battle','upgrade'].includes(id))return;
