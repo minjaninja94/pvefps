@@ -12,7 +12,7 @@ function environment(seed=1){
   querySelectorAll:()=>[],querySelector:()=>null,replaceChildren:noop,append:noop});return nodes.get(id);}
  const window={addEventListener:noop},sandbox={window,document:{getElementById:el,querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>({getContext:()=>ctx}),body:{dataset:{}}},
   requestAnimationFrame:noop,Math:math,Date,Map,Set,Array,Object,Number,String,JSON,console};
- for(const file of ['unit-consolidation.js','defense-guardian.js','hard-ai.js'])vm.runInNewContext(read(file),sandbox,{filename:file});
+ for(const file of ['unit-consolidation.js','defense-guardian.js','expansion/expansion-rules.js','hard-ai.js'])vm.runInNewContext(read(file),sandbox,{filename:file});
  return {window,sandbox,reseed:value=>{current=value>>>0||1;}};
 }
 function solo(seed=1,source=null){
