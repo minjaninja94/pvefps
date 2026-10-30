@@ -655,8 +655,14 @@ async function practiceStart(){
  practice=E.create({mode,size:1,aiDifficulty:difficulty,ruleset:$('mpRuleset').value,seed:Date.now()>>>0,members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%10,bot:true}]});
  // Use untouched authoritative bot setup, matching live host-created bot teams.
  $('mpStateTag').textContent=(global.DesertLobby?.difficultyLabel?.(difficulty)||'보통')+' AI 연습';message((mode==='classic'?'클래식 1:1':'3라인')+' AI 연습 시작');
- let last=performance.now();
- practiceTimer=setInterval(()=>{const now=performance.now();practice.tick(Math.min(.16,(now-last)/1000));last=now;onSnapshot(practice.snapshot('local'));},100);
+ // Match the live network host: authoritative tick every 50 ms,
+ // viewer snapshots every 200 ms. Only the transport differs (local vs P2P).
+ let last=performance.now(),lastSent=0;
+ practiceTimer=setInterval(()=>{
+  const now=performance.now(),dt=Math.max(0,Math.min((now-last)/1000,.2));last=now;
+  practice.tick(dt);
+  if(now-lastSent>=200||practice.state.ended){lastSent=now;onSnapshot(practice.snapshot('local'));}
+ },50);
  onSnapshot(practice.snapshot('local'));uiButtons();
 }
 async function leave(){
