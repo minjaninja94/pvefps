@@ -75,6 +75,8 @@ jobs:
         run: node --test desert-strike/smoke-career.test.cjs
       - name: Godot combat voice assets and web event hooks
         run: node --test desert-strike/smoke-combat-audio.test.cjs
+      - name: Forward tower blocks newly spawned units in solo-scale classic and 3-lane multiplayer
+        run: node --test desert-strike/smoke-forward-tower-aggro.test.cjs
       - name: Escalating counter damage, projectile parity and unchanged base attacks
         run: node --test desert-strike/smoke-counter-pressure.test.cjs
       - name: Fairy healing and beastkin ranged defense parity
