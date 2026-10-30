@@ -53,7 +53,7 @@
   } catch (_) {}
  }
  function loadIndex() {
-  if (!indexPromise) indexPromise = global.fetch(ROOT+'voice_index.json')
+  if (!indexPromise) indexPromise = global.fetch(ROOT+'voice_index.json?v=nemo-specialist-80-20261031')
    .then(response => { if (!response.ok) throw new Error('Voice index unavailable'); return response.json(); })
    .then(data => { voiceIndex = data.clips || {}; return voiceIndex; })
    .catch(() => { voiceIndex = {}; return voiceIndex; });
@@ -95,8 +95,8 @@
   if (!canPlay('voice:'+name, delay)) return;
   const token = generation, requestedAt = performance.now();
   loadIndex().then(clips => {
-   // New Nemo Japanese specialist atlases are preferred. Until rendered,
-   // reuse existing Nemo faction voices, never browser/system TTS.
+   // Use the generated Japanese Nemo sniper/assassin recordings.
+   // The legacy Nemo roles remain an offline fallback if an atlas is unavailable.
    const backupRole=role===9?2:role===10?0:role;
    const clip = clips[name] || clips['default/'+faction+'-'+role+'-'+event] ||
     clips[variant+'/'+faction+'-'+backupRole+'-'+event] || clips['default/'+faction+'-'+backupRole+'-'+event];
