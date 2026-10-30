@@ -14,33 +14,6 @@
  const atlases = new Map();
  const Context = global.AudioContext || global.webkitAudioContext;
  let enabled = true, context = null, voiceIndex = null, indexPromise = null, generation = 0;
- let specialSpeaking = false;
- const SPECIALIST_LINES=Object.freeze({
-  9:{spawn:'저격 위치 확보',attack:'목표 조준 완료',hit:'엄폐 위치 변경',death:'저격수 이탈'},
-  10:{spawn:'은밀 침투 시작',attack:'급소 포착',hit:'적에게 발각됐다',death:'침투 종료'}
- });
- function specialistLine(faction,role,event){
-  if(faction===3&&role===9)return {spawn:'쾌흥태, 포복 저격 투입!',attack:'오도 대물탄 발사!',hit:'쾌흥태, 재조준!',death:'쾌흥태, 위치 이탈!'}[event];
-  if(faction===3&&role===10)return {spawn:'견쌍섭, 은신 침투!',attack:'긴빠이 작전 개시!',hit:'견쌍섭, 들켰다!',death:'견쌍섭, 작전 종료!'}[event];
-  const names=global.DesertExpansion?.NAMES?.[faction],subject=names?.[role===9?0:1]|| (role===9?'저격병':'암살자');
-  return subject+', '+SPECIALIST_LINES[role][event]+'!';
- }
- function speakSpecial(faction,role,event){
-  const synth=global.speechSynthesis,Utterance=global.SpeechSynthesisUtterance;
-  if(!synth||typeof Utterance!=='function'||synth.speaking||synth.pending||specialSpeaking)return false;
-  const voices=synth.getVoices?.()||[];
-  const voice=voices.find(v=>/^ko(?:-|$)/i.test(v.lang));
-  if(!voice)return false; // Fallback to shipped VOICEVOX clips on systems without Korean TTS.
-  try{
-   const u=new Utterance(specialistLine(faction,role,event));
-   u.lang='ko-KR';u.voice=voice;u.volume=Math.min(1,levels.voice);
-   u.rate=role===9?.91:1.17;u.pitch=role===9?.78:1.05;
-   specialSpeaking=true;
-   u.onend=u.onerror=()=>{specialSpeaking=false;};
-   synth.speak(u);return true;
-  }catch(_){specialSpeaking=false;return false;}
- }
-
  const levels={voice:.5,effects:.32};
  for(const key of ['voice','effects'])try{const n=global.localStorage.getItem('desert-front-volume-'+key);if(n!==null&&Number.isFinite(Number(n)))levels[key]=Math.min(1,Math.max(0,Number(n)/100));}catch(_){}
  try { enabled = global.localStorage.getItem(ENABLED_KEY) !== 'false'; } catch (_) {}
@@ -87,7 +60,7 @@
   return indexPromise;
  }
  function atlas(name) {
-  if (!context || !/^f\d+-(?:default|moe)\.ogg$/.test(name)) return Promise.resolve(null);
+  if (!context || !(/^(?:f\d+-(?:default|moe)|spec-f\d+)\.ogg$/.test(name))) return Promise.resolve(null);
   if (!atlases.has(name)) {
    const decoder = context;
    atlases.set(name, global.fetch(ROOT+'voices/'+name)
@@ -115,13 +88,6 @@
   if (!Number.isInteger(faction) || faction<0 || faction>9 ||
       !Number.isInteger(role) || role<0 || role>10 ||
       !['spawn','attack','hit','death'].includes(event) || !inBattle()) return;
-  if(role===9||role===10){
-   const delay=event==='attack'?2400:1900;
-   if(!canPlay('special-voice:'+faction+'-'+role+'-'+event,delay))return;
-   if(speakSpecial(faction,role,event))return;
-   // No Korean speech engine: use existing faction-specific voice atlas clips.
-   role=role===9?2:0;
-  }
   if(activeVoices.size>=4||!context)return;
   const variant = skin === 'moe' ? 'moe' : 'default';
   const name = variant+'/'+faction+'-'+role+'-'+event;
@@ -129,7 +95,11 @@
   if (!canPlay('voice:'+name, delay)) return;
   const token = generation, requestedAt = performance.now();
   loadIndex().then(clips => {
-   const clip = clips[name] || clips['default/'+faction+'-'+role+'-'+event];
+   // New Nemo Japanese specialist atlases are preferred. Until rendered,
+   // reuse existing Nemo faction voices, never browser/system TTS.
+   const backupRole=role===9?2:role===10?0:role;
+   const clip = clips[name] || clips['default/'+faction+'-'+role+'-'+event] ||
+    clips[variant+'/'+faction+'-'+backupRole+'-'+event] || clips['default/'+faction+'-'+backupRole+'-'+event];
    if (!clip || !context || token!==generation) return null;
    return atlas(clip.atlas).then(buffer => ({buffer,clip}));
   }).then(result => {
@@ -156,7 +126,6 @@
   unit(faction,role,skin,'attack',x);
  }
  function stop() {
-  if(specialSpeaking){try{global.speechSynthesis?.cancel?.();}catch(_){}specialSpeaking=false;}
   generation++;
   for (const source of activeVoices) { try { source.stop(); } catch (_) {} }
   activeVoices.clear();
