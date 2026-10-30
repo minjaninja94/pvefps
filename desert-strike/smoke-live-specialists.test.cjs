@@ -223,7 +223,9 @@ test('all five co-op AI difficulties purchase specialist factories and keep anti
    bot.cash=100000;bot.ecoReadyAt=Infinity;
    for(let lane=0;lane<m.state.lanes;lane++)for(let i=0;i<4;i++)bot.buildings[lane][i]=[0,1,3,5][i];
   }
-  m.wave();
+  // The specialist purchase planner buys one priority factory per qualifying
+  // wave; easy AI deliberately skips alternating waves. Verify over 3 waves.
+  m.wave();m.wave();m.wave();
   for(const bot of m.state.players.filter(p=>p.bot)){
    const buildings=bot.buildings.flat();
    assert.ok(buildings.includes(9),difficulty+' AI must field sniper');
