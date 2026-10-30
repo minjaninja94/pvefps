@@ -5,7 +5,7 @@ const FACTIONS=['forge','brood','astral','marine','beastkin','elf','furry','robo
 const MUT=[[1.055,1,.96],[.995,1,1.12],[.99,1.09,1],[1.09,1.06,1.01],[1,1,1.08],[.94,1,.99],[1.02,1,1.07],[1.07,1,.99],[.99,1,1.01],[1,1,1.01]];
 const NAMES=[['원점 저격수','망령 침투병'],['심연 침저격충','그림자 절단충'],['성운 관측자','공허 위상검사'],['쾌흥태','견쌍섭'],['설원 살쾡이 사수','흑표 그림자'],['월광 장궁수','은월 그림자무희'],['붉은여우 명사수','밤늑대 추적자'],['분광 저격 드론','영점 암살기'],['심해 작살술사','먹물 잠행자'],['이슬 정밀술사','가시 그림자']];
 const CANDIDATES={
- [SNIPER]:{key:'sniper',name:'저격',cost:380,hp:78,damage:300,armor:0,range:370,rate:4.8,speed:44,kind:'ground',airTarget:false,aim:.65,armorPierce:.5,good:[],bad:[0,1,10]},
+ [SNIPER]:{key:'sniper',name:'저격',cost:380,hp:78,damage:300,armor:0,range:370,rate:4.8,speed:44,kind:'ground',airTarget:false,aim:.65,armorPierce:.5,good:[3],bad:[0,1,10]},
  [ASSASSIN]:{key:'assassin',name:'암살',cost:330,hp:52,damage:180,armor:0,range:30,rate:1.45,speed:96,kind:'ground',airTarget:false,aim:.18,armorPierce:0,good:[5,7,9],bad:[0,3,7],stealth:true}
 };
 const RULES=Object.freeze({detectionRadius:190,attackRevealSeconds:1.05,stealthOpacity:.58,infiltrationTrigger:250,infiltrationReach:380,infiltrationWindup:.35,infiltrationTravel:.45,landingRecovery:.45,firstStrikeMultiplier:1.2});
