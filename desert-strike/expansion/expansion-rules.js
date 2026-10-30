@@ -13,6 +13,14 @@ function definition(role,faction=0){
  const b=CANDIDATES[role];if(!b)return null;const [hp,damage,speed]=MUT[faction]||MUT[0];
  return {...b,role,faction,unitName:NAMES[faction]?.[role===SNIPER?0:1]||b.name,hp:b.hp*hp*2.25,damage:b.damage*damage*.94,speed:b.speed*speed*.84,range:b.range*(role===SNIPER&&faction===5?1.1:1)};
 }
+// Paid AI production target, shared by solo and multi. Low-cost frontline is built first.
+// Never treat specialists as free reinforcements or let them replace emergency counters.
+function plannedSpecialist(counts,wave,army=counts.reduce((n,v,i)=>n+(i===EXTRACTOR?0:v||0),0)){
+ const count=role=>counts[role]||0;
+ if(wave>=7&&army>=6&&count(SNIPER)<(army>=48?3:army>=28?2:1))return SNIPER;
+ if(wave>=10&&army>=8&&count(ASSASSIN)<(army>=48?3:army>=28?2:1))return ASSASSIN;
+ return null;
+}
 const side=u=>u.team??u.side;
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 function detected(unit,units,now=0){
@@ -46,6 +54,6 @@ function precisionMultiplier(attacker,target){
  const kind=target.def?.kind||target.kind;
  return target.role===3||(target.role===6&&kind==='ground')?1.6:target.heroCount===20?1.25:1;
 }
-const api=Object.freeze({VERSION,EXTRACTOR,SNIPER,ASSASSIN,FACTIONS,NAMES,RULES,CANDIDATES,definition,precisionMultiplier,detected,canTarget,presentation,infiltration,revealOnAttack,snapshot,liveEnabled:true});
+const api=Object.freeze({VERSION,EXTRACTOR,SNIPER,ASSASSIN,FACTIONS,NAMES,RULES,CANDIDATES,definition,precisionMultiplier,plannedSpecialist,detected,canTarget,presentation,infiltration,revealOnAttack,snapshot,liveEnabled:true});
 global.DesertExpansion=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
