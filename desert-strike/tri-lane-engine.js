@@ -408,7 +408,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    if(brain.heroLane===undefined)brain.heroLane=focus;
    const committed=bot.buildings[brain.heroLane].filter(r=>r===heroRole).length;
    const focusHero=heroSafe&&committed<20;
-   if(focusHero&&action?.kind!=='econ')
+   if(focusHero&&action?.kind!=='econ'&&action?.role!==9&&action?.role!==10)
     action=bot.cash>=unitCost(bot.faction,heroRole)?{kind:'unit',role:heroRole}:null;
    if(!action)break;
    const lanes=Array.from({length:LANES},(_,i)=>i).filter(l=>bot.buildings[l].some(x=>x===null)).sort((a,b)=>{
@@ -448,6 +448,13 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     let role=state.aiDifficulty==='easy'
      ?(state.wave>4&&(state.wave+lane)%7===0?9:state.wave>6&&(state.wave+lane)%9===0?10:selectCounter(lane,bot))
      :selectCounter(lane,bot);
+     const laneFactories=bot.buildings[lane].filter(r=>r!==null&&r!==EXTRACTOR);
+     const counterNeeded=state.units.some(u=>u.hp>0&&u.team!==bot.team&&u.role===10&&u.lane===lane)
+       &&laneFactories.filter(r=>r===7).length<1;
+     if(!counterNeeded&&state.wave>=6&&laneFactories.length>=3&&bot.cash>=380&&
+        laneFactories.filter(r=>r===9).length<Math.max(1,Math.floor(laneFactories.length*.1)))role=9;
+     else if(!counterNeeded&&state.wave>=8&&laneFactories.length>=4&&bot.cash>=330&&
+        laneFactories.filter(r=>r===10).length<Math.max(1,Math.floor(laneFactories.length*.08)))role=10;
     if(bot.cash<unitCost(bot.faction,role))role=bot.cash>=COST[1]?1:0;
     if(bot.cash<unitCost(bot.faction,role))break;
     const slot=bot.buildings[lane].findIndex(x=>x===null);if(slot<0)break;
