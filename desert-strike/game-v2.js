@@ -533,7 +533,8 @@ function aiChoose(budget=state.enemyCash){
  // Mixed heavy/air/healer compositions require two real counter types, not a random counter.
  const groundVehicle=[3,4,6,7].includes(state.faction);
  const tanks=intel.counts[3]+(groundVehicle?intel.counts[6]:0),air=intel.air,medics=intel.counts[7];
- if(intel.counts[10]>=1&&myCounts[7]<Math.max(1,Math.ceil(intel.counts[10]/3))&&affordable.includes(7))return 7;
+ if(intel.counts[10]>=1&&myCounts[7]<Math.max(1,Math.ceil(intel.counts[10]/3)))
+   return affordable.includes(7)?7:null; // Save credits for a detector rather than wasting them on invisible-target rifles.
   if(intel.counts[9]>=2&&myCounts[10]<Math.ceil(intel.counts[9]/3)&&affordable.includes(10))return 10;
   const armyCount=myCounts.reduce((n,v)=>n+v,0);
   if(state.wave>=6&&armyCount>=6&&!intel.invaded&&!intel.counts[10]&&affordable.includes(9)&&myCounts[9]<Math.max(1,Math.floor(armyCount*.09)))return 9;
