@@ -21,8 +21,8 @@ test('round 10 draft renders wave 1 selection beneath new cards and readable hov
  renderer.render(container,[previous.id],10);
  const root=container.children[0],header=root.children[0],strip=root.children[1],detail=root.children[2];
  assert.equal(root.attributes['aria-label'],'라운드별 이전 증강 선택 기록');
- assert.equal(strip.children.length,5);
- assert.match(header.children[1].textContent,/1 \/ 5개 선택/);
+ assert.equal(strip.children.length,8);
+ assert.match(header.children[1].textContent,/1 \/ 8개 선택/);
  assert.equal(strip.children[0].children[0].textContent,'WAVE 01');
  assert.equal(strip.children[0].children[1].textContent,previous.name);
  assert.equal(strip.children[1].children[1].textContent,'이번 선택');
@@ -42,12 +42,12 @@ test('round 10 draft renders wave 1 selection beneath new cards and readable hov
  strip.children[0].fire('mouseleave');
  assert.equal(detail.children[2].textContent,previous.description,'mobile tap pins preview');
 });
-test('all five selected rounds have individual card names, tiers and full original effects',()=>{
+test('selected rounds have individual card names, tiers and full original effects',()=>{
  const {renderer,container}=mount();
  const ids=catalogue.filter(c=>c.scope==='common').slice(0,5).map(c=>c.id);
  renderer.render(container,ids,40);
  const [,strip,detail]=container.children[0].children;
- assert.equal(strip.children.length,5);
+ assert.equal(strip.children.length,8);
  for(let i=0;i<5;i++){
   const chip=strip.children[i],card=byId.get(ids[i]);
   assert.equal(chip.children[0].textContent,'WAVE '+String([1,10,20,30,40][i]).padStart(2,'0'));
@@ -57,7 +57,7 @@ test('all five selected rounds have individual card names, tiers and full origin
   chip.fire('mouseenter');
   assert.equal(detail.children[2].textContent,card.description);
  }
- assert.equal(renderer.ROUNDS.length,5);
+ assert.equal(renderer.ROUNDS.length,8);
 });
 test('only own augment IDs are used, and client does not expose unselected opponent cards',()=>{
  const ui=load('tri-lane-ui.js'),solo=load('game-v2.js'),html=load('index.html');

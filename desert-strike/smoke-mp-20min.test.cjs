@@ -15,9 +15,9 @@ const members=[{uid:'left',team:0,faction:0,name:'A'},{uid:'right',team:1,factio
 test('online Prism-only schedule with 30-second choice does not change solo catalogue',async()=>{
  const w=await make(true);
  const selected=w.DesertAugments.create(7);
- assert.equal(selected.schedule.length,5);
+ assert.equal(selected.schedule.length,8);
  const game=w.DesertTriEngine.create({mode:'pvp',size:1,members,ruleset:'augment',seed:7});
- assert.deepEqual(Array.from(game.state.augmentSchedule),['prismatic','prismatic','prismatic','prismatic','prismatic']);
+ assert.deepEqual(Array.from(game.state.augmentSchedule),Array(8).fill('prismatic'));
  assert.equal(game.state.augmentChoice.remaining,30);
  assert.equal(game.state.augmentChoice.round,1);
  const initial=game.snapshot('left'),other=game.snapshot('right');
@@ -29,12 +29,12 @@ test('online Prism-only schedule with 30-second choice does not change solo cata
  assert.deepEqual(Array.from(after.players[0].augments),Array.from(game.state.players[0].augments),'enemy selected cards are revealed');
  assert.equal(after.players[0].cash,null,'enemy money remains hidden');
  assert.equal(game.state.augmentChoice,null);
- game.state.wave=17;game.wave();assert.equal(game.state.augmentChoice.round,18);
+ game.state.wave=9;game.wave();assert.equal(game.state.augmentChoice.round,10);
  game.state.augmentChoice=null;
- game.state.wave=35;game.wave();assert.equal(game.state.augmentChoice.round,36);
- assert.equal(w.DesertPrism.cards.length,100,'ten unusual capstones replace cards without expanding the catalogue');
+ game.state.wave=19;game.wave();assert.equal(game.state.augmentChoice.round,20);
+ assert.equal(w.DesertPrism.cards.length,400,'forty special Prisms per faction including thirty additions');
  for(let i=0;i<10;i++){
-  const card=w.DesertPrism.cards[i*10+9];
+  const card=w.DesertPrism.cards.find(card=>card.id==='exp-prism-'+i+'-9');
   assert.ok(card.effects.length>=2,'faction '+i+' has a compound capstone');
  }
 });

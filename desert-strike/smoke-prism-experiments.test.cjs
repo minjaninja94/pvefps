@@ -22,7 +22,7 @@ test('400 unique, valid per-faction Prism cards extend original 300 and can be d
  const foreign=['exp-prism-0-10'],killer={role:3},summons=[];
  for(let i=0;i<2;i++)summons.push(...P.deathEffects(foreign,killer));
  assert.ok(summons.some(s=>s.faction===1&&Number.isInteger(s.role)),'kills summon units from another faction');
- const shot={role:3,x:0,y:0,hp:100,maxHP:100},victim={hp:80,maxHP:100,x:30,y:0},others=[{hp:50,maxHP:50,x:35,y:0}];
+ const shot={role:4,x:0,y:0,hp:100,maxHP:100},victim={hp:80,maxHP:100,x:30,y:0},others=[{hp:50,maxHP:50,x:35,y:0}];
  const anomaly=['exp-prism-0-16'];
  let hit;for(let i=0;i<2;i++)hit=P.hitEffects(anomaly,shot,victim,100,i,others);
  assert.ok(hit.secondary.length>0,'projectile impact secondary effects must be applied');

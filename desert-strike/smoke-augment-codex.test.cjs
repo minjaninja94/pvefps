@@ -44,16 +44,16 @@ test('lobby has a small accessible ? codex help button and dialog with all filte
  assert.match(css,/@media\(max-width:680px\)/);
  assert.match(wf,/smoke-augment-codex\.test\.cjs/);
 });
-test('existing shared catalogue exposes 400 read-only entries without changing game rules',async()=>{
+test('existing shared catalogue exposes 700 read-only entries without changing game rules',async()=>{
  const {w}=env();await w.DesertAugments.load();
  const data=w.DesertAugments.list();
- assert.equal(data.length,400);
+ assert.equal(data.length,700);
  assert.equal(data.filter(c=>c.scope==='common').length,50);
- for(let i=0;i<10;i++)assert.equal(data.filter(c=>c.scope==='faction-'+i).length,35);
+ for(let i=0;i<10;i++)assert.equal(data.filter(c=>c.scope==='faction-'+i).length,65);
  assert.equal(data.find(c=>c.id===original.cards[0].id).description,original.cards[0].description);
  assert.ok(data.every(c=>typeof c.name==='string'&&typeof c.tier==='string'));
- assert.equal(w.DesertAugments.STAGES.join(','),'1,10,20,30,40');
- const again=w.DesertAugments.list();again.pop();assert.equal(w.DesertAugments.list().length,400);
+ assert.equal(w.DesertAugments.STAGES.join(','),'1,10,20,30,40,50,60,70');
+ const again=w.DesertAugments.list();again.pop();assert.equal(w.DesertAugments.list().length,700);
 });
 test('popup opens from selected faction, filters by common/faction, tier, and search, then restores focus',async()=>{
  const e=env(),{$,w,document,common,faction,tiers}=e;
@@ -64,14 +64,14 @@ test('popup opens from selected faction, filters by common/faction, tier, and se
  assert.equal($('augmentCodexFaction').value,'7');
  assert.equal($('augmentCodexFaction').children.length,10);
  assert.equal($('augmentCodexResults').children.length,3,'silver, gold, prismatic common groups');
- assert.match($('augmentCodexStatus').textContent,/50 \/ 50종 표시 \(전체 400종\)/);
+ assert.match($('augmentCodexStatus').textContent,/50 \/ 50종 표시 \(전체 700종\)/);
  assert.equal($('augmentCodexResults').children.reduce((n,sec)=>n+sec.children[1].children.length,0),50);
  $('augmentCodexTabs').fire('click',faction);
  assert.equal($('augmentCodexFactionLabel').hidden,false);
- assert.match($('augmentCodexStatus').textContent,/테스트종족7 전용 · 35 \/ 35종/);
- assert.equal($('augmentCodexResults').children.reduce((n,sec)=>n+sec.children[1].children.length,0),35);
+ assert.match($('augmentCodexStatus').textContent,/테스트종족7 전용 · 35 \/ 65종/);
+ assert.equal($('augmentCodexResults').children.reduce((n,sec)=>n+sec.children[1].children.length,0),65);
  $('augmentCodexTiers').fire('click',tiers[2]);
- assert.match($('augmentCodexStatus').textContent,/\/ 35종/);
+ assert.match($('augmentCodexStatus').textContent,/\/ 65종/);
  assert.ok($('augmentCodexResults').children.every(sec=>sec.children[0].textContent.startsWith('골드')));
  const selected=original.cards.find(c=>c.scope==='faction-7'&&c.tier==='gold');
  $('augmentCodexSearch').value=selected.name;
@@ -80,7 +80,7 @@ test('popup opens from selected faction, filters by common/faction, tier, and se
  assert.equal($('augmentCodexResults').children[0].children[1].children[0].children[2].textContent,selected.description);
  $('augmentCodexSearch').value='절대로 존재하지 않는 카드 987654';
  $('augmentCodexSearch').fire('input');
- assert.match($('augmentCodexStatus').textContent,/0 \/ 35종/);
+ assert.match($('augmentCodexStatus').textContent,/0 \/ 65종/);
  assert.match($('augmentCodexResults').children[0].textContent,/해당하는 증강 카드가 없습니다/);
  $('augmentCodexClose').fire('click');
  assert.equal($('augmentCodexDialog').open,false);

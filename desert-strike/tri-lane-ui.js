@@ -384,7 +384,7 @@ function renderAugmentRoster(){
    for(const [index,id] of (p.augments||[]).entries()){
     const card=global.DesertAugments?.card(id);
     const details=document.createElement('details'),summary=document.createElement('summary'),body=document.createElement('p');
-    const wave=[1,18,36,54,72][index];
+    const wave=(global.DesertAugments?.STAGES||[])[index];
     summary.textContent=(wave?'W'+wave+' · ':'')+(card?.name||'증강 정보 불러오는 중');
     body.textContent=card?.description||'증강 카드 설명을 불러오는 중입니다.';
     details.title=body.textContent;details.append(summary,body);cards.append(details);

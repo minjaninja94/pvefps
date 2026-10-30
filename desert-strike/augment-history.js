@@ -4,7 +4,7 @@
  */
 (function(global){
 'use strict';
-const ROUNDS=[1,10,20,30,40];
+const ROUNDS=global.DesertAugments?.STAGES||[1,10,20,30,40,50,60,70];
 const TIER_NAME={silver:'실버',gold:'골드',prismatic:'프리즘'};
 const make=(tag,className,text)=>{
  const node=document.createElement(tag);
@@ -14,7 +14,7 @@ const make=(tag,className,text)=>{
 };
 function render(target,selected=[],currentRound=1){
  if(!target)return;
- const ids=Array.isArray(selected)?selected.slice(0,5):[];
+ const ids=Array.isArray(selected)?selected.slice(0,ROUNDS.length):[];
  const stage=Number(currentRound)||1;
  const root=make('section','augment-history');
  root.setAttribute('aria-label','라운드별 이전 증강 선택 기록');
