@@ -111,7 +111,7 @@ const classic={...snapshot,mode:'classic',height:520,lanes:1,coreMaxHP:7200,
  cores:[[7200,7200]],turrets:[[1250,1250]],forwardHP:[[1000,1000]],lanePressure:[.5],fog:[false]};
 window.DesertTriUI.onSnapshot(classic);
 assert.equal(doc.body.dataset.multiArena,'classic','classic mode identifies single-map layout');
-assert.equal(item('mpBattleCanvas').height,520,'classic render uses the solo battlefield height');
+assert.equal(item('mpBattleCanvas').height,400,'compact single-line battle uses the reduced viewport height');
 assert.match(item('mpSelectedLane').textContent,/단일 전장/);
 assert.equal(item('mpBuildGrid').children.length,75,'one classic 75-slot board remains intact');
 const classicBefore=calls.length;
