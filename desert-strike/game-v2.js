@@ -1842,7 +1842,7 @@ function structure(g,x,y,side,turret=true,health=1,kind=turret?'turret':'core'){
 function drawStructureHealth(g,x,side,kind,hp,maxHP){
  const p=window.IsoWorld?.project?.(x,260)||{x,y:260};
  const width=kind==='core'?104:112;
- const y=p.y-(kind==='forward'?166:kind==='core'?154:145),left=p.x-width/2;
+ const y=p.y-(kind==='forward'?166:kind==='core'?189:140),left=p.x-width/2;
  const value=Math.max(0,Math.ceil(hp)),ratio=Math.max(0,Math.min(1,hp/maxHP));
  const name=kind==='forward'?'중간 타워':kind==='turret'?'본진 포탑':'핵심 기지';
  g.save();
