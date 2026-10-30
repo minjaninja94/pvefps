@@ -66,9 +66,11 @@ test('eight specialist base augments apply to sniper and assassin stats and wave
  const sniper=A.apply(base,['special-sniper-range','special-sniper-damage'],9);
  assert.ok(sniper.range>base.range&&sniper.damage>base.damage);
  assert.equal(A.apply(base,['special-assassin-speed'],9).speed,base.speed,'class effects do not leak into sniper');
- assert.equal(A.extra(['special-sniper-extra'],9),1);
- assert.equal(A.extra(['special-assassin-extra'],10),1);
+ assert.equal(A.extra(['special-sniper-extra'],9),0,'gold sniper no longer doubles costly units');
+ assert.equal(A.extra(['special-assassin-extra'],10),0,'gold assassin no longer doubles costly units');
  assert.equal(A.extra(['special-sniper-extra'],10),0);
+ assert.ok(A.apply(base,['special-sniper-extra'],9).speed>base.speed,'gold sniper repositions faster');
+ assert.ok(A.apply({...base,role:10},['special-assassin-extra'],10).hp>base.hp,'gold assassin gains survivability');
  const assassin=A.apply({...base,role:10},['special-assassin-speed','special-assassin-damage'],10);
  assert.ok(assassin.speed>base.speed&&assassin.damage>base.damage);
  const deck=A.create(311);assert.ok(deck.offer('silver',3).some(id=>A.card(id)?.tier==='silver'));
