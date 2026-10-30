@@ -11,7 +11,7 @@ function source(faction,role,skin){
 }
 function draw(g,{faction=0,role=9,skin='base',action='idle',frame=0,x=0,y=0,size=72,facing=1,opacity=1,filter='none'}={}){
  const {image,row}=source(faction,role,skin);if(!image.complete||!image.naturalWidth)return false;
- g.save();g.translate(x+size/2,y+size/2);g.scale(facing,1);g.globalAlpha=opacity;g.imageSmoothingEnabled=false;g.filter=filter;
+ g.save();g.translate(x+size/2,y+size/2);g.scale(facing,1);g.globalAlpha*=opacity;g.imageSmoothingEnabled=false;g.filter=filter;
  if(action==='death')g.globalAlpha*=1-((frame%16)/20);
  if(action==='spawn'){const scale=.5+.5*Math.min(1,frame/7);g.scale(scale,scale);}
  if(action==='hit')g.translate(-Math.sin(frame/15*Math.PI)*4,0);
