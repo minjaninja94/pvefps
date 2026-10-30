@@ -40,3 +40,20 @@ test('impossible responds to mixed visible threats without demanding a single-ro
  assert.equal(reply.needed,true);assert.ok([1,2,3,5].includes(reply.role));
  assert.equal(AI.response(AI.create(0),{counts,intel,difficulty:'veryhard'}).needed,false);
 });
+
+test('impossible targets 85 percent counter factories and releases the target after scouting a switch',()=>{
+ const brain=AI.create(0),intel={roles:[0,0,0,0,20,0,0,0]};
+ const counts=[0,3,7,6,0,0,4,0]; // 13/20 counters: enough for veryhard, below impossible.
+ assert.equal(AI.response(brain,{counts,intel,difficulty:'veryhard'}).needed,false);
+ assert.equal(AI.response(brain,{counts,intel,difficulty:'impossible'}).needed,true);
+ const near=[0,0,8,8,0,0,4,0]; // 80 percent still needs a counter.
+ assert.equal(AI.response(brain,{counts:near,intel,difficulty:'impossible'}).needed,true);
+ const complete=[0,0,9,8,0,0,3,0];
+ assert.equal(AI.response(brain,{counts:complete,intel,difficulty:'impossible'}).needed,false);
+ const switched=AI.response(brain,{counts:complete,intel:{roles:[0,0,0,0,0,0,20,0],air:20},difficulty:'impossible'});
+ assert.equal(switched.needed,true);assert.ok([4,1].includes(switched.role),'newly scouted aircraft replaces the obsolete anti-air counter target');
+});
+test('impossible mixed response uses the stronger deficit target',()=>{
+ const reply=AI.response(AI.create(0),{counts:[3,0,1,2,0,3,0,0],intel:{roles:[0,4,3,0,3,0,0,0]},difficulty:'impossible'});
+ assert.equal(reply.needed,true);assert.equal(reply.role,3);
+});

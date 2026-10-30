@@ -22,12 +22,12 @@ function response(brain,{counts,intel={},difficulty='veryhard'}){
  const table=[[1,3],[3,5],[0,1],[2,ground?3:6],[2,3],[0,ground?1:6],(intel.air||0)>=roles[6]*.5?[4,1]:[2,3],[0,5]];
  if(difficulty==='impossible'&&seen>=10&&fraction<.45){
   const weights=Array(8).fill(0);roles.forEach((n,r)=>{weights[table[r][0]]+=n*.65;weights[table[r][1]]+=n*.35;});
-  const deficits=weights.map((n,r)=>({role:r,gap:(army+2)*.72*n/seen-counts[r]})).sort((a,b)=>b.gap-a.gap);
+  const deficits=weights.map((n,r)=>({role:r,gap:(army+2)*.85*n/seen-counts[r]})).sort((a,b)=>b.gap-a.gap);
   return {needed:deficits[0].gap>=1.25,role:deficits[0].role,counters:deficits.filter(x=>x.gap>0).map(x=>x.role),major};
  }
  if(fraction<(difficulty==='impossible'?.45:.55))return {needed:false};
  const counters=table[major];
- const share=difficulty==='impossible'?.72:.60,covered=counters.reduce((n,r)=>n+counts[r],0);
+ const share=difficulty==='impossible'?.85:.60,covered=counters.reduce((n,r)=>n+counts[r],0);
  const needed=covered<Math.ceil(Math.max(army,3)*share);
  const role=counters.slice().sort((a,b)=>counts[a]-counts[b])[0];
  return {needed,role,counters,major};
