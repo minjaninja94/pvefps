@@ -1,6 +1,19 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function desertSkin(s, f) {
+      return s in ['default','moe','twilight','aurora','gold']
+        || (f == 0 && s in ["blood-iron","faction-0-skin-02","faction-0-skin-03","faction-0-skin-04","faction-0-skin-05","faction-0-skin-06","faction-0-skin-07","faction-0-skin-08","faction-0-skin-09","faction-0-skin-10"])
+        || (f == 1 && s in ["faction-1-skin-01","faction-1-skin-02","faction-1-skin-03","faction-1-skin-04","faction-1-skin-05","faction-1-skin-06","faction-1-skin-07","faction-1-skin-08","faction-1-skin-09","faction-1-skin-10"])
+        || (f == 2 && s in ["faction-2-skin-01","faction-2-skin-02","faction-2-skin-03","faction-2-skin-04","faction-2-skin-05","faction-2-skin-06","faction-2-skin-07","faction-2-skin-08","faction-2-skin-09","faction-2-skin-10"])
+        || (f == 3 && s in ["faction-3-skin-01","faction-3-skin-02","faction-3-skin-03","faction-3-skin-04","faction-3-skin-05","faction-3-skin-06","faction-3-skin-07","faction-3-skin-08","faction-3-skin-09","faction-3-skin-10"])
+        || (f == 4 && s in ["faction-4-skin-01","faction-4-skin-02","faction-4-skin-03","faction-4-skin-04","faction-4-skin-05","faction-4-skin-06","faction-4-skin-07","faction-4-skin-08","faction-4-skin-09","faction-4-skin-10"])
+        || (f == 5 && s in ["faction-5-skin-01","faction-5-skin-02","faction-5-skin-03","faction-5-skin-04","faction-5-skin-05","faction-5-skin-06","faction-5-skin-07","faction-5-skin-08","faction-5-skin-09","faction-5-skin-10"])
+        || (f == 6 && s in ["faction-6-skin-01","faction-6-skin-02","faction-6-skin-03","faction-6-skin-04","faction-6-skin-05","faction-6-skin-06","faction-6-skin-07","faction-6-skin-08","faction-6-skin-09","faction-6-skin-10"])
+        || (f == 7 && s in ["faction-7-skin-01","faction-7-skin-02","faction-7-skin-03","faction-7-skin-04","faction-7-skin-05","faction-7-skin-06","faction-7-skin-07","faction-7-skin-08","faction-7-skin-09","faction-7-skin-10"])
+        || (f == 8 && s in ["faction-8-skin-01","faction-8-skin-02","faction-8-skin-03","faction-8-skin-04","faction-8-skin-05","faction-8-skin-06","faction-8-skin-07","faction-8-skin-08","faction-8-skin-09","faction-8-skin-10"])
+        || (f == 9 && s in ["faction-9-skin-01","faction-9-skin-02","faction-9-skin-03","faction-9-skin-04","faction-9-skin-05","faction-9-skin-06","faction-9-skin-07","faction-9-skin-08","faction-9-skin-09","faction-9-skin-10"]);
+    }
     function signed() { return request.auth != null; }
     function now() { return request.time.toMillis(); }
     // Keep the existing public board and record fields. New records are append-only.
@@ -154,7 +167,7 @@ service cloud.firestore {
         && d.keys().hasAll(['name','faction','skin'])
         && d.name is string && d.name.size() >= 1 && d.name.size() <= 16
         && d.faction is int && d.faction >= 0 && d.faction <= 9
-        && d.skin in ['default','moe','twilight','aurora','gold'];}
+        && desertSkin(d.skin, d.faction);}
       allow get: if own();
       allow list: if false;
       allow create, update: if own() && valid(request.resource.data);
@@ -209,7 +222,7 @@ service cloud.firestore {
         return p is map && p.keys().hasOnly(['name','faction','team','ready','skin'])
           && p.name is string && p.name.size() >= 1 && p.name.size() <= 16
           && p.faction is int && p.faction >= 0 && p.faction <= 9
-          && (!('skin' in p) || p.skin in ['default','moe','twilight','aurora','gold'])
+          && (!('skin' in p) || desertSkin(p.skin, p.faction))
           && p.team in [0,1] && p.ready is bool;
       }
       function shape(r) {

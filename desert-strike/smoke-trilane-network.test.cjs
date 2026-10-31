@@ -16,7 +16,7 @@ function notify(k){
 }
 const firestore={
  doc(db,...parts){return {path:parts.join('/')};},
- async setDoc(ref,value){records.set(key(ref),clone(value));notify(key(ref));},
+ async setDoc(ref,value){if(ref.path.startsWith('desertRooms/')&&!ref.path.includes('/signals/'))for(const p of Object.values(value.players||{}))assert.ok(['default','moe','twilight','aurora','gold'].includes(p.skin),'legacy deployed rules still accept room cosmetics');records.set(key(ref),clone(value));notify(key(ref));},
  async updateDoc(ref,p){const old=records.get(key(ref));if(!old)throw Error('document missing');
   records.set(key(ref),{...clone(old),...clone(p)});notify(key(ref));},
  async deleteDoc(ref){records.delete(key(ref));notify(key(ref));},
@@ -70,7 +70,7 @@ function buildClient(uid){
   setInterval,clearInterval,setTimeout,clearTimeout,performance,Date,Math,Number,String,Object,Array,Map,Set,console
  };
  w.IronFirebase={async identity(){return {db:{},fs:firestore,uid};},message:e=>e?.message||String(e)};
- for(const file of ['prism-experiments.js','augment-rules.js'])vm.runInNewContext(fsNode.readFileSync(path.join(__dirname,file),'utf8'),env,{filename:file});
+ for(const file of ['skin-catalog.js','prism-experiments.js','augment-rules.js'])vm.runInNewContext(fsNode.readFileSync(path.join(__dirname,file),'utf8'),env,{filename:file});
  vm.runInNewContext(engineSource,env,{filename:'tri-lane-engine.js'});
  vm.runInNewContext(networkSource,env,{filename:'tri-lane-network.js'});
  const events={room:[],status:[],snap:[],peers:[]};
@@ -85,10 +85,10 @@ async function until(fn,ms=1800){
 }
 async function main(){
  const host=buildClient('hostUser'),guest=buildClient('guestUser');
- const room=await host.network.create({mode:'pvp',size:1,name:'방장',faction:4});
+ const room=await host.network.create({mode:'pvp',size:1,name:'방장',faction:0,skin:'blood-iron'});
  assert.match(room,/^[A-HJ-NP-Z2-9]{6}$/);
  assert.ok(records.has('desertRooms/'+room));
- const joined=await guest.network.join({code:room,name:'손님',faction:5,team:1});
+ const joined=await guest.network.join({code:room,name:'손님',faction:0,skin:'blood-iron',team:1});
  assert.equal(joined,room);
  await until(()=>host.network.current().peers.has('guestUser'));
  assert.ok(host.events.status.some(s=>s.includes('연결')),'WebRTC data channel open');
@@ -100,6 +100,8 @@ async function main(){
  assert.equal(result.ok,true,'guest sends validated order');
  await until(()=>guest.events.snap.some(s=>s?.players?.find(p=>p.uid==='guestUser')?.buildings[2][8]===1));
  const received=guest.events.snap.find(s=>s?.players?.find(p=>p.uid==='guestUser')?.buildings[2][8]===1);
+ assert.equal(received.players.find(p=>p.uid==='hostUser').skin,'blood-iron','host cosmetic survives the peer snapshot');
+ assert.equal(received.players.find(p=>p.uid==='guestUser').skin,'blood-iron','guest cosmetic reaches the host over WebRTC');
  assert.equal(received.players.find(p=>p.uid==='guestUser').cash,260);
  assert.equal(received.players.find(p=>p.uid==='hostUser').cash,null,'unscouted opponent cash must not leak over WebRTC');
  assert.equal(host.events.snap.at(-1).players.find(p=>p.uid==='guestUser').cash,null,'host UI also receives per-viewer redaction');

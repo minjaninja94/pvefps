@@ -6,11 +6,11 @@ const SKINS=[
  {id:'twilight',name:'황혼 작전',level:3,desc:'자줏빛 야전 도색',filter:'hue-rotate(55deg) saturate(1.3)',tone:'#ba91f2'},
  {id:'aurora',name:'오로라 특무',level:6,desc:'청록 발광형 전투복',filter:'hue-rotate(145deg) saturate(1.15)',tone:'#8bdff6'},
  {id:'gold',name:'황금 근위',level:10,desc:'레벨 10 해금',filter:'sepia(.62) saturate(1.35) contrast(1.05)',tone:'#e9c47f'},
- {id:'blood-iron',name:'혈철 집행군',faction:0,level:12,desc:'검붉은 기계 처형기사 · 병종별 8포즈',filter:'none',tone:'#df4b50'}
+ ...(global.DesertSkinCatalog?.SKINS||[])
 ];
 const KEY='desert-front-training-v2',empty=()=>({xp:0,wins:0,losses:0,mpWins:0,mpLosses:0,selectedFaction:0,selectedSkin:'default',aiDifficulty:'normal',nickname:'지휘관'});
 let progress=empty(),uid=null,active=false,lastMultiplayer='',authBusy=false;
-let selectedUnit=0,selectedAction='idle',animationStart=0,animationTick=0,onlineOpen=false,previewSkinId='',previewRole=0,previewAction='idle';
+let selectedUnit=0,selectedAction='idle',animationStart=0,animationTick=0,onlineOpen=false,previewSkinId='',previewRole=0,previewAction='idle',previewOpener=null;
 const RULESET_KEY='desert-front-ruleset-v1';
 const RULESETS=['standard','augment','prism'];
 const AI_LEVELS=['easy','normal','hard','veryhard','impossible'];
@@ -33,7 +33,7 @@ function save(){try{localStorage.setItem(storageKey(),JSON.stringify(progress));
 function levelFromXP(xp){let level=1,left=xp;while(level<100&&left>=100+level*70){left-=100+level*70;level++;}return {level,within:left,needed:100+level*70};}
 function rank(){const score=progress.mpWins*3+progress.wins*.5;return score>=100?'플래티넘 연습생':score>=55?'골드 연습생':score>=24?'실버 연습생':score>=7?'브론즈 연습생':'훈련병';}
 function skinForFaction(s,f){return s.faction===undefined||s.faction===f;}
-function skinAssetReady(s){return s.id!=='blood-iron'||global.DesertBloodIronArt?.loadedCount?.()===10;}
+function skinAssetReady(s){if(!global.DesertSkinArt?.has(s.id))return true;if(!global.DesertSkinArt.available(s.id))return false;global.DesertSkinArt.preload(s.id);return global.DesertSkinArt.loadedCount(s.id)===10;}
 function currentSkin(){const lv=levelFromXP(progress.xp).level;return SKINS.find(x=>x.id===progress.selectedSkin&&lv>=x.level&&skinForFaction(x,progress.selectedFaction)&&skinAssetReady(x))||SKINS[0];}
 function renderRuleset(){
  const selected=selectedRuleset!=='standard',label=selectedRuleset==='prism'?'프리즘 모드':'증강전';
@@ -107,8 +107,8 @@ function drawUnitAnimations(ts){
  });
  if(previewSkinId&&!$('skinPreviewLayer')?.hidden){
   const previewFilter=filterForSkin(previewSkinId),previewSkin=previewSkinId;
-  $('skinPreviewUnits')?.querySelectorAll('canvas[data-preview-role]').forEach(c=>{const rr=Number(c.dataset.previewRole),cc=c.getContext('2d');if(!cc)return;cc.clearRect(0,0,72,72);const hasArt=previewSkin!=='blood-iron'||global.DesertBloodIronArt?.frame?.(rr,'move',m.frameAt('move',elapsed));if(hasArt)m.draw(cc,{faction:f,role:rr,action:'move',frame:m.frameAt('move',elapsed),size:72,filter:previewFilter,skin:previewSkin});else{cc.fillStyle='#a6b8c8';cc.font='10px sans-serif';cc.fillText('이미지 대기',9,37);}});
-  const big=$('skinPreviewCanvas'),cc=big?.getContext('2d');if(cc){cc.clearRect(0,0,192,192);const hasArt=previewSkin!=='blood-iron'||global.DesertBloodIronArt?.frame?.(previewRole,previewAction,m.frameAt(previewAction,elapsed));if(hasArt)m.draw(cc,{faction:f,role:previewRole,action:previewAction,frame:m.frameAt(previewAction,elapsed),size:188,x:2,y:2,filter:previewFilter,skin:previewSkin});else{cc.fillStyle='#a6b8c8';cc.font='16px sans-serif';cc.fillText('이미지 업로드 대기',20,100);}}
+  $('skinPreviewUnits')?.querySelectorAll('canvas[data-preview-role]').forEach(c=>{const rr=Number(c.dataset.previewRole),cc=c.getContext('2d');if(!cc)return;cc.clearRect(0,0,72,72);const hasArt=!global.DesertSkinArt?.has(previewSkin)||global.DesertSkinArt.frame(previewSkin,f,rr,'move',m.frameAt('move',elapsed));if(hasArt)m.draw(cc,{faction:f,role:rr,action:'move',frame:m.frameAt('move',elapsed),size:72,filter:previewFilter,skin:previewSkin});else{cc.fillStyle='#a6b8c8';cc.font='10px sans-serif';cc.fillText('이미지 대기',9,37);}});
+  const big=$('skinPreviewCanvas'),cc=big?.getContext('2d');if(cc){cc.clearRect(0,0,192,192);const hasArt=!global.DesertSkinArt?.has(previewSkin)||global.DesertSkinArt.frame(previewSkin,f,previewRole,previewAction,m.frameAt(previewAction,elapsed));if(hasArt)m.draw(cc,{faction:f,role:previewRole,action:previewAction,frame:m.frameAt(previewAction,elapsed),size:188,x:2,y:2,filter:previewFilter,skin:previewSkin});else{cc.fillStyle='#a6b8c8';cc.font='16px sans-serif';cc.fillText('이미지 업로드 대기',20,100);}}
  }
  const large=$('lobbyUnitPreview'),ctx=large?.getContext('2d');
  if(ctx){ctx.clearRect(0,0,192,192);m.draw(ctx,{faction:f,role:selectedUnit,action:selectedAction,frame:m.frameAt(selectedAction,elapsed),size:178,x:7,y:7,filter,skin});}
@@ -128,18 +128,25 @@ function renderCovers(){const art=global.DesertCommanderCovers;if(!art)return;co
  art.draw($('lobbyHero'),progress.selectedFaction,skin);
 }
 
-function closeSkinPreview(){previewSkinId='';const layer=$('skinPreviewLayer');if(layer)layer.hidden=true;}
+function closeSkinPreview(){previewSkinId='';const layer=$('skinPreviewLayer');if(layer)layer.hidden=true;if(previewOpener?.isConnected)previewOpener.focus();previewOpener=null;}
 function openSkinPreview(id){
  const sk=SKINS.find(x=>x.id===id&&skinForFaction(x,progress.selectedFaction));if(!sk)return;
  const layer=$('skinPreviewLayer');if(!layer)return;
- previewSkinId=id;previewRole=0;previewAction='idle';layer.hidden=false;
+ previewOpener=document.activeElement;previewSkinId=id;previewRole=0;previewAction='idle';layer.hidden=false;
  $('skinPreviewTitle').textContent=sk.name+' · '+FACTIONS[progress.selectedFaction].name;
  $('skinPreviewUnlock').textContent=levelFromXP(progress.xp).level<sk.level?'잠김 · LV.'+sk.level+' 해금':'선택 가능';
- $('skinPreviewStatus').textContent=id==='blood-iron'?'혈철 집행군 10병종 · 8포즈 · 이미지 '+(global.DesertBloodIronArt?.loadedCount?.()||0)+'/10 로드됨 · 미배포 병종은 표시되지 않습니다.':'유닛별 애니메이션 미리보기';
+ updateSkinPreviewStatus();
  const fac=FACTIONS[progress.selectedFaction];
  $('skinPreviewUnits').innerHTML=[0,1,2,3,4,5,6,7,9,10].map((r,i)=>'<button type="button" class="skin-preview-role'+(i===0?' selected':'')+'" data-preview-select="'+r+'"><canvas width="72" height="72" data-preview-role="'+r+'"></canvas><small>'+(fac.units[r]||global.DesertRoster?.getDef?.(r,progress.selectedFaction)?.name||['돌격','사격','대장갑','장갑','대공','공성','특수','지원','저격','암살'][i])+'</small></button>').join('');
- $('skinPreviewActions').innerHTML=(global.DesertUnitMotion?.ACTIONS||[]).map(a=>'<button type="button" data-preview-action="'+a.id+'"'+(a.id===previewAction?' class="selected"':'')+'>'+a.label+'</button>').join('');
- if(id==='blood-iron')global.DesertBloodIronArt?.preload?.();
+ $('skinPreviewActions').innerHTML=(global.DesertSkinCatalog?.get(id)?[{id:'idle',label:'대기 재생'},{id:'move',label:'이동 재생'},{id:'attack',label:'공격 재생'},...['대기','준비','이동 1','이동 2','공격 준비','공격 적중','스킬','사망'].map((label,i)=>({id:'pose-'+i,label}))]:(global.DesertUnitMotion?.ACTIONS||[])).map(a=>'<button type="button" data-preview-action="'+a.id+'"'+(a.id===previewAction?' class="selected"':'')+'>'+a.label+'</button>').join('');
+ global.DesertSkinArt?.retry?.(id);global.DesertSkinArt?.preload?.(id);
+ layer.querySelector('.skin-preview-panel')?.focus();
+}
+function updateSkinPreviewStatus(){
+ const sk=global.DesertSkinCatalog?.get(previewSkinId),art=global.DesertSkinArt;
+ if(!sk){$('skinPreviewStatus').textContent='유닛별 애니메이션 미리보기';return;}
+ const n=art?.loadedCount(sk.id)||0,failed=art?.failedCount(sk.id)||0;
+ $('skinPreviewStatus').textContent=sk.status!=='ready'?'이미지 반영 대기 · 제작 기록은 복구 체크포인트 참조':failed?'이미지 '+n+'/10 · '+failed+'개 로드 실패 · 창을 다시 열면 재시도합니다.':n===10?'10병종 · 8포즈 로드 완료':'이미지 '+n+'/10 로드 중';
 }
 function mountSkinPreview(){
  if($('skinPreviewLayer'))return;
@@ -150,8 +157,8 @@ function mountSkinPreview(){
   const role=e.target.closest('[data-preview-select]');if(role){previewRole=Number(role.dataset.previewSelect);layer.querySelectorAll('[data-preview-select]').forEach(b=>b.classList.toggle('selected',b===role));}
   const action=e.target.closest('[data-preview-action]');if(action){previewAction=action.dataset.previewAction;layer.querySelectorAll('[data-preview-action]').forEach(b=>b.classList.toggle('selected',b===action));}
  });
- document.addEventListener('keydown',e=>{if(e.key==='Escape'&&previewSkinId){closeSkinPreview();}});
- global.addEventListener?.('desert-blood-iron-ready',()=>{if(previewSkinId==='blood-iron'){const n=global.DesertBloodIronArt?.loadedCount?.()||0;$('skinPreviewStatus').textContent=n===10?'10병종 이미지 로드 완료 · 움직임 확인 가능':'혈철 집행군 이미지 '+n+'/10 · 미배포 병종은 표시되지 않습니다.';if(n===10)render();}});
+ document.addEventListener('keydown',e=>{if(!previewSkinId)return;if(e.key==='Escape'){e.preventDefault();closeSkinPreview();}if(e.key==='Tab'){const buttons=[...layer.querySelectorAll('button:not([disabled])')],first=buttons[0],last=buttons[buttons.length-1];if(e.shiftKey&&(document.activeElement===first||document.activeElement===layer.querySelector('.skin-preview-panel'))){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}});
+ global.addEventListener?.('desert-skin-ready',e=>{if(previewSkinId===e.detail.id)updateSkinPreviewStatus();if(active&&global.DesertSkinArt.loadedCount(e.detail.id)===10)render();});
 }
 function chooseDifficulty(value){if(!AI_LEVELS.includes(value))return;progress.aiDifficulty=value;save();render();}
 function render(){
@@ -171,7 +178,7 @@ function render(){
  $('lobbyFactionName').textContent=fac.name;$('lobbyFactionTrait').textContent=fac.bonus;
 
  $('lobbyFactions').innerHTML=FACTIONS.map((f,i)=>'<button class="lobby-faction'+(i===progress.selectedFaction?' selected':'')+'" data-faction="'+i+'" style="--fac:'+f.color+'"><span class="lobby-icon">'+f.logo+'</span><canvas width="160" height="114" data-cover="'+i+'" aria-label="'+f.name+' 사령부와 대표 병력"></canvas><strong>'+f.name+'</strong><small>'+f.tag+'</small></button>').join('');
- $('lobbySkins').innerHTML=SKINS.filter(x=>skinForFaction(x,progress.selectedFaction)).map(x=>'<div class="lobby-skin-item" style="--skin:'+x.tone+'"><button type="button" class="lobby-skin'+(s.id===x.id?' selected':'')+'" data-skin="'+x.id+'" '+(l.level<x.level||!skinAssetReady(x)?'disabled':'')+'><span class="skin-swatch">✦</span><strong>'+x.name+'</strong><small>'+(l.level<x.level?'LV.'+x.level+' 해금':!skinAssetReady(x)?'이미지 배포 대기':x.desc)+'</small></button><button type="button" class="lobby-skin-preview-open" data-preview-skin="'+x.id+'">스킨 확인해보기</button></div>').join('');
+ $('lobbySkins').innerHTML=SKINS.filter(x=>skinForFaction(x,progress.selectedFaction)).map(x=>'<div class="lobby-skin-item" style="--skin:'+x.tone+'"><button type="button" class="lobby-skin'+(s.id===x.id?' selected':'')+'" data-skin="'+x.id+'" '+(l.level<x.level||!skinAssetReady(x)?'disabled':'')+'><span class="skin-swatch">✦</span><strong>'+x.name+'</strong><small>'+(l.level<x.level?'LV.'+x.level+' 해금':!skinAssetReady(x)?(x.status==='planned'?'이미지 반영 대기':'이미지 로드 중'):x.desc)+'</small></button><button type="button" class="lobby-skin-preview-open" data-preview-skin="'+x.id+'">스킨 확인해보기</button></div>').join('');
  $('lobbySkinMessage').textContent=s.name+' 선택 · 게임 능력치는 변경되지 않습니다.';
  renderUnitGallery();
  renderCovers();

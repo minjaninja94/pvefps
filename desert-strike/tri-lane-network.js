@@ -7,6 +7,7 @@
 const ICE=[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}];
 let events={},scope=null,db=null,fs=null,uid=null,roomId=null,room=null,host=false,localPeer=null;
 let roomUnsub=null,peerSubs=new Map(),channels=new Map(),pcs=new Map(),clock=null,engine=null,seq=0,lastFrame=0;
+const appearances=new Map(),legacySkins=['default','moe','twilight','aurora','gold'];
 let active=false,answering=false,hostPeerOpen=new Set(),snapshotSeq=0,serverTimer=null,gameEndedLocally=false,resultRetry=null,resultWinner=null,resultAttempts=0,serverRegistration=null;
 const msg=e=>global.IronFirebase?.message?.(e)||e?.message||String(e);
 function notify(key,data){try{events[key]?.(data);}catch(e){console.error('멀티 UI 갱신 오류',e);}}
@@ -43,7 +44,9 @@ async function retryResult(){
 function status(s){notify('status',s);}
 function validateName(s){return String(s||'지휘관').trim().replace(/[<>]/g,'').slice(0,16)||'지휘관';}
 function validateRuleset(s){return s==='augment'||s==='prism'?s:'standard';}
-function validateSkin(s){return ['default','moe','twilight','aurora','gold'].includes(s)?s:'default';}
+function validateSkin(s){return ['default','moe','twilight','aurora','gold'].includes(s)||global.DesertSkinCatalog?.get(s)?.status==='ready'?s:'default';}
+function wireSkin(s){return legacySkins.includes(s)?s:'default';}
+function appearanceSkin(s,f){return legacySkins.includes(s)||global.DesertSkinCatalog?.validFor(s,f)?s:'default';}
 function code(){const bytes=new Uint8Array(6);crypto.getRandomValues(bytes);return Array.from(bytes,n=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[n%32]).join('');}
 const path=()=>fs.doc(db,'desertRooms',roomId);
 const publicPath=code=>fs.doc(db,'desertPublicRooms',code||roomId);
@@ -53,7 +56,7 @@ async function identity(){
  scope=await (global.DesertDeviceAccount?global.DesertDeviceAccount.identity():global.IronFirebase.identity());
  db=scope.db;fs=scope.fs;uid=scope.uid;return scope;
 }
-function members(){return Object.entries(room?.players||{}).map(([id,p])=>({uid:id,...p}));}
+function members(){return Object.entries(room?.players||{}).map(([id,p])=>({uid:id,...p,skin:appearances.get(id)||p.skin||'default'}));}
 function everyoneReady(r){
  const p=Object.values(r?.players||{});
  if(r.mode==='coop')return p.length===r.size&&p.every(x=>x.ready&&x.team===0);
@@ -68,7 +71,7 @@ function resetLocal(){
  for(const stop of peerSubs.values())stop();peerSubs.clear();
  for(const ch of channels.values())try{ch.close();}catch(e){}
  for(const pc of pcs.values())try{pc.close();}catch(e){}
- channels.clear();pcs.clear();hostPeerOpen.clear();
+ channels.clear();pcs.clear();hostPeerOpen.clear();appearances.clear();
  engine=null;room=null;roomId=null;uid=null;host=false;seq=0;lastFrame=0;active=false;answering=false;scope=null;db=null;fs=null;
 }
 async function leave(){
@@ -138,11 +141,11 @@ function trackServerRegistration(id,details,action){
 }
 async function create(opts){
  if(roomId)await leave();
- await identity();
+ await identity();appearances.set(uid,appearanceSkin(opts.skin,Number(opts.faction)));
  if(!['pvp','coop','classic'].includes(opts.mode)||![1,2,3].includes(Number(opts.size))||opts.mode==='coop'&&Number(opts.size)<2||opts.mode==='classic'&&Number(opts.size)!==1)throw Error('잘못된 인원/모드');
  roomId=code();host=true;
  room={version:1,host:uid,mode:opts.mode,size:Number(opts.size),ruleset:validateRuleset(opts.ruleset),seed:crypto.getRandomValues(new Uint32Array(1))[0]||1,publicRoom:opts.publicRoom!==false,status:'lobby',created:Date.now(),expires:Date.now()+7200000,
-  players:{[uid]:{name:validateName(opts.name),faction:Number(opts.faction),skin:validateSkin(opts.skin),team:0,ready:false}}};
+  players:{[uid]:{name:validateName(opts.name),faction:Number(opts.faction),skin:wireSkin(validateSkin(opts.skin)),team:0,ready:false}}};
  const id=roomId;
  try{
   try{await fs.setDoc(path(),room);}
@@ -168,7 +171,7 @@ async function create(opts){
 }
 async function join(opts){
  if(roomId)await leave();
- await identity();
+ await identity();appearances.set(uid,appearanceSkin(opts.skin,Number(opts.faction)));
  roomId=String(opts.code||'').trim().toUpperCase();
  if(!/^[A-HJ-NP-Z2-9]{6}$/.test(roomId)){roomId=null;throw Error('6자리 방 코드가 필요합니다.');}
  host=false;
@@ -189,7 +192,7 @@ async function join(opts){
     else throw Error('두 팀 모두 정원이 가득 찼습니다.');
    }
    if(Object.keys(players).length>=r.size*(r.mode==='coop'?1:2))throw Error('방 정원이 가득 찼습니다.');
-   players[uid]={name:validateName(opts.name),team,faction:Number(opts.faction),skin:validateSkin(opts.skin),ready:false};
+   players[uid]={name:validateName(opts.name),team,faction:Number(opts.faction),skin:wireSkin(validateSkin(opts.skin)),ready:false};
    joined={code:id,mode:r.mode,size:r.size,team,host:false};
    if(players[uid].faction<0||players[uid].faction>9)throw Error('종족 선택 오류');
    tx.update(ref,{players});
@@ -234,6 +237,7 @@ function listenHostAnswer(guest,pc){
 function handleChannel(guest,ch){
  channels.set(guest,ch);
  ch.onopen=()=>{
+  send(ch,{type:'appearance',skin:appearances.get(uid)||'default'});
   hostPeerOpen.add(guest);status('실시간 연결: '+hostPeerOpen.size+'명');
   notify('peers',new Set(hostPeerOpen));
   if(host&&engine)send(ch,{type:'snapshot',state:engine.snapshot(guest)});
@@ -243,6 +247,7 @@ function handleChannel(guest,ch){
  ch.onmessage=e=>{
   let data;try{data=JSON.parse(e.data);}catch(err){return;}
   if(host){
+   if(data?.type==='appearance'&&room?.status==='lobby'&&room.players?.[guest]){appearances.set(guest,appearanceSkin(data.skin,Number(room.players[guest].faction)));return;}
    if(!engine||data?.type!=='order'||typeof data.seq!=='number')return;
    const old=ch._lastSeq||0;if(data.seq<=old||data.seq>old+1000)return;ch._lastSeq=data.seq;
    // The peer connection determines the owner UID, never a client-provided ID.
@@ -294,6 +299,9 @@ async function start(){
  if(!everyoneReady(room))throw Error('설정된 인원과 전원 준비가 필요합니다.');
  const guests=members().filter(m=>m.uid!==uid);
  if(guests.some(g=>channels.get(g.uid)?.readyState!=='open'))throw Error('모든 참가자의 P2P 연결이 완료되지 않았습니다.');
+ // Cosmetic packets preserve compatibility with existing Firestore room rules.
+ const appearanceDeadline=Date.now()+1500;
+ while(guests.some(g=>!appearances.has(g.uid))&&Date.now()<appearanceDeadline)await new Promise(resolve=>setTimeout(resolve,20));
  if(!global.DesertTriEngine)throw Error('3라인 전투 엔진이 준비되지 않았습니다.');
  if(room.ruleset==='augment'||room.ruleset==='prism')await global.DesertAugments.load();
  engine=global.DesertTriEngine.create({mode:room.mode,size:room.size,members:members(),ruleset:validateRuleset(room.ruleset),seed:room.seed||1,aiDifficulty:global.DesertLobby?.aiDifficulty?.()||'normal'});
