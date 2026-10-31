@@ -862,15 +862,24 @@ function init(){
  $('mpLeave').addEventListener('click',runClick(leave));
  $('mpResultLobby').addEventListener('click',runClick(()=>global.DesertLobby?.returnToLobby?.()));
  $('mpResultRetry').addEventListener('click',runClick(()=>NET.retryResult?.()));
+ $('mpResultLogin')?.addEventListener('click',runClick(async()=>{
+  await global.DesertLobby?.returnToLobby?.();
+  global.DesertCareer?.open?.();
+ }));
  NET.configure({status:message,room:onRoom,snapshot:onSnapshot,peers:uiButtons,
   serverResult:data=>{
-   const label=data?.state==='done'?'승패·RP 기록 완료':data?.state==='abandoned'?'경기 중단 · 서버 기록 확인 필요':data?.state==='error'?'⚠ 서버 결과 전송 실패 · 자동 재시도 중: '+(data.error||'연결을 확인하세요'):data?.waiting_for_other_players?'✓ 내 결과 서버 접수 완료 · 상대 결과 확인 대기':data?.state==='untracked'?'비공식 경기 · 서버 결과 기록 없음':'서버 결과 확인 중…';
+   const label=data?.state==='done'
+    ?(global.DesertMember?.isMember?.()?'회원 승패·랭킹 서버 정산 완료 · 게스트 상대도 내 기록에 반영':'경기 결과 확인 완료 · 게스트는 공식 랭크·포인트 제외')
+    :data?.state==='abandoned'?'경기 중단 · 서버 기록 확인 필요'
+    :data?.state==='error'?'⚠ 서버 결과 전송 실패 · 자동 재시도 중: '+(data.error||'연결을 확인하세요')
+    :data?.waiting_for_other_players?'✓ 내 결과 서버 접수 완료 · 상대 결과 확인 대기'
+    :data?.state==='untracked'?'비공식 경기 · 서버 결과 기록 없음':'서버 결과 확인 중…';
    global.DesertBattleReport?.serverStatus?.(label);
    $('mpResultRetry').hidden=data?.state!=='error';
   },forcedResult:data=>{
    if(!snap||snap.ended)return;
    onSnapshot({...snap,ended:true,winner:data.winner_team});
-   global.DesertBattleReport?.serverStatus?.('탈주 판정 · 승패·RP 기록 완료');
+   global.DesertBattleReport?.serverStatus?.(global.DesertMember?.isMember?.()?'탈주 판정 · 회원 승패·랭킹 서버 정산 완료':'탈주 판정 · 게스트는 공식 랭킹 제외');
    message('서버 판정: 상대 연결 종료 · '+(data.winner_team===my()?.team?'승리':'패배')+' 처리');
   }});
  uiButtons();
