@@ -261,8 +261,8 @@ async function restoreAccount(){
  if(!global.DesertDeviceAccount)return;
  try{
   const account=await global.DesertDeviceAccount.identity();uid=account.uid;
-  render();info('Supabase 온라인 인증 완료 · 계정 및 방 연결을 사용할 수 있습니다.');
- }catch(e){render();info('온라인 인증 실패 · 싱글 플레이는 가능하지만 멀티는 로그인이 필요합니다.');}
+  render();info('온라인 인증 완료 · 회원가입 없이 게스트도 멀티플레이 방을 만들고 참가할 수 있습니다.');
+ }catch(e){render();info('익명 멀티 인증 실패: '+(e.message||'Supabase Anonymous Sign-Ins 설정을 확인하세요.')+' · 싱글 플레이는 가능합니다.');}
 }
 async function deviceLogin(){
  if(authBusy)return;authBusy=true;$('lobbyDeviceLogin').disabled=true;info('이 기기의 인증 정보를 확인하는 중…');
