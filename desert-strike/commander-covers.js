@@ -13,6 +13,8 @@ function drawSkinCover(g,f,skin,w,h){
  }
  if(!image.complete||!image.naturalWidth)return false;
  g.save();g.clearRect(0,0,w,h);
+ const filter=global.DesertSkinShop?.resolve?.(skin)?.filter;
+ if(filter&&filter!=='none')g.filter=filter;
  const scale=Math.max(w/image.naturalWidth,h/image.naturalHeight),sw=w/scale,sh=h/scale;
  g.drawImage(image,(image.naturalWidth-sw)/2,(image.naturalHeight-sh)/2,sw,sh,0,0,w,h);
  g.restore();return true;
