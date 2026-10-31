@@ -63,7 +63,7 @@ test('only own augment IDs are used, and client does not expose unselected oppon
  const ui=load('tri-lane-ui.js'),solo=load('game-v2.js'),html=load('index.html');
  assert.match(ui,/DesertAugmentHistory\?\.render\?\.\(history,my\(\)\?\.augments\|\|\[\],choice\.round\)/);
  assert.match(solo,/DesertAugmentHistory\?\.render\?\.\(\$\('soloAugmentHistory'\),state\.augments,choice\.round\)/);
- assert.match(ui,/const key=JSON\.stringify\(\[choice\.cards,choice\.rerolls,choice\.tier,choice\.round,my\(\)\?\.augments\|\|\[\]\]\)/);
+ assert.match(ui,/const key=JSON\.stringify\(\[choice\.cards,choice\.rerolls,choice\.tier,choice\.round,choice\.selected,my\(\)\?\.augments\|\|\[\]\]\)/);
  assert.doesNotMatch(ui,/Math\.ceil\(choice\.remaining\),choice\.tier/,'timer ticks should not rebuild hovered history');
  assert.ok(html.indexOf('augment-history.js')>html.indexOf('augment-rules.js'));
  assert.ok(html.indexOf('augment-history.js')<html.indexOf('tri-lane-ui.js'));
