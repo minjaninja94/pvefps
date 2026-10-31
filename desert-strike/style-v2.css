@@ -914,3 +914,20 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
 #mpBattleView #mpAugmentPanel{scroll-margin-top:calc(var(--command-hud-height,230px) + 16px);border-color:#f2c980}
 #mpBattleView #mpAugmentPanel[hidden]{display:none!important}
 #mpBattleView #mpAugmentPanel>h3{color:#ffdfa6}
+
+/* Supabase Discord OAuth account flow. Existing members link without changing their UID. */
+.career-discord-actions{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+.career-discord-actions .career-discord-button{flex:1;min-height:43px;background:#5865f2;color:#fff;border:1px solid #8590ff}
+.career-discord-actions .career-discord-button:hover{background:#4752c4}
+.career-discord-connected{display:block;width:100%;font-size:12px;color:#b8ddc5;background:#16382f;padding:10px 12px;border-radius:8px}
+.career-discord-setup{padding:13px;border:1px solid #5865f2;border-radius:9px;background:#17243b;margin:12px 0}
+.career-discord-setup p{font-size:12px;line-height:1.6;color:#dce4f1;margin:0 0 12px}
+.career-oauth-fields{display:grid;gap:10px;margin-bottom:12px}
+.career-oauth-fields label{display:grid;gap:5px;font-size:13px}
+.career-oauth-fields input{width:100%;min-width:0;padding:10px;color:#fff;background:#112432;border:1px solid #617b99;border-radius:7px;font:inherit}
+.career-discord-setup>.btn{width:100%;min-height:42px}
+.career-panel[data-auth-mode="discord"] .career-mode-tabs,
+.career-panel[data-auth-mode="discord"]>.career-auth-form,
+.career-panel[data-auth-mode="discord"] #careerLogin,
+.career-panel[data-auth-mode="discord"] #careerRegister{display:none!important}
+.career-layer [hidden]{display:none!important}
