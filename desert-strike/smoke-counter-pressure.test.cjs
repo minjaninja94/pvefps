@@ -90,7 +90,7 @@ test('both battle HUDs disclose only the current strength of the advantage, not 
  assert.match(solo,/counterTempo.*counterAdvantage/);
  assert.match(multi,/mpCounterTempo.*counterAdvantage/);
  assert.match(html,/유리한 병종 상성 피해/);
- assert.match(html,/prism-mode-20261030/);
+ assert.match(html,/<script src="\.\/tri-lane-network\.js\?v=[^"]+"/);
 });
 test('heal-only support displays its real purpose, and no fake offensive armor matchup',()=>{
  const solo=read('game-v2.js'),host=read('tri-lane-engine.js'),ui=read('tri-lane-ui.js');
