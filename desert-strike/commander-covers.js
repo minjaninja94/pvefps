@@ -9,7 +9,7 @@ function drawSkinCover(g,f,skin,w,h){
   image=new Image();image.decoding='async';
   image.onload=()=>global.dispatchEvent?.(new Event('desert-cover-ready'));
   image.onerror=()=>{skinCovers.delete(id);};
-  image.src='./assets/sprites/commander-'+id+'.jpg';skinCovers.set(id,image);
+  image.src='./assets/sprites/commander-'+id+'.jpg'+(f===7?'?v=robot-neutral-2':'');skinCovers.set(id,image);
  }
  if(!image.complete||!image.naturalWidth)return false;
  g.save();g.clearRect(0,0,w,h);

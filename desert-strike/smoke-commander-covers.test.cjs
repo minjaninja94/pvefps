@@ -28,7 +28,7 @@ for(const skin of catalog.SKINS){
  const before=draws.length;
  window.DesertCommanderCovers.draw(canvas,skin.faction,skin.id);
  assert.equal(draws.length,before+1,`cover not drawn: ${skin.id}`);
- assert.ok(paths.at(-1).endsWith('commander-'+skin.id+'.jpg'),`wrong cover: ${skin.id}`);
+ assert.ok(paths.at(-1).split('?')[0].endsWith('commander-'+skin.id+'.jpg'),`wrong cover: ${skin.id}`);
 }
 assert.equal(hashes.size,100,'every concept needs a distinct image');
 window.DesertCommanderCovers.draw(canvas,3,'faction-3-skin-01~gold');
