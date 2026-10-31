@@ -31,6 +31,7 @@ function show(){
  $('careerDiscordLink')?.toggleAttribute('hidden',!a||discordLinked);
  $('careerDiscordConnected')?.toggleAttribute('hidden',!a||!discordLinked);
  $('careerDiscordSetup')?.toggleAttribute('hidden',!onboarding);
+ $('lobbyRankLogin')?.toggleAttribute('hidden',!!a);
  const panel=$('careerPanel');if(panel)panel.dataset.discordSetup=String(onboarding);
  const open=$('careerOpen');if(open)open.textContent=a?'내 계정 · 전적':onboarding?'Discord 지휘관 등록':'로그인 / 회원가입';
  if(a)global.DesertCareer?.setMode?.('member');
@@ -228,12 +229,12 @@ async function finishSolo(won,display='solo'){
  try{return await claimSoloReward(run.owner,payload);}catch(e){rewardStatus(run.display,'포인트 지급 대기 · 연결 후 자동으로 다시 확인합니다.');}
 }
 async function syncMatchReward(code){
- if(!member)return null;
+ if(!member){rewardStatus('multi','게스트: 공식 랭킹·스킨 포인트 없음 · 로그인하면 다음 경기부터 보상이 적용됩니다.');return null;}
  const owner=member.user_id;
  try{
   const db=await api(),{data,error}=await db.rpc('desert_match_skin_reward',{p_code:code});
   if(error)throw error;
-  if(member?.user_id===owner){global.DesertSkinShop?.setAccount(owner,data.wallet);rewardStatus('multi',data.reward>0?'스킨 포인트 +'+data.reward+' P 지급 완료':'포인트 보상 없음');}
+  if(member?.user_id===owner){global.DesertSkinShop?.setAccount(owner,data.wallet);rewardStatus('multi',data.reward>0?'스킨 포인트 +'+data.reward+' P 지급 완료 · 상대가 게스트여도 회원 보상 적용':'이번 경기 스킨 포인트 지급 없음');}
   return data;
  }catch(e){rewardStatus('multi','보상 확인 대기 · 다시 접속하면 잔액에 반영됩니다.');return null;}
 }
