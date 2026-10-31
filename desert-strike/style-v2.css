@@ -941,3 +941,7 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
 #mpResultLogin{display:block;max-width:100%;min-height:40px;margin:9px 0 12px}
 #mpResultLogin[hidden],#lobbyRankLogin[hidden]{display:none!important}
 @media(max-width:650px){.lobby-rank-benefits{padding:12px}.lobby-rank-benefits button{justify-self:stretch}}
+
+/* Supplied Desert Front soldier portrait is the website and in-game brand emblem. */
+.logo img.logo-badge{display:block;width:42px;height:42px;flex:0 0 42px;padding:0;border:1px solid #dda265;border-radius:9px;object-fit:cover;object-position:center;background:#203440;box-shadow:0 0 0 2px #101820}
+@media(max-width:620px){.command-hud .logo img.logo-badge{width:32px;height:32px;flex:0 0 32px;padding:0;border-radius:7px}}
