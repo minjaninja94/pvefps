@@ -931,3 +931,13 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
 .career-panel[data-auth-mode="discord"] #careerLogin,
 .career-panel[data-auth-mode="discord"] #careerRegister{display:none!important}
 .career-layer [hidden]{display:none!important}
+
+/* PvP participation is open to guests; only members receive server-verified ranks/rewards. */
+.lobby-rank-benefits{display:grid;gap:8px;margin:10px 0 13px;padding:14px 16px;border:1px solid #9b8050;border-radius:10px;background:linear-gradient(110deg,#3a3025,#173746);color:#f1ece0}
+.lobby-rank-benefits strong{color:#ffe6a7;font-size:14px}
+.lobby-rank-benefits p{font-size:12px;line-height:1.6;margin:0;color:#d6e5e7}
+.lobby-rank-benefits p b{color:#ffe5a3}
+.lobby-rank-benefits button{justify-self:start;min-height:38px;padding:9px 15px}
+#mpResultLogin{display:block;max-width:100%;min-height:40px;margin:9px 0 12px}
+#mpResultLogin[hidden],#lobbyRankLogin[hidden]{display:none!important}
+@media(max-width:650px){.lobby-rank-benefits{padding:12px}.lobby-rank-benefits button{justify-self:stretch}}
