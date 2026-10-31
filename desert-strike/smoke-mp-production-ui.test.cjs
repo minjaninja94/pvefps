@@ -10,7 +10,7 @@ for(const id of ['mpBuildSwipe','mpPrevLane','mpNextLane','mpLaneHint','mpDeploy
 assert.ok(html.indexOf('id="mpUnitCards"')<html.indexOf('id="mpLaneTabs"'));
 assert.ok(html.indexOf('id="mpLaneTabs"')<html.indexOf('id="mpBuildGrid"'));
 assert.ok(html.indexOf('id="mpBuildGrid"')<html.indexOf('id="mpBattleCanvas"'),'production board appears before live battlefield');
-assert.match(css,/#view-multiplayer \.mp-build-grid\{[^}]*repeat\(5,minmax\(0,1fr\)\)/);
+assert.match(css,/#view-multiplayer \.mp-build-grid\{[^}]*repeat\(15,minmax\(57px,1fr\)\)/);
 assert.match(css,/touch-action:pan-y/);
 const no=()=>{},calls=[],records=new Map();
 const g=new Proxy({createLinearGradient(){return {addColorStop(){}};},createRadialGradient(){return {addColorStop(){}};}},{get(o,k){return k in o?o[k]:no;}});
@@ -116,6 +116,10 @@ assert.match(item('mpSelectedLane').textContent,/중앙/,'right swipe returns to
 swipe.dispatch('pointerdown',{button:0,pointerId:3,clientX:100,clientY:140});
 swipe.dispatch('pointerup',{pointerId:3,clientX:102,clientY:250});
 assert.match(item('mpSelectedLane').textContent,/중앙/,'vertical scroll does not switch lines');
+viewport.scrollWidth=1020;viewport.clientWidth=600;
+swipe.dispatch('pointerdown',{button:0,pointerId:4,clientX:260,clientY:150});
+swipe.dispatch('pointerup',{pointerId:4,clientX:100,clientY:150});
+assert.match(item('mpSelectedLane').textContent,/중앙/,'horizontal board scrolling must not select a different production lane');
 const classicBuildings=[Array(75).fill(null)];
 classicBuildings[0][5]=1;
 const classic={...snapshot,mode:'classic',height:520,lanes:1,coreMaxHP:7200,

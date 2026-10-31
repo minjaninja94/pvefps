@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=multi-unified-20261031"><link rel="stylesheet" href="./blood-iron-skins.css?v=match-rewards-chroma10"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=compact-build1"><link rel="stylesheet" href="./blood-iron-skins.css?v=match-rewards-chroma10"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -177,8 +177,8 @@
      <button type="button" class="active" data-lane="1" aria-pressed="true"><strong>중앙 라인</strong><small data-lane-count="1">0 / 75</small></button>
      <button type="button" data-lane="2" aria-pressed="false"><strong>하단 라인</strong><small data-lane-count="2">0 / 75</small></button>
     </div>
-    <div class="mp-lane-switch"><button type="button" id="mpPrevLane" aria-label="이전 생산 라인">◀</button><span id="mpLaneHint" role="status" aria-live="polite">중앙 라인 · 좌우로 밀어 라인 전환</span><button type="button" id="mpNextLane" aria-label="다음 생산 라인">▶</button></div>
-    <div id="mpBuildSwipe" class="mp-build-swipe" aria-label="생산 건물 배치 영역. 좌우로 드래그하면 라인이 전환됩니다."><div class="build-grid-viewport mp-grid-viewport"><div id="mpBuildGrid" class="mp-build-grid" aria-label="중앙 라인의 생산 시설 75칸"></div></div></div>
+    <div class="mp-lane-switch"><button type="button" id="mpPrevLane" aria-label="이전 생산 라인">◀</button><span id="mpLaneHint" role="status" aria-live="polite">중앙 라인 · 좌우로 밀어 배치 칸 보기</span><button type="button" id="mpNextLane" aria-label="다음 생산 라인">▶</button></div>
+    <div id="mpBuildSwipe" class="mp-build-swipe" aria-label="생산 건물 배치 영역. 좌우로 스크롤하면 75개 배치 칸을 모두 볼 수 있습니다."><div class="build-grid-viewport mp-grid-viewport"><div id="mpBuildGrid" class="mp-build-grid" aria-label="중앙 라인의 생산 시설 75칸"></div></div></div>
 
    </section>
   </div>
@@ -302,7 +302,7 @@
 <script src="./tri-lane-network.js?v=appearance-sync2" defer></script>
 <script src="./combat-audio.js?v=nemo80-live-20261031" defer></script>
 <script src="./multiplayer-motion.js?v=smooth1" defer></script>
-<script src="./tri-lane-ui.js?v=dynamic-bgm1" defer></script>
+<script src="./tri-lane-ui.js?v=compact-build1" defer></script>
 <script src="./battle-report.js?v=match-rewards-chroma10" defer></script>
 <script src="./game-v2.js?v=dynamic-bgm1" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>

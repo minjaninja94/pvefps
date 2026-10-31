@@ -20,3 +20,9 @@ node --test desert-strike/tests/multiplayer-motion.test.cjs desert-strike/tests/
 node --test desert-strike/smoke-mp-production-ui.test.cjs desert-strike/smoke-counter-pressure.test.cjs desert-strike/smoke-original-art.test.cjs desert-strike/smoke-tower-sprites.test.cjs
 ```
 Browser checks use Playwright and a local static server at port 8765, serving the repository root: `tests/multiplayer-presentation-browser.cjs`, `tests/skin-shop-browser.cjs`.
+
+## Compact production board
+
+Multiplayer now uses the solo 15-column × 5-row layout with all 75 production slots per lane intact. Empty boards measure exactly the same as solo: 1020 × 326 px on desktop and 970 × 291 px at a 390 px mobile viewport. Narrow panels scroll horizontally, with no inner vertical scrolling. Role portraits are 36 px, and constructing cells can grow to 83 px like solo to keep progress labels readable. Lane tabs keep at least 44 px touch height. Scrolling across slots cannot change the selected production lane; tabs and arrow buttons remain available.
+
+Validated in browser viewports 1440, 980 and 390 px: 15 columns, 75 slots, matching solo height, no vertical overflow, and switching all three lanes. The production UI regression also verifies horizontal board gestures cannot switch lanes or spend credits accidentally.

@@ -254,7 +254,7 @@ function unitCards(){
 }
 function updateLanePicker(p){
  $('mpSelectedLane').textContent=laneName(lane);
- $('mpLaneHint').textContent=laneCount()===1?'단일 전장 · 생산시설 75칸':laneName(lane)+' · 좌우로 밀어 라인 전환';
+ $('mpLaneHint').textContent=laneCount()===1?'단일 전장 · 생산시설 75칸':laneName(lane)+' · 좌우로 밀어 배치 칸 보기';
  for(const b of $('mpLaneTabs').querySelectorAll('[data-lane]')){
   const index=Number(b.dataset.lane),selected=index===lane;
   b.classList.toggle('active',selected);
@@ -799,6 +799,8 @@ function init(){
   start=null;
   if(laneCount()===1||Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.3)return;
   suppressClickUntil=performance.now()+500;
+  const viewport=swipeArea.querySelector('.mp-grid-viewport');
+  if(viewport&&viewport.scrollWidth>viewport.clientWidth)return;
   pickLane(lane+(dx<0?1:-1));
  });
  swipeArea.addEventListener('click',e=>{
