@@ -244,7 +244,7 @@ body{background:
 .lobby-shell{max-width:1320px;margin:auto;padding:22px clamp(12px,3vw,44px) 48px;position:relative}
 .lobby-header{display:flex;align-items:center;gap:14px;margin-bottom:24px;border-bottom:1px solid #486075;padding-bottom:15px}
 .lobby-header strong{font-size:22px;letter-spacing:.12em}.lobby-header small{display:block;color:#91b5c1;font-size:10px;letter-spacing:.19em;margin-top:3px}
-.lobby-mark{font-weight:900;color:#0f1827;background:linear-gradient(135deg,#fff5bd,#c7e7fc);padding:12px;border-radius:10px;font-size:19px}.lobby-mark span{color:#e37e83}
+.lobby-header .lobby-mark{display:block;width:56px;height:56px;flex:0 0 56px;padding:0;object-fit:cover;object-position:center;border-radius:12px;border:1px solid #dda265;background:#203440;box-shadow:0 0 0 2px #14232f,0 4px 16px #050d17a0}
 .lobby-account-status{margin-left:auto;border:1px solid #718b9f;background:#18313c;border-radius:30px;padding:8px 13px;font-size:12px}
 .lobby-hero-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(275px,.85fr);gap:18px}
 .lobby-panel{background:linear-gradient(155deg,#192e3bd9,#131d31ed);border:1px solid #567183;border-radius:18px;box-shadow:0 15px 35px #0005;padding:clamp(15px,2vw,27px)}
