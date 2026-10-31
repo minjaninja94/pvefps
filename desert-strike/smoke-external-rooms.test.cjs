@@ -10,6 +10,7 @@ const snap=x=>({exists:()=>x!==undefined,data:()=>clone(x)});
 let failRoomCreate=false;
 const store={
  doc:(_,...p)=>({path:p.join('/')}),
+ async getDoc(ref){return snap(records.get(ref.path));},
  async setDoc(ref,data){
   if(failRoomCreate&&ref.path.startsWith('desertRooms/')){
    failRoomCreate=false;
@@ -60,8 +61,10 @@ test('room creation errors reset the failed attempt',async()=>{
  assert.ok(records.has('desertRooms/'+room));
  await c.net.leave();
 });
-test('device identity has session and memory persistence fallback for storage-restricted visitors',()=>{
+test('device identity delegates to Supabase and keeps local public IDs when storage is restricted',()=>{
  const device=fsNode.readFileSync(path.join(__dirname,'device-account.js'),'utf8');
- assert.match(device,/browserSessionPersistence/);
- assert.match(device,/inMemoryPersistence/);
+ assert.match(device,/DesertSupabaseRooms\.identity/);
+ assert.match(device,/localStorage\.setItem/);
+ assert.match(device,/record\.persistent=false/);
+ assert.doesNotMatch(device,/IronFirebase|firebase-auth/);
 });
