@@ -861,7 +861,9 @@ function beginSoloAugment(index,deferWave=false){
  state.augmentStage=index;
  enemyChooseAugment(index);
  state.augmentChoice={round:window.DesertAugments.STAGES[index],tier,remaining:30,cards,rerolls:[false,false,false],deferWave};
+ changeView('battle'); // Every draft interrupts the current construction or upgrade screen.
  renderSoloAugment();
+ updateUI(true);
  return true;
 }
 function chooseSoloAugment(slot){
@@ -1559,7 +1561,7 @@ function updateUI(full=false){
  $('friendlyCount').textContent=state.units.filter(x=>x.side===0).length;
  $('hostileCount').textContent=state.units.filter(x=>x.side===1).length;
  $('frontStatus').textContent=inv?'⚠ 아군 기지 침공':state.units.some(x=>x.side===0&&x.x>WORLD_W-490)?'적 기지 압박':'중앙 전선';
- $('battleStatus').textContent=state.ended?'전투 종료':!state.live?'작전 대기':state.paused?'일시정지':preparation>0?'초기 배치 · '+Math.ceil(preparation-1e-6)+'초 뒤 첫 출격':inv?'⚠ 본진 침공':'전투 진행 중';
+ $('battleStatus').textContent=state.ended?'전투 종료':!state.live?'작전 대기':state.augmentChoice?'✦ 증강 선택 중 · 전투 일시정지':state.paused?'일시정지':preparation>0?'초기 배치 · '+Math.ceil(preparation-1e-6)+'초 뒤 첫 출격':inv?'⚠ 본진 침공':'전투 진행 중';
  const nukeTargets=state.units.filter(u=>u.side===1&&u.hp>0&&!u.guardian);
  const nukeAllowed=nukeTargets.length>0;
  $('nukeInfo').textContent=state.nukes?'1회 남음 · '+(nukeAllowed?'상대 병력 제거 · 가디언 제외':'상대 병력 대기 중'):'사용 완료';

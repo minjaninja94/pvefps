@@ -559,9 +559,10 @@ function renderAugmentRoster(){
 function renderAugment(){
  const panel=$('mpAugmentPanel'),choice=snap?.augmentChoice;
  if(!panel)return;
- if(!choice||choice.selected){panel.hidden=true;augmentKey='';return;}
- const key=JSON.stringify([choice.cards,choice.rerolls,choice.tier,choice.round,my()?.augments||[]]);
- const headingText=()=> 'WAVE '+choice.round+' · '+({silver:'실버',gold:'골드',prismatic:'프리즘'}[choice.tier]||choice.tier)+' 증강 · '+Math.ceil(choice.remaining)+'초';
+ if(!choice){panel.hidden=true;augmentKey='';return;}
+ const waiting=!!choice.selected;
+ const key=JSON.stringify([choice.cards,choice.rerolls,choice.tier,choice.round,choice.selected,my()?.augments||[]]);
+ const headingText=()=> '✦ 전투 일시정지 · WAVE '+choice.round+' · '+({silver:'실버',gold:'골드',prismatic:'프리즘'}[choice.tier]||choice.tier)+(waiting?' · 선택 완료 / 상대 대기':' · 증강 선택 필요')+' · '+Math.ceil(choice.remaining)+'초';
  if(key===augmentKey){
   const heading=panel.querySelector('h3');
   if(heading)heading.textContent=headingText();
@@ -571,7 +572,8 @@ function renderAugment(){
  panel.hidden=false;panel.replaceChildren();
  const heading=document.createElement('h3');
  heading.textContent=headingText();
- const description=document.createElement('p');description.textContent='프리즘 3장 중 1장 선택 · 카드마다 리롤 1회 · 30초 후 자동 선택';
+ const description=document.createElement('p');description.textContent=waiting?'내 증강 선택 완료 · 다른 지휘관의 선택을 기다리고 있습니다. 모두 선택하면 전투가 자동으로 재개됩니다.':'3장 중 1장 선택 · 카드마다 리롤 1회 · 30초 후 자동 선택 · 선택 중에는 전투가 멈춥니다.';
+ if(waiting){panel.append(heading,description);return;}
  const cards=document.createElement('div');cards.className='mp-augment-cards';
  for(let i=0;i<3;i++){
   const card=global.DesertAugments?.card(choice.cards[i]),slot=document.createElement('div');slot.className='mp-augment-card';
@@ -592,6 +594,7 @@ function renderAugment(){
 function onSnapshot(v){
  if(!v){motion.reset();snap=null;renderAugmentRoster();renderBattleAugments();global.DesertCombatAudio?.stop?.();return;}if(v.width!==3300||![520,1560].includes(v.height)||!Array.isArray(v.players)||(v.lanes!==undefined&&v.lanes!==(v.mode==='classic'?1:3)))return;
  const fresh=!snap,modeChanged=!snap||snap.mode!==v.mode;
+ const newAugmentRound=!!v.augmentChoice&&!v.ended&&snap?.augmentChoice?.round!==v.augmentChoice.round;
  if(!$('frontLobby').hidden)global.DesertLobby?.enterMatch?.();
  if(fresh){
   global.DesertLobbyMusic?.resetBattle?.();
@@ -609,7 +612,7 @@ function onSnapshot(v){
  const preparation=!v.ended&&v.wave===0?Math.max(0,(v.preparationEndsAt??E.OPENING_PREP_SECONDS??10)-v.seconds):0;
  const opening=$('mpOpening');if(opening)opening.hidden=preparation<=1e-6;
  const openingNumber=$('mpOpeningSeconds');if(openingNumber)openingNumber.textContent=String(Math.max(0,Math.ceil(preparation-1e-6)));
- if(!v.ended)$('mpStateTag').textContent=preparation>0?'초기 배치 · '+Math.ceil(preparation-1e-6)+'초 뒤 첫 출격':(v.mode==='classic'?'클래식 1:1':practice?'3라인 AI 연습':'3라인 전투')+' · '+'진행 중';
+ if(!v.ended)$('mpStateTag').textContent=v.augmentChoice?'✦ 증강 선택 중 · 전투 일시정지 · '+Math.ceil(v.augmentChoice.remaining)+'초':preparation>0?'초기 배치 · '+Math.ceil(preparation-1e-6)+'초 뒤 첫 출격':(v.mode==='classic'?'클래식 1:1':practice?'3라인 AI 연습':'3라인 전투')+' · '+'진행 중';
  const battle=$('mpBattleCanvas');if(battle.height!==battleHeight())battle.height=battleHeight();
  const allButton=$('mpBattleLaneSelect')?.querySelector?.('[data-mp-scope="all"]');if(allButton)allButton.hidden=laneCount()===1;
  if(fresh||lane>=laneCount()){lane=laneCount()===1?0:1;cameraX=1100;repairLane=lane;gridKey='';setView('base');setBattleScope(laneCount()===1?'lane':'all');}
@@ -627,7 +630,7 @@ function onSnapshot(v){
  }
  $('mpWave').textContent='WAVE '+String(v.wave).padStart(2,'0');
  const tempo=$('mpCounterTempo');if(tempo){const power=E.counterAdvantage?.(v.wave)??1.55;tempo.textContent='▲ 상성 '+power.toFixed(2)+'×';tempo.dataset.phase=v.wave>=60?'finish':v.wave>=30?'boost':'normal';tempo.title='유리한 병종 상성만 강화됩니다. 기본 피해와 건물 공격 피해는 그대로입니다.';}
- $('mpCountdown').textContent=Math.max(0,v.next).toFixed(1)+'초';
+ $('mpCountdown').textContent=v.augmentChoice?'증강 선택 · '+Math.ceil(v.augmentChoice.remaining)+'초':Math.max(0,v.next).toFixed(1)+'초';
  const traitHud=$('mpFactionTraits');
  if(traitHud){const myTrait=(v.factionTraits||[]).find(x=>x.uid===myId),faction=global.DesertRoster?.FACTIONS?.[me?.faction];
   traitHud.hidden=!faction;
@@ -657,6 +660,11 @@ function onSnapshot(v){
   }
  }
  renderAugment();renderAugmentRoster();renderBattleAugments();unitCards();buildGrid();upgradeInfo();renderTacticalPositions();drawOverview();
+ if(newAugmentRound){
+  if($('mpAugmentDialog')?.open)$('mpAugmentDialog').close();
+  setView('battle',true);
+  $('mpAugmentPanel')?.scrollIntoView?.({behavior:'auto',block:'start'});
+ }
 }
 function order(cmd){
  if(!snap||snap.ended)return message('진행 중인 경기가 없습니다.');

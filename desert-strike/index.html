@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=compact-mp-hud-1"><link rel="stylesheet" href="./blood-iron-skins.css?v=match-rewards-chroma10"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=augment-draft-focus-1"><link rel="stylesheet" href="./blood-iron-skins.css?v=match-rewards-chroma10"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -160,7 +160,7 @@
   <div id="mpStatus" role="status" class="mp-status">방을 만들거나 방 코드를 입력하세요.</div>
   <div id="mpMembers" class="mp-members">아직 참가한 방이 없습니다.</div>
  </section>
- <section class="panel mp-command" id="mpCommand" hidden><section id="mpAugmentPanel" class="mp-augment-panel" hidden aria-label="증강 카드 선택"></section>
+ <section class="panel mp-command" id="mpCommand" hidden>
   <div class="mp-tab-screen active" id="mpBaseView">
   <div class="mp-production-title"><div><h2>멀티 생산 기지</h2><p id="mpBaseDescription">라인 선택 → 유닛 선택 → 빈 칸에 건설</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="battle">전장 보기 →</button></div>
   <div id="mpFactionTraits" class="marine-ops faction-trait-banner" hidden role="status" aria-live="off"></div>
@@ -186,6 +186,7 @@
 
   </div>
   <section class="mp-tab-screen mp-battle-section" id="mpBattleView" hidden>
+    <section id="mpAugmentPanel" class="mp-augment-panel" hidden aria-label="증강 카드 선택" aria-live="polite"></section>
     <section id="mpAugmentBattleRoster" class="mp-augment-battle-roster" hidden aria-label="양측 선택 완료 증강을 전투 화면에서 직접 비교"></section>
    <div class="mp-production-title"><div><h2>실시간 전장</h2><p id="mpBattleDescription">전체 전장 또는 상단·중앙·하단 버튼으로 라인을 선택하세요.</p></div><button type="button" class="btn outline mp-jump" data-mp-jump="base">생산 배치 →</button></div>
    <nav class="mp-battle-navigation" aria-label="멀티 전장 카메라 조작"><div id="mpBattleLaneSelect" class="mp-battle-lane-select" role="group" aria-label="전장 전체 또는 개별 라인"><button type="button" data-mp-scope="all" class="active" aria-pressed="true">전체 전장</button><button type="button" data-mp-lane="0">상단</button><button type="button" data-mp-lane="1" class="active">중앙</button><button type="button" data-mp-lane="2">하단</button></div><div class="mp-battle-camera"><button id="mpPanLeft" type="button" class="btn outline" aria-label="전장 왼쪽으로 이동">◀</button><span id="mpBattleCurrentLane">중앙 라인</span><button id="mpPanCenter" type="button" class="btn outline">중앙</button><button id="mpPanRight" type="button" class="btn outline" aria-label="전장 오른쪽으로 이동">▶</button></div></nav><div class="mp-battle-wrap"><canvas id="mpAllBattleCanvas" width="1100" height="408" aria-label="상단 중앙 하단 3개 전장의 실시간 아군·적군 병력 위치를 한 화면에 표시. 라인을 누르면 상세 전장으로 전환합니다."></canvas><canvas id="mpBattleCanvas" width="1100" height="400" hidden aria-label="선택한 라인 전장. 좌우 드래그로 시점을 이동합니다."></canvas><div id="mpOpening" class="opening-countdown" role="status" aria-label="초기 배치 카운트다운" hidden><span>초기 배치 시간</span><div><strong id="mpOpeningSeconds">10</strong><b>초 뒤 첫 웨이브</b></div><small>지금 배치한 병력 시설은 준비 종료와 함께 첫 출격합니다.</small></div></div>
@@ -303,9 +304,9 @@
 <script src="./tri-lane-network.js?v=appearance-sync2" defer></script>
 <script src="./combat-audio.js?v=nemo80-live-20261031" defer></script>
 <script src="./multiplayer-motion.js?v=smooth1" defer></script>
-<script src="./tri-lane-ui.js?v=counter-support3" defer></script>
+<script src="./tri-lane-ui.js?v=augment-draft-focus-1" defer></script>
 <script src="./battle-report.js?v=match-rewards-chroma10" defer></script>
-<script src="./game-v2.js?v=counter-support3" defer></script>
+<script src="./game-v2.js?v=augment-draft-focus-1" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=dynamic-bgm1" defer></script>

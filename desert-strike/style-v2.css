@@ -909,3 +909,8 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
 .lobby-points{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0 0}
 .lobby-points>span{font-size:11px;color:#a6c4cf}
 .lobby-points>strong{font-size:17px;font-weight:850;color:#f6cb8d;font-variant-numeric:tabular-nums}
+
+/* Drafts are now embedded at the top of the actual battle tab. */
+#mpBattleView #mpAugmentPanel{scroll-margin-top:calc(var(--command-hud-height,230px) + 16px);border-color:#f2c980}
+#mpBattleView #mpAugmentPanel[hidden]{display:none!important}
+#mpBattleView #mpAugmentPanel>h3{color:#ffdfa6}
