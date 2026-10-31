@@ -148,14 +148,7 @@ async function create(opts){
   players:{[uid]:{name:validateName(opts.name),faction:Number(opts.faction),skin:wireSkin(validateSkin(opts.skin)),team:0,ready:false}}};
  const id=roomId;
  try{
-  try{await fs.setDoc(path(),room);}
-  catch(e){
-   // Legacy deployments can host standard invitation rooms only.
-   if(e?.code==='permission-denied'&&room.ruleset==='standard'&&room.mode!=='classic'){
-    const legacy={...room};delete legacy.ruleset;delete legacy.seed;delete legacy.publicRoom;
-    await fs.setDoc(path(),legacy);room=legacy;
-   }else throw e;
-  }
+  await fs.setDoc(path(),room);
   if(room.publicRoom){
    try{await fs.setDoc(publicPath(id),{owner:uid,created:room.created,expires:room.expires});}
    catch(e){status('공개방 목록 등록 실패: '+msg(e)+' · 코드로 초대할 수 있습니다.');}
