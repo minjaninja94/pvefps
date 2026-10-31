@@ -6,6 +6,11 @@ on:
       - "desert-strike/tri-lane-network.js"
       - "desert-strike/device-account.js"
       - "desert-strike/desert-member.js"
+      - "desert-strike/career-profile.js"
+      - "desert-strike/index.html"
+      - "desert-strike/style-v2.css"
+      - "desert-strike/smoke-discord-auth.test.cjs"
+      - "desert-strike/sql/desert_discord_member_v1.sql"
       - "desert-strike/smoke-supabase-room-adapter.test.cjs"
       - "desert-strike/smoke-trilane-network.test.cjs"
       - "desert-strike/smoke-device-account.test.cjs"
@@ -29,7 +34,10 @@ jobs:
           node --check desert-strike/supabase-room-adapter.js
           node --check desert-strike/device-account.js
           node --check desert-strike/desert-member.js
+          node --check desert-strike/career-profile.js
           node --check desert-strike/tri-lane-network.js
+      - name: Discord OAuth login and linked account regression
+        run: node desert-strike/smoke-discord-auth.test.cjs
       - name: Supabase room and SDP adapter (mocked SDK)
         run: node desert-strike/smoke-supabase-room-adapter.test.cjs
       - name: Supabase device account identity
