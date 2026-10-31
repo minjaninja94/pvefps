@@ -10,6 +10,7 @@ on:
       - "desert-strike/index.html"
       - "desert-strike/style-v2.css"
       - "desert-strike/smoke-discord-auth.test.cjs"
+      - "desert-strike/smoke-guest-multiplayer.test.cjs"
       - "desert-strike/sql/desert_discord_member_v1.sql"
       - "desert-strike/smoke-supabase-room-adapter.test.cjs"
       - "desert-strike/smoke-trilane-network.test.cjs"
@@ -36,6 +37,8 @@ jobs:
           node --check desert-strike/desert-member.js
           node --check desert-strike/career-profile.js
           node --check desert-strike/tri-lane-network.js
+      - name: Anonymous guest online multiplayer (no Discord)
+        run: node desert-strike/smoke-guest-multiplayer.test.cjs
       - name: Discord OAuth login and linked account regression
         run: node desert-strike/smoke-discord-auth.test.cjs
       - name: Supabase room and SDP adapter (mocked SDK)
