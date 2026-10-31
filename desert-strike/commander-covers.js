@@ -1,5 +1,22 @@
-/* Ten commander covers assembled from the actual in-game sprites. */
+/* Commander covers use a separate illustration for every faction skin. */
 (function(global){'use strict';
+const skinCovers=new Map();
+function drawSkinCover(g,f,skin,w,h){
+ const id=String(skin||'').split('~')[0],entry=global.DesertSkinCatalog?.get?.(id);
+ if(!entry||entry.faction!==f||typeof Image==='undefined')return false;
+ let image=skinCovers.get(id);
+ if(!image){
+  image=new Image();image.decoding='async';
+  image.onload=()=>global.dispatchEvent?.(new Event('desert-cover-ready'));
+  image.onerror=()=>{skinCovers.delete(id);};
+  image.src='./assets/sprites/commander-'+id+'.jpg';skinCovers.set(id,image);
+ }
+ if(!image.complete||!image.naturalWidth)return false;
+ g.save();g.clearRect(0,0,w,h);
+ const scale=Math.max(w/image.naturalWidth,h/image.naturalHeight),sw=w/scale,sh=h/scale;
+ g.drawImage(image,(image.naturalWidth-sw)/2,(image.naturalHeight-sh)/2,sw,sh,0,0,w,h);
+ g.restore();return true;
+}
 const PAL=[
  ['#8de2fa','#2b5062','#56899d'],['#afd980','#344a33','#6b9368'],['#dec6ff','#483b68','#8975a8'],
  ['#eab186','#513e3c','#8b654c'],['#e9b0b4','#684854','#ad7e77'],['#b4f0d1','#365c53','#73aa8f'],
@@ -37,6 +54,7 @@ function base(g,f,p){
 function draw(canvas,f,skin='default'){
  const g=canvas?.getContext?.('2d');if(!g)return;
  const w=canvas.width,h=canvas.height,p=PAL[f]||PAL[0],old=g.imageSmoothingEnabled;
+ if(drawSkinCover(g,f,skin,w,h))return;
  if(skin==='moe'&&global.DesertMoeArt?.cover?.(g,f,w,h))return;
  if(global.DesertRealSprites?.cover?.(g,f,0,0,w,h,true))return;
  if(global.DesertRealSprites){g.fillStyle=p[1];g.fillRect(0,0,w,h);return;}
