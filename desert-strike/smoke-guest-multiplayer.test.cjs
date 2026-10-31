@@ -36,7 +36,7 @@ function fixture(enabled=true){
  return {member:window.DesertMember,rooms:window.DesertSupabaseRooms,client,rpcCalls,anonCount:()=>anonymousCalls};
 }
 (async()=>{
- assert.match(html,/lobby-guest-multi-note/,'guest multiplayer must be discoverable');
+ assert.match(html,/lobby-rank-benefits/,'guest multiplayer and optional member ranking must be discoverable');
  assert.match(html,/careerGuest" class="btn outline">게스트로 바로 플레이/);
  assert.doesNotMatch(network,/Firebase 네트워크 모듈이 아직 준비되지 않았습니다/);
  const guest=fixture();
