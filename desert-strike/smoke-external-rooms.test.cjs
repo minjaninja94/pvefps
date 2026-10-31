@@ -29,14 +29,14 @@ const store={
  }
 };
 function client(uid,ledger){
- const w={IronFirebase:{identity:async()=>({db:{},fs:store,uid}),message:e=>e?.message||String(e)},
+ const w={DesertSupabaseRooms:{identity:async()=>({db:{},fs:store,uid}),message:e=>e?.message||String(e)},
   DesertMember:{joinMatch:ledger,endMatch(){},forfeit:async()=>null}};
  vm.runInNewContext(networkSource,{window:w,crypto:webcrypto,Date,Math,Number,String,Object,Array,Map,Set,Promise,performance,setTimeout,clearTimeout,setInterval,clearInterval,RTCPeerConnection:class{},console});
  const statuses=[];
  w.DesertTriNetwork.configure({status:s=>statuses.push(s),room:x=>events.push(x)});
  return {net:w.DesertTriNetwork,statuses};
 }
-test('fresh external visitors can open and join a Firebase room while Supabase is unavailable',async()=>{
+test('room creation and joining are not blocked by a failed ranked-ledger registration',async()=>{
  const never=new Promise(()=>{});
  const host=client('external-host',()=>never),guest=client('external-guest',()=>never);
  const created=await Promise.race([host.net.create({mode:'classic',size:1,name:'외부테스터',faction:0,publicRoom:false}),new Promise((_,reject)=>setTimeout(()=>reject(Error('creation blocked by ledger')),250))]);
@@ -49,7 +49,7 @@ test('fresh external visitors can open and join a Firebase room while Supabase i
  assert.ok(guest.statuses.some(x=>x.includes('참가 완료')));
  await host.net.leave();await guest.net.leave();
 });
-test('Firestore permission error resets failed room and next attempt may succeed',async()=>{
+test('room creation errors reset the failed attempt',async()=>{
  const c=client('new-browser',async()=>({ok:false,reason:'Supabase 게스트 인증 비활성'}));
  failRoomCreate=true;
  await assert.rejects(c.net.create({mode:'classic',size:1,name:'테스터',faction:0,publicRoom:false}),/방 생성 실패/);
