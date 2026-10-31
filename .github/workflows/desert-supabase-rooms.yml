@@ -1,0 +1,40 @@
+name: Desert Front Supabase room and P2P transport
+on:
+  push:
+    paths:
+      - "desert-strike/supabase-room-adapter.js"
+      - "desert-strike/tri-lane-network.js"
+      - "desert-strike/device-account.js"
+      - "desert-strike/desert-member.js"
+      - "desert-strike/smoke-supabase-room-adapter.test.cjs"
+      - "desert-strike/smoke-trilane-network.test.cjs"
+      - "desert-strike/smoke-device-account.test.cjs"
+      - ".github/workflows/desert-supabase-rooms.yml"
+  pull_request:
+    paths:
+      - "desert-strike/**"
+  workflow_dispatch:
+jobs:
+  supabase-rooms:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Supabase game scripts syntax
+        run: |
+          node --check desert-strike/supabase-room-adapter.js
+          node --check desert-strike/device-account.js
+          node --check desert-strike/desert-member.js
+          node --check desert-strike/tri-lane-network.js
+      - name: Supabase room and SDP adapter (mocked SDK)
+        run: node desert-strike/smoke-supabase-room-adapter.test.cjs
+      - name: Supabase device account identity
+        run: node desert-strike/smoke-device-account.test.cjs
+      - name: WebRTC host-authoritative combat packets remain P2P
+        run: node desert-strike/smoke-trilane-network.test.cjs
+      - name: External room and public-room discovery smoke
+        run: |
+          node --test desert-strike/smoke-external-rooms.test.cjs
+          node --test desert-strike/smoke-public-room.test.cjs
