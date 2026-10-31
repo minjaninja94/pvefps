@@ -34,9 +34,12 @@ async function loadMember(user,importGuest=false){
  const db=await api();
  const {data,error}=await db.from('desert_web_members').select('*').eq('user_id',user.id).maybeSingle();
  if(error)throw error;
+ clearTimeout(saveTimer);
  member=data||null;
+ global.DesertSkinShop?.setAccount(user.id,null);
  session=(await db.auth.getSession()).data.session;
  if(member){
+  try{await refreshSkinWallet();}catch(e){status('스킨 포인트 동기화 실패: '+e.message);}
   if(importGuest){
    const old=global.DesertLobby?.exportProgress?.();
    if(old){const merged={...old,nickname:member.nickname};await saveProgress(merged,true);global.DesertLobby?.importProgress?.(merged);}
@@ -52,7 +55,7 @@ async function loadMember(user,importGuest=false){
 async function restore(){
  try{const db=await api(),{data,error}=await db.auth.getSession();if(error)throw error;
   if(data.session)await loadMember(data.session.user);
-  else {member=null;session=null;global.DesertCareer?.setLadders?.(null);show();}
+  else {member=null;session=null;global.DesertSkinShop?.setAccount(null,null);global.DesertCareer?.setLadders?.(null);show();}
  }catch(e){status('Supabase 계정 확인 실패: '+(e.message||e));}
 }
 async function signup(id,pass,nick){
@@ -82,26 +85,44 @@ async function logout(){
  if(match?.tracked&&match.playing&&!match.ended)await forfeit();
  const db=await api(),{error}=await db.auth.signOut();
  if(error)throw error;
- member=null;session=null;match=null;global.DesertCareer?.setLadders?.(null);global.DesertLobby?.useGuestProfile?.();show();
+ clearTimeout(saveTimer);member=null;session=null;match=null;global.DesertSkinShop?.setAccount(null,null);global.DesertCareer?.setLadders?.(null);global.DesertLobby?.useGuestProfile?.();show();
 }
 async function saveProgress(progress,immediate=false){
  if(!member||!progress)return;
+ const owner=member.user_id;
+ const chosen=global.DesertSkinShop?.resolve(progress.selectedSkin);
  const next={
   nickname:String(progress.nickname||member.nickname).slice(0,16),
   xp:Math.max(0,Math.min(10000000,Math.floor(progress.xp||0))),
   wins:Math.max(0,Math.floor(progress.wins||0)),losses:Math.max(0,Math.floor(progress.losses||0)),
   mp_wins:Math.max(0,Math.floor(progress.mpWins||0)),mp_losses:Math.max(0,Math.floor(progress.mpLosses||0)),
-  selected_faction:Number(progress.selectedFaction)||0,selected_skin:progress.selectedSkin||'default',
+  selected_faction:Number(progress.selectedFaction)||0,selected_skin:chosen&&global.DesertSkinShop.owns(chosen.id)?chosen.id:'default',
   ai_difficulty:['easy','normal','hard','veryhard','impossible'].includes(progress.aiDifficulty)?progress.aiDifficulty:'normal',updated_at:new Date().toISOString()
  };
  const save=async()=>{
+  if(member?.user_id!==owner)return;
   const changed=member.mp_wins!==next.mp_wins||member.mp_losses!==next.mp_losses;
-  const db=await api(),{error}=await db.from('desert_web_members').update(next).eq('user_id',member.user_id);
-  if(error)throw error;member={...member,...next};
+  const db=await api(),{error}=await db.from('desert_web_members').update(next).eq('user_id',owner);
+  if(error)throw error;if(member?.user_id!==owner)return;member={...member,...next};
   if(changed)void refreshRating().catch(e=>status('랭킹 갱신 실패: '+e.message));
  };
  if(immediate)return save();
  clearTimeout(saveTimer);saveTimer=setTimeout(()=>void save().catch(e=>status('프로필 저장 실패: '+e.message)),450);
+}
+async function refreshSkinWallet(){
+ if(!member)throw Error('로그인이 필요합니다.');
+ const owner=member.user_id,db=await api(),{data,error}=await db.rpc('desert_skin_state');
+ if(error)throw error;
+ if(member?.user_id===owner)global.DesertSkinShop?.setAccount(owner,data);
+ return data;
+}
+async function buySkin(id){
+ if(!member)throw Error('로그인 후 구매할 수 있습니다.');
+ const skin=global.DesertSkinShop?.resolve(id);if(!skin)throw Error('알 수 없는 스킨입니다.');
+ const owner=member.user_id,db=await api(),{data,error}=await db.rpc('desert_buy_skin',{p_skin:skin.id});
+ if(error)throw error;
+ if(member?.user_id!==owner)throw Error('로그인 계정이 변경되었습니다.');
+ global.DesertSkinShop?.setAccount(owner,data);return data;
 }
 async function refreshRating(){
  if(!member)return;
@@ -209,6 +230,6 @@ function init(){
  show();
 }
 global.DesertMember=Object.freeze({restore,signup,login,logout,account,isMember:()=>!!member,
- saveProgress,joinMatch,startMatch,markPlaying,poll,forfeit,reportResult,pendingState,endMatch,refreshRating});
+ refreshSkinWallet,buySkin,saveProgress,joinMatch,startMatch,markPlaying,poll,forfeit,reportResult,pendingState,endMatch,refreshRating});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })(window);

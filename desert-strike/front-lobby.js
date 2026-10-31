@@ -1,6 +1,7 @@
 (function(global){'use strict';
 const $=id=>document.getElementById(id),FACTIONS=global.DesertRoster?.FACTIONS||[];
-const SKINS=[
+const SHOP=global.DesertSkinShop;
+const SKINS=SHOP?.SKINS||[
  {id:'default',name:'기본 제복',level:1,desc:'기본 외형',filter:'none',tone:'#a9d9ce'},
  {id:'moe',name:'모에화 빔',level:1,desc:'SD 외형',filter:'none',tone:'#f4afd5'},
  {id:'twilight',name:'황혼 작전',level:3,desc:'자줏빛 야전 도색',filter:'hue-rotate(55deg) saturate(1.3)',tone:'#ba91f2'},
@@ -10,6 +11,7 @@ const SKINS=[
 ];
 const KEY='desert-front-training-v2',empty=()=>({xp:0,wins:0,losses:0,mpWins:0,mpLosses:0,selectedFaction:0,selectedSkin:'default',aiDifficulty:'normal',nickname:'지휘관'});
 let progress=empty(),uid=null,active=false,lastMultiplayer='',authBusy=false;
+const shopChoices=new Map();let shopBusy=false;
 let selectedUnit=0,selectedAction='idle',animationStart=0,animationTick=0,onlineOpen=false,previewSkinId='',previewRole=0,previewAction='idle',previewOpener=null;
 const RULESET_KEY='desert-front-ruleset-v1';
 const RULESETS=['standard','augment','prism'];
@@ -34,7 +36,8 @@ function levelFromXP(xp){let level=1,left=xp;while(level<100&&left>=100+level*70
 function rank(){const score=progress.mpWins*3+progress.wins*.5;return score>=100?'플래티넘 연습생':score>=55?'골드 연습생':score>=24?'실버 연습생':score>=7?'브론즈 연습생':'훈련병';}
 function skinForFaction(s,f){return s.faction===undefined||s.faction===f;}
 function skinAssetReady(s){if(!global.DesertSkinArt?.has(s.id))return true;if(!global.DesertSkinArt.available(s.id))return false;global.DesertSkinArt.preload(s.id);return global.DesertSkinArt.loadedCount(s.id)===10;}
-function currentSkin(){const lv=levelFromXP(progress.xp).level;return SKINS.find(x=>x.id===progress.selectedSkin&&lv>=x.level&&skinForFaction(x,progress.selectedFaction)&&skinAssetReady(x))||SKINS[0];}
+function skinOwned(s){return SHOP?SHOP.owns(s.id):['default','moe'].includes(s.id);}
+function currentSkin(){const selected=SHOP?.resolve(progress.selectedSkin)||SKINS.find(x=>x.id===progress.selectedSkin);return selected&&skinOwned(selected)&&skinForFaction(selected,progress.selectedFaction)&&skinAssetReady(selected)?selected:SKINS[0];}
 function renderRuleset(){
  const selected=selectedRuleset!=='standard',label=selectedRuleset==='prism'?'프리즘 모드':'증강전';
  const roomActive=!!global.DesertTriNetwork?.current?.()?.roomId;
@@ -74,7 +77,7 @@ function syncRulesetFromRoom(value){
  selectedRuleset=value;
  renderRuleset();
 }
-function filterForSkin(id){return SKINS.find(x=>x.id===id)?.filter||'none';}
+function filterForSkin(id){return SHOP?.resolve(id)?.filter||SKINS.find(x=>x.id===id)?.filter||'none';}
 function stateChange(){save();render();if(uid)void syncProfile();}
 function updateUnitInfo(){
  const i=progress.selectedFaction,r=selectedUnit,fac=FACTIONS[i],unit=global.DesertRoster?.getDef?.(r,i);
@@ -130,20 +133,20 @@ function renderCovers(){const art=global.DesertCommanderCovers;if(!art)return;co
 
 function closeSkinPreview(){previewSkinId='';const layer=$('skinPreviewLayer');if(layer)layer.hidden=true;if(previewOpener?.isConnected)previewOpener.focus();previewOpener=null;}
 function openSkinPreview(id){
- const sk=SKINS.find(x=>x.id===id&&skinForFaction(x,progress.selectedFaction));if(!sk)return;
+ const sk=(SHOP?.resolve(id)||SKINS.find(x=>x.id===id));if(sk&&!skinForFaction(sk,progress.selectedFaction))return;if(!sk)return;
  const layer=$('skinPreviewLayer');if(!layer)return;
  previewOpener=document.activeElement;previewSkinId=id;previewRole=0;previewAction='idle';layer.hidden=false;
  $('skinPreviewTitle').textContent=sk.name+' · '+FACTIONS[progress.selectedFaction].name;
- $('skinPreviewUnlock').textContent=levelFromXP(progress.xp).level<sk.level?'잠김 · LV.'+sk.level+' 해금':'선택 가능';
+ $('skinPreviewUnlock').textContent=skinOwned(sk)?'보유 중 · 선택 가능':sk.price+' P · 포인트로 해금';
  updateSkinPreviewStatus();
  const fac=FACTIONS[progress.selectedFaction];
  $('skinPreviewUnits').innerHTML=[0,1,2,3,4,5,6,7,9,10].map((r,i)=>'<button type="button" class="skin-preview-role'+(i===0?' selected':'')+'" data-preview-select="'+r+'"><canvas width="72" height="72" data-preview-role="'+r+'"></canvas><small>'+(fac.units[r]||global.DesertRoster?.getDef?.(r,progress.selectedFaction)?.name||['돌격','사격','대장갑','장갑','대공','공성','특수','지원','저격','암살'][i])+'</small></button>').join('');
- $('skinPreviewActions').innerHTML=(global.DesertSkinCatalog?.get(id)?[{id:'idle',label:'대기 재생'},{id:'move',label:'이동 재생'},{id:'attack',label:'공격 재생'},...['대기','준비','이동 1','이동 2','공격 준비','공격 적중','스킬','사망'].map((label,i)=>({id:'pose-'+i,label}))]:(global.DesertUnitMotion?.ACTIONS||[])).map(a=>'<button type="button" data-preview-action="'+a.id+'"'+(a.id===previewAction?' class="selected"':'')+'>'+a.label+'</button>').join('');
+ $('skinPreviewActions').innerHTML=(global.DesertSkinCatalog?.get(SHOP?.resolve(id)?.baseId||id)?[{id:'idle',label:'대기 재생'},{id:'move',label:'이동 재생'},{id:'attack',label:'공격 재생'},...['대기','준비','이동 1','이동 2','공격 준비','공격 적중','스킬','사망'].map((label,i)=>({id:'pose-'+i,label}))]:(global.DesertUnitMotion?.ACTIONS||[])).map(a=>'<button type="button" data-preview-action="'+a.id+'"'+(a.id===previewAction?' class="selected"':'')+'>'+a.label+'</button>').join('');
  global.DesertSkinArt?.retry?.(id);global.DesertSkinArt?.preload?.(id);
  layer.querySelector('.skin-preview-panel')?.focus();
 }
 function updateSkinPreviewStatus(){
- const sk=global.DesertSkinCatalog?.get(previewSkinId),art=global.DesertSkinArt;
+ const sk=global.DesertSkinCatalog?.get(SHOP?.resolve(previewSkinId)?.baseId||previewSkinId),art=global.DesertSkinArt;
  if(!sk){$('skinPreviewStatus').textContent='유닛별 애니메이션 미리보기';return;}
  const n=art?.loadedCount(sk.id)||0,failed=art?.failedCount(sk.id)||0;
  $('skinPreviewStatus').textContent=sk.status!=='ready'?'이미지 반영 대기 · 제작 기록은 복구 체크포인트 참조':failed?'이미지 '+n+'/10 · '+failed+'개 로드 실패 · 창을 다시 열면 재시도합니다.':n===10?'10병종 · 8포즈 로드 완료':'이미지 '+n+'/10 로드 중';
@@ -158,7 +161,7 @@ function mountSkinPreview(){
   const action=e.target.closest('[data-preview-action]');if(action){previewAction=action.dataset.previewAction;layer.querySelectorAll('[data-preview-action]').forEach(b=>b.classList.toggle('selected',b===action));}
  });
  document.addEventListener('keydown',e=>{if(!previewSkinId)return;if(e.key==='Escape'){e.preventDefault();closeSkinPreview();}if(e.key==='Tab'){const buttons=[...layer.querySelectorAll('button:not([disabled])')],first=buttons[0],last=buttons[buttons.length-1];if(e.shiftKey&&(document.activeElement===first||document.activeElement===layer.querySelector('.skin-preview-panel'))){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}});
- global.addEventListener?.('desert-skin-ready',e=>{if(previewSkinId===e.detail.id)updateSkinPreviewStatus();if(active&&global.DesertSkinArt.loadedCount(e.detail.id)===10)render();});
+ global.addEventListener?.('desert-skin-ready',e=>{if((SHOP?.resolve(previewSkinId)?.baseId||previewSkinId)===e.detail.id)updateSkinPreviewStatus();if(active&&global.DesertSkinArt.loadedCount(e.detail.id)===10)render();});
 }
 function chooseDifficulty(value){if(!AI_LEVELS.includes(value))return;progress.aiDifficulty=value;save();render();}
 function render(){
@@ -178,11 +181,39 @@ function render(){
  $('lobbyFactionName').textContent=fac.name;$('lobbyFactionTrait').textContent=fac.bonus;
 
  $('lobbyFactions').innerHTML=FACTIONS.map((f,i)=>'<button class="lobby-faction'+(i===progress.selectedFaction?' selected':'')+'" data-faction="'+i+'" style="--fac:'+f.color+'"><span class="lobby-icon">'+f.logo+'</span><canvas width="160" height="114" data-cover="'+i+'" aria-label="'+f.name+' 사령부와 대표 병력"></canvas><strong>'+f.name+'</strong><small>'+f.tag+'</small></button>').join('');
- $('lobbySkins').innerHTML=SKINS.filter(x=>skinForFaction(x,progress.selectedFaction)).map(x=>'<div class="lobby-skin-item" style="--skin:'+x.tone+'"><button type="button" class="lobby-skin'+(s.id===x.id?' selected':'')+'" data-skin="'+x.id+'" '+(l.level<x.level||!skinAssetReady(x)?'disabled':'')+'><span class="skin-swatch">✦</span><strong>'+x.name+'</strong><small>'+(l.level<x.level?'LV.'+x.level+' 해금':!skinAssetReady(x)?(x.status==='planned'?'이미지 반영 대기':'이미지 로드 중'):x.desc)+'</small></button><button type="button" class="lobby-skin-preview-open" data-preview-skin="'+x.id+'">스킨 확인해보기</button></div>').join('');
+ renderSkinShop();
  $('lobbySkinMessage').textContent=s.name+' 선택 · 게임 능력치는 변경되지 않습니다.';
  renderUnitGallery();
  renderCovers();
  $('mpFaction').value=String(progress.selectedFaction);$('mpName').value=progress.nickname;
+}
+function shopMessage(message){if($('skinShopStatus'))$('skinShopStatus').textContent=message;}
+function renderSkinShop(){
+ if(!SHOP)return;
+ const wallet=SHOP.snapshot(),member=global.DesertMember?.account?.(),ready=!!member&&wallet.userId===member.userId&&wallet.ready;
+ if($('skinWallet'))$('skinWallet').innerHTML=member?(ready?'<strong>스킨 포인트 '+wallet.points.toLocaleString()+' P</strong><small>최초 3,000P · 매일 첫 로그인 300P</small>':'<span>포인트를 불러오는 중입니다.</span><button type="button" data-refresh-wallet>다시 불러오기</button>'):'<strong>로그인하고 스킨 포인트 받기</strong><small>최초 3,000P · 매일 첫 로그인 300P</small><button type="button" data-open-skin-login>로그인</button>';
+ const selected=currentSkin();
+ $('lobbySkins').innerHTML=SHOP.BASES.filter(x=>skinForFaction(x,progress.selectedFaction)).map(base=>{
+  const equipped=SHOP.resolve(progress.selectedSkin),chroma=shopChoices.get(base.id)||(equipped?.baseId===base.id?equipped.chroma:'original');
+  const variant=SHOP.variant(base.id,chroma),owned=skinOwned(variant),baseOwned=SHOP.owns(base.id),loaded=skinAssetReady(variant);
+  const purchase=chroma!=='original'&&!baseOwned?base:variant;
+  const disabled=!ready||shopBusy||wallet.points<purchase.price||base.status!=='ready';
+  return '<div class="lobby-skin-item" style="--skin:'+variant.tone+'"><canvas class="skin-card-art" width="96" height="96" data-shop-art="'+variant.id+'" aria-label="'+variant.name+' 미리보기"></canvas><strong>'+base.name+'</strong><div class="skin-chromas" role="group" aria-label="'+base.name+' 색상">'+SHOP.CHROMAS.map(c=>{
+   const v=SHOP.variant(base.id,c.id);return '<button type="button" data-base="'+base.id+'" data-chroma="'+c.id+'" aria-label="'+c.name+(skinOwned(v)?' · 보유':' · '+v.price+' P')+'" aria-pressed="'+(c.id===chroma)+'" title="'+c.name+(skinOwned(v)?' · 보유':' · '+v.price+' P')+'" style="--chroma:'+c.tone+'">'+c.icon+'<small>'+(skinOwned(v)?'✓':v.price+'P')+'</small></button>';
+  }).join('')+'</div><small>'+SHOP.CHROMAS.find(c=>c.id===chroma).name+'</small><button type="button" class="lobby-skin'+(selected.id===variant.id?' selected':'')+'" data-skin="'+variant.id+'" '+(!owned||!loaded?'disabled':'')+'>'+(selected.id===variant.id?'선택 중':owned?(loaded?'선택':'이미지 로드 중'):'미보유')+'</button>'+(!owned?'<button type="button" class="skin-buy" data-buy-skin="'+purchase.id+'" '+(disabled?'disabled':'')+'>'+(!member?'로그인 후 구매':shopBusy?'구매 처리 중':purchase.id!==variant.id?'기본 스킨 먼저 해금 · '+purchase.price+' P':variant.price+' P로 해금')+'</button>':'')+'<button type="button" class="lobby-skin-preview-open" data-preview-skin="'+variant.id+'">10병종 미리보기</button></div>';
+ }).join('');
+ $('lobbySkins').querySelectorAll('[data-shop-art]').forEach(c=>{const s=SHOP.resolve(c.dataset.shopArt);global.DesertUnitMotion?.draw(c.getContext('2d'),{faction:progress.selectedFaction,role:0,action:'idle',frame:0,size:96,skin:s.id,filter:s.filter});});
+}
+async function buySkin(id){
+ if(shopBusy)return;shopBusy=true;renderSkinShop();shopMessage('구매 중…');
+ const account=global.DesertMember?.account?.()?.userId;
+ try{
+  await global.DesertMember.buySkin(id);
+  if(global.DesertMember?.account?.()?.userId!==account)return;
+  const skin=SHOP.resolve(id);shopMessage(skin.name+' 해금 완료');
+  skinAssetReady(skin);chooseSkin(id);
+ }catch(e){shopMessage(e.message||'구매에 실패했습니다. 다시 시도해 주세요.');}
+ finally{shopBusy=false;renderSkinShop();}
 }
 function show(){global.DesertCommandHud?.closeUpgrades?.();delete document.body.dataset.playMode;active=true;$('frontLobby').hidden=false;document.body.classList.add('lobby-active');global.DesertLobbyMusic?.enterLobby?.();render();}
 function hide(){closeSkinPreview();active=false;$('frontLobby').hidden=true;document.body.classList.remove('lobby-active');global.DesertLobbyMusic?.exitLobby?.();}
@@ -190,14 +221,14 @@ function chooseFaction(i){
  if(!Number.isInteger(i)||i<0||i>=FACTIONS.length)return;
  progress.selectedFaction=i;if(!SKINS.some(x=>x.id===progress.selectedSkin&&skinForFaction(x,i)))progress.selectedSkin='default';closeSkinPreview();selectedUnit=0;selectedAction='idle';animationStart=performance.now();stateChange();
 }
-function chooseSkin(id){const sk=SKINS.find(x=>x.id===id),l=levelFromXP(progress.xp).level;if(!sk||l<sk.level||!skinForFaction(sk,progress.selectedFaction)||!skinAssetReady(sk))return false;progress.selectedSkin=id;global.DesertRoster?.refreshChoices?.();stateChange();return true;}
+function chooseSkin(id){const sk=SHOP?.resolve(id)||SKINS.find(x=>x.id===id);if(!sk||!skinOwned(sk)||!skinForFaction(sk,progress.selectedFaction)||!skinAssetReady(sk))return false;progress.selectedSkin=sk.id;global.DesertRoster?.refreshChoices?.();stateChange();return true;}
 function exportProgress(){return {...progress};}
 function importProgress(v){if(!v||typeof v!=='object')return;const next=empty();
  next.xp=Math.max(0,Math.min(10000000,Number(v.xp)||0));
  for(const key of ['wins','losses','mpWins','mpLosses'])next[key]=Math.max(0,Math.floor(Number(v[key])||0));
  next.nickname=safeName(v.nickname);
  next.selectedFaction=Number.isInteger(v.selectedFaction)&&v.selectedFaction>=0&&v.selectedFaction<FACTIONS.length?v.selectedFaction:0;
- next.selectedSkin=SKINS.some(sk=>sk.id===v.selectedSkin)?v.selectedSkin:'default';
+ const skin=SHOP?.resolve(v.selectedSkin)||SKINS.find(sk=>sk.id===v.selectedSkin);next.selectedSkin=skin&&skinOwned(skin)&&skinForFaction(skin,next.selectedFaction)?skin.id:'default';
  next.aiDifficulty=normalizeDifficulty(v.aiDifficulty);progress=next;save();render();}
 function useGuestProfile(){progress=load();render();}
 function grantXP(amount){progress.xp=Math.min(10000000,progress.xp+Math.max(0,Math.floor(amount)));stateChange();}
@@ -207,7 +238,7 @@ function info(msg){$('lobbyAuthMessage').textContent=msg;}
 async function syncProfile(){
  if(!uid||!global.IronFirebase)return;
  try{const {db,fs}=await global.IronFirebase.ready();await fs.setDoc(fs.doc(db,'desertProfiles',uid),
- {name:progress.nickname,faction:progress.selectedFaction,skin:currentSkin().id},{merge:true});
+ {name:progress.nickname,faction:progress.selectedFaction,skin:['default','moe','twilight','aurora','gold'].includes(currentSkin().id)?currentSkin().id:'default'},{merge:true});
  info('프로필 저장 완료');
  }catch(e){info('프로필 저장 실패: '+(global.IronFirebase.message?.(e)||e.message));}
 }
@@ -216,9 +247,9 @@ async function restoreAccount(){
  try{
   const account=await global.DesertDeviceAccount.identity();uid=account.uid;
   try{const snap=await account.fs.getDoc(account.fs.doc(account.db,'desertProfiles',uid));
-   if(snap.exists()){const pref=snap.data();if(pref.name)progress.nickname=safeName(pref.name);
+   if(snap.exists()&&!global.DesertMember?.account?.()){const pref=snap.data();if(pref.name)progress.nickname=safeName(pref.name);
     if(Number.isInteger(pref.faction)&&pref.faction>=0&&pref.faction<FACTIONS.length)progress.selectedFaction=pref.faction;
-    if(SKINS.some(x=>x.id===pref.skin&&levelFromXP(progress.xp).level>=x.level))progress.selectedSkin=pref.skin;save();}
+    if(!global.DesertMember?.account?.()&&SHOP?.resolve(pref.skin)&&skinOwned(SHOP.resolve(pref.skin)))progress.selectedSkin=SHOP.resolve(pref.skin).id;save();}
   }catch(_){}
   render();info('기기 인증 완료 · 다음 방문에도 이 브라우저에서 자동 접속합니다.');
  }catch(e){render();info('기기 계정으로 플레이할 수 있습니다. 온라인 인증은 연결 후 다시 시도합니다.');}
@@ -313,7 +344,14 @@ function initialize(){
  $('lobbyCloseMulti').addEventListener('click',()=>{if(global.DesertTriNetwork?.current()?.roomId)return;setMultiplayerExpanded(false);});
  global.requestAnimationFrame?.(drawUnitAnimations);
  $('lobbyFactions').addEventListener('click',e=>{const b=e.target.closest('[data-faction]');if(b)chooseFaction(Number(b.dataset.faction));});
- $('lobbySkins').addEventListener('click',e=>{const p=e.target.closest('[data-preview-skin]');if(p){openSkinPreview(p.dataset.previewSkin);return;}const b=e.target.closest('[data-skin]');if(b)chooseSkin(b.dataset.skin);});
+ $('lobbySkins').addEventListener('click',e=>{
+  const chroma=e.target.closest('[data-chroma]');if(chroma){shopChoices.set(chroma.dataset.base,chroma.dataset.chroma);renderSkinShop();return;}
+  const buy=e.target.closest('[data-buy-skin]');if(buy){void buySkin(buy.dataset.buySkin);return;}
+  const p=e.target.closest('[data-preview-skin]');if(p){openSkinPreview(p.dataset.previewSkin);return;}
+  const b=e.target.closest('[data-skin]');if(b)chooseSkin(b.dataset.skin);
+ });
+ $('skinWallet')?.addEventListener('click',async e=>{if(e.target.closest('[data-open-skin-login]')){global.DesertCareer?.open?.();return;}if(!e.target.closest('[data-refresh-wallet]'))return;try{await global.DesertMember?.refreshSkinWallet();}catch(err){shopMessage(err.message);}});
+ global.addEventListener?.('desert-skin-wallet',()=>{if(active)render();});
  $('lobbySolo').addEventListener('click',single);
  $('lobbyMulti').addEventListener('click',openMultiplayer);
  $('lobbyRulesetPicker')?.addEventListener('click',e=>{

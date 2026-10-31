@@ -44,9 +44,9 @@ async function retryResult(){
 function status(s){notify('status',s);}
 function validateName(s){return String(s||'지휘관').trim().replace(/[<>]/g,'').slice(0,16)||'지휘관';}
 function validateRuleset(s){return s==='augment'||s==='prism'?s:'standard';}
-function validateSkin(s){return ['default','moe','twilight','aurora','gold'].includes(s)||global.DesertSkinCatalog?.get(s)?.status==='ready'?s:'default';}
+function validateSkin(s){return global.DesertSkinShop?(global.DesertSkinShop.resolve(s)?.status==='ready'?s:'default'):legacySkins.includes(s)||global.DesertSkinCatalog?.get(s)?.status==='ready'?s:'default';}
 function wireSkin(s){return legacySkins.includes(s)?s:'default';}
-function appearanceSkin(s,f){return legacySkins.includes(s)||global.DesertSkinCatalog?.validFor(s,f)?s:'default';}
+function appearanceSkin(s,f){return global.DesertSkinShop?(global.DesertSkinShop.validFor(s,f)?s:'default'):legacySkins.includes(s)||global.DesertSkinCatalog?.validFor(s,f)?s:'default';}
 function code(){const bytes=new Uint8Array(6);crypto.getRandomValues(bytes);return Array.from(bytes,n=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[n%32]).join('');}
 const path=()=>fs.doc(db,'desertRooms',roomId);
 const publicPath=code=>fs.doc(db,'desertPublicRooms',code||roomId);

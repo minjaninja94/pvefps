@@ -5,10 +5,12 @@ const roles=[0,1,2,3,4,5,6,7,9,10];
 const names=['assault','rifle','antiarmor','heavy','antiair','siege','flyer','support','sniper','assassin'];
 const actions={idle:[0,1],ready:[1],move:[2,3],attack:[4,5],siege:[4,6],skill:[6],hit:[5],spawn:[0],death:[7]};
 const entries=new Map(),cache=new Map();
-function entry(id){if(!entries.has(id))entries.set(id,{sheets:new Map(),requested:new Set(),failed:new Set()});return entries.get(id);}
-function available(id,faction){const s=catalog?.get(id);return !!s&&s.status==='ready'&&(faction===undefined||s.faction===faction);}
+const baseId=id=>global.DesertSkinShop?.resolve(id)?.baseId||id;
+function entry(id){id=baseId(id);if(!entries.has(id))entries.set(id,{sheets:new Map(),requested:new Set(),failed:new Set()});return entries.get(id);}
+function available(id,faction){const s=catalog?.get(baseId(id));return !!s&&s.status==='ready'&&(faction===undefined||s.faction===faction);}
 function emit(id){global.dispatchEvent?.(new CustomEvent('desert-skin-ready',{detail:{id}}));if(id==='blood-iron')global.dispatchEvent?.(new Event('desert-blood-iron-ready'));}
 function load(id,role){
+ id=baseId(id);
  const slot=roles.indexOf(role);if(slot<0||!available(id)||typeof Image==='undefined')return;
  const e=entry(id);if(e.requested.has(role))return;
  e.requested.add(role);const im=new Image();im.decoding='async';
@@ -29,9 +31,9 @@ function frame(id,faction,role,action='idle',phase=0){
  if(cache.size>=256)cache.delete(cache.keys().next().value);cache.set(key,canvas);return canvas;
 }
 function preload(id){for(const role of roles)load(id,role);}
-function retry(id){const e=entries.get(id);if(!e)return;for(const role of e.failed)e.requested.delete(role);e.failed.clear();preload(id);}
-function loadedCount(id){return entries.get(id)?.sheets.size||0;}
-const api=Object.freeze({frame,load,preload,retry,available,loadedCount,failedCount:id=>entries.get(id)?.failed.size||0,has:id=>!!catalog?.get(id),roles:Object.freeze(roles)});
+function retry(id){id=baseId(id);const e=entries.get(id);if(!e)return;for(const role of e.failed)e.requested.delete(role);e.failed.clear();preload(id);}
+function loadedCount(id){return entries.get(baseId(id))?.sheets.size||0;}
+const api=Object.freeze({frame,load,preload,retry,available,loadedCount,failedCount:id=>entries.get(baseId(id))?.failed.size||0,has:id=>!!catalog?.get(baseId(id)),roles:Object.freeze(roles)});
 global.DesertSkinArt=api;
 global.DesertBloodIronArt=Object.freeze({frame:(role,action,phase)=>frame('blood-iron',0,role,action,phase),load:role=>load('blood-iron',role),preload:()=>preload('blood-iron'),loadedCount:()=>loadedCount('blood-iron'),failedCount:()=>api.failedCount('blood-iron')});
 })(window);

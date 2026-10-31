@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: "22"
       - name: Faction skin catalog and loader regressions
-        run: node --test desert-strike/tests/skin-catalog.test.cjs
+        run: node --test desert-strike/tests/skin-catalog.test.cjs desert-strike/tests/skin-shop.test.cjs
       - name: JavaScript syntax V1 + V2
         run: |
           node --check desert-strike/game.js

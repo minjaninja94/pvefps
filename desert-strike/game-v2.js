@@ -1573,8 +1573,10 @@ function updateUI(full=false){
    const portrait=window.IsoWorld?.portrait(state.faction,i)||window.DesertSprites?.portrait(state.faction,i)||sprite(state.faction,i,0);
    const skin=window.DesertLobby?.selectedSkin?.()||'default';
    const generated=window.DesertSkinArt?.frame(skin,state.faction,i,'idle',4);
-   const actual=generated||(skin==='moe'?window.DesertMoeArt?.frame(state.faction,i,'idle',4)||portrait:portrait);
-   const icon=i>=9&&!generated?'<span class="specialist-static-preview" style="background-image:url(./expansion/assets/'+(skin==='moe'?'moe':'base')+'-'+f.id+'-'+(i===9?'sniper':'assassin')+'.webp)" aria-hidden="true"></span>':typeof actual?.toDataURL==='function'?'<img class="pixel-preview" src="'+actual.toDataURL('image/png')+'" alt="" aria-hidden="true">':r.token;
+   const appearance=window.DesertSkinShop?.resolve(skin),baseSkin=appearance?.baseId||skin;
+   let actual=generated||(baseSkin==='moe'?window.DesertMoeArt?.frame(state.faction,i,'idle',4)||portrait:portrait),painted=false;
+   if(appearance&&window.DesertUnitMotion){const canvas=document.createElement('canvas');canvas.width=canvas.height=72;painted=window.DesertUnitMotion.draw(canvas.getContext('2d'),{faction:state.faction,role:i,action:'idle',frame:4,size:72,skin});if(painted)actual=canvas;}
+   const icon=i>=9&&!generated&&!painted?'<span class="specialist-static-preview" style="background-image:url(./expansion/assets/'+(baseSkin==='moe'?'moe':'base')+'-'+f.id+'-'+(i===9?'sniper':'assassin')+'.webp)" aria-hidden="true"></span>':typeof actual?.toDataURL==='function'?'<img class="pixel-preview" src="'+actual.toDataURL('image/png')+'" alt="" aria-hidden="true">':r.token;
    return '<button class="unit-card'+(selectedRole===i?' selected':'')+'" data-role="'+i+'" title="'+getDef(i,state.faction).tips+
     '"><span class="uc-top">'+getDef(i,state.faction).mark+' '+getDef(i,state.faction).name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
     '</span><span class="uc-name">'+f.units[i]+'</span><span class="uc-role">'+getDef(i,state.faction).name+' · '+(getDef(i,state.faction).kind==='air'?'공중':'지상')+'</span>'+

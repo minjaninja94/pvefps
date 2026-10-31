@@ -83,7 +83,8 @@ function combatDef(u,players=null){
  const level=u.uid?players?.find(p=>p.uid===u.uid)?.weapon||0:0;
  return level?{...actual,damage:actual.damage*(1+.08*level),heal:actual.heal*(1+.08*level)}:actual;
 }
-function roomPlayers(input){const x=Array.isArray(input)?input:Object.values(input||{});return x.map(p=>({uid:String(p.uid||p.id||''),name:String(p.name||'지휘관').slice(0,16),team:Number(p.team),faction:Number(p.faction),skin:['default','moe','twilight','aurora','gold'].includes(p.skin)||(global.DesertSkinCatalog||(typeof require==='function'?require('./skin-catalog.js'):null))?.validFor(p.skin,Number(p.faction))?p.skin:'default',bot:!!p.bot}));}
+const skinShop=global.DesertSkinShop||(typeof require==='function'?require('./skin-shop.js'):null);
+function roomPlayers(input){const x=Array.isArray(input)?input:Object.values(input||{});return x.map(p=>({uid:String(p.uid||p.id||''),name:String(p.name||'지휘관').slice(0,16),team:Number(p.team),faction:Number(p.faction),skin:skinShop?.validFor(p.skin,Number(p.faction))?p.skin:'default',bot:!!p.bot}));}
 function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='standard',seed=1}={}){
  const augmented=ruleset==='augment'||ruleset==='prism';
  if(augmented&&!global.DesertAugments?.ready?.())throw Error('증강 카드 준비 전입니다. 새로고침 후 다시 시도하세요.');

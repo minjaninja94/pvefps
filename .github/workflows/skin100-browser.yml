@@ -11,6 +11,10 @@ on:
       - "desert-strike/unit-motion.js"
       - "desert-strike/index.html"
       - "desert-strike/skin-catalog.js"
+      - "desert-strike/skin-shop.js"
+      - "desert-strike/desert-member.js"
+      - "desert-strike/tests/skin-shop-browser.cjs"
+      - "desert-strike/blood-iron-skins.css"
       - "desert-strike/assets/sprites/faction-*-actions.webp"
 permissions:
   contents: read
@@ -31,6 +35,7 @@ jobs:
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/skin-server.log" 2>&1 &
           NODE_PATH="$RUNNER_TEMP/skin-browser/node_modules" node desert-strike/tests/skin-browser.cjs
+          NODE_PATH="$RUNNER_TEMP/skin-browser/node_modules" node desert-strike/tests/skin-shop-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -38,4 +43,5 @@ jobs:
           path: |
             skin-browser-preview.png
             skin-browser-lobby.png
+            skin-shop-browser.png
           if-no-files-found: ignore

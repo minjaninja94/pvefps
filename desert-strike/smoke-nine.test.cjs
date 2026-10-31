@@ -44,7 +44,7 @@ const fakeEl=id=>{
  return elements.get(id);
 };
 const fakeDoc={readyState:'complete',body:{dataset:{},classList:{add(){},remove(){}}},getElementById:fakeEl,querySelectorAll(){return []},querySelector(){return null}};
-const modelWindow={DesertRoster:{...engineWin.DesertRoster,refreshChoices(){}},IsoWorld:{portrait(){return {}},frame(){return {}}},addEventListener(k,fn){listeners[k]=fn;}};
+const modelWindow={DesertSkinShop:require('./skin-shop.js'),DesertRoster:{...engineWin.DesertRoster,refreshChoices(){}},IsoWorld:{portrait(){return {}},frame(){return {}}},addEventListener(k,fn){listeners[k]=fn;}};
 vm.runInNewContext(read('front-lobby.js'),{window:modelWindow,document:fakeDoc,localStorage:{getItem(k){return store.get(k)||null},setItem(k,v){store.set(k,v)}},console,Math,Number,String,Object,Array,Map,Set,JSON,performance:{now:()=>0}},{timeout:10000});
 const lobby=modelWindow.DesertLobby;
 assert.equal(lobby.levelFromXP(0).level,1);
@@ -53,6 +53,8 @@ assert.equal(lobby.chooseSkin('gold'),false,'locked skin cannot be selected');
 lobby.chooseFaction(8);assert.equal(lobby.selectedFaction(),8);
 lobby.completeSolo({win:true,wave:22});assert.match(fakeEl('lobbyRecord').textContent,/싱글 1승/);
 lobby.grantXP(6000);assert.ok(lobby.levelFromXP(6000).level>=6);
+assert.equal(lobby.chooseSkin('aurora'),false,'XP never grants paid chromas');
+modelWindow.DesertSkinShop.setAccount('test',{points:2800,owned:['default~aurora']});
 assert.equal(lobby.chooseSkin('aurora'),true);
 assert.ok(lobby.filterForSkin(lobby.selectedSkin())!=='none');
 lobby.completeMultiplayer({winner:0,side:0,matchId:'room-1'});lobby.completeMultiplayer({winner:0,side:0,matchId:'room-1'});
