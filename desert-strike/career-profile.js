@@ -140,6 +140,7 @@ function close(){
 }
 function init(){
  $('careerOpen')?.addEventListener('click',()=>open());
+ $('lobbyRankLogin')?.addEventListener('click',()=>open());
  $('lobbyRankModes')?.addEventListener('click',e=>{const b=e.target.closest('[data-rank-mode]');if(!b)return;rankMode=b.dataset.rankMode;renderLadders();});
  $('careerHistoryOpen')?.addEventListener('click',()=>open({history:true}));
  $('careerClose')?.addEventListener('click',close);
