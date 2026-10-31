@@ -69,5 +69,5 @@ test('3-line result dialog stays visible before practice reward settlement and a
  assert.match(report,/practice=false/);
  assert.match(report,/게스트 연습: 승패 기록만 저장/);
  assert.match(lobby,/로그인 필요 · /);
- assert.ok(html.includes('desert-member.js?v=practice-reward-visible1'));
+ assert.ok(html.includes('desert-member.js?v=room-supabase-v1'));
 });
