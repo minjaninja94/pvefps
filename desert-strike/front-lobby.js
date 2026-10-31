@@ -252,23 +252,17 @@ function completeSolo({win,wave,seconds}){void global.DesertMember?.finishSolo?.
 function completeMultiplayer({winner,side,matchId,mode='pvp',size=1,wave=0,seconds=0,faction=progress.selectedFaction}){if(!matchId||lastMultiplayer===matchId)return;lastMultiplayer=matchId;if(winner===side)progress.mpWins++;else if(winner!==null)progress.mpLosses++;global.DesertCareer?.record?.({mode,size,side,winner,faction,wave,seconds,online:mode==='pvp'||mode==='classic'});grantXP(winner===side?165:75);}
 function info(msg){$('lobbyAuthMessage').textContent=msg;}
 async function syncProfile(){
- if(!uid||!global.IronFirebase)return;
- try{const {db,fs}=await global.IronFirebase.ready();await fs.setDoc(fs.doc(db,'desertProfiles',uid),
- {name:progress.nickname,faction:progress.selectedFaction,skin:['default','moe','twilight','aurora','gold'].includes(currentSkin().id)?currentSkin().id:'default'},{merge:true});
- info('프로필 저장 완료');
- }catch(e){info('프로필 저장 실패: '+(global.IronFirebase.message?.(e)||e.message));}
+ try{
+  await global.DesertMember?.saveProgress?.(progress,true);
+  info('선택한 설정을 저장했습니다.');
+ }catch(e){info('설정 저장 실패: '+(e.message||e));}
 }
 async function restoreAccount(){
  if(!global.DesertDeviceAccount)return;
  try{
   const account=await global.DesertDeviceAccount.identity();uid=account.uid;
-  try{const snap=await account.fs.getDoc(account.fs.doc(account.db,'desertProfiles',uid));
-   if(snap.exists()&&!global.DesertMember?.account?.()){const pref=snap.data();if(pref.name)progress.nickname=safeName(pref.name);
-    if(Number.isInteger(pref.faction)&&pref.faction>=0&&pref.faction<FACTIONS.length)progress.selectedFaction=pref.faction;
-    if(!global.DesertMember?.account?.()&&SHOP?.resolve(pref.skin)&&skinOwned(SHOP.resolve(pref.skin)))progress.selectedSkin=SHOP.resolve(pref.skin).id;save();}
-  }catch(_){}
-  render();info('기기 인증 완료 · 다음 방문에도 이 브라우저에서 자동 접속합니다.');
- }catch(e){render();info('기기 계정으로 플레이할 수 있습니다. 온라인 인증은 연결 후 다시 시도합니다.');}
+  render();info('Supabase 온라인 인증 완료 · 계정 및 방 연결을 사용할 수 있습니다.');
+ }catch(e){render();info('온라인 인증 실패 · 싱글 플레이는 가능하지만 멀티는 로그인이 필요합니다.');}
 }
 async function deviceLogin(){
  if(authBusy)return;authBusy=true;$('lobbyDeviceLogin').disabled=true;info('이 기기의 인증 정보를 확인하는 중…');
