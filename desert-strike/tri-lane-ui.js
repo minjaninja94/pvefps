@@ -653,10 +653,12 @@ function onSnapshot(v){
    resultKey=key;
    global.DesertLobbyMusic?.stopBattle?.();
    global.DesertCombatAudio?.stop?.();
-   if(practice&&!practiceRecorded){practiceRecorded=true;void global.DesertMember?.finishSolo?.(v.winner===side);global.DesertCareer?.record?.({mode:'practice',size:1,side:0,winner:v.winner,faction:me?.faction??faction(),wave:v.wave,seconds:v.seconds,online:false});}
+   if(practice&&!practiceRecorded){practiceRecorded=true;global.DesertCareer?.record?.({mode:'practice',size:1,side:0,winner:v.winner,faction:me?.faction??faction(),wave:v.wave,seconds:v.seconds,online:false});}
    if(!practice)global.DesertLobby?.completeMultiplayer?.({winner:v.winner,side,matchId:lobby?.id||'unknown',mode:v.mode,size:v.size,wave:v.wave,seconds:v.seconds,faction:me?.faction??faction()});
-   global.DesertBattleReport?.showMulti?.(v,myId,{serverStatus:practice?'연습 기록 저장 완료':'경기 결과 저장 중…'});
-   if(!practice)void NET.reportWinner?.(v.winner);
+   global.DesertBattleReport?.showMulti?.(v,myId,{practice:!!practice,serverStatus:practice?'연습 전적 저장 완료 · 포인트 지급 여부는 위에서 확인하세요.':'경기 결과 저장 중…'});
+   // The popup must exist before the asynchronous reward writes its status.
+   if(practice)void global.DesertMember?.finishSolo?.(v.winner===side,'multi');
+   else void NET.reportWinner?.(v.winner);
   }
  }
  renderAugment();renderAugmentRoster();renderBattleAugments();unitCards();buildGrid();upgradeInfo();renderTacticalPositions();drawOverview();
@@ -689,7 +691,7 @@ async function practiceStart(){
  if(version!==practiceStartVersion)return;
  practice=E.create({mode,size:1,aiDifficulty:difficulty,ruleset:$('mpRuleset').value,seed:Date.now()>>>0,members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%10,bot:true}]});
  // Use untouched authoritative bot setup, matching live host-created bot teams.
- $('mpStateTag').textContent=(global.DesertLobby?.difficultyLabel?.(difficulty)||'보통')+' AI 연습';message((mode==='classic'?'클래식 1:1':'3라인')+' AI 연습 시작');
+ $('mpStateTag').textContent=(global.DesertLobby?.difficultyLabel?.(difficulty)||'보통')+' AI 연습';message((mode==='classic'?'클래식 1:1':'3라인')+' AI 연습 시작'+(global.DesertMember?.account?.()?' · 승리 시 난이도별 스킨 P 지급':' · 게스트 전적만 저장 · 포인트는 로그인 필요'));
  // Match the live network host: authoritative tick every 50 ms,
  // viewer snapshots every 200 ms. Only the transport differs (local vs P2P).
  let last=performance.now(),lastSent=0;

@@ -54,7 +54,7 @@ function showSolo(state){
  unitStats(target,[{label:'내가 생산한 유닛',counts:friendly,faction:state?.faction,metrics:state?.combatStats?.[0]},
   {label:'상대 AI 생산 유닛',counts:enemy,faction:state?.enemyFaction,metrics:state?.combatStats?.[1]}]);
 }
-function showMulti(v,playerId,{serverStatus='서버 경기 결과 확인 중…'}={}){
+function showMulti(v,playerId,{serverStatus='서버 경기 결과 확인 중…',practice=false}={}){
  if(!v?.ended)return;
  const me=v.players?.find(p=>p.uid===playerId),side=me?.team??v.viewerTeam??0,winner=v.winner;
  const panel=$('mpResultOverlay');if(!panel)return;
@@ -74,7 +74,10 @@ function showMulti(v,playerId,{serverStatus='서버 경기 결과 확인 중…'
  }
  unitStats($('mpResultProduction'),groups);
  $('mpResultStatus').textContent=serverStatus;
- const reward=$('multiSkinReward');if(reward)reward.textContent=global.DesertMember?.account?.()&&['pvp','classic'].includes(v.mode)?'스킨 포인트 확인 중…':'';
+ const reward=$('multiSkinReward'),loggedIn=!!global.DesertMember?.account?.();
+ if(reward)reward.textContent=practice
+  ?(loggedIn?'AI 대전 스킨 포인트 서버 정산 중…':'게스트 연습: 승패 기록만 저장됩니다. 포인트를 받으려면 로그인 후 새 경기에서 승리하세요.')
+  :loggedIn&&['pvp','classic'].includes(v.mode)?'스킨 포인트 확인 중…':'';
  panel.classList.remove('hidden');
  document.body.classList.add('result-visible');
 }

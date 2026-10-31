@@ -8,7 +8,7 @@ const KEY='sb_publishable_w5JXAnoVsKky54QgiAPtAg_UyzmZAli';
 const EMAIL_DOMAIN='@accounts.desertfront.invalid';
 const SDK='https://esm.sh/@supabase/supabase-js@2.76.1';
 let clientPromise,member=null,session=null,match=null,saveTimer=null,processing=false,registrationVersion=0;
-let soloRun=null,soloRegistrationVersion=0;
+let soloRun=null,soloRegistrationVersion=0,restorePromise=null,restored=false;
 const $=id=>document.getElementById(id);
 const username=id=>String(id||'').trim().toLowerCase();
 const status=t=>{if($('careerStatus'))$('careerStatus').textContent=t;};
@@ -53,11 +53,16 @@ async function loadMember(user,importGuest=false){
  }
  show();return member;
 }
-async function restore(){
- try{const db=await api(),{data,error}=await db.auth.getSession();if(error)throw error;
-  if(data.session)await loadMember(data.session.user);
-  else {member=null;session=null;global.DesertSkinShop?.setAccount(null,null);global.DesertCareer?.setLadders?.(null);show();}
- }catch(e){status('Supabase 계정 확인 실패: '+(e.message||e));}
+function restore(){
+ if(restorePromise)return restorePromise;
+ restorePromise=(async()=>{
+  try{const db=await api(),{data,error}=await db.auth.getSession();if(error)throw error;
+   if(data.session)await loadMember(data.session.user);
+   else {member=null;session=null;global.DesertSkinShop?.setAccount(null,null);global.DesertCareer?.setLadders?.(null);show();}
+  }catch(e){status('Supabase 계정 확인 실패: '+(e.message||e));}
+  finally{restored=true;}
+ })();
+ return restorePromise;
 }
 async function signup(id,pass,nick){
  const userId=username(id),nickname=String(nick||'').trim();
@@ -147,7 +152,10 @@ async function retrySoloRewards(){
 }
 async function beginSolo(difficulty,display='solo'){
  const version=++soloRegistrationVersion;soloRun=null;rewardStatus(display,'');
- if(!member)return true;
+ // Do not silently treat a persisted, not-yet-restored login as a guest.
+ if(!member&&!restored)await restore();
+ if(version!==soloRegistrationVersion)return false;
+ if(!member){rewardStatus(display,'게스트 경기: 승패 기록만 저장됩니다. 포인트를 받으려면 로그인 후 새로 출격하세요.');return true;}
  const owner=member.user_id;
  try{
   if(!await retrySoloRewards())return false;
@@ -159,9 +167,12 @@ async function beginSolo(difficulty,display='solo'){
   soloRun={id:data.runId,owner,difficulty:data.difficulty,display,finished:false};return true;
  }catch(e){status('AI 대전 보상 등록 실패: '+e.message);return false;}
 }
-async function finishSolo(won){
+async function finishSolo(won,display='solo'){
  const run=soloRun;
- if(!run||member?.user_id!==run.owner){rewardStatus('solo','로그인 계정으로 출격하면 승리 포인트를 받을 수 있습니다.');return;}
+ if(!run||member?.user_id!==run.owner){
+  rewardStatus(run?.display||display,member?'이번 경기의 서버 보상 등록을 확인할 수 없습니다. 다음 경기부터 로그인 상태에서 출격해 주세요.':'게스트 경기는 승패 기록만 저장됩니다. 포인트를 받으려면 로그인 후 새로 출격하세요.');
+  return null;
+ }
  if(run.finished)return;run.finished=true;
  const payload={id:run.id,won:!!won,display:run.display},rows=pendingSolo(run.owner);
  if(!rows.some(r=>r.id===run.id))storePendingSolo(run.owner,[...rows,payload]);
