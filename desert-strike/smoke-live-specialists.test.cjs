@@ -35,16 +35,16 @@ test('solo army roster keeps specialist portraits still while combat retains ani
  assert.ok(art.includes('const poses={idle:[0,1]'),'battle animation strips must remain present');
 });
 
-test('sniper shows a real armor matchup without falsely claiming airborne role-six weakness',()=>{
+test('sniper counters air/ground specials, armor and riflemen with the same live definitions',()=>{
  const {G}=solo(91),{E}=multi(91);
  for(let f=0;f<10;f++){
-  assert.deepEqual(Array.from(G.getDef(9,f).good),[3]);
-  assert.deepEqual(Array.from(E.definition(f,9).good),[3]);
+  assert.deepEqual(Array.from(G.getDef(9,f).good),[6,3,1]);
+  assert.deepEqual(Array.from(E.definition(f,9).good),[6,3,1]);
  }
  const sniper={role:9},armor={role:3,kind:'ground'},groundSpecial={role:6,kind:'ground'},airSpecial={role:6,kind:'air'};
  assert.equal(X.precisionMultiplier(sniper,armor),1.6);
  assert.equal(X.precisionMultiplier(sniper,groundSpecial),1.6);
- assert.equal(X.precisionMultiplier(sniper,airSpecial),1);
+ assert.equal(X.precisionMultiplier(sniper,airSpecial),1.6);
  assert.equal(E.matchupMultiplier(E.definition(0,9),armor,30),1.65);
  assert.equal(X.plannedSpecialist(Array(11).fill(0),7,6),9);
 });

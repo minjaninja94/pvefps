@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=compact-build1"><link rel="stylesheet" href="./blood-iron-skins.css?v=match-rewards-chroma10"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=counter-support3"><link rel="stylesheet" href="./blood-iron-skins.css?v=match-rewards-chroma10"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -34,6 +34,7 @@
      <div class="lobby-rank-overview"><small id="lobbyRankIdentity">게스트 지휘관 · 비공식 기록</small><div id="lobbyRank" class="lobby-rank">브론즈</div><strong id="lobbyRankRP" class="lobby-rp">전체 멀티 순위 확인 중</strong><small id="lobbyRankNote">게스트 기록</small></div>
     </div>
     <div class="lobby-rank-stats"><div><span>랭크 전적</span><strong id="lobbyRankWL">0승 0패</strong></div><div><span>승률</span><strong id="lobbyRankWinrate">0%</strong></div></div>
+    <div class="lobby-points"><span>스킨 포인트</span><strong id="lobbySkinPoints" role="status" aria-live="polite">로그인 필요</strong></div>
     <div class="lobby-level"><b id="lobbyLevel">LV. 1</b><span id="lobbyXP">0 / 170 XP</span></div><div class="lobby-xp-track"><i id="lobbyXPFill"></i></div><p id="lobbyRecord">싱글 0승 0패 · 온라인 0승 0패</p>
     <div class="lobby-recent-head"><strong>최근 전적</strong><button id="careerHistoryOpen" type="button" class="btn outline">전체 40경기 보기</button></div><div id="lobbyRecentMatches" class="lobby-recent-matches">최근 경기 없음</div>
     <section id="lobbyRankLadder" class="lobby-ladder" aria-label="멀티 랭킹 및 모드별 티어"><div class="lobby-ladder-heading"><strong>멀티 모드별 랭킹</strong><small>DB 승수·승률 기준 임시 티어 · 내부 점수 비공개</small></div><nav id="lobbyRankModes" class="lobby-rank-modes" aria-label="랭킹 모드"><button type="button" class="selected" data-rank-mode="all">전체</button><button type="button" data-rank-mode="pvp">3라인 PvP</button><button type="button" data-rank-mode="classic">클래식 1:1</button><button type="button" data-rank-mode="coop">협동</button></nav><div id="lobbyModeRankSummary" class="lobby-mode-ranks">회원 로그인 후 랭킹을 불러옵니다.</div><div id="lobbyLeaderboard" class="lobby-leaderboard">랭킹 확인 중…</div></section>
@@ -284,7 +285,7 @@
 <script src="../firebase-config.js" defer></script>
 <script src="../firebase-network.js?v=externalroom1" defer></script>
 <script src="./moe-unit-art.js?v=ground-special-popup1" defer></script>
-<script src="./expansion/expansion-rules.js?v=sniper-ai-specialists-20261031" defer></script>
+<script src="./expansion/expansion-rules.js?v=counter-support3" defer></script>
 <script src="./expansion/expansion-art.js?v=live2" defer></script>
 <script src="./skin-catalog.js?v=ground-special-popup1" defer></script>
 <script src="./skin-shop.js?v=visible-obsidian1" defer></script>
@@ -297,19 +298,19 @@
 <script src="./augment-rules.js?v=gold-rebalance-20261031" defer></script>
 <script src="./augment-history.js?v=history1" defer></script>
 <script src="./augment-codex.js?v=spec-transcend-20261031" defer></script>
-<script src="./tri-lane-engine.js?v=dynamic-bgm1" defer></script>
+<script src="./tri-lane-engine.js?v=counter-support3" defer></script>
 <script src="./device-account.js?v=externalroom1" defer></script>
 <script src="./tri-lane-network.js?v=appearance-sync2" defer></script>
 <script src="./combat-audio.js?v=nemo80-live-20261031" defer></script>
 <script src="./multiplayer-motion.js?v=smooth1" defer></script>
-<script src="./tri-lane-ui.js?v=compact-build1" defer></script>
+<script src="./tri-lane-ui.js?v=counter-support3" defer></script>
 <script src="./battle-report.js?v=match-rewards-chroma10" defer></script>
-<script src="./game-v2.js?v=dynamic-bgm1" defer></script>
+<script src="./game-v2.js?v=counter-support3" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=dynamic-bgm1" defer></script>
 <script src="./desert-member.js?v=match-rewards-chroma10" defer></script>
 <script src="./career-profile.js?v=rankincome20261030" defer></script>
 <script src="./audio-settings.js?v=nukegear1" defer></script>
-<script src="./front-lobby.js?v=match-rewards-chroma10" defer></script>
+<script src="./front-lobby.js?v=points3-match-rewards-chroma10" defer></script>
 </body></html>

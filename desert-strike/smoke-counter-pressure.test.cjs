@@ -40,7 +40,7 @@ test('solo and authoritative multiplayer use the same escalating advantage and u
   {attack:2,target:3,faction:0,beneficial:true},{attack:4,target:6,faction:5,beneficial:true},
   {attack:0,target:3,faction:0,expected:.7},{attack:0,target:2,faction:0,expected:1},
   {attack:1,target:3,faction:0,expected:.7},{attack:0,target:6,faction:4,expected:.68},
-  {attack:4,target:6,faction:4,expected:.78},{attack:2,target:6,faction:4,ground:true},
+  {attack:4,target:6,faction:4,beneficial:true},{attack:2,target:6,faction:4,ground:true},
   {attack:2,target:6,faction:3,ground:true},{attack:2,target:6,faction:7,ground:true}
  ];
  for(const [wave,advantage] of thresholds){

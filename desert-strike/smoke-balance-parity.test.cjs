@@ -68,7 +68,7 @@ test('all four ground specials receive their documented counters in real solo an
   }
   assert.ok(damage[2]>damage[1]*1.5,'antiarmor counters all ground specials');
   assert.ok(damage[faction===7?5:3]>damage[1]*1.4,'artillery counters mech; armor counters cavalry/van');
-  assert.ok(damage[4]<damage[1],'antiair never receives an aircraft bonus against ground specials');
+  assert.ok(damage[4]>damage[1]*1.4,'antiair counters ground specials while their ground classification stays intact');
   assert.ok(damage[0]<damage[1],'ground specials retain their infantry resistance');
   assert.ok(damage[9]>damage[1]*1.5,'snipers retain ground-special precision damage');
  }

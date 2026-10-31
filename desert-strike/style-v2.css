@@ -903,3 +903,7 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
 @media(max-width:680px){.mp-battle-lane-select{flex-wrap:wrap}.mp-battle-lane-select button{padding:7px 8px;min-width:45px}.mp-tactical-positions{padding:7px}.mp-position-lane header{font-size:10px}#mpAllBattleCanvas{min-height:230px;object-fit:fill}}
 
 #view-multiplayer #mpBuildGrid button.constructing{min-height:83px}
+
+.lobby-points{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0 0}
+.lobby-points>span{font-size:11px;color:#a6c4cf}
+.lobby-points>strong{font-size:17px;font-weight:850;color:#f6cb8d;font-variant-numeric:tabular-nums}

@@ -175,6 +175,8 @@ function render(){
  const account=global.DesertDeviceAccount?.status?.();
  $('lobbyAccountStatus').textContent=global.DesertMember?.account?.()?('회원 · '+global.DesertMember.account().nickname):'게스트 · 이 기기';
  if(account){$('lobbyUserId').value=account.accountId;$('lobbyDeviceId').value=account.deviceId;}
+ const points=global.DesertSkinShop?.snapshot?.();
+ if($('lobbySkinPoints'))$('lobbySkinPoints').textContent=points?.ready?points.points.toLocaleString('ko-KR')+' P':points?.userId?'불러오는 중…':'로그인 필요';
  $('lobbyLevel').textContent='LV. '+l.level;$('lobbyXP').textContent=l.within+' / '+l.needed+' XP';$('lobbyXPFill').style.width=Math.min(100,l.within/l.needed*100)+'%';
  $('lobbyRank').textContent=global.DesertCareer?.tier?.(global.DesertCareer?.rating?.()||1000)||'브론즈';
  $('lobbyRecord').textContent='싱글 '+progress.wins+'승 '+progress.losses+'패 · 온라인 '+progress.mpWins+'승 '+progress.mpLosses+'패';

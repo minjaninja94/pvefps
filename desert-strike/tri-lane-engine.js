@@ -6,7 +6,7 @@
 'use strict';
 // The browser loads the shared module first; legacy headless test fixtures may omit it.
 const LIVE_SPECIALISTS=global.DesertExpansion||{
- definition(role){const sn=role===9;return {cost:sn?380:330,hp:(sn?78:52)*2.25,damage:(sn?300:180)*.94,armor:0,range:sn?370:30,rate:sn?4.8:1.45,speed:(sn?44:96)*.84,airTarget:false,kind:'ground',good:sn?[3]:[5,7,9],bad:sn?[0,1,10]:[0,3,7]};},
+ definition(role){const sn=role===9;return {cost:sn?380:330,hp:(sn?78:52)*2.25,damage:(sn?300:180)*.94,armor:0,range:sn?390:30,rate:sn?4.8:1.45,speed:(sn?44:96)*.84,airTarget:sn,kind:'ground',good:sn?[6,3,1]:[5,7,9],bad:sn?[0,10]:[0,3,7]};},
  precisionMultiplier(){return 1;},canTarget(){return true;},
  presentation(){return {visible:true,opacity:1,label:'',detectionRadius:0,targetable:true};},
  infiltration(){return null;},revealOnAttack(){},RULES:{firstStrikeMultiplier:1.2}
@@ -42,7 +42,7 @@ const OCTOPER_REGEN=.0006,ROBOT_REPAIR=.0015;
 const BEAST_RANGED_DAMAGE_REDUCTION=.06,FAIRY_CHAIN_HEAL_RATIO=.05,FAIRY_HEAL_MULTIPLIER=1.15;
 const INK_DURATION=1.8,INK_COOLDOWN=6;
 const GOODS=[[5,7],[0,7],[3,4],[1,4],[6],[1,4],[0,3],[]];
-const BADS=[[3,1],[3,5],[0,1],[2,6],[3,2],[0,6],[4,1],[]];
+const BADS=[[3,1],[3,5,9],[0,1],[2,6,9],[3,2],[0,6],[4,1,9],[]];
 function unitCost(faction,role){return role===6?({4:285,6:270,7:285}[faction]??COST[role]):COST[role];}
 function definition(faction,role){
  if(role===9||role===10)return LIVE_SPECIALISTS.definition(role,faction);
@@ -63,7 +63,7 @@ function definition(faction,role){
   kind:groundSpecial?'ground':t[7],
   heal:(role===7?36:0)*mut[1]*1.5*(robot?.85:fairy?FAIRY_HEAL_MULTIPLIER:1),
   blast:role===5?(octo?58*1.08:58):0,
-  good:bongo?[0,7]:prowler?[0,5,7]:groundSpecial&&furry?[0,5,7]:groundSpecial&&robot?[0,3]:GOODS[role],bad:bongo||prowler?[2,3]:groundSpecial&&furry?[2,3]:groundSpecial&&robot?[2,5]:BADS[role]
+  good:bongo?[0,7]:prowler?[0,5,7]:groundSpecial&&furry?[0,5,7]:groundSpecial&&robot?[0,3]:GOODS[role],bad:bongo||prowler?[2,3,4,9]:groundSpecial&&furry?[2,3,4,9]:groundSpecial&&robot?[2,5,4,9]:BADS[role]
  };
 }
 // Wave 30+ rewards a correct unit counter instead of making every unit take more damage.
@@ -73,7 +73,8 @@ function matchupMultiplier(attacker,target,wave,attackRole=attacker.role){
   if(attackRole===2)return 1.65*counterAdvantage(wave)/1.55;
   if(attackRole===3&&target.faction!==7)return counterAdvantage(wave);
   if(attackRole===5&&target.faction===7)return counterAdvantage(wave);
-  return attackRole===0?.68:attackRole===4?.78:1;
+  if(attackRole===4)return counterAdvantage(wave);
+  return attackRole===0?.68:1;
  }
  return attacker.good.includes(target.role)?counterAdvantage(wave):attacker.bad.includes(target.role)?.7:1;
 }
@@ -697,7 +698,9 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  function stepUnits(dt){
   // Three production bands feed one continuous world. Units can seek across both old borders.
   const alive=state.units.filter(u=>u.hp>0),byId=new Map(alive.map(u=>[u.id,u]));
-  const grid=new Map(),cell=270;
+  const grid=new Map(),cell=270,claims=new Map();
+  const claim=(a,v)=>combatDef(a,state.players).damage*LIVE_SPECIALISTS.precisionMultiplier(a,{...v,kind:definition(v.faction,v.role).kind});
+  for(const a of alive)if(a.role===9&&a.aimStartedAt!=null){const v=byId.get(a.aimTargetId);if(v)claims.set(v.id,(claims.get(v.id)||0)+claim(a,v));}
   for(const v of alive){
    const k=v.team+','+Math.floor(v.x/cell)+','+Math.floor(v.y/cell);
    if(!grid.has(k))grid.set(k,[]);grid.get(k).push(v);
@@ -738,17 +741,19 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    const valid=v=>v&&v.hp>0&&v.id!==u.id&&(support?
      v.team===u.team&&!v.isHatchling&&v.hp<v.maxHP-10:
      v.team!==u.team&&LIVE_SPECIALISTS.canTarget(u,v,state.units,state.seconds)&&(d.airTarget||definition(v.faction,v.role).kind!=='air')&&(!u.guardian||global.DesertGuardian?.canTarget(u,v,d.range,{multiplayer:true})));
-   const priority=v=>(u.role===4&&definition(v.faction,v.role).kind==='air'?175:0)
+   const priority=v=>(LIVE_SPECIALISTS.targetBonus?.(u,v,d.range,Math.hypot(v.x-u.x,v.y-u.y))||0)
     +(u.role===6&&[4,6].includes(u.faction)&&[5,7].includes(v.role)?80:0)
     +(d.good.includes(v.role)?Math.min(35,d.range*.2):0);
+   if(u.role===9&&u.aimStartedAt!=null){const old=byId.get(u.aimTargetId);if(old)claims.set(old.id,Math.max(0,(claims.get(old.id)||0)-claim(u,old)));}
+   const reserved=v=>u.role===9&&(claims.get(v.id)||0)>=v.hp?10000:0;
    let target=byId.get(u.targetId),best=target?Math.hypot(target.x-u.x,target.y-u.y):Infinity;
    if(!valid(target)||best>(support?SUPPORT_RADIUS:AGGRO_LEASH)){target=null;best=Infinity;}
-   let targetScore=target?best-(support?0:priority(target)):Infinity;
+   let targetScore=target?best-(support?0:priority(target))+reserved(target):Infinity;
    for(const v of nearby(support?u.team:1-u.team,u.x,u.y,r)){
     if(!valid(v))continue;
     const distance=Math.hypot(v.x-u.x,v.y-u.y);
-    const bonus=u.role===9?Math.min(130,unitCost(v.faction,v.role)*.2):0;
-     const score=distance-(support?0:priority(v)+bonus);
+    const bonus=0;
+     const score=distance-(support?0:priority(v)+bonus)+reserved(v);
     if(score+36<targetScore){target=v;best=distance;targetScore=score;}
    }
    const currentLane=clamp(Math.floor(u.y/LANE_H),0,LANES-1);
@@ -766,7 +771,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
       if(u.aimTargetId!==target.id||u.aimStartedAt==null){u.aimTargetId=target.id;u.aimStartedAt=state.seconds;}
       if(state.seconds-u.aimStartedAt>=LIVE_SPECIALISTS.definition(9,u.faction).aim){
        attack(u,target);u.aimStartedAt=null;
-      }else u.act='skill';
+      }else{u.act='skill';claims.set(target.id,(claims.get(target.id)||0)+claim(u,target));}
      }else if(u.cool<=0)attack(u,target);
     }
     else{
@@ -779,15 +784,9 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     if(u.role===9)u.aimStartedAt=null;
     if(support){
      // Healers regroup with any allied front, not just the lane they were built in.
-     let friend=null,dist=Infinity;
-     for(const v of alive)if(v.team===u.team&&v.id!==u.id&&v.role!==7){
-      const dd=Math.hypot(v.x-u.x,v.y-u.y);
-      if(dd<dist){dist=dd;friend=v;}
-     }
-     if(friend&&dist>115){
-      const move=Math.min(moveSpeed*dt,dist-105);
-      u.x+=(friend.x-u.x)/dist*move;u.y+=(friend.y-u.y)/dist*move;u.act='move';
-     }
+     const friend=LIVE_SPECIALISTS.supportRally?.(u,alive,WIDTH)||{x:u.team===0?WIDTH*.25-100:WIDTH*.75+100,y:(currentLane+.5)*LANE_H};
+     const dist=Math.hypot(friend.x-u.x,friend.y-u.y);
+     if(dist>105){const move=Math.min(moveSpeed*dt,dist-105);u.x+=(friend.x-u.x)/dist*move;u.y+=(friend.y-u.y)/dist*move;u.act='move';}else u.act='idle';
     }else if(u.guardian){
      const x=u.guardianHomeX,y=(u.guardianLane+.5)*LANE_H,dist=Math.hypot(x-u.x,y-u.y),move=Math.min(moveSpeed*dt,dist);
      if(dist>1){u.x+=(x-u.x)/dist*move;u.y+=(y-u.y)/dist*move;u.act='move';}else u.act='idle';

@@ -2,7 +2,7 @@
 'use strict';
 // Standalone test harnesses may load this engine without the optional specialist script.
 const LIVE_SPECIALISTS=window.DesertExpansion||{
- CANDIDATES:{9:{key:'sniper',name:'저격',cost:380,hp:78,damage:300,armor:0,range:370,rate:4.8,speed:44,airTarget:false,kind:'ground',good:[3],bad:[0,1,10]},
+ CANDIDATES:{9:{key:'sniper',name:'저격',cost:380,hp:78,damage:300,armor:0,range:390,rate:4.8,speed:44,airTarget:true,kind:'ground',good:[6,3,1],bad:[0,10]},
   10:{key:'assassin',name:'암살',cost:330,hp:52,damage:180,armor:0,range:30,rate:1.45,speed:96,airTarget:false,kind:'ground',good:[5,7,9],bad:[0,3,7]}},
  NAMES:Array.from({length:10},(_,f)=>f===3?['쾌흥태','견쌍섭']:['저격병','암살자']),
  definition(role){const r=this.CANDIDATES[role];return {...r,hp:r.hp*2.25,damage:r.damage*.94,speed:r.speed*.84,heal:0,blast:0};},
@@ -35,12 +35,12 @@ const INK_DURATION=1.8,INK_COOLDOWN=6;
 const MARINE_LOOT_CHANCE=.08,MARINE_RECRUIT_CHANCE=.23,MARINE_RECRUIT_HP=.10,MARINE_RECRUIT_CAP=2,HUANGLONG_INTERVAL=INTERVAL/3;
 const ROLE=[
  {key:'charge',name:'돌격',mark:'⚔',token:'⚔',cost:65,hp:115,damage:21,armor:1,range:29,rate:.77,speed:82,airTarget:false,kind:'ground',tips:'적 포병·지원병 후방을 빠르게 찌릅니다. 장갑 기지 공격력은 낮습니다.',good:[5,7],bad:[3,1]},
- {key:'rifle',name:'사격',mark:'⌖',token:'⌖',cost:100,hp:108,damage:17,armor:1,range:164,rate:.8,speed:60,airTarget:true,kind:'ground',tips:'저렴한 범용 원거리 병력. 공중도 공격합니다.',good:[0,7],bad:[3,5]},
+ {key:'rifle',name:'사격',mark:'⌖',token:'⌖',cost:100,hp:108,damage:17,armor:1,range:164,rate:.8,speed:60,airTarget:true,kind:'ground',tips:'저렴한 범용 원거리 병력. 공중도 공격합니다.',good:[0,7],bad:[3,5,9]},
  {key:'breaker',name:'대장갑',mark:'◆',token:'◆',cost:185,hp:94,damage:47,armor:0,range:208,rate:1.76,speed:49,airTarget:true,kind:'ground',tips:'전차·중장갑을 파괴하지만 근접 압박에 취약합니다.',good:[3,4],bad:[0,1]},
- {key:'armor',name:'장갑',mark:'▣',token:'▣',cost:285,hp:390,damage:32,armor:9,range:120,rate:1.27,speed:35,airTarget:false,kind:'ground',tips:'앞줄에서 버티며 일반 총격을 흡수합니다.',good:[1,4],bad:[2,6]},
- {key:'antiair',name:'대공',mark:'✣',token:'✣',cost:185,hp:175,damage:16,armor:3,range:228,rate:.57,speed:47,airTarget:true,kind:'ground',tips:'비행체를 우선 공격하며 대공 피해량이 높습니다.',good:[6],bad:[3,2]},
+ {key:'armor',name:'장갑',mark:'▣',token:'▣',cost:285,hp:390,damage:32,armor:9,range:120,rate:1.27,speed:35,airTarget:false,kind:'ground',tips:'앞줄에서 버티며 일반 총격을 흡수합니다.',good:[1,4],bad:[2,6,9]},
+ {key:'antiair',name:'대공',mark:'✣',token:'✣',cost:185,hp:175,damage:16,armor:3,range:228,rate:.57,speed:47,airTarget:true,kind:'ground',tips:'비행·지상 특수병종을 우선 공격하고 상성 추가 피해를 줍니다.',good:[6],bad:[3,2]},
  {key:'siege',name:'포격',mark:'✹',token:'✹',cost:360,hp:114,damage:69,armor:0,range:317,rate:2.55,speed:30,airTarget:false,kind:'ground',blast:58,tips:'후열 광역 화력. 근접 침투에는 취약합니다.',good:[1,4],bad:[0,6]},
- {key:'flyer',name:'비행',mark:'◇',token:'◇',cost:300,hp:160,damage:24,armor:1,range:149,rate:.86,speed:92,airTarget:true,kind:'air',tips:'대부분의 지상 공격을 회피합니다. 대공포를 조심하세요.',good:[0,3],bad:[4,1]},
+ {key:'flyer',name:'비행',mark:'◇',token:'◇',cost:300,hp:160,damage:24,armor:1,range:149,rate:.86,speed:92,airTarget:true,kind:'air',tips:'대부분의 지상 공격을 회피합니다. 대공포를 조심하세요.',good:[0,3],bad:[4,1,9]},
  {key:'support',name:'지원',mark:'✚',token:'✚',cost:220,hp:136,damage:0,heal:36,armor:1,range:139,rate:1.24,speed:61,airTarget:false,kind:'ground',tips:'공격하지 않고 부상한 아군만 치료합니다. 공격 상성은 없으며 적 돌격·사격병의 견제에 취약합니다.',good:[],bad:[]}
 ];
 const FACTIONS=[
@@ -56,7 +56,7 @@ const FACTIONS=[
  {id:'fairy',name:'농농 페어리족',tag:'PETAL FAIRIES',logo:'❀',color:'#ffadd4',bonus:'치유 특화 · 지원병 기본 치유량 15% 증가 · 5초마다 주변 다른 아군 1기에 실제 회복량의 5% 추가 치유',mut:{hp:1,dmg:1,speed:1.01},units:['꽃잎 소검사','이슬 마도사','씨앗 관통술사','버섯껍질 방패수','반딧불 대공술사','꽃가루 폭격사','별빛 나비정령','꽃샘 치유사'],slogan:'주변 아군에게 이어지는 연쇄치유',secondary:'#84577c'}
 ];
 ROLE[8]={key:'extractor',name:'자원채취',mark:'⬡',token:'⬡',cost:70,hp:1,damage:0,armor:0,range:0,rate:1,speed:0,kind:'ground',good:[],bad:[]};
-for(const r of [9,10])ROLE[r]={...LIVE_SPECIALISTS.CANDIDATES[r],mark:r===9?'⌖':'†',token:r===9?'⌖':'†',tips:r===9?'장거리 단일 저격 · 장갑병 및 지상 특수병(비행 제외)에 정밀 피해 1.6배 · 장갑 50% 관통 · 근접 호위에 취약':'은신 침투 · 지원병 탐지 범위에서 표적 지정 가능 · 매우 낮은 체력'};
+for(const r of [9,10])ROLE[r]={...LIVE_SPECIALISTS.CANDIDATES[r],mark:r===9?'⌖':'†',token:r===9?'⌖':'†',tips:r===9?'비행·지상 특수 및 장갑에 정밀 피해 1.6배 · 사격병 피해 1.15배 · 장갑 50% 관통 · 긴 재장전, 돌격·암살에 취약':'은신 침투 · 지원병 탐지 범위에서 표적 지정 가능 · 매우 낮은 체력'};
 FACTIONS.forEach((f,i)=>f.units.push('자원채취',...LIVE_SPECIALISTS.NAMES[i]));
 const COMBAT_ROLES=[0,1,2,3,4,5,6,7,9,10];
 const RNAME=ROLE.map(r=>r.name),SPRITES=new Map();
@@ -70,7 +70,7 @@ const BASIC_GUIDES=[
 '원거리 사격. 뒤에서 공격하고 비행 유닛도 공격합니다.',
 '대장갑 무기. 전차와 중장갑을 파괴합니다. 근접병에게 약합니다.',
 '지상 중장갑. 앞에서 피해를 받아 아군을 보호합니다. 대장갑에 약합니다.',
-'대공 사격. 비행 유닛을 우선 공격합니다.',
+'대공 사격. 비행·지상 특수병종을 우선 공격하며 상성 추가 피해를 줍니다.',
 '장거리 광역 포격. 뭉친 지상 적에 강하지만 근접전에 약합니다.',
 '비행 유닛. 적 근접 공격을 피하지만 대공 무기에 약합니다.',
 '지원병. 공격하지 않고 아군을 치료합니다. 공격 상성은 없으며 적 돌격·사격병에 약합니다.'
@@ -106,7 +106,7 @@ function getDef(role,faction){
   range:isBongo?43:isProwler?40:isWolfRider?42:isRobot&&role===6?175:r.range*(rangeBoost?1.10:isRobot&&[1,2,4,5].includes(role)?1.04:1),
   rate:isBongo?1.45:isProwler?.95:isWolfRider?.85:isRobot&&role===6?.8:r.rate,
   airTarget:groundSpecial&&faction!==7?false:r.airTarget,
-  good:isBongo?[0,7]:isProwler?[0,5,7]:groundSpecial&&faction===6?[0,5,7]:groundSpecial&&faction===7?[0,3]:r.good,bad:isBongo||isProwler?[2,3]:groundSpecial&&faction===6?[2,3]:groundSpecial&&faction===7?[2,5]:r.bad,
+  good:isBongo?[0,7]:isProwler?[0,5,7]:groundSpecial&&faction===6?[0,5,7]:groundSpecial&&faction===7?[0,3]:r.good,bad:isBongo||isProwler?[2,3,4,9]:groundSpecial&&faction===6?[2,3,4,9]:groundSpecial&&faction===7?[2,5,4,9]:r.bad,
   tips:unitGuide(faction,role),
   unitType:groundSpecial?'ground-special':r.kind
 };
@@ -973,7 +973,8 @@ function matchupMultiplier(attacker,target,wave,attackRole=attacker.role){
   if(attackRole===2)return 1.65*counterAdvantage(wave)/1.55;
   if(attackRole===3&&target.faction!==7)return counterAdvantage(wave);
   if(attackRole===5&&target.faction===7)return counterAdvantage(wave);
-  return attackRole===0?.68:attackRole===4?.78:1;
+  if(attackRole===4)return counterAdvantage(wave);
+  return attackRole===0?.68:1;
  }
  return attacker.good.includes(target.role)?counterAdvantage(wave):attacker.bad.includes(target.role)?.7:1;
 }
@@ -1181,6 +1182,12 @@ function structureHit(side,amount,part=null){
 function nearestUnit(u,def){
  const targets=state.sortedTeams?.[1-u.side]||state.units.filter(v=>v.side!==u.side).sort((a,b)=>a.x-b.x);
  if(!targets.length)return null;
+ const reservations=new Map();
+ if(u.role===9){
+  const reserve=(target,damage)=>reservations.set(target,(reservations.get(target)||0)+damage*LIVE_SPECIALISTS.precisionMultiplier({role:9},target));
+  for(const a of state.units)if(a.hp>0&&a.side===u.side&&a.role===9&&a.strike?.target&&!a.strike.hit)reserve(a.strike.target,combatDef(a).damage*sideWeaponMultiplier(a.side));
+  for(const p of state.shots)if(p.side===u.side&&p.source===9&&p.target)reserve(p.target,p.damage);
+ }
  let lo=0,hi=targets.length;
  while(lo<hi){const mid=(lo+hi)>>>1;if(targets[mid].x<u.x)lo=mid+1;else hi=mid;}
  let a=lo-1,b=lo,candidate=null,score=Infinity;
@@ -1189,17 +1196,16 @@ function nearestUnit(u,def){
   const dxA=a>=0?Math.abs(targets[a].x-u.x):Infinity;
   const dxB=b<targets.length?Math.abs(targets[b].x-u.x):Infinity;
   const next=Math.min(dxA,dxB);
-  if(candidate&&next>(score+175))break;
+  if(candidate&&next>(score+(u.role===9?560:210)))break;
   const v=dxA<=dxB?targets[a--]:targets[b++];
   if(v.hp<=0||v.side===u.side||!LIVE_SPECIALISTS.canTarget(u,v,state.units,state.elapsed)||(u.guardian&&!window.DesertGuardian?.canTarget(u,v,def.range))||(!def.airTarget&&getDef(v.role,v.faction).kind==='air'))continue;
   const dy=Math.abs(u.y-v.y);
   const d=Math.hypot(next,dy);
-  const bonus=(u.role===4&&getDef(v.role,v.faction).kind==='air'?175:0)
+  const bonus=(LIVE_SPECIALISTS.targetBonus?.(u,v,def.range,d)||0)
    +(u.role===6&&[4,6].includes(u.faction)&&[5,7].includes(v.role)?80:0)
    +(def.good.includes(v.role)?Math.min(35,def.range*.2):0);
-  const precision=u.role===9?Math.min(130,unitCost(v.role,v.faction)*.2):0;
-  const reserved=u.role===9?state.units.reduce((n,a)=>n+(a.side===u.side&&a.role===9&&a.strike?.target===v&&!a.strike.hit?combatDef(a).damage*LIVE_SPECIALISTS.precisionMultiplier(a,{...v,kind:getDef(v.role,v.faction).kind}):0),0):0;
-  if(d-bonus-precision+(reserved>=v.hp?10000:0)<score){score=d-bonus-precision+(reserved>=v.hp?10000:0);candidate=v;}
+  const reserved=reservations.get(v)||0;
+  if(d-bonus+(reserved>=v.hp?10000:0)<score){score=d-bonus+(reserved>=v.hp?10000:0);candidate=v;}
  }
  return candidate;
 }
@@ -1373,9 +1379,8 @@ function tick(dt){
     if(distance(u,mate)>def.range*.72)move(u,mate.x,mate.y,ds);
     else if(u.cooldown<=0)beginStrike(u,mate,null,true);
    }else{
-    const mate2=state.units.find(v=>v.side===u.side&&v.role!==7&&v.hp>0);
-    if(mate2&&distance(u,mate2)>94)move(u,mate2.x,mate2.y,ds);
-    else if(!mate2)move(u,u.side===0?WORLD_W-350:350,260,ds);
+    const rally=LIVE_SPECIALISTS.supportRally?.(u,state.units,WORLD_W)||{x:u.side===0?WORLD_W*.25-100:WORLD_W*.75+100,y:260};
+    if(distance(u,rally)>105)move(u,rally.x,rally.y,ds);
    }
    continue;
   }
@@ -1463,11 +1468,13 @@ function endMatch(win){
  window.DesertBattleReport?.showSolo?.(state);
  setMessage(win?'적군 핵심 기지 파괴 · 승리':'아군 핵심 기지 파괴 · 패배');
 }
+function counterMark(role){return role===6?'🪽♞':ROLE[role]?.mark||'';}
+function counterName(role){return role===6?'비행·지상 특수':ROLE[role]?.name||'';}
 function roleMatchupHtml(role,faction=state?.faction??0){
  if(role===7)return '<span class="tag strong">회복 전용 · 공격 상성 없음</span><span class="tag weak">위협: 돌격 · 사격 · 기병</span>';
  const r=getDef(role,faction);
- return '<span class="tag strong">'+(role===7?'시너지 ':'강점 ')+r.good.map(i=>ROLE[i].mark+ROLE[i].name).join(' · ')+'</span>'+
- '<span class="tag weak">약점 '+r.bad.map(i=>ROLE[i].mark+ROLE[i].name).join(' · ')+'</span>';
+ return '<span class="tag strong">'+(role===7?'시너지 ':'강점 ')+r.good.map(i=>counterMark(i)+counterName(i)).join(' · ')+'</span>'+
+ '<span class="tag weak">약점 '+r.bad.map(i=>counterMark(i)+counterName(i)).join(' · ')+'</span>';
 }
 function constructionBar(slot){
  const mine=state.mineTimings[slot],at=factoryReadyAt(0,slot),now=state.elapsed;
@@ -1585,7 +1592,7 @@ function updateUI(full=false){
    return '<button class="unit-card'+(selectedRole===i?' selected':'')+'" data-role="'+i+'" title="'+getDef(i,state.faction).tips+
     '"><span class="uc-top">'+getDef(i,state.faction).mark+' '+getDef(i,state.faction).name+' <span>0'+(i+1)+'</span></span><span class="uc-sprite">'+icon+
     '</span><span class="uc-name">'+f.units[i]+'</span><span class="uc-role">'+getDef(i,state.faction).name+' · '+(getDef(i,state.faction).kind==='air'?'공중':'지상')+'</span>'+
-    '<span class="uc-cost">'+unitCost(i,state.faction)+' CR</span><span class="good-counter">'+(i===7?'✚ 회복 전용':'강점: '+getDef(i,state.faction).good.map(x=>ROLE[x].mark).join(' '))+'</span><span class="bad-counter">'+(i===7?'위협: ⚔ ⌖':'약점: '+getDef(i,state.faction).bad.map(x=>ROLE[x].mark).join(' '))+'</span></button>';
+    '<span class="uc-cost">'+unitCost(i,state.faction)+' CR</span><span class="good-counter">'+(i===7?'✚ 회복 전용':'강점: '+getDef(i,state.faction).good.map(counterMark).join(' '))+'</span><span class="bad-counter">'+(i===7?'위협: ⚔ ⌖':'약점: '+getDef(i,state.faction).bad.map(counterMark).join(' '))+'</span></button>';
   }).join('')+'<button class="unit-card resource-card'+(selectedRole===EXTRACTOR?' selected':'')+'" data-role="8" title="'+ecoTooltip(state.eco,state.elapsed)+'" '+(state.eco>=7||ecoRemaining()>0?'disabled':'')+'><span class="uc-top">자원채취 · '+state.eco+'/7</span><span class="uc-sprite"><img class="pixel-preview" src="./assets/resource-extractor.webp" alt=""></span><span class="uc-name">자원채취 건물</span><span class="uc-role">'+(state.eco>=7?'수입 +'+showIncome(state.eco):'완료 후 +'+showIncome(state.eco+1))+' / 0.5초</span><span class="uc-cost">'+(state.eco>=7?'최대 단계':ecoCost()+' CR')+'</span><span class="bad-counter">'+(state.eco>=7?'7 / 7':'건설 '+ecoBuildSeconds(state.eco+1)+'초 · 안정화 '+ecoStabilize(state.eco+1,state.elapsed)+'초')+'</span></button>';
 
   $('demolishButton').classList.toggle('selected',demolition);
@@ -1620,8 +1627,8 @@ function initFactions(){
   if(portrait)c.getContext('2d')?.drawImage(portrait,0,0,72,72);
  });
  $('counterMatrix').innerHTML=COMBAT_ROLES.map(i=>{const r=ROLE[i];return '<div class="matrix-item"><b>'+r.mark+' '+r.name+'</b>'+
- '<div class="good">'+(i===7?'회복 전용 · 공격 상성 없음':'강점: '+r.good.map(x=>ROLE[x].mark+ROLE[x].name).join(' / '))+'</div>'+
- '<div class="bad">'+(i===7?'위협: 돌격 · 사격 · 돌격기병':'약점: '+r.bad.map(x=>ROLE[x].mark+ROLE[x].name).join(' / '))+'</div></div>';}).join('');
+ '<div class="good">'+(i===7?'회복 전용 · 공격 상성 없음':'강점: '+r.good.map(x=>counterMark(x)+counterName(x)).join(' / '))+'</div>'+
+ '<div class="bad">'+(i===7?'위협: 돌격 · 사격 · 돌격기병':'약점: '+r.bad.map(x=>counterMark(x)+counterName(x)).join(' / '))+'</div></div>';}).join('');
 }
 function px(ctx,x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h);}
 function buildSprite(faction,role,phase){
@@ -2181,7 +2188,7 @@ function wire(){
    $('pauseButton').textContent=state.paused?'▶ 계속하기':'Ⅱ 일시정지';updateUI(true);}}
  });
 }
-window.DesertRoster=Object.freeze({OPENING_PREP_SECONDS,WAVE_INTERVAL:INTERVAL,FACTORY_BUILD_SECONDS,FACTIONS,ROLE,getDef,refreshChoices:initFactions,cost:unitCost});
+window.DesertRoster=Object.freeze({OPENING_PREP_SECONDS,WAVE_INTERVAL:INTERVAL,FACTORY_BUILD_SECONDS,FACTIONS,ROLE,getDef,counterMark,counterName,refreshChoices:initFactions,cost:unitCost});
 for(const readyEvent of ['desert-moe-ready','desert-real-sprites-ready'])window.addEventListener?.(readyEvent,()=>{if(state){state.lastCards=undefined;updateUI(true);}});initFactions();wire();reset();
 if(typeof window.addEventListener==='function')window.addEventListener('marine-art-ready',()=>updateUI(true));
 if(typeof window.addEventListener==='function')window.addEventListener('isometric-art-ready',()=>updateUI(true));

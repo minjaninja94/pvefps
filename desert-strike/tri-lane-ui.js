@@ -15,6 +15,8 @@ function roleBadge(g,u,x,y,small=false){
  g.strokeStyle=teamInk(u.team);g.lineWidth=1;g.strokeRect(x-w/2+.5,y-h/2+.5,w-1,h-1);
  g.fillStyle=isAlly(u.team)?'#c4efff':'#ffd2ca';g.font='900 '+(small?10:13)+'px monospace';g.fillText(mark,x,y+(small?3:4));g.restore();
 }
+const counterMark=r=>global.DesertRoster?.counterMark?.(r)||(r===6?'🪽♞':ICONS[r]||E.NAMES[r]);
+const counterName=r=>global.DesertRoster?.counterName?.(r)||(r===6?'비행·지상 특수':E.NAMES[r]);
 const LANES=['상단','중앙','하단'],ICONS=['⚔','⌖','◆','▣','✣','✹','♞','✚','⬡','⌖','†'];
 function message(msg){$('mpStatus').textContent=msg;}
 function laneCount(){return snap?.lanes??3;}
@@ -216,8 +218,8 @@ function renderCounterGuide(fac){
   item.className='mp-counter-item';
   const heading=document.createElement('strong'),good=document.createElement('span'),bad=document.createElement('span');
   heading.textContent=(ICONS[i]||'')+' '+(global.DesertRoster?.FACTIONS?.[fac]?.units?.[i]||E.NAMES[i]);
-  good.textContent=i===7?'회복 전용 · 공격 상성 없음':'강점: '+(d?.good||[]).map(r=>E.NAMES[r]).join(' · ');
-  bad.textContent=i===7?'위협: 돌격 · 사격 · 기병':'약점: '+(d?.bad||[]).map(r=>E.NAMES[r]).join(' · ');
+  good.textContent=i===7?'회복 전용 · 공격 상성 없음':'강점: '+(d?.good||[]).map(counterName).join(' · ');
+  bad.textContent=i===7?'위협: 돌격 · 사격 · 기병':'약점: '+(d?.bad||[]).map(counterName).join(' · ');
   good.className='mp-counter-good';bad.className='mp-counter-bad';
   item.append(heading,good,bad);fragment.append(item);
  }
@@ -232,23 +234,23 @@ function unitCards(){
   const cv=document.createElement('canvas');cv.width=cv.height=72;unitIcon(cv,fac,i);
   const name=document.createElement('strong');name.textContent=i===8?'자원채취 건물':global.DesertRoster?.FACTIONS[fac]?.units[i]||E.NAMES[i];
   const cost=document.createElement('small');cost.textContent=(i===8&&(me?.eco||0)>=7?'최대 단계':(i===8?E.ecoPrice(me?.eco||0):(E.unitCost?.(fac,i)??E.COST[i]))+' CR')+' · '+(i===8?'슬롯 1칸':d?.kind==='air'?'비행':'지상');
-  const advantage=i===8?[]:(d?.good||[]).map(r=>E.NAMES[r]);
-   const vulnerable=i===8?[]:(d?.bad||[]).map(r=>E.NAMES[r]);
+  const advantage=i===8?[]:(d?.good||[]).map(counterName);
+   const vulnerable=i===8?[]:(d?.bad||[]).map(counterName);
    b.title=i===8?ecoTooltip(me?.eco||0,snap?.seconds||0):
     [d?.tips||'',i===7?'회복 전용 · 공격 상성 없음':'강점 '+advantage.join(' · '),i===7?'위협: 돌격 · 사격 · 기병':'약점 '+vulnerable.join(' · ')].filter(Boolean).join('\n');
   if(i===8)b.disabled=(me?.eco||0)>=7||(me?.ecoReadyAt||0)>(snap?.seconds||0);
   b.append(cv,name,cost);
    if(d){const good=document.createElement('span'),bad=document.createElement('span');
-    good.className='mp-good-counter';good.textContent=i===7?'✚ 회복 전용':'강점 '+(d.good||[]).map(r=>ICONS[r]||E.NAMES[r]).join(' ');
-    bad.className='mp-bad-counter';bad.textContent=i===7?'위협 ⚔ ⌖':'약점 '+(d.bad||[]).map(r=>ICONS[r]||E.NAMES[r]).join(' ');
+    good.className='mp-good-counter';good.textContent=i===7?'✚ 회복 전용':'강점 '+(d.good||[]).map(counterMark).join(' ');
+    bad.className='mp-bad-counter';bad.textContent=i===7?'위협 ⚔ ⌖':'약점 '+(d.bad||[]).map(counterMark).join(' ');
     b.append(good,bad);
    }
    out.append(b);
  }
  const d=role===8?null:global.DesertRoster?.getDef(role,fac);
  $('mpUnitDetails').textContent=role===8?ecoTooltip(me?.eco||0,snap?.seconds||0):
-  d?[d.tips||'',(role===7?'시너지: ':'강점: ')+(d.good||[]).map(r=>E.NAMES[r]).join(' · '),
-   '약점: '+(d.bad||[]).map(r=>E.NAMES[r]).join(' · ')].filter(Boolean).join('  /  '):'유닛을 선택하세요.';
+  d?[d.tips||'',(role===7?'시너지: ':'강점: ')+(d.good||[]).map(counterName).join(' · '),
+   '약점: '+(d.bad||[]).map(counterName).join(' · ')].filter(Boolean).join('  /  '):'유닛을 선택하세요.';
  }
  $('mpUnitCards').querySelectorAll('[data-role]').forEach(b=>b.classList.toggle('unaffordable',!!me&&me.cash<(Number(b.dataset.role)===8?E.ecoPrice(me.eco):(E.unitCost?.(me.faction,Number(b.dataset.role))??E.COST[Number(b.dataset.role)]))));
 }
