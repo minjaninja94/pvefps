@@ -11,6 +11,11 @@ on:
       - "desert-strike/style-v2.css"
       - "desert-strike/smoke-discord-auth.test.cjs"
       - "desert-strike/smoke-guest-multiplayer.test.cjs"
+      - "desert-strike/smoke-ranked-guest-mix.test.cjs"
+      - "desert-strike/sql/desert_mixed_pvp_member_rewards.sql"
+      - "desert-strike/battle-report.js"
+      - "desert-strike/front-lobby.js"
+      - "desert-strike/tri-lane-ui.js"
       - "desert-strike/sql/desert_discord_member_v1.sql"
       - "desert-strike/smoke-supabase-room-adapter.test.cjs"
       - "desert-strike/smoke-trilane-network.test.cjs"
@@ -37,6 +42,11 @@ jobs:
           node --check desert-strike/desert-member.js
           node --check desert-strike/career-profile.js
           node --check desert-strike/tri-lane-network.js
+          node --check desert-strike/tri-lane-ui.js
+          node --check desert-strike/battle-report.js
+          node --check desert-strike/front-lobby.js
+      - name: Member-ranked PvP versus anonymous guests and guest login UI
+        run: node desert-strike/smoke-ranked-guest-mix.test.cjs
       - name: Anonymous guest online multiplayer (no Discord)
         run: node desert-strike/smoke-guest-multiplayer.test.cjs
       - name: Discord OAuth login and linked account regression
