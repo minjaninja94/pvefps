@@ -48,7 +48,10 @@ function renderRuleset(){
   b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));
   b.disabled=roomActive;
  }
- const reward=$('lobbyRewardGuide');if(reward)reward.textContent=(global.DesertMember?.account?.()?'회원 ':'로그인 필요 · ')+'AI 승리 +'+(SHOP?.REWARDS.solo[progress.aiDifficulty]||100)+'P · 온라인 대전 승리 +500P / 패배 +200P';
+ const reward=$('lobbyRewardGuide');
+ if(reward)reward.textContent=global.DesertMember?.isMember?.()
+  ?'회원 공식 보상 · AI 승리 +'+(SHOP?.REWARDS.solo[progress.aiDifficulty]||100)+'P · PvP 승리 +500P / 패배 +200P · 게스트 상대도 정상 정산'
+  :'게스트는 PvP 가능 · 공식 승패·랭킹·스킨 P 미적립 · 로그인하면 다음 경기부터 기록과 보상을 받습니다';
  const description=$('lobbyRulesetDescription');
  if(description)description.textContent=selected
   ?'1·10·20·30·40·50·60·70웨이브에 '+(selectedRuleset==='prism'?'프리즘 증강만 선택합니다.':'증강을 선택합니다.')
