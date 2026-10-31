@@ -111,13 +111,13 @@ function render(){
 }
 function setMode(mode){
  const panel=$('careerPanel');if(!panel)return;
- mode=global.DesertMember?.isMember?.()?'member':mode==='signup'?'signup':'login';
+ mode=panel.dataset.discordSetup==='true'?'discord':global.DesertMember?.isMember?.()?'member':mode==='signup'?'signup':'login';
  panel.dataset.authMode=mode;
  $('careerTabLogin')?.setAttribute('aria-pressed',String(mode==='login'));
  $('careerTabSignup')?.setAttribute('aria-pressed',String(mode==='signup'));
  $('careerTabLogin')?.classList.toggle('active',mode==='login');
  $('careerTabSignup')?.classList.toggle('active',mode==='signup');
- const title=$('careerDialogTitle');if(title)title.textContent=mode==='member'?'회원 정보 · 전적':mode==='signup'?'지휘관 회원가입':'지휘관 로그인';
+ const title=$('careerDialogTitle');if(title)title.textContent=mode==='discord'?'Discord 지휘관 등록':mode==='member'?'회원 정보 · 전적':mode==='signup'?'지휘관 회원가입':'지휘관 로그인';
  const password=$('careerPassword');
  if(password)password.autocomplete=mode==='signup'?'new-password':'current-password';
 }
