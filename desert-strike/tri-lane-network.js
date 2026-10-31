@@ -52,7 +52,7 @@ const path=()=>fs.doc(db,'desertRooms',roomId);
 const publicPath=code=>fs.doc(db,'desertPublicRooms',code||roomId);
 const signalPath=guest=>fs.doc(db,'desertRooms',roomId,'signals',guest);
 async function identity(){
- if(!global.DesertSupabaseRooms)throw Error('Firebase 네트워크 모듈이 아직 준비되지 않았습니다.');
+ if(!global.DesertSupabaseRooms)throw Error('Supabase 온라인 연결 모듈이 아직 준비되지 않았습니다.');
  scope=await (global.DesertDeviceAccount?global.DesertDeviceAccount.identity():global.DesertSupabaseRooms.identity());
  db=scope.db;fs=scope.fs;uid=scope.uid;return scope;
 }
@@ -127,8 +127,8 @@ function trackServerRegistration(id,details,action){
   if(roomId===id)status('방 '+id+' '+action+' 완료 · 비공식 경기 (서버 전적 서비스 없음)');
   return;
  }
- // Firestore is the multiplayer lobby. A delayed/disabled Supabase guest
- // session must never block players from creating or joining that lobby.
+ // Guest and member sessions both use Supabase Auth; server-side rankings
+ // are only finalized when every participant has a registered member profile.
  serverRegistration=Promise.resolve().then(()=>register(details)).then(result=>{
   if(roomId!==id)return;
   status('방 '+id+' '+action+' 완료 · '+(result?.ok
@@ -317,8 +317,8 @@ async function start(){
   if(registered?.ok||!String(registered?.reason||'').includes('참가자가 서버에 모두 등록되지 않았습니다'))break;
   await new Promise(resolve=>setTimeout(resolve,650));
  }
- if(!registered?.ok)status('경고: 이번 경기는 서버에 등록되지 않아 공식 승패·등급을 반영할 수 없습니다. '+(registered?.reason||''));
- else status('이번 경기 승패는 서버에서 자동으로 기록됩니다.');
+ if(!registered?.ok)status('비공식 경기 · 서버 기록 시스템 연결 실패: '+(registered?.reason||''));
+ else status('서버 경기 상태 연결 완료 · 공식 랭킹/보상은 모든 참가자가 회원인 경우에만 반영됩니다.');
  await fs.updateDoc(path(),{status:'playing'});
  global.DesertMember?.markPlaying?.(roomId);beginServerHeartbeat();
  if(room.publicRoom)try{await fs.deleteDoc(publicPath());}catch(_){}
@@ -328,7 +328,7 @@ async function start(){
   if(!engine||engine.state.ended)return broadcast();
   engine.tick(dt);broadcast();
  },50);
- broadcast(true);active=true;status(registered?.ok?'랭크 경기 시작 · 서버 승패 집계 활성':'비공식 경기 시작 · 서버 점수 제외: '+(registered?.reason||'참가 등록 실패'));
+ broadcast(true);active=true;status(registered?.ok?'멀티플레이 시작 · 게스트 동반 경기는 공식 점수·보상 제외':'비공식 멀티플레이 시작 · 서버 점수 제외: '+(registered?.reason||'참가 등록 실패'));
 }
 function sendOrder(order){
  if(!roomId||room?.status!=='playing')return {ok:false,reason:'경기가 시작되지 않았습니다.'};
