@@ -9,6 +9,8 @@ on:
       - "desert-strike/smoke-supabase-room-adapter.test.cjs"
       - "desert-strike/smoke-trilane-network.test.cjs"
       - "desert-strike/smoke-device-account.test.cjs"
+      - "desert-strike/smoke-external-rooms.test.cjs"
+      - "desert-strike/smoke-public-room.test.cjs"
       - ".github/workflows/desert-supabase-rooms.yml"
   pull_request:
     paths:
