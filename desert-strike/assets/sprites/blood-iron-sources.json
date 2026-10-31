@@ -1,0 +1,42 @@
+{
+  "name": "혈철 집행군",
+  "faction": 0,
+  "id": "blood-iron",
+  "version": "2026-10-31",
+  "source": "Generated 10 role-specific 4×2 transparent pose sheets",
+  "status": "Image WebP files must be supplied before deployment; code falls back to existing art when absent",
+  "position_to_pose": [
+    "idle",
+    "ready",
+    "move-1",
+    "move-2",
+    "attack-windup",
+    "attack-impact",
+    "skill",
+    "death"
+  ],
+  "roles": [
+    "assault",
+    "rifle",
+    "antiarmor",
+    "heavy",
+    "antiair",
+    "siege",
+    "flyer",
+    "support",
+    "sniper",
+    "assassin"
+  ],
+  "source_sha256": [
+    "f00316948d2391a8eeae40706022e8c424a726cae24d8c952415e8e2eb587360",
+    "c8a39b6e33c1341567a373584c912bcaf2f598a06452980ae87e79315936624c",
+    "cea9a4363b83e3f7f720d7530a2b4cbd2b0e1dcc24e569eb6be4012e8e36c5c4",
+    "f083031f29650e4085da3b66c4cfb46981847c7fea1f3e0acc00c99571930057",
+    "1b886c6bcbd0b69791090e0db48fe3e40ccf833919e9f5bd367e4ca836c1a1de",
+    "695dae91487f99197a74effa2f972976f7f9e829578407d88edda315056b0dd7",
+    "f369b6c78dc9545792ea33d93b648c81a9c5b035fdb01d57317b249dd48cb6e8",
+    "4ef22a98acd2cf6e1f0801da890147890c35b15f2d314c504d1902886150b462",
+    "08433224e61f73f0f42a427039be555cb4ac0d18fbd480747672b731b98ea807",
+    "e69353930af36b3b5ad860a07dd2999032e75e4a57a80afa81c514f41691fb63"
+  ]
+}

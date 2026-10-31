@@ -9,13 +9,14 @@ const byId=Object.fromEntries(ACTIONS.map(a=>[a.id,a])),BASE={hit:'attack',skill
 function frameAt(action,seconds){return Math.floor(Math.max(0,seconds)*(byId[action]||byId.idle).fps)%16;}
 function draw(ctx,{faction=0,role=0,action='idle',frame=0,x=0,y=0,size=72,filter='none',skin='default',isHatchling=false}={}){
  if(!ctx)return false;
- if((role===9||role===10)&&global.DesertExpansionArt)return global.DesertExpansionArt.draw(ctx,{faction,role,action,frame,x,y,size,filter,skin:skin==='moe'?'moe':'base'});
+ const bloodIron=skin==='blood-iron'&&faction===0&&!isHatchling?global.DesertBloodIronArt?.frame?.(role,action,frame):null;
+ if(!bloodIron&&(role===9||role===10)&&global.DesertExpansionArt)return global.DesertExpansionArt.draw(ctx,{faction,role,action,frame,x,y,size,filter,skin:skin==='moe'?'moe':'base'});
  if(!global.IsoWorld)return false;
  if(!byId[action])action='idle';
  const t=((Math.floor(frame)%16)+16)%16/15;
- const source=isHatchling?global.IsoWorld.broodlingFrame?.(BASE[action]||action,Math.floor(t*15)):
+ const source=bloodIron||(isHatchling?global.IsoWorld.broodlingFrame?.(BASE[action]||action,Math.floor(t*15)):
   skin==='moe'&&global.DesertMoeArt?global.DesertMoeArt.frame(faction,role,BASE[action]||action,Math.floor(t*15)):
-  global.IsoWorld.frame(faction,role,BASE[action]||action,Math.floor(t*15));
+  global.IsoWorld.frame(faction,role,BASE[action]||action,Math.floor(t*15)));
  if(!source)return false;
  const hue=['#9be7fa','#bdda9c','#bfb1fb','#f5ab8a','#ffd0d6','#bdfae9','#e9cda9','#82e8fa','#c49cfa','#fad2d6'][faction]||'#f4e8cc';
  ctx.save();ctx.translate(x+size/2,y+size/2);

@@ -5,11 +5,12 @@ const SKINS=[
  {id:'moe',name:'모에화 빔',level:1,desc:'SD 외형',filter:'none',tone:'#f4afd5'},
  {id:'twilight',name:'황혼 작전',level:3,desc:'자줏빛 야전 도색',filter:'hue-rotate(55deg) saturate(1.3)',tone:'#ba91f2'},
  {id:'aurora',name:'오로라 특무',level:6,desc:'청록 발광형 전투복',filter:'hue-rotate(145deg) saturate(1.15)',tone:'#8bdff6'},
- {id:'gold',name:'황금 근위',level:10,desc:'레벨 10 해금',filter:'sepia(.62) saturate(1.35) contrast(1.05)',tone:'#e9c47f'}
+ {id:'gold',name:'황금 근위',level:10,desc:'레벨 10 해금',filter:'sepia(.62) saturate(1.35) contrast(1.05)',tone:'#e9c47f'},
+ {id:'blood-iron',name:'혈철 집행군',faction:0,level:12,desc:'검붉은 기계 처형기사 · 병종별 8포즈',filter:'none',tone:'#df4b50'}
 ];
 const KEY='desert-front-training-v2',empty=()=>({xp:0,wins:0,losses:0,mpWins:0,mpLosses:0,selectedFaction:0,selectedSkin:'default',aiDifficulty:'normal',nickname:'지휘관'});
 let progress=empty(),uid=null,active=false,lastMultiplayer='',authBusy=false;
-let selectedUnit=0,selectedAction='idle',animationStart=0,animationTick=0,onlineOpen=false;
+let selectedUnit=0,selectedAction='idle',animationStart=0,animationTick=0,onlineOpen=false,previewSkinId='',previewRole=0,previewAction='idle';
 const RULESET_KEY='desert-front-ruleset-v1';
 const RULESETS=['standard','augment','prism'];
 const AI_LEVELS=['easy','normal','hard','veryhard','impossible'];
@@ -31,7 +32,8 @@ function save(){try{localStorage.setItem(storageKey(),JSON.stringify(progress));
  global.DesertMember?.saveProgress?.(progress);}
 function levelFromXP(xp){let level=1,left=xp;while(level<100&&left>=100+level*70){left-=100+level*70;level++;}return {level,within:left,needed:100+level*70};}
 function rank(){const score=progress.mpWins*3+progress.wins*.5;return score>=100?'플래티넘 연습생':score>=55?'골드 연습생':score>=24?'실버 연습생':score>=7?'브론즈 연습생':'훈련병';}
-function currentSkin(){const lv=levelFromXP(progress.xp).level;return SKINS.find(x=>x.id===progress.selectedSkin&&lv>=x.level)||SKINS[0];}
+function skinForFaction(s,f){return s.faction===undefined||s.faction===f;}
+function currentSkin(){const lv=levelFromXP(progress.xp).level;return SKINS.find(x=>x.id===progress.selectedSkin&&lv>=x.level&&skinForFaction(x,progress.selectedFaction))||SKINS[0];}
 function renderRuleset(){
  const selected=selectedRuleset!=='standard',label=selectedRuleset==='prism'?'프리즘 모드':'증강전';
  const roomActive=!!global.DesertTriNetwork?.current?.()?.roomId;
@@ -102,6 +104,11 @@ function drawUnitAnimations(ts){
   ctx.clearRect(0,0,72,72);
   m.draw(ctx,{faction:f,role:r,action:r===selectedUnit?selectedAction:'move',frame:m.frameAt(r===selectedUnit?selectedAction:'move',elapsed),size:72,filter,skin});
  });
+ if(previewSkinId&&!$('skinPreviewLayer')?.hidden){
+  const previewFilter=filterForSkin(previewSkinId),previewSkin=previewSkinId;
+  $('skinPreviewUnits')?.querySelectorAll('canvas[data-preview-role]').forEach(c=>{const rr=Number(c.dataset.previewRole),cc=c.getContext('2d');if(!cc)return;cc.clearRect(0,0,72,72);m.draw(cc,{faction:f,role:rr,action:'move',frame:m.frameAt('move',elapsed),size:72,filter:previewFilter,skin:previewSkin});});
+  const big=$('skinPreviewCanvas'),cc=big?.getContext('2d');if(cc){cc.clearRect(0,0,192,192);m.draw(cc,{faction:f,role:previewRole,action:previewAction,frame:m.frameAt(previewAction,elapsed),size:188,x:2,y:2,filter:previewFilter,skin:previewSkin});}
+ }
  const large=$('lobbyUnitPreview'),ctx=large?.getContext('2d');
  if(ctx){ctx.clearRect(0,0,192,192);m.draw(ctx,{faction:f,role:selectedUnit,action:selectedAction,frame:m.frameAt(selectedAction,elapsed),size:178,x:7,y:7,filter,skin});}
  // Headquarters canvas is a static cover, not the animated unit preview.
@@ -118,6 +125,32 @@ function chooseAction(action){
 function renderCovers(){const art=global.DesertCommanderCovers;if(!art)return;const skin=currentSkin().id;
  $('lobbyFactions')?.querySelectorAll('canvas[data-cover]')?.forEach(c=>art.draw(c,Number(c.dataset.cover),skin));
  art.draw($('lobbyHero'),progress.selectedFaction,skin);
+}
+
+function closeSkinPreview(){previewSkinId='';const layer=$('skinPreviewLayer');if(layer)layer.hidden=true;}
+function openSkinPreview(id){
+ const sk=SKINS.find(x=>x.id===id&&skinForFaction(x,progress.selectedFaction));if(!sk)return;
+ const layer=$('skinPreviewLayer');if(!layer)return;
+ previewSkinId=id;previewRole=0;previewAction='idle';layer.hidden=false;
+ $('skinPreviewTitle').textContent=sk.name+' · '+FACTIONS[progress.selectedFaction].name;
+ $('skinPreviewUnlock').textContent=levelFromXP(progress.xp).level<sk.level?'잠김 · LV.'+sk.level+' 해금':'선택 가능';
+ $('skinPreviewStatus').textContent=id==='blood-iron'?'혈철 집행군 10병종 · 8포즈 · '+(global.DesertBloodIronArt?.loadedCount?.()||0)+'/10 이미지 로딩됨':'유닛별 애니메이션 미리보기';
+ const fac=FACTIONS[progress.selectedFaction];
+ $('skinPreviewUnits').innerHTML=[0,1,2,3,4,5,6,7,9,10].map((r,i)=>'<button type="button" class="skin-preview-role'+(i===0?' selected':'')+'" data-preview-select="'+r+'"><canvas width="72" height="72" data-preview-role="'+r+'"></canvas><small>'+(fac.units[r]||global.DesertRoster?.getDef?.(r,progress.selectedFaction)?.name||['돌격','사격','대장갑','장갑','대공','공성','특수','지원','저격','암살'][i])+'</small></button>').join('');
+ $('skinPreviewActions').innerHTML=(global.DesertUnitMotion?.ACTIONS||[]).map(a=>'<button type="button" data-preview-action="'+a.id+'"'+(a.id===previewAction?' class="selected"':'')+'>'+a.label+'</button>').join('');
+ if(id==='blood-iron')global.DesertBloodIronArt?.preload?.();
+}
+function mountSkinPreview(){
+ if($('skinPreviewLayer'))return;
+ const layer=document.createElement('div');layer.id='skinPreviewLayer';layer.className='skin-preview-layer';layer.hidden=true;
+ layer.innerHTML='<section class="skin-preview-panel" role="dialog" aria-modal="true" aria-labelledby="skinPreviewTitle" tabindex="-1"><header><div><h2 id="skinPreviewTitle">스킨 미리보기</h2><small id="skinPreviewUnlock"></small></div><button type="button" id="skinPreviewClose">✕ 닫기</button></header><p id="skinPreviewStatus" role="status"></p><div class="skin-preview-body"><div id="skinPreviewUnits" class="skin-preview-roles"></div><div class="skin-preview-detail"><canvas id="skinPreviewCanvas" width="192" height="192"></canvas><div id="skinPreviewActions" class="skin-preview-actions"></div></div></div></section>';
+ $('frontLobby').appendChild(layer);
+ layer.addEventListener('click',e=>{if(e.target===layer||e.target.closest('#skinPreviewClose'))closeSkinPreview();
+  const role=e.target.closest('[data-preview-select]');if(role){previewRole=Number(role.dataset.previewSelect);layer.querySelectorAll('[data-preview-select]').forEach(b=>b.classList.toggle('selected',b===role));}
+  const action=e.target.closest('[data-preview-action]');if(action){previewAction=action.dataset.previewAction;layer.querySelectorAll('[data-preview-action]').forEach(b=>b.classList.toggle('selected',b===action));}
+ });
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&previewSkinId){closeSkinPreview();}});
+ global.addEventListener?.('desert-blood-iron-ready',()=>{if(previewSkinId==='blood-iron')$('skinPreviewStatus').textContent='혈철 집행군 10병종 · 8포즈 · '+(global.DesertBloodIronArt?.loadedCount?.()||0)+'/10 이미지 로딩됨';});
 }
 function chooseDifficulty(value){if(!AI_LEVELS.includes(value))return;progress.aiDifficulty=value;save();render();}
 function render(){
@@ -137,19 +170,19 @@ function render(){
  $('lobbyFactionName').textContent=fac.name;$('lobbyFactionTrait').textContent=fac.bonus;
 
  $('lobbyFactions').innerHTML=FACTIONS.map((f,i)=>'<button class="lobby-faction'+(i===progress.selectedFaction?' selected':'')+'" data-faction="'+i+'" style="--fac:'+f.color+'"><span class="lobby-icon">'+f.logo+'</span><canvas width="160" height="114" data-cover="'+i+'" aria-label="'+f.name+' 사령부와 대표 병력"></canvas><strong>'+f.name+'</strong><small>'+f.tag+'</small></button>').join('');
- $('lobbySkins').innerHTML=SKINS.map(x=>'<button class="lobby-skin'+(s.id===x.id?' selected':'')+'" data-skin="'+x.id+'" style="--skin:'+x.tone+'" '+(l.level<x.level?'disabled':'')+'><span class="skin-swatch">✦</span><strong>'+x.name+'</strong><small>'+(l.level<x.level?'LV.'+x.level+' 해금':x.desc)+'</small></button>').join('');
+ $('lobbySkins').innerHTML=SKINS.filter(x=>skinForFaction(x,progress.selectedFaction)).map(x=>'<div class="lobby-skin-item" style="--skin:'+x.tone+'"><button type="button" class="lobby-skin'+(s.id===x.id?' selected':'')+'" data-skin="'+x.id+'" '+(l.level<x.level?'disabled':'')+'><span class="skin-swatch">✦</span><strong>'+x.name+'</strong><small>'+(l.level<x.level?'LV.'+x.level+' 해금':x.desc)+'</small></button><button type="button" class="lobby-skin-preview-open" data-preview-skin="'+x.id+'">스킨 확인해보기</button></div>').join('');
  $('lobbySkinMessage').textContent=s.name+' 선택 · 게임 능력치는 변경되지 않습니다.';
  renderUnitGallery();
  renderCovers();
  $('mpFaction').value=String(progress.selectedFaction);$('mpName').value=progress.nickname;
 }
 function show(){global.DesertCommandHud?.closeUpgrades?.();delete document.body.dataset.playMode;active=true;$('frontLobby').hidden=false;document.body.classList.add('lobby-active');global.DesertLobbyMusic?.enterLobby?.();render();}
-function hide(){active=false;$('frontLobby').hidden=true;document.body.classList.remove('lobby-active');global.DesertLobbyMusic?.exitLobby?.();}
+function hide(){closeSkinPreview();active=false;$('frontLobby').hidden=true;document.body.classList.remove('lobby-active');global.DesertLobbyMusic?.exitLobby?.();}
 function chooseFaction(i){
  if(!Number.isInteger(i)||i<0||i>=FACTIONS.length)return;
- progress.selectedFaction=i;selectedUnit=0;selectedAction='idle';animationStart=performance.now();stateChange();
+ progress.selectedFaction=i;if(!SKINS.some(x=>x.id===progress.selectedSkin&&skinForFaction(x,i)))progress.selectedSkin='default';closeSkinPreview();selectedUnit=0;selectedAction='idle';animationStart=performance.now();stateChange();
 }
-function chooseSkin(id){const sk=SKINS.find(x=>x.id===id),l=levelFromXP(progress.xp).level;if(!sk||l<sk.level)return false;progress.selectedSkin=id;global.DesertRoster?.refreshChoices?.();stateChange();return true;}
+function chooseSkin(id){const sk=SKINS.find(x=>x.id===id),l=levelFromXP(progress.xp).level;if(!sk||l<sk.level||!skinForFaction(sk,progress.selectedFaction))return false;progress.selectedSkin=id;global.DesertRoster?.refreshChoices?.();stateChange();return true;}
 function exportProgress(){return {...progress};}
 function importProgress(v){if(!v||typeof v!=='object')return;const next=empty();
  next.xp=Math.max(0,Math.min(10000000,Number(v.xp)||0));
@@ -256,7 +289,7 @@ async function returnToLobby(){
  show();
 }
 function initialize(){
- if(!FACTIONS.length||!$('frontLobby'))return;progress=load();animationStart=performance.now();
+ if(!FACTIONS.length||!$('frontLobby'))return;progress=load();animationStart=performance.now();mountSkinPreview();
  // Reparent original multiplayer room controls, preserving their handlers and IDs.
  // The combat view now holds ONLY battlefield/HUD, never a second setup screen.
  const roomPanel=$('mpLobby'),mount=$('lobbyMultiMount');
@@ -272,7 +305,7 @@ function initialize(){
  $('lobbyCloseMulti').addEventListener('click',()=>{if(global.DesertTriNetwork?.current()?.roomId)return;setMultiplayerExpanded(false);});
  global.requestAnimationFrame?.(drawUnitAnimations);
  $('lobbyFactions').addEventListener('click',e=>{const b=e.target.closest('[data-faction]');if(b)chooseFaction(Number(b.dataset.faction));});
- $('lobbySkins').addEventListener('click',e=>{const b=e.target.closest('[data-skin]');if(b)chooseSkin(b.dataset.skin);});
+ $('lobbySkins').addEventListener('click',e=>{const p=e.target.closest('[data-preview-skin]');if(p){openSkinPreview(p.dataset.previewSkin);return;}const b=e.target.closest('[data-skin]');if(b)chooseSkin(b.dataset.skin);});
  $('lobbySolo').addEventListener('click',single);
  $('lobbyMulti').addEventListener('click',openMultiplayer);
  $('lobbyRulesetPicker')?.addEventListener('click',e=>{
