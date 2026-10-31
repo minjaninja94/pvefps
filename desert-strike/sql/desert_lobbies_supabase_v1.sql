@@ -195,3 +195,17 @@ begin
  end if;
 end;
 $pub$;
+
+-- Hourly TTL cleanup (also deployed as a separate migration).
+create or replace function public.desert_expire_rtc_rooms()
+returns integer language plpgsql security definer set search_path='' as $f$
+declare n integer;
+begin
+ delete from public.desert_lobbies where expires_at < now();
+ get diagnostics n = row_count;
+ return n;
+end;
+$f$;
+revoke all on function public.desert_expire_rtc_rooms() from public,anon,authenticated;
+-- On a hosted Supabase project with pg_cron, schedule once from SQL editor:
+-- select cron.schedule('desert-front-rtc-rooms-expiry','15 * * * *','select public.desert_expire_rtc_rooms()');
