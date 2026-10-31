@@ -25,7 +25,7 @@
     <section id="lobbyMultiplayerConfig" class="lobby-online-setup lobby-inline-multiplayer" hidden aria-label="멀티플레이 방 만들기 및 참가">
      <div class="lobby-section-title"><div><h2>멀티플레이 방 만들기 · 참가</h2></div><button type="button" id="lobbyCloseMulti" class="btn outline">접기</button></div>
 
-     <div id="lobbyMultiMount"></div>
+     <p class="lobby-guest-multi-note">게스트도 Discord·회원가입 없이 공개방 검색, 방 만들기, 참가 및 PvP·협동전을 이용할 수 있습니다. 게스트가 참여한 경기는 공식 랭킹·스킨 포인트가 지급되지 않습니다.</p><div id="lobbyMultiMount"></div>
     </section>
    </main>
    <aside class="lobby-panel lobby-profile">
@@ -41,7 +41,7 @@
     <div class="lobby-profile-options"><label>지휘관 이름<input id="lobbyNickname" maxlength="16" value="지휘관" autocomplete="nickname"></label><button id="lobbySaveName" type="button">프로필 저장</button></div>
     <button type="button" id="careerOpen" class="btn accent lobby-login-button">로그인 / 회원가입</button>
     <details class="lobby-device-details"><summary>기기 연결 정보 (게스트)</summary>
-    <div class="lobby-auth"><button id="lobbyDeviceLogin" type="button">이 기기로 간편 접속</button><button id="lobbyCopyIds" type="button">접속 ID 복사</button><label>유저 고유 ID<input id="lobbyUserId" readonly autocomplete="off" aria-label="유저 고유 ID"></label><label>기기 접속 ID<input id="lobbyDeviceId" readonly autocomplete="off" aria-label="기기 접속 ID"></label><p>게스트 기록은 이 브라우저에 저장됩니다. 브라우저 데이터를 삭제하면 기록이 사라집니다.</p><small id="lobbyAuthMessage" role="status">기기 계정을 준비하고 있습니다.</small></div>
+    <div class="lobby-auth"><button id="lobbyDeviceLogin" type="button">게스트 온라인 인증</button><button id="lobbyCopyIds" type="button">접속 ID 복사</button><label>유저 고유 ID<input id="lobbyUserId" readonly autocomplete="off" aria-label="유저 고유 ID"></label><label>기기 접속 ID<input id="lobbyDeviceId" readonly autocomplete="off" aria-label="기기 접속 ID"></label><p>게스트 기록은 이 브라우저에 저장됩니다. 브라우저 데이터를 삭제하면 기록이 사라집니다.</p><small id="lobbyAuthMessage" role="status">기기 계정을 준비하고 있습니다.</small></div>
     </details>
    </aside>
   </div>
@@ -49,11 +49,11 @@
    <section id="careerPanel" class="lobby-panel career-panel" data-auth-mode="login" tabindex="-1">
    <div class="lobby-section-title"><div><h2 id="careerDialogTitle">지휘관 로그인</h2></div><button type="button" id="careerClose" class="btn outline" aria-label="팝업 닫기">✕ 닫기</button></div>
    <div class="career-mode-tabs" role="group" aria-label="로그인 방식"><button id="careerTabLogin" type="button" class="active" aria-pressed="true">로그인</button><button id="careerTabSignup" type="button" aria-pressed="false">회원가입</button></div>
-   <p class="career-short-note">이메일 없이 아이디·비밀번호로 접속합니다. 회원 기록은 계정에 저장됩니다.</p>
+   <p class="career-short-note">로그인 없이도 게스트로 온라인 대전이 가능합니다. 계정 회원은 아이디·비밀번호 또는 Discord 연결로 전적과 스킨을 보존합니다.</p>
    <strong id="careerRating">멀티 임시 랭킹 · 회원 로그인 필요</strong>
    <div id="careerAccount" class="career-account">접속 대기</div>
    <div class="career-auth-form"><label>아이디 <input id="careerEmail" type="text" autocomplete="username" maxlength="20" minlength="4" placeholder="영문·숫자·_ 4~20자"></label><label id="careerNicknameLabel">닉네임 <input id="careerNickname" type="text" maxlength="16" placeholder="게임 내 표시 이름"></label><label>비밀번호 <input id="careerPassword" type="password" autocomplete="current-password" minlength="8" maxlength="72" placeholder="8자 이상"></label></div>
-   <div class="career-actions"><button type="button" id="careerRegister" class="btn accent">회원가입</button><button type="button" id="careerLogin" class="btn outline">로그인</button><button type="button" id="careerGuest" class="btn outline">게스트 플레이</button><button type="button" id="careerLogout" class="btn outline" hidden>로그아웃</button></div>
+   <div class="career-actions"><button type="button" id="careerRegister" class="btn accent">회원가입</button><button type="button" id="careerLogin" class="btn outline">로그인</button><button type="button" id="careerGuest" class="btn outline">게스트로 바로 플레이</button><button type="button" id="careerLogout" class="btn outline" hidden>로그아웃</button></div>
    <p class="career-discord-hint">기존 아이디 회원은 먼저 아이디·비밀번호로 로그인한 뒤 <strong>기존 계정에 Discord 연결</strong>을 선택하세요. Discord로 새 계정을 만들면 기존 스킨·전적과 별개가 됩니다.</p>
    <div class="career-discord-actions">
     <button type="button" id="careerDiscordLogin" class="btn career-discord-button">Discord로 로그인 · 회원가입</button>
@@ -323,8 +323,8 @@
 <script src="./commander-covers.js?v=unified-covers-120" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=dynamic-bgm1" defer></script>
-<script src="./desert-member.js?v=discord-auth-1" defer></script>
+<script src="./desert-member.js?v=guest-multi-1" defer></script>
 <script src="./career-profile.js?v=discord-auth-1" defer></script>
 <script src="./audio-settings.js?v=nukegear1" defer></script>
-<script src="./front-lobby.js?v=room-supabase-v1" defer></script>
+<script src="./front-lobby.js?v=guest-multi-1" defer></script>
 </body></html>
