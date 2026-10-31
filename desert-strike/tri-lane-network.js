@@ -1,6 +1,6 @@
-/* Desert Front WebRTC room transport. Firestore handles lobby/SDP only.
+/* Desert Front WebRTC room transport. Supabase handles lobby/SDP only.
  * Authoritative match + construction validation run on the host; never send
- * per-frame unit state to Firestore. Requires rules from FIREBASE_SETUP.md.
+ * per-frame unit state to Supabase. Uses Supabase RPC and RLS.
  */
 (function(global){
 'use strict';
@@ -9,7 +9,7 @@ let events={},scope=null,db=null,fs=null,uid=null,roomId=null,room=null,host=fal
 let roomUnsub=null,peerSubs=new Map(),channels=new Map(),pcs=new Map(),clock=null,engine=null,seq=0,lastFrame=0;
 const appearances=new Map(),legacySkins=['default','moe','twilight','aurora','gold'];
 let active=false,answering=false,hostPeerOpen=new Set(),snapshotSeq=0,serverTimer=null,gameEndedLocally=false,resultRetry=null,resultWinner=null,resultAttempts=0,serverRegistration=null;
-const msg=e=>global.IronFirebase?.message?.(e)||e?.message||String(e);
+const msg=e=>global.DesertSupabaseRooms?.message?.(e)||e?.message||String(e);
 function notify(key,data){try{events[key]?.(data);}catch(e){console.error('멀티 UI 갱신 오류',e);}}
 function beginServerHeartbeat(){
  if(serverTimer)return;
@@ -52,8 +52,8 @@ const path=()=>fs.doc(db,'desertRooms',roomId);
 const publicPath=code=>fs.doc(db,'desertPublicRooms',code||roomId);
 const signalPath=guest=>fs.doc(db,'desertRooms',roomId,'signals',guest);
 async function identity(){
- if(!global.IronFirebase)throw Error('Firebase 네트워크 모듈이 아직 준비되지 않았습니다.');
- scope=await (global.DesertDeviceAccount?global.DesertDeviceAccount.identity():global.IronFirebase.identity());
+ if(!global.DesertSupabaseRooms)throw Error('Firebase 네트워크 모듈이 아직 준비되지 않았습니다.');
+ scope=await (global.DesertDeviceAccount?global.DesertDeviceAccount.identity():global.DesertSupabaseRooms.identity());
  db=scope.db;fs=scope.fs;uid=scope.uid;return scope;
 }
 function members(){return Object.entries(room?.players||{}).map(([id,p])=>({uid:id,...p,skin:appearances.get(id)||p.skin||'default'}));}
@@ -83,7 +83,7 @@ async function leave(){
  const id=roomId,currentUid=uid,isHost=host;
  try{
   if(isHost){
-   // Delete SDP docs before removing the parent; Firestore does not cascade child deletion.
+   // Delete SDP docs before removing the parent; Supabase removes signals on room deletion.
    for(const m of members())if(m.uid!==currentUid){
     try{await fs.deleteDoc(signalPath(m.uid));}catch(e){}
    }
@@ -150,7 +150,7 @@ async function create(opts){
  try{
   try{await fs.setDoc(path(),room);}
   catch(e){
-   // Legacy Firestore deployments can host standard invitation rooms only.
+   // Legacy deployments can host standard invitation rooms only.
    if(e?.code==='permission-denied'&&room.ruleset==='standard'&&room.mode!=='classic'){
     const legacy={...room};delete legacy.ruleset;delete legacy.seed;delete legacy.publicRoom;
     await fs.setDoc(path(),legacy);room=legacy;
@@ -197,6 +197,9 @@ async function join(opts){
    if(players[uid].faction<0||players[uid].faction>9)throw Error('종족 선택 오류');
    tx.update(ref,{players});
   });
+  // Reflect the server-assigned team if the requested side filled concurrently.
+  const joinedRoom=await fs.getDoc(path());
+  if(joinedRoom.exists()&&joinedRoom.data().players?.[uid])joined.team=Number(joinedRoom.data().players[uid].team);
   listenRoom();
   status('방 '+id+' 참가 완료 · 서버 전적 확인 중…');
   trackServerRegistration(id,joined,'참가');
@@ -312,7 +315,7 @@ async function start(){
  if(!global.DesertTriEngine)throw Error('3라인 전투 엔진이 준비되지 않았습니다.');
  if(room.ruleset==='augment'||room.ruleset==='prism')await global.DesertAugments.load();
  engine=global.DesertTriEngine.create({mode:room.mode,size:room.size,members:members(),ruleset:validateRuleset(room.ruleset),seed:room.seed||1,aiDifficulty:global.DesertLobby?.aiDifficulty?.()||'normal'});
- // The guest's Supabase registration can finish after Firebase signaling.
+ // The guest's ranked registration can finish after Supabase signaling.
  // Retry registration before beginning the battle so normal online wins count.
  if(serverRegistration)await Promise.race([serverRegistration,new Promise(resolve=>setTimeout(resolve,2000))]);
  let registered={ok:false,reason:'서버 기록 시스템이 연결되지 않았습니다'};
