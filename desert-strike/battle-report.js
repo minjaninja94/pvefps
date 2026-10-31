@@ -76,8 +76,12 @@ function showMulti(v,playerId,{serverStatus='서버 경기 결과 확인 중…'
  $('mpResultStatus').textContent=serverStatus;
  const reward=$('multiSkinReward'),loggedIn=!!global.DesertMember?.account?.();
  if(reward)reward.textContent=practice
-  ?(loggedIn?'AI 대전 스킨 포인트 서버 정산 중…':'게스트 연습: 승패 기록만 저장됩니다. 포인트를 받으려면 로그인 후 새 경기에서 승리하세요.')
-  :loggedIn&&['pvp','classic'].includes(v.mode)?'스킨 포인트 확인 중…':'';
+  ?(loggedIn?'AI 대전 스킨 포인트 서버 정산 중…':'게스트 연습: 공식 포인트 미적립 · 로그인하면 다음 경기부터 보상을 받습니다.')
+  :['pvp','classic'].includes(v.mode)
+   ?(loggedIn?'로그인 회원 · 공식 승패·랭킹 반영 및 스킨 포인트 정산 중… (승리 +500P / 패배 +200P)'
+      :'게스트 · PvP 참여 완료! 공식 승패·랭킹·스킨 P는 적립되지 않습니다. 로그인하면 다음 경기부터 기록됩니다.')
+   :(loggedIn?'회원 계정 · 서버 경기 결과를 확인 중입니다.':'게스트 · 공식 랭킹 제외 · 회원 로그인 후 다음 경기부터 집계됩니다.');
+ const rankLogin=$('mpResultLogin');if(rankLogin)rankLogin.hidden=loggedIn;
  panel.classList.remove('hidden');
  document.body.classList.add('result-visible');
 }
