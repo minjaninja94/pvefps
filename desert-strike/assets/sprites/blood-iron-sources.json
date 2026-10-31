@@ -4,7 +4,7 @@
   "id": "blood-iron",
   "version": "2026-10-31",
   "source": "Generated 10 role-specific 4×2 transparent pose sheets",
-  "status": "Image WebP files must be supplied before deployment; code falls back to existing art when absent",
+  "status": "Deployed with 10 verified RGBA WebP sheets and 10 original PNGs",
   "position_to_pose": [
     "idle",
     "ready",
@@ -38,5 +38,17 @@
     "4ef22a98acd2cf6e1f0801da890147890c35b15f2d314c504d1902886150b462",
     "08433224e61f73f0f42a427039be555cb4ac0d18fbd480747672b731b98ea807",
     "e69353930af36b3b5ad860a07dd2999032e75e4a57a80afa81c514f41691fb63"
-  ]
+  ],
+  "runtime_sha256": {
+    "assault": "e28a3d64089a6408124596c6c0a7fd90216588b1eab2a8e330964e953e654a9d",
+    "rifle": "d199ab64fac76a9a8e94fc537b32f252e17d293074859e4fdb93f75c508ebfe9",
+    "antiarmor": "8a1f38c6a42c8aca4c79a53ddd32abe362834e31fc4ff3351d8b90b84da2e1b1",
+    "heavy": "f1045b090fe8cdfcac08c916bd566f19cc560a6aa624bf160cba70b31e20176d",
+    "antiair": "c89ff2efc1e1ca1744b88b8c1a6bda499fdbcd64ea42f9064d87447efd9e2a41",
+    "siege": "c06faa2ff4b2a27351c2243e3bd347793f153cd21543bf8e7dc6d05401e68458",
+    "flyer": "49bb68d00e1ee9503aefab0f6bb6506912382c7dc23ad0492202b8d231a05e2f",
+    "support": "b6624bfed68df26194fa88ec6292fb0801ab36527367bbfd084efefcf5724644",
+    "sniper": "8c21140916d0110f7002a921d173beb70840b925808d34f5e44bd98cbed5e172",
+    "assassin": "123c1899d7c68597e60db2c3a19f6f359c378937461432d5fc73fa8e390cfe66"
+  }
 }
