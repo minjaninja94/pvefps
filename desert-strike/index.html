@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=discord-auth-1"><link rel="stylesheet" href="./blood-iron-skins.css?v=unified-commander-cards"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=ranked-mixed-1"><link rel="stylesheet" href="./blood-iron-skins.css?v=unified-commander-cards"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -20,12 +20,17 @@
      </div>
      <p id="lobbyRulesetDescription" aria-live="polite">핵심 기지 파괴로 승리 · 웨이브 무제한</p>
     </div>
-    <p id="lobbyRewardGuide" class="lobby-reward-guide">로그인 계정 · AI 승리 난이도별 50~250P · 대전 승리 500P / 패배 200P</p>
+    <p id="lobbyRewardGuide" class="lobby-reward-guide">회원 전용 공식 기록 · AI 승리 50~250P · PvP 승리 500P / 패배 200P · 익명 게스트는 랭킹 제외</p>
     <div class="lobby-actions"><button id="lobbySolo" class="lobby-primary" type="button"><strong>싱글 출격</strong><span>무제한 웨이브 · 핵심 기지 파괴 시 종료</span></button><button id="lobbyMulti" type="button" aria-expanded="false" aria-controls="lobbyMultiplayerConfig"><strong>멀티플레이</strong><span>무제한 웨이브 · 핵심 기지 파괴 시 종료</span></button><button id="lobbyPractice" type="button"><strong>3라인 연습</strong><span>무제한 웨이브 · AI 전투 연습</span></button></div>
     <section id="lobbyMultiplayerConfig" class="lobby-online-setup lobby-inline-multiplayer" hidden aria-label="멀티플레이 방 만들기 및 참가">
      <div class="lobby-section-title"><div><h2>멀티플레이 방 만들기 · 참가</h2></div><button type="button" id="lobbyCloseMulti" class="btn outline">접기</button></div>
 
-     <p class="lobby-guest-multi-note">게스트도 Discord·회원가입 없이 공개방 검색, 방 만들기, 참가 및 PvP·협동전을 이용할 수 있습니다. 게스트가 참여한 경기는 공식 랭킹·스킨 포인트가 지급되지 않습니다.</p><div id="lobbyMultiMount"></div>
+     <section class="lobby-rank-benefits" aria-label="공식 랭킹 로그인 혜택">
+      <strong>⚔ 게스트도 자유롭게 PvP · 로그인 회원은 공식 랭킹 참여!</strong>
+      <p>로그인 회원은 상대가 익명 게스트여도 승리·패배 기록과 랭크 점수를 받습니다. PvP 승리 <b>500P</b> · 패배 <b>200P</b> 스킨 포인트도 지급됩니다.</p>
+      <p>게스트는 대전은 자유롭지만 <b>공식 승수·순위·스킨 포인트는 적립되지 않습니다.</b> 보상을 받으려면 경기 시작 전에 로그인하세요.</p>
+      <button id="lobbyRankLogin" type="button" class="btn accent">로그인하고 공식 랭킹 참여</button>
+     </section><div id="lobbyMultiMount"></div>
     </section>
    </main>
    <aside class="lobby-panel lobby-profile">
@@ -49,7 +54,7 @@
    <section id="careerPanel" class="lobby-panel career-panel" data-auth-mode="login" tabindex="-1">
    <div class="lobby-section-title"><div><h2 id="careerDialogTitle">지휘관 로그인</h2></div><button type="button" id="careerClose" class="btn outline" aria-label="팝업 닫기">✕ 닫기</button></div>
    <div class="career-mode-tabs" role="group" aria-label="로그인 방식"><button id="careerTabLogin" type="button" class="active" aria-pressed="true">로그인</button><button id="careerTabSignup" type="button" aria-pressed="false">회원가입</button></div>
-   <p class="career-short-note">로그인 없이도 게스트로 온라인 대전이 가능합니다. 계정 회원은 아이디·비밀번호 또는 Discord 연결로 전적과 스킨을 보존합니다.</p>
+   <p class="career-short-note">게스트도 PvP 가능! 단, 공식 랭킹·승패·스킨 포인트는 로그인한 회원에게만 지급됩니다. 게스트 상대 경기라도 회원은 승리 500P, 패배 200P를 받을 수 있습니다.</p>
    <strong id="careerRating">멀티 임시 랭킹 · 회원 로그인 필요</strong>
    <div id="careerAccount" class="career-account">접속 대기</div>
    <div class="career-auth-form"><label>아이디 <input id="careerEmail" type="text" autocomplete="username" maxlength="20" minlength="4" placeholder="영문·숫자·_ 4~20자"></label><label id="careerNicknameLabel">닉네임 <input id="careerNickname" type="text" maxlength="16" placeholder="게임 내 표시 이름"></label><label>비밀번호 <input id="careerPassword" type="password" autocomplete="current-password" minlength="8" maxlength="72" placeholder="8자 이상"></label></div>
@@ -275,7 +280,7 @@
   <h3 class="result-production-heading">생산·피해·처치·영웅 전투 기록</h3>
   <details class="result-detail-hint"><summary>통계 도움말</summary><p>생산은 누적 출격 수, 피해는 실제로 가한 피해입니다. 처치·손실에는 영웅을 구성하는 병력 수가 포함됩니다.</p></details>
   <div id="mpResultProduction" class="result-production" aria-label="아군 및 상대 생산 통계"></div>
-  <p id="multiSkinReward" class="match-skin-reward" role="status"></p><p id="mpResultStatus" class="result-server-status" role="status">서버 결과 저장 확인 중…</p>
+  <p id="multiSkinReward" class="match-skin-reward" role="status"></p><button id="mpResultLogin" type="button" class="btn accent" hidden>로그인하고 다음 경기부터 공식 승수·포인트 받기</button><p id="mpResultStatus" class="result-server-status" role="status">서버 결과 저장 확인 중…</p>
   <button id="mpResultRetry" type="button" class="btn outline" hidden>서버 기록 다시 시도</button>
   <button id="mpResultLobby" type="button" class="btn start-cta">로비로 가기</button>
  </div>
@@ -314,17 +319,17 @@
 <script src="./augment-codex.js?v=spec-transcend-20261031" defer></script>
 <script src="./tri-lane-engine.js?v=counter-support3" defer></script>
 <script src="./device-account.js?v=room-supabase-v1" defer></script>
-<script src="./tri-lane-network.js?v=room-supabase-v1" defer></script>
+<script src="./tri-lane-network.js?v=ranked-mixed-1" defer></script>
 <script src="./combat-audio.js?v=nemo80-live-20261031" defer></script>
 <script src="./multiplayer-motion.js?v=smooth1" defer></script>
-<script src="./tri-lane-ui.js?v=practice-reward-visible1" defer></script>
-<script src="./battle-report.js?v=practice-reward-visible1" defer></script>
+<script src="./tri-lane-ui.js?v=ranked-mixed-1" defer></script>
+<script src="./battle-report.js?v=ranked-mixed-1" defer></script>
 <script src="./game-v2.js?v=augment-draft-focus-1" defer></script>
 <script src="./commander-covers.js?v=unified-covers-120" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=dynamic-bgm1" defer></script>
-<script src="./desert-member.js?v=guest-multi-1" defer></script>
-<script src="./career-profile.js?v=discord-auth-1" defer></script>
+<script src="./desert-member.js?v=ranked-mixed-1" defer></script>
+<script src="./career-profile.js?v=ranked-mixed-1" defer></script>
 <script src="./audio-settings.js?v=nukegear1" defer></script>
-<script src="./front-lobby.js?v=guest-multi-1" defer></script>
+<script src="./front-lobby.js?v=ranked-mixed-1" defer></script>
 </body></html>
