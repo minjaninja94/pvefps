@@ -20,11 +20,11 @@
  function load(f,r=0){const s=assets[f]?.[r];if(!s||s.status!=='new'||typeof Image==='undefined')return;
   s.status='loading';const im=new Image();im.decoding='async';
   im.onload=()=>{s.image=im;s.status='ready';cache.clear();global.IsoWorld?.invalidateSpriteFaction?.(f);global.dispatchEvent?.(new Event('desert-real-sprites-ready'));};
-  im.onerror=()=>{s.status='error';};im.src='./assets/sprites/uniform-'+NAMES[f]+'-'+r+'.webp?v=uniform7';
+  im.onerror=()=>{s.status='error';};im.src='./assets/sprites/uniform-'+NAMES[f]+'-'+r+'.webp?v=ground-special-20261031';
   loadArt(f);
  }
  function loadArt(f,portrait=true){const list=portrait?portraits:banners;if(typeof Image==='undefined'||list[f]||!NAMES[f])return;
-  const img=new Image();img.decoding='async';img.onload=()=>global.dispatchEvent?.(new Event('desert-real-sprites-ready'));img.src='./assets/sprites/'+NAMES[f]+'-'+(portrait?'portrait':'banner')+'.webp?v=uniform7';list[f]=img;
+  const img=new Image();img.decoding='async';img.onload=()=>global.dispatchEvent?.(new Event('desert-real-sprites-ready'));img.src='./assets/sprites/'+NAMES[f]+'-'+(portrait?'portrait':'banner')+'.webp?v=ground-special-20261031';list[f]=img;
  }
  function cover(g,f,x,y,w,h,portrait=false){loadArt(f,portrait);const im=(portrait?portraits:banners)[f];if(!im?.complete||!im.naturalWidth)return false;
   g.save();g.clearRect(x,y,w,h);g.fillStyle='#172936';g.fillRect(x,y,w,h);

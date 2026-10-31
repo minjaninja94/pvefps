@@ -24,8 +24,8 @@ function cover(g,f,w,h){
  g.fillStyle='#ef9bcc';g.fillRect(0,h-3,w,3);g.restore();return true;
 }
 function ready(){global.dispatchEvent?.(new Event('desert-moe-ready'));}
-function loadPortrait(f){if(portraits[f]||typeof Image==='undefined')return;const im=new Image();im.decoding='async';im.onload=ready;im.src='./assets/sprites/moe-'+NAMES[f]+'-portrait.webp?v=moe6';portraits[f]=im;}
-function load(f){if(loading.has(f)||typeof Image==='undefined')return;loading.add(f);loadPortrait(f);const im=new Image();im.decoding='async';im.onerror=()=>loading.delete(f);im.onload=()=>{assets[f]=im;cache.clear();ready();};im.src='./assets/sprites/moe-'+NAMES[f]+'-actions.webp?v=moe6';}
+function loadPortrait(f){if(portraits[f]||typeof Image==='undefined')return;const im=new Image();im.decoding='async';im.onload=ready;im.src='./assets/sprites/moe-'+NAMES[f]+'-portrait.webp?v=ground-special-20261031';portraits[f]=im;}
+function load(f){if(loading.has(f)||typeof Image==='undefined')return;loading.add(f);loadPortrait(f);const im=new Image();im.decoding='async';im.onerror=()=>loading.delete(f);im.onload=()=>{assets[f]=im;cache.clear();ready();};im.src='./assets/sprites/moe-'+NAMES[f]+'-actions.webp?v=ground-special-20261031';}
 function preload(){NAMES.forEach((_,f)=>load(f));}
 global.DesertMoeArt=Object.freeze({frame,cover,load,preload,names:NAMES,loadedCount:()=>assets.filter(Boolean).length});
 })(window);

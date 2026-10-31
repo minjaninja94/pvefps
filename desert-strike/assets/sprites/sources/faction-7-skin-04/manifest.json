@@ -82,7 +82,10 @@
       "role": 6,
       "key": "flyer",
       "file": "faction-7-skin-04-flyer-actions.webp",
-      "sha256": "1938b45938c0ee3aa3c505043e661786921acaeda9406cef11ae78a17dc2e44b"
+      "sha256": "060298b809c7d8a90f582d1e941b80ea66baf42ce5a235df7e34fee5a54f4fc2",
+      "replacement_source": "sources/ground-special/faction-7-atlas.png",
+      "replacement_row": 5,
+      "kind": "ground"
     },
     {
       "role": 7,

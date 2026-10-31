@@ -2126,7 +2126,12 @@
             153
           ]
         ],
-        "preservedSpecial": true
+        "preservedSpecial": true,
+        "groundReplacement": {
+          "source": "sources/ground-special/faction-3-atlas.png",
+          "row": 0,
+          "sha256": "42e461feb1b42edcfc7d306e0d365ac4546f9f04df2692f2ea81a2ac87e9640e"
+        }
       },
       {
         "role": 7,
@@ -2675,7 +2680,12 @@
             143
           ]
         ],
-        "preservedSpecial": true
+        "preservedSpecial": true,
+        "groundReplacement": {
+          "source": "sources/ground-special/faction-4-atlas.png",
+          "row": 0,
+          "sha256": "4278fde47452456c060402d1ca5e95208efcb31f92245f1e2f713e41688bcb68"
+        }
       },
       {
         "role": 7,
@@ -3773,7 +3783,12 @@
             126
           ]
         ],
-        "preservedSpecial": true
+        "preservedSpecial": true,
+        "groundReplacement": {
+          "source": "sources/ground-special/faction-6-atlas.png",
+          "row": 0,
+          "sha256": "ef574ecab306e839bd9ed9d27c7a6c234bd2e766933ac5ef8cb8d15923d4aeca"
+        }
       },
       {
         "role": 7,
@@ -4322,7 +4337,12 @@
             133
           ]
         ],
-        "preservedSpecial": true
+        "preservedSpecial": true,
+        "groundReplacement": {
+          "source": "sources/ground-special/faction-7-atlas.png",
+          "row": 0,
+          "sha256": "86ad3de055dd93bd45c031d39709971981cfcd6fdac072a6c10532e686ca3190"
+        }
       },
       {
         "role": 7,

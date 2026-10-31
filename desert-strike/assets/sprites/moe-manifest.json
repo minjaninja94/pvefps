@@ -105,7 +105,13 @@
       "impact",
       "skill",
       "death"
-    ]
+    ],
+    "groundSpecialReplacement": {
+      "role": 6,
+      "source": "sources/ground-special/faction-3-atlas.png",
+      "row": 1,
+      "sha256": "04348a5cea1a1fbb5ea3f6d4dc286c12ec3e7cdb00c0d9cc445beb230b61268b"
+    }
   },
   "beastkin": {
     "columns": 8,
@@ -132,7 +138,13 @@
       "impact",
       "skill",
       "death"
-    ]
+    ],
+    "groundSpecialReplacement": {
+      "role": 6,
+      "source": "sources/ground-special/faction-4-atlas.png",
+      "row": 1,
+      "sha256": "cabcb7a937a3ba46b34aa6759dc6f0e4a2c3f76968554360f140d035c0d66bad"
+    }
   },
   "elf": {
     "columns": 8,
@@ -186,7 +198,13 @@
       "impact",
       "skill",
       "death"
-    ]
+    ],
+    "groundSpecialReplacement": {
+      "role": 6,
+      "source": "sources/ground-special/faction-6-atlas.png",
+      "row": 1,
+      "sha256": "2b03974d96b099949c356b26294aa3ae87e3f1d9600d66616a1548485f39b8d6"
+    }
   },
   "robot": {
     "columns": 8,
@@ -213,7 +231,13 @@
       "impact",
       "skill",
       "death"
-    ]
+    ],
+    "groundSpecialReplacement": {
+      "role": 6,
+      "source": "sources/ground-special/faction-7-atlas.png",
+      "row": 1,
+      "sha256": "73102b8bf4a5c66cd0d9d38224d03c2833d8593ba8b9d42717cf26849ec95769"
+    }
   },
   "octoper": {
     "columns": 8,

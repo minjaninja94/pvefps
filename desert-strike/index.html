@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=multi-unified-20261031"><link rel="stylesheet" href="./blood-iron-skins.css?v=skinpoints1"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=multi-unified-20261031"><link rel="stylesheet" href="./blood-iron-skins.css?v=ground-special-popup1"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -9,7 +9,7 @@
    <main class="lobby-panel lobby-main">
 
     <h1>지휘관 사령부</h1>
-    <div class="lobby-stage"><div class="lobby-stage-glow"></div><canvas id="lobbyHero" width="320" height="210" aria-label="선택한 종족 사령부와 대표 유닛"></canvas><div class="lobby-stage-label"><span id="lobbyFactionName">철갑연합</span><small id="lobbyFactionTrait">다목적 장갑·전열</small></div></div>
+<div class="lobby-stage-layout"><div class="lobby-stage"><div class="lobby-stage-glow"></div><canvas id="lobbyHero" width="320" height="210" aria-label="선택한 종족 사령부와 대표 유닛"></canvas><div class="lobby-stage-label"><span id="lobbyFactionName">철갑연합</span><small id="lobbyFactionTrait">다목적 장갑·전열</small></div></div><nav class="lobby-choice-controls" aria-label="지휘관 외형 선택"><button id="lobbyFactionOpen" type="button" aria-haspopup="dialog" aria-controls="lobbyFactionDialog"><strong>종족 선택</strong><span id="lobbySelectedFaction">철갑연합</span></button><button id="lobbySkinOpen" type="button" aria-haspopup="dialog" aria-controls="lobbySkinDialog"><strong>스킨 선택</strong><span id="lobbySelectedSkin">기본 제복</span></button></nav></div>
     <div class="lobby-difficulty" id="lobbyDifficulty" role="group" aria-label="싱글·3라인 연습 AI 난이도"><span>AI 전투 난이도 <small>싱글 · 3라인 연습 · 협동전</small></span><div><button type="button" data-difficulty="easy" aria-pressed="false"><strong>쉬움</strong><small>느린 배치</small></button><button type="button" data-difficulty="normal" aria-pressed="true" class="selected"><strong>보통</strong><small>기본 전술</small></button><button type="button" data-difficulty="hard" aria-pressed="false"><strong>어려움</strong><small>공세·상성 대응</small></button><button type="button" data-difficulty="veryhard" aria-pressed="false"><strong>아주 어려움</strong><small>전략형 하드 AI</small></button><button type="button" data-difficulty="impossible" aria-pressed="false"><strong>임파서블</strong><small>고속 전술 대응</small></button></div></div>
     <div id="lobbyRulesetPicker" class="lobby-ruleset-picker" role="group" aria-label="싱글, 멀티플레이 및 3라인 연습 전투 규칙">
      <div class="lobby-ruleset-heading"><strong>전투 규칙 선택</strong><span class="lobby-ruleset-heading-tools"><button id="augmentCodexOpen" type="button" class="augment-codex-trigger" aria-haspopup="dialog" aria-controls="augmentCodexDialog" title="증강 효과 보기">? 증강 도감</button></span></div>
@@ -61,17 +61,19 @@
    <label>유닛 음성 <input id="audioVoiceVolume" type="range" min="0" max="100" value="50"><output id="audioVoiceValue">50%</output></label>
    <label>전투 효과음 <input id="audioEffectsVolume" type="range" min="0" max="100" value="32"><output id="audioEffectsValue">32%</output></label>
    </div></details>
-  <section class="lobby-panel lobby-loadout"><div class="lobby-section-title"><div><h2>10종족 선택</h2></div><span>80개 전투 유닛</span></div><div id="lobbyFactions" class="lobby-factions"></div>
+  <section class="lobby-panel lobby-loadout">
    <div class="lobby-section-title"><div><h2>유닛별 애니메이션 도감</h2></div><span>병종 선택 · 동작 확인 · 능력치</span></div>
-   <div class="lobby-unit-layout"><div id="lobbyUnitGrid" class="lobby-unit-grid" aria-label="유닛 8종 애니메이션"></div>
+   <div class="lobby-unit-layout"><div id="lobbyUnitGrid" class="lobby-unit-grid" aria-label="10병종 애니메이션"></div>
     <div class="lobby-unit-inspector"><div class="lobby-unit-stage"><canvas id="lobbyUnitPreview" width="192" height="192"></canvas><span id="lobbyUnitAnimBadge">대기</span></div>
      <strong id="lobbyUnitTitle">유닛 선택</strong><div id="lobbyUnitStats"></div>
      <div id="lobbyUnitActions" class="lobby-unit-actions">
       <button type="button" data-action="idle" class="active">대기</button><button type="button" data-action="move">이동</button><button type="button" data-action="attack">공격</button><button type="button" data-action="siege">공성</button>
       <button type="button" data-action="hit">피격</button><button type="button" data-action="skill">스킬</button><button type="button" data-action="spawn">소환</button><button type="button" data-action="death">사망</button>
      </div></div></div>
-   <div class="lobby-section-title"><div><h2>지휘관 스킨</h2></div><span id="lobbySkinMessage">로그인하고 스킨 포인트로 해금</span></div><div id="skinWallet" class="skin-wallet" role="status"></div><div id="skinShopStatus" role="status" aria-live="polite"></div><div id="lobbySkins" class="lobby-skins"></div>
+
   </section>
+  <dialog id="lobbyFactionDialog" class="lobby-choice-dialog" aria-labelledby="lobbyFactionDialogTitle"><header><h2 id="lobbyFactionDialogTitle">종족 선택</h2><button type="button" data-choice-close="faction" aria-label="종족 선택 닫기">✕ 닫기</button></header><div id="lobbyFactions" class="lobby-factions"></div></dialog>
+  <dialog id="lobbySkinDialog" class="lobby-choice-dialog lobby-skin-dialog" aria-labelledby="lobbySkinDialogTitle"><header><h2 id="lobbySkinDialogTitle">스킨 · 크로마 선택</h2><button type="button" data-choice-close="skin" aria-label="스킨 선택 닫기">✕ 닫기</button></header>   <p id="lobbySkinMessage">로그인하고 스킨 포인트로 해금</p><div id="skinWallet" class="skin-wallet" role="status"></div><div id="skinShopStatus" role="status" aria-live="polite"></div><div id="lobbySkins" class="lobby-skins"></div></dialog>
   <footer class="lobby-footer">유닛 음성: <a href="https://voicevox.hiroshiba.jp/nemo/term/" target="_blank" rel="noopener noreferrer">VOICEVOX Nemo</a></footer>
  </div>
 </section>
@@ -274,18 +276,18 @@
 <script src="./heroine-factions.js?v=tenfog2" defer></script>
 <script src="./expansion-art.js?v=tenfog2" defer></script>
 <script src="./maiden-illustrations.js?v=tenfog2" defer></script>
-<script src="./sprite-atlas.js?v=uniform7" defer></script>
+<script src="./sprite-atlas.js?v=ground-special-popup1" defer></script>
 <script src="./special-unit-art.js?v=uniform7" defer></script>
 <script src="./resource-art.js?v=uniform7" defer></script>
 <script src="./isometric-world.js?v=desktop-original-png-20261030" defer></script>
 <script src="../firebase-config.js" defer></script>
 <script src="../firebase-network.js?v=externalroom1" defer></script>
-<script src="./moe-unit-art.js?v=uniform7" defer></script>
+<script src="./moe-unit-art.js?v=ground-special-popup1" defer></script>
 <script src="./expansion/expansion-rules.js?v=sniper-ai-specialists-20261031" defer></script>
 <script src="./expansion/expansion-art.js?v=live2" defer></script>
-<script src="./skin-catalog.js?v=skin100-recovery-20261031" defer></script>
+<script src="./skin-catalog.js?v=ground-special-popup1" defer></script>
 <script src="./skin-shop.js?v=skinpoints1" defer></script>
-<script src="./blood-iron-art.js?v=skinpoints1" defer></script>
+<script src="./blood-iron-art.js?v=ground-special-popup1" defer></script>
 <script src="./unit-motion.js?v=skinpoints1" defer></script>
 <script src="./unit-consolidation.js?v=battlestats3" defer></script>
 <script src="./defense-guardian.js?v=guardianheal1" defer></script>
@@ -294,18 +296,18 @@
 <script src="./augment-rules.js?v=gold-rebalance-20261031" defer></script>
 <script src="./augment-history.js?v=history1" defer></script>
 <script src="./augment-codex.js?v=spec-transcend-20261031" defer></script>
-<script src="./tri-lane-engine.js?v=skinpoints1" defer></script>
+<script src="./tri-lane-engine.js?v=ground-special-popup1" defer></script>
 <script src="./device-account.js?v=externalroom1" defer></script>
 <script src="./tri-lane-network.js?v=skinpoints1" defer></script>
 <script src="./combat-audio.js?v=nemo80-live-20261031" defer></script>
 <script src="./tri-lane-ui.js?v=multi-unified-20261031" defer></script>
 <script src="./battle-report.js?v=battlestats2" defer></script>
-<script src="./game-v2.js?v=skinpoints1" defer></script>
+<script src="./game-v2.js?v=ground-special-popup1" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=nukegear1" defer></script>
 <script src="./desert-member.js?v=skinpoints1" defer></script>
 <script src="./career-profile.js?v=rankincome20261030" defer></script>
 <script src="./audio-settings.js?v=nukegear1" defer></script>
-<script src="./front-lobby.js?v=skinpoints1" defer></script>
+<script src="./front-lobby.js?v=ground-special-popup1" defer></script>
 </body></html>

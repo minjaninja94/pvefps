@@ -1,0 +1,390 @@
+{
+  "sets": 48,
+  "poses": 384,
+  "entries": [
+    {
+      "faction": 3,
+      "skin": "default",
+      "row": 0,
+      "file": "uniform-marine-6.webp",
+      "sha256": "42e461feb1b42edcfc7d306e0d365ac4546f9f04df2692f2ea81a2ac87e9640e",
+      "kind": "ground"
+    },
+    {
+      "faction": 3,
+      "skin": "moe",
+      "row": 1,
+      "file": "moe-marine-actions.webp",
+      "sha256": "04348a5cea1a1fbb5ea3f6d4dc286c12ec3e7cdb00c0d9cc445beb230b61268b",
+      "kind": "ground"
+    },
+    {
+      "faction": 3,
+      "skin": "faction-3-skin-01",
+      "row": 2,
+      "file": "faction-3-skin-01-flyer-actions.webp",
+      "sha256": "3ac8cb0bb7bbf75c6a688f2411fc6975553da7f2c70f16117270c62a6cfee209",
+      "kind": "ground"
+    },
+    {
+      "faction": 3,
+      "skin": "faction-3-skin-02",
+      "row": 3,
+      "file": "faction-3-skin-02-flyer-actions.webp",
+      "sha256": "dc43a5d45a23a0189d400fb41c26e6bdfba68d77733514f5914c8ff67aa370f8",
+      "kind": "ground"
+    },
+    {
+      "faction": 3,
+      "skin": "faction-3-skin-03",
+      "row": 4,
+      "file": "faction-3-skin-03-flyer-actions.webp",
+      "sha256": "b61c81e7d2f3d631236a49e3c1d877498fb937ffe5c55089f2492faa7025f151",
+      "kind": "ground"
+    },
+    {
+      "faction": 3,
+      "skin": "faction-3-skin-04",
+      "row": 5,
+      "file": "faction-3-skin-04-flyer-actions.webp",
+      "sha256": "ded80b858588919833cdb8d3c05686f9ad66bcfa779c28b3e31240d202d7c1ef",
+      "kind": "ground"
+    },
+    {
+      "faction": 3,
+      "skin": "faction-3-skin-05",
+      "row": 6,
+      "file": "faction-3-skin-05-flyer-actions.webp",
+      "sha256": "7975b49110c60568b3f4ff588535574e024c50999e4bf4f19137821e92bc87dc",
+      "kind": "ground"
+    },
+    {
+      "faction": 3,
+      "skin": "faction-3-skin-06",
+      "row": 7,
+      "file": "faction-3-skin-06-flyer-actions.webp",
+      "sha256": "7ead6cf97586f932355688c8246fefc06e0da27db29bc5b9a5e6b0f69b5de035",
+      "kind": "ground"
+    },
+    {
+      "faction": 3,
+      "skin": "faction-3-skin-07",
+      "row": 8,
+      "file": "faction-3-skin-07-flyer-actions.webp",
+      "sha256": "84d106da997967d233b42834e0b1ec6d0a00a1ddbcab4e247f9f431bfd7e009f",
+      "kind": "ground"
+    },
+    {
+      "faction": 3,
+      "skin": "faction-3-skin-08",
+      "row": 9,
+      "file": "faction-3-skin-08-flyer-actions.webp",
+      "sha256": "c85f7dfaccfaf463cd33d5880296ad69c1476bed15eea9444c74796089b17bab",
+      "kind": "ground"
+    },
+    {
+      "faction": 3,
+      "skin": "faction-3-skin-09",
+      "row": 10,
+      "file": "faction-3-skin-09-flyer-actions.webp",
+      "sha256": "43643ae5e19cc7f9876b352db187129f728bf229ba43e386e0f2a8041de8f713",
+      "kind": "ground"
+    },
+    {
+      "faction": 3,
+      "skin": "faction-3-skin-10",
+      "row": 11,
+      "file": "faction-3-skin-10-flyer-actions.webp",
+      "sha256": "168c248ca6283e28cbe34b396dbcae8a30e7b29366ad776d737cde99e1530cd7",
+      "kind": "ground"
+    },
+    {
+      "faction": 4,
+      "skin": "default",
+      "row": 0,
+      "file": "uniform-beastkin-6.webp",
+      "sha256": "4278fde47452456c060402d1ca5e95208efcb31f92245f1e2f713e41688bcb68",
+      "kind": "ground"
+    },
+    {
+      "faction": 4,
+      "skin": "moe",
+      "row": 1,
+      "file": "moe-beastkin-actions.webp",
+      "sha256": "cabcb7a937a3ba46b34aa6759dc6f0e4a2c3f76968554360f140d035c0d66bad",
+      "kind": "ground"
+    },
+    {
+      "faction": 4,
+      "skin": "faction-4-skin-01",
+      "row": 2,
+      "file": "faction-4-skin-01-flyer-actions.webp",
+      "sha256": "41f2c780c937d7dc33c3f3923af7d1f97b3f4bbdca042a29a3d4164567a01180",
+      "kind": "ground"
+    },
+    {
+      "faction": 4,
+      "skin": "faction-4-skin-02",
+      "row": 3,
+      "file": "faction-4-skin-02-flyer-actions.webp",
+      "sha256": "f144909df88118f04dad3d83cd3b424a0870b752b59f82878de927d54a40f589",
+      "kind": "ground"
+    },
+    {
+      "faction": 4,
+      "skin": "faction-4-skin-03",
+      "row": 4,
+      "file": "faction-4-skin-03-flyer-actions.webp",
+      "sha256": "e7c48ca64a61f621ef14cb616419843bf82130e5e95e574015b5c789801ec533",
+      "kind": "ground"
+    },
+    {
+      "faction": 4,
+      "skin": "faction-4-skin-04",
+      "row": 5,
+      "file": "faction-4-skin-04-flyer-actions.webp",
+      "sha256": "aab682353bbc901ce4868ce002efa73bb7b9e31fb8f40cf7b7aa346d2564f924",
+      "kind": "ground"
+    },
+    {
+      "faction": 4,
+      "skin": "faction-4-skin-05",
+      "row": 6,
+      "file": "faction-4-skin-05-flyer-actions.webp",
+      "sha256": "b706a9e12de5f4ab992964979260c376f324941fe39da1465cf5a713278c12fa",
+      "kind": "ground"
+    },
+    {
+      "faction": 4,
+      "skin": "faction-4-skin-06",
+      "row": 7,
+      "file": "faction-4-skin-06-flyer-actions.webp",
+      "sha256": "263bfbf7608194a887010d8be6dd8fdbfc22cb962d3ec1c36abb3e424cffca7d",
+      "kind": "ground"
+    },
+    {
+      "faction": 4,
+      "skin": "faction-4-skin-07",
+      "row": 8,
+      "file": "faction-4-skin-07-flyer-actions.webp",
+      "sha256": "33fac907db18336b5c593b9ec7a4a9396fb2642dd251a0d5b6950afcd4f4dda5",
+      "kind": "ground"
+    },
+    {
+      "faction": 4,
+      "skin": "faction-4-skin-08",
+      "row": 9,
+      "file": "faction-4-skin-08-flyer-actions.webp",
+      "sha256": "83a54c39984fd16c9cf72dabcef3b712d2f686a6842e379be613e47d71732a4d",
+      "kind": "ground"
+    },
+    {
+      "faction": 4,
+      "skin": "faction-4-skin-09",
+      "row": 10,
+      "file": "faction-4-skin-09-flyer-actions.webp",
+      "sha256": "8ed9e84b8a07daef8c9aab86e6df71ddb8c85f0af06ef55c0bffe82494e64994",
+      "kind": "ground"
+    },
+    {
+      "faction": 4,
+      "skin": "faction-4-skin-10",
+      "row": 11,
+      "file": "faction-4-skin-10-flyer-actions.webp",
+      "sha256": "4d325e8f5091522b9866f435fe6e73b5612d2e95ef5c68e74ac3dfe1f35becd7",
+      "kind": "ground"
+    },
+    {
+      "faction": 6,
+      "skin": "default",
+      "row": 0,
+      "file": "uniform-furry-6.webp",
+      "sha256": "ef574ecab306e839bd9ed9d27c7a6c234bd2e766933ac5ef8cb8d15923d4aeca",
+      "kind": "ground"
+    },
+    {
+      "faction": 6,
+      "skin": "moe",
+      "row": 1,
+      "file": "moe-furry-actions.webp",
+      "sha256": "2b03974d96b099949c356b26294aa3ae87e3f1d9600d66616a1548485f39b8d6",
+      "kind": "ground"
+    },
+    {
+      "faction": 6,
+      "skin": "faction-6-skin-01",
+      "row": 2,
+      "file": "faction-6-skin-01-flyer-actions.webp",
+      "sha256": "15e9b22197a43fecc7d3300fd6decd7e1f4084b6cfd57f6e9f36aedf3eee6a9b",
+      "kind": "ground"
+    },
+    {
+      "faction": 6,
+      "skin": "faction-6-skin-02",
+      "row": 3,
+      "file": "faction-6-skin-02-flyer-actions.webp",
+      "sha256": "2d5772b955f490d7780c6c9433408aa95a9b52484ec649f4be35ea18b23bd50b",
+      "kind": "ground"
+    },
+    {
+      "faction": 6,
+      "skin": "faction-6-skin-03",
+      "row": 4,
+      "file": "faction-6-skin-03-flyer-actions.webp",
+      "sha256": "47b0e45c5de40636e0dc116d3526d472bdd2674c449174153aab65ab76710e66",
+      "kind": "ground"
+    },
+    {
+      "faction": 6,
+      "skin": "faction-6-skin-04",
+      "row": 5,
+      "file": "faction-6-skin-04-flyer-actions.webp",
+      "sha256": "cf03ac00a33bc51dc53f23e92e2da2fbbf7e74d9ef642c0c8c32d03269cbe1df",
+      "kind": "ground"
+    },
+    {
+      "faction": 6,
+      "skin": "faction-6-skin-05",
+      "row": 6,
+      "file": "faction-6-skin-05-flyer-actions.webp",
+      "sha256": "3dfdd81871e3162f59e75590d78ae4c285b1781b434ad7bd6ce98001d7fad3fa",
+      "kind": "ground"
+    },
+    {
+      "faction": 6,
+      "skin": "faction-6-skin-06",
+      "row": 7,
+      "file": "faction-6-skin-06-flyer-actions.webp",
+      "sha256": "dc40c2e090fbd29750de3ebe9520f9fb14b86b476f07b696477e03fc69a76beb",
+      "kind": "ground"
+    },
+    {
+      "faction": 6,
+      "skin": "faction-6-skin-07",
+      "row": 8,
+      "file": "faction-6-skin-07-flyer-actions.webp",
+      "sha256": "85fbb7810ba5d6421c2dba2826cc77d3e2bbe8e86ae7b43c5691afb9d9a2ae2a",
+      "kind": "ground"
+    },
+    {
+      "faction": 6,
+      "skin": "faction-6-skin-08",
+      "row": 9,
+      "file": "faction-6-skin-08-flyer-actions.webp",
+      "sha256": "f72ccd8fb67c4bee485d19e7f35303fa83596002c0fcac606a5325569382c025",
+      "kind": "ground"
+    },
+    {
+      "faction": 6,
+      "skin": "faction-6-skin-09",
+      "row": 10,
+      "file": "faction-6-skin-09-flyer-actions.webp",
+      "sha256": "e3902f8061fa5ff029e5c0fe0c5502565df75b402c3e5581cb1d4b1530734fdd",
+      "kind": "ground"
+    },
+    {
+      "faction": 6,
+      "skin": "faction-6-skin-10",
+      "row": 11,
+      "file": "faction-6-skin-10-flyer-actions.webp",
+      "sha256": "38f652ab5f7b547069bd3f8911c9e4fa0624cf7b8cd08acd49dd99f3fc930bc0",
+      "kind": "ground"
+    },
+    {
+      "faction": 7,
+      "skin": "default",
+      "row": 0,
+      "file": "uniform-robot-6.webp",
+      "sha256": "86ad3de055dd93bd45c031d39709971981cfcd6fdac072a6c10532e686ca3190",
+      "kind": "ground"
+    },
+    {
+      "faction": 7,
+      "skin": "moe",
+      "row": 1,
+      "file": "moe-robot-actions.webp",
+      "sha256": "73102b8bf4a5c66cd0d9d38224d03c2833d8593ba8b9d42717cf26849ec95769",
+      "kind": "ground"
+    },
+    {
+      "faction": 7,
+      "skin": "faction-7-skin-01",
+      "row": 2,
+      "file": "faction-7-skin-01-flyer-actions.webp",
+      "sha256": "ecaca214c17fcce89d6df03b5f606d38f0a45db16dceedae38400a3355f0d4a2",
+      "kind": "ground"
+    },
+    {
+      "faction": 7,
+      "skin": "faction-7-skin-02",
+      "row": 3,
+      "file": "faction-7-skin-02-flyer-actions.webp",
+      "sha256": "5c88962e1cee090e947c3a99b9ec763209dafb4c179f5c960166405da33d8e1c",
+      "kind": "ground"
+    },
+    {
+      "faction": 7,
+      "skin": "faction-7-skin-03",
+      "row": 4,
+      "file": "faction-7-skin-03-flyer-actions.webp",
+      "sha256": "f5780798762e9a4ad226bd3f950afe7d5984b61daebf5f0d99b5a6d0d0d15c17",
+      "kind": "ground"
+    },
+    {
+      "faction": 7,
+      "skin": "faction-7-skin-04",
+      "row": 5,
+      "file": "faction-7-skin-04-flyer-actions.webp",
+      "sha256": "060298b809c7d8a90f582d1e941b80ea66baf42ce5a235df7e34fee5a54f4fc2",
+      "kind": "ground"
+    },
+    {
+      "faction": 7,
+      "skin": "faction-7-skin-05",
+      "row": 6,
+      "file": "faction-7-skin-05-flyer-actions.webp",
+      "sha256": "d998cec3bcf6de0bf68079efc38ebbb61208f2111c24bd8f08e683085e6430f0",
+      "kind": "ground"
+    },
+    {
+      "faction": 7,
+      "skin": "faction-7-skin-06",
+      "row": 7,
+      "file": "faction-7-skin-06-flyer-actions.webp",
+      "sha256": "51aff8ec1aba595b9b1134ba95903685dbd8b27e522a52bf8b1c723a743818a8",
+      "kind": "ground"
+    },
+    {
+      "faction": 7,
+      "skin": "faction-7-skin-07",
+      "row": 8,
+      "file": "faction-7-skin-07-flyer-actions.webp",
+      "sha256": "7e24ef2233b22d4c7fead1738bc769cddd9a9f91c56e15a4bf57ab2ff58268a2",
+      "kind": "ground"
+    },
+    {
+      "faction": 7,
+      "skin": "faction-7-skin-08",
+      "row": 9,
+      "file": "faction-7-skin-08-flyer-actions.webp",
+      "sha256": "b3eef667341a75096bb3690220b88ef3a2e71416b569f2ac7151bf762b093908",
+      "kind": "ground"
+    },
+    {
+      "faction": 7,
+      "skin": "faction-7-skin-09",
+      "row": 10,
+      "file": "faction-7-skin-09-flyer-actions.webp",
+      "sha256": "2cca8a9b54486f5a966b790ab3d6c04b40c6b54e5112c66178b91589bd7b3542",
+      "kind": "ground"
+    },
+    {
+      "faction": 7,
+      "skin": "faction-7-skin-10",
+      "row": 11,
+      "file": "faction-7-skin-10-flyer-actions.webp",
+      "sha256": "20f400e4a5043647238ee0a72402b2029a21c6642116fd12900d3ee3eed6e41b",
+      "kind": "ground"
+    }
+  ]
+}

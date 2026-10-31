@@ -4,6 +4,9 @@ from pathlib import Path
 from PIL import Image
 ROOT=Path(__file__).resolve().parents[1];SPRITES=ROOT/'assets/sprites'
 roles=['assault','rifle','antiarmor','heavy','antiair','siege','flyer','support','sniper','assassin']
+ground_path=SPRITES/'ground-special-manifest.json'
+ground=json.loads(ground_path.read_text())['entries'] if ground_path.exists() else []
+ground_by_id={x['skin']:x for x in ground if x['skin'] not in ('default','moe')}
 rows=json.loads((ROOT/'skin-catalog.json').read_text());report={'sets':[],'ready':0,'sheets':0,'poses':0}
 for skin in rows:
  errors=[];assets=[]
@@ -14,6 +17,8 @@ for skin in rows:
    assert im.getchannel('A').getextrema()[0]==0,'opaque background'
    for pose in range(8):
     c=im.crop((pose%4*96,pose//4*96,pose%4*96+96,pose//4*96+96));assert c.getchannel('A').getbbox(),'empty pose'
+   if role=='flyer' and skin['faction'] in [3,4,6,7] and ground:
+    assert ground_by_id.get(skin['id'],{}).get('sha256')==hashlib.sha256(path.read_bytes()).hexdigest(),'ground-special replacement mismatch'
    assets.append({'file':path.name,'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'size_bytes':path.stat().st_size})
   except Exception as e:errors.append(role+': '+str(e))
  skin['status']='ready' if len(assets)==10 and not errors else 'planned'

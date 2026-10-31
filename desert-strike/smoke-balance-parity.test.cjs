@@ -55,6 +55,35 @@ test('both ground charge variants hit the same three closest ground targets and 
   assert.equal(rows[faction===6?2:3][0].hp,1e5,'ground splash target count respected');assert.equal(rows[4][0].hp,1e5,'aircraft not hit');
  }
 });
+test('all four ground specials receive their documented counters in real solo and host hits',()=>{
+ for(const faction of [3,4,6,7])for(const wave of [20,40,60]){
+  const damage={};
+  for(const role of [0,1,2,3,4,5,9]){
+   const p=pair(0,faction),[a,b]=p.add(0,role,1000,260),[x,y]=p.add(1,6,1020,260);
+   p.s.wave=p.match.state.wave=wave;x.hp=x.maxHP=y.hp=y.maxHP=1e6;
+   assert.equal(p.S.G.getDef(6,faction).kind,'ground');assert.equal(p.M.E.definition(faction,6).kind,'ground');
+   if(role===0)assert.equal(p.S.G.nearestUnit(a,p.S.G.getDef(0,0)),x,'melee can target grounded specials');
+   p.S.G.damage(x,100,role,a,()=>1);p.match.__test.applyHit(b,y,100);
+   near(1e6-x.hp,1e6-y.hp,'incoming counter parity '+faction+'/'+role+'/W'+wave);damage[role]=1e6-x.hp;
+  }
+  assert.ok(damage[2]>damage[1]*1.5,'antiarmor counters all ground specials');
+  assert.ok(damage[faction===7?5:3]>damage[1]*1.4,'artillery counters mech; armor counters cavalry/van');
+  assert.ok(damage[4]<damage[1],'antiair never receives an aircraft bonus against ground specials');
+  assert.ok(damage[0]<damage[1],'ground specials retain their infantry resistance');
+  assert.ok(damage[9]>damage[1]*1.5,'snipers retain ground-special precision damage');
+ }
+});
+test('the other six faction specials remain aircraft and take the actual antiair bonus',()=>{
+ for(const faction of [0,1,2,5,8,9]){
+  const p=pair(0,faction),[a,b]=p.add(0,4,1000,260),[x,y]=p.add(1,6,1020,260),[melee]=p.add(0,0,1000,260);
+  assert.equal(p.S.G.getDef(6,faction).kind,'air');assert.equal(p.M.E.definition(faction,6).kind,'air');
+  assert.equal(p.S.G.nearestUnit(melee,p.S.G.getDef(0,0)),null,'infantry cannot target aircraft');
+  assert.equal(p.M.E.matchupMultiplier(p.M.E.definition(0,4),y,20,4),1.55);
+  x.hp=x.maxHP=y.hp=y.maxHP=1e6;
+  p.S.G.damage(x,100,4,a,()=>1);p.match.__test.applyHit(b,y,100);
+  near(1e6-x.hp,1e6-y.hp,'air special antiair parity '+faction);
+ }
+});
 test('ink reduces an attack once in either engine rather than twice on the host',()=>{
  const p=pair(),[a,b]=p.add(0,1,1000,260),[x,y]=p.add(1,2,1100,260);
  a.inkUntil=b.inkUntil=102;

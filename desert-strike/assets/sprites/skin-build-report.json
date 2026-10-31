@@ -1808,8 +1808,8 @@
         },
         {
           "file": "faction-3-skin-01-flyer-actions.webp",
-          "sha256": "4c918eda3c6198bb334da981f8720e29067b3d98b4dfd00ad3d814581d6b62de",
-          "size_bytes": 39062
+          "sha256": "3ac8cb0bb7bbf75c6a688f2411fc6975553da7f2c70f16117270c62a6cfee209",
+          "size_bytes": 41944
         },
         {
           "file": "faction-3-skin-01-support-actions.webp",
@@ -1867,8 +1867,8 @@
         },
         {
           "file": "faction-3-skin-02-flyer-actions.webp",
-          "sha256": "32a7f59aa08c22b0399a1622a0a20344e29b7460f8419ad87f7ba11da3156032",
-          "size_bytes": 36140
+          "sha256": "dc43a5d45a23a0189d400fb41c26e6bdfba68d77733514f5914c8ff67aa370f8",
+          "size_bytes": 45132
         },
         {
           "file": "faction-3-skin-02-support-actions.webp",
@@ -1926,8 +1926,8 @@
         },
         {
           "file": "faction-3-skin-03-flyer-actions.webp",
-          "sha256": "95217e285abf734a2f9a19a3f0b233d37bb306e4f16ee06c13802c96c38cf31b",
-          "size_bytes": 37568
+          "sha256": "b61c81e7d2f3d631236a49e3c1d877498fb937ffe5c55089f2492faa7025f151",
+          "size_bytes": 40594
         },
         {
           "file": "faction-3-skin-03-support-actions.webp",
@@ -1985,8 +1985,8 @@
         },
         {
           "file": "faction-3-skin-04-flyer-actions.webp",
-          "sha256": "342d6108a41328761858ef9951588b9691c4c6d7ccf57903122767e3233f4852",
-          "size_bytes": 44226
+          "sha256": "ded80b858588919833cdb8d3c05686f9ad66bcfa779c28b3e31240d202d7c1ef",
+          "size_bytes": 46030
         },
         {
           "file": "faction-3-skin-04-support-actions.webp",
@@ -2044,8 +2044,8 @@
         },
         {
           "file": "faction-3-skin-05-flyer-actions.webp",
-          "sha256": "ccd59e4abb658a11437b1f8183bd8cf6533f730724bbec49a97894d343628f47",
-          "size_bytes": 41164
+          "sha256": "7975b49110c60568b3f4ff588535574e024c50999e4bf4f19137821e92bc87dc",
+          "size_bytes": 49368
         },
         {
           "file": "faction-3-skin-05-support-actions.webp",
@@ -2103,8 +2103,8 @@
         },
         {
           "file": "faction-3-skin-06-flyer-actions.webp",
-          "sha256": "31bf58b7106510064b29203fc787249fce7064ba06bfb6aa619b808dda1c5e49",
-          "size_bytes": 41448
+          "sha256": "7ead6cf97586f932355688c8246fefc06e0da27db29bc5b9a5e6b0f69b5de035",
+          "size_bytes": 41658
         },
         {
           "file": "faction-3-skin-06-support-actions.webp",
@@ -2162,8 +2162,8 @@
         },
         {
           "file": "faction-3-skin-07-flyer-actions.webp",
-          "sha256": "62df49a6aef04663388f70dcbe55888375559af18ba2ebc255d67c8a84ab91ff",
-          "size_bytes": 41946
+          "sha256": "84d106da997967d233b42834e0b1ec6d0a00a1ddbcab4e247f9f431bfd7e009f",
+          "size_bytes": 46694
         },
         {
           "file": "faction-3-skin-07-support-actions.webp",
@@ -2221,8 +2221,8 @@
         },
         {
           "file": "faction-3-skin-08-flyer-actions.webp",
-          "sha256": "7243d0b24cc2cf5b49398202ac03322478e0248a61b4f398d98ed6e17474ff4e",
-          "size_bytes": 37226
+          "sha256": "c85f7dfaccfaf463cd33d5880296ad69c1476bed15eea9444c74796089b17bab",
+          "size_bytes": 44650
         },
         {
           "file": "faction-3-skin-08-support-actions.webp",
@@ -2280,8 +2280,8 @@
         },
         {
           "file": "faction-3-skin-09-flyer-actions.webp",
-          "sha256": "096ccac79585a8ae45d34c314326e63b7deca213169ea5ef3736a17f2c83d322",
-          "size_bytes": 42094
+          "sha256": "43643ae5e19cc7f9876b352db187129f728bf229ba43e386e0f2a8041de8f713",
+          "size_bytes": 47644
         },
         {
           "file": "faction-3-skin-09-support-actions.webp",
@@ -2339,8 +2339,8 @@
         },
         {
           "file": "faction-3-skin-10-flyer-actions.webp",
-          "sha256": "88ca7c2745a32081f48966a5f6296b40be963a38995eb35b2b1a2c2973044d56",
-          "size_bytes": 38686
+          "sha256": "168c248ca6283e28cbe34b396dbcae8a30e7b29366ad776d737cde99e1530cd7",
+          "size_bytes": 46906
         },
         {
           "file": "faction-3-skin-10-support-actions.webp",
@@ -2398,8 +2398,8 @@
         },
         {
           "file": "faction-4-skin-01-flyer-actions.webp",
-          "sha256": "61d62303ec799ea94dee1c438ff4ad937a5eeff540ea201faab7e89f0ab9798a",
-          "size_bytes": 48898
+          "sha256": "41f2c780c937d7dc33c3f3923af7d1f97b3f4bbdca042a29a3d4164567a01180",
+          "size_bytes": 36012
         },
         {
           "file": "faction-4-skin-01-support-actions.webp",
@@ -2457,8 +2457,8 @@
         },
         {
           "file": "faction-4-skin-02-flyer-actions.webp",
-          "sha256": "35ee0ed70a78652437ece2b5995bfa06374fdce4d4c445e34b4a379e0f0f455c",
-          "size_bytes": 36384
+          "sha256": "f144909df88118f04dad3d83cd3b424a0870b752b59f82878de927d54a40f589",
+          "size_bytes": 41154
         },
         {
           "file": "faction-4-skin-02-support-actions.webp",
@@ -2516,8 +2516,8 @@
         },
         {
           "file": "faction-4-skin-03-flyer-actions.webp",
-          "sha256": "5f05af22aef3716f4d8e00b69be8e96b08b00119f570afd2b9bd9dfe5065e8ec",
-          "size_bytes": 41086
+          "sha256": "e7c48ca64a61f621ef14cb616419843bf82130e5e95e574015b5c789801ec533",
+          "size_bytes": 42334
         },
         {
           "file": "faction-4-skin-03-support-actions.webp",
@@ -2575,8 +2575,8 @@
         },
         {
           "file": "faction-4-skin-04-flyer-actions.webp",
-          "sha256": "20220078096fb897255e33c4e29cc9af9694a5fb887510e51c2c88e89fe477ef",
-          "size_bytes": 36948
+          "sha256": "aab682353bbc901ce4868ce002efa73bb7b9e31fb8f40cf7b7aa346d2564f924",
+          "size_bytes": 41294
         },
         {
           "file": "faction-4-skin-04-support-actions.webp",
@@ -2634,8 +2634,8 @@
         },
         {
           "file": "faction-4-skin-05-flyer-actions.webp",
-          "sha256": "47235d80034c570bfd297e8675a2c24fbf3c28bf219ee8a8c6a79a8915bf24cd",
-          "size_bytes": 49246
+          "sha256": "b706a9e12de5f4ab992964979260c376f324941fe39da1465cf5a713278c12fa",
+          "size_bytes": 44852
         },
         {
           "file": "faction-4-skin-05-support-actions.webp",
@@ -2693,8 +2693,8 @@
         },
         {
           "file": "faction-4-skin-06-flyer-actions.webp",
-          "sha256": "2bc647160451d066510444317622f8ba90d73042813b8c96e577ba92a9fa7b5b",
-          "size_bytes": 44572
+          "sha256": "263bfbf7608194a887010d8be6dd8fdbfc22cb962d3ec1c36abb3e424cffca7d",
+          "size_bytes": 40094
         },
         {
           "file": "faction-4-skin-06-support-actions.webp",
@@ -2752,8 +2752,8 @@
         },
         {
           "file": "faction-4-skin-07-flyer-actions.webp",
-          "sha256": "7c8ccb5968c1601f5bec67b8bfc8ebf382bb4776f86a74c287bb457b8fb91806",
-          "size_bytes": 45222
+          "sha256": "33fac907db18336b5c593b9ec7a4a9396fb2642dd251a0d5b6950afcd4f4dda5",
+          "size_bytes": 41436
         },
         {
           "file": "faction-4-skin-07-support-actions.webp",
@@ -2811,8 +2811,8 @@
         },
         {
           "file": "faction-4-skin-08-flyer-actions.webp",
-          "sha256": "7de46cb162039a6f1211ad2cb9c13257c5adf262c45a2dfb6911b27d1804d5ef",
-          "size_bytes": 44384
+          "sha256": "83a54c39984fd16c9cf72dabcef3b712d2f686a6842e379be613e47d71732a4d",
+          "size_bytes": 43682
         },
         {
           "file": "faction-4-skin-08-support-actions.webp",
@@ -2870,8 +2870,8 @@
         },
         {
           "file": "faction-4-skin-09-flyer-actions.webp",
-          "sha256": "c71adf4a5af92d33b030fe93e06c05b3c5eaee62ac9e077579a8f9a814f66ae9",
-          "size_bytes": 40318
+          "sha256": "8ed9e84b8a07daef8c9aab86e6df71ddb8c85f0af06ef55c0bffe82494e64994",
+          "size_bytes": 42360
         },
         {
           "file": "faction-4-skin-09-support-actions.webp",
@@ -2929,8 +2929,8 @@
         },
         {
           "file": "faction-4-skin-10-flyer-actions.webp",
-          "sha256": "38de2a841b2e7340ed9fa42666b5c69e64f0b67401ab9de174316f63d0bef2f0",
-          "size_bytes": 41966
+          "sha256": "4d325e8f5091522b9866f435fe6e73b5612d2e95ef5c68e74ac3dfe1f35becd7",
+          "size_bytes": 45694
         },
         {
           "file": "faction-4-skin-10-support-actions.webp",
@@ -3578,8 +3578,8 @@
         },
         {
           "file": "faction-6-skin-01-flyer-actions.webp",
-          "sha256": "0e31b20da38dc35e4dea4746afeca02bb8c65cc3cfb478bcd0babfe2df2fa6ad",
-          "size_bytes": 48020
+          "sha256": "15e9b22197a43fecc7d3300fd6decd7e1f4084b6cfd57f6e9f36aedf3eee6a9b",
+          "size_bytes": 36674
         },
         {
           "file": "faction-6-skin-01-support-actions.webp",
@@ -3637,8 +3637,8 @@
         },
         {
           "file": "faction-6-skin-02-flyer-actions.webp",
-          "sha256": "381901cf786fea39f50a36880780da9e1303a89846f5568f73f2a0b28eb85d44",
-          "size_bytes": 40914
+          "sha256": "2d5772b955f490d7780c6c9433408aa95a9b52484ec649f4be35ea18b23bd50b",
+          "size_bytes": 42384
         },
         {
           "file": "faction-6-skin-02-support-actions.webp",
@@ -3696,8 +3696,8 @@
         },
         {
           "file": "faction-6-skin-03-flyer-actions.webp",
-          "sha256": "9fbe8f88c65186b6c00dbb4bbb62c166b123cf03d972c80eb6cfe9b053356692",
-          "size_bytes": 46828
+          "sha256": "47b0e45c5de40636e0dc116d3526d472bdd2674c449174153aab65ab76710e66",
+          "size_bytes": 42280
         },
         {
           "file": "faction-6-skin-03-support-actions.webp",
@@ -3755,8 +3755,8 @@
         },
         {
           "file": "faction-6-skin-04-flyer-actions.webp",
-          "sha256": "3ad798e38b6e653f95690b96a36df9765b7c1d8764626dc621933e935a7bc5a5",
-          "size_bytes": 33498
+          "sha256": "cf03ac00a33bc51dc53f23e92e2da2fbbf7e74d9ef642c0c8c32d03269cbe1df",
+          "size_bytes": 42736
         },
         {
           "file": "faction-6-skin-04-support-actions.webp",
@@ -3814,8 +3814,8 @@
         },
         {
           "file": "faction-6-skin-05-flyer-actions.webp",
-          "sha256": "e7a85dd2d6a552bd268e03a25c281b3ed3514b07ca34406eefb620d927a31b34",
-          "size_bytes": 35940
+          "sha256": "3dfdd81871e3162f59e75590d78ae4c285b1781b434ad7bd6ce98001d7fad3fa",
+          "size_bytes": 44264
         },
         {
           "file": "faction-6-skin-05-support-actions.webp",
@@ -3873,8 +3873,8 @@
         },
         {
           "file": "faction-6-skin-06-flyer-actions.webp",
-          "sha256": "04fefda216fe98a944030d7aef4e024a485b36d5116053990ca4c09e3b294fc5",
-          "size_bytes": 38294
+          "sha256": "dc40c2e090fbd29750de3ebe9520f9fb14b86b476f07b696477e03fc69a76beb",
+          "size_bytes": 43602
         },
         {
           "file": "faction-6-skin-06-support-actions.webp",
@@ -3932,8 +3932,8 @@
         },
         {
           "file": "faction-6-skin-07-flyer-actions.webp",
-          "sha256": "a8e329c33365eac966ac752ab015ddd1e3c0dda8efe6f833e05bae024089f82d",
-          "size_bytes": 48092
+          "sha256": "85fbb7810ba5d6421c2dba2826cc77d3e2bbe8e86ae7b43c5691afb9d9a2ae2a",
+          "size_bytes": 50070
         },
         {
           "file": "faction-6-skin-07-support-actions.webp",
@@ -3991,8 +3991,8 @@
         },
         {
           "file": "faction-6-skin-08-flyer-actions.webp",
-          "sha256": "ab6afa632c351008616368ebfb78077801420d01feb3ab12bcec72c4752b1b57",
-          "size_bytes": 42684
+          "sha256": "f72ccd8fb67c4bee485d19e7f35303fa83596002c0fcac606a5325569382c025",
+          "size_bytes": 44120
         },
         {
           "file": "faction-6-skin-08-support-actions.webp",
@@ -4050,8 +4050,8 @@
         },
         {
           "file": "faction-6-skin-09-flyer-actions.webp",
-          "sha256": "dedcdfc73456daee04c27178d02a4ca8817df1067abe41e080fde052dac55624",
-          "size_bytes": 43180
+          "sha256": "e3902f8061fa5ff029e5c0fe0c5502565df75b402c3e5581cb1d4b1530734fdd",
+          "size_bytes": 48128
         },
         {
           "file": "faction-6-skin-09-support-actions.webp",
@@ -4109,8 +4109,8 @@
         },
         {
           "file": "faction-6-skin-10-flyer-actions.webp",
-          "sha256": "958883e0655edba380130a7afbe746da9c5c5913738436b7b13ea2b7137b459c",
-          "size_bytes": 49422
+          "sha256": "38f652ab5f7b547069bd3f8911c9e4fa0624cf7b8cd08acd49dd99f3fc930bc0",
+          "size_bytes": 53016
         },
         {
           "file": "faction-6-skin-10-support-actions.webp",
@@ -4168,8 +4168,8 @@
         },
         {
           "file": "faction-7-skin-01-flyer-actions.webp",
-          "sha256": "6dc35a127e141a4c450c0bd6c72baf3ad019067fba0ac45132d8115829d93dc6",
-          "size_bytes": 35276
+          "sha256": "ecaca214c17fcce89d6df03b5f606d38f0a45db16dceedae38400a3355f0d4a2",
+          "size_bytes": 42302
         },
         {
           "file": "faction-7-skin-01-support-actions.webp",
@@ -4227,8 +4227,8 @@
         },
         {
           "file": "faction-7-skin-02-flyer-actions.webp",
-          "sha256": "e07a1316750dbe5e4de707b5b11cedfdd2cc4171534b1410947b8a7b53cd726d",
-          "size_bytes": 41508
+          "sha256": "5c88962e1cee090e947c3a99b9ec763209dafb4c179f5c960166405da33d8e1c",
+          "size_bytes": 42986
         },
         {
           "file": "faction-7-skin-02-support-actions.webp",
@@ -4286,8 +4286,8 @@
         },
         {
           "file": "faction-7-skin-03-flyer-actions.webp",
-          "sha256": "1b907390b3cfcc1746ffb459a17e18e2064ab8967adb65c05e006c0e87f8f214",
-          "size_bytes": 35772
+          "sha256": "f5780798762e9a4ad226bd3f950afe7d5984b61daebf5f0d99b5a6d0d0d15c17",
+          "size_bytes": 42352
         },
         {
           "file": "faction-7-skin-03-support-actions.webp",
@@ -4345,8 +4345,8 @@
         },
         {
           "file": "faction-7-skin-04-flyer-actions.webp",
-          "sha256": "1938b45938c0ee3aa3c505043e661786921acaeda9406cef11ae78a17dc2e44b",
-          "size_bytes": 42146
+          "sha256": "060298b809c7d8a90f582d1e941b80ea66baf42ce5a235df7e34fee5a54f4fc2",
+          "size_bytes": 45824
         },
         {
           "file": "faction-7-skin-04-support-actions.webp",
@@ -4404,8 +4404,8 @@
         },
         {
           "file": "faction-7-skin-05-flyer-actions.webp",
-          "sha256": "c5539287d750fc6f71aae43a3cdcb74f9315dc242997b9dce12bd263bd40bd41",
-          "size_bytes": 37960
+          "sha256": "d998cec3bcf6de0bf68079efc38ebbb61208f2111c24bd8f08e683085e6430f0",
+          "size_bytes": 47724
         },
         {
           "file": "faction-7-skin-05-support-actions.webp",
@@ -4463,8 +4463,8 @@
         },
         {
           "file": "faction-7-skin-06-flyer-actions.webp",
-          "sha256": "483e492071aa9451d0e312ecfda569710ce8b2a3758a201b6090d5473b188209",
-          "size_bytes": 50744
+          "sha256": "51aff8ec1aba595b9b1134ba95903685dbd8b27e522a52bf8b1c723a743818a8",
+          "size_bytes": 49152
         },
         {
           "file": "faction-7-skin-06-support-actions.webp",
@@ -4522,8 +4522,8 @@
         },
         {
           "file": "faction-7-skin-07-flyer-actions.webp",
-          "sha256": "0dd94c5d8aed53c3d7a81f8f4cbca22d48da46e854d62fdabd71ff7db0a7ec9b",
-          "size_bytes": 40966
+          "sha256": "7e24ef2233b22d4c7fead1738bc769cddd9a9f91c56e15a4bf57ab2ff58268a2",
+          "size_bytes": 46072
         },
         {
           "file": "faction-7-skin-07-support-actions.webp",
@@ -4581,8 +4581,8 @@
         },
         {
           "file": "faction-7-skin-08-flyer-actions.webp",
-          "sha256": "86d107aa3ecfe901e11fec14ceb4059fb274ced9d80d44f3e158304823f5797d",
-          "size_bytes": 47738
+          "sha256": "b3eef667341a75096bb3690220b88ef3a2e71416b569f2ac7151bf762b093908",
+          "size_bytes": 48938
         },
         {
           "file": "faction-7-skin-08-support-actions.webp",
@@ -4640,8 +4640,8 @@
         },
         {
           "file": "faction-7-skin-09-flyer-actions.webp",
-          "sha256": "8d7fd0b51036b592ff0f8fe4fdf9762f47aa7db7f4a73ddffaf7c1550ad2ad3b",
-          "size_bytes": 50522
+          "sha256": "2cca8a9b54486f5a966b790ab3d6c04b40c6b54e5112c66178b91589bd7b3542",
+          "size_bytes": 49250
         },
         {
           "file": "faction-7-skin-09-support-actions.webp",
@@ -4699,8 +4699,8 @@
         },
         {
           "file": "faction-7-skin-10-flyer-actions.webp",
-          "sha256": "ae998d94b366b909717b7572dd36396c1230922aca69159504318c2676a4fe5e",
-          "size_bytes": 49322
+          "sha256": "20f400e4a5043647238ee0a72402b2029a21c6642116fd12900d3ee3eed6e41b",
+          "size_bytes": 50148
         },
         {
           "file": "faction-7-skin-10-support-actions.webp",

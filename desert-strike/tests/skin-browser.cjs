@@ -24,6 +24,7 @@ const {chromium}=require('playwright');
   assert.deepEqual(failures,[],skin.id+' renders every role and pose');
  }
  console.log('Verified '+readySkins.length+' ready skins, '+readySkins.length*10+' sheets and '+readySkins.length*80+' rendered poses.');
+ await page.locator('#lobbySkinOpen').click();
  assert.equal(await page.locator('[data-skin="blood-iron"]').isDisabled(),true);
  await page.locator('[data-preview-skin="blood-iron"]').click();
  await page.waitForFunction(()=>DesertSkinArt.loadedCount('blood-iron')===10);

@@ -7,7 +7,7 @@ text="""/* Cosmetic catalog. Gameplay statistics live in the combat rules. */
 (function(global){'use strict';
 const SKINS=Object.freeze(DATA.map(s=>Object.freeze(s)));
 const byId=new Map(SKINS.map(s=>[s.id,s]));
-const api=Object.freeze({VERSION:'skin100-recovery-20261031',SKINS,get:id=>byId.get(id),validFor:(id,faction)=>byId.get(id)?.status==='ready'&&byId.get(id).faction===faction});
+const api=Object.freeze({VERSION:'ground-special-20261031',SKINS,get:id=>byId.get(id),validFor:(id,faction)=>byId.get(id)?.status==='ready'&&byId.get(id).faction===faction});
 global.DesertSkinCatalog=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
 """.replace('DATA',json.dumps(rows,ensure_ascii=False,separators=(',',':')))

@@ -1,0 +1,129 @@
+{
+  "faction": 4,
+  "role": 6,
+  "kind": "ground",
+  "source": "sources/ground-special/faction-4-atlas.png",
+  "source_sha256": "c744e78c895b4220eb1a5cdddc0f628f0b4c8168457e076d81a2273950511373",
+  "columns": [
+    0,
+    131,
+    256,
+    389,
+    516,
+    648,
+    770,
+    889,
+    1024
+  ],
+  "rows": [
+    0,
+    135,
+    238,
+    352,
+    464,
+    581,
+    707,
+    842,
+    970,
+    1104,
+    1244,
+    1370,
+    1536
+  ],
+  "poses": [
+    "idle",
+    "ready",
+    "move-1",
+    "move-2",
+    "attack-windup",
+    "attack-impact",
+    "skill",
+    "death"
+  ],
+  "skins": [
+    {
+      "skin": "default",
+      "row": 0,
+      "file": "uniform-beastkin-6.webp",
+      "sha256": "4278fde47452456c060402d1ca5e95208efcb31f92245f1e2f713e41688bcb68",
+      "kind": "ground"
+    },
+    {
+      "skin": "moe",
+      "row": 1,
+      "file": "moe-beastkin-actions.webp",
+      "sha256": "cabcb7a937a3ba46b34aa6759dc6f0e4a2c3f76968554360f140d035c0d66bad",
+      "kind": "ground"
+    },
+    {
+      "skin": "faction-4-skin-01",
+      "row": 2,
+      "file": "faction-4-skin-01-flyer-actions.webp",
+      "sha256": "41f2c780c937d7dc33c3f3923af7d1f97b3f4bbdca042a29a3d4164567a01180",
+      "kind": "ground"
+    },
+    {
+      "skin": "faction-4-skin-02",
+      "row": 3,
+      "file": "faction-4-skin-02-flyer-actions.webp",
+      "sha256": "f144909df88118f04dad3d83cd3b424a0870b752b59f82878de927d54a40f589",
+      "kind": "ground"
+    },
+    {
+      "skin": "faction-4-skin-03",
+      "row": 4,
+      "file": "faction-4-skin-03-flyer-actions.webp",
+      "sha256": "e7c48ca64a61f621ef14cb616419843bf82130e5e95e574015b5c789801ec533",
+      "kind": "ground"
+    },
+    {
+      "skin": "faction-4-skin-04",
+      "row": 5,
+      "file": "faction-4-skin-04-flyer-actions.webp",
+      "sha256": "aab682353bbc901ce4868ce002efa73bb7b9e31fb8f40cf7b7aa346d2564f924",
+      "kind": "ground"
+    },
+    {
+      "skin": "faction-4-skin-05",
+      "row": 6,
+      "file": "faction-4-skin-05-flyer-actions.webp",
+      "sha256": "b706a9e12de5f4ab992964979260c376f324941fe39da1465cf5a713278c12fa",
+      "kind": "ground"
+    },
+    {
+      "skin": "faction-4-skin-06",
+      "row": 7,
+      "file": "faction-4-skin-06-flyer-actions.webp",
+      "sha256": "263bfbf7608194a887010d8be6dd8fdbfc22cb962d3ec1c36abb3e424cffca7d",
+      "kind": "ground"
+    },
+    {
+      "skin": "faction-4-skin-07",
+      "row": 8,
+      "file": "faction-4-skin-07-flyer-actions.webp",
+      "sha256": "33fac907db18336b5c593b9ec7a4a9396fb2642dd251a0d5b6950afcd4f4dda5",
+      "kind": "ground"
+    },
+    {
+      "skin": "faction-4-skin-08",
+      "row": 9,
+      "file": "faction-4-skin-08-flyer-actions.webp",
+      "sha256": "83a54c39984fd16c9cf72dabcef3b712d2f686a6842e379be613e47d71732a4d",
+      "kind": "ground"
+    },
+    {
+      "skin": "faction-4-skin-09",
+      "row": 10,
+      "file": "faction-4-skin-09-flyer-actions.webp",
+      "sha256": "8ed9e84b8a07daef8c9aab86e6df71ddb8c85f0af06ef55c0bffe82494e64994",
+      "kind": "ground"
+    },
+    {
+      "skin": "faction-4-skin-10",
+      "row": 11,
+      "file": "faction-4-skin-10-flyer-actions.webp",
+      "sha256": "4d325e8f5091522b9866f435fe6e73b5612d2e95ef5c68e74ac3dfe1f35becd7",
+      "kind": "ground"
+    }
+  ]
+}

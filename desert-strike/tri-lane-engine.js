@@ -71,6 +71,8 @@ function counterAdvantage(wave){return wave>=60?2:wave>=50?1.85:wave>=40?1.75:wa
 function matchupMultiplier(attacker,target,wave,attackRole=attacker.role){
  if(target.role===6&&[3,4,6,7].includes(target.faction)){
   if(attackRole===2)return 1.65*counterAdvantage(wave)/1.55;
+  if(attackRole===3&&target.faction!==7)return counterAdvantage(wave);
+  if(attackRole===5&&target.faction===7)return counterAdvantage(wave);
   return attackRole===0?.68:attackRole===4?.78:1;
  }
  return attacker.good.includes(target.role)?counterAdvantage(wave):attacker.bad.includes(target.role)?.7:1;
