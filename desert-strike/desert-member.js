@@ -7,28 +7,34 @@ const PROJECT='https://gshcrhfqpkkcwinrbqjm.supabase.co';
 const KEY='sb_publishable_w5JXAnoVsKky54QgiAPtAg_UyzmZAli';
 const EMAIL_DOMAIN='@accounts.desertfront.invalid';
 const SDK='https://esm.sh/@supabase/supabase-js@2.76.1';
-let clientPromise,member=null,session=null,match=null,saveTimer=null,processing=false,registrationVersion=0;
+let clientPromise,member=null,session=null,match=null,saveTimer=null,processing=false,registrationVersion=0,discordPending=null,discordLinked=false;
 let soloRun=null,soloRegistrationVersion=0,restorePromise=null,restored=false;
 const $=id=>document.getElementById(id);
 const username=id=>String(id||'').trim().toLowerCase();
 const status=t=>{if($('careerStatus'))$('careerStatus').textContent=t;};
 async function api(){
  if(!clientPromise)clientPromise=import(SDK).then(({createClient})=>createClient(PROJECT,KEY,{
-  auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:false,storageKey:'desert-front-member-auth-v1'}
+  auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true,storageKey:'desert-front-member-auth-v1'}
  })).catch(e=>{clientPromise=null;throw e;});
  return clientPromise;
 }
 function account(){return member?{username:member.username,nickname:member.nickname,userId:member.user_id}:null;}
 function show(){
- const a=account(),b=$('careerAccount'),label=$('lobbyAccountStatus');
- if(b)b.textContent=a?'회원 · '+a.username+' ('+a.nickname+')':'게스트 플레이 · 이 브라우저';
- if(label)label.textContent=a?'회원 · '+a.nickname:'게스트 · 이 기기';
+ const a=account(),onboarding=!!discordPending,b=$('careerAccount'),label=$('lobbyAccountStatus');
+ if(b)b.textContent=a?'회원 · '+a.username+' ('+a.nickname+')':onboarding?'Discord 인증 완료 · 지휘관 아이디를 등록하세요.':'게스트 플레이 · 이 브라우저';
+ if(label)label.textContent=a?'회원 · '+a.nickname:onboarding?'Discord 회원 등록 대기':'게스트 · 이 기기';
  $('careerLogout')?.toggleAttribute('hidden',!a);
- $('careerRegister')?.toggleAttribute('hidden',!!a);
- $('careerLogin')?.toggleAttribute('hidden',!!a);
- const open=$('careerOpen');if(open)open.textContent=a?'내 계정 · 전적':'로그인 / 회원가입';
+ $('careerRegister')?.toggleAttribute('hidden',!!a||onboarding);
+ $('careerLogin')?.toggleAttribute('hidden',!!a||onboarding);
+ $('careerGuest')?.toggleAttribute('hidden',!!a);
+ $('careerDiscordLogin')?.toggleAttribute('hidden',!!a||onboarding);
+ $('careerDiscordLink')?.toggleAttribute('hidden',!a||discordLinked);
+ $('careerDiscordConnected')?.toggleAttribute('hidden',!a||!discordLinked);
+ $('careerDiscordSetup')?.toggleAttribute('hidden',!onboarding);
+ const panel=$('careerPanel');if(panel)panel.dataset.discordSetup=String(onboarding);
+ const open=$('careerOpen');if(open)open.textContent=a?'내 계정 · 전적':onboarding?'Discord 지휘관 등록':'로그인 / 회원가입';
  if(a)global.DesertCareer?.setMode?.('member');
- else if($('careerPanel')?.dataset.authMode==='member')global.DesertCareer?.setMode?.('login');
+ else if(panel?.dataset.authMode==='member'||onboarding)global.DesertCareer?.setMode?.('login');
  global.DesertCareer?.render?.();
 }
 async function loadMember(user,importGuest=false){
@@ -37,6 +43,12 @@ async function loadMember(user,importGuest=false){
  if(error)throw error;
  clearTimeout(saveTimer);
  member=data||null;
+ // Re-read the authenticated user so a newly linked Discord identity is visible after OAuth.
+ const {data:authData,error:authError}=await db.auth.getUser();
+ if(authError)throw authError;
+ const currentUser=authData.user||user;
+ discordLinked=!!currentUser.identities?.some(identity=>identity.provider==='discord');
+ discordPending=!member&&discordLinked?currentUser:null;
  global.DesertSkinShop?.setAccount(user.id,null);
  session=(await db.auth.getSession()).data.session;
  if(member){
@@ -57,8 +69,11 @@ function restore(){
  if(restorePromise)return restorePromise;
  restorePromise=(async()=>{
   try{const db=await api(),{data,error}=await db.auth.getSession();if(error)throw error;
-   if(data.session)await loadMember(data.session.user);
-   else {member=null;session=null;global.DesertSkinShop?.setAccount(null,null);global.DesertCareer?.setLadders?.(null);show();}
+   if(data.session){
+    await loadMember(data.session.user);
+    if(discordPending){status('Discord 인증 완료 · 사용할 지휘관 아이디와 닉네임을 등록하세요.');global.DesertCareer?.open?.();}
+   }
+   else {member=null;session=null;discordPending=null;discordLinked=false;global.DesertSkinShop?.setAccount(null,null);global.DesertCareer?.setLadders?.(null);show();}
   }catch(e){status('Supabase 계정 확인 실패: '+(e.message||e));}
   finally{restored=true;}
  })();
@@ -87,11 +102,44 @@ async function login(id,pass){
  if(result.error)throw Error('아이디 또는 비밀번호를 확인해 주세요.');
  await loadMember(result.data.user,false);return account();
 }
+
+function oauthReturnUrl(){return global.location.origin+global.location.pathname;}
+async function signInDiscord(){
+ if(member)throw Error('기존 회원은 Discord 계정 연결 기능을 사용해 주세요.');
+ if(discordPending)throw Error('먼저 Discord 지휘관 등록을 완료해 주세요.');
+ const db=await api();
+ const {error}=await db.auth.signInWithOAuth({provider:'discord',options:{redirectTo:oauthReturnUrl()}});
+ if(error)throw error;
+}
+async function linkDiscord(){
+ if(!member)throw Error('기존 아이디로 먼저 로그인해야 계정을 연결할 수 있습니다.');
+ const db=await api(),{data,error}=await db.auth.getUser();
+ if(error)throw error;
+ if(data.user?.id!==member.user_id)throw Error('로그인 계정이 변경되었습니다. 다시 로그인해 주세요.');
+ if(data.user.identities?.some(identity=>identity.provider==='discord')){discordLinked=true;show();return;}
+ const result=await db.auth.linkIdentity({provider:'discord',options:{redirectTo:oauthReturnUrl()}});
+ if(result.error)throw Error(result.error.message+' · Supabase Auth 설정에서 수동 계정 연결(Manual Linking)이 활성화되어 있는지 확인해 주세요.');
+}
+async function finishDiscordSignup(id,nick){
+ if(!discordPending)throw Error('Discord 인증을 먼저 완료해 주세요.');
+ const userId=username(id),nickname=String(nick||'').trim();
+ if(!/^[a-z0-9_]{4,20}$/.test(userId))throw Error('아이디는 영문 소문자·숫자·_ 4~20자입니다.');
+ if(!nickname||Array.from(nickname).length>16)throw Error('닉네임은 1~16자입니다.');
+ const db=await api(),{data:authData,error:authError}=await db.auth.getUser();
+ if(authError)throw authError;
+ if(authData.user?.id!==discordPending.id||!authData.user.identities?.some(i=>i.provider==='discord'))
+  throw Error('Discord 로그인 세션이 달라졌습니다. 다시 로그인해 주세요.');
+ const {error}=await db.rpc('desert_discord_claim_member',{p_username:userId,p_nickname:nickname});
+ if(error)throw error;
+ await loadMember(authData.user,true);
+ if(!member)throw Error('회원 정보 등록을 확인할 수 없습니다.');
+ return account();
+}
 async function logout(){
  if(match?.tracked&&match.playing&&!match.ended)await forfeit();
  const db=await api(),{error}=await db.auth.signOut();
  if(error)throw error;
- clearTimeout(saveTimer);member=null;session=null;match=null;soloRun=null;soloRegistrationVersion++;global.DesertSkinShop?.setAccount(null,null);global.DesertCareer?.setLadders?.(null);global.DesertLobby?.useGuestProfile?.();show();
+ clearTimeout(saveTimer);member=null;session=null;discordPending=null;discordLinked=false;match=null;soloRun=null;soloRegistrationVersion++;global.DesertSkinShop?.setAccount(null,null);global.DesertCareer?.setLadders?.(null);global.DesertLobby?.useGuestProfile?.();show();
 }
 async function saveProgress(progress,immediate=false){
  if(!member||!progress)return;
@@ -288,20 +336,23 @@ function fastForfeit(){
 function init(){
  const btn=(id,handler)=>$(id)?.addEventListener('click',async()=>{
   if(processing)return;processing=true;
-  try{status('계정을 처리하고 있습니다…');await handler();status('완료 · 계정 진행도를 이어서 플레이할 수 있습니다.');if(['careerRegister','careerLogin','careerGuest'].includes(id))global.DesertCareer?.close?.();}
+  try{status('계정을 처리하고 있습니다…');await handler();status('완료 · 계정 진행도를 이어서 플레이할 수 있습니다.');if(['careerRegister','careerLogin','careerGuest','careerDiscordFinish'].includes(id))global.DesertCareer?.close?.();}
   catch(e){status('처리 실패: '+(e.message||e));}
   finally{processing=false;const pw=$('careerPassword');if(pw)pw.value='';show();}
  });
  btn('careerRegister',()=>signup($('careerEmail').value,$('careerPassword').value,$('careerNickname').value));
  btn('careerLogin',()=>login($('careerEmail').value,$('careerPassword').value));
  btn('careerLogout',logout);
- btn('careerGuest',async()=>{if(member)await logout();global.DesertCareer?.close?.();});
+ btn('careerDiscordLogin',signInDiscord);
+ btn('careerDiscordLink',linkDiscord);
+ btn('careerDiscordFinish',()=>finishDiscordSignup($('careerDiscordUsername').value,$('careerDiscordNickname').value));
+ btn('careerGuest',async()=>{if(member||discordPending)await logout();global.DesertCareer?.close?.();});
  global.addEventListener('online',()=>void retrySoloRewards());
  global.addEventListener('pagehide',fastForfeit);
  global.addEventListener('beforeunload',fastForfeit);
  show();
 }
-global.DesertMember=Object.freeze({restore,signup,login,logout,onlineSession,account,isMember:()=>!!member,
+global.DesertMember=Object.freeze({restore,signup,login,logout,signInDiscord,linkDiscord,finishDiscordSignup,onlineSession,account,isMember:()=>!!member,
  beginSolo,finishSolo,retrySoloRewards,refreshSkinWallet,buySkin,saveProgress,joinMatch,startMatch,markPlaying,poll,forfeit,reportResult,pendingState,endMatch,refreshRating});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })(window);
