@@ -1,5 +1,5 @@
 /* Supabase ID/password account and server-authoritative abandonment ledger.
- * Firebase continues to handle P2P signaling. No service key or password storage.
+ * Supabase also owns lobby and SDP signaling; combat remains WebRTC peer-to-peer.
  */
 (function(global){
 'use strict';
@@ -209,6 +209,12 @@ async function ensureGuestSession(){
  if(result.error)throw Error('Supabase 게스트 인증이 꺼져 있습니다. 서버 탈주 판정이 필요한 경기는 회원 로그인으로 이용하세요.');
  session=result.data.session;return result.data.session;
 }
+async function onlineSession(){
+ const db=await api();
+ const session=await ensureGuestSession();
+ if(!session?.user?.id)throw Error('Supabase 온라인 인증에 실패했습니다.');
+ return {db,uid:session.user.id};
+}
 async function joinMatch(opts){
  const version=++registrationVersion;
  try{
@@ -295,7 +301,7 @@ function init(){
  global.addEventListener('beforeunload',fastForfeit);
  show();
 }
-global.DesertMember=Object.freeze({restore,signup,login,logout,account,isMember:()=>!!member,
+global.DesertMember=Object.freeze({restore,signup,login,logout,onlineSession,account,isMember:()=>!!member,
  beginSolo,finishSolo,retrySoloRewards,refreshSkinWallet,buySkin,saveProgress,joinMatch,startMatch,markPlaying,poll,forfeit,reportResult,pendingState,endMatch,refreshRating});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })(window);
