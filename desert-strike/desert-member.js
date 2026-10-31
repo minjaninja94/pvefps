@@ -254,7 +254,7 @@ async function ensureGuestSession(){
  const {data}=await db.auth.getSession();
  if(data.session){session=data.session;return data.session;}
  const result=await db.auth.signInAnonymously();
- if(result.error)throw Error('Supabase 게스트 인증이 꺼져 있습니다. 서버 탈주 판정이 필요한 경기는 회원 로그인으로 이용하세요.');
+ if(result.error)throw Error('익명 멀티 인증 실패: '+result.error.message+' · Supabase Authentication > Sign In / Providers에서 Anonymous Sign-Ins를 켜 주세요.');
  session=result.data.session;return result.data.session;
 }
 async function onlineSession(){
@@ -346,7 +346,13 @@ function init(){
  btn('careerDiscordLogin',signInDiscord);
  btn('careerDiscordLink',linkDiscord);
  btn('careerDiscordFinish',()=>finishDiscordSignup($('careerDiscordUsername').value,$('careerDiscordNickname').value));
- btn('careerGuest',async()=>{if(member||discordPending)await logout();global.DesertCareer?.close?.();});
+ btn('careerGuest',async()=>{
+  if(member||discordPending)await logout();
+  const identity=await onlineSession();
+  if(!identity.uid)throw Error('게스트 온라인 인증을 확인할 수 없습니다.');
+  status('게스트 온라인 접속 완료 · 멀티플레이 가능 · 스킨 포인트와 공식 랭킹은 회원 전용입니다.');
+  global.DesertCareer?.close?.();
+ });
  global.addEventListener('online',()=>void retrySoloRewards());
  global.addEventListener('pagehide',fastForfeit);
  global.addEventListener('beforeunload',fastForfeit);
