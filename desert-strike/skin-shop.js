@@ -10,7 +10,7 @@ const CHROMAS=Object.freeze([
  {id:'emerald',name:'에메랄드',icon:'❖',tone:'#6ce4a1',filter:'sepia(.75) saturate(2.4) hue-rotate(75deg)'},
  {id:'cobalt',name:'코발트',icon:'✦',tone:'#719eff',filter:'sepia(.7) saturate(2.8) hue-rotate(175deg) contrast(1.1)'},
  {id:'rose',name:'장미',icon:'♥',tone:'#ff9dd4',filter:'sepia(.6) saturate(2.2) hue-rotate(285deg) brightness(1.05)'},
- {id:'obsidian',name:'흑요석',icon:'◈',tone:'#9aa3b6',filter:'grayscale(1) brightness(.48) contrast(1.35)'},
+ {id:'obsidian',name:'흑요석',icon:'◈',tone:'#b7c9dc',filter:'grayscale(.9) brightness(1.3) contrast(.8)'},
  {id:'ivory',name:'상아',icon:'❅',tone:'#f8f1db',filter:'grayscale(.85) brightness(1.6) contrast(.8)'},
  {id:'sunset',name:'석양',icon:'☀',tone:'#ffb16a',filter:'sepia(.9) saturate(2.5) hue-rotate(345deg) brightness(1.1)'}
 ].map(Object.freeze));

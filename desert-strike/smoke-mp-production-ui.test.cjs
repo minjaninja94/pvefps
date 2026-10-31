@@ -52,6 +52,7 @@ const cost=[65,100,185,285,185,360,300,220],unitNames=['돌격','사격','대장
 const engine={SLOTS:75,COST:cost,NAMES:unitNames,EXTRACTOR:8,OPENING_PREP_SECONDS:10,FACTORY_BUILD_SECONDS:12,incomePerTick:level=>[1,2.2,3.2,4.05,4.8,5.45,6,6.45][level],ecoBuildSeconds:level=>12+4*(level-1),ecoPrice(){return 70;},ecoStabilize(){return 8;},WEAPON_COST(n){return Math.round(200*Math.pow(1.65,n));},ARMOR_COST(n){return Math.round(190*Math.pow(1.63,n));}};
 const window={DesertTriEngine:engine,DesertTriNetwork:network,addEventListener:no,
  DesertRoster:{FACTIONS:[{name:'철갑연합',units:unitNames}],getDef(){return {kind:'ground',tips:'테스트 병력'};}},};
+vm.runInNewContext(fs.readFileSync(path.join(root,'multiplayer-motion.js'),'utf8'),{window});
 vm.runInNewContext(src,{window,document:doc,performance:{now:()=>1000},requestAnimationFrame:no,console,Math,Number,Array,Object,Promise,setInterval:no,clearInterval:no},{filename:'tri-lane-ui.js',timeout:10000});
 network.handlers.room({uid:'local',host:true,id:'test',room:{status:'playing',players:{local:{team:0,name:'시험',faction:0,ready:true}},host:'local'}});
 const buildings=Array.from({length:3},()=>Array(75).fill(null));

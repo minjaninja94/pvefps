@@ -291,7 +291,11 @@ function broadcast(force=false){
  const now=performance.now();
  if(!force&&now-lastFrame<200)return;
  lastFrame=now;
- snapshotSeq++;for(const [guest,ch] of channels)send(ch,{type:'snapshot',seq:snapshotSeq,state:engine.snapshot(guest)});
+ snapshotSeq++;for(const [guest,ch] of channels){
+  // Avoid constructing private snapshots for closed or congested connections.
+  if(ch?.readyState!=='open'||ch.bufferedAmount>65536)continue;
+  send(ch,{type:'snapshot',seq:snapshotSeq,state:engine.snapshot(guest)});
+ }
  notify('snapshot',engine.snapshot(uid));
 }
 async function start(){

@@ -7,6 +7,17 @@ const TAU=Math.PI*2,LIST=[
 const ACTIONS=Object.freeze(LIST.map(([id,label,fps])=>({id,label,fps})));
 const byId=Object.fromEntries(ACTIONS.map(a=>[a.id,a])),BASE={hit:'attack',skill:'siege',spawn:'idle'};
 function frameAt(action,seconds){return Math.floor(Math.max(0,seconds)*(byId[action]||byId.idle).fps)%16;}
+// Bound filtered-frame memory; apply chroma filters once per source, not per unit.
+const tinted=new Map(),sourceIds=new WeakMap();let nextSourceId=0;
+function tint(source,filter){
+ if(filter==='none'||!global.document?.createElement)return null;
+ let id=sourceIds.get(source);if(!id){id=++nextSourceId;sourceIds.set(source,id);}
+ const key=id+':'+filter,hit=tinted.get(key);
+ if(hit){tinted.delete(key);tinted.set(key,hit);return hit;}
+ const c=global.document.createElement('canvas');c.width=source.width;c.height=source.height;
+ const g=c.getContext('2d');if(!g)return null;g.filter=filter;g.drawImage(source,0,0);
+ tinted.set(key,c);if(tinted.size>512)tinted.delete(tinted.keys().next().value);return c;
+}
 function draw(ctx,{faction=0,role=0,action='idle',frame=0,x=0,y=0,size=72,filter='none',skin='default',isHatchling=false}={}){
  if(!ctx)return false;
  const appearance=global.DesertSkinShop?.resolve(skin);if(appearance){skin=appearance.baseId;filter=appearance.filter;}
@@ -24,7 +35,7 @@ function draw(ctx,{faction=0,role=0,action='idle',frame=0,x=0,y=0,size=72,filter
  if(action==='spawn'){const z=.35+.65*Math.min(1,t*2.7);ctx.scale(z,z);ctx.globalAlpha=Math.min(1,.18+t*4);}
  if(action==='hit'){ctx.translate(-Math.sin(t*Math.PI)*size*.07,0);ctx.rotate(-Math.sin(t*Math.PI)*.12);}
  if(action==='skill')ctx.translate(0,-Math.sin(t*Math.PI)*size*.045);
- ctx.filter=filter;ctx.drawImage(source,-size/2,-size/2,size,size);ctx.filter='none';
+ const colored=tint(source,filter);ctx.filter=colored?'none':filter;ctx.drawImage(colored||source,-size/2,-size/2,size,size);ctx.filter='none';
  if(action==='hit'){ctx.fillStyle='#ff6677';ctx.globalAlpha=(1-t)*.35;ctx.fillRect(-size*.34,-size*.43,size*.68,size*.82);}
  if(action==='spawn'||action==='skill'){
   ctx.strokeStyle=hue;ctx.lineWidth=Math.max(1,size/45);ctx.globalAlpha=.3+.5*(1-t);
