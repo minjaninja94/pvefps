@@ -16,6 +16,7 @@ function notify(k){
 }
 const firestore={
  doc(db,...parts){return {path:parts.join('/')};},
+ async getDoc(ref){return docSnap(records.get(key(ref)));},
  async setDoc(ref,value){if(ref.path.startsWith('desertRooms/')&&!ref.path.includes('/signals/'))for(const p of Object.values(value.players||{}))assert.ok(['default','moe','twilight','aurora','gold'].includes(p.skin),'legacy deployed rules still accept room cosmetics');records.set(key(ref),clone(value));notify(key(ref));},
  async updateDoc(ref,p){const old=records.get(key(ref));if(!old)throw Error('document missing');
   records.set(key(ref),{...clone(old),...clone(p)});notify(key(ref));},
