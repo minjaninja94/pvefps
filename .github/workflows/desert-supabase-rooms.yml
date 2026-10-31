@@ -8,6 +8,8 @@ on:
       - "desert-strike/desert-member.js"
       - "desert-strike/career-profile.js"
       - "desert-strike/index.html"
+      - "desert-strike/assets/brand/desert-front-icon.webp"
+      - "desert-strike/smoke-site-icon.test.cjs"
       - "desert-strike/style-v2.css"
       - "desert-strike/smoke-discord-auth.test.cjs"
       - "desert-strike/smoke-guest-multiplayer.test.cjs"
@@ -47,6 +49,8 @@ jobs:
           node --check desert-strike/front-lobby.js
       - name: Member-ranked PvP versus anonymous guests and guest login UI
         run: node desert-strike/smoke-ranked-guest-mix.test.cjs
+      - name: Desert Front website and HUD brand icon
+        run: node desert-strike/smoke-site-icon.test.cjs
       - name: Anonymous guest online multiplayer (no Discord)
         run: node desert-strike/smoke-guest-multiplayer.test.cjs
       - name: Discord OAuth login and linked account regression
