@@ -4,11 +4,16 @@
  const KEY = 'desert-front-lobby-music-enabled';
  const SOURCES = {
   lobby: './assets/audio/lobby-theme.mp3',
-  battle: './assets/audio/battle-theme.mp3'
+  battle: './assets/audio/battle-theme.mp3',
+  horizon: './assets/audio/horizon-of-the-titan.mp3',
+  iron: './assets/audio/iron-vanguard.mp3'
  };
- const VOLUMES = {lobby: 0.3, battle: 0.35};
+ const VOLUMES = {lobby: 0.3, battle: 0.3, horizon: 0.3, iron: 0.3};
+ // New masters are approximately -14.4 LUFS; match the older battle master at playback.
+ const GAINS={lobby:1,battle:.711,horizon:1,iron:1};
+ const BATTLE=['battle','horizon','iron'];let battleStage=0;
  const VOLUME_KEY='desert-front-volume-music';
- try{const n=global.localStorage.getItem(VOLUME_KEY);if(n!==null&&n!==''&&Number.isFinite(Number(n))){VOLUMES.lobby=VOLUMES.battle=Math.min(1,Math.max(0,Number(n)/100));}}catch(_){}
+ try{const n=global.localStorage.getItem(VOLUME_KEY);if(n!==null&&n!==''&&Number.isFinite(Number(n))){for(const kind of Object.keys(VOLUMES))VOLUMES[kind]=Math.min(1,Math.max(0,Number(n)/100));}}catch(_){}
  const players = Object.create(null);
  let scene = 'none';
  let enabled = true;
@@ -27,7 +32,7 @@
    const audio = new Audio(SOURCES[kind]);
    audio.loop = true;
    audio.preload = 'auto';
-   audio.volume = VOLUMES[kind];
+   audio.volume = VOLUMES[kind]*GAINS[kind];
    players[kind] = audio;
   }
   return players[kind];
@@ -50,15 +55,21 @@
   if (scene === next) { tryPlay(); return; }
   pauseAll();
   scene = next;
-  if (next === 'battle') {
-   const audio = getPlayer('battle');
+  if (BATTLE.includes(next)) {
+   const audio = getPlayer(next);
    try { audio.currentTime = 0; } catch (_) {}
   }
   tryPlay();
  }
- function enterLobby() { setScene('lobby'); }
- function exitLobby() { setScene('battle'); }
- function stopBattle() { if (scene === 'battle') setScene('none'); }
+ function enterLobby() { battleStage=0;setScene('lobby'); }
+ function exitLobby() { if(!BATTLE.includes(scene)){battleStage=0;setScene('battle');}else tryPlay();if(enabled)getPlayer('horizon'); }
+ function resetBattle(){battleStage=0;if(BATTLE.includes(scene))setScene('battle');}
+ function setBattleStage(value){
+  if(!BATTLE.includes(scene))return;
+  const next=Number(value);if(!Number.isInteger(next)||next<0||next>2||next<=battleStage)return;
+  battleStage=next;setScene(BATTLE[next]);if(next===1&&enabled)getPlayer('iron');
+ }
+ function stopBattle() { if (BATTLE.includes(scene)) setScene('none'); }
  function setEnabled(value) {
   enabled = Boolean(value);
   try { global.localStorage.setItem(KEY, String(enabled)); } catch (_) {}
@@ -67,9 +78,9 @@
   else pauseAll();
  }
  function setVolume(value) {
-  const next=Math.min(1,Math.max(0,Number(value)/100||0));VOLUMES.lobby=VOLUMES.battle=next;
+  const next=Math.min(1,Math.max(0,Number(value)/100||0));for(const kind of Object.keys(VOLUMES))VOLUMES[kind]=next;
   try{global.localStorage.setItem(VOLUME_KEY,String(Math.round(next*100)));}catch(_){}
-  for(const kind of Object.keys(players))players[kind].volume=next;
+  for(const kind of Object.keys(players))players[kind].volume=next*GAINS[kind];
  }
  function volume(){return Math.round(VOLUMES.lobby*100);}
  function init() {
@@ -85,7 +96,7 @@
   renderButton();
   if (document.body.classList.contains('lobby-active')) enterLobby();
  }
- global.DesertLobbyMusic = Object.freeze({enterLobby, exitLobby, stopBattle, setEnabled,setVolume,volume,isEnabled:()=>enabled});
+ global.DesertLobbyMusic = Object.freeze({enterLobby, exitLobby, stopBattle, resetBattle, setBattleStage, setEnabled,setVolume,volume,isEnabled:()=>enabled});
  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
  else init();
 })(window);

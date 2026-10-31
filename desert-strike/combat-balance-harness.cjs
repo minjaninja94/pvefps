@@ -23,6 +23,7 @@ function solo(seed=1,source=null){
 }
 function multi(seed=1){
  const env=environment(seed),marker='return {state,order,tick,wave,snapshot,definition};';
+ for(const file of ['skin-catalog.js','skin-shop.js'])vm.runInNewContext(read(file),env.sandbox,{filename:file});
  const source=read('tri-lane-engine.js');if(!source.includes(marker))throw Error('Multiplayer test hook missing');
  vm.runInNewContext(source.replace(marker,'return {state,order,tick,wave,snapshot,definition,__test:{applyHit,attack,spawn,broodLay,marineSpoils,combatDef,hardBotPurchase}};'),env.sandbox,{filename:'tri-lane-engine.js'});
  return {...env,E:env.window.DesertTriEngine};

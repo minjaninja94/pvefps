@@ -36,12 +36,13 @@ const firestore={
   return result;
  }
 };
-let nextOffer=1;const offered=new Map();
+let nextOffer=1,droppedAppearance=false;const offered=new Map();
 class Channel {
  constructor(){this.readyState='connecting';this.onopen=null;this.onmessage=null;this.onclose=null;this.peer=null;}
  connect(other){this.peer=other;other.peer=this;this.readyState='open';other.readyState='open';
   queueMicrotask(()=>{this.onopen?.();other.onopen?.();});}
  send(data){if(this.readyState!=='open'||!this.peer)throw Error('channel closed');
+  const packet=JSON.parse(data);if(packet.type==='appearance'&&packet.skin==='blood-iron~aurora'&&!droppedAppearance){droppedAppearance=true;return;}
   queueMicrotask(()=>this.peer.onmessage?.({data}));}
  close(){this.readyState='closed';this.onclose?.();}
 }
@@ -73,9 +74,10 @@ function buildClient(uid){
  for(const file of ['skin-catalog.js','skin-shop.js','prism-experiments.js','augment-rules.js'])vm.runInNewContext(fsNode.readFileSync(path.join(__dirname,file),'utf8'),env,{filename:file});
  vm.runInNewContext(engineSource,env,{filename:'tri-lane-engine.js'});
  vm.runInNewContext(networkSource,env,{filename:'tri-lane-network.js'});
+ let match=null;const baseEngine=w.DesertTriEngine;w.DesertTriEngine={...baseEngine,create(opts){match=baseEngine.create(opts);return match;}};
  const events={room:[],status:[],snap:[],peers:[]};
  w.DesertTriNetwork.configure({room:x=>events.room.push(x),status:x=>events.status.push(x),snapshot:x=>events.snap.push(x),peers:x=>events.peers.push(x)});
- return {network:w.DesertTriNetwork,augments:w.DesertAugments,events};
+ return {network:w.DesertTriNetwork,augments:w.DesertAugments,events,get match(){return match;}};
 
 }
 async function until(fn,ms=1800){
@@ -88,7 +90,7 @@ async function main(){
  const room=await host.network.create({mode:'pvp',size:1,name:'방장',faction:0,skin:'blood-iron~gold'});
  assert.match(room,/^[A-HJ-NP-Z2-9]{6}$/);
  assert.ok(records.has('desertRooms/'+room));
- const joined=await guest.network.join({code:room,name:'손님',faction:0,skin:'blood-iron~gold',team:1});
+ const joined=await guest.network.join({code:room,name:'손님',faction:0,skin:'blood-iron~aurora',team:1});
  assert.equal(joined,room);
  await until(()=>host.network.current().peers.has('guestUser'));
  assert.ok(host.events.status.some(s=>s.includes('연결')),'WebRTC data channel open');
@@ -101,11 +103,25 @@ async function main(){
  await until(()=>guest.events.snap.some(s=>s?.players?.find(p=>p.uid==='guestUser')?.buildings[2][8]===1));
  const received=guest.events.snap.find(s=>s?.players?.find(p=>p.uid==='guestUser')?.buildings[2][8]===1);
  assert.equal(received.players.find(p=>p.uid==='hostUser').skin,'blood-iron~gold','host cosmetic survives the peer snapshot');
- assert.equal(received.players.find(p=>p.uid==='guestUser').skin,'blood-iron~gold','guest cosmetic reaches the host over WebRTC');
+ assert.equal(received.players.find(p=>p.uid==='guestUser').skin,'blood-iron~aurora','guest cosmetic reaches the host over WebRTC');
  assert.equal(received.players.find(p=>p.uid==='guestUser').cash,260);
  assert.equal(received.players.find(p=>p.uid==='hostUser').cash,null,'unscouted opponent cash must not leak over WebRTC');
  assert.equal(host.events.snap.at(-1).players.find(p=>p.uid==='guestUser').cash,null,'host UI also receives per-viewer redaction');
  assert.ok(received.players.find(p=>p.uid==='hostUser').buildings.every(l=>l.every(x=>x===null)),'opponent facilities hidden from guest data packets');
+ assert.ok(droppedAppearance,'first cosmetic packet deliberately lost; start requests and receives it again');
+ host.network.sendOrder({type:'build',lane:1,slot:0,role:0});
+ host.match.state.seconds=20;host.match.wave();
+ for(const u of host.match.state.units){u.x=1650;u.y=u.lane*520+260;}
+ host.match.state.musicStage=1;host.network.sendOrder({type:'build',lane:1,slot:1,role:0});
+ await until(()=>guest.events.snap.at(-1)?.musicStage===1);
+ for(const client of [host,guest]){
+  const packet=client.events.snap.at(-1);
+  assert.ok(packet.units.some(u=>u.uid==='hostUser'&&u.skin==='blood-iron~gold'),'host units preserve selected paid chroma for both viewers');
+  assert.ok(packet.units.some(u=>u.uid==='guestUser'&&u.skin==='blood-iron~aurora'),'guest units preserve distinct paid chroma for both viewers');
+ }
+ host.match.state.musicStage=2;host.network.sendOrder({type:'build',lane:1,slot:2,role:0});
+ await until(()=>guest.events.snap.at(-1)?.musicStage===2);
+ assert.equal(host.events.snap.at(-1).musicStage,2,'highlight stage travels unchanged to both clients');
  const invalid=host.network.sendOrder({type:'build',lane:4,slot:7,role:0});
  assert.equal(invalid.ok,false,'bad lane rejected');
  await host.network.leave();

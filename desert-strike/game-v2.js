@@ -234,7 +234,7 @@ function reset(){
  built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),buildReadyAt:Array(SLOTS).fill(0),enemyBuildReadyAt:Array(SLOTS).fill(0),produced:[Array(11).fill(0),Array(11).fill(0)],combatStats:[combatRows(),combatRows()],units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},
  broodBirths:[0,0],broodBirthsTotal:[0,0],
- towerShots:[],aiSight:new Set(),nukes:1,enemyNukes:1,barrageCd:0,enemyBarrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
+ musicStage:0,combatTeams:0,towerShots:[],aiSight:new Set(),nukes:1,enemyNukes:1,barrageCd:0,enemyBarrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
  nextUnitId:1,attackCount:0,nextConsolidation:1,aiNextThink:0,aiLastRefitAt:-Infinity,aiIntelMemory:null,aiDifficulty:window.DesertLobby?.aiDifficulty?.()||'normal',hardBrain:null,prismWaveAt:-Infinity,
  ruleset:'standard',augments:[],enemyAugments:[],augmentChoice:null,augmentStage:-1,augmentSchedule:[],prismLastStandUsed:false,enemyPrismLastStandUsed:false};
  selectedRole=null;demolition=false;bannerSeconds=0;barrageSeconds=0;
@@ -253,7 +253,7 @@ function start(){
  reset();
  state.faction=selectedFaction;
  state.enemyFaction=(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length;
- state.live=true;
+ state.live=true;window.DesertLobbyMusic?.resetBattle?.();
  state.ruleset=ruleset;
  if(isAugmented(ruleset)){
   const seed=Date.now()>>>0;
@@ -1075,6 +1075,7 @@ function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
     state.units.filter(v=>v.hp>0&&v.side===attacker.side&&v!==attacker)) : null;
  if(special)hit+=special.bonus;
  u.hp-=hit;
+ if(hit>0&&attacker&&attacker.side!==u.side){state.combatTeams|=1<<attacker.side;if(state.combatTeams===3)state.musicStage=Math.max(1,state.musicStage);}
  if(u.hp<=0&&isAugmented(state.ruleset)){
   const reboot=ownPrism()?.survival?.(sideAugments(u.side),u,state.elapsed,u.hp)||0;
   if(reboot>0){u.hp=reboot;pulse(u.x,u.y,'#93dff3',35);floatText(u.x,u.y-25,'자동 재부팅!','#9ff2ff');}
@@ -1314,6 +1315,8 @@ function projectileImpact(p){
 }
 function tick(dt){
  if(!state.live||state.paused||state.ended||state.augmentChoice)return;
+ if(state.musicStage<2&&(!state.nukes||!state.enemyNukes)&&state.units.some(u=>u.hp>0&&!u.guardian&&(u.side===0?u.x>WORLD_W*.75:u.x<WORLD_W*.25)))state.musicStage=2;
+ window.DesertLobbyMusic?.setBattleStage?.(state.musicStage);
  if(state.followFront){
   const left=state.units.filter(u=>u.side===0),right=state.units.filter(u=>u.side===1);
   let center=WORLD_W/2;

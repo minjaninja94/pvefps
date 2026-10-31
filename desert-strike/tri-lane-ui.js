@@ -591,6 +591,11 @@ function onSnapshot(v){
  if(!v){motion.reset();snap=null;renderAugmentRoster();renderBattleAugments();global.DesertCombatAudio?.stop?.();return;}if(v.width!==3300||![520,1560].includes(v.height)||!Array.isArray(v.players)||(v.lanes!==undefined&&v.lanes!==(v.mode==='classic'?1:3)))return;
  const fresh=!snap,modeChanged=!snap||snap.mode!==v.mode;
  if(!$('frontLobby').hidden)global.DesertLobby?.enterMatch?.();
+ if(fresh){
+  global.DesertLobbyMusic?.resetBattle?.();
+  for(const p of v.players)global.DesertSkinArt?.preload?.(p.skin||'default');
+ }
+ if(!v.ended)global.DesertLobbyMusic?.setBattleStage?.(v.musicStage??0);
  combatAudioSnapshot(v);
  if(fresh||modeChanged)motion.reset();lastSnapshotAt=performance.now();motion.receive(v,lastSnapshotAt);snap=v;$('mpCommand').hidden=false;$('mpViewTabs').hidden=false;
  document.body.dataset.multiArena=v.mode==='classic'?'classic':'triple';

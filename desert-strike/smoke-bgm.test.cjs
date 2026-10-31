@@ -36,7 +36,8 @@ test('lobby and battle music are exclusive, loop, and obey the persistent switch
  assert.equal(lobby.loop,true);
  assert.equal(lobby.paused,false);
  manager.exitLobby();
- assert.equal(items.length,2);
+ assert.equal(items.length,3);
+ assert.ok(items[2].src.endsWith('horizon-of-the-titan.mp3'));assert.equal(items[2].paused,true,'next battle track preloads without overlapping playback');
  const battle = items[1];
  assert.equal(battle.src,'./assets/audio/battle-theme.mp3');
  assert.equal(battle.loop,true);

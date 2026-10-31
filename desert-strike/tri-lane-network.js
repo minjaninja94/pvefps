@@ -246,6 +246,7 @@ function handleChannel(guest,ch){
  ch.onerror=()=>status('P2P 연결 오류. 일부 네트워크는 TURN 릴레이 없이는 연결되지 않습니다.');
  ch.onmessage=e=>{
   let data;try{data=JSON.parse(e.data);}catch(err){return;}
+  if(data?.type==='request-appearance'&&!host&&room?.status==='lobby'){send(ch,{type:'appearance',skin:appearances.get(uid)||'default'});return;}
   if(host){
    if(data?.type==='appearance'&&room?.status==='lobby'&&room.players?.[guest]){appearances.set(guest,appearanceSkin(data.skin,Number(room.players[guest].faction)));return;}
    if(!engine||data?.type!=='order'||typeof data.seq!=='number')return;
@@ -304,8 +305,10 @@ async function start(){
  const guests=members().filter(m=>m.uid!==uid);
  if(guests.some(g=>channels.get(g.uid)?.readyState!=='open'))throw Error('모든 참가자의 P2P 연결이 완료되지 않았습니다.');
  // Cosmetic packets preserve compatibility with existing Firestore room rules.
+ for(const g of guests)if(!appearances.has(g.uid))send(channels.get(g.uid),{type:'request-appearance'});
  const appearanceDeadline=Date.now()+1500;
  while(guests.some(g=>!appearances.has(g.uid))&&Date.now()<appearanceDeadline)await new Promise(resolve=>setTimeout(resolve,20));
+ if(guests.some(g=>!appearances.has(g.uid)))throw Error('참가자의 스킨 정보를 동기화 중입니다. 잠시 후 다시 시작해 주세요.');
  if(!global.DesertTriEngine)throw Error('3라인 전투 엔진이 준비되지 않았습니다.');
  if(room.ruleset==='augment'||room.ruleset==='prism')await global.DesertAugments.load();
  engine=global.DesertTriEngine.create({mode:room.mode,size:room.size,members:members(),ruleset:validateRuleset(room.ruleset),seed:room.seed||1,aiDifficulty:global.DesertLobby?.aiDifficulty?.()||'normal'});
