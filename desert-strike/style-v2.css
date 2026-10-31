@@ -372,6 +372,8 @@ html{scroll-padding-top:calc(var(--command-hud-height) + 12px)}
 body[data-play-mode="solo"] .command-hud .mp-overview,body[data-play-mode="solo"] .command-hud .mp-command-bar,
 body:not([data-play-mode="multi"]) .command-hud .mp-overview,body:not([data-play-mode="multi"]) .command-hud .mp-command-bar,
 body[data-play-mode="multi"] .command-hud .stats,body[data-play-mode="multi"] .command-hud .production-intel{display:none!important}
+/* The full three-lane battlefield remains in the battle tab; hide only the redundant sticky HUD minimap. */
+body[data-play-mode="multi"] .command-hud .mp-overview{display:none!important}
 .upgrade-layer{position:fixed;inset:calc(var(--command-hud-height) + 8px) max(12px,calc((100vw - 1160px)/2)) 12px;z-index:65;overflow:auto;overscroll-behavior:contain;padding:16px;background:#13252af7;border:1px solid #c4aa78;border-radius:12px;box-shadow:0 22px 70px #000c}
 .upgrade-layer[hidden]{display:none!important}.upgrade-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;position:sticky;top:-16px;background:#13252afa;padding:12px 0;z-index:2}
 .upgrade-toolbar h2{font-size:22px;margin:4px 0}.upgrade-toolbar small{color:#c1cec5;font-size:11px}.upgrade-toolbar button{min-height:44px;flex-shrink:0}
@@ -907,3 +909,8 @@ body.career-modal-open .front-lobby{overflow:hidden}.career-history-details{bord
 .lobby-points{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0 0}
 .lobby-points>span{font-size:11px;color:#a6c4cf}
 .lobby-points>strong{font-size:17px;font-weight:850;color:#f6cb8d;font-variant-numeric:tabular-nums}
+
+/* Drafts are now embedded at the top of the actual battle tab. */
+#mpBattleView #mpAugmentPanel{scroll-margin-top:calc(var(--command-hud-height,230px) + 16px);border-color:#f2c980}
+#mpBattleView #mpAugmentPanel[hidden]{display:none!important}
+#mpBattleView #mpAugmentPanel>h3{color:#ffdfa6}

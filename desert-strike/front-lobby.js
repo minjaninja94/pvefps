@@ -48,7 +48,7 @@ function renderRuleset(){
   b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));
   b.disabled=roomActive;
  }
- const reward=$('lobbyRewardGuide');if(reward)reward.textContent='AI 승리 +'+(SHOP?.REWARDS.solo[progress.aiDifficulty]||100)+'P · 대전 승리 +500P / 패배 +200P';
+ const reward=$('lobbyRewardGuide');if(reward)reward.textContent=(global.DesertMember?.account?.()?'회원 ':'로그인 필요 · ')+'AI 승리 +'+(SHOP?.REWARDS.solo[progress.aiDifficulty]||100)+'P · 온라인 대전 승리 +500P / 패배 +200P';
  const description=$('lobbyRulesetDescription');
  if(description)description.textContent=selected
   ?'1·10·20·30·40·50·60·70웨이브에 '+(selectedRuleset==='prism'?'프리즘 증강만 선택합니다.':'증강을 선택합니다.')

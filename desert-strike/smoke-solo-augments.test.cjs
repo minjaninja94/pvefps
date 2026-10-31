@@ -34,7 +34,7 @@ for(const initialRuleset of ['augment','prism'])test(initialRuleset+' draft work
  vm.runInNewContext(src('augment-rules.js'),sandbox,{filename:'augment-rules.js',timeout:3000});
  await w.DesertAugments.load();
  vm.runInNewContext(src('sprite-animations.js'),sandbox,{filename:'sprite-animations.js',timeout:3000});
- const inject="window.__soloTest={state:()=>state,start,reset,wave,tick,createUnit,effectiveDef,combatDef,getDef,damage,heal,supplyCap,chooseSoloAugment,rerollSoloAugment,advanceSoloAugmentTimer};initFactions();wire();reset();";
+ const inject="window.__soloTest={state:()=>state,start,reset,wave,tick,createUnit,effectiveDef,combatDef,getDef,damage,heal,supplyCap,changeView,activeView:()=>activeView,chooseSoloAugment,rerollSoloAugment,advanceSoloAugmentTimer};initFactions();wire();reset();";
  const game=src('game-v2.js').replace("initFactions();wire();reset();",inject);
  assert.ok(game.includes(inject),'sandbox game injection');
  vm.runInNewContext(game,sandbox,{filename:'game-v2.js',timeout:9000});
@@ -50,6 +50,8 @@ for(const initialRuleset of ['augment','prism'])test(initialRuleset+' draft work
  assert.equal(enemyFirst.tier,st.augmentChoice.tier,'AI draft receives the same rarity as the human');
  assert.ok(['common','faction-'+st.enemyFaction].includes(enemyFirst.scope),'AI never receives another faction\'s signature card');
  assert.equal(el('soloAugmentOverlay').classList.contains('hidden'),false);
+ assert.equal(G.activeView(),'battle','first draft automatically opens the battle view');
+ assert.match(el('battleStatus').textContent,/증강 선택 중 · 전투 일시정지/);
  const before=st.elapsed;G.tick(20);assert.equal(st.elapsed,before,'battle clock freezes during draft');
  const card0=st.augmentChoice.cards[0];
  assert.ok(G.rerollSoloAugment(0),'one reroll is allowed');
@@ -66,9 +68,11 @@ for(const initialRuleset of ['augment','prism'])test(initialRuleset+' draft work
   assert.equal(enhanced[key],expected[key],'player '+key+' follows the actual card rule, including zero baseline stats');
  }
  G.tick(.5);assert.ok(st.elapsed>0);
+ G.changeView('base');assert.equal(G.activeView(),'base');
  st.built[0]=0;st.wave=9;const count=st.produced[0][0];
  G.wave();assert.equal(st.wave,10);
  assert.equal(st.augmentChoice.round,10);
+ assert.equal(G.activeView(),'battle','later draft switches construction back to battle');
  assert.equal(st.enemyAugments.length,2,'AI gets its second distinct card on wave 10');
  assert.equal(w.DesertAugments.card(st.enemyAugments[1]).tier,st.augmentChoice.tier);
  assert.equal(new Set(st.enemyAugments).size,2,'AI cannot draft duplicates');
