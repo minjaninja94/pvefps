@@ -1,0 +1,39 @@
+name: Faction skin browser verification
+on:
+  workflow_dispatch:
+  push:
+    branches: ["codex/skin100-recovery-20261031"]
+    paths:
+      - ".github/workflows/skin100-browser.yml"
+      - "desert-strike/tests/skin-browser.cjs"
+      - "desert-strike/blood-iron-art.js"
+      - "desert-strike/front-lobby.js"
+      - "desert-strike/unit-motion.js"
+      - "desert-strike/index.html"
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install isolated browser test dependencies
+        run: |
+          npm install --prefix "$RUNNER_TEMP/skin-browser" --no-package-lock --ignore-scripts playwright@1.64.1
+          node "$RUNNER_TEMP/skin-browser/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Verify real skin rendering and selection
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/skin-server.log" 2>&1 &
+          NODE_PATH="$RUNNER_TEMP/skin-browser/node_modules" node desert-strike/tests/skin-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: faction-skin-browser-evidence
+          path: |
+            skin-browser-preview.png
+            skin-browser-lobby.png
+          if-no-files-found: ignore
