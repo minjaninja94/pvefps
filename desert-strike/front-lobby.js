@@ -48,6 +48,7 @@ function renderRuleset(){
   b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));
   b.disabled=roomActive;
  }
+ const reward=$('lobbyRewardGuide');if(reward)reward.textContent='AI 승리 +'+(SHOP?.REWARDS.solo[progress.aiDifficulty]||100)+'P · 대전 승리 +500P / 패배 +200P';
  const description=$('lobbyRulesetDescription');
  if(description)description.textContent=selected
   ?'1·10·20·30·40·50·60·70웨이브에 '+(selectedRuleset==='prism'?'프리즘 증강만 선택합니다.':'증강을 선택합니다.')
@@ -242,7 +243,7 @@ function importProgress(v){if(!v||typeof v!=='object')return;const next=empty();
  next.aiDifficulty=normalizeDifficulty(v.aiDifficulty);progress=next;save();render();}
 function useGuestProfile(){progress=load();render();}
 function grantXP(amount){progress.xp=Math.min(10000000,progress.xp+Math.max(0,Math.floor(amount)));stateChange();}
-function completeSolo({win,wave,seconds}){if(win)progress.wins++;else progress.losses++;global.DesertCareer?.record?.({mode:'solo',size:1,side:0,winner:win?0:1,faction:progress.selectedFaction,wave,seconds,online:false});grantXP((win?120:45)+Math.min(80,Math.floor((wave||0)*3)));}
+function completeSolo({win,wave,seconds}){void global.DesertMember?.finishSolo?.(!!win);if(win)progress.wins++;else progress.losses++;global.DesertCareer?.record?.({mode:'solo',size:1,side:0,winner:win?0:1,faction:progress.selectedFaction,wave,seconds,online:false});grantXP((win?120:45)+Math.min(80,Math.floor((wave||0)*3)));}
 function completeMultiplayer({winner,side,matchId,mode='pvp',size=1,wave=0,seconds=0,faction=progress.selectedFaction}){if(!matchId||lastMultiplayer===matchId)return;lastMultiplayer=matchId;if(winner===side)progress.mpWins++;else if(winner!==null)progress.mpLosses++;global.DesertCareer?.record?.({mode,size,side,winner,faction,wave,seconds,online:mode==='pvp'||mode==='classic'});grantXP(winner===side?165:75);}
 function info(msg){$('lobbyAuthMessage').textContent=msg;}
 async function syncProfile(){
@@ -282,7 +283,8 @@ function prepare(){
  if(button)button.click();$('mpFaction').value=String(progress.selectedFaction);$('mpName').value=progress.nickname;
 }
 let soloAugLoadPending=false;
-function single(){
+let soloRewardStarting=false;
+async function single(){
  if(global.DesertTriNetwork?.current()?.roomId){
   $('lobbyMultiplayerConfig').hidden=false;
   $('mpStatus').textContent='먼저 참여 중인 방에서 나가야 싱글플레이를 시작할 수 있습니다.';
@@ -302,6 +304,12 @@ function single(){
   });
   return;
  }
+ if(soloRewardStarting)return;
+ soloRewardStarting=true;$('lobbySolo').disabled=true;
+ const difficulty=progress.aiDifficulty;
+ try{if(global.DesertMember?.beginSolo&&!await global.DesertMember.beginSolo(difficulty)){info('AI 대전 보상 연결 실패 · 다시 출격을 눌러주세요.');return;}}
+ finally{soloRewardStarting=false;$('lobbySolo').disabled=false;}
+ progress.aiDifficulty=difficulty;
  document.body.dataset.playMode='solo';prepare();setMultiplayerExpanded(false);
  hide();$('startButton').click();
  $('startOverlay').classList.add('hidden');
@@ -335,7 +343,7 @@ async function returnToLobby(){
  $('restartButton').click();
  $('startOverlay').classList.add('hidden');$('endOverlay').classList.add('hidden');
  setMultiplayerExpanded(false);
- show();
+ show();void global.DesertMember?.retrySoloRewards?.();
 }
 function initialize(){
  if(!FACTIONS.length||!$('frontLobby'))return;progress=load();animationStart=performance.now();mountSkinPreview();

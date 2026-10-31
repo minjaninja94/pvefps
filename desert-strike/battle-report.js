@@ -74,6 +74,7 @@ function showMulti(v,playerId,{serverStatus='서버 경기 결과 확인 중…'
  }
  unitStats($('mpResultProduction'),groups);
  $('mpResultStatus').textContent=serverStatus;
+ const reward=$('multiSkinReward');if(reward)reward.textContent=global.DesertMember?.account?.()&&['pvp','classic'].includes(v.mode)?'스킨 포인트 확인 중…':'';
  panel.classList.remove('hidden');
  document.body.classList.add('result-visible');
 }

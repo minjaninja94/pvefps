@@ -627,7 +627,7 @@ function onSnapshot(v){
    resultKey=key;
    global.DesertLobbyMusic?.stopBattle?.();
    global.DesertCombatAudio?.stop?.();
-   if(practice&&!practiceRecorded){practiceRecorded=true;global.DesertCareer?.record?.({mode:'practice',size:1,side:0,winner:v.winner,faction:me?.faction??faction(),wave:v.wave,seconds:v.seconds,online:false});}
+   if(practice&&!practiceRecorded){practiceRecorded=true;void global.DesertMember?.finishSolo?.(v.winner===side);global.DesertCareer?.record?.({mode:'practice',size:1,side:0,winner:v.winner,faction:me?.faction??faction(),wave:v.wave,seconds:v.seconds,online:false});}
    if(!practice)global.DesertLobby?.completeMultiplayer?.({winner:v.winner,side,matchId:lobby?.id||'unknown',mode:v.mode,size:v.size,wave:v.wave,seconds:v.seconds,faction:me?.faction??faction()});
    global.DesertBattleReport?.showMulti?.(v,myId,{serverStatus:practice?'연습 기록 저장 완료':'경기 결과 저장 중…'});
    if(!practice)void NET.reportWinner?.(v.winner);
@@ -645,13 +645,17 @@ function order(cmd){
  else if(practice)onSnapshot(practice.snapshot('local'));
  else message('명령 전달 완료 · 호스트 판정 대기');
 }
+let practiceStartVersion=0;
 async function practiceStart(){
+ const version=++practiceStartVersion;
  practiceRecorded=false;resultKey='';global.DesertBattleReport?.hideMulti?.();
  if(isAugmented($('mpRuleset').value))await global.DesertAugments.load();
  if(lobby)return message('온라인 방에서 나간 뒤 연습할 수 있습니다.');
  myId='local';
  const difficulty=global.DesertLobby?.aiDifficulty?.()||'normal';
  const mode=$('mpMode').value==='classic'?'classic':'pvp';
+ if(global.DesertMember?.beginSolo&&!await global.DesertMember.beginSolo(difficulty,'multi'))return message('AI 대전 보상 연결 실패 · 다시 연습을 시작해 주세요.');
+ if(version!==practiceStartVersion)return;
  practice=E.create({mode,size:1,aiDifficulty:difficulty,ruleset:$('mpRuleset').value,seed:Date.now()>>>0,members:[{uid:'local',name:'연습 지휘관',team:0,faction:faction(),skin:skin()},{uid:'AI_local',name:'적 AI',team:1,faction:(faction()+1)%10,bot:true}]});
  // Use untouched authoritative bot setup, matching live host-created bot teams.
  $('mpStateTag').textContent=(global.DesertLobby?.difficultyLabel?.(difficulty)||'보통')+' AI 연습';message((mode==='classic'?'클래식 1:1':'3라인')+' AI 연습 시작');
@@ -666,6 +670,7 @@ async function practiceStart(){
  onSnapshot(practice.snapshot('local'));uiButtons();
 }
 async function leave(){
+ practiceStartVersion++;
  global.DesertBattleReport?.hideMulti?.();resultKey='';
  if(practice){clearInterval(practiceTimer);practiceTimer=null;practice=null;practiceRecorded=false;myId='';snap=null;$('mpCommand').hidden=true;$('mpStateTag').textContent='연결 전';message('연습 종료');}
  else{await NET.leave();snap=null;$('mpCommand').hidden=true;}

@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b22">
-<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=multi-unified-20261031"><link rel="stylesheet" href="./blood-iron-skins.css?v=ground-special-popup1"></head>
+<title>DESERT FRONT | 2.5D Ten-Faction Strategy</title><meta name="description" content="10종족 80병종, 자동 병력 생산, 기지 수비, 폭격과 업그레이드가 있는 전략 게임"><link rel="stylesheet" href="./style-v2.css?v=multi-unified-20261031"><link rel="stylesheet" href="./blood-iron-skins.css?v=match-rewards-chroma10"></head>
 <body>
 <section id="frontLobby" class="front-lobby" aria-label="데저트 프런트 메인 로비">
  <div class="lobby-shell">
@@ -20,6 +20,7 @@
      </div>
      <p id="lobbyRulesetDescription" aria-live="polite">핵심 기지 파괴로 승리 · 웨이브 무제한</p>
     </div>
+    <p id="lobbyRewardGuide" class="lobby-reward-guide">로그인 계정 · AI 승리 난이도별 50~250P · 대전 승리 500P / 패배 200P</p>
     <div class="lobby-actions"><button id="lobbySolo" class="lobby-primary" type="button"><strong>싱글 출격</strong><span>무제한 웨이브 · 핵심 기지 파괴 시 종료</span></button><button id="lobbyMulti" type="button" aria-expanded="false" aria-controls="lobbyMultiplayerConfig"><strong>멀티플레이</strong><span>무제한 웨이브 · 핵심 기지 파괴 시 종료</span></button><button id="lobbyPractice" type="button"><strong>3라인 연습</strong><span>무제한 웨이브 · AI 전투 연습</span></button></div>
     <section id="lobbyMultiplayerConfig" class="lobby-online-setup lobby-inline-multiplayer" hidden aria-label="멀티플레이 방 만들기 및 참가">
      <div class="lobby-section-title"><div><h2>멀티플레이 방 만들기 · 참가</h2></div><button type="button" id="lobbyCloseMulti" class="btn outline">접기</button></div>
@@ -249,7 +250,7 @@
   <div id="soloAugmentHistory" class="augment-history-mount" aria-label="이전에 획득한 증강 카드 기록"></div>
  </section>
 </div>
-<div id="endOverlay" class="modal-backdrop hidden"><div class="modal-panel end-panel"><h2 id="endTitle">승리</h2><p id="endSummary"></p><div id="soloProductionStats" class="result-production" aria-label="경기 생산 및 전투 통계"></div><button id="restartButton" class="btn start-cta">메인 로비로 돌아가기</button></div></div>
+<div id="endOverlay" class="modal-backdrop hidden"><div class="modal-panel end-panel"><h2 id="endTitle">승리</h2><p id="soloSkinReward" class="match-skin-reward" role="status"></p><p id="endSummary"></p><div id="soloProductionStats" class="result-production" aria-label="경기 생산 및 전투 통계"></div><button id="restartButton" class="btn start-cta">메인 로비로 돌아가기</button></div></div>
 <div id="mpResultOverlay" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="mpResultTitle">
  <div class="modal-panel result-panel" tabindex="-1">
 
@@ -258,7 +259,7 @@
   <h3 class="result-production-heading">생산·피해·처치·영웅 전투 기록</h3>
   <details class="result-detail-hint"><summary>통계 도움말</summary><p>생산은 누적 출격 수, 피해는 실제로 가한 피해입니다. 처치·손실에는 영웅을 구성하는 병력 수가 포함됩니다.</p></details>
   <div id="mpResultProduction" class="result-production" aria-label="아군 및 상대 생산 통계"></div>
-  <p id="mpResultStatus" class="result-server-status" role="status">서버 결과 저장 확인 중…</p>
+  <p id="multiSkinReward" class="match-skin-reward" role="status"></p><p id="mpResultStatus" class="result-server-status" role="status">서버 결과 저장 확인 중…</p>
   <button id="mpResultRetry" type="button" class="btn outline" hidden>서버 기록 다시 시도</button>
   <button id="mpResultLobby" type="button" class="btn start-cta">로비로 가기</button>
  </div>
@@ -286,7 +287,7 @@
 <script src="./expansion/expansion-rules.js?v=sniper-ai-specialists-20261031" defer></script>
 <script src="./expansion/expansion-art.js?v=live2" defer></script>
 <script src="./skin-catalog.js?v=ground-special-popup1" defer></script>
-<script src="./skin-shop.js?v=skinpoints1" defer></script>
+<script src="./skin-shop.js?v=match-rewards-chroma10" defer></script>
 <script src="./blood-iron-art.js?v=ground-special-popup1" defer></script>
 <script src="./unit-motion.js?v=skinpoints1" defer></script>
 <script src="./unit-consolidation.js?v=battlestats3" defer></script>
@@ -300,14 +301,14 @@
 <script src="./device-account.js?v=externalroom1" defer></script>
 <script src="./tri-lane-network.js?v=skinpoints1" defer></script>
 <script src="./combat-audio.js?v=nemo80-live-20261031" defer></script>
-<script src="./tri-lane-ui.js?v=multi-unified-20261031" defer></script>
-<script src="./battle-report.js?v=battlestats2" defer></script>
-<script src="./game-v2.js?v=ground-special-popup1" defer></script>
+<script src="./tri-lane-ui.js?v=match-rewards-chroma10" defer></script>
+<script src="./battle-report.js?v=match-rewards-chroma10" defer></script>
+<script src="./game-v2.js?v=match-rewards-chroma10" defer></script>
 <script src="./commander-covers.js?v=uniform7" defer></script>
 <script src="./command-hud.js?v=uniform7" defer></script>
 <script src="./lobby-music.js?v=nukegear1" defer></script>
-<script src="./desert-member.js?v=skinpoints1" defer></script>
+<script src="./desert-member.js?v=match-rewards-chroma10" defer></script>
 <script src="./career-profile.js?v=rankincome20261030" defer></script>
 <script src="./audio-settings.js?v=nukegear1" defer></script>
-<script src="./front-lobby.js?v=ground-special-popup1" defer></script>
+<script src="./front-lobby.js?v=match-rewards-chroma10" defer></script>
 </body></html>

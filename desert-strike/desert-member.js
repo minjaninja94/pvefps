@@ -8,6 +8,7 @@ const KEY='sb_publishable_w5JXAnoVsKky54QgiAPtAg_UyzmZAli';
 const EMAIL_DOMAIN='@accounts.desertfront.invalid';
 const SDK='https://esm.sh/@supabase/supabase-js@2.76.1';
 let clientPromise,member=null,session=null,match=null,saveTimer=null,processing=false,registrationVersion=0;
+let soloRun=null,soloRegistrationVersion=0;
 const $=id=>document.getElementById(id);
 const username=id=>String(id||'').trim().toLowerCase();
 const status=t=>{if($('careerStatus'))$('careerStatus').textContent=t;};
@@ -39,7 +40,7 @@ async function loadMember(user,importGuest=false){
  global.DesertSkinShop?.setAccount(user.id,null);
  session=(await db.auth.getSession()).data.session;
  if(member){
-  try{await refreshSkinWallet();}catch(e){status('스킨 포인트 동기화 실패: '+e.message);}
+  try{await refreshSkinWallet();await retrySoloRewards();}catch(e){status('스킨 포인트 동기화 실패: '+e.message);}
   if(importGuest){
    const old=global.DesertLobby?.exportProgress?.();
    if(old){const merged={...old,nickname:member.nickname};await saveProgress(merged,true);global.DesertLobby?.importProgress?.(merged);}
@@ -85,7 +86,7 @@ async function logout(){
  if(match?.tracked&&match.playing&&!match.ended)await forfeit();
  const db=await api(),{error}=await db.auth.signOut();
  if(error)throw error;
- clearTimeout(saveTimer);member=null;session=null;match=null;global.DesertSkinShop?.setAccount(null,null);global.DesertCareer?.setLadders?.(null);global.DesertLobby?.useGuestProfile?.();show();
+ clearTimeout(saveTimer);member=null;session=null;match=null;soloRun=null;soloRegistrationVersion++;global.DesertSkinShop?.setAccount(null,null);global.DesertCareer?.setLadders?.(null);global.DesertLobby?.useGuestProfile?.();show();
 }
 async function saveProgress(progress,immediate=false){
  if(!member||!progress)return;
@@ -123,6 +124,59 @@ async function buySkin(id){
  if(error)throw error;
  if(member?.user_id!==owner)throw Error('로그인 계정이 변경되었습니다.');
  global.DesertSkinShop?.setAccount(owner,data);return data;
+}
+function rewardStatus(mode,message){const node=$(mode==='solo'?'soloSkinReward':'multiSkinReward');if(node)node.textContent=message;}
+const pendingKey=owner=>'desert-skin-pending-solo-'+owner;
+function pendingSolo(owner){try{return JSON.parse(global.localStorage.getItem(pendingKey(owner))||'[]');}catch(_){return [];}}
+function storePendingSolo(owner,rows){try{global.localStorage.setItem(pendingKey(owner),JSON.stringify(rows));}catch(_){}}
+async function claimSoloReward(owner,payload){
+ if(member?.user_id!==owner)throw Error('로그인 계정이 변경되었습니다.');
+ const db=await api(),{data,error}=await db.rpc('desert_finish_solo_skin',{p_run_id:payload.id,p_won:payload.won});
+ if(error)throw error;
+ storePendingSolo(owner,pendingSolo(owner).filter(p=>p.id!==payload.id));
+ if(member?.user_id===owner){global.DesertSkinShop?.setAccount(owner,data.wallet);rewardStatus(payload.display||'solo',data.reward>0?'스킨 포인트 +'+data.reward+' P 지급 완료':'AI 패배 · 포인트 보상 없음');}
+ return data;
+}
+async function retrySoloRewards(){
+ if(!member)return true;
+ const owner=member.user_id;
+ for(const payload of pendingSolo(owner)){
+  try{await claimSoloReward(owner,payload);}catch(e){if(e.code==='42501'&&String(e.message).includes('진행한 AI 대전')){storePendingSolo(owner,pendingSolo(owner).filter(p=>p.id!==payload.id));continue;}rewardStatus(payload.display||'solo','포인트 지급 대기 · 연결 후 다시 확인합니다.');return false;}
+ }
+ return true;
+}
+async function beginSolo(difficulty,display='solo'){
+ const version=++soloRegistrationVersion;soloRun=null;rewardStatus(display,'');
+ if(!member)return true;
+ const owner=member.user_id;
+ try{
+  if(!await retrySoloRewards())return false;
+  if(member?.user_id!==owner||version!==soloRegistrationVersion)return false;
+  const id=global.crypto.randomUUID(),db=await api();
+  const {data,error}=await db.rpc('desert_begin_solo_skin',{p_run_id:id,p_difficulty:difficulty});
+  if(error)throw error;
+  if(member?.user_id!==owner||version!==soloRegistrationVersion)return false;
+  soloRun={id:data.runId,owner,difficulty:data.difficulty,display,finished:false};return true;
+ }catch(e){status('AI 대전 보상 등록 실패: '+e.message);return false;}
+}
+async function finishSolo(won){
+ const run=soloRun;
+ if(!run||member?.user_id!==run.owner){rewardStatus('solo','로그인 계정으로 출격하면 승리 포인트를 받을 수 있습니다.');return;}
+ if(run.finished)return;run.finished=true;
+ const payload={id:run.id,won:!!won,display:run.display},rows=pendingSolo(run.owner);
+ if(!rows.some(r=>r.id===run.id))storePendingSolo(run.owner,[...rows,payload]);
+ rewardStatus(run.display,'스킨 포인트 확인 중…');
+ try{return await claimSoloReward(run.owner,payload);}catch(e){rewardStatus(run.display,'포인트 지급 대기 · 연결 후 자동으로 다시 확인합니다.');}
+}
+async function syncMatchReward(code){
+ if(!member)return null;
+ const owner=member.user_id;
+ try{
+  const db=await api(),{data,error}=await db.rpc('desert_match_skin_reward',{p_code:code});
+  if(error)throw error;
+  if(member?.user_id===owner){global.DesertSkinShop?.setAccount(owner,data.wallet);rewardStatus('multi',data.reward>0?'스킨 포인트 +'+data.reward+' P 지급 완료':'포인트 보상 없음');}
+  return data;
+ }catch(e){rewardStatus('multi','보상 확인 대기 · 다시 접속하면 잔액에 반영됩니다.');return null;}
 }
 async function refreshRating(){
  if(!member)return;
@@ -175,7 +229,7 @@ async function poll(){
  try{
   const db=await api(),{data,error}=await db.rpc('desert_ping_match',{p_code:match.code});
   if(error)throw error;
-  if(['done','abandoned'].includes(data?.state)){match.ended=true;match.winner=data.winner_team;await refreshRating();}
+  if(['done','abandoned'].includes(data?.state)){match.ended=true;match.winner=data.winner_team;await refreshRating().catch(e=>status('랭킹 갱신 대기: '+e.message));if(data.state==='done')await syncMatchReward(match.code);}
   return data;
  }catch(e){status('서버 경기 상태 확인 실패: '+e.message);return null;}
 }
@@ -185,19 +239,19 @@ async function forfeit(){
  try{
   const db=await api(),{data,error}=await db.rpc('desert_forfeit_match',{p_code:match.code});
   if(error)throw error;
-  await refreshRating();return data;
+  match.winner=data?.winner_team;await refreshRating().catch(e=>status('랭킹 갱신 대기: '+e.message));if(data?.state==='done')await syncMatchReward(match.code);return data;
  }catch(e){match.ended=false;status('탈주 기록 서버 처리 중: '+e.message);return null;}
 }
 async function reportResult(winner){
  if(match?.tracked&&!match.playing)await markPlaying(match.code);
  if(!match?.tracked||!match.playing)return {state:'untracked'};
- if(match.ended)return {state:'done',winner_team:match.winner};
+ if(match.ended){if(member)try{await syncMatchReward(match.code);}catch(e){rewardStatus('multi','보상 확인 대기 · 다시 접속하면 잔액에 반영됩니다.');}return {state:'done',winner_team:match.winner};}
  if(winner!==null&&![0,1].includes(winner))return {state:'error',error:'올바르지 않은 경기 결과'};
  try{
   const db=await api(),{data,error}=await db.rpc('desert_report_match_result',{p_code:match.code,p_winner:winner});
   if(error)throw error;
   match.reportedResult=!!(data?.report_received||data?.state==='done'||data?.waiting_for_other_players);
-  if(data?.state==='done'){match.ended=true;match.winner=data.winner_team;await refreshRating();}
+  if(data?.state==='done'){match.ended=true;match.winner=data.winner_team;await refreshRating().catch(e=>status('랭킹 갱신 대기: '+e.message));await syncMatchReward(match.code);}
   return data;
  }catch(e){status('경기 결과 전송 실패: '+e.message);return {state:'error',error:e?.message||String(e)};}
 }
@@ -225,11 +279,12 @@ function init(){
  btn('careerLogin',()=>login($('careerEmail').value,$('careerPassword').value));
  btn('careerLogout',logout);
  btn('careerGuest',async()=>{if(member)await logout();global.DesertCareer?.close?.();});
+ global.addEventListener('online',()=>void retrySoloRewards());
  global.addEventListener('pagehide',fastForfeit);
  global.addEventListener('beforeunload',fastForfeit);
  show();
 }
 global.DesertMember=Object.freeze({restore,signup,login,logout,account,isMember:()=>!!member,
- refreshSkinWallet,buySkin,saveProgress,joinMatch,startMatch,markPlaying,poll,forfeit,reportResult,pendingState,endMatch,refreshRating});
+ beginSolo,finishSolo,retrySoloRewards,refreshSkinWallet,buySkin,saveProgress,joinMatch,startMatch,markPlaying,poll,forfeit,reportResult,pendingState,endMatch,refreshRating});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })(window);

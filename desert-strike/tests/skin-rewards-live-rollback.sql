@@ -1,0 +1,71 @@
+begin;
+do $$
+declare a uuid; b uuid; run_test uuid; loss_id uuid; old_id uuid; next_id uuid; code text; response jsonb; again jsonb; n integer:=0; difficulty text; blocked boolean;
+begin
+ select user_id into a from public.desert_web_members order by user_id limit 1;
+ select user_id into b from public.desert_web_members where user_id<>a order by user_id limit 1;
+ assert a is not null and b is not null,'two existing members required; no test accounts are created';
+ perform set_config('test.reward_user_a',a::text,true);perform set_config('test.reward_user_b',b::text,true);
+ insert into public.desert_skin_wallets(user_id,points) values(a,3000),(b,3000)
+ on conflict(user_id) do update set points=3000,last_login_date=(now() at time zone 'Asia/Seoul')::date;
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',a,'role','authenticated')::text,true);
+ foreach difficulty in array array['easy','normal','hard','veryhard','impossible'] loop
+  run_test:=gen_random_uuid();n:=n+1;perform public.desert_begin_solo_skin(run_test,difficulty);
+  blocked:=false;begin perform public.desert_finish_solo_skin(run_test,true);exception when invalid_parameter_value then blocked:=true;end;assert blocked,'preparation time enforced';
+  update public.desert_solo_skin_runs set started_at=clock_timestamp()-interval '30 seconds' where desert_solo_skin_runs.id=run_test;
+  response:=public.desert_finish_solo_skin(run_test,true);assert (response->>'reward')::integer=n*50,'difficulty payout';
+  again:=public.desert_finish_solo_skin(run_test,true);assert (again->>'alreadyRecorded')::boolean;assert again->'wallet'->>'points'=response->'wallet'->>'points','repeat claim never adds points';
+ end loop;
+ assert (select points from public.desert_skin_wallets where user_id=a)=3750;
+ loss_id:=gen_random_uuid();perform public.desert_begin_solo_skin(loss_id,'impossible');perform public.desert_finish_solo_skin(loss_id,false);
+ response:=public.desert_finish_solo_skin(loss_id,true);assert (response->>'reward')::int=0,'a recorded loss cannot be upgraded to a win';
+ perform set_config('test.reward_last_run',loss_id::text,true);
+ old_id:=gen_random_uuid();next_id:=gen_random_uuid();perform public.desert_begin_solo_skin(old_id,'easy');perform public.desert_begin_solo_skin(next_id,'normal');
+ blocked:=false;begin perform public.desert_finish_solo_skin(old_id,true);exception when insufficient_privilege then blocked:=true;end;assert blocked,'cancelled runs cannot claim';
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',b,'role','authenticated')::text,true);
+ blocked:=false;begin perform public.desert_finish_solo_skin(loss_id,true);exception when insufficient_privilege then blocked:=true;end;assert blocked,'cross-account run rejected';
+ code:=translate(upper(substr(md5(gen_random_uuid()::text),1,6)),'01','AB');
+ insert into public.desert_ranked_matches(room_code,host_uid,mode,team_size,state,started_at) values(code,a,'classic',1,'playing',now()-interval '30 seconds');
+ insert into public.desert_ranked_match_players(room_code,user_id,team) values(code,a,0),(code,b,1);
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',a,'role','authenticated')::text,true);
+ response:=public.desert_report_match_result(code,0);assert response->>'state'='playing';assert (select points from public.desert_skin_wallets where user_id=a)=3750,'unconfirmed result grants nothing';
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',b,'role','authenticated')::text,true);
+ response:=public.desert_report_match_result(code,0);assert response->>'state'='done';
+ assert (select points from public.desert_skin_wallets where user_id=a)=4250;assert (select points from public.desert_skin_wallets where user_id=b)=3200;
+ perform public.desert_report_match_result(code,0);assert (select points from public.desert_skin_wallets where user_id=b)=3200,'duplicate consensus does not pay again';
+ response:=public.desert_match_skin_reward(code);assert (response->>'reward')::int=200,'loser receipt';
+ code:=translate(upper(substr(md5(gen_random_uuid()::text),1,6)),'01','AB');
+ insert into public.desert_ranked_matches(room_code,host_uid,mode,team_size,state,started_at) values(code,a,'pvp',1,'playing',now()-interval '30 seconds');
+ insert into public.desert_ranked_match_players(room_code,user_id,team) values(code,a,0),(code,b,1);
+ perform public.desert_forfeit_match(code);perform public.desert_forfeit_match(code);
+ assert (select points from public.desert_skin_wallets where user_id=a)=4750;assert (select points from public.desert_skin_wallets where user_id=b)=3400,'forfeit terminal result pays once';
+ code:=translate(upper(substr(md5(gen_random_uuid()::text),1,6)),'01','AB');
+ insert into public.desert_ranked_matches(room_code,host_uid,mode,team_size,state,started_at) values(code,a,'pvp',1,'playing',now()-interval '30 seconds');
+ insert into public.desert_ranked_match_players(room_code,user_id,team) values(code,a,0),(code,b,1);
+ perform public.desert_report_match_result(code,null);
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',a,'role','authenticated')::text,true);perform public.desert_report_match_result(code,null);
+ assert (select points from public.desert_skin_wallets where user_id=a)=4750,'draw pays no win/loss reward';
+ code:=translate(upper(substr(md5(gen_random_uuid()::text),1,6)),'01','AB');
+ insert into public.desert_ranked_matches(room_code,host_uid,mode,team_size,state,started_at) values(code,a,'coop',1,'playing',now()-interval '30 seconds');
+ insert into public.desert_ranked_match_players(room_code,user_id,team) values(code,a,0);
+ perform public.desert_report_match_result(code,0);assert (select points from public.desert_skin_wallets where user_id=a)=4750,'PvP payout does not apply to coop';
+ assert not has_function_privilege('authenticated','private.desert_credit_skin_reward(uuid,text,text,integer)','EXECUTE');
+ assert not has_function_privilege('anon','public.desert_finish_solo_skin(uuid,boolean)','EXECUTE');
+end $$;
+do $$ declare u uuid; c record; s jsonb; begin
+ u:=current_setting('test.reward_user_a')::uuid;
+ insert into public.desert_skin_wallets(user_id,points) values(u,5000) on conflict(user_id) do update set points=5000,last_login_date=(now() at time zone 'Asia/Seoul')::date;
+ delete from public.desert_skin_unlocks where user_id=u and skin_id in(select id from public.desert_skin_catalog where base_id='blood-iron');
+ perform public.desert_buy_skin('blood-iron');
+ for c in select id from public.desert_skin_catalog where base_id='blood-iron' and chroma<>'original' loop s:=public.desert_buy_skin(c.id); end loop;
+ assert (s->>'points')::int=2000;
+ assert (select count(*) from public.desert_skin_unlocks where user_id=u and skin_id in(select id from public.desert_skin_catalog where base_id='blood-iron'))=11;
+ update public.desert_web_members set selected_faction=0,selected_skin='blood-iron~emerald' where user_id=u;
+end $$;
+set local role authenticated;
+do $$ declare blocked boolean:=false; begin
+ assert (select count(*) from public.desert_skin_match_rewards where user_id<>auth.uid())=0,'reward ledger RLS';
+ begin update public.desert_skin_match_rewards set points=500;exception when insufficient_privilege then blocked:=true;end;assert blocked,'ledger cannot be edited by clients';
+end $$;
+rollback;
+select 'PASS: all five AI reward amounts, one-time claims, loss immutability, run ownership, confirmed PvP win/loss and forfeit payouts, draw/coop exclusion, and ledger RLS. All changes rolled back.' as result;

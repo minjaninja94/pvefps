@@ -1,8 +1,8 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const shop=require('../skin-shop.js');
-test('102 base appearances each have four independent, faction-scoped variants',()=>{
- assert.equal(shop.BASES.length,102);assert.equal(shop.SKINS.length,408);
- assert.equal(new Set(shop.SKINS.map(s=>s.id)).size,408);
+test('102 base appearances each have ten paid chromas plus the original, faction-scoped variants',()=>{
+ assert.equal(shop.BASES.length,102);assert.equal(shop.SKINS.length,1122);
+ assert.equal(new Set(shop.SKINS.map(s=>s.id)).size,1122);
  for(const base of shop.BASES)for(const c of shop.CHROMAS){
   const skin=shop.variant(base.id,c.id);assert.equal(skin.baseId,base.id);assert.equal(skin.price,c.id==='original'?base.price:200);
   if(base.faction!==undefined){assert.ok(shop.validFor(skin.id,base.faction));assert.ok(!shop.validFor(skin.id,(base.faction+1)%10));}
