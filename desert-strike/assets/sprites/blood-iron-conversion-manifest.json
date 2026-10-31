@@ -1,0 +1,129 @@
+{
+  "skin_id": "blood-iron",
+  "faction": 0,
+  "set_name": "혈철 집행군",
+  "source_version": "2026-10-31",
+  "layout": "4 columns x 2 rows per role, 8 poses",
+  "source_frame_labels": [
+    "idle",
+    "ready",
+    "move-a",
+    "move-b",
+    "attack-windup",
+    "attack-impact",
+    "skill",
+    "death"
+  ],
+  "roles": [
+    {
+      "role": 0,
+      "key": "assault",
+      "source_file": "붉은_집행기사_메카_스프라이트_시트.png",
+      "source_sha256": "f00316948d2391a8eeae40706022e8c424a726cae24d8c952415e8e2eb587360",
+      "asset_file": "blood-iron-assault-actions.webp",
+      "source_size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "role": 1,
+      "key": "rifle",
+      "source_file": "붉은_에너지_기사의_스프라이트_시트.png",
+      "source_sha256": "c8a39b6e33c1341567a373584c912bcaf2f598a06452980ae87e79315936624c",
+      "asset_file": "blood-iron-rifle-actions.webp",
+      "source_size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "role": 2,
+      "key": "antiarmor",
+      "source_file": "고딕_중장갑_기사_메카_스프라이트_시트.png",
+      "source_sha256": "cea9a4363b83e3f7f720d7530a2b4cbd2b0e1dcc24e569eb6be4012e8e36c5c4",
+      "asset_file": "blood-iron-antiarmor-actions.webp",
+      "source_size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "role": 3,
+      "key": "heavy",
+      "source_file": "고딕_중장갑_메카_8종_스프라이트_시트.png",
+      "source_sha256": "f083031f29650e4085da3b66c4cfb46981847c7fea1f3e0acc00c99571930057",
+      "asset_file": "blood-iron-heavy-actions.webp",
+      "source_size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "role": 4,
+      "key": "antiair",
+      "source_file": "고딕_중장_대공_워커_스프라이트_시트.png",
+      "source_sha256": "1b886c6bcbd0b69791090e0db48fe3e40ccf833919e9f5bd367e4ca836c1a1de",
+      "asset_file": "blood-iron-antiair-actions.webp",
+      "source_size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "role": 5,
+      "key": "siege",
+      "source_file": "다크_판타지_공성포_8종_스프라이트.png",
+      "source_sha256": "695dae91487f99197a74effa2f972976f7f9e829578407d88edda315056b0dd7",
+      "asset_file": "blood-iron-siege-actions.webp",
+      "source_size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "role": 6,
+      "key": "flyer",
+      "source_file": "고딕_스팀펑크_건십_스프라이트_시트.png",
+      "source_sha256": "f369b6c78dc9545792ea33d93b648c81a9c5b035fdb01d57317b249dd48cb6e8",
+      "asset_file": "blood-iron-flyer-actions.webp",
+      "source_size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "role": 7,
+      "key": "support",
+      "source_file": "고딕_기계_성녀_8종_스프라이트.png",
+      "source_sha256": "4ef22a98acd2cf6e1f0801da890147890c35b15f2d314c504d1902886150b462",
+      "asset_file": "blood-iron-support-actions.webp",
+      "source_size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "role": 8,
+      "key": "sniper",
+      "source_file": "붉은_망토의_그림자_저격수_스프라이트_시트.png",
+      "source_sha256": "08433224e61f73f0f42a427039be555cb4ac0d18fbd480747672b731b98ea807",
+      "asset_file": "blood-iron-sniper-actions.webp",
+      "source_size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "role": 9,
+      "key": "assassin",
+      "source_file": "8가지_포즈의_붉은_망토_암살_기사.png",
+      "source_sha256": "e69353930af36b3b5ad860a07dd2999032e75e4a57a80afa81c514f41691fb63",
+      "asset_file": "blood-iron-assassin-actions.webp",
+      "source_size": [
+        1254,
+        1254
+      ]
+    }
+  ]
+}
