@@ -1,7 +1,7 @@
 {
   "method": "built-in image_gen; no CLI/API fallback",
-  "status": "99 new source atlases generated; complete deployment blocked by environment loss",
-  "note": "Prompts reconstructed from the tool-call templates. Recovered per-generation records and source hashes remain authoritative; do not regenerate before checking saved originals.",
+  "status": "99 source atlases recovered and imported; 100 total sets pass file validation",
+  "note": "Recovered generation records are authoritative where present. Original PNGs, exact extraction coordinates and runtime sheet hashes are preserved in sources/<skin-id>/manifest.json.",
   "existing_blood_iron": "10 original PNGs already archived on main",
   "entries": [
     {
@@ -12,7 +12,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-0bf72069-1347-46ce-913f-024653529575.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-0-skin-02/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "006428adc2960c6323c0eda1cb0878249b54890e9fa69f91be571115079ebe18"
     },
     {
       "id": "faction-0-skin-03",
@@ -22,7 +23,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-2ec2d12e-45a3-4379-94ac-729d7c56758d.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-0-skin-03/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "2cdefa0481f03e1d02b996afc370278511a5549890b4ab16c43142fdb7401c43"
     },
     {
       "id": "faction-0-skin-04",
@@ -32,7 +34,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-42e1e39f-98b2-4b45-a2d5-dd098d3dc7b9.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-0-skin-04/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "e24525b0b3caff761bc69da8ab8fa8047e308b0460df887b1c90ab8b47b66bac"
     },
     {
       "id": "faction-0-skin-05",
@@ -42,7 +45,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-3750c360-ed02-44d8-8855-1babc96f4c30.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-0-skin-05/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "8f378ae24db091c0c1cab43ddbfbd0d738be659bc9ad36066e8b60a3fd2fc182"
     },
     {
       "id": "faction-0-skin-06",
@@ -52,7 +56,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-35c61905-781f-4d2d-9774-2223c8c61f99.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-0-skin-06/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "46e1fc73977381acdc4af231a8966e1e83a81f34ab2be3214d49fc0f86c61e07"
     },
     {
       "id": "faction-0-skin-07",
@@ -62,7 +67,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-bc83e280-f4f6-47eb-8d14-fa0592747476.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-0-skin-07/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "50d0aa4d7c4f95bf3b0dea699672b36e9bd1e134957a54e7dc065bd21ab9b368"
     },
     {
       "id": "faction-0-skin-08",
@@ -72,7 +78,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-919f2fe4-b0d6-4ad9-b689-ba75ca9a6547.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-0-skin-08/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "669259fc46329061f95ac85024715507d4a131e5af86fb7aeac99b557e215ccd"
     },
     {
       "id": "faction-0-skin-09",
@@ -82,7 +89,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-f8452712-dbed-4202-aae5-446567456ac2.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-0-skin-09/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "f74a4df04187928a36bc74bc3a18ba014f9da4a20bdcef4ab565b4254785e7eb"
     },
     {
       "id": "faction-0-skin-10",
@@ -92,7 +100,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-cf028161-68d1-498b-a8d3-d6fa0de1ab9b.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-0-skin-10/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "90f9035e78541d70078acd75090af879db3a99566152ff1e21d249ab49c69424"
     },
     {
       "id": "faction-1-skin-01",
@@ -102,7 +111,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-9370092b-130c-46d6-9caf-3dbda852b9ad.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-1-skin-01/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "52984f06874063c07edbd86f6e539aee56f361b56b231ced63c10ccb2fbad1cb"
     },
     {
       "id": "faction-1-skin-02",
@@ -112,7 +122,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-1bd99045-a5b4-4463-9df4-e5c077ad184f.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-1-skin-02/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "27a0ed3cc23a64a7a48c352ea67ed41280e422ee35e5620a0e3546e2f52f0ff1"
     },
     {
       "id": "faction-1-skin-03",
@@ -122,7 +133,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-36dd49b4-1048-4857-8caa-293a885c9f89.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-1-skin-03/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "81184d2cfb6415ef79b57aacdde9491d61ed600042c1622a1cf0f0cb1c2fc17d"
     },
     {
       "id": "faction-1-skin-04",
@@ -132,7 +144,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-755cfde8-551a-4065-9fe0-d5b549b637ca.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-1-skin-04/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "dc4d182ef23ea4d8ff2339fcbc1ac84cd35e7aa22ceee39ec3f897260cdbe1e9"
     },
     {
       "id": "faction-1-skin-05",
@@ -142,7 +155,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-6aa57edd-a544-48cd-97bc-ba09fb455044.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-1-skin-05/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "d8b8df49015a814221f69d4abe8f48a941bc9c8aa9bed35535e9b4a522ccfe94"
     },
     {
       "id": "faction-1-skin-06",
@@ -152,7 +166,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-c9a91a60-9312-4434-a093-f185e57c5c4c.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-1-skin-06/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "a2c6d2640cbd7f13de3d7cd8dd8eff44b3737d956846d7543943d226b61f87bc"
     },
     {
       "id": "faction-1-skin-07",
@@ -162,7 +177,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-4d301037-7786-47a4-9c35-27f44f3d8b71.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-1-skin-07/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "a93f802e1ba8a781d07289562fd82aea00d9f800b7861823e1f4ac019746121d"
     },
     {
       "id": "faction-1-skin-08",
@@ -172,7 +188,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-dd1495d1-b9cf-4104-bd1c-6ef2c028d960.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-1-skin-08/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "db0b67b5305c992f8d6c6b1b5a593d0a88fde5951cd3cc5e55d9e8ea46e6531e"
     },
     {
       "id": "faction-1-skin-09",
@@ -180,9 +197,10 @@
       "faction": 1,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"호박 화석충\" for Abyss Swarm alien insectoid organic monsters with chitin fangs and evolving bodies. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"호박 화석충\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-1-skin-09.json",
+      "source_recovery": "generated_images/exec-ac16941f-511c-4f95-bc1b-ec73ed96fcf8.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-1-skin-09/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "e2240ccfac032626c4cfdec549e910580f1421a398639b65e3fc2c8ebd580e16"
     },
     {
       "id": "faction-1-skin-10",
@@ -192,7 +210,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-f8e300b9-68b6-4bef-bb36-cadde50e34fd.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-1-skin-10/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "aa9b50f7dfd4d695d1658c3d6f2e460baf0604389d68ef4dfa01186f8114d6e6"
     },
     {
       "id": "faction-2-skin-01",
@@ -202,7 +221,8 @@
       "transparent_background": true,
       "source_recovery": "generated_images/exec-4147b279-9d1a-435b-960c-3885f76704d1.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-2-skin-01/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "a407e3213395f0c88f09b8751ef5d101f2f6d0ea5708291379139bd98d2abeb4"
     },
     {
       "id": "faction-2-skin-02",
@@ -210,9 +230,10 @@
       "faction": 2,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"별자리 신수군\" for Nebula Covenant astral mystics, magical constructs and psionic warriors. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"별자리 신수군\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-2-skin-02.json",
+      "source_recovery": "generated_images/exec-09bc5969-d209-492d-a362-1381e2df8cc8.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-2-skin-02/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "dfe5136bf54ac2593cc31e2dd5801ca6995f6ab5b08efb80c8a2a5b5f9523c32"
     },
     {
       "id": "faction-2-skin-03",
@@ -220,9 +241,10 @@
       "faction": 2,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"프리즘 무녀대\" for Nebula Covenant astral mystics, magical constructs and psionic warriors. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"프리즘 무녀대\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-2-skin-03.json",
+      "source_recovery": "generated_images/exec-9128e67c-b9e2-4c55-bd3b-83e5717b80e0.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-2-skin-03/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "d70a53e534a3ebecb2674da98610b6acb99e81ae1fd7a1326ffcc125e9f3fad9"
     },
     {
       "id": "faction-2-skin-04",
@@ -230,9 +252,10 @@
       "faction": 2,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"은하 마법소녀단\" for Nebula Covenant astral mystics, magical constructs and psionic warriors. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"은하 마법소녀단\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-2-skin-04.json",
+      "source_recovery": "generated_images/exec-f92dd5a9-1ca5-4bd8-8df1-03a56436719a.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-2-skin-04/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "f3756740da717c30af9e9fb114207cbc205e77b429ab8e05e6eb0a83b6a01351"
     },
     {
       "id": "faction-2-skin-05",
@@ -240,9 +263,10 @@
       "faction": 2,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"천체 태엽정령\" for Nebula Covenant astral mystics, magical constructs and psionic warriors. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"천체 태엽정령\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-2-skin-05.json",
+      "source_recovery": "generated_images/exec-93524ce1-3688-4fa8-baef-2cb5a153da8d.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-2-skin-05/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "9b128f67f39db1ee91f0fbdd5e4e2db6d1fb489cc0eaaeb51fb98bf8c20d78b1"
     },
     {
       "id": "faction-2-skin-06",
@@ -250,9 +274,10 @@
       "faction": 2,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"유리 성배기사\" for Nebula Covenant astral mystics, magical constructs and psionic warriors. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"유리 성배기사\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-2-skin-06.json",
+      "source_recovery": "generated_images/exec-b7c67b4e-69fd-4672-a71c-1aa1e08acf5b.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-2-skin-06/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "63aa557155381c63fbc129a87e59a1f5b3e32229c3880428abcd8de2723853d0"
     },
     {
       "id": "faction-2-skin-07",
@@ -260,9 +285,10 @@
       "faction": 2,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"유령 별항해사\" for Nebula Covenant astral mystics, magical constructs and psionic warriors. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"유령 별항해사\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-2-skin-07.json",
+      "source_recovery": "generated_images/exec-73e5c0b0-1761-4a28-beaa-42aaf39c448d.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-2-skin-07/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "b738bb0221a2e239b32118b520627cbea4a85af054a9353fca8e6a588282b4b7"
     },
     {
       "id": "faction-2-skin-08",
@@ -270,9 +296,10 @@
       "faction": 2,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"백야 천사군\" for Nebula Covenant astral mystics, magical constructs and psionic warriors. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"백야 천사군\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-2-skin-08.json",
+      "source_recovery": "generated_images/exec-94b3bbd3-c58b-479d-9fb4-fe1f1d068081.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-2-skin-08/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "d39a33e43aae5ad06753212915df1e83e060f36a81262bba0408d7f759b50c3e"
     },
     {
       "id": "faction-2-skin-09",
@@ -280,9 +307,10 @@
       "faction": 2,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"흑백 체스왕국\" for Nebula Covenant astral mystics, magical constructs and psionic warriors. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"흑백 체스왕국\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-2-skin-09.json",
+      "source_recovery": "generated_images/exec-80297456-0dfc-4c2f-9e8e-01e9dfecef18.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-2-skin-09/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "5cc79d840a73a4b54bb370a9af465e6924ef9a56bc1b4cdd79144da9220604f2"
     },
     {
       "id": "faction-2-skin-10",
@@ -290,9 +318,10 @@
       "faction": 2,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"별을 먹는 용신\" for Nebula Covenant astral mystics, magical constructs and psionic warriors. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"별을 먹는 용신\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-2-skin-10.json",
+      "source_recovery": "generated_images/exec-6f82dc55-7ed2-4620-95ae-a68e826783c0.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-2-skin-10/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "7b3cd2718e4fbc959b4e9e8cd939039520de81f8357cb8521ea3ccf58c4e12d4"
     },
     {
       "id": "faction-3-skin-01",
@@ -300,9 +329,10 @@
       "faction": 3,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"종말의 해병단\" for Marine Citadel adult muscular marine soldiers with military gear and vehicles. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"종말의 해병단\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-3-skin-01.json",
+      "source_recovery": "generated_images/exec-602ff154-772c-4598-a36e-98cfdbce2c42.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-3-skin-01/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "517bfff9082a29d2d340ccbad9c754a164f527c695cd006a77a1296a10a64ff8"
     },
     {
       "id": "faction-3-skin-02",
@@ -310,9 +340,10 @@
       "faction": 3,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"한양 해병전\" for Marine Citadel adult muscular marine soldiers with military gear and vehicles. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"한양 해병전\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-3-skin-02.json",
+      "source_recovery": "generated_images/exec-f8f1bd2d-35de-4a43-94a7-9b147e96f0fe.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-3-skin-02/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "ecd79cc8cbe9d29c02f8e71509197c2030f237fdf256df14d8de23683e18b202"
     },
     {
       "id": "faction-3-skin-03",
@@ -320,9 +351,10 @@
       "faction": 3,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"마계 해병 원정대\" for Marine Citadel adult muscular marine soldiers with military gear and vehicles. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"마계 해병 원정대\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-3-skin-03.json",
+      "source_recovery": "generated_images/exec-a8fcbe91-23b4-4389-8af2-e6cccffb9e79.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-3-skin-03/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "9603778ffe0a482f0778c82a126e6d87ffc921a8c153d1a05491d2734226c8cd"
     },
     {
       "id": "faction-3-skin-04",
@@ -330,9 +362,10 @@
       "faction": 3,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"백색 근위 의장대\" for Marine Citadel adult muscular marine soldiers with military gear and vehicles. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"백색 근위 의장대\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-3-skin-04.json",
+      "source_recovery": "generated_images/exec-5acee163-a7a1-46da-adc3-14bf26804db5.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-3-skin-04/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "a85dec7e3745879dcb0b14e10cabd42ddebf923fc0f3143d6cc3b7b67be54a20"
     },
     {
       "id": "faction-3-skin-05",
@@ -340,9 +373,10 @@
       "faction": 3,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"전우애 수육식당\" for Marine Citadel adult muscular marine soldiers with military gear and vehicles. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"전우애 수육식당\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-3-skin-05.json",
+      "source_recovery": "generated_images/exec-66a325c0-bde8-40c5-b70a-ff7e7ae20588.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-3-skin-05/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "9b792fd5fe1ba0b902289bdbf59ecf0892ac7cfc3eb44b00ce1d9090d88855eb"
     },
     {
       "id": "faction-3-skin-06",
@@ -350,9 +384,10 @@
       "faction": 3,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"짐승 해병단\" for Marine Citadel adult muscular marine soldiers with military gear and vehicles. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"짐승 해병단\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-3-skin-06.json",
+      "source_recovery": "generated_images/exec-e1a3ee23-2517-4f76-a31c-c91d848d849a.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-3-skin-06/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "1a3242edeb48cf3a34b7fe8a4b15a85fa533e6f9d8397464f48b7f6bf06190f5"
     },
     {
       "id": "faction-3-skin-07",
@@ -360,9 +395,10 @@
       "faction": 3,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"해병 특촬전대\" for Marine Citadel adult muscular marine soldiers with military gear and vehicles. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"해병 특촬전대\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-3-skin-07.json",
+      "source_recovery": "generated_images/exec-03d3ff4c-cc63-47ff-b271-ec6b15929c4a.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-3-skin-07/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "26ef670aa76b39aeef229377dc0dbc574fc0cdb33dfdd71ae518647a53457734"
     },
     {
       "id": "faction-3-skin-08",
@@ -370,9 +406,10 @@
       "faction": 3,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"은하 불량학교\" for Marine Citadel adult muscular marine soldiers with military gear and vehicles. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"은하 불량학교\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-3-skin-08.json",
+      "source_recovery": "generated_images/exec-8e5bcd08-b8d1-42df-8060-8a5bffa30b49.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-3-skin-08/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "46d521bb72b62af8f0330eb155c9c1784e3523ee09fc9dc7aca555611dbff670"
     },
     {
       "id": "faction-3-skin-09",
@@ -380,9 +417,10 @@
       "faction": 3,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"검은 해병 수도회\" for Marine Citadel adult muscular marine soldiers with military gear and vehicles. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"검은 해병 수도회\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-3-skin-09.json",
+      "source_recovery": "generated_images/exec-b2017c69-36ef-493e-a7c2-6fc755f0e7e5.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-3-skin-09/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "2262356b0a6bebba0cf798b11298bcaed443f8eaf6d3b5b96535d842e2ff6c04"
     },
     {
       "id": "faction-3-skin-10",
@@ -390,9 +428,10 @@
       "faction": 3,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"오도 해적단\" for Marine Citadel adult muscular marine soldiers with military gear and vehicles. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"오도 해적단\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-3-skin-10.json",
+      "source_recovery": "generated_images/exec-cda1dd8d-a758-4e09-ae57-fa85e3bf3901.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-3-skin-10/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "ab192a7e9cf92bba3da96167311e39a90568d942e8027b66b3cffeb8fcbfd5ea"
     },
     {
       "id": "faction-4-skin-01",
@@ -400,9 +439,10 @@
       "faction": 4,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"완전 야생화\" for Moon Beastkin adult humanlike animal-eared warriors with tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"완전 야생화\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-4-skin-01.json",
+      "source_recovery": "generated_images/exec-6352d0f4-a0f1-484f-8e74-2d5cfdde232b.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-4-skin-01/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "6b67ddc2d80f7d75ccb9bb638d8b41a2db30a927a95497517c4ae9dc8254926c"
     },
     {
       "id": "faction-4-skin-02",
@@ -410,9 +450,10 @@
       "faction": 4,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"붉은 달 백귀야행\" for Moon Beastkin adult humanlike animal-eared warriors with tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"붉은 달 백귀야행\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-4-skin-02.json",
+      "source_recovery": "generated_images/exec-4acbd766-bd5b-45d0-abc7-6d46475af002.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-4-skin-02/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "271cb5052048f15337f882958d1b6397b6f75a975065b8c7a67ae470dc199f28"
     },
     {
       "id": "faction-4-skin-03",
@@ -420,9 +461,10 @@
       "faction": 4,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"월광 무사단\" for Moon Beastkin adult humanlike animal-eared warriors with tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"월광 무사단\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-4-skin-03.json",
+      "source_recovery": "generated_images/exec-00aefa5b-b7c0-4055-9519-8a2ed5ff2755.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-4-skin-03/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "724fff493f1b520d198172de0319e32fa7d178cf33ce3abaa1f1c6e17ef12801"
     },
     {
       "id": "faction-4-skin-04",
@@ -430,9 +472,10 @@
       "faction": 4,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"기계 포식자\" for Moon Beastkin adult humanlike animal-eared warriors with tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"기계 포식자\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-4-skin-04.json",
+      "source_recovery": "generated_images/exec-3f836a2b-a676-4aea-8dfb-2d1fb5b11eb1.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-4-skin-04/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "47318c4fc76b2fd74f65220ee810f36cdfeb55e3ae615e285cb18a6d70b97be5"
     },
     {
       "id": "faction-4-skin-05",
@@ -440,9 +483,10 @@
       "faction": 4,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"고양이 귀족왕국\" for Moon Beastkin adult humanlike animal-eared warriors with tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"고양이 귀족왕국\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-4-skin-05.json",
+      "source_recovery": "generated_images/exec-e5945602-2c81-47ec-ab83-1611a74cf731.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-4-skin-05/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "9ddfba0d8c6e10234dc18cf5677536c5b008864ec2bc54577a3641489369cc19"
     },
     {
       "id": "faction-4-skin-06",
@@ -450,9 +494,10 @@
       "faction": 4,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"용린 무투단\" for Moon Beastkin adult humanlike animal-eared warriors with tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"용린 무투단\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-4-skin-06.json",
+      "source_recovery": "generated_images/exec-6784db73-54b5-46df-817e-3e5a7fda4204.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-4-skin-06/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "81a3a154d9d351d4ea2be2f9fb52892d9bb6be9ddd41c5f850e41951094a4f08"
     },
     {
       "id": "faction-4-skin-07",
@@ -460,9 +505,10 @@
       "faction": 4,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"월영 괴도단\" for Moon Beastkin adult humanlike animal-eared warriors with tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"월영 괴도단\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-4-skin-07.json",
+      "source_recovery": "generated_images/exec-ff9bb4a7-02d7-4696-a9c6-c6907a716217.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-4-skin-07/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "327e330e1f241939993d06fee9ec81e64825284876b22c4f75f8aab0d607845c"
     },
     {
       "id": "faction-4-skin-08",
@@ -470,9 +516,10 @@
       "faction": 4,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"바다의 야수해적\" for Moon Beastkin adult humanlike animal-eared warriors with tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"바다의 야수해적\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-4-skin-08.json",
+      "source_recovery": "generated_images/exec-8552a018-f51e-4b4a-b0ed-2cc995c8daf0.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-4-skin-08/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "31d4305c65000b140ce7012b13b2cd44f31b12ec0dffd13c568294e02943f2e8"
     },
     {
       "id": "faction-4-skin-09",
@@ -480,9 +527,10 @@
       "faction": 4,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"황혼 인형극\" for Moon Beastkin adult humanlike animal-eared warriors with tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"황혼 인형극\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-4-skin-09.json",
+      "source_recovery": "generated_images/exec-30063dc4-dff2-4c64-9813-26933f78e881.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-4-skin-09/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "dc87a1fef2febe52d0a519a08a8256c4f1db9849fc8d16ba6ecd5bc0139894a0"
     },
     {
       "id": "faction-4-skin-10",
@@ -490,9 +538,10 @@
       "faction": 4,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"천년 축제단\" for Moon Beastkin adult humanlike animal-eared warriors with tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"천년 축제단\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-4-skin-10.json",
+      "source_recovery": "generated_images/exec-9dda2baa-fb76-4f04-85af-98a92383d5bb.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-4-skin-10/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "9e4d5076a27eb76c41da63f2ecf542e73cdfc375eb6656b7c48c76f863a5a340"
     },
     {
       "id": "faction-5-skin-01",
@@ -500,9 +549,10 @@
       "faction": 5,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"흑림 추방자\" for Silvermoon Elves adult elegant long-eared elf warriors, nature magic. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"흑림 추방자\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-5-skin-01.json",
+      "source_recovery": "generated_images/exec-e1057db2-99c4-486c-b45f-dd9992d7f8f8.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-5-skin-01/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "60b1324733e4a59916ea09703c0183589cfb77eb896d112872bbf59f6cbf946e"
     },
     {
       "id": "faction-5-skin-02",
@@ -510,9 +560,10 @@
       "faction": 5,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"백설 여왕군\" for Silvermoon Elves adult elegant long-eared elf warriors, nature magic. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"백설 여왕군\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-5-skin-02.json",
+      "source_recovery": "generated_images/exec-b751a93c-c86e-459a-afd8-08274dc394dc.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-5-skin-02/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "8600d2802ff309508e9fbf92523e2156f8ab52f091fa18d85fa100617fec5339"
     },
     {
       "id": "faction-5-skin-03",
@@ -520,9 +571,10 @@
       "faction": 5,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"고목 정령융합\" for Silvermoon Elves adult elegant long-eared elf warriors, nature magic. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"고목 정령융합\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-5-skin-03.json",
+      "source_recovery": "generated_images/exec-b3132715-1ff6-407d-802d-ed0bb27a2956.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-5-skin-03/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "fd886aa67673d070f4eb6e34a7e916c373ba9793239db34754d8eafafa9416ce"
     },
     {
       "id": "faction-5-skin-04",
@@ -530,9 +582,10 @@
       "faction": 5,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"현대 마도학원\" for Silvermoon Elves adult elegant long-eared elf warriors, nature magic. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"현대 마도학원\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-5-skin-04.json",
+      "source_recovery": "generated_images/exec-6c894e02-72e5-4292-896f-f16948b1f2af.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-5-skin-04/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "d6adff6ff81a3597c8d6caee6a16ce9b60860c484a615b757a76cd5f51d77fbd"
     },
     {
       "id": "faction-5-skin-05",
@@ -540,9 +593,10 @@
       "faction": 5,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"황금 태양신국\" for Silvermoon Elves adult elegant long-eared elf warriors, nature magic. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"황금 태양신국\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-5-skin-05.json",
+      "source_recovery": "generated_images/exec-a07779fb-50b0-4ac8-b631-1d594a946166.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-5-skin-05/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "de621228b97702d42e20233cd17ade24ba5688d92ee1b8d0dcfef93511e97da8"
     },
     {
       "id": "faction-5-skin-06",
@@ -550,9 +604,10 @@
       "faction": 5,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"심해 진주회\" for Silvermoon Elves adult elegant long-eared elf warriors, nature magic. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"심해 진주회\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-5-skin-06.json",
+      "source_recovery": "generated_images/exec-5d615eef-64e5-4162-b49c-817d7239f8e9.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-5-skin-06/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "0f26dde465ebb61a36c248e66c3eab34e7d80d7feda12ad220162b5473a6d4cb"
     },
     {
       "id": "faction-5-skin-07",
@@ -560,9 +615,10 @@
       "faction": 5,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"피의 밤 연회\" for Silvermoon Elves adult elegant long-eared elf warriors, nature magic. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"피의 밤 연회\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-5-skin-07.json",
+      "source_recovery": "generated_images/exec-ebb45945-7863-4f0a-8fcb-6686bf356c65.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-5-skin-07/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "4936f62e45a233a02b02faa7c132044237e4a478e5907d81fe6dda1c35065784"
     },
     {
       "id": "faction-5-skin-08",
@@ -570,9 +626,10 @@
       "faction": 5,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"톱니 하늘함대\" for Silvermoon Elves adult elegant long-eared elf warriors, nature magic. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"톱니 하늘함대\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-5-skin-08.json",
+      "source_recovery": "generated_images/exec-ff937965-d43a-4996-94a4-26caae22518e.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-5-skin-08/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "cebc415d07bf8691d06126af371d475668026bd7d3bc085c70ad3143d8e7a659"
     },
     {
       "id": "faction-5-skin-09",
@@ -580,9 +637,10 @@
       "faction": 5,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"영혼의 서고\" for Silvermoon Elves adult elegant long-eared elf warriors, nature magic. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"영혼의 서고\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-5-skin-09.json",
+      "source_recovery": "generated_images/exec-0a9083ab-2648-41b7-aa0b-0587dc53c323.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-5-skin-09/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "c5bb65432071ef2e2d00d365af2add2343e5394e2a3972ec31e021404da09b17"
     },
     {
       "id": "faction-5-skin-10",
@@ -590,9 +648,10 @@
       "faction": 5,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"달여우 신사\" for Silvermoon Elves adult elegant long-eared elf warriors, nature magic. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"달여우 신사\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-5-skin-10.json",
+      "source_recovery": "generated_images/exec-bae2469c-525b-4e50-9370-e810e51efdfa.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-5-skin-10/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "443945f638560b7b9b2ed98dc8b3601d19962b2ea42604612eec19ff2cfd37a8"
     },
     {
       "id": "faction-6-skin-01",
@@ -600,9 +659,10 @@
       "faction": 6,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"인간 강림\" for Night Furries fully anthropomorphic furry animal warriors with fur, muzzles, paws and tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"인간 강림\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-6-skin-01.json",
+      "source_recovery": "generated_images/exec-36eb23fa-239f-48af-8b9a-db7fc53ba175.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-6-skin-01/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "bff3950413c6e2add6ad44c942f555c28f1d0212703278ac09632846376b8665"
     },
     {
       "id": "faction-6-skin-02",
@@ -610,9 +670,10 @@
       "faction": 6,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"백골 사냥무리\" for Night Furries fully anthropomorphic furry animal warriors with fur, muzzles, paws and tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"백골 사냥무리\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-6-skin-02.json",
+      "source_recovery": "generated_images/exec-067e50aa-2dbd-4f74-9a83-87792c7da2d9.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-6-skin-02/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "a4b0c06fc0fbd62b5ed903bf85032d7896a7558d8e610d64dd8111d855a37ee2"
     },
     {
       "id": "faction-6-skin-03",
@@ -620,9 +681,10 @@
       "faction": 6,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"고대 공룡왕국\" for Night Furries fully anthropomorphic furry animal warriors with fur, muzzles, paws and tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"고대 공룡왕국\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-6-skin-03.json",
+      "source_recovery": "generated_images/exec-368218f4-d735-43a5-b996-01d79debb36a.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-6-skin-03/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "934c9ac92c58a9573fe6c7d9bd756ea8a44cc4964bc4641c91c7ab0a7180b674"
     },
     {
       "id": "faction-6-skin-04",
@@ -630,9 +692,10 @@
       "faction": 6,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"곤충 하이브\" for Night Furries fully anthropomorphic furry animal warriors with fur, muzzles, paws and tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"곤충 하이브\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-6-skin-04.json",
+      "source_recovery": "generated_images/exec-4f9f5b03-693a-415b-bcf6-86bdc0715266.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-6-skin-04/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "a34e512371518cf11b94396e1f51dd8508c31b06fe31dcaf544ae427ea057d59"
     },
     {
       "id": "faction-6-skin-05",
@@ -640,9 +703,10 @@
       "faction": 6,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"기계 사냥꾼\" for Night Furries fully anthropomorphic furry animal warriors with fur, muzzles, paws and tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"기계 사냥꾼\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-6-skin-05.json",
+      "source_recovery": "generated_images/exec-0894e22b-cc7f-4e48-80cf-58ce0e034397.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-6-skin-05/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "b6738bf5707f4b7ee4e43159e58d13017b7dc8682e106adbd5318f644d4f472c"
     },
     {
       "id": "faction-6-skin-06",
@@ -650,9 +714,10 @@
       "faction": 6,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"봉제 카니발\" for Night Furries fully anthropomorphic furry animal warriors with fur, muzzles, paws and tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"봉제 카니발\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-6-skin-06.json",
+      "source_recovery": "generated_images/exec-42c38877-58b6-493b-8dd4-0163b932328e.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-6-skin-06/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "59e88c37d543854a92af7e53f0d3878bf8daa434e5184c242c71fa9380a87582"
     },
     {
       "id": "faction-6-skin-07",
@@ -660,9 +725,10 @@
       "faction": 6,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"천상의 그리폰군\" for Night Furries fully anthropomorphic furry animal warriors with fur, muzzles, paws and tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"천상의 그리폰군\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-6-skin-07.json",
+      "source_recovery": "generated_images/exec-91358232-384d-4d3f-95b1-065f11ee1ecb.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-6-skin-07/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "b84d1c8c961f1e14db390c3c61d8e96cf7b24865885de8b473ba5b9566b5dee1"
     },
     {
       "id": "faction-6-skin-08",
@@ -670,9 +736,10 @@
       "faction": 6,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"달밤 폭주족\" for Night Furries fully anthropomorphic furry animal warriors with fur, muzzles, paws and tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"달밤 폭주족\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-6-skin-08.json",
+      "source_recovery": "generated_images/exec-78aa672d-a971-4a8e-867d-1c345c8e4652.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-6-skin-08/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "f119357e1a29875ee0d8f5559f9dae3a8de4582c81df315b41277336e6005353"
     },
     {
       "id": "faction-6-skin-09",
@@ -680,9 +747,10 @@
       "faction": 6,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"황금 수왕 근위대\" for Night Furries fully anthropomorphic furry animal warriors with fur, muzzles, paws and tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"황금 수왕 근위대\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-6-skin-09.json",
+      "source_recovery": "generated_images/exec-5ff5055f-116b-41d6-a38e-302f57e1c1a1.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-6-skin-09/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "711cd4a631100e738a33b2d505d08b56ea2a37ace726d6807c211506fe7fb367"
     },
     {
       "id": "faction-6-skin-10",
@@ -690,9 +758,10 @@
       "faction": 6,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"괴짜 야수서커스\" for Night Furries fully anthropomorphic furry animal warriors with fur, muzzles, paws and tails. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"괴짜 야수서커스\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-6-skin-10.json",
+      "source_recovery": "generated_images/exec-4bb9dba8-b61b-467c-a6d6-af98b804c9d0.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-6-skin-10/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "998dad478a6c88c945bd003926a4f7b44052aa04452e8d6b7df07565437ae010"
     },
     {
       "id": "faction-7-skin-01",
@@ -700,9 +769,10 @@
       "faction": 7,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"인간화 실험체\" for Chrome Robots intelligent mechanical robots and drones. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"인간화 실험체\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-7-skin-01.json",
+      "source_recovery": "generated_images/exec-dfc08734-2f4e-42a8-b389-11e312326f13.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-7-skin-01/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "57c794bd86e36d1cba6b171d09d03528d5cb34f2e3717bb8d1a8f9cb59ad8ff1"
     },
     {
       "id": "faction-7-skin-02",
@@ -710,9 +780,10 @@
       "faction": 7,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"고양이 로보랜드\" for Chrome Robots intelligent mechanical robots and drones. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"고양이 로보랜드\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-7-skin-02.json",
+      "source_recovery": "generated_images/exec-d199288e-c3cd-41f3-957a-5619501a3a97.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-7-skin-02/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "2d9ec91f03d5058646b66502d5df80bab5c48c55948fd875a0425c62d20b1378"
     },
     {
       "id": "faction-7-skin-03",
@@ -720,9 +791,10 @@
       "faction": 7,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"기계곤충왕국\" for Chrome Robots intelligent mechanical robots and drones. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"기계곤충왕국\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-7-skin-03.json",
+      "source_recovery": "generated_images/exec-76f02576-9ac4-4a01-a765-bcd8628b9c9b.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-7-skin-03/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "04fe5dff990d492693ec245aae0ebc07dd622eb40ccdbc386a43b529f57ab1ab"
     },
     {
       "id": "faction-7-skin-04",
@@ -730,9 +802,10 @@
       "faction": 7,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"태엽 장난감군\" for Chrome Robots intelligent mechanical robots and drones. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"태엽 장난감군\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-7-skin-04.json",
+      "source_recovery": "generated_images/exec-05cff5c1-14fa-4f04-9adb-3002bae84da0.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-7-skin-04/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "4820e195b05a31bb092808fe03038091923d9e5e62924ff00de3aad243097865"
     },
     {
       "id": "faction-7-skin-05",
@@ -740,9 +813,10 @@
       "faction": 7,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"석상 고대수호자\" for Chrome Robots intelligent mechanical robots and drones. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"석상 고대수호자\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-7-skin-05.json",
+      "source_recovery": "generated_images/exec-ce657b26-39df-4529-a0a0-b3325b8c8aa3.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-7-skin-05/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "d6c6f42db5e1cbc9df8dd68bf357de543ffee57a880817cd2ad4d83035619527"
     },
     {
       "id": "faction-7-skin-06",
@@ -750,9 +824,10 @@
       "faction": 7,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"유령 전뇌신\" for Chrome Robots intelligent mechanical robots and drones. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"유령 전뇌신\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-7-skin-06.json",
+      "source_recovery": "generated_images/exec-abcd13fa-f920-416e-99c8-2ce34dddcd97.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-7-skin-06/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "bbd6b7300c31d2a794a96234147b1e992539fb202ecb1a18163c5b6516d9b969"
     },
     {
       "id": "faction-7-skin-07",
@@ -760,9 +835,10 @@
       "faction": 7,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"적흑 지옥기관\" for Chrome Robots intelligent mechanical robots and drones. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"적흑 지옥기관\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-7-skin-07.json",
+      "source_recovery": "generated_images/exec-d3430337-6b89-47a6-8560-4ff4a843a295.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-7-skin-07/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "49dd286a5b8769f2a4e97899b2142015761e1d473b71c532026d430bcb17eb6f"
     },
     {
       "id": "faction-7-skin-08",
@@ -770,9 +846,10 @@
       "faction": 7,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"식물 기생코어\" for Chrome Robots intelligent mechanical robots and drones. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"식물 기생코어\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-7-skin-08.json",
+      "source_recovery": "generated_images/exec-dde246d1-9a81-487c-b5bb-c4829177946f.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-7-skin-08/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "01d6fb76c03847878090e36d5b9829a8c805d5f8fa9d334387777f2f2a8f1641"
     },
     {
       "id": "faction-7-skin-09",
@@ -780,9 +857,10 @@
       "faction": 7,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"용골격 플랫폼\" for Chrome Robots intelligent mechanical robots and drones. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"용골격 플랫폼\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-7-skin-09.json",
+      "source_recovery": "generated_images/exec-71b018be-c7ed-4f49-970c-1adf5e7e5dd7.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-7-skin-09/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "c61fff10da9544bb7c4fc5003c64fde891e190de3a40b1034ef917f460bf02ac"
     },
     {
       "id": "faction-7-skin-10",
@@ -790,9 +868,10 @@
       "faction": 7,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"해저 탐사제국\" for Chrome Robots intelligent mechanical robots and drones. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"해저 탐사제국\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-7-skin-10.json",
+      "source_recovery": "generated_images/exec-d33e344c-7fee-4836-8dd8-0e30aa441ffd.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-7-skin-10/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "9aa051cd1ad6905698315553e1d04a03477e0563845c06a7c8f900712a7808e6"
     },
     {
       "id": "faction-8-skin-01",
@@ -800,9 +879,10 @@
       "faction": 8,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"진주 용왕궁\" for Octoper Swarm cephalopod tentacled creatures with aquatic anatomy. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"진주 용왕궁\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-8-skin-01.json",
+      "source_recovery": "generated_images/exec-82da2b50-f027-4ebf-8ef7-4582e0ac38bb.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-8-skin-01/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "131c2b4cb6c5a56949ea287a063ba85e333f657ffd19cfb7c5db9756af4911c9"
     },
     {
       "id": "faction-8-skin-02",
@@ -810,9 +890,10 @@
       "faction": 8,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"먹물 기밀국\" for Octoper Swarm cephalopod tentacled creatures with aquatic anatomy. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"먹물 기밀국\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-8-skin-02.json",
+      "source_recovery": "generated_images/exec-7b5c6ae3-68b3-453c-a962-a953050d12fb.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-8-skin-02/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "16cf8661e0b9d0a2802b3683371ada4d24260f66c705e41065698fbbf5a0d1de"
     },
     {
       "id": "faction-8-skin-03",
@@ -820,9 +901,10 @@
       "faction": 8,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"붉은 해적함대\" for Octoper Swarm cephalopod tentacled creatures with aquatic anatomy. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"붉은 해적함대\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-8-skin-03.json",
+      "source_recovery": "generated_images/exec-c3619a64-d449-4daa-af4b-5532423a7479.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-8-skin-03/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "0a766b889495a7309c5335a35bdfec847537d7b066960852a1eeb79323c0cf35"
     },
     {
       "id": "faction-8-skin-04",
@@ -830,9 +912,10 @@
       "faction": 8,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"얼어붙은 해구\" for Octoper Swarm cephalopod tentacled creatures with aquatic anatomy. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"얼어붙은 해구\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-8-skin-04.json",
+      "source_recovery": "generated_images/exec-471b7654-9f00-4058-96f7-565e7e2c559b.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-8-skin-04/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "54c3214d30590b4dcce33467e0f4b36781f2563fe250ed0cb1dfb5bda129d425"
     },
     {
       "id": "faction-8-skin-05",
@@ -840,9 +923,10 @@
       "faction": 8,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"요괴 촉수극단\" for Octoper Swarm cephalopod tentacled creatures with aquatic anatomy. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"요괴 촉수극단\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-8-skin-05.json",
+      "source_recovery": "generated_images/exec-db18c961-017e-403b-b049-b9d300acfe73.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-8-skin-05/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "bf5ee38068943fcf7a39dc4d44e95421b5187c54a67fc5ce185849af69450902"
     },
     {
       "id": "faction-8-skin-06",
@@ -850,9 +934,10 @@
       "faction": 8,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"별먹는 공허종\" for Octoper Swarm cephalopod tentacled creatures with aquatic anatomy. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"별먹는 공허종\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-8-skin-06.json",
+      "source_recovery": "generated_images/exec-d8065063-1423-4433-af38-d06e0a46740d.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-8-skin-06/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "89fda27f4f0c627991fc3ab0d257fca8f9f2f8f8b25f561011572eb33405eebc"
     },
     {
       "id": "faction-8-skin-07",
@@ -860,9 +945,10 @@
       "faction": 8,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"살아있는 산호도시\" for Octoper Swarm cephalopod tentacled creatures with aquatic anatomy. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"살아있는 산호도시\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-8-skin-07.json",
+      "source_recovery": "generated_images/exec-219627ec-1cbd-4a92-903b-5391be18f6da.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-8-skin-07/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "b92b3ee9fac6408824b4706b5325776e7861832903b978220fd3191fafe9888e"
     },
     {
       "id": "faction-8-skin-08",
@@ -870,9 +956,10 @@
       "faction": 8,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"찻잔 해양극\" for Octoper Swarm cephalopod tentacled creatures with aquatic anatomy. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"찻잔 해양극\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-8-skin-08.json",
+      "source_recovery": "generated_images/exec-b79c4fbf-cd03-4b98-9351-f42841c2972b.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-8-skin-08/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "767f59508e4abeaede9dcdc76c6840cde55339cb4e34327b61f210c96e15b815"
     },
     {
       "id": "faction-8-skin-09",
@@ -880,9 +967,10 @@
       "faction": 8,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"심해 의태극단\" for Octoper Swarm cephalopod tentacled creatures with aquatic anatomy. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"심해 의태극단\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-8-skin-09.json",
+      "source_recovery": "generated_images/exec-43bee9f5-31a5-42fb-9321-7e80649fdf56.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-8-skin-09/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "689f18a7b3ac195cef516a533b158013bcedaa4c744cad2f3d5f7911c7dbeec5"
     },
     {
       "id": "faction-8-skin-10",
@@ -890,9 +978,10 @@
       "faction": 8,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"역병의 흑해\" for Octoper Swarm cephalopod tentacled creatures with aquatic anatomy. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"역병의 흑해\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-8-skin-10.json",
+      "source_recovery": "generated_images/exec-ef4ed483-30a7-4ede-acd1-3a8e4d739cf3.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-8-skin-10/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "b69d4073c23646131c3bd04161f59943a1ed64cc9b6203a6825a188d8754744c"
     },
     {
       "id": "faction-9-skin-01",
@@ -900,9 +989,10 @@
       "faction": 9,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"흑장미 마녀회\" for Fairies adult miniature winged fantasy fae, floral and insect motifs. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"흑장미 마녀회\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-9-skin-01.json",
+      "source_recovery": "generated_images/exec-0725fcea-86a1-4d40-bdc1-ebe3f9e1870f.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-9-skin-01/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "a95ffcbf0c1f084c4abc4892c1278eeed4813f5e6118c353b4bb6656b4cd6275"
     },
     {
       "id": "faction-9-skin-02",
@@ -910,9 +1000,10 @@
       "faction": 9,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"철제 온실관리자\" for Fairies adult miniature winged fantasy fae, floral and insect motifs. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"철제 온실관리자\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-9-skin-02.json",
+      "source_recovery": "generated_images/exec-e5e93d5e-cb09-4c47-9537-24385958696c.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-9-skin-02/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "fbf2599fd2090e6e3def8816b5f871a9058e6ad4afc3de3633a5ecbf447b1fbc"
     },
     {
       "id": "faction-9-skin-03",
@@ -920,9 +1011,10 @@
       "faction": 9,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"독나비 가면무도회\" for Fairies adult miniature winged fantasy fae, floral and insect motifs. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"독나비 가면무도회\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-9-skin-03.json",
+      "source_recovery": "generated_images/exec-2b98f13e-9d0c-467f-9e2f-48cda3ae0bec.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-9-skin-03/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "b15d6096c0acb3d8d3672498274ce1fcd419e978d724c45ca5ed1086abb30975"
     },
     {
       "id": "faction-9-skin-04",
@@ -930,9 +1022,10 @@
       "faction": 9,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"꿀벌 왕국\" for Fairies adult miniature winged fantasy fae, floral and insect motifs. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"꿀벌 왕국\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-9-skin-04.json",
+      "source_recovery": "generated_images/exec-7dd73d20-353f-4e1f-a500-42797b8e1dcf.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-9-skin-04/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "66410125e24626a524d85f4bd1a9561e84d6d4502fc6a380d5a3b8a64adb6714"
     },
     {
       "id": "faction-9-skin-05",
@@ -940,9 +1033,10 @@
       "faction": 9,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"디저트 퐁당왕국\" for Fairies adult miniature winged fantasy fae, floral and insect motifs. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"디저트 퐁당왕국\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-9-skin-05.json",
+      "source_recovery": "generated_images/exec-1d5079be-d30d-4bc4-9b48-3094ec76c181.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-9-skin-05/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "ff2c67d226978362285d286e0895d21e751478a9e25a217b732249b7fb7a5782"
     },
     {
       "id": "faction-9-skin-06",
@@ -950,9 +1044,10 @@
       "faction": 9,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"세라핌 합창단\" for Fairies adult miniature winged fantasy fae, floral and insect motifs. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"세라핌 합창단\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-9-skin-06.json",
+      "source_recovery": "generated_images/exec-09b9684c-d20d-41a2-b524-425ee7c239c3.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-9-skin-06/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "6793683348be1e9c760f124fa240b0c5080f8696d2740659822d353233d61bf3"
     },
     {
       "id": "faction-9-skin-07",
@@ -960,9 +1055,10 @@
       "faction": 9,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"묘지의 사신요정\" for Fairies adult miniature winged fantasy fae, floral and insect motifs. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"묘지의 사신요정\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-9-skin-07.json",
+      "source_recovery": "generated_images/exec-817474d3-367e-434b-9c7d-e372346eb311.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-9-skin-07/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "7c2b5a73d738fc5420f672f9252f533a220dff3993f639086f5c9182e5392a3c"
     },
     {
       "id": "faction-9-skin-08",
@@ -970,9 +1066,10 @@
       "faction": 9,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"종이책 환상극\" for Fairies adult miniature winged fantasy fae, floral and insect motifs. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"종이책 환상극\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-9-skin-08.json",
+      "source_recovery": "generated_images/exec-f36cec55-d134-4245-9a2f-5e10dcda4eea.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-9-skin-08/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "2eb6974f0e86d2cbd3692e02747f0df054479085cf401f6c0eb4585208fb18ab"
     },
     {
       "id": "faction-9-skin-09",
@@ -980,9 +1077,10 @@
       "faction": 9,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"사계절 전령\" for Fairies adult miniature winged fantasy fae, floral and insect motifs. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"사계절 전령\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-9-skin-09.json",
+      "source_recovery": "generated_images/exec-3733afcc-7292-4f05-a3fb-22468e52d27e.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-9-skin-09/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "5bf9cfc685ddd7b88b4ce925164da129e9ed85d040c9458ad9ab5597c25a830c"
     },
     {
       "id": "faction-9-skin-10",
@@ -990,9 +1088,10 @@
       "faction": 9,
       "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"초소형 대괴수\" for Fairies adult miniature winged fantasy fae, floral and insect motifs. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"초소형 대괴수\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults.",
       "transparent_background": true,
-      "source_recovery": "generation-records/faction-9-skin-10.json",
+      "source_recovery": "generated_images/exec-70dbd47b-ee5e-450d-9090-a5eca2bebbfb.png",
       "target_source": "desert-strike/assets/sprites/sources/faction-9-skin-10/atlas.png",
-      "deployment": "pending"
+      "deployment": "pending",
+      "source_sha256": "2c7388f5db043a2f048470067ffede860490c015a2a3fe78fd3b1837b735cae9"
     }
   ]
 }

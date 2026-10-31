@@ -1,0 +1,108 @@
+{
+  "extractor_version": 3,
+  "id": "faction-0-skin-05",
+  "source": "sources/faction-0-skin-05/atlas.png",
+  "source_sha256": "8f378ae24db091c0c1cab43ddbfbd0d738be659bc9ad36066e8b60a3fd2fc182",
+  "source_size": [
+    1122,
+    1402
+  ],
+  "columns": [
+    0,
+    158,
+    300,
+    422,
+    546,
+    688,
+    824,
+    977,
+    1122
+  ],
+  "rows": [
+    0,
+    140,
+    263,
+    388,
+    531,
+    668,
+    810,
+    948,
+    1088,
+    1228,
+    1402
+  ],
+  "poses": [
+    "idle",
+    "ready",
+    "move-1",
+    "move-2",
+    "attack-windup",
+    "attack-impact",
+    "skill",
+    "death"
+  ],
+  "roles": [
+    {
+      "role": 0,
+      "key": "assault",
+      "file": "faction-0-skin-05-assault-actions.webp",
+      "sha256": "d8ad928b1c2f6330cae7ff6ccddbb1b76b89904b1891f6dcc5aac644b1b73b82"
+    },
+    {
+      "role": 1,
+      "key": "rifle",
+      "file": "faction-0-skin-05-rifle-actions.webp",
+      "sha256": "7833e368e129b7b0e7735b84aa25df797b3b66bf4517f63df8117b30a3a60c3e"
+    },
+    {
+      "role": 2,
+      "key": "antiarmor",
+      "file": "faction-0-skin-05-antiarmor-actions.webp",
+      "sha256": "0e71ffd1ad5e1991dc4dba86f45f9ddfc1a8b70b0e5cdd640cf270bb5e5e764b"
+    },
+    {
+      "role": 3,
+      "key": "heavy",
+      "file": "faction-0-skin-05-heavy-actions.webp",
+      "sha256": "d82d236d453326347d47a2e552f217353ebbe2eef389768c83e2ea1b1f9084f8"
+    },
+    {
+      "role": 4,
+      "key": "antiair",
+      "file": "faction-0-skin-05-antiair-actions.webp",
+      "sha256": "d24c051d4984b0f030527cdf6f4b1be2e6db884c5b01db90b0a404a68a1b6bdd"
+    },
+    {
+      "role": 5,
+      "key": "siege",
+      "file": "faction-0-skin-05-siege-actions.webp",
+      "sha256": "00f1c3cc551cc2112a90ec087b4a2ed0bacf5379791cbf28873be0947b18a85d"
+    },
+    {
+      "role": 6,
+      "key": "flyer",
+      "file": "faction-0-skin-05-flyer-actions.webp",
+      "sha256": "a72a08134882572c220d56d40f415ebee6d6c1841babc546eedf78a9c2a93570"
+    },
+    {
+      "role": 7,
+      "key": "support",
+      "file": "faction-0-skin-05-support-actions.webp",
+      "sha256": "13a6bbcf01c2124877a018c0ce31c70aeb23194d2e5e518fbbef007e18c59acc"
+    },
+    {
+      "role": 9,
+      "key": "sniper",
+      "file": "faction-0-skin-05-sniper-actions.webp",
+      "sha256": "db221d09457d8180ea4acd9b058bc408c10630047ca047fff1f31bc99c3cde57"
+    },
+    {
+      "role": 10,
+      "key": "assassin",
+      "file": "faction-0-skin-05-assassin-actions.webp",
+      "sha256": "7264a595f2978dbaa485faf60c95c78c73c0b46ef1b63cef0b5a3eb4a338f6bf"
+    }
+  ],
+  "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set: \"생체 침식병기\", faction Iron Alliance: mechanical soldiers and walkers. Interpret this Korean concept name faithfully and invent a strongly coherent original costume/material/weapon/silhouette theme for this skin, not a palette swap. ONE precisely aligned sprite atlas, portrait, exactly 8 equal columns and 10 equal rows =80 distinct sprites. No text, numbers, labels, dividers, backdrop or checkerboard. Genuine transparent background. Crisp detailed isometric 3/4 right-facing tiny game sprite illustration, consistent camera and scale per unit, strong readable silhouettes. Every cell has ONE complete unit with generous clear padding (at least 15% empty margin on each edge) including effects, all isolated, absolutely no sprite or effect crossing cell boundaries. Row classes in order: 1 melee assault with blade; 2 rifle ranged shooter; 3 antiarmor launcher; 4 armored heavy shield tank; 5 antiair homing launcher; 6 huge siege artillery; 7 flying unit with wings or flight apparatus; 8 magical healer support; 9 cloaked long-range sniper; 10 slim twin-blade stealth assassin. Adapt equipment to faction biology and skin concept, different recognizable shapes for all 10 rows. Each row SAME character across eight column animation poses: 1 idle; 2 ready; 3 walking left-foot; 4 walking right-foot; 5 attack windup; 6 attack impact with small contained effect; 7 thematic special skill with contained glow; 8 dead fallen body/wreck. Maintain fixed baseline within each row, fixed full-body scale across poses, all eight poses clearly distinct. Render all 80 isolated sprites in exact 8 by 10 uniform grid, no omitted rows, no scenery. Use tasteful unique materials and costume shapes informed by \"생체 침식병기\". Keep costumes fully clothed.",
+  "generation_source_file": "exec-3750c360-ed02-44d8-8855-1babc96f4c30.png"
+}

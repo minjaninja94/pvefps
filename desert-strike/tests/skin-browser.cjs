@@ -9,6 +9,21 @@ const {chromium}=require('playwright');
  await page.locator('#frontLobby').waitFor({state:'visible'});
  await page.waitForFunction(()=>window.DesertSkinCatalog&&window.DesertLobby&&window.DesertSkinArt);
  assert.equal(await page.evaluate(()=>DesertSkinCatalog.SKINS.length),100);
+ const readySkins=await page.evaluate(()=>DesertSkinCatalog.SKINS.filter(s=>s.status==='ready').map(s=>({id:s.id,faction:s.faction})));
+ for(const skin of readySkins){
+  await page.evaluate(id=>DesertSkinArt.preload(id),skin.id);
+  await page.waitForFunction(id=>DesertSkinArt.loadedCount(id)===10,skin.id);
+  const failures=await page.evaluate(s=>{
+   const failures=[];
+   for(const role of DesertSkinArt.roles)for(let pose=0;pose<8;pose++){
+    const c=DesertSkinArt.frame(s.id,s.faction,role,'pose-'+pose);
+    if(!c||!Array.from(c.getContext('2d').getImageData(0,0,c.width,c.height).data).some((v,i)=>i%4===3&&v>0))failures.push(role+':'+pose);
+   }
+   return failures;
+  },skin);
+  assert.deepEqual(failures,[],skin.id+' renders every role and pose');
+ }
+ console.log('Verified '+readySkins.length+' ready skins, '+readySkins.length*10+' sheets and '+readySkins.length*80+' rendered poses.');
  assert.equal(await page.locator('[data-skin="blood-iron"]').isDisabled(),true);
  await page.locator('[data-preview-skin="blood-iron"]').click();
  await page.waitForFunction(()=>DesertSkinArt.loadedCount('blood-iron')===10);

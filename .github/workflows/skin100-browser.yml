@@ -2,7 +2,7 @@ name: Faction skin browser verification
 on:
   workflow_dispatch:
   push:
-    branches: ["codex/skin100-recovery-20261031"]
+    branches: ["main", "codex/skin100-recovery-20261031"]
     paths:
       - ".github/workflows/skin100-browser.yml"
       - "desert-strike/tests/skin-browser.cjs"
@@ -10,6 +10,8 @@ on:
       - "desert-strike/front-lobby.js"
       - "desert-strike/unit-motion.js"
       - "desert-strike/index.html"
+      - "desert-strike/skin-catalog.js"
+      - "desert-strike/assets/sprites/faction-*-actions.webp"
 permissions:
   contents: read
 jobs:

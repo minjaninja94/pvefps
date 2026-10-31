@@ -1,0 +1,108 @@
+{
+  "extractor_version": 3,
+  "id": "faction-9-skin-10",
+  "source": "sources/faction-9-skin-10/atlas.png",
+  "source_sha256": "2c7388f5db043a2f048470067ffede860490c015a2a3fe78fd3b1837b735cae9",
+  "source_size": [
+    1122,
+    1402
+  ],
+  "columns": [
+    0,
+    159,
+    296,
+    421,
+    559,
+    700,
+    837,
+    967,
+    1122
+  ],
+  "rows": [
+    0,
+    151,
+    271,
+    398,
+    527,
+    659,
+    794,
+    928,
+    1066,
+    1194,
+    1402
+  ],
+  "poses": [
+    "idle",
+    "ready",
+    "move-1",
+    "move-2",
+    "attack-windup",
+    "attack-impact",
+    "skill",
+    "death"
+  ],
+  "roles": [
+    {
+      "role": 0,
+      "key": "assault",
+      "file": "faction-9-skin-10-assault-actions.webp",
+      "sha256": "467ab004369a99367a6a8cf6a1bfe96d7d51938b51ab428846103659e7104faf"
+    },
+    {
+      "role": 1,
+      "key": "rifle",
+      "file": "faction-9-skin-10-rifle-actions.webp",
+      "sha256": "d02b7605850f7ea91046337152774159d30be8f0c0006683a40c6acdcc13508d"
+    },
+    {
+      "role": 2,
+      "key": "antiarmor",
+      "file": "faction-9-skin-10-antiarmor-actions.webp",
+      "sha256": "bf8f4aae994f435945d2af4680c0fd4b36b65c1a53fdb10551833d2081d27977"
+    },
+    {
+      "role": 3,
+      "key": "heavy",
+      "file": "faction-9-skin-10-heavy-actions.webp",
+      "sha256": "a0aed45eb3265d188b0911c1cf39b8f40841d88dd512c91daf0624bccb4365c2"
+    },
+    {
+      "role": 4,
+      "key": "antiair",
+      "file": "faction-9-skin-10-antiair-actions.webp",
+      "sha256": "6e68f691d59bbc3ea65a60211f36e61cba506a3748aa8cf087e8d939d670137d"
+    },
+    {
+      "role": 5,
+      "key": "siege",
+      "file": "faction-9-skin-10-siege-actions.webp",
+      "sha256": "77b77261db2bd8c41ae543e29667b5edbb268856003cee1f46eade8ee29da3f5"
+    },
+    {
+      "role": 6,
+      "key": "flyer",
+      "file": "faction-9-skin-10-flyer-actions.webp",
+      "sha256": "dd64a2810904d212c547592621467dcb7ca03a91778bdf6c10e7cd5a61e81df9"
+    },
+    {
+      "role": 7,
+      "key": "support",
+      "file": "faction-9-skin-10-support-actions.webp",
+      "sha256": "4a156e0dc30668abe75eb1a3596ae8fa7b3e128107f44d8bc9c463113141476c"
+    },
+    {
+      "role": 9,
+      "key": "sniper",
+      "file": "faction-9-skin-10-sniper-actions.webp",
+      "sha256": "e1e83e076c61f898d642a58202e792c8a6092753ace0ab9e7e6e18d7dbe469ff"
+    },
+    {
+      "role": 10,
+      "key": "assassin",
+      "file": "faction-9-skin-10-assassin-actions.webp",
+      "sha256": "3a3bcef636325bf9ef68ac24b6c3797a31f9727f82d25323e0f5a86de4bcc595"
+    }
+  ],
+  "row_boundary_method": "explicit visual correction for irregular source spacing",
+  "prompt": "Use case: stylized-concept. Asset type: production transparent tactical game sprite atlas for Desert Front. Skin set \"초소형 대괴수\" for Fairies adult miniature winged fantasy fae, floral and insect motifs. Interpret this Korean concept name faithfully with strong original silhouettes, costumes and equipment. ONE precisely aligned sprite atlas in portrait orientation, exactly 8 equal columns and 10 equal rows, 80 sprites total. No text, labels, borders or background. Genuine transparent background. Crisp detailed isometric 3/4 right-facing small game sprites, coherent material palette and unique equipment silhouettes. IMPORTANT: each sprite INCLUDING ALL EFFECTS is strictly INSIDE its own cell with at least 15% empty padding at all four edges. Do not connect sprites with glow. Keep effects tiny. Row1 melee assault blade; row2 ranged rifle; row3 antiarmor launcher; row4 armored heavy shield; row5 antiair homing launcher; row6 siege artillery; row7 flying unit with wings or flight apparatus; row8 healer support; row9 cloaked sniper with long rifle; row10 slim twin-blade stealth assassin. Adapt all anatomy and gear to faction species and \"초소형 대괴수\" concept. Each row the SAME character in eight clearly different poses: col1 idle, col2 ready, col3 left-foot walking, col4 right-foot walking, col5 attack windup, col6 attack impact with tiny contained effect, col7 thematic special skill with tiny contained glow, col8 fallen dead body or wreck. Maintain same character size and camera across poses. Render all 80 distinct isolated complete sprites in exactly 8 by 10 UNIFORM grid. No scenery or opaque checkerboard. All humanoids are fully clothed adults."
+}

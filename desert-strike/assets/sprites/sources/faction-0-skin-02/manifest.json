@@ -1,0 +1,108 @@
+{
+  "extractor_version": 3,
+  "id": "faction-0-skin-02",
+  "source": "sources/faction-0-skin-02/atlas.png",
+  "source_sha256": "006428adc2960c6323c0eda1cb0878249b54890e9fa69f91be571115079ebe18",
+  "source_size": [
+    1122,
+    1402
+  ],
+  "columns": [
+    0,
+    155,
+    300,
+    424,
+    562,
+    696,
+    840,
+    981,
+    1122
+  ],
+  "rows": [
+    0,
+    139,
+    254,
+    387,
+    527,
+    667,
+    813,
+    948,
+    1091,
+    1228,
+    1402
+  ],
+  "poses": [
+    "idle",
+    "ready",
+    "move-1",
+    "move-2",
+    "attack-windup",
+    "attack-impact",
+    "skill",
+    "death"
+  ],
+  "roles": [
+    {
+      "role": 0,
+      "key": "assault",
+      "file": "faction-0-skin-02-assault-actions.webp",
+      "sha256": "28a41f079de1d0900af8cd7ed7887fed92e7e053c630cd27ff2855073755f785"
+    },
+    {
+      "role": 1,
+      "key": "rifle",
+      "file": "faction-0-skin-02-rifle-actions.webp",
+      "sha256": "e8f0f0cf8fd11584b724e33be243dbb836058298d6f0a01cf1b2c25244e5e0d3"
+    },
+    {
+      "role": 2,
+      "key": "antiarmor",
+      "file": "faction-0-skin-02-antiarmor-actions.webp",
+      "sha256": "f28907ce09ee4ca72a08955391d024f896dfbd5cffff24c7abc2294af1cd1972"
+    },
+    {
+      "role": 3,
+      "key": "heavy",
+      "file": "faction-0-skin-02-heavy-actions.webp",
+      "sha256": "6bc8d7f03ddbaffa116deb25b1ed311f8ddeb7221397a5c19944b083bae4666a"
+    },
+    {
+      "role": 4,
+      "key": "antiair",
+      "file": "faction-0-skin-02-antiair-actions.webp",
+      "sha256": "617a643efcdfa948866c6147b62a23d1cb5f820be4569b09cad74f639e67eef8"
+    },
+    {
+      "role": 5,
+      "key": "siege",
+      "file": "faction-0-skin-02-siege-actions.webp",
+      "sha256": "39fcbec18ad1a93d13b3590dbf2a42d9d4c5161a4bbb00f2a51d67beac050c90"
+    },
+    {
+      "role": 6,
+      "key": "flyer",
+      "file": "faction-0-skin-02-flyer-actions.webp",
+      "sha256": "4b7c4439734f2f718bb1ba8e37b0df52570149cba2ed058677988e17b1d62dce"
+    },
+    {
+      "role": 7,
+      "key": "support",
+      "file": "faction-0-skin-02-support-actions.webp",
+      "sha256": "1917a3680183a624a82a311dfe5d3e57376647c6f70ba01d948e86034c90afa8"
+    },
+    {
+      "role": 9,
+      "key": "sniper",
+      "file": "faction-0-skin-02-sniper-actions.webp",
+      "sha256": "b1d4c3d9621069828ba9a0643c24d41d913d2eb3ee2b8be1b4d67c895b7a2fbc"
+    },
+    {
+      "role": 10,
+      "key": "assassin",
+      "file": "faction-0-skin-02-assassin-actions.webp",
+      "sha256": "0755bbcec255e0857ce12880691774c7f01a01df5f03e0260c1e14e03c4ff800"
+    }
+  ],
+  "prompt": "Use case: stylized-concept. Production game sprite atlas for Desert Front, skin set '성해 순례단' (Holy Sea Pilgrims), Iron Alliance mechanical faction. Create ONE large precisely aligned sprite atlas on genuine transparent background. Canvas portrait, exactly 8 equal columns by 10 equal rows =80 cells, no borders, no labels, no text. Every cell holds ONE complete small isometric 3/4 right-facing tactical game unit, dark crisp pixel-art illustration, each unit fully within its own cell with generous transparent padding, no overlap. All units are ivory ceramic and weathered gold pilgrimage mechs, cathedral shells, blue holy-water glass, chains, lanterns, sea-relic reliquaries; distinct silhouettes and recognizable equipment. Each row a different class: row1 melee sword pilgrim; row2 rifle acolyte; row3 shoulder antiarmor rocket templar; row4 huge shield heavy walker; row5 four-legged antiair missile walker; row6 wheeled siege cannon; row7 flying gunship with cathedral wings; row8 healing shrine nun robot; row9 cloaked long rifle sniper; row10 slim twin-blade assassin. Across EVERY row, columns 1-8 show the SAME class in these eight clearly different animation poses: idle, ready, step left, step right, attack windup, attack impact with small muzzle/slash effect contained within cell, holy-water skill with contained blue glow, fallen dead wreck. Fixed camera, scale and baseline per row across columns. Render all 80 sprites. Strict uniform grid. No backdrop, no opaque checkerboard, no scenery. Maintain readable tiny game silhouettes.",
+  "generation_source_file": "exec-0bf72069-1347-46ce-913f-024653529575.png"
+}

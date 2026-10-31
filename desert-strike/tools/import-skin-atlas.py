@@ -2,7 +2,7 @@
 Usage: python3 tools/import-skin-atlas.py SKIN_ID SOURCE_PNG [PROMPT_FILE]
 Dependencies: pillow numpy scipy
 """
-import sys,json,hashlib,shutil
+import sys,json,hashlib,shutil,argparse
 from pathlib import Path
 import numpy as np
 from PIL import Image
@@ -21,12 +21,19 @@ def boundaries(alpha,n,axis):
   bounds.append(int(choices[cost.argmin()]))
  return bounds+[extent]
 def main():
- skin,src=sys.argv[1],Path(sys.argv[2]);target=ROOT/'assets/sprites';archive=target/'sources'/skin;archive.mkdir(parents=True,exist_ok=True)
+ parser=argparse.ArgumentParser(description=__doc__)
+ parser.add_argument('skin');parser.add_argument('source');parser.add_argument('prompt',nargs='?')
+ parser.add_argument('--rows',help='Explicit source row boundaries, comma separated, for irregular atlas spacing')
+ args=parser.parse_args()
+ skin,src=args.skin,Path(args.source);target=ROOT/'assets/sprites';archive=target/'sources'/skin;archive.mkdir(parents=True,exist_ok=True)
  im=Image.open(src).convert('RGBA');a=np.array(im)[:,:,3]
  assert a.min()==0 and a.max()>128,'Source requires real transparency'
  source=archive/'atlas.png'
  if source.resolve()!=src.resolve():shutil.copy2(src,source)
  ys=boundaries(a,10,0);xs=boundaries(a,8,1)
+ if args.rows:
+  ys=[int(v) for v in args.rows.split(',')]
+  assert len(ys)==11 and ys[0]==0 and ys[-1]==im.height and all(x<y for x,y in zip(ys,ys[1:])),'Invalid row boundaries'
  manifest={'extractor_version':3,'id':skin,'source':'sources/'+skin+'/atlas.png','source_sha256':sha(source),'source_size':list(im.size),'columns':xs,'rows':ys,'poses':POSES,'roles':[]}
  for row,role in enumerate(ROLES):
   cells=[]
@@ -47,7 +54,8 @@ def main():
   out=target/f'{skin}-{role}-actions.webp';temp=out.with_suffix('.tmp')
   sheet.save(temp,'WEBP',quality=86,method=4,exact=True);temp.replace(out)
   manifest['roles'].append({'role':[0,1,2,3,4,5,6,7,9,10][row],'key':role,'file':out.name,'sha256':sha(out)})
- if len(sys.argv)>3:manifest['prompt']=Path(sys.argv[3]).read_text()
+ if args.rows:manifest['row_boundary_method']='explicit visual correction for irregular source spacing'
+ if args.prompt:manifest['prompt']=Path(args.prompt).read_text()
  elif (archive/'manifest.json').exists():
   previous=json.loads((archive/'manifest.json').read_text())
   if 'prompt' in previous:manifest['prompt']=previous['prompt']
