@@ -14,7 +14,7 @@ test('public browser lists only live public room metadata and private invites st
   async runTransaction(_,fn){const actions=[];const tx={async get(ref){return snapshot(records.get(ref.path));},update:(ref,value)=>actions.push([ref,value])};
    await fn(tx);for(const [ref,change] of actions)records.set(ref.path,{...records.get(ref.path),...clone(change)});}
  };
- const w={IronFirebase:{identity:async()=>({db,fs:firestore,uid:'ownerUid'}),message:e=>e.message||String(e)}};
+ const w={DesertSupabaseRooms:{identity:async()=>({db,fs:firestore,uid:'ownerUid'}),message:e=>e.message||String(e)}};
  vm.runInNewContext(source,{window:w,crypto:webcrypto,performance,Date,Math,Number,Object,Array,Map,Set,Promise,console,RTCPeerConnection:class{},setInterval,clearInterval,setTimeout,clearTimeout},{filename:'tri-lane-network.js'});
  const api=w.DesertTriNetwork;
  api.configure({});
