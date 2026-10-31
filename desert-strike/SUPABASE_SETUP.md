@@ -19,7 +19,7 @@
 - `.github/workflows/desert-supabase-rooms.yml`에서는 독립된 Supabase 어댑터 모의 테스트 및 WebRTC 네트워크 회귀 테스트를 수행합니다.
 - 서로 다른 실제 기기/브라우저의 STUN/NAT 통과·연결 재수립 및 전체 자동 배포의 성공 여부는 별도 현장 검증이 필요합니다.
 - TURN 릴레이는 설정되지 않았기 때문에 일부 방화벽/대칭 NAT 조합에서는 P2P 접속이 실패할 수 있습니다.
-- 서버 `expires_at`에 따라 만료방은 숨겨지고 새 참여가 거절됩니다. 기존 레코드의 물리적 TTL 삭제 배치 작업은 별도 운영 설정이 필요합니다.
+- 서버 `expires_at`에 따라 만료방은 숨겨지고 새 참여가 거절됩니다. **별도 pg_cron 작업 `desert-front-rtc-rooms-expiry`(매시 15분)** 에서 `desert_expire_rtc_rooms()`를 실행해 만료 레코드를 실제 삭제합니다. 기존 랭크 경기 정리 작업은 변경하지 않았습니다.
 - 루트 `firebase-config.js`, `firebase-network.js`는 **다른 게임의 호환성**을 위해 삭제하지 않았으며, Desert Front 웹은 사용하지 않습니다.
 
 ---
