@@ -318,7 +318,7 @@ async function start(){
   await new Promise(resolve=>setTimeout(resolve,650));
  }
  if(!registered?.ok)status('비공식 경기 · 서버 기록 시스템 연결 실패: '+(registered?.reason||''));
- else status('서버 경기 상태 연결 완료 · 공식 랭킹/보상은 모든 참가자가 회원인 경우에만 반영됩니다.');
+ else status('서버 경기 연결 완료 · 회원 '+(registered.data?.rankEligibleMembers??'?')+'명 공식 랭킹·보상 정산 / 게스트 '+(registered.data?.guestParticipants??'?')+'명 기록 제외');
  await fs.updateDoc(path(),{status:'playing'});
  global.DesertMember?.markPlaying?.(roomId);beginServerHeartbeat();
  if(room.publicRoom)try{await fs.deleteDoc(publicPath());}catch(_){}
@@ -328,7 +328,7 @@ async function start(){
   if(!engine||engine.state.ended)return broadcast();
   engine.tick(dt);broadcast();
  },50);
- broadcast(true);active=true;status(registered?.ok?'멀티플레이 시작 · 게스트 동반 경기는 공식 점수·보상 제외':'비공식 멀티플레이 시작 · 서버 점수 제외: '+(registered?.reason||'참가 등록 실패'));
+ broadcast(true);active=true;status(registered?.ok?'멀티플레이 시작 · 로그인한 회원은 게스트 상대 경기라도 승패·RP·포인트 반영':'비공식 멀티플레이 시작 · 서버 점수 제외: '+(registered?.reason||'참가 등록 실패'));
 }
 function sendOrder(order){
  if(!roomId||room?.status!=='playing')return {ok:false,reason:'경기가 시작되지 않았습니다.'};
