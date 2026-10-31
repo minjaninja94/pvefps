@@ -1,6 +1,6 @@
 'use strict';
-// Offline integration replay of the actual Firestore/WebRTC room transport.
-// Simulates two independent clients using the same signaling store and RTC links.
+// Offline integration replay of the WebRTC room transport (storage is mocked).
+// Simulates two independent clients using a fake room store and RTC links.
 const assert=require('node:assert/strict');
 const fsNode=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const {webcrypto}=require('node:crypto');
@@ -70,7 +70,7 @@ function buildClient(uid){
   fetch:async()=>({ok:true,json:async()=>JSON.parse(fsNode.readFileSync(path.join(__dirname,'assets/augments.json'),'utf8'))}),
   setInterval,clearInterval,setTimeout,clearTimeout,performance,Date,Math,Number,String,Object,Array,Map,Set,console
  };
- w.IronFirebase={async identity(){return {db:{},fs:firestore,uid};},message:e=>e?.message||String(e)};
+ w.DesertSupabaseRooms={async identity(){return {db:{},fs:firestore,uid};},message:e=>e?.message||String(e)};
  for(const file of ['skin-catalog.js','skin-shop.js','prism-experiments.js','augment-rules.js'])vm.runInNewContext(fsNode.readFileSync(path.join(__dirname,file),'utf8'),env,{filename:file});
  vm.runInNewContext(engineSource,env,{filename:'tri-lane-engine.js'});
  vm.runInNewContext(networkSource,env,{filename:'tri-lane-network.js'});
@@ -128,7 +128,7 @@ async function main(){
  await until(()=>!records.has('desertRooms/'+room));
  assert.ok(!records.has('desertRooms/'+room+'/signals/guestUser'),'host deletes SDP on room close');
  await guest.network.leave();
- console.log('Mocked end-to-end 1v1 passed: Firebase room, signed join, P2P offer/answer, ready, host start, guest build, authoritative credits, cleanup');
+ console.log('Mocked end-to-end 1v1 passed: Supabase-backed room, signed join, P2P offer/answer, ready, host start, guest build, authoritative credits, cleanup');
 
  // Also reproduce full 2v2, 3v3 and 2/3-player co-op invite rooms and SDP.
  for(const [mode,size] of [['classic',1],['pvp',2],['pvp',3],['coop',2],['coop',3]]){
