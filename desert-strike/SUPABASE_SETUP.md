@@ -12,6 +12,16 @@
 - **프론트엔드:** `supabase-room-adapter.js`, `tri-lane-network.js`, `device-account.js`, `desert-member.js`; `index.html`은 Firebase SDK를 로드하지 않습니다.
 - **SQL 복구 지점:** `sql/desert_lobbies_supabase_v1.sql`은 현재 배포한 RPC 정의를 포함하며, 실제 DB에는 migration history로 각각 별도 적용됐습니다.
 
+## PvP 회원 랭크 정산 (2026-11-01)
+
+- **익명 참가:** Supabase Auth Anonymous Sign-Ins로 게임 계정 없이 방 생성·참가가 가능하며 전투는 기존 WebRTC P2P입니다.
+- **회원만 공식 기록:** PvP/클래식 결과를 서버가 확정하면 경기 시작 시 `desert_web_members`가 존재하고 `auth.users.is_anonymous`가 거짓인 참가자에게만 랭크 승패(+24/-24 RP)와 모드별 승패가 적립됩니다. 익명 상대가 있어도 회원 적립은 취소되지 않습니다. 점수는 100~3000 범위에서 제한됩니다.
+- **PvP 보상:** 회원에게 승리 500P, 패배 200P가 기존 `desert_skin_match_rewards`의 경기 키로 중복 없이 지급됩니다. 익명 참가자는 기록·포인트 모두 받지 않습니다. 협동전 스킨 P는 종전과 마찬가지로 PvP 보상 대상이 아닙니다.
+- **경기 시작 시 자격 확정:** `desert_ranked_match_players.member_at_start` 플래그를 방장 시작 RPC에서 서버가 계산해 도중·경기 후 회원 전환으로 보상을 받지 못하게 막습니다.
+- **DB 재현 SQL:** `sql/desert_mixed_pvp_member_rewards.sql`. 이전 all-members-required 분기 대신 참가자별 정산을 수행합니다.
+- **UI:** 로비와 결과 팝업에서 공식 랭킹·포인트의 회원 혜택과 게스트 미지급을 명시하고 로그인 버튼을 노출합니다.
+- **검증:** 실제 DB에서 회원 승/게스트 패, 게스트 승/회원 패, 전원 회원 대전, 시작 이후 뒤늦은 회원 등록 차단을 트랜잭션 롤백 테스트로 확인했습니다. CI `smoke-ranked-guest-mix.test.cjs`에서도 결과 팝업 및 정산 SQL 계약을 점검합니다.
+
 ## 배포/검증
 
 - Supabase의 두 테이블, 네 개 RPC, RLS, Realtime Publication 적용을 확인했습니다.
