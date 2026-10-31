@@ -1,15 +1,17 @@
 /* Commander covers use a separate illustration for every faction skin. */
 (function(global){'use strict';
 const skinCovers=new Map();
+const COVER_NAMES=['forge','brood','astral','marine','beastkin','elf','furry','robot','octoper','fairy'];
 function drawSkinCover(g,f,skin,w,h){
  const id=String(skin||'').split('~')[0],entry=global.DesertSkinCatalog?.get?.(id);
- if(!entry||entry.faction!==f||typeof Image==='undefined')return false;
- let image=skinCovers.get(id);
+ if(typeof Image==='undefined'||!COVER_NAMES[f]||!(['default','moe'].includes(id)||entry?.faction===f))return false;
+ const key=['default','moe'].includes(id)?id+'-'+COVER_NAMES[f]:id;
+ let image=skinCovers.get(key);
  if(!image){
   image=new Image();image.decoding='async';
   image.onload=()=>global.dispatchEvent?.(new Event('desert-cover-ready'));
-  image.onerror=()=>{skinCovers.delete(id);};
-  image.src='./assets/sprites/commander-'+id+'.jpg'+(f===7?'?v=robot-neutral-2':'');skinCovers.set(id,image);
+  image.onerror=()=>{skinCovers.delete(key);};
+  image.src='./assets/sprites/commander-'+key+'.jpg'+(f===7?'?v=robot-neutral-2':'');skinCovers.set(key,image);
  }
  if(!image.complete||!image.naturalWidth)return false;
  g.save();g.clearRect(0,0,w,h);
