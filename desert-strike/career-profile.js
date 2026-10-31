@@ -83,7 +83,7 @@ function render(){
  const label=$('lobbyRank');if(label)label.textContent=info.tier.name;
  const rp=$('lobbyRankRP');if(rp)rp.textContent=info.rank?'#'+info.rank.rank_position+' / '+info.rank.total_players+'명 · '+info.wins+'승':'멀티 랭킹 배치 대기';
  const type=$('lobbyRankIdentity');if(type)type.textContent=info.nickname+' · '+(info.member?'회원':'게스트');
- const note=$('lobbyRankNote');if(note)note.textContent=info.rank?.provisional?'DB 승수 기준 임시 티어 · 과거 모드 미분류':info.member?'서버 확정 전적 기반':'게스트 기록 · 서버 랭킹 제외';
+ const note=$('lobbyRankNote');if(note)note.textContent=info.rank?.provisional?'공식 승패 기록 기반 임시 티어 · 배치 진행 중':info.member?'서버 확정 승패 · 게스트 상대 경기 포함':'게스트는 공식 순위·승패·스킨 P 미적립 · 로그인 시 다음 경기부터 참여';
  const wl=$('lobbyRankWL');if(wl)wl.textContent=info.wins+'승 '+info.losses+'패';
  const wr=$('lobbyRankWinrate');if(wr)wr.textContent=(info.wins+info.losses?((info.wins/(info.wins+info.losses))*100).toFixed(1):'0.0')+'%';
  const recent=$('lobbyRecentMatches');
