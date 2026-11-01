@@ -45,16 +45,19 @@ test('assassin reliably kills a standard artillery troop with an ordinary hit on
  a.firstAssassinStrike=true;game.__test.attack(a,b);
  assert.ok(b.hp<=0,'multiplayer host assassin should kill standard artillery without relying on first-strike bonus');
 });
-test('sniper modest damage adjustment finishes an unupgraded Marine assault troop in both engines',()=>{
- const {G,s}=single(0,3);G.createUnit(0,0,9);const sniper=s.units.at(-1);
- G.createUnit(1,0,0);const charge=s.units.at(-1);
- G.damage(charge,G.getDef(9,0).damage,9,sniper);
- assert.equal(charge.hp,0,'solo basic sniper should finish basic Marine charge in one hit');
- const {game,s:ms}=multiplayer(0,3);
- game.__test.spawn(ms.players[0],0,0,9);const shooter=ms.units.at(-1);
- game.__test.spawn(ms.players[1],0,0,0);const victim=ms.units.at(-1);
- game.__test.attack(shooter,victim);
- assert.ok(victim.hp<=0,'host sniper should finish Marine charge in one ordinary shot');
+test('sniper loses its one-shot versus assault counters in both engines across all ten factions',()=>{
+ for(let faction=0;faction<10;faction++){
+  const rival=(faction+3)%10,{G,s}=single(faction,rival);
+  G.createUnit(0,0,9);const sniper=s.units.at(-1);
+  G.createUnit(1,0,0);const charge=s.units.at(-1),original=charge.hp;
+  G.damage(charge,G.getDef(9,faction).damage,9,sniper);
+  assert.ok(charge.hp>0&&charge.hp<original,'solo assault must survive initial sniper hit: '+faction);
+  const {game,s:ms}=multiplayer(faction,rival);
+  game.__test.spawn(ms.players[0],0,0,9);const shooter=ms.units.at(-1);
+  game.__test.spawn(ms.players[1],0,0,0);const victim=ms.units.at(-1),full=victim.hp;
+  game.__test.attack(shooter,victim);
+  assert.ok(victim.hp>0&&victim.hp<full,'host assault must survive initial sniper hit: '+faction);
+ }
 });
 test('artillery advances into forward tower return-fire radius, including elf +10% range in both engines',()=>{
  for(const faction of [0,5]){
