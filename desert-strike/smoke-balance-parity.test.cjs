@@ -1,6 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const {solo,multi}=require('./combat-balance-harness.cjs');
+const C=require('./unit-consolidation.js');
 const near=(a,b,label)=>assert.ok(Math.abs(a-b)<1e-7,`${label}: ${a} != ${b}`);
 function pair(faction=0,rival=0){
  const S=solo(),M=multi();S.G.reset();const s=S.G.state();
@@ -29,19 +30,33 @@ test('all 80 base definitions, faction prices and effective role properties agre
  assert.ok(G.getDef(2,4).damage>G.getDef(2,0).damage);assert.ok(G.getDef(2,6).damage>G.getDef(2,0).damage);
  assert.deepEqual([3,4,6,7].map(f=>E.unitCost(f,6)),[300,285,270,285]);
 });
+test('artillery splash stays at full radius and falls smoothly from 100% center to 40% rim',()=>{
+ near(C.splashFalloff(0,68),1,'center has full splash');
+ assert.ok(C.splashFalloff(17,68)>.85,'nearby targets still take most splash');
+ assert.ok(C.splashFalloff(34,68)>.74&&C.splashFalloff(34,68)<.76,'midpoint retains ~75%');
+ assert.ok(C.splashFalloff(51,68)<.65&&C.splashFalloff(51,68)>.55,'outer ring takes less');
+ near(C.splashFalloff(68,68),.4,'edge takes 40%');
+});
 test('actual artillery resolution agrees at center, falloff and outer edge for normal, Octoper and merged heroes',()=>{
  for(const faction of [0,8])for(const hero of [1,20])for(const wave of [20,40,60]){
   const p=pair(faction,0),[a,b]=p.add(0,5,1000,260,hero);
   p.s.wave=p.match.state.wave=wave;
   const radius=p.S.G.getDef(5,faction).blast+10,rows=[];
-  for(const d of [0,radius/2,radius,radius+.1]){
+  for(const d of [0,radius/4,radius/2,radius*3/4,radius,radius+.1]){
    const [x,y]=p.add(1,1,1100+d,260,hero);x.hp=x.maxHP=y.hp=y.maxHP=1e6;
    rows.push({d,x,y});
   }
   const damage=p.S.G.combatDef(a).damage;
   p.S.G.projectileImpact({side:0,faction,source:5,sourceUnit:a.uid,baseSide:null,tx:1100,ty:260,damage,blast:radius-10,volley:hero});
   p.match.__test.attack(b,rows[0].y);
-  for(const {d,x,y}of rows){near(1e6-x.hp,1e6-y.hp,`blast f${faction} hero${hero} W${wave} d${d}`);if(d>radius)assert.equal(x.hp,1e6);}
+  let previous=Infinity;
+  for(const {d,x,y}of rows){
+   const inflicted=1e6-x.hp;
+   near(inflicted,1e6-y.hp,`blast f${faction} hero${hero} W${wave} d${d}`);
+   assert.ok(inflicted<=previous+1e-5,'damage must decline with distance');
+   if(d>radius)assert.equal(x.hp,1e6,'explosion radius must not grow');
+   previous=inflicted;
+  }
  }
 });
 test('both ground charge variants hit the same three closest ground targets and honor armor counters',()=>{
