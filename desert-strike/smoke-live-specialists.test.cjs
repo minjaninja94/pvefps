@@ -22,6 +22,42 @@ test('live sniper/assassin catalogue matches both engines for all ten factions',
  }
 });
 
+test('sniper fire and tower retaliation overlap in solo and host multiplayer for base and elf factions',()=>{
+ const towerRange=285;
+ for(const faction of [0,5]){
+  const {G}=solo(137+faction),{E}=multi(137+faction);
+  const base=G.getDef(9,faction),host=E.definition(faction,9);
+  assert.equal(base.range,faction===5?319:290);
+  assert.equal(host.range,base.range);
+  assert.ok(base.range*.88<towerRange-3,'sniper unit attack position must enter a tower radius');
+  assert.ok(base.range*.85<towerRange-3,'sniper structure approach must enter a tower radius');
+
+  const s=G.state();
+  s.faction=faction;s.enemyFaction=1;s.live=true;s.paused=false;s.next=999;s.aiNextThink=Infinity;s.wave=8;s.elapsed=100;
+  s.units.length=0;
+  G.createUnit(0,0,9);
+  const soloSniper=s.units.at(-1);
+  soloSniper.x=2030;soloSniper.y=260;soloSniper.hp=soloSniper.maxHP=10000;
+  const soloBefore=s.forwardHP[1];
+  for(let i=0;i<220;i++)G.tick(.05);
+  assert.ok(s.forwardHP[1]<soloBefore,'solo sniper must engage the forward tower');
+  assert.ok(soloSniper.hp<10000,'solo tower must retaliate before the sniper can free-fire');
+
+  const match=E.create({mode:'classic',size:1,members:[
+   {uid:'a',team:0,faction},{uid:'b',team:1,faction:1}
+  ]});
+  const m=match.state;
+  m.wave=8;m.seconds=100;m.next=999;
+  match.__test.spawn(m.players[0],0,0,9);
+  const multiSniper=m.units.at(-1);
+  multiSniper.x=2030;multiSniper.y=260;multiSniper.hp=multiSniper.maxHP=10000;
+  const multiBefore=m.forwardHP[0][1];
+  for(let i=0;i<220;i++)match.tick(.05);
+  assert.ok(m.forwardHP[0][1]<multiBefore,'multiplayer sniper must engage the forward tower');
+  assert.ok(multiSniper.hp<10000,'multiplayer tower must retaliate before the sniper can free-fire');
+ }
+});
+
 test('solo army roster keeps specialist portraits still while combat retains animated strips',()=>{
  const fs=require('node:fs'),path=require('node:path');
  const game=fs.readFileSync(path.join(__dirname,'game-v2.js'),'utf8');
