@@ -43,6 +43,8 @@ jobs:
           node --check desert-strike/tri-lane-network.js
           node --check desert-strike/tri-lane-ui.js
           node --check desert-strike/balance-sim.cjs
+      - name: Live sniper assassin solo/multi parity and five difficulty AI combat
+        run: node --test desert-strike/smoke-live-specialists.test.cjs
       - name: Lobby and battle BGM transitions
         run: node --test desert-strike/smoke-bgm.test.cjs
       - name: Unlimited waves in solo and PvP/co-op with core-only victory
@@ -74,8 +76,6 @@ jobs:
         run: node --test desert-strike/smoke-mp-20min.test.cjs
       - name: Tactical counters take priority over hero production
         run: node --test desert-strike/smoke-ai-adaptation.test.cjs
-      - name: Live sniper assassin solo/multi parity and five difficulty AI combat
-        run: node --test desert-strike/smoke-live-specialists.test.cjs
       - name: Live sniper and assassin rules, 40 sprite strips and real-engine combat
         run: node --test desert-strike/expansion/smoke-expansion.test.cjs
       - name: Scoped cost-aware response to infantry-screened siege
