@@ -1395,7 +1395,7 @@ function tick(dt){
    &&forwardDistance<=Math.max(360,def.range+125)
    &&(!target||forwardDistance+32<distance(u,target));
   if(interceptForward){
-   if(forwardDistance>(u.role===9?Math.min(def.range*.85,TOWER_RANGE-12):def.range+15))move(u,forward.x,forward.y,ds);
+   if(forwardDistance>(u.role===9||u.role===5?Math.min(def.range*.85,TOWER_RANGE-12):def.range+15))move(u,forward.x,forward.y,ds);
    else if(u.cooldown<=0)beginStrike(u,null,1-u.side);
   }else if(target){
    const reach=def.range<48?Math.max(def.range,unitRadius(u)+unitRadius(target)+7):def.range*(def.range>65?.88:1);
@@ -1405,7 +1405,7 @@ function tick(dt){
    if(u.guardian){move(u,u.guardianHomeX,260,ds);continue;}
    const side=1-u.side,tx=defenseTarget(side).x;
    const d=Math.hypot(u.x-tx,u.y-260);
-   if(d>(u.role===9?Math.min(def.range*.85,TOWER_RANGE-12):def.range+15))move(u,tx,260,ds);
+   if(d>(u.role===9||u.role===5?Math.min(def.range*.85,TOWER_RANGE-12):def.range+15))move(u,tx,260,ds);
    else if(u.cooldown<=0)beginStrike(u,null,side);
   }
  }
