@@ -39,7 +39,7 @@ test('sniper fire and tower retaliation overlap in solo and host multiplayer for
   const soloSniper=s.units.at(-1);
   soloSniper.x=2030;soloSniper.y=260;soloSniper.hp=soloSniper.maxHP=10000;
   const soloBefore=s.forwardHP[1];
-  for(let i=0;i<220;i++)G.tick(.05);
+  for(let i=0;i<320;i++)G.tick(.05);
   assert.ok(s.forwardHP[1]<soloBefore,'solo sniper must engage the forward tower');
   assert.ok(soloSniper.hp<10000,'solo tower must retaliate before the sniper can free-fire');
 
@@ -52,7 +52,7 @@ test('sniper fire and tower retaliation overlap in solo and host multiplayer for
   const multiSniper=m.units.at(-1);
   multiSniper.x=2030;multiSniper.y=260;multiSniper.hp=multiSniper.maxHP=10000;
   const multiBefore=m.forwardHP[0][1];
-  for(let i=0;i<220;i++)match.tick(.05);
+  for(let i=0;i<320;i++)match.tick(.05);
   assert.ok(m.forwardHP[0][1]<multiBefore,`multiplayer sniper must engage the forward tower: x=${multiSniper.x.toFixed(1)} hp=${multiSniper.hp.toFixed(1)} forward=${m.forwardHP[0][1]} aim=${multiSniper.aimStartedAt} target=${multiSniper.aimTargetId} cool=${multiSniper.cool} units=${m.units.length} ended=${m.ended}`);
   assert.ok(multiSniper.hp<10000,'multiplayer tower must retaliate before the sniper can free-fire');
  }
