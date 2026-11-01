@@ -6,7 +6,7 @@
 'use strict';
 // The browser loads the shared module first; legacy headless test fixtures may omit it.
 const LIVE_SPECIALISTS=global.DesertExpansion||{
- definition(role){const sn=role===9;return {cost:sn?380:330,hp:(sn?78:52)*2.25,damage:(sn?300:180)*.94,armor:0,range:sn?390:30,rate:sn?4.8:1.45,speed:(sn?44:96)*.84,airTarget:sn,kind:'ground',good:sn?[6,3,1]:[5,7,9],bad:sn?[0,10]:[0,3,7]};},
+ definition(role){const sn=role===9;return {cost:sn?380:330,hp:(sn?78:52)*2.25,damage:(sn?300:180)*.94,armor:0,range:sn?290:30,rate:sn?4.8:1.45,speed:(sn?44:96)*.84,airTarget:sn,kind:'ground',good:sn?[6,3,1]:[5,7,9],bad:sn?[0,10]:[0,3,7]};},
  precisionMultiplier(){return 1;},canTarget(){return true;},
  presentation(){return {visible:true,opacity:1,label:'',detectionRadius:0,targetable:true};},
  infiltration(){return null;},revealOnAttack(){},RULES:{firstStrikeMultiplier:1.2}
@@ -796,7 +796,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
      const targetFort=fort(lane,defender),tx=targetFort.x;
      const ty=targetFort.y,dist=Math.hypot(tx-u.x,ty-u.y);
      if(state.cores[lane][defender]>0){
-      if(dist>Math.max(48,d.range*.85)){
+      if(dist>(u.role===9?Math.min(d.range*.85,TOWER_RANGE-12):Math.max(48,d.range*.85))){
        const step=Math.min(moveSpeed*dt,dist);
        u.x+=(tx-u.x)/Math.max(dist,1)*step;u.y+=(ty-u.y)/Math.max(dist,1)*step;u.act='move';
       }else if(u.cool<=0){
