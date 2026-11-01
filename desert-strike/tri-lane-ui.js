@@ -82,6 +82,14 @@ function drawAllBattle(){
    roleBadge(g,u,x,y-31,true);
    if(u.count>1){g.fillStyle='#fff5db';g.textAlign='center';g.font='bold 10px monospace';g.fillText(String(u.count),x+14,y-11);}
   }
+  for(const e of snap.effects||[]){
+   if(e.kind!=='coreLaser'||e.lane!==l)continue;
+   const from=left+width*e.x/E.WIDTH,to=left+width*e.tx/E.WIDTH;
+   const fy=mid+(e.team===0?-7:8),ty=mid+Math.max(-18,Math.min(15,(e.ty-l*E.LANE_H-260)*.11))+(e.team===0?8:-7);
+   g.save();g.globalAlpha=Math.max(.35,Math.min(1,(e.time||0)/.3));
+   g.strokeStyle=e.team===0?'#7afff1':'#ff9e85';g.lineWidth=3;
+   g.beginPath();g.moveTo(from,fy);g.lineTo(to,ty);g.stroke();g.restore();
+  }
   if(snap.fog?.[l]){
    const x=team===0?left+width*(E.WIDTH-770)/E.WIDTH:left;
    g.fillStyle='#071524d7';g.fillRect(x,top+24,width*770/E.WIDTH,band-30);
@@ -381,6 +389,20 @@ function draw(){
  }
  for(const e of snap.effects||[]){
   if(e.lane!==lane)continue;
+  if(e.kind==='coreLaser'){
+   const muzzle=iso?.towerMuzzle?.(e.x,e.y-lane*E.LANE_H,e.faction,'core',e.team)
+     ||pos(e.x,e.y-lane*E.LANE_H);
+   const landing=pos(e.tx,e.ty-lane*E.LANE_H);
+   if((muzzle.x<cameraX-120||muzzle.x>cameraX+1220)&&(landing.x<cameraX-120||landing.x>cameraX+1220))continue;
+   ctx.save();ctx.globalAlpha=Math.max(.3,Math.min(1,(e.time||0)/.3+.15));
+   ctx.shadowBlur=17;ctx.shadowColor=e.team===0?'#3afaf1':'#ff866c';
+   ctx.strokeStyle=e.team===0?'#34eae9':'#ff8064';ctx.lineWidth=7;
+   ctx.beginPath();ctx.moveTo(muzzle.x,muzzle.y);ctx.lineTo(landing.x,landing.y);ctx.stroke();
+   ctx.shadowBlur=0;ctx.strokeStyle='#ffffff';ctx.lineWidth=2;
+   ctx.beginPath();ctx.moveTo(muzzle.x,muzzle.y);ctx.lineTo(landing.x,landing.y);ctx.stroke();
+   ctx.fillStyle='#fff2cf';ctx.beginPath();ctx.arc(landing.x,landing.y,5,0,Math.PI*2);ctx.fill();ctx.restore();
+   continue;
+  }
   if(e.kind==='projectile'){
    const pct=Math.max(.08,Math.min(1,1-(e.time||0)/.38+(performance.now()-lastSnapshotAt)/380));
    const px=e.x+(e.tx-e.x)*pct,py=e.y+(e.ty-e.y)*pct-lane*E.LANE_H;
