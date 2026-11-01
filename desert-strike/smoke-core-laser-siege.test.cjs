@@ -52,11 +52,15 @@ test('sniper loses its one-shot versus assault counters in both engines across a
   G.createUnit(1,0,0);const charge=s.units.at(-1),original=charge.hp;
   G.damage(charge,G.getDef(9,faction).damage,9,sniper);
   assert.ok(charge.hp>0&&charge.hp<original,'solo assault must survive initial sniper hit: '+faction);
+  charge.hp=charge.maxHP*.1;G.damage(charge,G.getDef(9,faction).damage,9,sniper);
+  assert.equal(charge.hp,0,'solo sniper can execute an already wounded assault troop: '+faction);
   const {game,s:ms}=multiplayer(faction,rival);
   game.__test.spawn(ms.players[0],0,0,9);const shooter=ms.units.at(-1);
   game.__test.spawn(ms.players[1],0,0,0);const victim=ms.units.at(-1),full=victim.hp;
   game.__test.attack(shooter,victim);
   assert.ok(victim.hp>0&&victim.hp<full,'host assault must survive initial sniper hit: '+faction);
+  victim.hp=victim.maxHP*.1;game.__test.attack(shooter,victim);
+  assert.ok(victim.hp<=0,'host sniper can finish an already wounded assault troop: '+faction);
  }
 });
 test('artillery advances into forward tower return-fire radius, including elf +10% range in both engines',()=>{
