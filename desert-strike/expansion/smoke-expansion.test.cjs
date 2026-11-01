@@ -39,9 +39,15 @@ test('reward preparation never grants from unverified local counters or changes 
 
 test('precision helps armored specialists without giving a 20x hero damage shortcut',()=>{
  assert.equal(X.precisionMultiplier({role:9},{role:3,kind:'ground'}),1.6);
- assert.equal(X.precisionMultiplier({role:9},{role:1,kind:'ground'}),1);
- assert.equal(X.precisionMultiplier({role:9},{role:1,heroCount:20,kind:'ground'}),1.25);
- assert.equal(X.precisionMultiplier({role:9},{role:6,kind:'air'}),1);
+ assert.equal(X.CANDIDATES[9].damage,300,'3% sniper buff is rolled back');
+ assert.equal(X.CANDIDATES[9].rate,4.8);
+ assert.equal(X.CANDIDATES[9].cost,380);
+ assert.equal(X.precisionMultiplier({role:9},{role:0,kind:'ground'}),.72,'assault infantry gets 28% damage reduction');
+ assert.equal(X.precisionMultiplier({role:9},{role:0,heroCount:20,kind:'ground'}),.72,'merged assault stays the counter');
+ assert.equal(X.precisionMultiplier({role:9},{role:1,kind:'ground'}),1.15,'riflemen remain vulnerable');
+ assert.equal(X.precisionMultiplier({role:9},{role:1,heroCount:20,kind:'ground'}),1.15);
+ assert.equal(X.precisionMultiplier({role:9},{role:6,kind:'air'}),1.6,'air specials remain precision targets');
+ assert.equal(X.precisionMultiplier({role:9},{role:3,kind:'ground'}),1.6,'armor remains vulnerable');
 });
 test('detection can target an infiltrator during travel and attack exposure is clearly labelled',()=>{
  const assassin={...unit(10,1,100),phase:'infiltrating'},support=unit(7,0,0);
