@@ -2,12 +2,12 @@
 'use strict';
 // Standalone test harnesses may load this engine without the optional specialist script.
 const LIVE_SPECIALISTS=window.DesertExpansion||{
- CANDIDATES:{9:{key:'sniper',name:'저격',cost:380,hp:78,damage:300,armor:0,range:290,rate:4.8,speed:44,airTarget:true,kind:'ground',good:[6,3,1],bad:[0,10]},
+ CANDIDATES:{9:{key:'sniper',name:'저격',cost:380,hp:78,damage:309,armor:0,range:290,rate:4.8,speed:44,airTarget:true,kind:'ground',good:[6,3,1],bad:[0,10]},
   10:{key:'assassin',name:'암살',cost:330,hp:52,damage:180,armor:0,range:30,rate:1.45,speed:96,airTarget:false,kind:'ground',good:[5,7,9],bad:[0,3,7]}},
  NAMES:Array.from({length:10},(_,f)=>f===3?['쾌흥태','견쌍섭']:['저격병','암살자']),
  definition(role){const r=this.CANDIDATES[role];return {...r,hp:r.hp*2.25,damage:r.damage*.94,speed:r.speed*.84,heal:0,blast:0};},
  precisionMultiplier(){return 1;},canTarget(){return true;},presentation(){return {opacity:1,label:''};},
- infiltration(){return null;},revealOnAttack(){},RULES:{firstStrikeMultiplier:1.2}
+ infiltration(){return null;},revealOnAttack(){},RULES:{firstStrikeMultiplier:1.2,siegeExecutionMultiplier:1.14}
 };
 
 const $=id=>document.getElementById(id);
@@ -25,7 +25,7 @@ function factoryReady(side,slot){return state.elapsed+1e-6>=factoryReadyAt(side,
 function productionReadyAt(){return state.elapsed<OPENING_PREP_SECONDS?OPENING_PREP_SECONDS:state.elapsed+FACTORY_BUILD_SECONDS;}
 function setFactoryReady(side,slot){(side===0?state.buildReadyAt:state.enemyBuildReadyAt)[slot]=productionReadyAt();}
 
-const TOWER_RANGE=285,TOWER_PERIOD=.31,TOWER_DAMAGE=28,FOG_END_WAVE=6,ENEMY_FOG_X=WORLD_W-770;
+const TOWER_RANGE=285,TOWER_PERIOD=.31,TOWER_DAMAGE=28,CORE_LASER_PERIOD=TOWER_PERIOD/2,FOG_END_WAVE=6,ENEMY_FOG_X=WORLD_W-770;
 const HEAL_WINDOW=1,HEAL_BUDGET=80;
 const BROOD_BIRTH_CHANCE=.15,BROOD_BIRTH_COOLDOWN=12,BROOD_BIRTH_CAP=8,BROOD_ALIVE_CAP=14;
 const OCTOPER_REGEN=.0006,ROBOT_REPAIR=.0015;
@@ -234,7 +234,7 @@ function reset(){
  built:Array(SLOTS).fill(null),enemyBuilt:Array(SLOTS).fill(null),buildReadyAt:Array(SLOTS).fill(0),enemyBuildReadyAt:Array(SLOTS).fill(0),produced:[Array(11).fill(0),Array(11).fill(0)],combatStats:[combatRows(),combatRows()],units:[],deadUnits:[],shots:[],effects:[],floaters:[],structureFX:[],
  marineSupports:[],marineRecruitCount:[0,0],marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},
  broodBirths:[0,0],broodBirthsTotal:[0,0],
- musicStage:0,combatTeams:0,towerShots:[],aiSight:new Set(),nukes:1,enemyNukes:1,barrageCd:0,enemyBarrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
+ musicStage:0,combatTeams:0,towerShots:[],coreLaserTarget:[null,null],aiSight:new Set(),nukes:1,enemyNukes:1,barrageCd:0,enemyBarrageCd:0,faction:selectedFaction,enemyFaction:(selectedFaction+1+Math.floor(Math.random()*(FACTIONS.length-1)))%FACTIONS.length,
  nextUnitId:1,attackCount:0,nextConsolidation:1,aiNextThink:0,aiLastRefitAt:-Infinity,aiIntelMemory:null,aiDifficulty:window.DesertLobby?.aiDifficulty?.()||'normal',hardBrain:null,prismWaveAt:-Infinity,
  ruleset:'standard',augments:[],enemyAugments:[],augmentChoice:null,augmentStage:-1,augmentSchedule:[],prismLastStandUsed:false,enemyPrismLastStandUsed:false};
  selectedRole=null;demolition=false;bannerSeconds=0;barrageSeconds=0;
@@ -978,7 +978,7 @@ function matchupMultiplier(attacker,target,wave,attackRole=attacker.role){
   if(attackRole===4)return counterAdvantage(wave);
   return attackRole===0?.68:1;
  }
- return attacker.good.includes(target.role)?counterAdvantage(wave):attacker.bad.includes(target.role)?.7:1;
+ return attacker.good.includes(target.role)?counterAdvantage(wave)*(attackRole===10&&target.role===5?(LIVE_SPECIALISTS.RULES.siegeExecutionMultiplier||1.14):1):attacker.bad.includes(target.role)?.7:1;
 }
 function calcDamage(attacker,target,amount,unit=null,volley=null){
  let out=amount;
@@ -1442,6 +1442,22 @@ function tick(dt){
   damage(target,TOWER_DAMAGE*(def.kind==='air'?1.25:target.role===3?1.12:1),'turret');
   state['cool'+side]=TOWER_PERIOD;
   state.towerShots.push({side,kind:'turret',x:origin.x,y:origin.y,tx:target.x,ty:target.y,time:.22,duration:.22});
+ }
+ // The exposed core mounts one focused, continuous laser after its outer turret falls.
+ // One target per core, normal-turret damage and range, twice the rate: no splash or free siege immunity.
+ for(let side=0;side<2;side++){
+  if(state.turretHP[side]>0||state.baseHP[side]<=0)continue;
+  const origin={x:side===0?90:WORLD_W-90,y:260},key='coreLaserCool'+side;
+  state[key]=Math.max(0,(state[key]||0)-ds);
+  const legal=u=>u?.hp>0&&u.side!==side&&LIVE_SPECIALISTS.canTarget({side,role:4,...origin},u,state.units,state.elapsed)&&distance(u,origin)<=TOWER_RANGE;
+  let target=state.units.find(u=>u.uid===state.coreLaserTarget[side]&&legal(u));
+  if(!target){target=state.units.filter(legal).sort((a,b)=>distance(a,origin)-distance(b,origin))[0]||null;state.coreLaserTarget[side]=target?.uid??null;}
+  if(!target){state[key]=0;continue;}
+  if(state[key]>0)continue;
+  const def=getDef(target.role,target.faction);
+  damage(target,TOWER_DAMAGE*(def.kind==='air'?1.25:target.role===3?1.12:1),'turret');
+  state[key]=CORE_LASER_PERIOD;
+  state.towerShots.push({side,kind:'coreLaser',x:origin.x,y:origin.y,tx:target.x,ty:target.y,time:.26,duration:.26});
  }
  for(const shot of state.towerShots)shot.time-=ds;
  state.towerShots=state.towerShots.filter(x=>x.time>0);
@@ -1913,6 +1929,16 @@ function drawBattle(){
   const start=window.IsoWorld?.towerMuzzle?.(shot.x,shot.y,faction,shot.kind,shot.side)
    ||{x:shot.x,y:shot.y-66};
   const end=window.IsoWorld?.project?.(shot.tx,shot.ty)||{x:shot.tx,y:shot.ty};
+  if(shot.kind==='coreLaser'){
+   const alpha=Math.max(.25,1-shot.time/(shot.duration||.26)*.35);
+   g.save();g.globalAlpha=alpha;g.shadowBlur=16;g.shadowColor=shot.side===0?'#4afff6':'#ff7b5e';
+   g.strokeStyle=shot.side===0?'#3beee7':'#ff745c';g.lineWidth=7;
+   g.beginPath();g.moveTo(start.x,start.y);g.lineTo(end.x,end.y);g.stroke();
+   g.shadowBlur=0;g.strokeStyle='#f8ffff';g.lineWidth=2;
+   g.beginPath();g.moveTo(start.x,start.y);g.lineTo(end.x,end.y);g.stroke();
+   g.fillStyle='#fff7d6';g.beginPath();g.arc(end.x,end.y,5,0,Math.PI*2);g.fill();g.restore();
+   continue;
+  }
   const sx=start.x+(end.x-start.x)*progress,sy=start.y+(end.y-start.y)*progress;
   const angle=Math.atan2(end.y-start.y,end.x-start.x);
   g.save();g.globalAlpha=Math.max(.18,1-progress*.65);
