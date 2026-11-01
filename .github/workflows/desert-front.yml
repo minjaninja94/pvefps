@@ -45,6 +45,8 @@ jobs:
           node --check desert-strike/balance-sim.cjs
       - name: Live sniper assassin solo/multi parity and five difficulty AI combat
         run: node --test desert-strike/smoke-live-specialists.test.cjs
+      - name: Core-laser defense, artillery range and specialist matchup regression
+        run: node --test desert-strike/smoke-core-laser-siege.test.cjs
       - name: Lobby and battle BGM transitions
         run: node --test desert-strike/smoke-bgm.test.cjs
       - name: Unlimited waves in solo and PvP/co-op with core-only victory
