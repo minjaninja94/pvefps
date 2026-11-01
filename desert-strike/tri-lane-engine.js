@@ -6,10 +6,10 @@
 'use strict';
 // The browser loads the shared module first; legacy headless test fixtures may omit it.
 const LIVE_SPECIALISTS=global.DesertExpansion||{
- definition(role){const sn=role===9;return {cost:sn?380:330,hp:(sn?78:52)*2.25,damage:(sn?300:180)*.94,armor:0,range:sn?290:30,rate:sn?4.8:1.45,speed:(sn?44:96)*.84,airTarget:sn,kind:'ground',good:sn?[6,3,1]:[5,7,9],bad:sn?[0,10]:[0,3,7]};},
+ definition(role){const sn=role===9;return {cost:sn?380:330,hp:(sn?78:52)*2.25,damage:(sn?309:180)*.94,armor:0,range:sn?290:30,rate:sn?4.8:1.45,speed:(sn?44:96)*.84,airTarget:sn,kind:'ground',good:sn?[6,3,1]:[5,7,9],bad:sn?[0,10]:[0,3,7]};},
  precisionMultiplier(){return 1;},canTarget(){return true;},
  presentation(){return {visible:true,opacity:1,label:'',detectionRadius:0,targetable:true};},
- infiltration(){return null;},revealOnAttack(){},RULES:{firstStrikeMultiplier:1.2}
+ infiltration(){return null;},revealOnAttack(){},RULES:{firstStrikeMultiplier:1.2,siegeExecutionMultiplier:1.14}
 };
 
 const LANES=3,WIDTH=3300,HEIGHT=1560,LANE_H=520,COLS=15,ROWS=5,SLOTS=COLS*ROWS;
@@ -19,7 +19,7 @@ const AI_LEVELS=['easy','normal','hard','veryhard','impossible'];
 const INCOME_STEPS=[1.2,1,.85,.75,.65,.55,.45];
 const incomePerTick=level=>Number((1+INCOME_STEPS.slice(0,Math.min(7,Math.max(0,Math.floor(level)))).reduce((sum,x)=>sum+x,0)).toFixed(2));
 
-const TOWER_HP=1250,TOWER_RANGE=285,TOWER_PERIOD=.34,TOWER_DAMAGE=27,FOG_END_WAVE=6,FOG_WIDTH=770;
+const TOWER_HP=1250,TOWER_RANGE=285,TOWER_PERIOD=.34,TOWER_DAMAGE=27,CORE_LASER_PERIOD=TOWER_PERIOD/2,FOG_END_WAVE=6,FOG_WIDTH=770;
 const AGGRO_RADIUS=590,AGGRO_LEASH=740,SUPPORT_RADIUS=615,CONTACT_CELL=64;
 const EXTRACTOR=8,ecoPrice=level=>Math.round(70*Math.pow(1.36,level)),ecoStabilize=(level,seconds)=>(4+2*level+Math.min(6,Math.floor(Math.max(0,seconds)/120)))/2;
 const ecoBuildSeconds=level=>12+4*Math.max(0,level-1);
@@ -76,7 +76,7 @@ function matchupMultiplier(attacker,target,wave,attackRole=attacker.role){
   if(attackRole===4)return counterAdvantage(wave);
   return attackRole===0?.68:1;
  }
- return attacker.good.includes(target.role)?counterAdvantage(wave):attacker.bad.includes(target.role)?.7:1;
+ return attacker.good.includes(target.role)?counterAdvantage(wave)*(attackRole===10&&target.role===5?(LIVE_SPECIALISTS.RULES.siegeExecutionMultiplier||1.14):1):attacker.bad.includes(target.role)?.7:1;
 }
 function combatDef(u,players=null){
  const base=global.DesertAugments?.apply?.(definition(u.faction,u.role),u.augments||[],u.role)||definition(u.faction,u.role);
@@ -103,7 +103,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
  const players=humans.concat(mode==='coop'?Array.from({length:size},(_,i)=>({uid:'AI_'+i,name:'적 AI '+(i+1),team:1,faction:(i+3)%10,bot:true})):[]);
  const state={mode,size,ruleset:augmented?ruleset:'standard',augmentStage:-1,augmentChoice:null,augmentSchedule:aug?.schedule||[],aiDifficulty:AI_LEVELS.includes(aiDifficulty)?aiDifficulty:'normal',seconds:0,wave:0,next:OPENING_PREP_SECONDS,ended:false,winner:null,
   width:WIDTH,height:HEIGHT,lanes:LANES,musicStage:0,combatTeams:0,nukeCount:0,
-  cores:Array.from({length:LANES},()=>[CORE_HP,CORE_HP]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),forwardHP:Array.from({length:LANES},()=>[1000,1000]),forwardClaimed:Array.from({length:LANES},()=>[false,false]),forwardCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,nextConsolidation:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,augments:[],produced:Array(11).fill(0),combatStats:{damage:Array(11).fill(0),kills:Array(11).fill(0),
+  cores:Array.from({length:LANES},()=>[CORE_HP,CORE_HP]),turrets:Array.from({length:LANES},()=>[TOWER_HP,TOWER_HP]),towerCooldown:Array.from({length:LANES},()=>[0,0]),coreLaserCooldown:Array.from({length:LANES},()=>[0,0]),coreLaserTarget:Array.from({length:LANES},()=>[null,null]),forwardHP:Array.from({length:LANES},()=>[1000,1000]),forwardClaimed:Array.from({length:LANES},()=>[false,false]),forwardCooldown:Array.from({length:LANES},()=>[0,0]),units:[],effects:[],nextUnit:1,nextConsolidation:1,marineSupports:[],marineRecruitCount:new Map(),marineStats:{loot:0,lootedCR:0,recruits:0,huangSpawns:0,bongoCharges:0},marineStatsByUid:new Map(),broodBirthsByUid:new Map(),broodTotalByUid:new Map(),players:players.map(p=>({...p,augments:[],produced:Array(11).fill(0),combatStats:{damage:Array(11).fill(0),kills:Array(11).fill(0),
   losses:Array(11).fill(0),heroDamage:Array(11).fill(0),heroes:Array(11).fill(0)},cash:360,eco:0,ecoReadyAt:0,weapon:0,armor:0,nukes:1,barrageCd:0,mineCosts:{},mineTimings:{},buildings:Array.from({length:LANES},()=>Array(SLOTS).fill(null)),buildingReadyAt:Array.from({length:LANES},()=>Array(SLOTS).fill(0))})),lanePressure:Array(LANES).fill(.5)};
  const byUid=uid=>state.players.find(p=>p.uid===uid);
  function combatLife(u){return u.heroCount===20?Math.max(0,Math.min(20,Math.ceil(Math.max(0,u.hp)/(u.maxHP/20)-1e-9))):(u.hp>0?1:0);}
@@ -869,6 +869,34 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    if(state.effects.length>=160)state.effects.splice(0,state.effects.length-159);
    state.effects.push({kind:'projectile',originKind:forward?'forward':'turret',x,y,tx:v.x,ty:v.y,role:4,faction,team,lane,time:.38});
    state.effects.push({x:v.x,y:v.y,lane,kind:'tower',time:.16,team});
+  }
+  // Once the outer turret falls, its core locks one target with a 2x-rate laser.
+  for(let lane=0;lane<LANES;lane++)for(let team=0;team<2;team++){
+   if(state.turrets[lane][team]>0||state.cores[lane][team]<=0)continue;
+   const x=team===0?110:WIDTH-110,y=(lane+.5)*LANE_H;
+   state.coreLaserCooldown[lane][team]=Math.max(0,state.coreLaserCooldown[lane][team]-dt);
+   const legal=u=>u?.hp>0&&u.team!==team&&u.lane===lane
+     &&LIVE_SPECIALISTS.canTarget({team,role:4,x,y},u,state.units,state.seconds)&&Math.hypot(u.x-x,u.y-y)<=TOWER_RANGE;
+   let target=state.units.find(u=>u.id===state.coreLaserTarget[lane][team]&&legal(u));
+   if(!target){
+    target=state.units.filter(legal).sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y))[0]||null;
+    state.coreLaserTarget[lane][team]=target?.id??null;
+   }
+   if(!target){state.coreLaserCooldown[lane][team]=0;continue;}
+   if(state.coreLaserCooldown[lane][team]>0)continue;
+   const def=combatDef(target,state.players),damage=TOWER_DAMAGE*(def.kind==='air'?1.25:target.role===3?1.12:1);
+   let hit=global.DesertConsolidation?.hit(damage,def.armor,target,null)??Math.max(3,damage-def.armor*.66);
+   if(target.faction===0&&[3,4].includes(target.role))hit*=.94;
+   if(target.faction===2&&state.seconds-(target.lastWardAt??-999)>=10){target.lastWardAt=state.seconds;hit*=.82;}
+   target.hp-=hit;target.lastDamagedAt=state.seconds;
+   if(target.hp<=0){
+    const reboot=global.DesertPrism?.survival?.(chosenOf(target),target,state.seconds,target.hp)||0;
+    if(reboot>0){target.hp=reboot;target.killed=false;state.effects.push({x:target.x,y:target.y,lane,kind:'shield',time:.8,team:target.team});}
+   }
+   state.coreLaserCooldown[lane][team]=CORE_LASER_PERIOD;
+   const faction=state.players.find(p=>p.team===team)?.faction??0;
+   if(state.effects.length>=160)state.effects.splice(0,state.effects.length-159);
+   state.effects.push({kind:'coreLaser',x,y,tx:target.x,ty:target.y,faction,team,lane,time:.3});
   }
   state.units=state.units.filter(u=>u.hp>0);
   for(const e of state.effects)e.time-=dt;
