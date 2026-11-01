@@ -7,7 +7,7 @@ const LIVE_SPECIALISTS=window.DesertExpansion||{
  NAMES:Array.from({length:10},(_,f)=>f===3?['쾌흥태','견쌍섭']:['저격병','암살자']),
  definition(role){const r=this.CANDIDATES[role];return {...r,hp:r.hp*2.25,damage:r.damage*.94,speed:r.speed*.84,heal:0,blast:0};},
  precisionMultiplier(a,t){return a.role!==9?1:t.role===0?.72:t.role===3||t.role===6?1.6:t.role===1?1.15:t.heroCount===20?1.25:1;},canTarget(){return true;},presentation(){return {opacity:1,label:''};},
- infiltration(){return null;},revealOnAttack(){},RULES:{firstStrikeMultiplier:1.2,siegeExecutionMultiplier:1.14,sniperAssaultMultiplier:.72}
+ infiltration(){return null;},revealOnAttack(){},RULES:{firstStrikeMultiplier:1.2,siegeExecutionMultiplier:1.14,sniperAssaultMultiplier:.72,sniperAssaultFreshCap:.85}
 };
 
 const $=id=>document.getElementById(id);
@@ -1077,6 +1077,9 @@ function damage(u,amount,source,attacker=null,roll=Math.random,volley=null){
     state.units.filter(v=>v.hp>0&&v.side!==attacker.side&&v!==u),
     state.units.filter(v=>v.hp>0&&v.side===attacker.side&&v!==attacker)) : null;
  if(special)hit+=special.bonus;
+ // Fresh assault troops must survive a sniper's first shot, even at faction stat extremes.
+ // Wounded assault troops can still be finished by precision fire.
+ if(source===9&&u.role===0&&u.hp>=u.maxHP-1e-6)hit=Math.min(hit,u.maxHP*(LIVE_SPECIALISTS.RULES.sniperAssaultFreshCap??.85));
  u.hp-=hit;
  if(hit>0&&attacker&&attacker.side!==u.side){state.combatTeams|=1<<attacker.side;if(state.combatTeams===3)state.musicStage=Math.max(1,state.musicStage);}
  if(u.hp<=0&&isAugmented(state.ruleset)){
