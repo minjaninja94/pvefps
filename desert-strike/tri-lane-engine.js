@@ -796,7 +796,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
      const targetFort=fort(lane,defender),tx=targetFort.x;
      const ty=targetFort.y,dist=Math.hypot(tx-u.x,ty-u.y);
      if(state.cores[lane][defender]>0){
-      if(dist>(u.role===9?Math.min(d.range*.85,TOWER_RANGE-12):Math.max(48,d.range*.85))){
+      if(dist>(u.role===9||u.role===5?Math.min(d.range*.85,TOWER_RANGE-12):Math.max(48,d.range*.85))){
        const step=Math.min(moveSpeed*dt,dist);
        u.x+=(tx-u.x)/Math.max(dist,1)*step;u.y+=(ty-u.y)/Math.max(dist,1)*step;u.act='move';
       }else if(u.cool<=0){
