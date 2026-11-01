@@ -8,7 +8,7 @@ const CANDIDATES={
  [SNIPER]:{key:'sniper',name:'저격',cost:380,hp:78,damage:300,armor:0,range:290,rate:4.8,speed:44,kind:'ground',airTarget:true,aim:.65,armorPierce:.5,good:[6,3,1],bad:[0,10]},
  [ASSASSIN]:{key:'assassin',name:'암살',cost:330,hp:52,damage:180,armor:0,range:30,rate:1.45,speed:96,kind:'ground',airTarget:false,aim:.18,armorPierce:0,good:[5,7,9],bad:[0,3,7],stealth:true}
 };
-const RULES=Object.freeze({detectionRadius:190,attackRevealSeconds:1.05,stealthOpacity:.58,infiltrationTrigger:250,infiltrationReach:380,infiltrationWindup:.35,infiltrationTravel:.45,landingRecovery:.45,firstStrikeMultiplier:1.2,siegeExecutionMultiplier:1.14,sniperAssaultMultiplier:.72});
+const RULES=Object.freeze({detectionRadius:190,attackRevealSeconds:1.05,stealthOpacity:.58,infiltrationTrigger:250,infiltrationReach:380,infiltrationWindup:.35,infiltrationTravel:.45,landingRecovery:.45,firstStrikeMultiplier:1.2,siegeExecutionMultiplier:1.14,sniperAssaultMultiplier:.72,sniperAssaultFreshCap:.85});
 function definition(role,faction=0){
  const b=CANDIDATES[role];if(!b)return null;const [hp,damage,speed]=MUT[faction]||MUT[0];
  return {...b,role,faction,unitName:NAMES[faction]?.[role===SNIPER?0:1]||b.name,hp:b.hp*hp*2.25,damage:b.damage*damage*.94,speed:b.speed*speed*.84,range:b.range*(role===SNIPER&&faction===5?1.1:1)};
