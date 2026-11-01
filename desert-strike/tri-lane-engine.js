@@ -6,10 +6,10 @@
 'use strict';
 // The browser loads the shared module first; legacy headless test fixtures may omit it.
 const LIVE_SPECIALISTS=global.DesertExpansion||{
- definition(role){const sn=role===9;return {cost:sn?380:330,hp:(sn?78:52)*2.25,damage:(sn?309:180)*.94,armor:0,range:sn?290:30,rate:sn?4.8:1.45,speed:(sn?44:96)*.84,airTarget:sn,kind:'ground',good:sn?[6,3,1]:[5,7,9],bad:sn?[0,10]:[0,3,7]};},
- precisionMultiplier(){return 1;},canTarget(){return true;},
+ definition(role){const sn=role===9;return {cost:sn?380:330,hp:(sn?78:52)*2.25,damage:(sn?300:180)*.94,armor:0,range:sn?290:30,rate:sn?4.8:1.45,speed:(sn?44:96)*.84,airTarget:sn,kind:'ground',good:sn?[6,3,1]:[5,7,9],bad:sn?[0,10]:[0,3,7]};},
+ precisionMultiplier(a,t){return a.role!==9?1:t.role===0?.72:t.role===3||t.role===6?1.6:t.role===1?1.15:t.heroCount===20?1.25:1;},canTarget(){return true;},
  presentation(){return {visible:true,opacity:1,label:'',detectionRadius:0,targetable:true};},
- infiltration(){return null;},revealOnAttack(){},RULES:{firstStrikeMultiplier:1.2,siegeExecutionMultiplier:1.14}
+ infiltration(){return null;},revealOnAttack(){},RULES:{firstStrikeMultiplier:1.2,siegeExecutionMultiplier:1.14,sniperAssaultMultiplier:.72}
 };
 
 const LANES=3,WIDTH=3300,HEIGHT=1560,LANE_H=520,COLS=15,ROWS=5,SLOTS=COLS*ROWS;
@@ -685,7 +685,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    const radius=d.blast+10,volley=global.DesertConsolidation?.strength?.(a)||1;
    for(const x of state.units)if(x.team!==a.team&&x.hp>0&&definition(x.faction,x.role).kind!=='air'){
     const distance=Math.hypot(x.x-v.x,x.y-v.y);
-    if(distance<=radius)applyHit(a,x,dmg*(1-.48*distance/radius)*(global.DesertConsolidation?.splashWeight?.(x,volley)||1));
+    if(distance<=radius)applyHit(a,x,dmg*(global.DesertConsolidation?.splashFalloff?.(distance,radius)??(1-.6*Math.pow(distance/radius,1.25)))*(global.DesertConsolidation?.splashWeight?.(x,volley)||1));
    }
   }else{
    applyHit(a,v,dmg*(a.role===10&&!a.firstAssassinStrike?LIVE_SPECIALISTS.RULES.firstStrikeMultiplier:1));
