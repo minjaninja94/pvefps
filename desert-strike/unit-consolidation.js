@@ -15,6 +15,13 @@ function splashWeight(target,attackerVolley=1){
  const shots=Math.max(1,Number(attackerVolley)||1);
  return Math.min(4.5,1+.18*Math.max(0,strength(target)-1)/shots);
 }
+// StarCraft-inspired center-to-edge splash: full at the impact point,
+// ~75% at half radius and 40% at the outer rim. Radius itself never changes.
+function splashFalloff(distance,radius){
+ if(!(radius>0))return 0;
+ const t=Math.max(0,Math.min(1,distance/radius));
+ return 1-.6*Math.pow(t,1.25);
+}
 function hit(amount,armor,target,attacker,volley=null){
  const shots=Math.max(1,volley??strength(attacker));
  // Armor is per soldier and per projectile, never twenty layers on one body.
@@ -51,6 +58,6 @@ function aura(g,x,y,size,time=0,guardian=false){
  for(let i=0;i<6;i++){const phase=(time*.55+i/6)%1,px=x+Math.sin(time*2+i)*size*.39,py=y-phase*size*.9;g.globalAlpha=(1-phase)*.7;g.fillRect(px,py,Math.max(1,size*.025),size*.075);}
  g.globalAlpha=.65;g.beginPath();g.ellipse(x,y-size*.24,size*.43,size*.43,0,Math.PI*1.12,Math.PI*1.88);g.stroke();g.restore();
 }
-const api=Object.freeze({COUNT,strength,hit,splashWeight,definition,population,compact,aura});
+const api=Object.freeze({COUNT,strength,hit,splashWeight,splashFalloff,definition,population,compact,aura});
 global.DesertConsolidation=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);
