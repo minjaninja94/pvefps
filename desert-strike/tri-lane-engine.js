@@ -781,7 +781,7 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
     }
    }else{
     u.targetId=null;
-    if(u.role===9)u.aimStartedAt=null;
+    // Keep fort aim between ticks. Switching from a unit to a fort resets via aimTargetId below.
     if(support){
      // Healers regroup with any allied front, not just the lane they were built in.
      const friend=LIVE_SPECIALISTS.supportRally?.(u,alive,WIDTH)||{x:u.team===0?WIDTH*.25-100:WIDTH*.75+100,y:(currentLane+.5)*LANE_H};
