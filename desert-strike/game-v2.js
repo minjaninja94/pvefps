@@ -2,7 +2,7 @@
 'use strict';
 // Standalone test harnesses may load this engine without the optional specialist script.
 const LIVE_SPECIALISTS=window.DesertExpansion||{
- CANDIDATES:{9:{key:'sniper',name:'저격',cost:380,hp:78,damage:300,armor:0,range:390,rate:4.8,speed:44,airTarget:true,kind:'ground',good:[6,3,1],bad:[0,10]},
+ CANDIDATES:{9:{key:'sniper',name:'저격',cost:380,hp:78,damage:300,armor:0,range:290,rate:4.8,speed:44,airTarget:true,kind:'ground',good:[6,3,1],bad:[0,10]},
   10:{key:'assassin',name:'암살',cost:330,hp:52,damage:180,armor:0,range:30,rate:1.45,speed:96,airTarget:false,kind:'ground',good:[5,7,9],bad:[0,3,7]}},
  NAMES:Array.from({length:10},(_,f)=>f===3?['쾌흥태','견쌍섭']:['저격병','암살자']),
  definition(role){const r=this.CANDIDATES[role];return {...r,hp:r.hp*2.25,damage:r.damage*.94,speed:r.speed*.84,heal:0,blast:0};},
@@ -1395,7 +1395,7 @@ function tick(dt){
    &&forwardDistance<=Math.max(360,def.range+125)
    &&(!target||forwardDistance+32<distance(u,target));
   if(interceptForward){
-   if(forwardDistance>def.range+15)move(u,forward.x,forward.y,ds);
+   if(forwardDistance>(u.role===9?Math.min(def.range*.85,TOWER_RANGE-12):def.range+15))move(u,forward.x,forward.y,ds);
    else if(u.cooldown<=0)beginStrike(u,null,1-u.side);
   }else if(target){
    const reach=def.range<48?Math.max(def.range,unitRadius(u)+unitRadius(target)+7):def.range*(def.range>65?.88:1);
@@ -1405,7 +1405,7 @@ function tick(dt){
    if(u.guardian){move(u,u.guardianHomeX,260,ds);continue;}
    const side=1-u.side,tx=defenseTarget(side).x;
    const d=Math.hypot(u.x-tx,u.y-260);
-   if(d>def.range+15)move(u,tx,260,ds);
+   if(d>(u.role===9?Math.min(def.range*.85,TOWER_RANGE-12):def.range+15))move(u,tx,260,ds);
    else if(u.cooldown<=0)beginStrike(u,null,side);
   }
  }
