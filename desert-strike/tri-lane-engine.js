@@ -9,7 +9,7 @@ const LIVE_SPECIALISTS=global.DesertExpansion||{
  definition(role){const sn=role===9;return {cost:sn?380:330,hp:(sn?78:52)*2.25,damage:(sn?300:180)*.94,armor:0,range:sn?290:30,rate:sn?4.8:1.45,speed:(sn?44:96)*.84,airTarget:sn,kind:'ground',good:sn?[6,3,1]:[5,7,9],bad:sn?[0,10]:[0,3,7]};},
  precisionMultiplier(a,t){return a.role!==9?1:t.role===0?.72:t.role===3||t.role===6?1.6:t.role===1?1.15:t.heroCount===20?1.25:1;},canTarget(){return true;},
  presentation(){return {visible:true,opacity:1,label:'',detectionRadius:0,targetable:true};},
- infiltration(){return null;},revealOnAttack(){},RULES:{firstStrikeMultiplier:1.2,siegeExecutionMultiplier:1.14,sniperAssaultMultiplier:.72}
+ infiltration(){return null;},revealOnAttack(){},RULES:{firstStrikeMultiplier:1.2,siegeExecutionMultiplier:1.14,sniperAssaultMultiplier:.72,sniperAssaultFreshCap:.85}
 };
 
 const LANES=3,WIDTH=3300,HEIGHT=1560,LANE_H=520,COLS=15,ROWS=5,SLOTS=COLS*ROWS;
@@ -592,6 +592,8 @@ function create({mode='pvp',size=1,members=[],aiDifficulty='normal',ruleset='sta
    ?global.DesertPrism?.hitEffects?.(chosenOf(a),a,v,hit,state.seconds,state.units.filter(x=>x.hp>0&&x.team!==a.team&&x!==v),
       state.units.filter(x=>x.hp>0&&x.team===a.team&&x!==a)):null;
   if(prism)hit+=prism.bonus;
+  // A full-health assault troop survives one sniper hit, including faction/upgrade spikes.
+  if(a.role===9&&v.role===0&&v.hp>=v.maxHP-1e-6)hit=Math.min(hit,v.maxHP*(LIVE_SPECIALISTS.RULES.sniperAssaultFreshCap??.85));
   v.hp-=hit;v.attackAge=.12;v.hitAge=.3;v.lastDamagedAt=state.seconds;
   if(v.hp<=0){
    const reboot=global.DesertPrism?.survival?.(chosenOf(v),v,state.seconds,v.hp)||0;
