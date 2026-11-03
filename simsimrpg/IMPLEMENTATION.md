@@ -1,6 +1,6 @@
 # simsimrpg — 구현 순서, 서버 설계, 테스트 체크리스트
 
-> 기준: [메인 기획서](./PLAN.md), [32개 진영·192개 직업 루트 및 다단계 상위 전직 트리](./CLASS_CATALOG.md), [공동 게이트·포지션 대형·봇 3명](./FORMATION_AND_GATE.md), [레벨 격차·고레벨 명예·초보 보상](./LEVEL_GAP_AND_PRESTIGE.md), [접속 2배·7일/3.5일 성장·전직/게이트 이벤트](./GROWTH_REWARDS_AND_GATE_EVENTS.md), [1~7차 장기 성장·완만한 곡선](./SEVEN_ADVANCEMENTS.md), [게이트 이벤트300종](./GATE_EVENTS_300.md), [혼합 레벨 HP·신참 보스 보호](./MIXED_LEVEL_HP_RAID_BALANCE.md), [직업 도트·프레임 생성 규격](./PIXEL_ANIMATION_PRODUCTION_RULES.md), [192직업 개별 모션](./CLASS_ANIMATION_192.md), [생성 하한 JSON](./ANIMATION_GENERATION_POLICY.json), [재편 32진영·해병 인물·7개 누적 전직스킬](./FACTION_CLASS_REWORK_2026_11_03.md), [시너지·수동 보스·방치 성장](./SOCIAL_IDLE_SYSTEM.md)  
+> 기준: [메인 기획서](./PLAN.md), [32개 진영·192개 직업 루트 및 다단계 상위 전직 트리](./CLASS_CATALOG.md), [공동 게이트·포지션 대형·봇 3명](./FORMATION_AND_GATE.md), [레벨 격차·고레벨 명예·초보 보상](./LEVEL_GAP_AND_PRESTIGE.md), [접속 2배·7일/3.5일 성장·전직/게이트 이벤트](./GROWTH_REWARDS_AND_GATE_EVENTS.md), [1~7차 장기 성장·완만한 곡선](./SEVEN_ADVANCEMENTS.md), [게이트 이벤트300종](./GATE_EVENTS_300.md), [혼합 레벨 HP·신참 보스 보호](./MIXED_LEVEL_HP_RAID_BALANCE.md), [직업 도트·프레임 생성 규격](./PIXEL_ANIMATION_PRODUCTION_RULES.md), [192직업 개별 모션](./CLASS_ANIMATION_192.md), [생성 하한 JSON](./ANIMATION_GENERATION_POLICY.json), [재편 32진영·해병 인물·7개 누적 전직스킬](./FACTION_CLASS_REWORK_2026_11_03.md), [32진영×6기초직업 정본 JSON](./FACTION_ROSTER_32X6.json), [시너지·수동 보스·방치 성장](./SOCIAL_IDLE_SYSTEM.md)  
 > 작성: 2026-11-02 KST · **실제 개발은 다음 세션에 시작; 이 문서는 기획과 작업 가이드만 포함**  
 > 공통 원칙: **기존 프로젝트 절대 변경하지 않음. 소스·DB·배포 독립. 각 단위마다 Git commit/push 및 SHA 공유.**
 
