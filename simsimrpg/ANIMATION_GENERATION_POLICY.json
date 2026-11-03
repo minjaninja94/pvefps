@@ -8,9 +8,11 @@
     "root_classes": 192,
     "job_nodes_target": 9024,
     "final_job_nodes": 1536,
-    "advancement_tiers": 7
+    "advancement_tiers": 7,
+    "faction_roster_file": "FACTION_ROSTER_32X6.json"
   },
   "source_of_truth": [
+    "FACTION_ROSTER_32X6.json",
     "FACTION_CLASS_REWORK_2026_11_03.md",
     "CLASS_CATALOG.md",
     "CLASS_ANIMATION_192.md",
