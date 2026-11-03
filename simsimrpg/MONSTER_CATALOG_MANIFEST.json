@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "project": "simsimrpg",
+  "status": "design_only_unimplemented",
+  "category_count": 20,
+  "family_count": 200,
+  "monster_archetypes": 2000,
+  "unique_names": 2000,
+  "palette_variants_per_archetype": 10,
+  "visible_variants": 20000,
+  "counts_by_rank": {
+    "common": 1400,
+    "special": 300,
+    "elite": 200,
+    "boss": 100
+  },
+  "unique_body_frames_1_direction_estimate": 103600,
+  "manual_boss_pool": 100,
+  "meme_invasion_event": "E120",
+  "marine_food_typed_skills": 11,
+  "marine_food_scope": "every live enemy; active faction F29 players only receive food ally buffs",
+  "current_faction_32": "궤도개척군",
+  "validation": {
+    "duplicate_monster_ids": 0,
+    "duplicate_names": 0,
+    "missing_family_references": 0,
+    "wrong_family_role_counts": 0,
+    "invalid_manual_bosses": 0,
+    "invalid_food_targets": 0,
+    "four_shards_have_500_monsters_and_10_palettes": true
+  },
+  "files": [
+    {
+      "path": "MONSTER_FAMILIES_200.json",
+      "sha": "a2e17e144f716e39240e63802b44eb37599a0662"
+    },
+    {
+      "path": "MONSTERS_01_05.json",
+      "sha": "b1f6b097d1e3c1e89aea62f6b00ee397cade9d24"
+    },
+    {
+      "path": "MONSTERS_06_10.json",
+      "sha": "c527a3f8fbf7326680c889b4cec02905a39bc975"
+    },
+    {
+      "path": "MONSTERS_11_15.json",
+      "sha": "d45ee39e64cf2ba16cff86d5d2685eb26e3b2005"
+    },
+    {
+      "path": "MONSTERS_16_20.json",
+      "sha": "cec6f8511d32243091080496f32d915ffb2e4023"
+    },
+    {
+      "path": "MARINE_SKILLS_6X8.json",
+      "sha": "2c85d4591ff4098e2e37b896f476209f7080264f"
+    },
+    {
+      "path": "FACTION_ROSTER_32X6.json",
+      "sha": "75c01670dab2148a3b360dfe1e53ea3f6680f37c"
+    }
+  ]
+}
