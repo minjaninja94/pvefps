@@ -22,7 +22,8 @@
     "신화의 신들",
     "오리왕국",
     "음식왕국",
-    "차원 오류족"
+    "차원 오류족",
+    "초현실 밈연합"
   ],
   "demoted_to_job_concepts": [
     "오리광대",
@@ -1655,53 +1656,59 @@
     {
       "id": 32,
       "faction_id": "F32",
-      "name": "초현실 밈연합",
+      "name": "시간관리국",
       "root_classes": [
         {
           "root_class_id": "F32-C1",
-          "display_name": "트랄랄레로 트랄랄라",
+          "display_name": "시간수사관",
           "initial_unique_active_skills": 1
         },
         {
           "root_class_id": "F32-C2",
-          "display_name": "퉁퉁퉁 사후르",
+          "display_name": "연대감찰관",
           "initial_unique_active_skills": 1
         },
         {
           "root_class_id": "F32-C3",
-          "display_name": "봄바르디로 크로코딜로",
+          "display_name": "시계기술관",
           "initial_unique_active_skills": 1
         },
         {
           "root_class_id": "F32-C4",
-          "display_name": "발레리나 카푸치나",
+          "display_name": "역행의무관",
           "initial_unique_active_skills": 1
         },
         {
           "root_class_id": "F32-C5",
-          "display_name": "침판지니 바나니니",
+          "display_name": "시대밀수단속관",
           "initial_unique_active_skills": 1
         },
         {
           "root_class_id": "F32-C6",
-          "display_name": "브르브르 파타핌",
+          "display_name": "미래예보관",
           "initial_unique_active_skills": 1
         }
       ],
       "signature_path": {
-        "display_name": "초현실 사후르 박자왕",
-        "root_class_id": "F32-C2",
-        "role": "기괴한 타격·리듬·지원",
+        "display_name": "시간세관장",
+        "root_class_id": "F32-C5",
+        "role": "시대 물자 단속·약점 추적·지원·기록",
         "promotion_skills_1_to_7": [
-          "통 통 통",
-          "나무북 박자",
-          "리듬 경고",
-          "야행 나팔",
-          "타격 변주",
-          "혼종의 대행진",
-          "종말 사후르"
+          "밀수품 식별",
+          "시간 화물 압수",
+          "금지기술 봉인",
+          "시대 통행세",
+          "시간수송 통제",
+          "차원 항로 통제",
+          "역사의 최종 검문"
         ]
       }
     }
-  ]
+  ],
+  "enemy_only_event": {
+    "event_id": "E120",
+    "name": "한물간 밈의 습격",
+    "player_faction": false,
+    "linked_doc": "MEME_INVASION_EVENT.md"
+  }
 }
