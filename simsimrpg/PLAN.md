@@ -3,7 +3,7 @@
 > 작성·기록: 2026-11-02 (KST) · 기획 버전 1.1 (다단계 전직 계보 반영)  
 > 상태: **기획 보존 완료 목표 / 게임 코드 미구현**  
 > 첫 정식 버전 설계 목표: **32개 진영 × 6개 기본 직업군 = 192개 고정 계보 + 1~3차 깊은 분기 + 4~7차 심화 상위 전직**. 권장 구조에서는 총 **9,024개 직업 계보 노드·1,536개 7차 끝단 직업**(4~7차 내부 특성 선택 별도). 세부 설계·구현은 미완료  
- > 관련 문서: [전 진영·192클래스 목록](./CLASS_CATALOG.md), [공동 게이트·대형·도우미 3명](./FORMATION_AND_GATE.md), [초고레벨·초보 공존·명예](./LEVEL_GAP_AND_PRESTIGE.md), [성장곡선·접속 2배·게이트/전직 이벤트](./GROWTH_REWARDS_AND_GATE_EVENTS.md), [7차까지 전직/장기 성장](./SEVEN_ADVANCEMENTS.md), [300종 공동 게이트 이벤트](./GATE_EVENTS_300.md), [도트 애니메이션 제작 규칙](./PIXEL_ANIMATION_PRODUCTION_RULES.md), [192개 클래스 고유 모션](./CLASS_ANIMATION_192.md), [프레임 생성 정책 JSON](./ANIMATION_GENERATION_POLICY.json), [32진영 재편·해병 인물·경제직업·누적 7개 전직스킬](./FACTION_CLASS_REWORK_2026_11_03.md), [혼합레벨 HP·보스 안전 입장](./MIXED_LEVEL_HP_RAID_BALANCE.md), [채널 시너지·수동 보스·방치 밸런스](./SOCIAL_IDLE_SYSTEM.md), [개발 순서·검증표](./IMPLEMENTATION.md)
+ > 관련 문서: [전 진영·192클래스 목록](./CLASS_CATALOG.md), [공동 게이트·대형·도우미 3명](./FORMATION_AND_GATE.md), [초고레벨·초보 공존·명예](./LEVEL_GAP_AND_PRESTIGE.md), [성장곡선·접속 2배·게이트/전직 이벤트](./GROWTH_REWARDS_AND_GATE_EVENTS.md), [7차까지 전직/장기 성장](./SEVEN_ADVANCEMENTS.md), [300종 공동 게이트 이벤트](./GATE_EVENTS_300.md), [도트 애니메이션 제작 규칙](./PIXEL_ANIMATION_PRODUCTION_RULES.md), [192개 클래스 고유 모션](./CLASS_ANIMATION_192.md), [프레임 생성 정책 JSON](./ANIMATION_GENERATION_POLICY.json), [32진영 재편·해병 인물·경제직업·누적 7개 전직스킬](./FACTION_CLASS_REWORK_2026_11_03.md), [32진영·192기초직업 데이터 JSON](./FACTION_ROSTER_32X6.json), [혼합레벨 HP·보스 안전 입장](./MIXED_LEVEL_HP_RAID_BALANCE.md), [채널 시너지·수동 보스·방치 밸런스](./SOCIAL_IDLE_SYSTEM.md), [개발 순서·검증표](./IMPLEMENTATION.md)
 
 ## 1. 절대 변경하면 안 되는 확정 핵심 (최근 수정 의견 우선)
 
