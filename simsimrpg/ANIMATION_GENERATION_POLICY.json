@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "version": "2026-11-03",
+  "version": "2026-11-03-v2",
   "project": "simsimrpg",
   "scope": {
     "factions": 32,
@@ -11,9 +11,10 @@
     "advancement_tiers": 7
   },
   "source_of_truth": [
-    "PIXEL_ANIMATION_PRODUCTION_RULES.md",
-    "CLASS_ANIMATION_192.md",
+    "FACTION_CLASS_REWORK_2026_11_03.md",
     "CLASS_CATALOG.md",
+    "CLASS_ANIMATION_192.md",
+    "PIXEL_ANIMATION_PRODUCTION_RULES.md",
     "SEVEN_ADVANCEMENTS.md"
   ],
   "inspiration": {
@@ -50,7 +51,7 @@
     "pixel_art": true,
     "transparent_source_png": true,
     "render_filter": "nearest",
-    "facing_policy": "shared-gate 2d 3/4 side view, fix handedness and text after mirror",
+    "facing_policy": "original 2d 3/4 side view, faction-rig-specific biped/quad/fluid/avian/vehicle/surreal humanoid; handedness checked",
     "max_atlas_px": [
       2048,
       2048
@@ -80,7 +81,7 @@
     "required_pose_phases": [
       "anticipation",
       "acceleration",
-      "active_contact_or_release",
+      "contact_or_support_activation",
       "follow_through",
       "recovery"
     ],
@@ -144,123 +145,116 @@
   },
   "animation_modes": {
     "idle": {
-      "unique_drawn_frames_min": 10,
-      "recommended_max": 14,
+      "unique_drawn_frames_min": 8,
+      "recommended_max": 12,
       "fps_min": 8,
       "fps_max": 12,
       "loop": true
     },
     "walk": {
-      "unique_drawn_frames_min": 12,
-      "recommended_max": 18,
+      "unique_drawn_frames_min": 10,
+      "recommended_max": 14,
       "fps_min": 12,
       "fps_max": 16,
       "loop": true
     },
     "run": {
-      "unique_drawn_frames_min": 14,
-      "recommended_max": 20,
+      "unique_drawn_frames_min": 12,
+      "recommended_max": 16,
       "fps_min": 14,
       "fps_max": 20,
       "loop": true
     },
     "basic_attack_a": {
-      "unique_drawn_frames_min": 18,
-      "recommended_max": 24,
-      "fps_min": 16,
+      "unique_drawn_frames_min": 10,
+      "recommended_max": 16,
+      "fps_min": 14,
       "fps_max": 24,
       "loop": false
     },
     "basic_attack_b": {
-      "unique_drawn_frames_min": 18,
-      "recommended_max": 24,
-      "fps_min": 16,
+      "unique_drawn_frames_min": 10,
+      "recommended_max": 16,
+      "fps_min": 14,
       "fps_max": 24,
       "loop": false
     },
     "heavy_attack": {
-      "unique_drawn_frames_min": 22,
-      "recommended_max": 32,
-      "fps_min": 16,
+      "unique_drawn_frames_min": 14,
+      "recommended_max": 22,
+      "fps_min": 14,
       "fps_max": 24,
       "loop": false
     },
     "cast": {
-      "unique_drawn_frames_min": 20,
-      "recommended_max": 30,
-      "fps_min": 14,
-      "fps_max": 22,
-      "loop": false
-    },
-    "signature_skill": {
-      "unique_drawn_frames_min": 30,
-      "recommended_max": 44,
-      "fps_min": 18,
+      "unique_drawn_frames_min": 12,
+      "recommended_max": 20,
+      "fps_min": 12,
       "fps_max": 24,
       "loop": false
     },
-    "ultimate": {
-      "unique_drawn_frames_min": 48,
-      "recommended_max": 72,
-      "fps_min": 20,
-      "fps_max": 30,
+    "root_skill": {
+      "unique_drawn_frames_min": 10,
+      "recommended_max": 16,
+      "fps_min": 12,
+      "fps_max": 24,
       "loop": false
     },
     "guard": {
-      "unique_drawn_frames_min": 12,
-      "recommended_max": 18,
+      "unique_drawn_frames_min": 8,
+      "recommended_max": 14,
       "fps_min": 12,
-      "fps_max": 18,
+      "fps_max": 20,
       "loop": false
     },
     "hurt": {
-      "unique_drawn_frames_min": 8,
-      "recommended_max": 12,
+      "unique_drawn_frames_min": 6,
+      "recommended_max": 10,
       "fps_min": 12,
       "fps_max": 20,
       "loop": false
     },
     "knockdown": {
-      "unique_drawn_frames_min": 14,
-      "recommended_max": 22,
+      "unique_drawn_frames_min": 10,
+      "recommended_max": 16,
       "fps_min": 12,
       "fps_max": 20,
       "loop": false
     },
     "death": {
-      "unique_drawn_frames_min": 18,
-      "recommended_max": 28,
+      "unique_drawn_frames_min": 12,
+      "recommended_max": 20,
       "fps_min": 12,
       "fps_max": 20,
       "loop": false
     },
     "revive": {
-      "unique_drawn_frames_min": 12,
-      "recommended_max": 18,
+      "unique_drawn_frames_min": 8,
+      "recommended_max": 16,
       "fps_min": 12,
       "fps_max": 20,
       "loop": false
     },
+    "social_emote": {
+      "unique_drawn_frames_min": 8,
+      "recommended_max": 14,
+      "fps_min": 8,
+      "fps_max": 16,
+      "loop": true
+    },
     "heal": {
-      "unique_drawn_frames_min": 22,
-      "recommended_max": 34,
-      "fps_min": 14,
+      "unique_drawn_frames_min": 12,
+      "recommended_max": 18,
+      "fps_min": 12,
       "fps_max": 22,
       "loop": false
     },
     "buff": {
-      "unique_drawn_frames_min": 18,
-      "recommended_max": 28,
-      "fps_min": 14,
+      "unique_drawn_frames_min": 12,
+      "recommended_max": 18,
+      "fps_min": 12,
       "fps_max": 22,
       "loop": false
-    },
-    "social_emote": {
-      "unique_drawn_frames_min": 12,
-      "recommended_max": 20,
-      "fps_min": 8,
-      "fps_max": 16,
-      "loop": true
     }
   },
   "root_class_constraints": {
@@ -274,7 +268,7 @@
       "basic_attack_b",
       "heavy_attack",
       "cast",
-      "signature_skill",
+      "root_skill",
       "guard",
       "hurt",
       "knockdown",
@@ -298,26 +292,71 @@
       "ranged": [
         "cast",
         "heavy_attack"
+      ],
+      "merchant": [
+        "buff",
+        "root_skill"
+      ],
+      "chef": [
+        "heal",
+        "buff"
+      ],
+      "performer": [
+        "social_emote",
+        "buff"
       ]
     },
     "replace_nonsensical_actions_with_role_equivalent": true,
-    "core_202_min_frames_without_attack_b": true,
-    "attack_b_18_additional": true,
+    "base_unique_drawn_frames_per_direction_min": 138,
+    "attack_a_min": 10,
+    "attack_b_min": 10,
+    "root_skill_min": 10,
+    "required_unique_distinct_a_b_and_root": true,
     "signature_uniqueness_per_root": true,
     "profile_document": "CLASS_ANIMATION_192.md"
   },
   "advancement_constraints": {
-    "per_job_node_unique_signature_min": 30,
-    "tiers_with_major_ultimate": [
-      3,
-      5,
-      7
-    ],
-    "major_ultimate_unique_frames_min": 48,
+    "promotion_tiers": 7,
+    "new_unique_active_skill_each_promotion": 1,
+    "previous_promotion_skills_persist": true,
+    "root_active_skill_count": 1,
+    "total_active_skill_count_at_tier_7_min": 8,
+    "unique_skill_body_frames_min_by_tier": {
+      "1": 12,
+      "2": 16,
+      "3": 20,
+      "4": 24,
+      "5": 30,
+      "6": 36,
+      "7": 48
+    },
+    "total_new_promotion_abilities_at_tier_7": 7,
+    "separate_passive_and_basic_attack_counts": true,
+    "higher_tiers_derive_rig_layers_from_previous": true,
+    "faction_signature_class_paths_required": 32,
     "shared_base_rig_permitted": true,
     "shared_base_idle_walk_permitted": true,
     "different_signature_silhouette_required": true,
-    "merely_recoloring_not_sufficient": true
+    "fx_frames_do_not_count_towards_body_frames": true,
+    "merely_recoloring_not_sufficient": true,
+    "roles_including_economy_cooking_medicine_performance_and_research": true,
+    "special_cases": {
+      "marine_roster": [
+        "손수잘 해병",
+        "황근출 해병",
+        "황룡",
+        "진떡팔 해병",
+        "마철두 해병",
+        "곽말풍 중령"
+      ],
+      "yellow_dragon_dead_rebirth_chain": [
+        "root:황룡",
+        "promotion_1:해병수육",
+        "promotion_2:각성 공군"
+      ],
+      "yellow_dragon_ally_debuff_must_be_opt_in": true,
+      "yellow_dragon_respawn_trigger_requires_real_hp_zero": true
+    }
   },
   "qa_hard_fail": [
     "duplicated frames counted as new unique art",
@@ -331,7 +370,13 @@
     "stage promotion changes only job name or aura color",
     "non-original copyrighted DnF artwork used in shipping assets",
     "missing loop / transition / die-revive test",
-    "50 player shared-gate playback becomes unreadable or untested"
+    "50 player shared-gate playback becomes unreadable or untested",
+    "one of seven promotions does not grant a new persistent active skill",
+    "previously unlocked skill disappears on promotion",
+    "early class falsely inherits old 18/18/30 frame minima as hard constraints",
+    "friend debuff applied without consent by yellow dragon",
+    "hero early animation frame is duplicated or only shifted to meet count",
+    "removed factions retained as selectable independent factions"
   ],
   "status": "planning_only_no_images_created"
 }
