@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "version": "2026-11-03-v3",
+  "version": "2026-11-03-v4",
   "project": "simsimrpg",
   "scope": {
     "factions": 32,
@@ -10,12 +10,15 @@
     "final_job_nodes": 1536,
     "advancement_tiers": 7,
     "faction_roster_file": "FACTION_ROSTER_32X6.json",
-    "faction_32": "시간관리국",
+    "faction_32": "궤도개척군",
     "removed_player_faction": "초현실 밈연합",
-    "meme_event_doc": "MEME_INVASION_EVENT.md"
+    "meme_event_doc": "MEME_INVASION_EVENT.md",
+    "discarded_player_faction_32": "시간관리국",
+    "faction_32_design_document": "ORBITAL_PIONEER_FACTION.md"
   },
   "source_of_truth": [
     "FACTION_ROSTER_32X6.json",
+    "ORBITAL_PIONEER_FACTION.md",
     "FACTION_CLASS_REWORK_2026_11_03.md",
     "CLASS_CATALOG.md",
     "CLASS_ANIMATION_192.md",
@@ -361,7 +364,8 @@
       ],
       "yellow_dragon_ally_debuff_must_be_opt_in": true,
       "yellow_dragon_respawn_trigger_requires_real_hp_zero": true,
-      "enemy_only_event": "E120 한물간 밈의 습격"
+      "enemy_only_event": "E120 한물간 밈의 습격",
+      "orbital_pioneer_enhanced_infantry": "F32-C1 강화병사"
     }
   },
   "qa_hard_fail": [
@@ -383,7 +387,9 @@
     "friend debuff applied without consent by yellow dragon",
     "hero early animation frame is duplicated or only shifted to meet count",
     "removed factions retained as selectable independent factions",
-    "obsolete meme actors appear in root faction 32 or are playable characters"
+    "obsolete meme actors appear in root faction 32 or are playable characters",
+    "time authority class or meme actor remains playable in faction 32",
+    "orbital pioneer strength armor frame poses copied from any existing commercial game"
   ],
   "status": "planning_only_no_images_created"
 }
