@@ -70,7 +70,8 @@
       "player_trade_disabled": true,
       "player_to_player_gold_transfer_disabled": true,
       "buffs_additive_and_capped": true
-    }
+    },
+    "marine_skill_tree_source": "MARINE_SKILLS_6X8.json"
   },
   "factions": [
     {
@@ -1540,17 +1541,56 @@
       "signature_path": {
         "display_name": "해병수육→각성 공군",
         "root_class_id": "F29-C3",
-        "role": "부활·자기강화·양날 버프",
+        "role": "해병수육 재생·기열 징발·역돌격·공군 각성·대가형 지원",
         "promotion_skills_1_to_7": [
           "수육 잔향",
           "기열 징발",
-          "공군 재편",
-          "배반의 역학",
-          "역적성 전술",
-          "해병 하늘가르기",
-          "황룡의 대반전"
+          "공군 역돌격",
+          "따흐앙! 공군의 반란",
+          "황룡 재가열",
+          "몽키스패너 공중폭격",
+          "황료일 대역전"
         ]
-      }
+      },
+      "meme_lore_skill_source": "MARINE_SKILLS_6X8.json",
+      "marine_characters": [
+        {
+          "root_class_id": "F29-C1",
+          "character_name": "손수잘 해병",
+          "skill_tree_source": "MARINE_SKILLS_6X8.json",
+          "unique_actives_at_7": 8
+        },
+        {
+          "root_class_id": "F29-C2",
+          "character_name": "황근출 해병",
+          "skill_tree_source": "MARINE_SKILLS_6X8.json",
+          "unique_actives_at_7": 8
+        },
+        {
+          "root_class_id": "F29-C3",
+          "character_name": "황룡",
+          "skill_tree_source": "MARINE_SKILLS_6X8.json",
+          "unique_actives_at_7": 8
+        },
+        {
+          "root_class_id": "F29-C4",
+          "character_name": "진떡팔 해병",
+          "skill_tree_source": "MARINE_SKILLS_6X8.json",
+          "unique_actives_at_7": 8
+        },
+        {
+          "root_class_id": "F29-C5",
+          "character_name": "마철두 해병",
+          "skill_tree_source": "MARINE_SKILLS_6X8.json",
+          "unique_actives_at_7": 8
+        },
+        {
+          "root_class_id": "F29-C6",
+          "character_name": "곽말풍 중령",
+          "skill_tree_source": "MARINE_SKILLS_6X8.json",
+          "unique_actives_at_7": 8
+        }
+      ]
     },
     {
       "id": 30,
