@@ -165,7 +165,7 @@ pvefps/
 
 ### M5-D. 20×10×10 몬스터 도감과 200가족·2만 팔레트·정식 보스100 구현
 
-- [ ] [MONSTER_MASTER_PLAN.md](./MONSTER_MASTER_PLAN.md), [MONSTER_FAMILIES_200.json](./MONSTER_FAMILIES_200.json), [4개 구간 몬스터 파일](./MONSTERS_01_05.json) 기반 **20대분류/200가족/2000몬스터 ID** 정확히 등록. 각 그룹의 별도 `signature_mechanic`·역할 AI·약점·드롭·독자 실루엣 200/200 검증.
+- [ ] [MONSTER_MASTER_PLAN.md](./MONSTER_MASTER_PLAN.md), [MONSTER_FAMILIES_200.json](./MONSTER_FAMILIES_200.json), [검증 매니페스트](./MONSTER_CATALOG_MANIFEST.json), [4개 구간 몬스터 파일](./MONSTERS_01_05.json) 기반 **20대분류/200가족/2000몬스터 ID** 정확히 등록. 각 그룹의 별도 `signature_mechanic`·역할 AI·약점·드롭·독자 실루엣 200/200 검증.
 - [ ] [MONSTERS_01_05.json](./MONSTERS_01_05.json)·[MONSTERS_06_10.json](./MONSTERS_06_10.json)·[MONSTERS_11_15.json](./MONSTERS_11_15.json)·[MONSTERS_16_20.json](./MONSTERS_16_20.json) = 각 500개, **2000/2000 ID 중복 없음**. 등급 1400 일반/300 특수/200 정예/100 정식 수동 보스(나머지 100타입10은 특수 지휘관) 확인.
 - [ ] 적 2000개 **기본 AI 동작은 아직 기획 템플릿일 뿐**. 10타입 실제 서버 AI 상태기계와 200개 `family_hook` 실제 구현, 중복 몹/우주곤충/변이괴물/군인/기계 각 반응이 그리기·공격/HP/상태이상과 일치하는지 검증.
 - [ ] 몬스터 본체 **103600 실제 독립 고유 프레임/기준 방향 최소** 계획. 일반40/특수52/정예80/보스160, 투사체·VFX/도감/양방향은 별도. 원본 생성 전 숫자만으로 완성 보고 금지.
