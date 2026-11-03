@@ -1,6 +1,6 @@
 # simsimrpg — 구현 순서, 서버 설계, 테스트 체크리스트
 
-> 기준: [메인 기획서](./PLAN.md), [32개 진영·192개 직업 루트 및 다단계 상위 전직 트리](./CLASS_CATALOG.md), [공동 게이트·포지션 대형·봇 3명](./FORMATION_AND_GATE.md), [레벨 격차·고레벨 명예·초보 보상](./LEVEL_GAP_AND_PRESTIGE.md), [접속 2배·7일/3.5일 성장·전직/게이트 이벤트](./GROWTH_REWARDS_AND_GATE_EVENTS.md), [1~7차 장기 성장·완만한 곡선](./SEVEN_ADVANCEMENTS.md), [게이트 이벤트300종](./GATE_EVENTS_300.md), [혼합 레벨 HP·신참 보스 보호](./MIXED_LEVEL_HP_RAID_BALANCE.md), [시너지·수동 보스·방치 성장](./SOCIAL_IDLE_SYSTEM.md)  
+> 기준: [메인 기획서](./PLAN.md), [32개 진영·192개 직업 루트 및 다단계 상위 전직 트리](./CLASS_CATALOG.md), [공동 게이트·포지션 대형·봇 3명](./FORMATION_AND_GATE.md), [레벨 격차·고레벨 명예·초보 보상](./LEVEL_GAP_AND_PRESTIGE.md), [접속 2배·7일/3.5일 성장·전직/게이트 이벤트](./GROWTH_REWARDS_AND_GATE_EVENTS.md), [1~7차 장기 성장·완만한 곡선](./SEVEN_ADVANCEMENTS.md), [게이트 이벤트300종](./GATE_EVENTS_300.md), [혼합 레벨 HP·신참 보스 보호](./MIXED_LEVEL_HP_RAID_BALANCE.md), [직업 도트·프레임 생성 규격](./PIXEL_ANIMATION_PRODUCTION_RULES.md), [192직업 개별 모션](./CLASS_ANIMATION_192.md), [생성 하한 JSON](./ANIMATION_GENERATION_POLICY.json), [시너지·수동 보스·방치 성장](./SOCIAL_IDLE_SYSTEM.md)  
 > 작성: 2026-11-02 KST · **실제 개발은 다음 세션에 시작; 이 문서는 기획과 작업 가이드만 포함**  
 > 공통 원칙: **기존 프로젝트 절대 변경하지 않음. 소스·DB·배포 독립. 각 단위마다 Git commit/push 및 SHA 공유.**
 
@@ -118,7 +118,7 @@ pvefps/
 - [ ] 드롭 동시성/DB 실패 시 아이템 중복 지급·골드 중복 지급 방지.
 
 ### M5. 32진영 × 192뿌리 × 다단계 전직 **전체 제작**
-- [ ] CLASS_CATALOG.md의 32진영에 대해 고유 기본 외형/애니메이션/공격 방식 제작.
+- [ ] CLASS_CATALOG.md의 32진영에 대해 고유 기본 외형/애니메이션/공격 방식 제작. **CLASS_ANIMATION_192.md의 직업 카드 F01-C1~F32-C6 전부** 기본공격 A·B와 고유 시그니처 실제 포즈로 검수.
 - [ ] 진영별 6개 기본 직업 루트 총 192개 전부 플레이 가능.
 - [ ] 각 192 루트에 1차 상위 전직 2개(384), 2차 심화 4개(768), 3차 극전직 8개(1,536) 그리고 **4~7차 각 1,536개 고유 상위 직업(6,144 추가)** 데이터/스킬/이펙트/전문화 트리 UI 생성 및 실동작.
 - [ ] 전직마다 **이름만 바뀌는 것이 아니라 고유 전투효과와 시각 연출 추가**.
@@ -127,6 +127,16 @@ pvefps/
 - [ ] 분기 영구 잠금과 다른 기기에서의 전직 동시 승인 방지.
 - [ ] 전 직업 노드/말단 경로 각각 데이터 스키마, 부모 계보, 참조 스킬, 그래픽 파일, 실전 자동 공격 가능 여부 검사.
 - [ ] 동등 수준 레벨/장비에서 극단적으로 약하거나 강한 직업 조정.
+
+### M5-A. 높은 고유 프레임 수 애니메이션 생산·품질 자동화 (2026-11-03)
+- [ ] [PIXEL_ANIMATION_PRODUCTION_RULES.md](./PIXEL_ANIMATION_PRODUCTION_RULES.md)과 [ANIMATION_GENERATION_POLICY.json](./ANIMATION_GENERATION_POLICY.json)을 **아트 생성기에 입력하는 하드 룰**로 구현, 원화 PNG/작업 프롬프트/해시/프레임 메타/아틀라스 저장.
+- [ ] 실제 Desert Front 소스 8포즈 반복과 다르게 **고유 그림 수 기준** 확인: idle 10+, walk 12+, run 14+, 기본 A/B 각18+, 강타22+, 시전20+, 시그니처30+, 고급 궁극기48+, 피격8+, death18+, revive12+. FPS/프레임 반복을 독립 그림으로 수량 계산 금지.
+- [ ] **192/192 클래스**에 역할별 대기·무기 관성·기본공격 A/B·시그니처 고유 실루엣. 인간·랩터·슬라임·곤충·용·기계·오리/음식 등 종족 리그의 실제 몸 구조가 다름을 검증.
+- [ ] 한 모션 원화는 4~8 키포즈씩 **여러 번 분할 생성 후 고유 인비트윈**을 추가, 알파 PNG 손/발/총구 앵커 및 파츠 레이어 일치. 생성 결과가 무너진 컷이 섞이면 해당 컷 QC/수정, 그대로 반복 시트 납품 금지.
+- [ ] 1~7차 전직에서 새 고유 시그니처 몸동작·별도 투사체/FX 및 3/5/7차 궁극기 연출 추가, 9,024개 계보 노드와 누락/중복 클래스 ID 검사.
+- [ ] 런타임 모션/서버 공격·회복 판정 동기화(프레임별 hit/projectile/heal/buff 이벤트). 피격·사망·자동부활과 idle/walk/run/attack 전이 테스트.
+- [ ] WebP 아틀라스/PNG 원본 분리, current 1~50 players lazy-load, 30~60fps 렌더, 50명+300이벤트+고렙 FX에서 모바일 텍스처·GPU·다운로드 크기 성능 검증.
+- [ ] **완성 허위 보고 금지**: source frames / unique drawn poses / runtime repeated frames / generated-but-not-approved / QA passed / server tested를 분리하고 각 결과를 GitHub 커밋 SHA와 함께 기록.
 
 ### M6. 소셜/모바일/선택 PC 보조 프로그램
 - [ ] 친구 초대·프로필 열람·칭호·장비 자랑·실시간 희귀 드롭 축하 알림.
