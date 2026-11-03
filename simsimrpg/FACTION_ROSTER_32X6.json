@@ -23,7 +23,8 @@
     "오리왕국",
     "음식왕국",
     "차원 오류족",
-    "초현실 밈연합"
+    "초현실 밈연합",
+    "시간관리국"
   ],
   "demoted_to_job_concepts": [
     "오리광대",
@@ -1656,51 +1657,51 @@
     {
       "id": 32,
       "faction_id": "F32",
-      "name": "시간관리국",
+      "name": "궤도개척군",
       "root_classes": [
         {
           "root_class_id": "F32-C1",
-          "display_name": "시간수사관",
+          "display_name": "강화병사",
           "initial_unique_active_skills": 1
         },
         {
           "root_class_id": "F32-C2",
-          "display_name": "연대감찰관",
+          "display_name": "화염돌격병",
           "initial_unique_active_skills": 1
         },
         {
           "root_class_id": "F32-C3",
-          "display_name": "시계기술관",
+          "display_name": "공성화력병",
           "initial_unique_active_skills": 1
         },
         {
           "root_class_id": "F32-C4",
-          "display_name": "역행의무관",
+          "display_name": "기갑공병",
           "initial_unique_active_skills": 1
         },
         {
           "root_class_id": "F32-C5",
-          "display_name": "시대밀수단속관",
+          "display_name": "야전의무병",
           "initial_unique_active_skills": 1
         },
         {
           "root_class_id": "F32-C6",
-          "display_name": "미래예보관",
+          "display_name": "궤도보급관",
           "initial_unique_active_skills": 1
         }
       ],
       "signature_path": {
-        "display_name": "시간세관장",
-        "root_class_id": "F32-C5",
-        "role": "시대 물자 단속·약점 추적·지원·기록",
+        "display_name": "행성개척총사령",
+        "root_class_id": "F32-C1",
+        "role": "외골격 강화병사·전열 화력·궤도 화력과 협동 지원",
         "promotion_skills_1_to_7": [
-          "밀수품 식별",
-          "시간 화물 압수",
-          "금지기술 봉인",
-          "시대 통행세",
-          "시간수송 통제",
-          "차원 항로 통제",
-          "역사의 최종 검문"
+          "강화복 과충전",
+          "추진 도약 사격",
+          "전선 돌파탄",
+          "진공 장갑 방벽",
+          "대기권 유도사격",
+          "강하 작전 명령",
+          "개척지 최후의 진군"
         ]
       }
     }
@@ -1710,5 +1711,7 @@
     "name": "한물간 밈의 습격",
     "player_faction": false,
     "linked_doc": "MEME_INVASION_EVENT.md"
-  }
+  },
+  "faction_32_design_document": "ORBITAL_PIONEER_FACTION.md",
+  "current_faction_32": "궤도개척군"
 }
