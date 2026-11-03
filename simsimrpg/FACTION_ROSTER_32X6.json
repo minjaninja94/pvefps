@@ -1,0 +1,1707 @@
+{
+  "schema_version": 1,
+  "planning_status": "design_only_not_implemented",
+  "source": [
+    "CLASS_CATALOG.md",
+    "FACTION_CLASS_REWORK_2026_11_03.md",
+    "CLASS_ANIMATION_192.md",
+    "SOCIAL_IDLE_SYSTEM.md"
+  ],
+  "total_factions": 32,
+  "total_root_classes": 192,
+  "replaced_faction_ids": [
+    16,
+    30,
+    31,
+    32
+  ],
+  "renamed_faction_ids": [
+    29
+  ],
+  "removed_independent_faction_names": [
+    "신화의 신들",
+    "오리왕국",
+    "음식왕국",
+    "차원 오류족"
+  ],
+  "demoted_to_job_concepts": [
+    "오리광대",
+    "햄버거기사",
+    "김치술사",
+    "냄비치유사"
+  ],
+  "advancement": {
+    "tiers": 7,
+    "initial_unique_active_skill_count": 1,
+    "promotion_unique_active_skill_increment": 1,
+    "skills_persist": true,
+    "total_active_skill_at_tier7": 8,
+    "level_requirements": [
+      30,
+      100,
+      250,
+      400,
+      600,
+      850,
+      1100
+    ]
+  },
+  "special_careers": {
+    "marine_names": [
+      "손수잘 해병",
+      "황근출 해병",
+      "황룡",
+      "진떡팔 해병",
+      "마철두 해병",
+      "곽말풍 중령"
+    ],
+    "huanglong_career_sequence": {
+      "root": "황룡",
+      "tier1": "해병수육",
+      "tier2": "각성 공군",
+      "requires_actual_death_for_respawn_passive": true,
+      "ally_debuff_opt_in_required": true,
+      "ally_debuff_to_self_buff_max_cap": true
+    },
+    "gold_support": {
+      "pvp_disabled": true,
+      "player_trade_disabled": true,
+      "player_to_player_gold_transfer_disabled": true,
+      "buffs_additive_and_capped": true
+    }
+  },
+  "factions": [
+    {
+      "id": 1,
+      "faction_id": "F01",
+      "name": "조선",
+      "root_classes": [
+        {
+          "root_class_id": "F01-C1",
+          "display_name": "검객",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F01-C2",
+          "display_name": "궁수",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F01-C3",
+          "display_name": "조총수",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F01-C4",
+          "display_name": "창병",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F01-C5",
+          "display_name": "무당",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F01-C6",
+          "display_name": "화차술사",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "의열 부적관",
+        "root_class_id": "F01-C5",
+        "role": "의식·지원",
+        "promotion_skills_1_to_7": [
+          "진혼 부적",
+          "진맥 진단",
+          "수호 부적진",
+          "귀문 봉쇄",
+          "전열 청명",
+          "왕실 퇴마",
+          "백성의 등불"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "faction_id": "F02",
+      "name": "중세 기사단",
+      "root_classes": [
+        {
+          "root_class_id": "F02-C1",
+          "display_name": "검술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F02-C2",
+          "display_name": "방패기사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F02-C3",
+          "display_name": "장궁수",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F02-C4",
+          "display_name": "성직자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F02-C5",
+          "display_name": "기병",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F02-C6",
+          "display_name": "공성장인",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "성벽의 맹세자",
+        "root_class_id": "F02-C2",
+        "role": "방어·지원",
+        "promotion_skills_1_to_7": [
+          "철벽맹세",
+          "성문방벽",
+          "방패연대",
+          "창검 격려",
+          "거인방호",
+          "결전의 성벽",
+          "불락성전"
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "faction_id": "F03",
+      "name": "현대군",
+      "root_classes": [
+        {
+          "root_class_id": "F03-C1",
+          "display_name": "돌격병",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F03-C2",
+          "display_name": "저격수",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F03-C3",
+          "display_name": "기관총병",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F03-C4",
+          "display_name": "공병",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F03-C5",
+          "display_name": "의무병",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F03-C6",
+          "display_name": "포병",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "전술 보급사령관",
+        "root_class_id": "F03-C4",
+        "role": "보급·수리",
+        "promotion_skills_1_to_7": [
+          "공구낙인",
+          "보급 진열",
+          "방벽 수복",
+          "탄약 공유",
+          "전략 통신",
+          "긴급 급양",
+          "전구 역전"
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "faction_id": "F04",
+      "name": "닌자마을",
+      "root_classes": [
+        {
+          "root_class_id": "F04-C1",
+          "display_name": "검닌자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F04-C2",
+          "display_name": "표창닌자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F04-C3",
+          "display_name": "독술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F04-C4",
+          "display_name": "환술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F04-C5",
+          "display_name": "그림자술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F04-C6",
+          "display_name": "봉술사",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "비밀정보상",
+        "root_class_id": "F04-C5",
+        "role": "정찰·경제",
+        "promotion_skills_1_to_7": [
+          "어둠표식",
+          "그림자 탐문",
+          "잠복 계약",
+          "약점 거래",
+          "정보 은폐",
+          "야행 증표",
+          "암부 지부장"
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "faction_id": "F05",
+      "name": "사무라이",
+      "root_classes": [
+        {
+          "root_class_id": "F05-C1",
+          "display_name": "검호",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F05-C2",
+          "display_name": "창술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F05-C3",
+          "display_name": "궁마사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F05-C4",
+          "display_name": "음양사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F05-C5",
+          "display_name": "암살자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F05-C6",
+          "display_name": "방랑낭인",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "검서기록관",
+        "root_class_id": "F05-C6",
+        "role": "검술·기록",
+        "promotion_skills_1_to_7": [
+          "검법서",
+          "무명 일도",
+          "낭인 길찾기",
+          "무사의 일기",
+          "검의 서약",
+          "칼끝 기록",
+          "천본검전"
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "faction_id": "F06",
+      "name": "바이킹",
+      "root_classes": [
+        {
+          "root_class_id": "F06-C1",
+          "display_name": "도끼전사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F06-C2",
+          "display_name": "방패벽전사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F06-C3",
+          "display_name": "광전사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F06-C4",
+          "display_name": "항해전사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F06-C5",
+          "display_name": "룬술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F06-C6",
+          "display_name": "투창병",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "항해 무역선장",
+        "root_class_id": "F06-C4",
+        "role": "호위·보급",
+        "promotion_skills_1_to_7": [
+          "물결타",
+          "항로 발견",
+          "전리품 분배",
+          "선체 복구",
+          "북해 호령",
+          "상단 정박",
+          "함대의 귀환"
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "faction_id": "F07",
+      "name": "로마 군단",
+      "root_classes": [
+        {
+          "root_class_id": "F07-C1",
+          "display_name": "군단병",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F07-C2",
+          "display_name": "백인대장",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F07-C3",
+          "display_name": "투창병",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F07-C4",
+          "display_name": "전차병",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F07-C5",
+          "display_name": "공성기술자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F07-C6",
+          "display_name": "군의관",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "후방 군수총감",
+        "root_class_id": "F07-C5",
+        "role": "군수·진형",
+        "promotion_skills_1_to_7": [
+          "진지 구축",
+          "군수 창고",
+          "보병 표창",
+          "수송 호위",
+          "보급선 회복",
+          "군단 대장정",
+          "제국 전술총감"
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "faction_id": "F08",
+      "name": "서부 총잡이",
+      "root_classes": [
+        {
+          "root_class_id": "F08-C1",
+          "display_name": "리볼버건맨",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F08-C2",
+          "display_name": "장총사수",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F08-C3",
+          "display_name": "현상금사냥꾼",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F08-C4",
+          "display_name": "폭약술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F08-C5",
+          "display_name": "기마총잡이",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F08-C6",
+          "display_name": "주술도박사",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "현상금 중개인",
+        "root_class_id": "F08-C3",
+        "role": "표적·골드",
+        "promotion_skills_1_to_7": [
+          "명패 지목",
+          "선불 계약",
+          "빠른 추격",
+          "보상 영수증",
+          "계약 총격",
+          "대행 수금",
+          "황야의 거상"
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "faction_id": "F09",
+      "name": "마법왕국",
+      "root_classes": [
+        {
+          "root_class_id": "F09-C1",
+          "display_name": "원소술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F09-C2",
+          "display_name": "소환술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F09-C3",
+          "display_name": "시공술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F09-C4",
+          "display_name": "결계술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F09-C5",
+          "display_name": "혈마법사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F09-C6",
+          "display_name": "마도공학자",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "마력 회계사",
+        "root_class_id": "F09-C6",
+        "role": "마나 경제",
+        "promotion_skills_1_to_7": [
+          "룬 계산",
+          "결정 환산",
+          "마력 채권",
+          "비용 저감",
+          "수정공정",
+          "마도 거래진",
+          "마력경제 대전환"
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "faction_id": "F10",
+      "name": "용족",
+      "root_classes": [
+        {
+          "root_class_id": "F10-C1",
+          "display_name": "화염룡전사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F10-C2",
+          "display_name": "빙룡술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F10-C3",
+          "display_name": "뇌룡창술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F10-C4",
+          "display_name": "용혈치유사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F10-C5",
+          "display_name": "비늘수호자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F10-C6",
+          "display_name": "비룡사냥꾼",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "비늘 보관사",
+        "root_class_id": "F10-C4",
+        "role": "치유·저장",
+        "promotion_skills_1_to_7": [
+          "용혈 봉합",
+          "비늘 정화",
+          "숨결보관",
+          "용비늘 방벽",
+          "광역 회복",
+          "용혈 축복",
+          "만룡 수호"
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "faction_id": "F11",
+      "name": "엘프",
+      "root_classes": [
+        {
+          "root_class_id": "F11-C1",
+          "display_name": "숲궁수",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F11-C2",
+          "display_name": "정령사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F11-C3",
+          "display_name": "월광검사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F11-C4",
+          "display_name": "수목치유사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F11-C5",
+          "display_name": "야수조련사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F11-C6",
+          "display_name": "별점술사",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "숲의 조율사",
+        "root_class_id": "F11-C2",
+        "role": "회복·환경",
+        "promotion_skills_1_to_7": [
+          "정령 방울",
+          "잎비 치유",
+          "숲의 발자국",
+          "요정 협주",
+          "고목의 가호",
+          "월광 울림",
+          "세계수 화음"
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "faction_id": "F12",
+      "name": "드워프",
+      "root_classes": [
+        {
+          "root_class_id": "F12-C1",
+          "display_name": "망치전사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F12-C2",
+          "display_name": "룬대장장이",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F12-C3",
+          "display_name": "폭약광부",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F12-C4",
+          "display_name": "석벽수호자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F12-C5",
+          "display_name": "기계궁수",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F12-C6",
+          "display_name": "맥주광전사",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "거대 대장장이",
+        "root_class_id": "F12-C2",
+        "role": "제작·장비",
+        "promotion_skills_1_to_7": [
+          "해머 검수",
+          "룬 제련",
+          "금속 감정",
+          "철광 독려",
+          "무기 수선",
+          "대형 프레스",
+          "만년의 명장"
+        ]
+      }
+    },
+    {
+      "id": 13,
+      "faction_id": "F13",
+      "name": "천사",
+      "root_classes": [
+        {
+          "root_class_id": "F13-C1",
+          "display_name": "광휘검사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F13-C2",
+          "display_name": "심판관",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F13-C3",
+          "display_name": "치유천사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F13-C4",
+          "display_name": "하늘궁수",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F13-C5",
+          "display_name": "수호천사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F13-C6",
+          "display_name": "성가사제",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "구호 대천사",
+        "root_class_id": "F13-C3",
+        "role": "부활·구조",
+        "promotion_skills_1_to_7": [
+          "상처 봉합",
+          "위기 감지",
+          "빛의 보급",
+          "생명 연결",
+          "부활 나팔",
+          "광역 성역",
+          "마지막 가호"
+        ]
+      }
+    },
+    {
+      "id": 14,
+      "faction_id": "F14",
+      "name": "악마",
+      "root_classes": [
+        {
+          "root_class_id": "F14-C1",
+          "display_name": "지옥기사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F14-C2",
+          "display_name": "저주술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F14-C3",
+          "display_name": "혈귀",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F14-C4",
+          "display_name": "계약술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F14-C5",
+          "display_name": "화염마인",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F14-C6",
+          "display_name": "꿈침식자",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "대가 계약자",
+        "root_class_id": "F14-C4",
+        "role": "위험·협상",
+        "promotion_skills_1_to_7": [
+          "계약 잉크",
+          "대가 청구",
+          "저주 감정",
+          "계약 갱신",
+          "약점 양도",
+          "흑월 협정",
+          "최후의 흥정"
+        ]
+      }
+    },
+    {
+      "id": 15,
+      "faction_id": "F15",
+      "name": "언데드",
+      "root_classes": [
+        {
+          "root_class_id": "F15-C1",
+          "display_name": "해골기사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F15-C2",
+          "display_name": "리치",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F15-C3",
+          "display_name": "구울사냥꾼",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F15-C4",
+          "display_name": "망령",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F15-C5",
+          "display_name": "역병술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F15-C6",
+          "display_name": "시체연금술사",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "장례 집행자",
+        "root_class_id": "F15-C6",
+        "role": "부활·시체",
+        "promotion_skills_1_to_7": [
+          "묘비 세움",
+          "망자 명부",
+          "시신 정화",
+          "죽음 징수",
+          "위령 버프",
+          "유골 공방",
+          "영원의 추도"
+        ]
+      }
+    },
+    {
+      "id": 16,
+      "faction_id": "F16",
+      "name": "고대 학술원",
+      "root_classes": [
+        {
+          "root_class_id": "F16-C1",
+          "display_name": "금서연구원",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F16-C2",
+          "display_name": "비전기록관",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F16-C3",
+          "display_name": "별지리학자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F16-C4",
+          "display_name": "유물감정사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F16-C5",
+          "display_name": "역사편찬자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F16-C6",
+          "display_name": "전술교관",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "시공 기록대신",
+        "root_class_id": "F16-C2",
+        "role": "연구·정찰",
+        "promotion_skills_1_to_7": [
+          "기록 탐사",
+          "오래된 교정",
+          "괴물 도감",
+          "약점 발표",
+          "금서 정리",
+          "시간각주",
+          "모든 시대의 대사전"
+        ]
+      }
+    },
+    {
+      "id": 17,
+      "faction_id": "F17",
+      "name": "랩터",
+      "root_classes": [
+        {
+          "root_class_id": "F17-C1",
+          "display_name": "발톱사냥꾼",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F17-C2",
+          "display_name": "맹독랩터",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F17-C3",
+          "display_name": "무리우두머리",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F17-C4",
+          "display_name": "갑주랩터",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F17-C5",
+          "display_name": "질주포식자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F17-C6",
+          "display_name": "원시포효자",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "포식 무리장",
+        "root_class_id": "F17-C3",
+        "role": "동료 지휘",
+        "promotion_skills_1_to_7": [
+          "울음 신호",
+          "무리 사냥",
+          "꼬리 집결",
+          "새끼 보호",
+          "전방 포효",
+          "최상위 포식",
+          "원시 대행진"
+        ]
+      }
+    },
+    {
+      "id": 18,
+      "faction_id": "F18",
+      "name": "곤충군단",
+      "root_classes": [
+        {
+          "root_class_id": "F18-C1",
+          "display_name": "개미병사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F18-C2",
+          "display_name": "사마귀암살자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F18-C3",
+          "display_name": "벌침사수",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F18-C4",
+          "display_name": "거미술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F18-C5",
+          "display_name": "딱정벌레수호자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F18-C6",
+          "display_name": "나방환술사",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "군체 건축왕",
+        "root_class_id": "F18-C1",
+        "role": "방어·협동",
+        "promotion_skills_1_to_7": [
+          "개미 삽질",
+          "군체 호령",
+          "일벌 호송",
+          "땅굴 방벽",
+          "산성 진군",
+          "육각 진형",
+          "무리의 성채"
+        ]
+      }
+    },
+    {
+      "id": 19,
+      "faction_id": "F19",
+      "name": "슬라임족",
+      "root_classes": [
+        {
+          "root_class_id": "F19-C1",
+          "display_name": "점액전사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F19-C2",
+          "display_name": "산성술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F19-C3",
+          "display_name": "분열술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F19-C4",
+          "display_name": "흡수자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F19-C5",
+          "display_name": "젤리수호자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F19-C6",
+          "display_name": "원소슬라임",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "연금 흡수왕",
+        "root_class_id": "F19-C4",
+        "role": "회복·변환",
+        "promotion_skills_1_to_7": [
+          "작은 흡수",
+          "점액 탈취",
+          "엉킴 회복",
+          "점액 균형",
+          "연금 분해",
+          "무해한 재생",
+          "만물 젤리화"
+        ]
+      }
+    },
+    {
+      "id": 20,
+      "faction_id": "F20",
+      "name": "수인",
+      "root_classes": [
+        {
+          "root_class_id": "F20-C1",
+          "display_name": "늑대검사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F20-C2",
+          "display_name": "고양이도적",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F20-C3",
+          "display_name": "곰수호자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F20-C4",
+          "display_name": "토끼궁수",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F20-C5",
+          "display_name": "여우주술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F20-C6",
+          "display_name": "호랑이격투가",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "짐승의 만물상",
+        "root_class_id": "F20-C5",
+        "role": "교환·지원",
+        "promotion_skills_1_to_7": [
+          "여우 등불",
+          "발자국 교역",
+          "축복 꼬리",
+          "어흥 부적",
+          "월야 시장",
+          "대지 증표",
+          "천수만상"
+        ]
+      }
+    },
+    {
+      "id": 21,
+      "faction_id": "F21",
+      "name": "해양종족",
+      "root_classes": [
+        {
+          "root_class_id": "F21-C1",
+          "display_name": "상어투사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F21-C2",
+          "display_name": "문어술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F21-C3",
+          "display_name": "해파리치유사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F21-C4",
+          "display_name": "바다창술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F21-C5",
+          "display_name": "심해저격수",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F21-C6",
+          "display_name": "조류지휘관",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "파도 항로왕",
+        "root_class_id": "F21-C6",
+        "role": "항로·버프",
+        "promotion_skills_1_to_7": [
+          "해류 지시",
+          "조개 신호",
+          "돛배 호위",
+          "방어 조류",
+          "해저 물자",
+          "파도 합창",
+          "만해 항로"
+        ]
+      }
+    },
+    {
+      "id": 22,
+      "faction_id": "F22",
+      "name": "버섯군단",
+      "root_classes": [
+        {
+          "root_class_id": "F22-C1",
+          "display_name": "포자술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F22-C2",
+          "display_name": "균사기사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F22-C3",
+          "display_name": "독버섯사수",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F22-C4",
+          "display_name": "균열연금술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F22-C5",
+          "display_name": "포식버섯",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F22-C6",
+          "display_name": "발광균치유사",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "발광 재배왕",
+        "root_class_id": "F22-C6",
+        "role": "회복·농사",
+        "promotion_skills_1_to_7": [
+          "포자 덧대기",
+          "버섯 온실",
+          "자생 포자",
+          "균사 연결",
+          "발광 치유",
+          "포자 만개",
+          "숲의 회복왕"
+        ]
+      }
+    },
+    {
+      "id": 23,
+      "faction_id": "F23",
+      "name": "식물군단",
+      "root_classes": [
+        {
+          "root_class_id": "F23-C1",
+          "display_name": "덩굴전사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F23-C2",
+          "display_name": "꽃가루술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F23-C3",
+          "display_name": "가시궁수",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F23-C4",
+          "display_name": "고목수호자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F23-C5",
+          "display_name": "씨앗소환사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F23-C6",
+          "display_name": "광합성사제",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "종자 감별사",
+        "root_class_id": "F23-C5",
+        "role": "수확·보급",
+        "promotion_skills_1_to_7": [
+          "씨앗 낙하",
+          "뿌리 감정",
+          "덩굴 수송",
+          "자라난 식량",
+          "발아 회복",
+          "무성한 대지",
+          "영원의 씨앗"
+        ]
+      }
+    },
+    {
+      "id": 24,
+      "faction_id": "F24",
+      "name": "심연의 촉수족",
+      "root_classes": [
+        {
+          "root_class_id": "F24-C1",
+          "display_name": "촉수격투가",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F24-C2",
+          "display_name": "심연주술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F24-C3",
+          "display_name": "광기전파자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F24-C4",
+          "display_name": "먹물저격수",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F24-C5",
+          "display_name": "꿈해체자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F24-C6",
+          "display_name": "심해결계사",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "심해 심리상담사",
+        "root_class_id": "F24-C5",
+        "role": "정신·해제",
+        "promotion_skills_1_to_7": [
+          "잠결 터치",
+          "악몽 분석",
+          "정신 정화",
+          "공포 역전",
+          "촉수 표식",
+          "심연 회복",
+          "꿈의 끝"
+        ]
+      }
+    },
+    {
+      "id": 25,
+      "faction_id": "F25",
+      "name": "로봇제국",
+      "root_classes": [
+        {
+          "root_class_id": "F25-C1",
+          "display_name": "레이저보병",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F25-C2",
+          "display_name": "중장갑기계",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F25-C3",
+          "display_name": "드론조종사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F25-C4",
+          "display_name": "수리봇",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F25-C5",
+          "display_name": "플라즈마포병",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F25-C6",
+          "display_name": "변형기체",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "자동 보급기",
+        "root_class_id": "F25-C4",
+        "role": "정비·자동화",
+        "promotion_skills_1_to_7": [
+          "진단 레이저",
+          "수복 패치",
+          "탄약 보충",
+          "예지 수리",
+          "합체 정비",
+          "핵심 재조립",
+          "자율정비망"
+        ]
+      }
+    },
+    {
+      "id": 26,
+      "faction_id": "F26",
+      "name": "외계인",
+      "root_classes": [
+        {
+          "root_class_id": "F26-C1",
+          "display_name": "정신파술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F26-C2",
+          "display_name": "중력전사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F26-C3",
+          "display_name": "광선사수",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F26-C4",
+          "display_name": "세포변이자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F26-C5",
+          "display_name": "차원이동자",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F26-C6",
+          "display_name": "감염자",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "중력 무역대사",
+        "root_class_id": "F26-C1",
+        "role": "외교·제어",
+        "promotion_skills_1_to_7": [
+          "번역 전파",
+          "정신공명",
+          "중력보조",
+          "외교 접속",
+          "초공간 교섭",
+          "별계약",
+          "은하 대사절"
+        ]
+      }
+    },
+    {
+      "id": 27,
+      "faction_id": "F27",
+      "name": "사이보그",
+      "root_classes": [
+        {
+          "root_class_id": "F27-C1",
+          "display_name": "검날개조인",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F27-C2",
+          "display_name": "전자저격수",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F27-C3",
+          "display_name": "해커전투원",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F27-C4",
+          "display_name": "나노치료사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F27-C5",
+          "display_name": "가속격투가",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F27-C6",
+          "display_name": "중력의수병",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "전장 분석관",
+        "root_class_id": "F27-C3",
+        "role": "센서·지원",
+        "promotion_skills_1_to_7": [
+          "패킷 탐색",
+          "침투 신호",
+          "피해 예보",
+          "자동 패치",
+          "보조 연산",
+          "시간최적화",
+          "신경망 지휘"
+        ]
+      }
+    },
+    {
+      "id": 28,
+      "faction_id": "F28",
+      "name": "스팀펑크",
+      "root_classes": [
+        {
+          "root_class_id": "F28-C1",
+          "display_name": "증기검사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F28-C2",
+          "display_name": "기어포병",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F28-C3",
+          "display_name": "톱날전사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F28-C4",
+          "display_name": "연금기관사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F28-C5",
+          "display_name": "비행선사수",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F28-C6",
+          "display_name": "시계술사",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "태엽 도시설계자",
+        "root_class_id": "F28-C6",
+        "role": "공학·보급",
+        "promotion_skills_1_to_7": [
+          "태엽 감기",
+          "기어 맞물림",
+          "장치 수리",
+          "공장 증기",
+          "대형 시계",
+          "금빛 톱니",
+          "시계도시 각성"
+        ]
+      }
+    },
+    {
+      "id": 29,
+      "faction_id": "F29",
+      "name": "해병 유니버스",
+      "root_classes": [
+        {
+          "root_class_id": "F29-C1",
+          "display_name": "손수잘 해병",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F29-C2",
+          "display_name": "황근출 해병",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F29-C3",
+          "display_name": "황룡",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F29-C4",
+          "display_name": "진떡팔 해병",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F29-C5",
+          "display_name": "마철두 해병",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F29-C6",
+          "display_name": "곽말풍 중령",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "해병수육→각성 공군",
+        "root_class_id": "F29-C3",
+        "role": "부활·자기강화·양날 버프",
+        "promotion_skills_1_to_7": [
+          "수육 잔향",
+          "기열 징발",
+          "공군 재편",
+          "배반의 역학",
+          "역적성 전술",
+          "해병 하늘가르기",
+          "황룡의 대반전"
+        ]
+      }
+    },
+    {
+      "id": 30,
+      "faction_id": "F30",
+      "name": "유랑예술단",
+      "root_classes": [
+        {
+          "root_class_id": "F30-C1",
+          "display_name": "가면극 배우",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F30-C2",
+          "display_name": "거리악사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F30-C3",
+          "display_name": "무대마술사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F30-C4",
+          "display_name": "오리광대",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F30-C5",
+          "display_name": "인형조종사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F30-C6",
+          "display_name": "행사기획자",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "만찬 퍼포먼서",
+        "root_class_id": "F30-C6",
+        "role": "공연·요리·지원",
+        "promotion_skills_1_to_7": [
+          "거리 안내",
+          "춤동작 합",
+          "오리 페스티벌",
+          "잔치 준비",
+          "요리 행진",
+          "광장 대합창",
+          "시대착오 대축제"
+        ]
+      }
+    },
+    {
+      "id": 31,
+      "faction_id": "F31",
+      "name": "대도시 상단",
+      "root_classes": [
+        {
+          "root_class_id": "F31-C1",
+          "display_name": "금화상인",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F31-C2",
+          "display_name": "은행가",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F31-C3",
+          "display_name": "장비감정사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F31-C4",
+          "display_name": "전투요리사",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F31-C5",
+          "display_name": "보급상",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F31-C6",
+          "display_name": "경매중개인",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "금화 연금왕",
+        "root_class_id": "F31-C1",
+        "role": "경제·교역",
+        "promotion_skills_1_to_7": [
+          "동전 세기",
+          "수지 계산",
+          "진열대 확장",
+          "거래세 절감",
+          "상단 계약",
+          "대량 유통",
+          "거상 연합"
+        ]
+      }
+    },
+    {
+      "id": 32,
+      "faction_id": "F32",
+      "name": "초현실 밈연합",
+      "root_classes": [
+        {
+          "root_class_id": "F32-C1",
+          "display_name": "트랄랄레로 트랄랄라",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F32-C2",
+          "display_name": "퉁퉁퉁 사후르",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F32-C3",
+          "display_name": "봄바르디로 크로코딜로",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F32-C4",
+          "display_name": "발레리나 카푸치나",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F32-C5",
+          "display_name": "침판지니 바나니니",
+          "initial_unique_active_skills": 1
+        },
+        {
+          "root_class_id": "F32-C6",
+          "display_name": "브르브르 파타핌",
+          "initial_unique_active_skills": 1
+        }
+      ],
+      "signature_path": {
+        "display_name": "초현실 사후르 박자왕",
+        "root_class_id": "F32-C2",
+        "role": "기괴한 타격·리듬·지원",
+        "promotion_skills_1_to_7": [
+          "통 통 통",
+          "나무북 박자",
+          "리듬 경고",
+          "야행 나팔",
+          "타격 변주",
+          "혼종의 대행진",
+          "종말 사후르"
+        ]
+      }
+    }
+  ]
+}
