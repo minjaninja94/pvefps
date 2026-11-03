@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "version": "2026-11-03-v4",
+  "version": "2026-11-03-v5",
   "project": "simsimrpg",
   "scope": {
     "factions": 32,
@@ -17,6 +17,8 @@
     "faction_32_design_document": "ORBITAL_PIONEER_FACTION.md"
   },
   "source_of_truth": [
+    "MARINE_SKILLS_6X8.json",
+    "MARINE_MEME_LORE_SKILLS.md",
     "FACTION_ROSTER_32X6.json",
     "ORBITAL_PIONEER_FACTION.md",
     "FACTION_CLASS_REWORK_2026_11_03.md",
@@ -365,7 +367,11 @@
       "yellow_dragon_ally_debuff_must_be_opt_in": true,
       "yellow_dragon_respawn_trigger_requires_real_hp_zero": true,
       "enemy_only_event": "E120 한물간 밈의 습격",
-      "orbital_pioneer_enhanced_infantry": "F32-C1 강화병사"
+      "orbital_pioneer_enhanced_infantry": "F32-C1 강화병사",
+      "marine_meme_skill_matrix": "MARINE_SKILLS_6X8.json",
+      "marine_48_named_skills_must_be_unique": true,
+      "mechanical_barrel_weapon_non_anatomical": true,
+      "meme_vehicle_cameos_fx_only": true
     }
   },
   "qa_hard_fail": [
@@ -389,7 +395,11 @@
     "removed factions retained as selectable independent factions",
     "obsolete meme actors appear in root faction 32 or are playable characters",
     "time authority class or meme actor remains playable in faction 32",
-    "orbital pioneer strength armor frame poses copied from any existing commercial game"
+    "orbital pioneer strength armor frame poses copied from any existing commercial game",
+    "marine career has generic unlabeled attack instead of mapped meme skill",
+    "marine 48 named skills missing or duplicate skill IDs",
+    "mechanical barrel sword and barrel shooting attacks not separately animated",
+    "meme vehicle creates unauthorized persistent helper AI"
   ],
   "status": "planning_only_no_images_created"
 }
