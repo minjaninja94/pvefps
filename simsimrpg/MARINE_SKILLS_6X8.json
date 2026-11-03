@@ -1,0 +1,653 @@
+{
+  "schema_version": 1,
+  "status": "planning_only_no_sprite_or_runtime",
+  "faction_id": "F29",
+  "faction_name": "해병 유니버스",
+  "source": "MARINE_MEME_LORE_SKILLS.md",
+  "lores": [
+    "해병문학 등장인물",
+    "해병문학 설정 및 용어"
+  ],
+  "rules": {
+    "new_active_skills_per_promotion": 1,
+    "promotion_tiers": 7,
+    "root_skill_count": 1,
+    "active_skill_count_at_tier_7": 8,
+    "skills_persist": true,
+    "unique_body_frame_min_by_tier": [
+      10,
+      12,
+      16,
+      20,
+      24,
+      30,
+      36,
+      48
+    ],
+    "ally_debuff_opt_in": true,
+    "base_npc_helpers": 3,
+    "no_persistent_extra_units": true,
+    "unlicensed_original_art_audio_prohibited": true,
+    "marine_cameos_fx_only": true
+  },
+  "careers": [
+    {
+      "id": "F29-C1",
+      "root_name": "손수잘 해병",
+      "role": "의무병 · 포신수술 패러디 · 구호/해제",
+      "tiers": [
+        {
+          "tier": 0,
+          "job_name": "손수잘 해병",
+          "skill_id": "F29-C1-S0",
+          "skill_name": "해병 응급처치",
+          "effect": "유효 손실 HP의 소량 회복 및 안전 사냥 약체를 밀치는 작은 구급상자 투척",
+          "unique_body_frames_min": 10,
+          "animation_plan": "의료가방 열기→붕대/주사 도구 꺼내기→치료 파동",
+          "skill_type": "active",
+          "granted_on": "character_create",
+          "persists": true
+        },
+        {
+          "tier": 1,
+          "job_name": "야전손수잘",
+          "skill_id": "F29-C1-S1",
+          "skill_name": "악! 응급 봉합",
+          "effect": "실제 감소 HP를 가진 아군 최우선 회복, 초보 진형 보호막 약간",
+          "unique_body_frames_min": 12,
+          "animation_plan": "악! 기합→상처 표시→압박 붕대→주사바늘 툭",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 2,
+          "job_name": "포신수술관",
+          "skill_id": "F29-C1-S2",
+          "skill_name": "포신 정비수술",
+          "effect": "은유적 '포신' 무기/무장 상태이상 해제와 사격병 공격의 과열·냉각 지원",
+          "unique_body_frames_min": 16,
+          "animation_plan": "확대경으로 허리 장착 포신 장치 검사→스패너 조정→보랏빛 정비광",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 3,
+          "job_name": "오도군의관",
+          "skill_id": "F29-C1-S3",
+          "skill_name": "해병 진정제 처방",
+          "effect": "정예의 강공격을 약화하고 아군 중독·기절 해제, 회복의 유효 기여 증가",
+          "unique_body_frames_min": 20,
+          "animation_plan": "오함마 모양 우스운 처방봉→마취구름 아이콘→회복",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 4,
+          "job_name": "전우애 구호장",
+          "skill_id": "F29-C1-S4",
+          "skill_name": "따흐흑! 전선 구조",
+          "effect": "실제 사망 직전인 전열 동료에게 선제 방벽 및 NPC 보호봇 보조",
+          "unique_body_frames_min": 24,
+          "animation_plan": "과장된 눈물 훔치기→의무 상자 전개→보호막",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 5,
+          "job_name": "해병의학 원장",
+          "skill_id": "F29-C1-S5",
+          "skill_name": "악으로 깡으로 버텨라",
+          "effect": "HP가 낮은 동료에 한해 수 초간 받는 피해 완충과 치유량 증폭",
+          "unique_body_frames_min": 30,
+          "animation_plan": "해병 표어 게이지→두 팔 들어 기합→맥박 회복",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 6,
+          "job_name": "6974 수술총감",
+          "skill_id": "F29-C1-S6",
+          "skill_name": "오도봉고 야전병원",
+          "effect": "오도봉고가 **무인 응급차 연출**로 짧게 지나가며 채널 후열 유효 참전자에 치료·정화, NPC 증원 없음",
+          "unique_body_frames_min": 36,
+          "animation_plan": "오도봉고 헤드라이트→뒤문 구급키트 떨어짐→응급회복",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 7,
+          "job_name": "손으로하는수술은뭐든지잘해",
+          "skill_id": "F29-C1-S7",
+          "skill_name": "기합 외과의 기적",
+          "effect": "HP0 자동부활 직후의 동료에게 응급 보호막을 제공하고 전체 안전 아군 대형에 강력한 유효 치료",
+          "unique_body_frames_min": 48,
+          "animation_plan": "약장 열기→여러 도구 순차 교체→의무진 방출→승리 포즈",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        }
+      ]
+    },
+    {
+      "id": "F29-C2",
+      "root_name": "황근출 해병",
+      "role": "전열 도끼 · 포신검술 · 포신포격",
+      "tiers": [
+        {
+          "tier": 0,
+          "job_name": "황근출 해병",
+          "skill_id": "F29-C2-S0",
+          "skill_name": "아쎄이 원위치!",
+          "effect": "전방 약체 한 기에 도발 표식을 붙이며 큰 도끼로 강타",
+          "unique_body_frames_min": 10,
+          "animation_plan": "도끼肩→기합! 표정→도끼날 수직 내리찍기",
+          "skill_type": "active",
+          "granted_on": "character_create",
+          "persists": true
+        },
+        {
+          "tier": 1,
+          "job_name": "오도도끼집행관",
+          "skill_id": "F29-C2-S1",
+          "skill_name": "붉은 배틀액스 원무",
+          "effect": "자신의 도끼를 넓게 돌려 전열 다수의 접근을 차단",
+          "unique_body_frames_min": 12,
+          "animation_plan": "무거운 손목 반동→1회전→넓은 붉은 검기",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 2,
+          "job_name": "포신검술 입문자",
+          "skill_id": "F29-C2-S2",
+          "skill_name": "포신검술: 일문자",
+          "effect": "허리 보호대에 접혀 있던 **비해부학적 픽셀 무장 포신**을 검처럼 펼쳐 좌우 베기, 단순 타격",
+          "unique_body_frames_min": 16,
+          "animation_plan": "보호대 개방→장검 형태로 포신 신전→횡베기→수납",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 3,
+          "job_name": "해병철인 무관",
+          "skill_id": "F29-C2-S3",
+          "skill_name": "포신 칼싸움: 맞다이",
+          "effect": "정예 1기에게 연속 패링→반격. 패링 실패해도 기본 사냥 강제 종료 없음",
+          "unique_body_frames_min": 20,
+          "animation_plan": "2회 금속 교차→충돌 불꽃→도끼 반격",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 4,
+          "job_name": "황근출 대기합장",
+          "skill_id": "F29-C2-S4",
+          "skill_name": "포신포격: 악! 발사",
+          "effect": "포신을 총구처럼 세워 **포탄 3발**을 전방 정예에 발사, 착탄 타이밍 명확",
+          "unique_body_frames_min": 24,
+          "animation_plan": "기합 흡기→허리 장착 장치 총구 전개→3점사→방열 연기",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 5,
+          "job_name": "6974 포신검성",
+          "skill_id": "F29-C2-S5",
+          "skill_name": "포신검술 오의: 오도절단",
+          "effect": "포신 형태의 장검과 도끼를 교차 사용하여 지정 정예 보호막/방어구 파괴",
+          "unique_body_frames_min": 30,
+          "animation_plan": "도끼 내려찍기→포신 이중 횡베기→검광 X자",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 6,
+          "job_name": "포항성채 전열제왕",
+          "skill_id": "F29-C2-S6",
+          "skill_name": "오도봉고 역돌격",
+          "effect": "오도봉고의 **무인 모형**이 적 무리를 밀어내며 황근출이 방향을 반대로 달려 뒤를 치는 넓은 전술기",
+          "unique_body_frames_min": 36,
+          "animation_plan": "반대 방향 출발→봉고 가로질러 지나감→뒤집어 앞줄 도끼 베기",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 7,
+          "job_name": "오도해병 대원수 황근출",
+          "skill_id": "F29-C2-S7",
+          "skill_name": "대기합 포신검무·6974식",
+          "effect": "도끼/포신검/포신포격 3단 연계 궁극기. 부위별 방어력 감소, 실제 DPS와 서버 피격 이펙트 동기화",
+          "unique_body_frames_min": 48,
+          "animation_plan": "최대 예비동작→도끼 지면 충돌→포신검무→포격→기합 복귀",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        }
+      ]
+    },
+    {
+      "id": "F29-C3",
+      "root_name": "황룡",
+      "role": "기열찐빠 → 해병수육 → 각성 공군 · 몽키스패너 · 대가형 버프",
+      "tiers": [
+        {
+          "tier": 0,
+          "job_name": "황룡",
+          "skill_id": "F29-C3-S0",
+          "skill_name": "기열 몽키스패너",
+          "effect": "약체를 한 번 기절시키는 스패너 타격과 짧은 도주/생존",
+          "unique_body_frames_min": 10,
+          "animation_plan": "스패너 꺼내기→안절부절→스패너 휘두르기",
+          "skill_type": "active",
+          "granted_on": "character_create",
+          "persists": true
+        },
+        {
+          "tier": 1,
+          "job_name": "해병수육",
+          "skill_id": "F29-C3-S1",
+          "skill_name": "수육 잔향",
+          "effect": "실제 HP0→자동부활 시 **패시브**로 아군 버프·적 디버프. 이 단계의 **신규 액티브**는 죽음/회복 미끼 잔영을 방출하는 '수육 잔향'",
+          "unique_body_frames_min": 12,
+          "animation_plan": "HP0 전용 패시브: 쓰러짐→냄비 모양 수육 연기→벌떡 부활, 액티브는 별도 연출",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 2,
+          "job_name": "각성 공군",
+          "skill_id": "F29-C3-S2",
+          "skill_name": "기열 징발",
+          "effect": "**동의한 해병 아군**의 공격력/방어 중 일부를 한시 낮추고, 그 양보다 큰 황룡 자기강화. 팀 전체 플레이를 망치지 않도록 합산 제한",
+          "unique_body_frames_min": 16,
+          "animation_plan": "소형 비행모자→아군에 명시적 기열 표식→본인 하늘색 각성 광",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 3,
+          "job_name": "수육계 비행장교",
+          "skill_id": "F29-C3-S3",
+          "skill_name": "공군 역돌격",
+          "effect": "자신의 몽키스패너를 들고 후열에서 안전한 거리로 후퇴하다 고위 정예 측면 급습",
+          "unique_body_frames_min": 20,
+          "animation_plan": "역주행 예고→스패너 회전→착지 반격",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 4,
+          "job_name": "기열찬 공중전 지휘관",
+          "skill_id": "F29-C3-S4",
+          "skill_name": "따흐앙! 공군의 반란",
+          "effect": "해병에게 붙은 부정 상태를 일부 적정 보스 정예에게 되돌리고 자신은 어그로 회피",
+          "unique_body_frames_min": 24,
+          "animation_plan": "기열 대사 이펙트→파란 나비형 날개→위상 반사",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 5,
+          "job_name": "해병수육 비행사령",
+          "skill_id": "F29-C3-S5",
+          "skill_name": "황룡 재가열",
+          "effect": "사망 후 부활 보호막/재가열 잔영을 늘리는 조건부 생존 액티브, 자해/반복 죽음 보상 금지",
+          "unique_body_frames_min": 30,
+          "animation_plan": "솥뚜껑 게이지→수증기→하늘 돌진→회수",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 6,
+          "job_name": "6974 반역비행대장",
+          "skill_id": "F29-C3-S6",
+          "skill_name": "몽키스패너 공중폭격",
+          "effect": "공중회피 후 붉은 전열을 통과하며 망치형 빛탄을 투하, 후열 신입 안전 유지",
+          "unique_body_frames_min": 36,
+          "animation_plan": "스패너 거꾸로 들기→회전 도약→공중 빛탄→착지",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 7,
+          "job_name": "역전의 황룡 공군총장",
+          "skill_id": "F29-C3-S7",
+          "skill_name": "황료일 대역전",
+          "effect": "동의한 아군에게만 대가형 상태가 발동하며 황룡은 거대한 자기 버프, 동시에 실제 약체 보조/보호로 보스 기여",
+          "unique_body_frames_min": 48,
+          "animation_plan": "한숨→스패너 던짐→공군 표식 전개→거대한 하늘빛 역전 오라",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        }
+      ]
+    },
+    {
+      "id": "F29-C4",
+      "root_name": "진떡팔 해병",
+      "role": "주계병 · 해병푸드 · 요리·회복·소셜",
+      "tiers": [
+        {
+          "tier": 0,
+          "job_name": "진떡팔 해병",
+          "skill_id": "F29-C4-S0",
+          "skill_name": "해병짬밥 배급",
+          "effect": "후열 동료에게 체력재생 버프 소량, 약체엔 식판 던지기",
+          "unique_body_frames_min": 10,
+          "animation_plan": "솥 휘젓기→국자 떠서 던지기",
+          "skill_type": "active",
+          "granted_on": "character_create",
+          "persists": true
+        },
+        {
+          "tier": 1,
+          "job_name": "오도주계병",
+          "skill_id": "F29-C4-S1",
+          "skill_name": "오늘의 해병짜장",
+          "effect": "검은 짜장소스 모양 **코믹 픽셀 파티클**을 정예에게 뿌려 이속 감소, 아군은 사기 회복 버프",
+          "unique_body_frames_min": 12,
+          "animation_plan": "짜장솥→소스 회전→깔끔한 만화식 얼룩",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 2,
+          "job_name": "해병푸드 연구관",
+          "skill_id": "F29-C4-S2",
+          "skill_name": "해병수육 한솥",
+          "effect": "아군 부활 직후 방어/회복 일시 증가, '수육'은 무해한 요리 모양 파티클",
+          "unique_body_frames_min": 16,
+          "animation_plan": "냄비 뚜껑 번쩍→뜨거운 국물 아이콘→회복",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 3,
+          "job_name": "6974 총주계장",
+          "skill_id": "F29-C4-S3",
+          "skill_name": "무톤요일 특식",
+          "effect": "무모칠·톤톤정 **영구 유닛이 아닌 잠깐 지나가는 도트 카메오**가 식판을 전달하고 팀 골드 소액 지원",
+          "unique_body_frames_min": 20,
+          "animation_plan": "무톤 듀오 택배 이펙트→식판 전달→짜장 별",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 4,
+          "job_name": "기합조리 장인",
+          "skill_id": "F29-C4-S4",
+          "skill_name": "전우애 진수성찬",
+          "effect": "아군 탱커 실제 피해 방어에 맞춰 사기와 치유량을 높이는 만찬 준비",
+          "unique_body_frames_min": 24,
+          "animation_plan": "요리 포즈→접시 열기→동료 간 축하 번쩍",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 5,
+          "job_name": "오도백반 총감",
+          "skill_id": "F29-C4-S5",
+          "skill_name": "해병짜장 리필",
+          "effect": "원거리 약체 진형에 짜장 투척 장판(이속 둔화)과 동료 유효 회복 동시 제공",
+          "unique_body_frames_min": 30,
+          "animation_plan": "커다란 짜장 국자 포물선→아래로 낙하→회복 버프",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 6,
+          "job_name": "포항성채 수석셰프",
+          "skill_id": "F29-C4-S6",
+          "skill_name": "해병기합 무한급식",
+          "effect": "아군 전체의 안전 파밍 생존·초급 시너지 기여를 개선하되 경제 보상은 상한",
+          "unique_body_frames_min": 36,
+          "animation_plan": "주방 솥 3개→시간차 조리→보급 테이블",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 7,
+          "job_name": "전설의 진떡팔 대주계장",
+          "skill_id": "F29-C4-S7",
+          "skill_name": "6974 해병대연회",
+          "effect": "약체 적 이동 약화·실제 힐·방벽·소액 일반 골드 보너스의 다단 요리 궁극기",
+          "unique_body_frames_min": 48,
+          "animation_plan": "7종 요리 아이콘→거대 냄비→연회 파장→근엄한 총주계 포즈",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        }
+      ]
+    },
+    {
+      "id": "F29-C5",
+      "root_name": "마철두 해병",
+      "role": "원거리 딜러 유지 + 원전의 해병짜장 장인 오마주",
+      "tiers": [
+        {
+          "tier": 0,
+          "job_name": "마철두 해병",
+          "skill_id": "F29-C5-S0",
+          "skill_name": "해병짜장 직사포",
+          "effect": "직사형 원거리 기본 딜, 검은 소스 형상 탄환을 물리 피해 파티클로 표시",
+          "unique_body_frames_min": 10,
+          "animation_plan": "소총 조준→어둑한 탄환→소스 튀는 아이콘",
+          "skill_type": "active",
+          "granted_on": "character_create",
+          "persists": true
+        },
+        {
+          "tier": 1,
+          "job_name": "오도저격수",
+          "skill_id": "F29-C5-S1",
+          "skill_name": "기합 3점사",
+          "effect": "가까운 적정 약체를 3연속 사격, 안정적인 기본 자동사냥 핵심",
+          "unique_body_frames_min": 12,
+          "animation_plan": "견착·반동 3회→수습",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 2,
+          "job_name": "해병짜장 탄약병",
+          "skill_id": "F29-C5-S2",
+          "skill_name": "해병짜장 고압탄",
+          "effect": "짧은 직선 관통탄으로 적 2~3기 피해, 소스 이펙트는 공격 전조 표시",
+          "unique_body_frames_min": 16,
+          "animation_plan": "압축되는 짜장통→탄환 발사→검은 소스 흔적",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 3,
+          "job_name": "오도탄도공학자",
+          "skill_id": "F29-C5-S3",
+          "skill_name": "호두과자 긴빠이탄",
+          "effect": "다음 공격의 소형 폭발/산탄을 강화, 코믹 과자 모양 투사체",
+          "unique_body_frames_min": 20,
+          "animation_plan": "주머니에 과자 넣기→무기 장전→연발",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 4,
+          "job_name": "6974 중화기사",
+          "skill_id": "F29-C5-S4",
+          "skill_name": "포신발사: 기합포격",
+          "effect": "기계식 허리 장착 **포신포**에서 추가 탄을 발사. 실제 몸체 노출 없이 스프라이트 무장/포탑 외형으로 표현",
+          "unique_body_frames_min": 24,
+          "animation_plan": "허리 무장 전개→큰 포신 끝 화염→견착 역반동",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 5,
+          "job_name": "해병탄막 조교",
+          "skill_id": "F29-C5-S5",
+          "skill_name": "각개트럭 탄약지원",
+          "effect": "각개트럭 **무인 원격 소품**이 화면을 지나가며 마철두에게 자동 탄약 보급/포화 집중",
+          "unique_body_frames_min": 30,
+          "animation_plan": "운반차 연출→탄약 상자→장전 빨라짐",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 6,
+          "job_name": "짜장탄환 총장",
+          "skill_id": "F29-C5-S6",
+          "skill_name": "오도봉고 전선제압",
+          "effect": "오도봉고가 짧게 돌진하는 전투 스킬 이펙트, 적정 정예의 후방 공격을 저지하고 원거리 포화",
+          "unique_body_frames_min": 36,
+          "animation_plan": "봉고 그림자→경적 도트→정예 공포 둔화",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 7,
+          "job_name": "무한해병탄창 마철두",
+          "skill_id": "F29-C5-S7",
+          "skill_name": "6974식 해병짜장 탄막",
+          "effect": "기관총·짜장 압력포·포신 사격이 순서대로 타격하는 강한 원거리 궁극기, 후열에서 정예 우선 타격",
+          "unique_body_frames_min": 48,
+          "animation_plan": "탄환 압축→소스형 탄도 궤적→3포신 동시발사→열기 배출",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        }
+      ]
+    },
+    {
+      "id": "F29-C6",
+      "root_name": "곽말풍 중령",
+      "role": "행정 과로 · 마라톤 회의 · 공문서 마도사 · 결계·제어",
+      "tiers": [
+        {
+          "tier": 0,
+          "job_name": "곽말풍 중령",
+          "skill_id": "F29-C6-S0",
+          "skill_name": "중령의 결재도장",
+          "effect": "소형 룬 공문서 날려 정예 방어 저하, 혼자 안전 파밍 가능한 낮은 공격력",
+          "unique_body_frames_min": 10,
+          "animation_plan": "도장 찍기→공문 종이날개→타격",
+          "skill_type": "active",
+          "granted_on": "character_create",
+          "persists": true
+        },
+        {
+          "tier": 1,
+          "job_name": "행정마도 중령",
+          "skill_id": "F29-C6-S1",
+          "skill_name": "마라톤 회의 6.9초",
+          "effect": "순간적으로 정예의 다음 행동을 묶고 동료 버프의 유효 시간을 정리",
+          "unique_body_frames_min": 12,
+          "animation_plan": "의자에 앉아 서류 훑기→한 장 결재→일제 지휘",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 2,
+          "job_name": "작전과장 마법사",
+          "skill_id": "F29-C6-S2",
+          "skill_name": "기합작전 명령서",
+          "effect": "게이트 정예의 다음 공격 예고를 명확하게 표시하고 적 방어 약화",
+          "unique_body_frames_min": 16,
+          "animation_plan": "사무실 전화→파란 서류마법진→표식",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 3,
+          "job_name": "보급·정보계 대마도사",
+          "skill_id": "F29-C6-S3",
+          "skill_name": "행정계원 9중 겸직",
+          "effect": "아홉 부서 문서 파티클을 각각 타깃에 붙여 방어/상태해제/탄약 보급에 작은 효과",
+          "unique_body_frames_min": 20,
+          "animation_plan": "각종 서류 더미 공중 펼침→도장 연타",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 4,
+          "job_name": "작전통제 대대장",
+          "skill_id": "F29-C6-S4",
+          "skill_name": "마갈곤 쿠데타 대응령",
+          "effect": "전열이 밀리면 즉시 보호막·정예 감속, 실제 진형 보호 효과",
+          "unique_body_frames_min": 24,
+          "animation_plan": "기합하다 서류 떨어뜨리기→가시결계",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 5,
+          "job_name": "전우애 법무사령관",
+          "skill_id": "F29-C6-S5",
+          "skill_name": "기열 문책마법",
+          "effect": "정예가 위험 패턴을 시전하면 마법 봉인 검사표를 투척하고 시전 연기",
+          "unique_body_frames_min": 30,
+          "animation_plan": "도장 3연타→큰 문책 붉은 도장",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 6,
+          "job_name": "6974 문서제왕",
+          "skill_id": "F29-C6-S6",
+          "skill_name": "만년 결재 지연술",
+          "effect": "약체 웨이브의 이동을 늦추는 지역 제어·동료 회복 기여, 상태이상 중첩 상한",
+          "unique_body_frames_min": 36,
+          "animation_plan": "결재 대기열 UI→금색 일시정지 결계→해제",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        },
+        {
+          "tier": 7,
+          "job_name": "곽말풍 초월행정총감",
+          "skill_id": "F29-C6-S7",
+          "skill_name": "6974 행정계획: 기합승인",
+          "effect": "무수한 공문서가 하늘에서 내려 정예를 봉인/타격하고 아군 방벽·치유/버프가 순차 발동",
+          "unique_body_frames_min": 48,
+          "animation_plan": "대대장 좌석 소환연출→서류 폭풍→마법진 결재→책상에 쓰러짐",
+          "skill_type": "active",
+          "granted_on": "promotion",
+          "persists": true
+        }
+      ]
+    }
+  ]
+}
