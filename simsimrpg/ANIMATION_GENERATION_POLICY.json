@@ -1,0 +1,337 @@
+{
+  "schema_version": 1,
+  "version": "2026-11-03",
+  "project": "simsimrpg",
+  "scope": {
+    "factions": 32,
+    "root_classes_per_faction": 6,
+    "root_classes": 192,
+    "job_nodes_target": 9024,
+    "final_job_nodes": 1536,
+    "advancement_tiers": 7
+  },
+  "source_of_truth": [
+    "PIXEL_ANIMATION_PRODUCTION_RULES.md",
+    "CLASS_ANIMATION_192.md",
+    "CLASS_CATALOG.md",
+    "SEVEN_ADVANCEMENTS.md"
+  ],
+  "inspiration": {
+    "game": "Dungeon & Fighter (DnF)",
+    "kind": "motion timing, pixel art layers, distinctive poses; not official count data",
+    "copy_original_frames": false
+  },
+  "legacy_baseline": {
+    "source": "desert-strike/assets/sprites/atlas-manifest.json; desert-strike/ART_UPDATE.md; desert-strike/assets/sprites/blood-iron-conversion-manifest.json",
+    "legacy_action_slots": 5,
+    "legacy_pose_layout_example": 8,
+    "copy_as_new_finished_animation": false
+  },
+  "render": {
+    "master_canvas_humanoid_px": [
+      128,
+      160
+    ],
+    "master_canvas_rig_variants": {
+      "fluid_or_quad": [
+        160,
+        192
+      ],
+      "large": [
+        192,
+        224
+      ]
+    },
+    "directions": [
+      "left",
+      "right"
+    ],
+    "allow_horizontal_mirror_with_asymmetry_qc": true,
+    "pixel_art": true,
+    "transparent_source_png": true,
+    "render_filter": "nearest",
+    "facing_policy": "shared-gate 2d 3/4 side view, fix handedness and text after mirror",
+    "max_atlas_px": [
+      2048,
+      2048
+    ],
+    "lazy_load_only_visible_classes": true,
+    "performance_test_players": 50
+  },
+  "generation": {
+    "batch_unique_keyposes_min": 4,
+    "batch_unique_keyposes_max": 8,
+    "do_not_mix_actions_in_same_raw_sheet": true,
+    "pose_to_pose_first": true,
+    "generate_midframes_and_manual_pixel_retouch": true,
+    "store_original_png": true,
+    "master_reference_required": true,
+    "lock_base_identity": true,
+    "store_provenance_sha256": true,
+    "frame_count_metric": "unique_painted_body_poses_only",
+    "do_not_count_as_unique": [
+      "repeated identical frame",
+      "recolor only",
+      "translation only",
+      "runtime interpolated playback frame",
+      "screen shake or particle overlay alone",
+      "mirrored frame used as separate direction"
+    ],
+    "required_pose_phases": [
+      "anticipation",
+      "acceleration",
+      "active_contact_or_release",
+      "follow_through",
+      "recovery"
+    ],
+    "validate_anchor_names": [
+      "ground_anchor",
+      "torso_anchor",
+      "head_anchor",
+      "main_hand_anchor",
+      "off_hand_anchor",
+      "weapon_tip",
+      "projectile_muzzle",
+      "impact_origin",
+      "shadow_anchor"
+    ],
+    "layers": [
+      "body",
+      "face_hair",
+      "headgear",
+      "chest",
+      "legwear",
+      "gloves",
+      "weapon",
+      "species_appendage",
+      "shadow",
+      "fx_foreground",
+      "fx_background"
+    ],
+    "mandatory_metadata": [
+      "faction_id",
+      "root_class_id",
+      "job_id",
+      "advancement_tier",
+      "animation_id",
+      "direction",
+      "frame_index",
+      "source_sha256",
+      "source_count",
+      "fps_hint",
+      "frame_durations_ms",
+      "ground_anchor",
+      "events",
+      "qc_status"
+    ],
+    "separate_tracks": [
+      "body",
+      "equipment",
+      "projectile",
+      "impact_fx",
+      "aura"
+    ],
+    "combat_events": [
+      "hit",
+      "projectile_spawn",
+      "heal_applied",
+      "buff_applied",
+      "foot_contact",
+      "fx_peak",
+      "invulnerability_start",
+      "invulnerability_end"
+    ]
+  },
+  "animation_modes": {
+    "idle": {
+      "unique_drawn_frames_min": 10,
+      "recommended_max": 14,
+      "fps_min": 8,
+      "fps_max": 12,
+      "loop": true
+    },
+    "walk": {
+      "unique_drawn_frames_min": 12,
+      "recommended_max": 18,
+      "fps_min": 12,
+      "fps_max": 16,
+      "loop": true
+    },
+    "run": {
+      "unique_drawn_frames_min": 14,
+      "recommended_max": 20,
+      "fps_min": 14,
+      "fps_max": 20,
+      "loop": true
+    },
+    "basic_attack_a": {
+      "unique_drawn_frames_min": 18,
+      "recommended_max": 24,
+      "fps_min": 16,
+      "fps_max": 24,
+      "loop": false
+    },
+    "basic_attack_b": {
+      "unique_drawn_frames_min": 18,
+      "recommended_max": 24,
+      "fps_min": 16,
+      "fps_max": 24,
+      "loop": false
+    },
+    "heavy_attack": {
+      "unique_drawn_frames_min": 22,
+      "recommended_max": 32,
+      "fps_min": 16,
+      "fps_max": 24,
+      "loop": false
+    },
+    "cast": {
+      "unique_drawn_frames_min": 20,
+      "recommended_max": 30,
+      "fps_min": 14,
+      "fps_max": 22,
+      "loop": false
+    },
+    "signature_skill": {
+      "unique_drawn_frames_min": 30,
+      "recommended_max": 44,
+      "fps_min": 18,
+      "fps_max": 24,
+      "loop": false
+    },
+    "ultimate": {
+      "unique_drawn_frames_min": 48,
+      "recommended_max": 72,
+      "fps_min": 20,
+      "fps_max": 30,
+      "loop": false
+    },
+    "guard": {
+      "unique_drawn_frames_min": 12,
+      "recommended_max": 18,
+      "fps_min": 12,
+      "fps_max": 18,
+      "loop": false
+    },
+    "hurt": {
+      "unique_drawn_frames_min": 8,
+      "recommended_max": 12,
+      "fps_min": 12,
+      "fps_max": 20,
+      "loop": false
+    },
+    "knockdown": {
+      "unique_drawn_frames_min": 14,
+      "recommended_max": 22,
+      "fps_min": 12,
+      "fps_max": 20,
+      "loop": false
+    },
+    "death": {
+      "unique_drawn_frames_min": 18,
+      "recommended_max": 28,
+      "fps_min": 12,
+      "fps_max": 20,
+      "loop": false
+    },
+    "revive": {
+      "unique_drawn_frames_min": 12,
+      "recommended_max": 18,
+      "fps_min": 12,
+      "fps_max": 20,
+      "loop": false
+    },
+    "heal": {
+      "unique_drawn_frames_min": 22,
+      "recommended_max": 34,
+      "fps_min": 14,
+      "fps_max": 22,
+      "loop": false
+    },
+    "buff": {
+      "unique_drawn_frames_min": 18,
+      "recommended_max": 28,
+      "fps_min": 14,
+      "fps_max": 22,
+      "loop": false
+    },
+    "social_emote": {
+      "unique_drawn_frames_min": 12,
+      "recommended_max": 20,
+      "fps_min": 8,
+      "fps_max": 16,
+      "loop": true
+    }
+  },
+  "root_class_constraints": {
+    "required_count": 192,
+    "require_class_identity_master": true,
+    "mandatory_source_actions": [
+      "idle",
+      "walk",
+      "run",
+      "basic_attack_a",
+      "basic_attack_b",
+      "heavy_attack",
+      "cast",
+      "signature_skill",
+      "guard",
+      "hurt",
+      "knockdown",
+      "death",
+      "revive",
+      "social_emote"
+    ],
+    "conditional_actions": {
+      "healer": [
+        "heal",
+        "buff"
+      ],
+      "tank": [
+        "guard",
+        "buff"
+      ],
+      "caster": [
+        "cast",
+        "buff"
+      ],
+      "ranged": [
+        "cast",
+        "heavy_attack"
+      ]
+    },
+    "replace_nonsensical_actions_with_role_equivalent": true,
+    "core_202_min_frames_without_attack_b": true,
+    "attack_b_18_additional": true,
+    "signature_uniqueness_per_root": true,
+    "profile_document": "CLASS_ANIMATION_192.md"
+  },
+  "advancement_constraints": {
+    "per_job_node_unique_signature_min": 30,
+    "tiers_with_major_ultimate": [
+      3,
+      5,
+      7
+    ],
+    "major_ultimate_unique_frames_min": 48,
+    "shared_base_rig_permitted": true,
+    "shared_base_idle_walk_permitted": true,
+    "different_signature_silhouette_required": true,
+    "merely_recoloring_not_sufficient": true
+  },
+  "qa_hard_fail": [
+    "duplicated frames counted as new unique art",
+    "missing required frames or storyboard",
+    "keypoints ground/weapon/hand drift",
+    "character identity or weapon changes unexpectedly",
+    "attack projectile / hit timing mismatches server",
+    "atlas bleed or wrong transparent alpha",
+    "separate motion types mixed in generated source",
+    "reversed text or wrong handedness from mirrored motion",
+    "stage promotion changes only job name or aura color",
+    "non-original copyrighted DnF artwork used in shipping assets",
+    "missing loop / transition / die-revive test",
+    "50 player shared-gate playback becomes unreadable or untested"
+  ],
+  "status": "planning_only_no_images_created"
+}
