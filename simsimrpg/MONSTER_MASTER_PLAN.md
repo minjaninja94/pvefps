@@ -1,7 +1,7 @@
 # simsimrpg — 20대분류 / 200계열군 / 2,000 기본 몬스터 / 20,000 팔레트 외형 마스터 기획
 
 > 최신 2026-11-04 KST. **기획 데이터 전수 작성**, 몬스터 이미지·실전 AI·애니메이션·데미지 밸런스 미구현. 명시적 게임 레퍼런스는 **장르/메커니즘 추상 참고**일 뿐 상업 게임 등장 몬스터의 이름·외형·스프라이트·음성·패턴의 식별 가능한 복제가 아님.  
-> 계열군 정본: [MONSTER_FAMILIES_200.json](./MONSTER_FAMILIES_200.json); 개별 2000종 4개 분할: [01–05](./MONSTERS_01_05.json), [06–10](./MONSTERS_06_10.json), [11–15](./MONSTERS_11_15.json), [16–20](./MONSTERS_16_20.json).  
+> **검증·정합성 매니페스트:** [MONSTER_CATALOG_MANIFEST.json](./MONSTER_CATALOG_MANIFEST.json). 계열군 정본: [MONSTER_FAMILIES_200.json](./MONSTER_FAMILIES_200.json); 개별 2000종 4개 분할: [01–05](./MONSTERS_01_05.json), [06–10](./MONSTERS_06_10.json), [11–15](./MONSTERS_11_15.json), [16–20](./MONSTERS_16_20.json).  
 > 해병푸드: [적 전체 디버프/해병만 버프](./MARINE_FOOD_TARGETING_RULES.md). 공동 게이트 안전: [MIXED_LEVEL_HP_RAID_BALANCE.md](./MIXED_LEVEL_HP_RAID_BALANCE.md).
 
 ## 1. 목표·ID·규모
