@@ -28,7 +28,18 @@
     "base_npc_helpers": 3,
     "no_persistent_extra_units": true,
     "unlicensed_original_art_audio_prohibited": true,
-    "marine_cameos_fx_only": true
+    "marine_cameos_fx_only": true,
+    "marine_food_effect_policy": {
+      "target_enemy": "all_alive_enemies_in_same_channel",
+      "target_ally_buff": "active_players_with_faction_F29_only",
+      "non_marine_buff_multiplier": 0,
+      "npc_helper_buff_multiplier": 0,
+      "does_enemy_debuff_affect_boss": true,
+      "boss_resistance_and_cap": true,
+      "stacking": "additive_capped_by_status_id",
+      "do_not_double_rewards": true,
+      "reference": "MARINE_FOOD_TARGETING_RULES.md"
+    }
   },
   "careers": [
     {
@@ -350,36 +361,72 @@
           "job_name": "진떡팔 해병",
           "skill_id": "F29-C4-S0",
           "skill_name": "해병짬밥 배급",
-          "effect": "후열 동료에게 체력재생 버프 소량, 약체엔 식판 던지기",
+          "effect": "후열 해병 동료에게 체력재생 버프 소량, 약체엔 식판 던지기",
           "unique_body_frames_min": 10,
           "animation_plan": "솥 휘젓기→국자 떠서 던지기",
           "skill_type": "active",
           "granted_on": "character_create",
-          "persists": true
+          "persists": true,
+          "marine_food_source": true,
+          "targeting_policy": {
+            "target_enemy": "all_alive_enemies_in_same_channel",
+            "target_ally_buff": "active_players_with_faction_F29_only",
+            "non_marine_buff_multiplier": 0,
+            "npc_helper_buff_multiplier": 0,
+            "does_enemy_debuff_affect_boss": true,
+            "boss_resistance_and_cap": true,
+            "stacking": "additive_capped_by_status_id",
+            "do_not_double_rewards": true,
+            "reference": "MARINE_FOOD_TARGETING_RULES.md"
+          }
         },
         {
           "tier": 1,
           "job_name": "오도주계병",
           "skill_id": "F29-C4-S1",
           "skill_name": "오늘의 해병짜장",
-          "effect": "검은 짜장소스 모양 **코믹 픽셀 파티클**을 정예에게 뿌려 이속 감소, 아군은 사기 회복 버프",
+          "effect": "검은 짜장소스 모양 **코믹 픽셀 파티클**을 정예에게 뿌려 이속 감소, 해병 아군은 사기 회복 버프",
           "unique_body_frames_min": 12,
           "animation_plan": "짜장솥→소스 회전→깔끔한 만화식 얼룩",
           "skill_type": "active",
           "granted_on": "promotion",
-          "persists": true
+          "persists": true,
+          "marine_food_source": true,
+          "targeting_policy": {
+            "target_enemy": "all_alive_enemies_in_same_channel",
+            "target_ally_buff": "active_players_with_faction_F29_only",
+            "non_marine_buff_multiplier": 0,
+            "npc_helper_buff_multiplier": 0,
+            "does_enemy_debuff_affect_boss": true,
+            "boss_resistance_and_cap": true,
+            "stacking": "additive_capped_by_status_id",
+            "do_not_double_rewards": true,
+            "reference": "MARINE_FOOD_TARGETING_RULES.md"
+          }
         },
         {
           "tier": 2,
           "job_name": "해병푸드 연구관",
           "skill_id": "F29-C4-S2",
           "skill_name": "해병수육 한솥",
-          "effect": "아군 부활 직후 방어/회복 일시 증가, '수육'은 무해한 요리 모양 파티클",
+          "effect": "해병 아군 부활 직후 방어/회복 일시 증가, '수육'은 무해한 요리 모양 파티클",
           "unique_body_frames_min": 16,
           "animation_plan": "냄비 뚜껑 번쩍→뜨거운 국물 아이콘→회복",
           "skill_type": "active",
           "granted_on": "promotion",
-          "persists": true
+          "persists": true,
+          "marine_food_source": true,
+          "targeting_policy": {
+            "target_enemy": "all_alive_enemies_in_same_channel",
+            "target_ally_buff": "active_players_with_faction_F29_only",
+            "non_marine_buff_multiplier": 0,
+            "npc_helper_buff_multiplier": 0,
+            "does_enemy_debuff_affect_boss": true,
+            "boss_resistance_and_cap": true,
+            "stacking": "additive_capped_by_status_id",
+            "do_not_double_rewards": true,
+            "reference": "MARINE_FOOD_TARGETING_RULES.md"
+          }
         },
         {
           "tier": 3,
@@ -391,43 +438,91 @@
           "animation_plan": "무톤 듀오 택배 이펙트→식판 전달→짜장 별",
           "skill_type": "active",
           "granted_on": "promotion",
-          "persists": true
+          "persists": true,
+          "marine_food_source": true,
+          "targeting_policy": {
+            "target_enemy": "all_alive_enemies_in_same_channel",
+            "target_ally_buff": "active_players_with_faction_F29_only",
+            "non_marine_buff_multiplier": 0,
+            "npc_helper_buff_multiplier": 0,
+            "does_enemy_debuff_affect_boss": true,
+            "boss_resistance_and_cap": true,
+            "stacking": "additive_capped_by_status_id",
+            "do_not_double_rewards": true,
+            "reference": "MARINE_FOOD_TARGETING_RULES.md"
+          }
         },
         {
           "tier": 4,
           "job_name": "기합조리 장인",
           "skill_id": "F29-C4-S4",
           "skill_name": "전우애 진수성찬",
-          "effect": "아군 탱커 실제 피해 방어에 맞춰 사기와 치유량을 높이는 만찬 준비",
+          "effect": "해병 아군 탱커 실제 피해 방어에 맞춰 사기와 치유량을 높이는 만찬 준비",
           "unique_body_frames_min": 24,
           "animation_plan": "요리 포즈→접시 열기→동료 간 축하 번쩍",
           "skill_type": "active",
           "granted_on": "promotion",
-          "persists": true
+          "persists": true,
+          "marine_food_source": true,
+          "targeting_policy": {
+            "target_enemy": "all_alive_enemies_in_same_channel",
+            "target_ally_buff": "active_players_with_faction_F29_only",
+            "non_marine_buff_multiplier": 0,
+            "npc_helper_buff_multiplier": 0,
+            "does_enemy_debuff_affect_boss": true,
+            "boss_resistance_and_cap": true,
+            "stacking": "additive_capped_by_status_id",
+            "do_not_double_rewards": true,
+            "reference": "MARINE_FOOD_TARGETING_RULES.md"
+          }
         },
         {
           "tier": 5,
           "job_name": "오도백반 총감",
           "skill_id": "F29-C4-S5",
           "skill_name": "해병짜장 리필",
-          "effect": "원거리 약체 진형에 짜장 투척 장판(이속 둔화)과 동료 유효 회복 동시 제공",
+          "effect": "원거리 약체 진형에 짜장 투척 장판(이속 둔화)과 해병 동료 유효 회복 동시 제공",
           "unique_body_frames_min": 30,
           "animation_plan": "커다란 짜장 국자 포물선→아래로 낙하→회복 버프",
           "skill_type": "active",
           "granted_on": "promotion",
-          "persists": true
+          "persists": true,
+          "marine_food_source": true,
+          "targeting_policy": {
+            "target_enemy": "all_alive_enemies_in_same_channel",
+            "target_ally_buff": "active_players_with_faction_F29_only",
+            "non_marine_buff_multiplier": 0,
+            "npc_helper_buff_multiplier": 0,
+            "does_enemy_debuff_affect_boss": true,
+            "boss_resistance_and_cap": true,
+            "stacking": "additive_capped_by_status_id",
+            "do_not_double_rewards": true,
+            "reference": "MARINE_FOOD_TARGETING_RULES.md"
+          }
         },
         {
           "tier": 6,
           "job_name": "포항성채 수석셰프",
           "skill_id": "F29-C4-S6",
           "skill_name": "해병기합 무한급식",
-          "effect": "아군 전체의 안전 파밍 생존·초급 시너지 기여를 개선하되 경제 보상은 상한",
+          "effect": "해병 아군 전체의 안전 파밍 생존·초급 시너지 기여를 개선하되 경제 보상은 상한",
           "unique_body_frames_min": 36,
           "animation_plan": "주방 솥 3개→시간차 조리→보급 테이블",
           "skill_type": "active",
           "granted_on": "promotion",
-          "persists": true
+          "persists": true,
+          "marine_food_source": true,
+          "targeting_policy": {
+            "target_enemy": "all_alive_enemies_in_same_channel",
+            "target_ally_buff": "active_players_with_faction_F29_only",
+            "non_marine_buff_multiplier": 0,
+            "npc_helper_buff_multiplier": 0,
+            "does_enemy_debuff_affect_boss": true,
+            "boss_resistance_and_cap": true,
+            "stacking": "additive_capped_by_status_id",
+            "do_not_double_rewards": true,
+            "reference": "MARINE_FOOD_TARGETING_RULES.md"
+          }
         },
         {
           "tier": 7,
@@ -439,7 +534,19 @@
           "animation_plan": "7종 요리 아이콘→거대 냄비→연회 파장→근엄한 총주계 포즈",
           "skill_type": "active",
           "granted_on": "promotion",
-          "persists": true
+          "persists": true,
+          "marine_food_source": true,
+          "targeting_policy": {
+            "target_enemy": "all_alive_enemies_in_same_channel",
+            "target_ally_buff": "active_players_with_faction_F29_only",
+            "non_marine_buff_multiplier": 0,
+            "npc_helper_buff_multiplier": 0,
+            "does_enemy_debuff_affect_boss": true,
+            "boss_resistance_and_cap": true,
+            "stacking": "additive_capped_by_status_id",
+            "do_not_double_rewards": true,
+            "reference": "MARINE_FOOD_TARGETING_RULES.md"
+          }
         }
       ]
     },
@@ -458,7 +565,19 @@
           "animation_plan": "소총 조준→어둑한 탄환→소스 튀는 아이콘",
           "skill_type": "active",
           "granted_on": "character_create",
-          "persists": true
+          "persists": true,
+          "marine_food_source": true,
+          "targeting_policy": {
+            "target_enemy": "all_alive_enemies_in_same_channel",
+            "target_ally_buff": "active_players_with_faction_F29_only",
+            "non_marine_buff_multiplier": 0,
+            "npc_helper_buff_multiplier": 0,
+            "does_enemy_debuff_affect_boss": true,
+            "boss_resistance_and_cap": true,
+            "stacking": "additive_capped_by_status_id",
+            "do_not_double_rewards": true,
+            "reference": "MARINE_FOOD_TARGETING_RULES.md"
+          }
         },
         {
           "tier": 1,
@@ -482,7 +601,19 @@
           "animation_plan": "압축되는 짜장통→탄환 발사→검은 소스 흔적",
           "skill_type": "active",
           "granted_on": "promotion",
-          "persists": true
+          "persists": true,
+          "marine_food_source": true,
+          "targeting_policy": {
+            "target_enemy": "all_alive_enemies_in_same_channel",
+            "target_ally_buff": "active_players_with_faction_F29_only",
+            "non_marine_buff_multiplier": 0,
+            "npc_helper_buff_multiplier": 0,
+            "does_enemy_debuff_affect_boss": true,
+            "boss_resistance_and_cap": true,
+            "stacking": "additive_capped_by_status_id",
+            "do_not_double_rewards": true,
+            "reference": "MARINE_FOOD_TARGETING_RULES.md"
+          }
         },
         {
           "tier": 3,
@@ -542,7 +673,19 @@
           "animation_plan": "탄환 압축→소스형 탄도 궤적→3포신 동시발사→열기 배출",
           "skill_type": "active",
           "granted_on": "promotion",
-          "persists": true
+          "persists": true,
+          "marine_food_source": true,
+          "targeting_policy": {
+            "target_enemy": "all_alive_enemies_in_same_channel",
+            "target_ally_buff": "active_players_with_faction_F29_only",
+            "non_marine_buff_multiplier": 0,
+            "npc_helper_buff_multiplier": 0,
+            "does_enemy_debuff_affect_boss": true,
+            "boss_resistance_and_cap": true,
+            "stacking": "additive_capped_by_status_id",
+            "do_not_double_rewards": true,
+            "reference": "MARINE_FOOD_TARGETING_RULES.md"
+          }
         }
       ]
     },
@@ -649,5 +792,6 @@
         }
       ]
     }
-  ]
+  ],
+  "food_policy_doc": "MARINE_FOOD_TARGETING_RULES.md"
 }
