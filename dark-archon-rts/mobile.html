@@ -2,9 +2,9 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#171a24"/>
-<title>마컨 디펜스</title>
+<title>마컨 디펜스 — 모바일 터치 버전</title>
 <style>
 :root{color-scheme:dark;--metal:#302a28;--edge:#776e56;--gold:#d5bd82;--blue:#79cde1;--green:#83e0a2;--red:#f49086}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -20%,#172d42,#080b12 65%);color:#ede9dc;font-family:Inter,system-ui,"Malgun Gothic",sans-serif}
@@ -30,9 +30,44 @@ a{color:#94c8f0}a:hover{color:#d6ecff}.unitTile:hover{border-color:#95d4ed}.unit
 .soundbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.soundbar label{display:flex;align-items:center;gap:4px;color:#d1d5db;font-size:11px}.soundbar input[type=range]{width:64px;accent-color:#b781db;cursor:pointer}.soundbar button{white-space:nowrap}
 
 .psiBlock{margin-top:6px;border-top:1px solid #7397b84d;padding:5px 4px 1px}.psiHead{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:#9cdbff;line-height:16px;margin-bottom:5px}.psiTrack{height:14px;position:relative;background:#12172b;border:1px solid #546ba5;box-shadow:inset 0 0 7px #000e;overflow:hidden}.psiFill{height:100%;width:100%;background:linear-gradient(90deg,#294cb4,#578be9,#a1f2ff);transition:width .16s linear}.psiTick{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 2px #111;transform:translateX(-1px)}.psiTick[data-cost="50"]{left:20%}.psiTick[data-cost="75"]{left:30%}.psiTick[data-cost="100"]{left:40%}.psiTick[data-cost="150"]{left:60%}.psiSkills{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;margin-top:5px}.psiSkill{border:1px solid #4f566d;border-radius:3px;text-align:center;font-size:10px;padding:4px 0;color:#778196;background:#101720;white-space:nowrap}.psiSkill.ready{color:#cbfce9;border-color:#438e87;background:#15332c;font-weight:800}.psiSkill.noHero{opacity:.4}
+
+/* Mobile runs the same 2400×700 simulation in a scrollable touch camera. */
+.mobile-page{overflow-x:hidden;--mobile-zoom:1900px;background:#090d17}
+.mobile-page main{width:100%;max-width:none;padding:4px 6px max(8px,env(safe-area-inset-bottom))}
+.mobile-page header{gap:5px;margin-bottom:4px}
+.mobile-page .brand{font-size:17px}.mobile-page .sub{font-size:10px}
+.mobile-page .topstat{gap:3px}.mobile-page .chip{padding:5px 7px;font-size:11px}
+.mobile-page .soundbar{gap:5px}.mobile-page .soundbar button,.mobile-page .soundbar a{padding:7px 9px;font-size:11px}
+.mobile-page .soundbar a{text-decoration:none;display:inline-flex;align-items:center}
+.mobileTools{position:sticky;top:0;z-index:30;display:flex;gap:6px;overflow-x:auto;align-items:center;padding:7px 4px;background:#111d30f5;border:1px solid #55718a;box-shadow:0 3px 12px #0009;white-space:nowrap;scrollbar-width:thin}
+.mobileTools button{flex:0 0 auto;min-height:45px;padding:7px 12px;border:1px solid #59738d;background:#263850;color:#d6ecff;border-radius:6px;font-size:13px;font-weight:700;touch-action:manipulation}
+.mobileTools button[aria-pressed="true"]{background:#654922;border-color:#f2be70;color:#fff2cc}
+.mobileHint{font-size:12px;color:#c2d5e6;padding:5px 7px;line-height:1.4}
+.mobile-page .frame{max-height:none;overflow:visible}
+.mobile-page .touchViewport{width:100%;height:clamp(235px,43dvh,440px);overflow:auto;overscroll-behavior:contain;background:#111722;scrollbar-width:thin;position:relative}
+.mobile-page #field{display:block;max-width:none;width:var(--mobile-zoom)!important;height:auto!important;aspect-ratio:2400/700;touch-action:none;cursor:crosshair}
+.mobile-page .gamebar{display:flex;flex-direction:column;gap:5px;min-height:0;height:auto;padding:5px}
+.mobile-page .selectionPanel{order:0}.mobile-page .commandsPanel{order:1}.mobile-page .mapPanel{order:2}
+.mobile-page .panel{padding:7px}.mobile-page .panelTitle{margin-bottom:5px}
+.mobile-page .unitrow{min-height:88px;gap:6px}.mobile-page .portrait{width:99px;min-width:90px;padding:4px}.mobile-page .portraitVisual{height:69px}
+.mobile-page #selectedList{grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:auto;gap:3px}
+.mobile-page .unitTile{height:53px}.mobile-page .unitTile .short{font-size:10px}
+.mobile-page .commandGrid{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:none;grid-auto-rows:minmax(58px,auto);gap:6px}
+.mobile-page .command{min-width:0;min-height:58px;font-size:18px;padding:4px 2px;touch-action:manipulation}.mobile-page .command small{font-size:11px;line-height:1.25}
+.mobile-page .psiSkills{gap:2px}.mobile-page .psiSkill{font-size:9px}
+.mobile-page #minimap{height:95px;max-height:none;aspect-ratio:auto;touch-action:manipulation;cursor:pointer}
+.mobile-page #message{font-size:12px}.mobile-page .help{font-size:12px;padding:0 5px 7px}
+@media(orientation:landscape){
+ .mobile-page .touchViewport{height:clamp(210px,58dvh,480px)}
+ .mobileTools{padding:4px}.mobileTools button{min-height:42px;padding:6px 11px}
+ .mobile-page .topstat .chip{padding:3px 6px;font-size:10px}
+ .mobile-page #selectedList{grid-template-columns:repeat(8,minmax(0,1fr))}
+ .mobile-page .commandGrid{grid-template-columns:repeat(6,minmax(0,1fr))}
+}
+@media(max-width:380px){.mobile-page .commandGrid{grid-template-columns:repeat(3,minmax(0,1fr))}.mobile-page .psiSkill{font-size:8px}}
 </style>
 </head>
-<body>
+<body class="mobile-page">
 <main>
 <header>
  <div><div class="brand">마컨 <span>디펜스</span></div><div class="sub">정신 지배 전략 디펜스</div></div>
@@ -45,10 +80,19 @@ a{color:#94c8f0}a:hover{color:#d6ecff}.unitTile:hover{border-color:#95d4ed}.unit
   <div class="chip">병력 <b id="army">1 / 0</b></div>
   <div class="chip">격파 / 지배 <b id="kills">0 / 0</b></div><div class="chip" id="heroChip">적 영웅 <b id="heroCount">0</b></div>
  </div>
- <div class="soundbar"><button id="soundToggle" class="groupbtn" aria-pressed="true" title="BGM과 유닛 음성 켜기/끄기">🔊 소리 켜짐</button><label>BGM <input id="bgmVol" type="range" min="0" max="100" value="28" aria-label="배경음악 음량"></label><label>VOICE <input id="voiceVol" type="range" min="0" max="100" value="88" aria-label="유닛 음성 음량"></label><button id="battleMode" class="groupbtn">모드: 디펜스</button><button id="teamSwitch" class="groupbtn" hidden>조작: 청록</button><button id="pause" class="groupbtn">일시정지</button><button id="restart" class="groupbtn">새 전투</button></div>
+ <div class="soundbar"><button id="soundToggle" class="groupbtn" aria-pressed="true" title="BGM과 유닛 음성 켜기/끄기">🔊 소리 켜짐</button><label>BGM <input id="bgmVol" type="range" min="0" max="100" value="28" aria-label="배경음악 음량"></label><label>VOICE <input id="voiceVol" type="range" min="0" max="100" value="88" aria-label="유닛 음성 음량"></label><button id="battleMode" class="groupbtn">모드: 디펜스</button><button id="teamSwitch" class="groupbtn" hidden>조작: 청록</button><button id="pause" class="groupbtn">일시정지</button><button id="restart" class="groupbtn">새 전투</button><a class="groupbtn" href="./index.html">PC버전</a></div>
 </header>
+<div class="mobileTools" role="toolbar" aria-label="모바일 카메라와 유닛 선택 도구">
+ <button id="mobilePan" aria-pressed="false" title="켜면 한 손가락으로 화면을 드래그해 이동합니다">✋ 화면 이동</button>
+ <button id="mobileHome">⌂ 기지</button>
+ <button id="mobileHero">✦ 다크 아콘</button>
+ <button id="mobileFront">⚔ 전선</button>
+ <button id="mobileMulti" aria-pressed="false" title="터치할 때마다 선택에 유닛을 추가합니다">＋ 다중 선택</button>
+ <button id="mobileZoom">🔎 확대/축소</button>
+</div>
+<div class="mobileHint">유닛 터치로 선택 → 아래 <b>이동·공격 이동·정신 지배</b> 버튼 → 대상 터치. 화면 이동을 켜고 끌어 카메라 이동, 미니맵 터치로 빠르게 이동. 가로 화면을 권장합니다.</div>
 <section class="frame" aria-label="RTS 게임 화면">
- <canvas id="field" width="2400" height="700" aria-label="마컨 디펜스 전장"></canvas>
+ <div class="touchViewport" id="touchViewport"><canvas id="field" width="2400" height="700" aria-label="모바일 마컨 디펜스 전장"></canvas></div>
  <div class="gamebar">
   <section class="panel mapPanel"><div class="panelTitle">TACTICAL MAP</div><canvas id="minimap" width="240" height="70" aria-label="미니맵"></canvas><div id="mapLegend">● 아군 청록 · 적군 주홍 · 중립 노랑</div></section>
   <section class="panel selectionPanel">
@@ -68,6 +112,7 @@ a{color:#94c8f0}a:hover{color:#d6ecff}.unitTile:hover{border-color:#95d4ed}.unit
    <div class="commandGrid">
     <button class="command" data-command="move">➜ <small>V 이동 (회피)</small></button>
      <button class="command" data-command="attackmove">⚔ <small>A 공격 이동</small></button>
+     <button class="command" data-command="attack">◎ <small>집중 공격</small></button>
     <button class="command" data-command="stop">■ <small>S 정지</small></button>
     <button class="command" data-command="hold">♜ <small>H 위치사수</small></button>
     <button class="command" data-command="mind">✦ <small>M 정신지배</small></button>
@@ -82,7 +127,7 @@ a{color:#94c8f0}a:hover{color:#d6ecff}.unitTile:hover{border-color:#95d4ed}.unit
  </div>
 </section>
 <div id="message" role="status">다크 아콘을 선택하고 정신 지배를 사용하십시오.</div>
-<p class="help">좌클릭 선택 · 드래그 다중 선택 · 우클릭 빈 땅 이동/적 공격 · V 순수 이동(전투 무시) · A 공격 이동 · R 상단 우회 진격 · M 정신 지배(상대 다크 아콘 제외) · E 마엘스트롬 · T 사이오닉 스톰(아군 피해) · F 피드백 · O 아군 시즈탱크 배치/해제(아군 오폭 주의) · Esc 취소 · 다크 아콘 사망 후 넥서스 재생산 60초 · Space 일시정지 · BGM/VOICE 개별 음량 조절 · 브라우저 정책상 첫 클릭이나 키 입력 후 소리 시작</p>
+<p class="help">터치 유닛 선택 · 드래그 다중 선택 · V 순수 이동(전투 무시) · A 공격 이동 · R 상단 우회 진격 · M 정신 지배(상대 다크 아콘 제외) · E 마엘스트롬 · T 사이오닉 스톰(아군 피해) · F 피드백 · O 아군 시즈탱크 배치/해제(아군 오폭 주의) · Esc 취소 · 다크 아콘 사망 후 넥서스 재생산 60초 · Space 일시정지 · BGM/VOICE 개별 음량 조절 · 브라우저 정책상 첫 클릭이나 키 입력 후 소리 시작</p>
 </main>
 <script>
 
