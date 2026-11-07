@@ -93,3 +93,23 @@ html,body.mobile-page{margin:0;width:100%;height:100%;height:100dvh;overflow:hid
  .mobile-page header .brand{font-size:12px}
  .mobile-page header .chip{font-size:9px;padding:4px 2px}
 }
+
+@media(max-height:370px){
+ .mobile-page{--quick-h:43px;--sheet-h:57px}
+ .mobile-page header{min-height:25px;max-height:28px}
+ .mobile-page .mobileTools{flex-basis:27px}
+ .mobile-page .mobileTools button{height:24px;min-height:24px;font-size:9px}
+ .mobile-page .mobileQuick button{min-height:35px;font-size:10px}
+ .mobile-page .mobileQuick button small{font-size:8px;margin-top:1px}
+ .mobile-page .mobileTabs{flex-basis:23px}
+ .mobile-page .touchViewport{min-height:57px}
+ .mobile-page .selectionPanel .unitrow{height:37px}
+ .mobile-page .selectionPanel .portrait{height:36px}
+ .mobile-page .selectionPanel .portraitVisual{display:none}
+ .mobile-page .selectionPanel #selectedList{height:37px}
+ .mobile-page .selectionPanel .unitTile{height:36px}
+ .mobile-page .selectionPanel .psiBlock{height:11px}
+ .mobile-page .selectionPanel .psiSkills{display:none}
+ .mobile-page .campaignPanel .campaignChoices button{height:48px}
+ .mobile-page #message{flex-basis:16px;height:16px;padding:1px 6px;font-size:9px;line-height:12px}
+}
