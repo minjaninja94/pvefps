@@ -155,6 +155,7 @@ window.addEventListener('keydown',ev=>{
  if([' ','arrowdown','arrowup','arrowleft','arrowright'].includes(k))ev.preventDefault();
  if(ev.repeat||modifierKeys.has(ev.key.toUpperCase()))return;
  if(ev.ctrlKey&&/^[1-5]$/.test(k)){
+  ev.preventDefault();
   groups[+k-1]=chosen().map(u=>u.id);notify(k+'번 부대 저장: '+groups[+k-1].length+'기');updateGroups();return;
  }
  if(/^[1-5]$/.test(k)){selected=new Set(groups[+k-1].filter(id=>allies().some(u=>u.id===id)));refreshSelection(true);return}
