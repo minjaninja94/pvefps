@@ -99,6 +99,74 @@ const TYPES={
  cannon:{name:'포토 캐논',race:'protoss',hp:100,shield:100,armor:0,damage:20,range:231,speed:0,r:32,cool:22/24,color:'#8bdfff',glyph:'✺'}
 };
 
+/* StarCraft: Brood War combat roster. Base HP/armor/damage are original values;
+ * movement and range are scaled to this standalone canvas game.
+ * Caster units are deliberately excluded from enemy waves. */
+Object.assign(TYPES,{
+ zergling:{name:'저글링',race:'zerg',hp:35,shield:0,armor:0,damage:5,range:35,speed:115,r:12,cool:.36,size:'small',weapon:'normal',canGround:true,canAir:false,color:'#ae8b62',glyph:'♞'},
+ dragoon:{name:'드라군',race:'protoss',hp:100,shield:80,armor:1,damage:20,range:162,speed:67,r:23,cool:1.25,size:'large',weapon:'explosive',canGround:true,canAir:true,projectile:true,color:'#6ca9f6',glyph:'✥'},
+ firebat:{name:'파이어뱃',race:'terran',hp:50,shield:0,armor:1,damage:16,range:48,speed:65,r:17,cool:.92,size:'small',weapon:'concussive',canGround:true,canAir:false,splash:50,color:'#f99452',glyph:'♨'},
+ vulture:{name:'벌처',race:'terran',hp:80,shield:0,armor:0,damage:20,range:184,speed:124,r:20,cool:1.25,size:'medium',weapon:'concussive',canGround:true,canAir:false,projectile:true,color:'#b1bac1',glyph:'➤'},
+ siegetank:{name:'시즈 탱크',race:'terran',hp:150,shield:0,armor:1,damage:70,range:305,speed:40,r:30,cool:3.13,size:'large',weapon:'explosive',canGround:true,canAir:false,projectile:true,splash:95,color:'#c3a173',glyph:'▰'},
+ wraith:{name:'레이스',race:'terran',hp:120,shield:0,armor:0,damage:8,airDamage:20,range:190,speed:110,r:23,cool:1.2,size:'large',flying:true,weapon:'normal',airWeapon:'explosive',canGround:true,canAir:true,projectile:true,color:'#a9b8dd',glyph:'✈'},
+ valkyrie:{name:'발키리',race:'terran',hp:200,shield:0,armor:2,damage:6,airDamage:48,range:204,speed:102,r:26,cool:2.6,size:'large',flying:true,weapon:'explosive',canGround:false,canAir:true,projectile:true,splash:75,color:'#f1bb9d',glyph:'✈'},
+ battlecruiser:{name:'배틀크루저',race:'terran',hp:500,shield:0,armor:3,damage:25,range:209,speed:39,r:38,cool:1.25,size:'large',flying:true,weapon:'normal',canGround:true,canAir:true,projectile:true,color:'#df9a76',glyph:'✚'},
+ darktemplar:{name:'다크 템플러',race:'protoss',hp:80,shield:40,armor:1,damage:40,range:36,speed:78,r:17,cool:1.25,size:'small',weapon:'normal',canGround:true,canAir:false,cloaked:true,color:'#b58cd4',glyph:'⛨'},
+ reaver:{name:'리버',race:'protoss',hp:100,shield:80,armor:0,damage:100,range:270,speed:29,r:32,cool:2.5,size:'large',weapon:'normal',canGround:true,canAir:false,projectile:true,splash:102,color:'#e0b7a2',glyph:'◈'},
+ scout:{name:'스카웃',race:'protoss',hp:150,shield:100,armor:0,damage:8,airDamage:28,range:160,speed:99,r:25,cool:1.25,size:'large',flying:true,weapon:'normal',airWeapon:'explosive',canGround:true,canAir:true,projectile:true,color:'#d4d6fa',glyph:'✦'},
+ corsair:{name:'커세어',race:'protoss',hp:100,shield:80,armor:1,damage:0,airDamage:5,range:182,speed:123,r:24,cool:.4,size:'medium',flying:true,weapon:'explosive',canGround:false,canAir:true,projectile:true,splash:65,color:'#83e1fa',glyph:'✥'},
+ carrier:{name:'캐리어',race:'protoss',hp:300,shield:150,armor:4,damage:48,range:285,speed:43,r:36,cool:2.3,size:'large',flying:true,weapon:'normal',canGround:true,canAir:true,projectile:true,color:'#f6da9d',glyph:'✧'},
+ lurker:{name:'러커',race:'zerg',hp:125,shield:0,armor:1,damage:20,range:213,speed:51,r:24,cool:1.54,size:'medium',weapon:'normal',canGround:true,canAir:false,pierce:true,splash:42,color:'#a584aa',glyph:'♠'},
+ mutalisk:{name:'뮤탈리스크',race:'zerg',hp:120,shield:0,armor:0,damage:9,range:130,speed:117,r:23,cool:1.25,size:'small',flying:true,weapon:'normal',canGround:true,canAir:true,bounce:true,projectile:true,color:'#af75b6',glyph:'❧'},
+ guardian:{name:'가디언',race:'zerg',hp:150,shield:0,armor:2,damage:20,range:269,speed:46,r:28,cool:1.25,size:'large',flying:true,weapon:'normal',canGround:true,canAir:false,projectile:true,color:'#b4a37a',glyph:'✸'},
+ devourer:{name:'디바우러',race:'zerg',hp:250,shield:0,armor:2,damage:0,airDamage:25,range:200,speed:76,r:30,cool:4.17,size:'large',flying:true,weapon:'explosive',canGround:false,canAir:true,projectile:true,splash:72,color:'#c789a8',glyph:'◆'},
+ scourge:{name:'스커지',race:'zerg',hp:25,shield:0,armor:0,damage:0,airDamage:110,range:28,speed:133,r:12,cool:1.2,size:'small',flying:true,weapon:'normal',canGround:false,canAir:true,suicide:true,color:'#b5e789',glyph:'↟'}
+});
+Object.assign(TYPES.marine,{size:'small',weapon:'normal',canGround:true,canAir:true,projectile:true});
+Object.assign(TYPES.zealot,{size:'small',weapon:'normal',canGround:true,canAir:false});
+Object.assign(TYPES.goliath,{size:'large',weapon:'normal',airWeapon:'explosive',airDamage:20,canGround:true,canAir:true,projectile:true});
+Object.assign(TYPES.hydra,{size:'medium',weapon:'explosive',canGround:true,canAir:true,projectile:true});
+Object.assign(TYPES.ultra,{size:'large',weapon:'normal',canGround:true,canAir:false});
+Object.assign(TYPES.archon,{size:'large',weapon:'normal',canGround:true,canAir:true,splash:58});
+Object.assign(TYPES.cannon,{size:'large',weapon:'normal',canGround:true,canAir:true,projectile:true});
+/* Official BW heroes have researched campaign stats below; when no official hero
+ * exists for a combat type, a labeled custom elite is used instead. */
+const HERO_STATS={
+ zergling:{name:'디바우링 원',hp:120,armor:3,damage:10,cool:.25},
+ hydra:{name:'헌터 킬러',hp:160,armor:2,damage:20},
+ ultra:{name:'토라스크',hp:800,armor:4,damage:50},
+ dragoon:{name:'피닉스 (드라군)',hp:240,shield:240,armor:3,damage:45,cool:.92},
+ zealot:{name:'피닉스 (질럿)',hp:240,shield:240,armor:2,damage:40},
+ marine:{name:'짐 레이너 (마린)',hp:200,armor:3,damage:18},
+ firebat:{name:'구이 몬타그',hp:160,armor:3,damage:16},
+ reaver:{name:'워브링어',hp:200,shield:400,armor:3,damage:125},
+ darktemplar:{name:'제라툴',hp:100,shield:400,armor:3,damage:100},
+ vulture:{name:'짐 레이너 (벌처)'},
+ siegetank:{name:'에드먼드 듀크'},
+ goliath:{name:'앨런 셰자르'},
+ wraith:{name:'톰 카잔스키'},
+ battlecruiser:{name:'하이페리온'},
+ scout:{name:'모조'},
+ carrier:{name:'간트리서'},
+ mutalisk:{name:'쿠쿨자 (뮤탈)'},
+ guardian:{name:'쿠쿨자 (가디언)'},
+ archon:{name:'태사다르/제라툴'},
+ corsair:{name:'라자갈'}
+};
+const WAVE_TIERS=[
+ ['marine','zergling','zealot','dragoon','firebat'],
+ ['hydra','vulture','darktemplar'],
+ ['goliath','mutalisk','lurker'],
+ ['ultra','siegetank','archon'],
+ ['reaver','wraith','scout'],
+ ['guardian','corsair'],
+ ['devourer','valkyrie'],
+ ['scourge','carrier'],
+ ['battlecruiser'],[]
+];
+const COMBAT_TYPES=WAVE_TIERS.flat();
+const wavePool=n=>[...new Set(WAVE_TIERS.slice(0,n).flat())];
+
 /* Supplied original clips: voices/<unit>-<ready|select|move|attack|death>.wav */
 const VOICE_TYPES=new Set(['darkarchon','archon','zealot','marine','goliath','hydra','ultra']);
 const VOICE_EVENTS=new Set(['ready','select','move','attack','death']);
@@ -182,21 +250,46 @@ const currentEnergy=()=>activeTeam?enemyEnergy:energy;
 const SKILL_COSTS={feedback:50,storm:75,mael:100,mind:150};
 function updateManaUI(){const value=clamp(currentEnergy(),0,250),hero=units.some(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon');$('psiFill').style.width=(value/250*100)+'%';$('psiValue').textContent=Math.floor(value)+' / 250';$('psiBlock').setAttribute('aria-valuenow',String(Math.floor(value)));for(const el of document.querySelectorAll('[data-skill]')){el.classList.toggle('ready',hero&&value>=SKILL_COSTS[el.dataset.skill]);el.classList.toggle('noHero',!hero);el.title=!hero?'다크 아콘이 없습니다':value>=SKILL_COSTS[el.dataset.skill]?'사용 가능':'마나 부족'}}
 function spendEnergy(n){if(activeTeam)enemyEnergy-=n;else energy-=n}
-function spawn(type,enemy,x,y){
+function spawn(type,enemy,x,y,isHero=false){
  const d=TYPES[type],u={id:++idCounter,type,enemy,x,y,hp:d.hp,max:d.hp,shield:d.shield||0,maxShield:d.shield||0,shieldDelay:0,face:0,attackTimer:0,cool:rnd(0,.4),stun:0,moving:false,fixed:type==='cannon',order:{type:type==='cannon'?'hold':enemy?'attackmove':'guard',x,y},orders:[],frameTime:rnd(0,10),lastAttacker:0,retaliateFor:0,roamFor:0};
+ 
+ if(isHero&&!u.fixed&&u.type!=='darkarchon'){
+  const spec=HERO_STATS[type]||{},hasOfficial=!!HERO_STATS[type];
+  u.hero=true;u.officialHero=hasOfficial;u.heroName=spec.name||'정예 '+d.name;
+  u.hp=u.max=spec.hp??Math.round(d.hp*2.25);
+  u.shield=u.maxShield=spec.shield??Math.round((d.shield||0)*2.25);
+  u.damage=spec.damage??Math.round(d.damage*1.8);
+  u.airDamage=spec.airDamage??Math.round((d.airDamage??d.damage)*1.8);
+  u.armor=spec.armor??(d.armor+2);u.attackCool=spec.cool??d.cool*.84;
+ }
  units.push(u);if(type==='darkarchon'&&u.enemy===activeTeam)playVoice(u,'ready',true);return u;
 }
 function startWave(){
  time=0;interval=0;spawns=[];
- if(wave===1)spawns=[{t:.8,type:'marine'},{t:2,type:'ultra'},{t:8,type:'marine'},{t:12,type:'zealot'},{t:17,type:'marine'}];
+ const pool=wavePool(wave),latest=WAVE_TIERS[wave-1]||[];
+ let lineup;
+ if(wave===10)lineup=[...COMBAT_TYPES];
  else {
-  const n=5+wave*3;
-  for(let i=0;i<n;i++){const pool=wave<4?['marine','zealot','hydra']:['marine','zealot','hydra','goliath','archon'];
-   spawns.push({t:1.2+i*Math.max(.7,1.55-wave*.04),type:(wave%2===0&&i===Math.floor(n*.52))?'ultra':pool[Math.floor(rnd(0,pool.length))]});
-  }
+  const extras=pool.filter(t=>!latest.includes(t)).sort(()=>Math.random()-.5).slice(0,Math.max(2,Math.min(7,Math.ceil(wave*.8))));
+  lineup=[...new Set([...latest,...(wave<4?['zergling','dragoon']:[]),...extras])];
  }
- notify('웨이브 '+wave+' 시작 · '+(wave===1?'울트라리스크를 정신 지배하세요':'병력을 지휘해 방어하세요'));
+ // Every featured type appears as one regular and one visibly marked hero.
+ const normalCount=Math.max(lineup.length,6+wave*3);
+ const roster=[...lineup.map(type=>({type,hero:true}))];
+ for(let i=0;i<normalCount;i++)roster.push({type:lineup[i%lineup.length],hero:false});
+ // Shuffle while reserving multiple entry lanes; all enemies appear immediately.
+ for(let i=roster.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[roster[i],roster[j]]=[roster[j],roster[i]]}
+ const rows=7;
+ roster.forEach((entry,i)=>{
+  const column=Math.floor(i/rows),row=i%rows;
+  const x=W-96-column*57+rnd(-9,9);
+  const y=88+row*(H-170)/(rows-1)+rnd(-9,9);
+  const u=spawn(entry.type,true,x,y,entry.hero);
+  u.order={type:'attackmove',x:HOME.x,y:HOME.y,target:null};
+ });
+ notify('웨이브 '+wave+' · '+roster.length+'기 전원 동시 출현! 붉은 오라 영웅 '+lineup.length+'기 중 강력한 유닛을 정신 지배하세요');
 }
+
 function reset(){
  units=[];selected.clear();groups=Array.from({length:5},()=>[]);effects=[];storms=[];corpses=[];projectiles=[];wave=1;energy=enemyEnergy=250;nexus=enemyBase=750;kills=conversions=0;idCounter=0;mode='select';paused=over=false;drag=null;reviveTimer=enemyReviveTimer=centerTimer=0;activeTeam=false;$('teamSwitch').textContent='조작: 청록';
  const hero=spawn('darkarchon',false,235,H/2);selected.add(hero.id);
