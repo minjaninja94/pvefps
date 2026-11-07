@@ -12,7 +12,7 @@ button{color:inherit;cursor:pointer}button:focus-visible{outline:2px solid #f1da
 main{max-width:1840px;margin:auto;padding:4px 10px 6px}header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px;flex-wrap:wrap}
 .brand{font-weight:900;letter-spacing:.09em;color:#e9d5a8;font-size:18px}.brand span{color:#c083ff;text-shadow:0 0 18px #ab4dff88}small,.sub{color:#a3a9b8;font-size:12px}.topstat{display:flex;gap:8px;flex-wrap:wrap}.chip{padding:7px 12px;border:1px solid #625849;background:linear-gradient(150deg,#282a30,#151922);border-radius:5px;font-size:12px}.chip b{color:#ace7ef;font-variant-numeric:tabular-nums}
 .frame{border:3px ridge #65798d;background:#0b0f16;box-shadow:0 15px 45px #000b,0 0 25px #5e9dbb33;position:relative}#field{display:block;width:100%;height:auto;cursor:crosshair;touch-action:none;background:#111722}
-.gamebar{display:grid;grid-template-columns:minmax(170px,1fr) minmax(300px,2.55fr) minmax(210px,1.3fr);gap:8px;min-height:224px;padding:6px;background:linear-gradient(155deg,#303b4f,#111b2a 55%,#2b2037);border-top:3px ridge #8cabc1;box-shadow:inset 0 8px 24px #05070d99}
+.gamebar{display:grid;grid-template-columns:minmax(170px,1fr) minmax(300px,2.55fr) minmax(210px,1.3fr);gap:8px;min-height:272px;padding:6px;background:linear-gradient(155deg,#303b4f,#111b2a 55%,#2b2037);border-top:3px ridge #8cabc1;box-shadow:inset 0 8px 24px #05070d99}
 .panel{border:2px ridge #657a93;background:linear-gradient(145deg,#152337,#222a39 55%,#171528);padding:8px;min-width:0;box-shadow:inset 0 0 18px #05050e99}.panelTitle{font-size:11px;letter-spacing:.17em;color:#c9def1;margin-bottom:7px;text-align:center;font-weight:800;border-bottom:1px solid #90a8c332;padding-bottom:5px}
 #minimap{display:block;width:100%;aspect-ratio:240/70;max-height:130px;border:2px solid #605f56;background:#0b1720;cursor:pointer}#mapLegend{font-size:11px;color:#94acbe;margin-top:5px}
 .unitrow{display:flex;gap:9px;min-height:132px}.portrait{width:124px;min-width:100px;display:flex;flex-direction:column;background:#0d121b;border:2px solid #6c6049;padding:6px;gap:4px}.portraitVisual{height:82px;display:grid;place-items:center;background:radial-gradient(circle,#4c394f,#121923);font-size:34px;font-weight:900;color:#dfa2d9;overflow:hidden}.portraitVisual img{width:100%;height:100%;object-fit:contain;image-rendering:auto}.portrait .label{font-size:11px;text-align:center;color:#e5dbb8}.hpbar{height:6px;background:#3e141d;border:1px solid #555}.hpbar>div{height:100%;background:linear-gradient(90deg,#2d9e5e,#9bde7e)}.shieldbar{background:#102942}.shieldbar>div{background:linear-gradient(90deg,#277de0,#8ce4ff)}
@@ -21,7 +21,7 @@ main{max-width:1840px;margin:auto;padding:4px 10px 6px}header{display:flex;align
 #groupBar{display:flex;gap:5px;align-items:center;margin-top:6px;flex-wrap:wrap}.groupbtn{padding:5px 9px;border:1px solid #676352;background:#161923;color:#cfc8b4;font-size:11px}.groupbtn.active{border-color:#6ee6a6;color:#b9ffd0}
 .commandGrid{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,48px);gap:5px}.command{border:2px outset #7888a2;background:linear-gradient(145deg,#2f405c,#151c2e 66%,#2c2240);font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:inset 0 0 7px #607c9d55}.command:hover{filter:brightness(1.2)}.command.active{border-color:#f0a9d9;background:#5d3265;box-shadow:0 0 8px #c369f255,inset 0 0 14px #cc74ce55}.command small{font-size:10px;color:#c6b8d0}.command:disabled{opacity:.32;cursor:default}
 #message{min-height:24px;padding:6px 0;color:#dfcda5;font-size:13px}.help{color:#b1b5bf;font-size:12px;line-height:1.5;margin:4px 0 0}
-@media(min-width:1400px) and (min-height:850px){#field{height:min(52vh,530px)}.frame{max-height:calc(100vh - 125px)}.gamebar{height:224px}}
+@media(min-width:1400px) and (min-height:850px){#field{height:min(52vh,530px)}.frame{max-height:calc(100vh - 125px)}.gamebar{height:278px}}
 @media(max-width:820px){.gamebar{grid-template-columns:1fr 1fr;min-height:0}.mapPanel{grid-column:1}.selectionPanel{grid-column:1/-1;grid-row:2}.commandsPanel{grid-column:2;grid-row:1}.portrait{width:95px}.commandGrid{grid-template-rows:repeat(3,43px)}#selectedList{grid-template-columns:repeat(8,minmax(0,1fr))}.topstat{gap:4px}}
 
 /* StarCraft Remastered-inspired, original CSS control-card treatment */
@@ -138,19 +138,19 @@ const HERO_STATS={
  dragoon:{name:'피닉스 (드라군)',hp:240,shield:240,armor:3,damage:45,cool:.92},
  zealot:{name:'피닉스 (질럿)',hp:240,shield:240,armor:2,damage:40},
  marine:{name:'짐 레이너 (마린)',hp:200,armor:3,damage:18},
- firebat:{name:'구이 몬타그',hp:160,armor:3,damage:16},
+ firebat:{name:'구이 몬타그',hp:160,armor:3,damage:32},
  reaver:{name:'워브링어',hp:200,shield:400,armor:3,damage:125},
- darktemplar:{name:'제라툴',hp:100,shield:400,armor:3,damage:100},
- vulture:{name:'짐 레이너 (벌처)'},
- siegetank:{name:'에드먼드 듀크'},
- goliath:{name:'앨런 셰자르'},
+ darktemplar:{name:'제라툴',hp:60,shield:400,armor:0,damage:100,cool:.92},
+ vulture:{name:'짐 레이너 (벌처)',hp:300,armor:3,damage:30,cool:.92},
+ siegetank:{name:'에드먼드 듀크',hp:400,armor:3,damage:150},
+ goliath:{name:'앨런 셰자르',hp:300,armor:3,damage:24,airDamage:40},
  wraith:{name:'톰 카잔스키'},
  battlecruiser:{name:'하이페리온'},
  scout:{name:'모조'},
  carrier:{name:'간트리서'},
  mutalisk:{name:'쿠쿨자 (뮤탈)'},
  guardian:{name:'쿠쿨자 (가디언)'},
- archon:{name:'태사다르/제라툴'},
+ archon:{name:'태사다르/제라툴',hp:100,shield:800,armor:3,damage:60},
  corsair:{name:'라자갈'}
 };
 const WAVE_TIERS=[
@@ -226,7 +226,10 @@ function spriteFrame(u,width){
  const sheet=spriteSheets[u.type];if(!sheet?.complete||!sheet.naturalWidth)return false;
  const face=((u.face||0)%(2*Math.PI)+2*Math.PI)%(2*Math.PI),dir=atlasDirection(Math.round(face*8/Math.PI)%16);
  const frame=u.attackTimer>0?10+Math.min(2,Math.floor((1-u.attackTimer/.3)*3)):u.moving?4+Math.floor(u.frameTime*10)%6:Math.floor(u.frameTime*4)%4;
- const cw=sheet.width/16,ch=sheet.height/16,center=spriteCenters[u.type]?.[dir]?.[frame]||{x:0,y:0};
+ const cw=sheet.width/16,ch=sheet.height/16,centers=spriteCenters[u.type]?.[dir];
+ // Lock the visual center to the idle pose: a frame-by-frame alpha centroid
+ // would cause large attacks/deaths to throw the sprite off its anchor point.
+ const center=centers?{x:centers.slice(0,4).reduce((n,p)=>n+p.x,0)/4,y:centers.slice(0,4).reduce((n,p)=>n+p.y,0)/4}:{x:0,y:0};
  const sx=Math.ceil(frame*cw+1),sy=Math.ceil(dir*ch+1),sw=Math.floor((frame+1)*cw-1)-sx,sh=Math.floor((dir+1)*ch-1)-sy;
  const height=width*ch/cw;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
  ctx.drawImage(sheet,sx,sy,sw,sh,-width/2-center.x*width/cw,-height*.73-center.y*height/ch,width,height);return true;
@@ -500,7 +503,7 @@ function applyImpact(source,target,amount,weapon='normal',splash=0,bounce=false,
 }
 function strike(u,t){
  const d=TYPES[u.type],air=!t.core&&!!TYPES[t.type].flying;
- const amount=air?(u.airDamage??d.airDamage??u.damage??d.damage):(u.damage??d.damage);
+ const amount=air?(u.airDamage??d.airDamage??u.damage??d.damage):(t.core&&d.canGround===false?Math.max(1,(u.airDamage??d.airDamage??u.damage??d.damage)*.5):(u.damage??d.damage));
  const weapon=air?(d.airWeapon||d.weapon||'normal'):(d.weapon||'normal');
  u.cool=u.attackCool??d.cool;u.attackTimer=u.fixed?.58:.3;
  if(u.enemy===activeTeam&&!u.neutral)playVoice(u,'attack');
@@ -587,7 +590,7 @@ function drawUnitAccents(u,d){
 
 function drawPrototypeUnit(u,d,w){
  // Animated Canvas-based fallback silhouettes for roster members awaiting individual art atlases.
- if(SPRITE_TYPES.includes(u.type)||u.fixed)return false;
+ if(u.fixed||u.type==='darkarchon')return false;
  ctx.save();const pulse=Math.sin(u.frameTime*8),r=Math.max(9,w*.37);
  if(d.flying)ctx.translate(0,-8+Math.sin(u.frameTime*4)*3);
  else ctx.translate(0,u.moving?Math.abs(pulse)*2:0);
