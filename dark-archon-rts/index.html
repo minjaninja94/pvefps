@@ -294,30 +294,38 @@ function spawn(type,enemy,x,y,isHero=false){
  }
  units.push(u);if(type==='darkarchon'&&u.enemy===activeTeam)playVoice(u,'ready',true);return u;
 }
+/* Campaign balance: one hero in early waves, up to four in the finale.
+ * Everyone enters together; heroes are deliberate high-value mind-control targets. */
+const CAMPAIGN_WAVES=[
+ {heroes:['zergling'],ordinary:{zergling:4,marine:2}},
+ {heroes:['marine'],ordinary:{zergling:4,marine:2,zealot:1}},
+ {heroes:['dragoon'],ordinary:{zergling:4,marine:3,firebat:1,zealot:2}},
+ {heroes:['firebat','hydra'],ordinary:{zergling:4,marine:3,hydra:2,zealot:2}},
+ {heroes:['zealot','lurker'],ordinary:{zergling:4,marine:2,hydra:2,goliath:1,vulture:2,dragoon:1}},
+ {heroes:['mutalisk','archon'],ordinary:{zergling:5,marine:2,hydra:2,goliath:1,mutalisk:2,dragoon:1}},
+ {heroes:['vulture','reaver','goliath'],ordinary:{zergling:5,marine:3,hydra:2,vulture:1,goliath:1,wraith:1,siegetank:1}},
+ {heroes:['siegetank','wraith','darktemplar'],ordinary:{zergling:5,marine:2,zealot:2,hydra:2,goliath:1,lurker:1,scout:1,corsair:1}},
+ {heroes:['guardian','scout','ultra'],ordinary:{zergling:4,marine:2,hydra:2,dragoon:2,goliath:1,firebat:1,guardian:1,valkyrie:1,devourer:1,ultra:1}},
+ {heroes:['carrier','battlecruiser','reaver','dragoon'],ordinary:{zergling:4,marine:2,hydra:2,dragoon:2,goliath:1,mutalisk:2,ultra:1,scourge:2,carrier:1,battlecruiser:1,guardian:1,vulture:1}}
+];
+const WAVE_COUNT=CAMPAIGN_WAVES.length;
 function startWave(){
  time=0;interval=0;spawns=[];
- const pool=wavePool(wave),latest=WAVE_TIERS[wave-1]||[];
- let lineup;
- if(wave===10)lineup=[...COMBAT_TYPES];
- else {
-  const extras=pool.filter(t=>!latest.includes(t)).sort(()=>Math.random()-.5).slice(0,Math.max(2,Math.min(7,Math.ceil(wave*.8))));
-  lineup=[...new Set([...latest,...(wave<4?['zergling','dragoon']:[]),...extras])];
- }
- // Every featured type appears as one regular and one visibly marked hero.
- const normalCount=Math.max(lineup.length,6+wave*3);
- const roster=[...lineup.map(type=>({type,hero:true}))];
- for(let i=0;i<normalCount;i++)roster.push({type:lineup[i%lineup.length],hero:false});
- // Shuffle while reserving multiple entry lanes; all enemies appear immediately.
+ const config=CAMPAIGN_WAVES[wave-1];
+ if(!config)throw Error('Invalid campaign wave '+wave);
+ const roster=[];
+ for(const [type,count] of Object.entries(config.ordinary))for(let i=0;i<count;i++)roster.push({type,hero:false});
+ for(const type of config.heroes)roster.push({type,hero:true});
+ // All members spawn on the same simulation tick, from different lanes.
  for(let i=roster.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[roster[i],roster[j]]=[roster[j],roster[i]]}
- const rows=7;
+ const rows=8;
  roster.forEach((entry,i)=>{
   const column=Math.floor(i/rows),row=i%rows;
-  const x=W-96-column*57+rnd(-9,9);
-  const y=88+row*(H-170)/(rows-1)+rnd(-9,9);
+  const x=W-92-column*52+rnd(-6,6),y=82+row*(H-164)/(rows-1)+rnd(-6,6);
   const u=spawn(entry.type,true,x,y,entry.hero);
   u.order={type:'attackmove',x:HOME.x,y:HOME.y,target:null};
  });
- notify('웨이브 '+wave+' · '+roster.length+'기 전원 동시 출현! 붉은 오라 영웅 '+lineup.length+'기 중 강력한 유닛을 정신 지배하세요');
+ notify('웨이브 '+wave+'/'+WAVE_COUNT+' · 적 '+roster.length+'기 전원 동시 출현 · 붉은 영웅 '+config.heroes.length+'기! 정신 지배할 대상을 선택하세요');
 }
 
 function reset(){
@@ -587,7 +595,7 @@ function tick(dt){
  units=units.filter(u=>u.hp>0);const prev=selected.size;selected=new Set([...selected].filter(id=>units.some(u=>u.id===id&&friendly(u))));if(selected.size!==prev)refreshSelection(true);
  if(nexus<=0){over=true;notify('패배 · 넥서스가 파괴됐습니다')}
  if(battleMode==='duel'&&enemyBase<=0){over=true;notify('승리 · 상대 기지를 파괴했습니다')}
- if(battleMode==='defense'&&!spawns.length&&!enemies().length){interval+=dt;if(interval>3){if(wave===10){over=true;notify('승리 · 10웨이브 격파')}else{wave++;energy=Math.min(250,energy+85);for(const u of allies())u.hp=Math.min(u.max,u.hp+u.max*.2);startWave()}}}
+ if(battleMode==='defense'&&!spawns.length&&!enemies().length){interval+=dt;if(interval>=8){if(wave===WAVE_COUNT){over=true;notify('승리! 마지막 영웅 웨이브까지 모두 방어했습니다')}else{wave++;energy=Math.min(250,energy+50);for(const u of allies()){u.hp=Math.min(u.max,u.hp+u.max*.12);u.shield=Math.min(u.maxShield,u.shield+u.maxShield*.25)}startWave()}}}
  else interval=0;
 }
 
@@ -721,7 +729,7 @@ function draw(){
   ctx.restore();
  }
  if(mode!=='select'){ctx.textAlign='left';ctx.font='bold 17px sans-serif';ctx.fillStyle='#ffe6b6';ctx.fillText({mind:'정신 지배: 적을 클릭',mael:'마엘스트롬: 지점 클릭',storm:'사이오닉 스톰: 아군 피해',feedback:'피드백: 상대 다크 아콘 클릭',attackmove:'공격 이동: 지점 클릭'}[mode],20,34)}
- if(interval>0&&!over&&battleMode==='defense'){ctx.font='bold 22px sans-serif';ctx.fillStyle='#dccca4';ctx.textAlign='center';ctx.fillText('WAVE CLEAR · +85 에너지',W/2,82)}
+ if(interval>0&&!over&&battleMode==='defense'){ctx.font='bold 22px sans-serif';ctx.fillStyle='#dccca4';ctx.textAlign='center';ctx.fillText('WAVE CLEAR · 다음 출현까지 '+Math.ceil(Math.max(0,8-interval))+'초 · PSI +50 / 병력 회복',W/2,82)}
  if(over||paused){ctx.fillStyle='#090a16d9';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.fillStyle='#f1b3d3';ctx.font='bold 44px sans-serif';ctx.fillText(paused?'PAUSED':nexus>0?'VICTORY':'DEFEAT',W/2,H/2);ctx.fillStyle='#d1c4b6';ctx.font='17px sans-serif';ctx.fillText('새 전투 버튼으로 재시작',W/2,H/2+42)}
 }
 function drawMinimap(){
@@ -781,7 +789,7 @@ function updateCommands(){
  }
 }
 function updateUI(){
- $('wave').textContent=battleMode==='duel'?'쟁탈전':wave+' / 10';$('energy').textContent=Math.floor(currentEnergy())+' / 250';$('nexusHP').textContent=Math.ceil(nexus)+' / 750';$('enemyBaseHP').textContent=Math.ceil(enemyBase)+' / 750';const activeTimer=activeTeam?enemyReviveTimer:reviveTimer;$('heroStatus').textContent=units.some(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon')?'전투 중':activeTimer>0?'생산 '+Math.ceil(activeTimer)+'초':'재생산 가능';
+ $('wave').textContent=battleMode==='duel'?'쟁탈전':wave+' / '+WAVE_COUNT;$('energy').textContent=Math.floor(currentEnergy())+' / 250';$('nexusHP').textContent=Math.ceil(nexus)+' / 750';$('enemyBaseHP').textContent=Math.ceil(enemyBase)+' / 750';const activeTimer=activeTeam?enemyReviveTimer:reviveTimer;$('heroStatus').textContent=units.some(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon')?'전투 중':activeTimer>0?'생산 '+Math.ceil(activeTimer)+'초':'재생산 가능';
  $('army').textContent=allies().filter(u=>!u.fixed).length+' / '+(enemies().filter(u=>!u.fixed).length+spawns.length);$('kills').textContent=kills+' / '+conversions;$('heroCount').textContent=units.filter(u=>u.enemy!==activeTeam&&!u.neutral&&u.hero&&u.hp>0).length;
  refreshSelection();updateCommands();updateManaUI();drawMinimap();
 }
