@@ -27,6 +27,7 @@ main{max-width:1840px;margin:auto;padding:4px 10px 6px}header{display:flex;align
 /* StarCraft Remastered-inspired, original CSS control-card treatment */
 a{color:#94c8f0}a:hover{color:#d6ecff}.unitTile:hover{border-color:#95d4ed}.unitTile:active{filter:brightness(1.4)}.groupbtn:hover{border-color:#a5c9f5}#message{background:#111927;border-left:3px solid #a87bc7;padding:8px 12px;letter-spacing:.02em}summary:hover{color:#fff!important}.portraitVisual{background:radial-gradient(circle at 50% 44%,#4c3b65,#19253c 58%,#0e1321)}
 
+.soundbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.soundbar label{display:flex;align-items:center;gap:4px;color:#d1d5db;font-size:11px}.soundbar input[type=range]{width:64px;accent-color:#b781db;cursor:pointer}.soundbar button{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -42,7 +43,7 @@ a{color:#94c8f0}a:hover{color:#d6ecff}.unitTile:hover{border-color:#95d4ed}.unit
   <div class="chip">병력 <b id="army">1 / 0</b></div>
   <div class="chip">격파 / 지배 <b id="kills">0 / 0</b></div>
  </div>
- <div><button id="battleMode" class="groupbtn">모드: 디펜스</button><button id="teamSwitch" class="groupbtn" hidden>조작: 청록</button><button id="pause" class="groupbtn">일시정지</button><button id="restart" class="groupbtn">새 전투</button></div>
+ <div class="soundbar"><button id="soundToggle" class="groupbtn" aria-pressed="true" title="BGM과 유닛 음성 켜기/끄기">🔊 소리 켜짐</button><label>BGM <input id="bgmVol" type="range" min="0" max="100" value="28" aria-label="배경음악 음량"></label><label>VOICE <input id="voiceVol" type="range" min="0" max="100" value="88" aria-label="유닛 음성 음량"></label><button id="battleMode" class="groupbtn">모드: 디펜스</button><button id="teamSwitch" class="groupbtn" hidden>조작: 청록</button><button id="pause" class="groupbtn">일시정지</button><button id="restart" class="groupbtn">새 전투</button></div>
 </header>
 <section class="frame" aria-label="RTS 게임 화면">
  <canvas id="field" width="2400" height="700" aria-label="마컨 디펜스 전장"></canvas>
@@ -72,7 +73,7 @@ a{color:#94c8f0}a:hover{color:#d6ecff}.unitTile:hover{border-color:#95d4ed}.unit
  </div>
 </section>
 <div id="message" role="status">다크 아콘을 선택하고 정신 지배를 사용하십시오.</div>
-<p class="help">좌클릭 선택 · 드래그 다중 선택 · 우클릭 이동/공격 · A 공격 이동 · R 상단 우회 진격 · M 정신 지배(상대 다크 아콘 제외) · E 마엘스트롬 · T 사이오닉 스톰(아군 피해) · F 피드백 · Esc 취소 · 다크 아콘 사망 후 넥서스 재생산 60초 · Space 일시정지</p>
+<p class="help">좌클릭 선택 · 드래그 다중 선택 · 우클릭 이동/공격 · A 공격 이동 · R 상단 우회 진격 · M 정신 지배(상대 다크 아콘 제외) · E 마엘스트롬 · T 사이오닉 스톰(아군 피해) · F 피드백 · Esc 취소 · 다크 아콘 사망 후 넥서스 재생산 60초 · Space 일시정지 · BGM/VOICE 개별 음량 조절 · 브라우저 정책상 첫 클릭이나 키 입력 후 소리 시작</p>
 </main>
 <script>
 
@@ -90,6 +91,38 @@ const TYPES={
  archon:{name:'집정관',race:'protoss',hp:10,shield:350,armor:0,damage:30,range:66,speed:67,r:25,cool:.83,color:'#aa9aea',glyph:'✧'},
  cannon:{name:'포토 캐논',race:'protoss',hp:100,shield:100,armor:0,damage:20,range:231,speed:0,r:32,cool:22/24,color:'#8bdfff',glyph:'✺'}
 };
+
+/* Supplied original clips: voices/<unit>-<ready|select|move|attack|death>.wav */
+const VOICE_TYPES=new Set(['darkarchon','archon','zealot','marine','goliath','hydra','ultra']);
+const VOICE_EVENTS=new Set(['ready','select','move','attack','death']);
+const bgm=new Audio('Warping_the_Citadel.mp3');
+bgm.loop=true;bgm.preload='none';bgm.volume=.28;
+let audioUnlocked=false,soundMuted=false,voiceVolume=.88,lastVoiceAt=-1e9;
+const voiceClips=new Map(),voiceCooldown=new Map(),voiceMissing=new Set();
+function playVoice(u,event,force=false){
+ if(!audioUnlocked||soundMuted||!u||!VOICE_TYPES.has(u.type)||!VOICE_EVENTS.has(event))return;
+ const key=u.type+'-'+event,now=performance.now(),gap=event==='attack'?3200:event==='move'?700:event==='select'?350:event==='death'?500:900;
+ if(now-(voiceCooldown.get(key)??-1e9)<gap||(!force&&now-lastVoiceAt<220)||voiceMissing.has(key))return;
+ voiceCooldown.set(key,now);lastVoiceAt=now;
+ let clip=voiceClips.get(key);
+ if(!clip){clip=new Audio('voices/'+key+'.wav');clip.preload='auto';clip.addEventListener('error',()=>voiceMissing.add(key),{once:true});voiceClips.set(key,clip)}
+ try{clip.pause();clip.currentTime=0;clip.volume=voiceVolume;const p=clip.play();if(p&&p.catch)p.catch(()=>{})}catch{}
+}
+function unlockAudio(){
+ if(audioUnlocked)return;
+ audioUnlocked=true;
+ if(!soundMuted){const p=bgm.play();if(p&&p.catch)p.catch(()=>{});const first=chosen()[0];if(first)playVoice(first,'ready',true)}
+}
+document.addEventListener('pointerdown',unlockAudio,{capture:true,once:true});
+document.addEventListener('keydown',unlockAudio,{capture:true,once:true});
+$('soundToggle').onclick=()=>{
+ soundMuted=!soundMuted;bgm.muted=soundMuted;
+ $('soundToggle').textContent=soundMuted?'🔇 음소거':'🔊 소리 켜짐';
+ $('soundToggle').setAttribute('aria-pressed',String(!soundMuted));
+ if(!soundMuted){unlockAudio();const p=bgm.play();if(p&&p.catch)p.catch(()=>{})}else bgm.pause();
+};
+$('bgmVol').oninput=e=>{bgm.volume=Number(e.target.value)/100};
+$('voiceVol').oninput=e=>{voiceVolume=Number(e.target.value)/100;for(const clip of voiceClips.values())clip.volume=voiceVolume};
 
 /* Original generated 16 x 16 atlases. The unfinished last row is excluded;
  * direction 15 reuses row 0. Columns: idle 0-3, move 4-9, attack 10-12, death 13-15. */
@@ -142,7 +175,7 @@ const currentEnergy=()=>activeTeam?enemyEnergy:energy;
 function spendEnergy(n){if(activeTeam)enemyEnergy-=n;else energy-=n}
 function spawn(type,enemy,x,y){
  const d=TYPES[type],u={id:++idCounter,type,enemy,x,y,hp:d.hp,max:d.hp,shield:d.shield||0,maxShield:d.shield||0,shieldDelay:0,face:0,attackTimer:0,cool:rnd(0,.4),stun:0,moving:false,fixed:type==='cannon',order:{type:type==='cannon'?'hold':enemy?'attackmove':'guard',x,y},orders:[],frameTime:rnd(0,10),lastAttacker:0,retaliateFor:0,roamFor:0};
- units.push(u);return u;
+ units.push(u);if(type==='darkarchon'&&u.enemy===activeTeam)playVoice(u,'ready',true);return u;
 }
 function startWave(){
  time=0;interval=0;spawns=[];
@@ -192,6 +225,7 @@ function command(type,p,target=null,append=false){
   else{u.order=o;u.orders=[]}
  });
  particle(p.x,p.y,type==='attackmove'?'#ffa58c':'#7bebc2',28);
+  playVoice(arr[0],type==='attack'?'attack':'move');
  notify((append?'예약: ':'')+({move:'이동',attack:'집중 공격',attackmove:'공격 이동'}[type]||'명령')+' · '+arr.length+'기');
  refreshSelection();
 }
@@ -203,11 +237,11 @@ function flank(){
   u.order={type:'move',x:u.x,y:laneY,target:null};
   u.orders=[{type:'move',x:u.enemy?315:W-315,y:laneY,target:null},{type:'attackmove',x:base.x,y:base.y,target:null}];
  }
- notify('상단 중립 없는 길로 우회 진격 · '+arr.length+'기');refreshSelection();
+ notify('상단 중립 없는 길로 우회 진격 · '+arr.length+'기');playVoice(arr[0],'move');refreshSelection();
 }
 function stop(type){
  const arr=chosen();for(const u of arr){u.order={type,x:u.x,y:u.y};u.orders=[]}
- notify((type==='stop'?'정지':'위치 사수')+' · '+arr.length+'기');refreshSelection();
+ notify((type==='stop'?'정지':'위치 사수')+' · '+arr.length+'기');playVoice(arr[0],'move');refreshSelection();
 }
 function mind(target){
  const hero=units.find(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon');
@@ -217,7 +251,7 @@ function mind(target){
  if(distance(hero,target)>264){notify('사거리 밖 · 다크 아콘 이동 필요');return}
  if(currentEnergy()<150){notify('에너지 부족');return}
  spendEnergy(150);target.enemy=activeTeam;target.neutral=false;target.stun=0;target.order={type:'guard',x:target.x,y:target.y};target.orders=[];conversions++;selected.clear();selected.add(target.id);
- particle(target.x,target.y,'#ff77b4',115);notify(TYPES[target.type].name+' 정신 지배 성공 · 우클릭으로 직접 지휘하세요');
+ particle(target.x,target.y,'#ff77b4',115);playVoice(target,'ready',true);notify(TYPES[target.type].name+' 정신 지배 성공 · 우클릭으로 직접 지휘하세요');
  mode='select';refreshSelection(true);
 }
 function mael(p){
@@ -225,14 +259,14 @@ function mael(p){
  if(!hero||distance(hero,p)>330){notify('마엘스트롬 사거리 밖');return}
  if(currentEnergy()<100){notify('에너지 부족');return}
  spendEnergy(100);for(const u of units.filter(u=>u.hp>0&&hostile(u)))if(distance(u,p)<90&&u.type!=='goliath')u.stun=4;
- particle(p.x,p.y,'#b5a0ff',140);notify('마엘스트롬!');mode='select';updateCommands();
+ particle(p.x,p.y,'#b5a0ff',140);playVoice(hero,'attack');notify('마엘스트롬!');mode='select';updateCommands();
 }
 function storm(p){
  const hero=units.find(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon');
  if(!hero||distance(hero,p)>297){notify('사이오닉 스톰 사거리 밖');return}
  if(currentEnergy()<75){notify('에너지 부족');return}
  spendEnergy(75);storms.push({x:p.x,y:p.y,ttl:3.2,pulse:0,caster:hero.id});
- particle(p.x,p.y,'#a8b8ff',96);notify('사이오닉 스톰 · 범위 안의 아군도 피해를 받습니다');mode='select';updateCommands();
+ particle(p.x,p.y,'#a8b8ff',96);playVoice(hero,'attack');notify('사이오닉 스톰 · 범위 안의 아군도 피해를 받습니다');mode='select';updateCommands();
 }
 function feedback(target){
  const hero=units.find(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon');
@@ -240,7 +274,7 @@ function feedback(target){
  if(distance(hero,target)>330){notify('피드백 사거리 밖');return}
  if(currentEnergy()<50){notify('에너지 부족');return}
  spendEnergy(50);const power=activeTeam?energy:enemyEnergy;if(activeTeam)energy=0;else enemyEnergy=0;
- damage(target,power,hero);particle(target.x,target.y,'#e8a7ff',80);notify('피드백 · 상대 에너지 '+Math.floor(power)+' 피해');mode='select';updateCommands();
+ damage(target,power,hero);playVoice(hero,'attack');particle(target.x,target.y,'#e8a7ff',80);notify('피드백 · 상대 에너지 '+Math.floor(power)+' 피해');mode='select';updateCommands();
 }
 function spawnNeutral(){
  const pool=['marine','zealot','hydra','goliath','ultra','archon'];
@@ -307,7 +341,7 @@ window.addEventListener('keydown',ev=>{
 $('pause').onclick=()=>{paused=!paused;notify(paused?'일시정지':'재개');$('pause').textContent=paused?'재개':'일시정지'};
 $('restart').onclick=reset;
 $('battleMode').onclick=()=>{battleMode=battleMode==='defense'?'duel':'defense';$('battleMode').textContent='모드: '+(battleMode==='duel'?'로컬 2인 쟁탈전':'디펜스');$('enemyBaseChip').hidden=battleMode!=='duel';$('teamSwitch').hidden=battleMode!=='duel';reset()};
-$('teamSwitch').onclick=()=>{activeTeam=!activeTeam;selected.clear();groups=Array.from({length:5},()=>[]);mode='select';$('teamSwitch').textContent='조작: '+(activeTeam?'주홍':'청록');notify((activeTeam?'주홍':'청록')+' 플레이어 조작 중');refreshSelection(true)};
+$('teamSwitch').onclick=()=>{activeTeam=!activeTeam;selected.clear();groups=Array.from({length:5},()=>[]);mode='select';$('teamSwitch').textContent='조작: '+(activeTeam?'주홍':'청록');notify((activeTeam?'주홍':'청록')+' 플레이어 조작 중');const hero=units.find(u=>u.hp>0&&u.enemy===activeTeam&&u.type==='darkarchon');if(hero)playVoice(hero,'ready',true);refreshSelection(true)};
 document.querySelectorAll('[data-command]').forEach(btn=>btn.onclick=()=>{
  const cmd=btn.dataset.command;
  if(cmd==='move'){setMode('attackmove');notify('공격 이동: 지점 클릭')}
@@ -336,10 +370,11 @@ function damage(t,n,source=null){
  if(source&&hostileFor(t,source)&&t.order.type!=='hold'){t.lastAttacker=source.id;t.retaliateFor=4}
  let amount=n;t.shieldDelay=7;if(t.shield>0){const absorbed=Math.min(t.shield,amount);t.shield-=absorbed;amount-=absorbed}
  if(amount>0)t.hp-=Math.max(1,amount-(TYPES[t.type].armor||0));
- if(t.hp<=0){corpses.push({type:t.type,x:t.x,y:t.y,face:t.face,age:0});if(t.enemy)kills++}
+ if(t.hp<=0){if(!t.neutral&&t.enemy===activeTeam)playVoice(t,'death',true);corpses.push({type:t.type,x:t.x,y:t.y,face:t.face,age:0});if(t.enemy)kills++}
 }
 function strike(u,t){
  const d=TYPES[u.type];u.cool=d.cool;u.attackTimer=u.fixed?.58:.3;
+ if(u.enemy===activeTeam&&!u.neutral)playVoice(u,'attack');
  if(u.fixed){projectiles.push({x:u.x,y:u.y-30,targetId:t.id,ownerId:u.id,damage:d.damage,enemy:u.enemy});particle(u.x,u.y-30,u.enemy?'#ffb4a4':'#9cefff',15);return}
  damage(t,d.damage,u);
  particle(t.x,t.y,u.neutral?'#f4d66b':u.enemy?'#ff8d83':'#88e8f3',u.type==='ultra'?42:18);
@@ -495,7 +530,8 @@ function updateGroups(){
 }
 function refreshSelection(force=false){
  const arr=chosen(),stamp=arr.map(u=>u.id).join(',');
- if(stamp!==selectionStamp||force){
+ if(stamp!==selectionStamp&&arr.length)playVoice(arr[0],'select');
+  if(stamp!==selectionStamp||force){
   selectionStamp=stamp;
   const grid=$('selectedList');grid.innerHTML='';
   const visible=arr.slice(0,16);
