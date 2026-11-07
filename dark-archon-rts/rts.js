@@ -12,7 +12,17 @@ const TYPES={
  goliath:{name:'골리앗',race:'terran',hp:230,damage:24,range:198,speed:44,r:23,cool:1.15,color:'#99bdaa',glyph:'▤'},
  archon:{name:'집정관',race:'protoss',hp:340,damage:36,range:154,speed:52,r:25,cool:1.2,color:'#aa9aea',glyph:'✧'}
 };
-const spriteImages={},spriteSheets={},spriteProblems={},spriteCrops={},spriteUrls={};
+const spriteImages={},spriteSheets={},spriteProblems={},spriteCrops={},spriteUrls={},spriteThumbs={};
+function updateSpriteThumb(type){
+ const im=spriteImages[type];if(!im||!im.width)return;
+ const crop=spriteCrops[type],ok=crop&&crop.w>0&&crop.h>0&&crop.x>=0&&crop.y>=0&&crop.x+crop.w<=im.width&&crop.y+crop.h<=im.height;
+ const sx=ok?crop.x:0,sy=ok?crop.y:0,sw=ok?crop.w:im.width,sh=ok?crop.h:im.height;
+ const el=document.createElement('canvas');el.width=96;el.height=96;const q=el.getContext('2d');
+ const scale=Math.min(88/sw,88/sh);const dw=sw*scale,dh=sh*scale;
+ q.drawImage(im,sx,sy,sw,sh,(96-dw)/2,(96-dh)/2,dw,dh);
+ try{spriteThumbs[type]=el.toDataURL('image/png')}catch{spriteThumbs[type]=im.src}
+}
+
 for(const key in TYPES){
  const img=new Image();img.onload=()=>{spriteImages[key]=img};img.onerror=()=>{spriteProblems[key]=true};
  img.src='assets/units/'+key+'.png';
@@ -304,7 +314,7 @@ function refreshSelection(force=false){
   const visible=arr.slice(0,16);
   for(const u of visible){
    const tile=document.createElement('button');tile.className='unitTile';tile.title=TYPES[u.type].name;
-   if(spriteImages[u.type]){const img=document.createElement('img');img.src=spriteImages[u.type].src;img.alt=TYPES[u.type].name;tile.appendChild(img)}
+   if(spriteImages[u.type]){const img=document.createElement('img');img.src=spriteThumbs[u.type]||spriteImages[u.type].src;img.alt=TYPES[u.type].name;tile.appendChild(img)}
    else tile.innerHTML=tileIcon(u.type);
    const text=document.createElement('span');text.className='short';text.textContent=Math.max(0,Math.ceil(u.hp));tile.appendChild(text);
    const bar=document.createElement('div');bar.className='uhp';bar.style.width=(clamp(u.hp/u.max,0,1)*100)+'%';tile.appendChild(bar);
@@ -316,7 +326,7 @@ function refreshSelection(force=false){
  const first=arr[0],portrait=$('portraitVisual');
  portrait.replaceChildren();
  if(first){
-  if(spriteImages[first.type]){const img=document.createElement('img');img.src=spriteImages[first.type].src;img.alt=TYPES[first.type].name;portrait.appendChild(img)}
+  if(spriteImages[first.type]){const img=document.createElement('img');img.src=spriteThumbs[first.type]||spriteImages[first.type].src;img.alt=TYPES[first.type].name;portrait.appendChild(img)}
   else {portrait.textContent=TYPES[first.type].glyph;portrait.style.color=TYPES[first.type].color}
   $('portraitName').textContent=arr.length>1?TYPES[first.type].name+' 외 '+(arr.length-1)+'기':TYPES[first.type].name;
   $('portraitHP').textContent=Math.ceil(first.hp)+' / '+first.max;
@@ -356,7 +366,7 @@ function initSpriteImport(){
   im.onload=()=>{
    if(spriteUrls[key])URL.revokeObjectURL(spriteUrls[key]);
    spriteUrls[key]=url;spriteImages[key]=im;delete spriteSheets[key];
-   spriteCrops[key]=readCrop();
+   spriteCrops[key]=readCrop();updateSpriteThumb(key);
    status.textContent=TYPES[key].name+' 이미지 연결 완료 ('+im.width+'×'+im.height+') · 원본 전체 시트면 잘라낼 좌표를 설정하세요';
    refreshSelection(true);
   };
@@ -366,7 +376,7 @@ function initSpriteImport(){
  $('spriteApply')?.addEventListener('click',apply);
  $('cropSet')?.addEventListener('click',()=>{
   const key=type.value;if(!spriteImages[key]){status.textContent='먼저 이미지를 불러오세요';return}
-  spriteCrops[key]=readCrop();status.textContent=TYPES[key].name+' 크롭 좌표 적용';refreshSelection(true);
+  spriteCrops[key]=readCrop();updateSpriteThumb(key);status.textContent=TYPES[key].name+' 크롭 좌표 적용';refreshSelection(true);
  });
 }
 initSpriteImport();
