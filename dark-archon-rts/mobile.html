@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="theme-color" content="#171a24"/>
+<title>마컨 디펜스</title>
+<style>
+:root{color-scheme:dark;--metal:#302a28;--edge:#776e56;--gold:#d5bd82;--blue:#79cde1;--green:#83e0a2;--red:#f49086}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -20%,#172d42,#080b12 65%);color:#ede9dc;font-family:Inter,system-ui,"Malgun Gothic",sans-serif}
+button{color:inherit;cursor:pointer}button:focus-visible{outline:2px solid #f1daa4;outline-offset:2px}
+main{max-width:1840px;margin:auto;padding:4px 10px 6px}header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px;flex-wrap:wrap}
+.brand{font-weight:900;letter-spacing:.09em;color:#e9d5a8;font-size:18px}.brand span{color:#c083ff;text-shadow:0 0 18px #ab4dff88}small,.sub{color:#a3a9b8;font-size:12px}.topstat{display:flex;gap:8px;flex-wrap:wrap}.chip{padding:7px 12px;border:1px solid #625849;background:linear-gradient(150deg,#282a30,#151922);border-radius:5px;font-size:12px}.chip b{color:#ace7ef;font-variant-numeric:tabular-nums}
+.frame{border:3px ridge #65798d;background:#0b0f16;box-shadow:0 15px 45px #000b,0 0 25px #5e9dbb33;position:relative}#field{display:block;width:100%;height:auto;cursor:crosshair;touch-action:none;background:#111722}
+.gamebar{display:grid;grid-template-columns:minmax(170px,1fr) minmax(300px,2.55fr) minmax(210px,1.3fr);gap:8px;min-height:272px;padding:6px;background:linear-gradient(155deg,#303b4f,#111b2a 55%,#2b2037);border-top:3px ridge #8cabc1;box-shadow:inset 0 8px 24px #05070d99}
+.panel{border:2px ridge #657a93;background:linear-gradient(145deg,#152337,#222a39 55%,#171528);padding:8px;min-width:0;box-shadow:inset 0 0 18px #05050e99}.panelTitle{font-size:11px;letter-spacing:.17em;color:#c9def1;margin-bottom:7px;text-align:center;font-weight:800;border-bottom:1px solid #90a8c332;padding-bottom:5px}
+#minimap{display:block;width:100%;aspect-ratio:240/70;max-height:130px;border:2px solid #605f56;background:#0b1720;cursor:pointer}#mapLegend{font-size:11px;color:#94acbe;margin-top:5px}
+.unitrow{display:flex;gap:9px;min-height:132px}.portrait{width:124px;min-width:100px;display:flex;flex-direction:column;background:#0d121b;border:2px solid #6c6049;padding:6px;gap:4px}.portraitVisual{height:82px;display:grid;place-items:center;background:radial-gradient(circle,#4c394f,#121923);font-size:34px;font-weight:900;color:#dfa2d9;overflow:hidden}.portraitVisual img{width:100%;height:100%;object-fit:contain;image-rendering:auto}.portrait .label{font-size:11px;text-align:center;color:#e5dbb8}.hpbar{height:6px;background:#3e141d;border:1px solid #555}.hpbar>div{height:100%;background:linear-gradient(90deg,#2d9e5e,#9bde7e)}.shieldbar{background:#102942}.shieldbar>div{background:linear-gradient(90deg,#277de0,#8ce4ff)}
+#selectedList{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(2,58px);gap:4px;flex:1;align-content:start}
+.unitTile{background:#171a23;border:1px solid #68634f;position:relative;display:grid;place-items:center;padding:0;min-width:0;overflow:hidden}.unitTile.active{border-color:#77f3a8;box-shadow:inset 0 0 0 1px #77f3a8}.unitTile.heroTile{border-color:#fd5565;box-shadow:inset 0 0 9px #ff2f4177}.unitTile.heroTile .short{color:#ffc4a1;font-weight:900}.unitTile img{width:100%;height:100%;object-fit:contain}.unitTile .glyph{font-size:19px}.unitTile .uhp{position:absolute;bottom:0;left:0;height:3px;background:#68d68d}.unitTile .ushield{position:absolute;bottom:3px;left:0;height:3px;background:#63bcff}.unitTile .short{position:absolute;bottom:8px;font-size:9px;background:#0009;padding:1px 2px}
+#groupBar{display:flex;gap:5px;align-items:center;margin-top:6px;flex-wrap:wrap}.groupbtn{padding:5px 9px;border:1px solid #676352;background:#161923;color:#cfc8b4;font-size:11px}.groupbtn.active{border-color:#6ee6a6;color:#b9ffd0}
+.commandGrid{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,45px);grid-auto-rows:45px;gap:5px}.command{border:2px outset #7888a2;background:linear-gradient(145deg,#2f405c,#151c2e 66%,#2c2240);font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:inset 0 0 7px #607c9d55}.command:hover{filter:brightness(1.2)}.command.active{border-color:#f0a9d9;background:#5d3265;box-shadow:0 0 8px #c369f255,inset 0 0 14px #cc74ce55}.command small{font-size:10px;color:#c6b8d0}.command:disabled{opacity:.32;cursor:default}.command[hidden]{display:none}.command.sieged{border-color:#f6aa66;box-shadow:inset 0 0 12px #f48a4866,0 0 10px #d7753444;color:#ffe0a6}.command.deploying{border-color:#b5a0b8;opacity:.65}
+#message{min-height:24px;padding:6px 0;color:#dfcda5;font-size:13px}.help{color:#b1b5bf;font-size:12px;line-height:1.5;margin:4px 0 0}
+@media(min-width:1400px) and (min-height:850px){#field{height:min(52vh,530px)}.frame{max-height:calc(100vh - 125px)}.gamebar{height:278px}}
+@media(max-width:820px){.gamebar{grid-template-columns:1fr 1fr;min-height:0}.mapPanel{grid-column:1}.selectionPanel{grid-column:1/-1;grid-row:2}.commandsPanel{grid-column:2;grid-row:1}.portrait{width:95px}.commandGrid{grid-template-rows:repeat(3,40px);grid-auto-rows:40px}#selectedList{grid-template-columns:repeat(8,minmax(0,1fr))}.topstat{gap:4px}}
+
+/* StarCraft Remastered-inspired, original CSS control-card treatment */
+a{color:#94c8f0}a:hover{color:#d6ecff}.unitTile:hover{border-color:#95d4ed}.unitTile:active{filter:brightness(1.4)}.groupbtn:hover{border-color:#a5c9f5}#message{background:#111927;border-left:3px solid #a87bc7;padding:8px 12px;letter-spacing:.02em}summary:hover{color:#fff!important}.portraitVisual{background:radial-gradient(circle at 50% 44%,#4c3b65,#19253c 58%,#0e1321)}
+
+.soundbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.soundbar label{display:flex;align-items:center;gap:4px;color:#d1d5db;font-size:11px}.soundbar input[type=range]{width:64px;accent-color:#b781db;cursor:pointer}.soundbar button{white-space:nowrap}
+
+.psiBlock{margin-top:6px;border-top:1px solid #7397b84d;padding:5px 4px 1px}.psiHead{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:#9cdbff;line-height:16px;margin-bottom:5px}.psiTrack{height:14px;position:relative;background:#12172b;border:1px solid #546ba5;box-shadow:inset 0 0 7px #000e;overflow:hidden}.psiFill{height:100%;width:100%;background:linear-gradient(90deg,#294cb4,#578be9,#a1f2ff);transition:width .16s linear}.psiTick{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 2px #111;transform:translateX(-1px)}.psiTick[data-cost="50"]{left:20%}.psiTick[data-cost="75"]{left:30%}.psiTick[data-cost="100"]{left:40%}.psiTick[data-cost="150"]{left:60%}.psiSkills{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;margin-top:5px}.psiSkill{border:1px solid #4f566d;border-radius:3px;text-align:center;font-size:10px;padding:4px 0;color:#778196;background:#101720;white-space:nowrap}.psiSkill.ready{color:#cbfce9;border-color:#438e87;background:#15332c;font-weight:800}.psiSkill.noHero{opacity:.4}
+</style>
+</head>
+<body>
+<main>
+<header>
+ <div><div class="brand">마컨 <span>디펜스</span></div><div class="sub">정신 지배 전략 디펜스</div></div>
+ <div class="topstat">
+  <div class="chip">WAVE <b id="wave">1 / 10</b></div>
+  <div class="chip">PSI <b id="energy">250 / 250</b></div>
+  <div class="chip">NEXUS <b id="nexusHP">750 / 750</b></div>
+  <div class="chip" id="enemyBaseChip" hidden>상대 기지 <b id="enemyBaseHP">750 / 750</b></div>
+  <div class="chip">다크 아콘 <b id="heroStatus">전투 중</b></div>
+  <div class="chip">병력 <b id="army">1 / 0</b></div>
+  <div class="chip">격파 / 지배 <b id="kills">0 / 0</b></div><div class="chip" id="heroChip">적 영웅 <b id="heroCount">0</b></div>
+ </div>
+ <div class="soundbar"><button id="soundToggle" class="groupbtn" aria-pressed="true" title="BGM과 유닛 음성 켜기/끄기">🔊 소리 켜짐</button><label>BGM <input id="bgmVol" type="range" min="0" max="100" value="28" aria-label="배경음악 음량"></label><label>VOICE <input id="voiceVol" type="range" min="0" max="100" value="88" aria-label="유닛 음성 음량"></label><button id="battleMode" class="groupbtn">모드: 디펜스</button><button id="teamSwitch" class="groupbtn" hidden>조작: 청록</button><button id="pause" class="groupbtn">일시정지</button><button id="restart" class="groupbtn">새 전투</button></div>
+</header>
+<section class="frame" aria-label="RTS 게임 화면">
+ <canvas id="field" width="2400" height="700" aria-label="마컨 디펜스 전장"></canvas>
+ <div class="gamebar">
+  <section class="panel mapPanel"><div class="panelTitle">TACTICAL MAP</div><canvas id="minimap" width="240" height="70" aria-label="미니맵"></canvas><div id="mapLegend">● 아군 청록 · 적군 주홍 · 중립 노랑</div></section>
+  <section class="panel selectionPanel">
+   <div class="panelTitle">UNIT SELECTION <span style="font-size:10px;color:#86d8ba">■ SELECTED FORCES</span></div>
+   <div class="unitrow">
+    <div class="portrait"><div id="portraitVisual" class="portraitVisual">✦</div><div id="portraitName" class="label">암흑 집정관</div><div id="portraitHP" class="label">25 HP + 200 보호막</div><div class="hpbar shieldbar"><div id="portraitShield" style="width:100%"></div></div><div class="hpbar"><div id="portraitBar" style="width:100%"></div></div></div>
+    <div id="selectedList" aria-label="선택된 유닛 목록"></div>
+   </div>
+   <div id="groupBar" aria-label="컨트롤 그룹"></div>
+    <div class="psiBlock" id="psiBlock" role="meter" aria-label="다크 아콘 마나" aria-valuemin="0" aria-valuemax="250" aria-valuenow="250">
+      <div class="psiHead"><span>✦ PSIONIC ENERGY</span><span id="psiValue">250 / 250</span></div>
+      <div class="psiTrack" title="기준선: 피드백 50, 스톰 75, 마엘스트롬 100, 정신 지배 150"><div id="psiFill" class="psiFill"></div><i class="psiTick" data-cost="50"></i><i class="psiTick" data-cost="75"></i><i class="psiTick" data-cost="100"></i><i class="psiTick" data-cost="150"></i></div>
+      <div class="psiSkills"><span class="psiSkill" data-skill="feedback">F 피드백 50</span><span class="psiSkill" data-skill="storm">T 스톰 75</span><span class="psiSkill" data-skill="mael">E 마엘 100</span><span class="psiSkill" data-skill="mind">M 마컨 150</span></div>
+    </div>
+  </section>
+  <section class="panel commandsPanel"><div class="panelTitle">COMMAND CARD</div>
+   <div class="commandGrid">
+    <button class="command" data-command="move">➜ <small>V 이동 (회피)</small></button>
+     <button class="command" data-command="attackmove">⚔ <small>A 공격 이동</small></button>
+    <button class="command" data-command="stop">■ <small>S 정지</small></button>
+    <button class="command" data-command="hold">♜ <small>H 위치사수</small></button>
+    <button class="command" data-command="mind">✦ <small>M 정신지배</small></button>
+    <button class="command" data-command="mael">❖ <small>E 마엘스트롬</small></button>
+    <button class="command" data-command="storm">ϟ <small>T 사이오닉 스톰</small></button>
+    <button class="command" data-command="revive">✦ <small>넥서스 재생산</small></button>
+    <button class="command" data-command="feedback">⚡ <small>F 피드백</small></button>
+    <button class="command" data-command="flank">⇢ <small>R 상단 우회</small></button>
+     <button class="command" id="siegeModeBtn" data-command="siege" hidden>◉ <small>O 시즈모드</small></button>
+   </div>
+  </section>
+ </div>
+</section>
+<div id="message" role="status">다크 아콘을 선택하고 정신 지배를 사용하십시오.</div>
+<p class="help">좌클릭 선택 · 드래그 다중 선택 · 우클릭 빈 땅 이동/적 공격 · V 순수 이동(전투 무시) · A 공격 이동 · R 상단 우회 진격 · M 정신 지배(상대 다크 아콘 제외) · E 마엘스트롬 · T 사이오닉 스톰(아군 피해) · F 피드백 · O 아군 시즈탱크 배치/해제(아군 오폭 주의) · Esc 취소 · 다크 아콘 사망 후 넥서스 재생산 60초 · Space 일시정지 · BGM/VOICE 개별 음량 조절 · 브라우저 정책상 첫 클릭이나 키 입력 후 소리 시작</p>
+</main>
+<script>
+
+'use strict';
+const cv=document.getElementById('field'),ctx=cv.getContext('2d');
+const minimap=document.getElementById('minimap'),mc=minimap.getContext('2d');
+const W=cv.width,H=cv.height,$=id=>document.getElementById(id);
+const TYPES={
+ darkarchon:{name:'암흑 집정관',race:'protoss',hp:25,shield:200,armor:1,damage:0,range:0,speed:66,r:24,cool:1,color:'#d35b9e',glyph:'✦'},
+ ultra:{name:'울트라리스크',race:'zerg',hp:400,shield:0,armor:1,damage:20,range:40,speed:58,r:37,cool:.63,color:'#d1a27f',glyph:'◆'},
+ marine:{name:'해병',race:'terran',hp:40,shield:0,armor:0,damage:6,range:166,speed:66,r:13,cool:.63,color:'#88bdd9',glyph:'▣'},
+ zealot:{name:'광전사',race:'protoss',hp:100,shield:60,armor:1,damage:16,range:38,speed:67,r:19,cool:.92,color:'#f0cc82',glyph:'◇'},
+ hydra:{name:'히드라리스크',race:'zerg',hp:80,shield:0,armor:0,damage:10,range:132,speed:58,r:18,cool:.63,color:'#b58dce',glyph:'♠'},
+ goliath:{name:'골리앗',race:'terran',hp:125,shield:0,armor:1,damage:12,range:166,speed:56,r:23,cool:.92,color:'#99bdaa',glyph:'▤'},
+ archon:{name:'집정관',race:'protoss',hp:10,shield:350,armor:0,damage:30,range:66,speed:67,r:25,cool:.83,color:'#aa9aea',glyph:'✧'},
+ cannon:{name:'포토 캐논',race:'protoss',hp:100,shield:100,armor:0,damage:20,range:231,speed:0,r:32,cool:22/24,color:'#8bdfff',glyph:'✺'}
+};
+
+/* StarCraft: Brood War combat roster. Base HP/armor/damage are original values;
+ * movement and range are scaled to this standalone canvas game.
+ * Caster units are deliberately excluded from enemy waves. */
+Object.assign(TYPES,{
+ zergling:{name:'저글링',race:'zerg',hp:35,shield:0,armor:0,damage:5,range:35,speed:115,r:12,cool:.36,size:'small',weapon:'normal',canGround:true,canAir:false,color:'#ae8b62',glyph:'♞'},
+ dragoon:{name:'드라군',race:'protoss',hp:100,shield:80,armor:1,damage:20,range:162,speed:67,r:23,cool:1.25,size:'large',weapon:'explosive',canGround:true,canAir:true,projectile:true,color:'#6ca9f6',glyph:'✥'},
+ firebat:{name:'파이어뱃',race:'terran',hp:50,shield:0,armor:1,damage:16,range:48,speed:65,r:17,cool:.92,size:'small',weapon:'concussive',canGround:true,canAir:false,splash:50,color:'#f99452',glyph:'♨'},
+ vulture:{name:'벌처',race:'terran',hp:80,shield:0,armor:0,damage:20,range:184,speed:124,r:20,cool:1.25,size:'medium',weapon:'concussive',canGround:true,canAir:false,projectile:true,color:'#b1bac1',glyph:'➤'},
+ siegetank:{name:'시즈 탱크',race:'terran',hp:150,shield:0,armor:1,damage:30,range:224,speed:40,r:30,cool:37/24,size:'large',weapon:'explosive',canGround:true,canAir:false,projectile:true,color:'#c3a173',glyph:'▰'},
+ wraith:{name:'레이스',race:'terran',hp:120,shield:0,armor:0,damage:8,airDamage:20,range:190,speed:110,r:23,cool:1.2,size:'large',flying:true,weapon:'normal',airWeapon:'explosive',canGround:true,canAir:true,projectile:true,color:'#a9b8dd',glyph:'✈'},
+ valkyrie:{name:'발키리',race:'terran',hp:200,shield:0,armor:2,damage:6,airDamage:48,range:204,speed:102,r:26,cool:2.6,size:'large',flying:true,weapon:'explosive',canGround:false,canAir:true,projectile:true,splash:75,color:'#f1bb9d',glyph:'✈'},
+ battlecruiser:{name:'배틀크루저',race:'terran',hp:500,shield:0,armor:3,damage:25,range:209,speed:39,r:38,cool:1.25,size:'large',flying:true,weapon:'normal',canGround:true,canAir:true,projectile:true,color:'#df9a76',glyph:'✚'},
+ darktemplar:{name:'다크 템플러',race:'protoss',hp:80,shield:40,armor:1,damage:40,range:36,speed:78,r:17,cool:1.25,size:'small',weapon:'normal',canGround:true,canAir:false,cloaked:true,color:'#b58cd4',glyph:'⛨'},
+ reaver:{name:'리버',race:'protoss',hp:100,shield:80,armor:0,damage:100,range:270,speed:29,r:32,cool:2.5,size:'large',weapon:'normal',canGround:true,canAir:false,projectile:true,splash:102,color:'#e0b7a2',glyph:'◈'},
+ scout:{name:'스카웃',race:'protoss',hp:150,shield:100,armor:0,damage:8,airDamage:28,range:160,speed:99,r:25,cool:1.25,size:'large',flying:true,weapon:'normal',airWeapon:'explosive',canGround:true,canAir:true,projectile:true,color:'#d4d6fa',glyph:'✦'},
+ corsair:{name:'커세어',race:'protoss',hp:100,shield:80,armor:1,damage:0,airDamage:5,range:182,speed:123,r:24,cool:.4,size:'medium',flying:true,weapon:'explosive',canGround:false,canAir:true,projectile:true,splash:65,color:'#83e1fa',glyph:'✥'},
+ carrier:{name:'캐리어',race:'protoss',hp:300,shield:150,armor:4,damage:48,range:285,speed:43,r:36,cool:2.3,size:'large',flying:true,weapon:'normal',canGround:true,canAir:true,projectile:true,color:'#f6da9d',glyph:'✧'},
+ lurker:{name:'러커',race:'zerg',hp:125,shield:0,armor:1,damage:20,range:213,speed:51,r:24,cool:1.54,size:'medium',weapon:'normal',canGround:true,canAir:false,pierce:true,splash:42,color:'#a584aa',glyph:'♠'},
+ mutalisk:{name:'뮤탈리스크',race:'zerg',hp:120,shield:0,armor:0,damage:9,range:130,speed:117,r:23,cool:1.25,size:'small',flying:true,weapon:'normal',canGround:true,canAir:true,bounce:true,projectile:true,color:'#af75b6',glyph:'❧'},
+ guardian:{name:'가디언',race:'zerg',hp:150,shield:0,armor:2,damage:20,range:269,speed:46,r:28,cool:1.25,size:'large',flying:true,weapon:'normal',canGround:true,canAir:false,projectile:true,color:'#b4a37a',glyph:'✸'},
+ devourer:{name:'디바우러',race:'zerg',hp:250,shield:0,armor:2,damage:0,airDamage:25,range:200,speed:76,r:30,cool:4.17,size:'large',flying:true,weapon:'explosive',canGround:false,canAir:true,projectile:true,splash:72,color:'#c789a8',glyph:'◆'},
+ scourge:{name:'스커지',race:'zerg',hp:25,shield:0,armor:0,damage:0,airDamage:110,range:28,speed:133,r:12,cool:1.2,size:'small',flying:true,weapon:'normal',canGround:false,canAir:true,suicide:true,color:'#b5e789',glyph:'↟'}
+});
+Object.assign(TYPES.marine,{size:'small',weapon:'normal',canGround:true,canAir:true,projectile:true});
+Object.assign(TYPES.zealot,{size:'small',weapon:'normal',canGround:true,canAir:false});
+Object.assign(TYPES.goliath,{size:'large',weapon:'normal',airWeapon:'explosive',airDamage:20,canGround:true,canAir:true,projectile:true});
+Object.assign(TYPES.hydra,{size:'medium',weapon:'explosive',canGround:true,canAir:true,projectile:true});
+Object.assign(TYPES.ultra,{size:'large',weapon:'normal',canGround:true,canAir:false});
+Object.assign(TYPES.archon,{size:'large',weapon:'normal',canGround:true,canAir:true,splash:58});
+Object.assign(TYPES.cannon,{size:'large',weapon:'normal',canGround:true,canAir:true,projectile:true});
+/* Official BW heroes have researched campaign stats below; when no official hero
+ * exists for a combat type, a labeled custom elite is used instead. */
+const HERO_STATS={
+ zergling:{name:'디바우링 원',hp:120,armor:3,damage:10,cool:.25},
+ hydra:{name:'헌터 킬러',hp:160,armor:2,damage:20},
+ ultra:{name:'토라스크',hp:800,armor:4,damage:50},
+ dragoon:{name:'피닉스 (드라군)',hp:240,shield:240,armor:3,damage:45,cool:.92},
+ zealot:{name:'피닉스 (질럿)',hp:240,shield:240,armor:2,damage:40},
+ marine:{name:'짐 레이너 (마린)',hp:200,armor:3,damage:18},
+ firebat:{name:'구이 몬타그',hp:160,armor:3,damage:32},
+ reaver:{name:'워브링어',hp:200,shield:400,armor:3,damage:125},
+ darktemplar:{name:'제라툴',hp:60,shield:400,armor:0,damage:100,cool:.92},
+ vulture:{name:'짐 레이너 (벌처)',hp:300,armor:3,damage:30,cool:.92},
+ siegetank:{name:'에드먼드 듀크',hp:400,armor:3,damage:70,siegeDamage:150},
+ goliath:{name:'앨런 셰자르',hp:300,armor:3,damage:24,airDamage:40},
+ wraith:{name:'톰 카잔스키',hp:500,armor:4,damage:16,airDamage:40,cool:.92},
+ battlecruiser:{name:'하이페리온',hp:850,armor:3,damage:30,cool:.92},
+ scout:{name:'모조',hp:400,shield:400,armor:3,damage:20,airDamage:56},
+ carrier:{name:'간트리서',hp:800,shield:500,armor:4,damage:48},
+ mutalisk:{name:'쿠쿨자 (뮤탈)',hp:300,armor:3,damage:18},
+ guardian:{name:'쿠쿨자 (가디언)',hp:400,armor:4,damage:40},
+ archon:{name:'태사다르/제라툴',hp:100,shield:800,armor:3,damage:60},
+ corsair:{name:'라자갈'}
+};
+const WAVE_TIERS=[
+ ['marine','zergling','zealot','dragoon','firebat'],
+ ['hydra','vulture','darktemplar'],
+ ['goliath','mutalisk','lurker'],
+ ['ultra','siegetank','archon'],
+ ['reaver','wraith','scout'],
+ ['guardian','corsair'],
+ ['devourer','valkyrie'],
+ ['scourge','carrier'],
+ ['battlecruiser'],[]
+];
+const COMBAT_TYPES=WAVE_TIERS.flat();
+const wavePool=n=>[...new Set(WAVE_TIERS.slice(0,n).flat())];
+
+/* Supplied original clips: voices/<unit>-<ready|select|move|attack|death>.wav */
+const VOICE_TYPES=new Set(['darkarchon','archon','zealot','marine','goliath','hydra','ultra']);
+const VOICE_EVENTS=new Set(['ready','select','move','attack','death']);
+const bgm=new Audio('Warping_the_Citadel.mp3');
+bgm.loop=true;bgm.preload='none';bgm.volume=.28;
+let audioUnlocked=false,soundMuted=false,voiceVolume=.88,lastVoiceAt=-1e9;
+const voiceClips=new Map(),voiceCooldown=new Map(),voiceMissing=new Set();
+let cueAudioContext=null;
+function playUnitCue(u,event){
+ const Ctor=window.AudioContext||window.webkitAudioContext;
+ if(!Ctor||voiceVolume<=0)return;
+ const key=u.type+'-'+event,now=performance.now(),gap=event==='attack'?1200:650;
+ if(now-(voiceCooldown.get(key)??-1e9)<gap||now-lastVoiceAt<150)return;
+ voiceCooldown.set(key,now);lastVoiceAt=now;
+ try{
+  const ac=cueAudioContext||(cueAudioContext=new Ctor());
+  if(ac.state==='suspended')ac.resume().catch(()=>{});
+  const osc=ac.createOscillator(),gain=ac.createGain();
+  const base={zerg:100,protoss:270,terran:155}[TYPES[u.type].race]||180;
+  const shift={ready:0,select:40,move:20,attack:110,death:-60}[event]||0;
+  osc.type=TYPES[u.type].race==='protoss'?'sine':TYPES[u.type].race==='terran'?'sawtooth':'triangle';
+  osc.frequency.setValueAtTime(base+shift,ac.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(45,(base+shift)*(event==='death'?.55:1.35)),ac.currentTime+.13);
+  gain.gain.setValueAtTime(.0001,ac.currentTime);
+  gain.gain.exponentialRampToValueAtTime(Math.max(.002,voiceVolume*.052),ac.currentTime+.012);
+  gain.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.19);
+  osc.connect(gain).connect(ac.destination);osc.start();osc.stop(ac.currentTime+.21);
+ }catch{}
+}
+function playVoice(u,event,force=false){
+ if(!audioUnlocked||soundMuted||!u||!VOICE_EVENTS.has(event))return;
+ if(!VOICE_TYPES.has(u.type)){playUnitCue(u,event);return}
+ const key=u.type+'-'+event,now=performance.now(),gap=event==='attack'?3200:event==='move'?700:event==='select'?350:event==='death'?500:900;
+ if(now-(voiceCooldown.get(key)??-1e9)<gap||(!force&&now-lastVoiceAt<220)||voiceMissing.has(key))return;
+ voiceCooldown.set(key,now);lastVoiceAt=now;
+ let clip=voiceClips.get(key);
+ if(!clip){clip=new Audio('voices/'+key+'.wav');clip.preload='auto';clip.addEventListener('error',()=>voiceMissing.add(key),{once:true});voiceClips.set(key,clip)}
+ try{clip.pause();clip.currentTime=0;clip.volume=voiceVolume;const p=clip.play();if(p&&p.catch)p.catch(()=>{})}catch{}
+}
+function unlockAudio(){
+ if(audioUnlocked)return;
+ audioUnlocked=true;
+ if(!soundMuted){const p=bgm.play();if(p&&p.catch)p.catch(()=>{});const first=chosen()[0];if(first)playVoice(first,'ready',true)}
+}
+document.addEventListener('pointerdown',unlockAudio,{capture:true,once:true});
+document.addEventListener('keydown',unlockAudio,{capture:true,once:true});
+$('soundToggle').onclick=()=>{
+ soundMuted=!soundMuted;bgm.muted=soundMuted;
+ $('soundToggle').textContent=soundMuted?'🔇 음소거':'🔊 소리 켜짐';
+ $('soundToggle').setAttribute('aria-pressed',String(!soundMuted));
+ if(!soundMuted){unlockAudio();const p=bgm.play();if(p&&p.catch)p.catch(()=>{})}else bgm.pause();
+};
+$('bgmVol').oninput=e=>{bgm.volume=Number(e.target.value)/100};
+$('voiceVol').oninput=e=>{voiceVolume=Number(e.target.value)/100;for(const clip of voiceClips.values())clip.volume=voiceVolume};
+
+/* Original generated 16 x 16 atlases. The unfinished last row is excluded;
+ * direction 15 reuses row 0. Columns: idle 0-3, move 4-9, attack 10-12, death 13-15. */
+const LEGACY_ATLAS_TYPES=new Set(['darkarchon','ultra','marine','zealot','hydra','goliath','archon']);
+const SPRITE_TYPES=[...new Set(['darkarchon',...COMBAT_TYPES])];
+const atlasDirection=dir=>dir===15?0:dir;
+const spriteSheets={},spriteThumbs={},spriteCenters={};
+for(const key of SPRITE_TYPES){
+ const img=new Image();spriteSheets[key]=img;
+ img.onload=()=>{const thumb=document.createElement('canvas');thumb.width=thumb.height=72;
+  const thumbCtx=thumb.getContext('2d');thumbCtx.imageSmoothingEnabled=LEGACY_ATLAS_TYPES.has(key);thumbCtx.drawImage(img,0,0,img.width/16,img.height/16,0,0,72,72);
+  const scan=document.createElement('canvas');scan.width=img.width;scan.height=img.height;
+  const sq=scan.getContext('2d',{willReadFrequently:true});sq.drawImage(img,0,0);
+  const rgba=sq.getImageData(0,0,img.width,img.height).data,cw=img.width/16,ch=img.height/16;
+  spriteCenters[key]=Array.from({length:15},(_,dir)=>{
+   const row=[];for(let frame=0;frame<16;frame++){
+    const x0=Math.ceil(frame*cw+2),x1=Math.floor((frame+1)*cw-2),y0=Math.ceil(dir*ch+2),y1=Math.floor((dir+1)*ch-2);
+    let sx=0,sy=0,weight=0;
+    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const a=rgba[(y*img.width+x)*4+3];if(a>96){sx+=x*a;sy+=y*a;weight+=a}}
+    row.push(weight?{x:sx/weight-(frame+.5)*cw,y:sy/weight-(dir+.5)*ch}:{x:0,y:0,empty:true});
+   }return row;
+  });
+  spriteThumbs[key]=thumb.toDataURL('image/png');refreshSelection(true)};
+ img.onerror=()=>{spriteSheets[key]=null};
+ img.src=key+'-atlas.'+(LEGACY_ATLAS_TYPES.has(key)?'avif':'png');
+}
+function spriteFrame(u,width){
+ const sheet=spriteSheets[u.type];if(!sheet?.complete||!sheet.naturalWidth)return false;
+ const face=((u.face||0)%(2*Math.PI)+2*Math.PI)%(2*Math.PI),dir=atlasDirection(Math.round(face*8/Math.PI)%16);
+ const frame=u.attackTimer>0?10+Math.min(2,Math.floor((1-u.attackTimer/.3)*3)):u.moving?4+Math.floor(u.frameTime*10)%6:Math.floor(u.frameTime*4)%4;
+ if(spriteCenters[u.type]?.[dir]?.[frame]?.empty)return false;
+ const cw=sheet.width/16,ch=sheet.height/16,centers=spriteCenters[u.type]?.[dir];
+ // Lock the visual center to the idle pose: a frame-by-frame alpha centroid
+ // would cause large attacks/deaths to throw the sprite off its anchor point.
+ const center=centers?{x:centers.slice(0,4).reduce((n,p)=>n+p.x,0)/4,y:centers.slice(0,4).reduce((n,p)=>n+p.y,0)/4}:{x:0,y:0};
+ const sx=Math.ceil(frame*cw+1),sy=Math.ceil(dir*ch+1),sw=Math.floor((frame+1)*cw-1)-sx,sh=Math.floor((dir+1)*ch-1)-sy;
+ const height=width*ch/cw;ctx.imageSmoothingEnabled=LEGACY_ATLAS_TYPES.has(u.type);ctx.imageSmoothingQuality='high';
+ ctx.drawImage(sheet,sx,sy,sw,sh,-width/2-center.x*width/cw,-height*.73-center.y*height/ch,width,height);return true;
+}
+const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+let units=[],selected=new Set(),groups=Array.from({length:5},()=>[]),spawns=[],effects=[],storms=[],corpses=[],projectiles=[],wave=1,energy=250,enemyEnergy=250,nexus=750,enemyBase=750,kills=0,conversions=0,idCounter=0,time=0,interval=0,mode='select',paused=false,over=false,drag=null,clickMemory={id:0,time:0},lastUI=0,selectionStamp='',battleMode='defense',activeTeam=false,reviveTimer=0,enemyReviveTimer=0,centerTimer=0;
+const HOME={x:95,y:H/2},AWAY={x:W-95,y:H/2};
+let hoveredUnitId=0,hoverPoint={x:0,y:0};
+const UPPER_LANE_BOTTOM=245,NEUTRAL_MIN_Y=320;
+const nexusArt=new Image();nexusArt.src='nexus.webp';
+const cannonBaseArt=new Image();cannonBaseArt.src='photon-cannon-base.webp';
+const cannonCoreArt=new Image();cannonCoreArt.src='photon-cannon-core.webp';
+const particle=(x,y,color,r=40)=>effects.push({x,y,color,r,ttl:.48,total:.48});
+const notify=text=>{$('message').textContent=text};
+const allies=()=>units.filter(u=>!u.enemy&&u.hp>0);
+const enemies=()=>units.filter(u=>u.enemy&&u.hp>0);
+const friendly=u=>!u.neutral&&!u.fixed&&u.enemy===activeTeam;
+const hostile=u=>u.neutral||u.enemy!==activeTeam;
+const hostileFor=(a,b)=>a!==b&&b.hp>0&&(a.neutral?!b.neutral:b.neutral||a.enemy!==b.enemy);
+const chosen=()=>units.filter(u=>selected.has(u.id)&&friendly(u)&&u.hp>0);
+const currentEnergy=()=>activeTeam?enemyEnergy:energy;
+const SKILL_COSTS={feedback:50,storm:75,mael:100,mind:150};
+const SIEGE_RANGE=384,SIEGE_MIN_RANGE=64,SIEGE_DEPLOY=79/24,SIEGE_UNDEPLOY=75/24,SIEGE_RADII=[10,25,40];
+function updateManaUI(){const value=clamp(currentEnergy(),0,250),hero=units.some(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon');$('psiFill').style.width=(value/250*100)+'%';$('psiValue').textContent=Math.floor(value)+' / 250';$('psiBlock').setAttribute('aria-valuenow',String(Math.floor(value)));for(const el of document.querySelectorAll('[data-skill]')){el.classList.toggle('ready',hero&&value>=SKILL_COSTS[el.dataset.skill]);el.classList.toggle('noHero',!hero);el.title=!hero?'다크 아콘이 없습니다':value>=SKILL_COSTS[el.dataset.skill]?'사용 가능':'마나 부족'}}
+function spendEnergy(n){if(activeTeam)enemyEnergy-=n;else energy-=n}
+function spawn(type,enemy,x,y,isHero=false){
+ const d=TYPES[type],u={id:++idCounter,type,enemy,x,y,hp:d.hp,max:d.hp,shield:d.shield||0,maxShield:d.shield||0,shieldDelay:0,face:0,attackTimer:0,cool:rnd(0,.4),stun:0,moving:false,fixed:type==='cannon',order:{type:type==='cannon'?'hold':enemy?'attackmove':'guard',x,y},orders:[],frameTime:rnd(0,10),lastAttacker:0,retaliateFor:0,roamFor:0};
+ 
+ if(isHero&&!u.fixed&&u.type!=='darkarchon'){
+  const spec=HERO_STATS[type]||{},hasOfficial=!!HERO_STATS[type];
+  u.hero=true;u.officialHero=hasOfficial;u.heroName=spec.name||'정예 '+d.name;
+  u.hp=u.max=spec.hp??Math.round(d.hp*2.25);
+  u.shield=u.maxShield=spec.shield??Math.round((d.shield||0)*2.25);
+  u.damage=spec.damage??Math.round(d.damage*1.8);
+  u.airDamage=spec.airDamage??Math.round((d.airDamage??d.damage)*1.8);
+  u.armor=spec.armor??(d.armor+2);u.attackCool=spec.cool??d.cool*.84;
+  if(type==='siegetank')u.siegeDamage=spec.siegeDamage??Math.round(70*1.8);
+ }
+ if(type==='siegetank'){u.sieged=false;u.siegeTransition=0;u.siegeTarget=false}
+ units.push(u);if(type==='darkarchon'&&u.enemy===activeTeam)playVoice(u,'ready',true);return u;
+}
+/* Campaign balance: one hero in early waves, up to four in the finale.
+ * Everyone enters together; heroes are deliberate high-value mind-control targets. */
+const CAMPAIGN_WAVES=[
+ {heroes:['zergling'],ordinary:{zergling:4,marine:2}},
+ {heroes:['marine'],ordinary:{zergling:4,marine:2,zealot:1}},
+ {heroes:['dragoon'],ordinary:{zergling:3,marine:3,firebat:1,zealot:2,siegetank:1}},
+ {heroes:['firebat','hydra'],ordinary:{zergling:3,marine:3,hydra:2,zealot:2,siegetank:1}},
+ {heroes:['zealot','lurker'],ordinary:{zergling:2,marine:2,hydra:2,goliath:1,vulture:2,dragoon:1,siegetank:2}},
+ {heroes:['mutalisk','archon'],ordinary:{zergling:3,marine:2,hydra:2,goliath:1,mutalisk:2,dragoon:1,siegetank:2}},
+ {heroes:['vulture','reaver','goliath'],ordinary:{zergling:3,marine:2,hydra:2,vulture:1,goliath:1,wraith:1,siegetank:4}},
+ {heroes:['siegetank','wraith','darktemplar'],ordinary:{zergling:3,marine:1,zealot:2,hydra:2,goliath:1,lurker:1,scout:1,corsair:1,siegetank:3}},
+ {heroes:['guardian','scout','ultra'],ordinary:{zergling:2,marine:1,hydra:2,dragoon:2,goliath:1,firebat:1,guardian:1,valkyrie:1,devourer:1,ultra:1,siegetank:3}},
+ {heroes:['carrier','battlecruiser','reaver','dragoon'],ordinary:{zergling:4,marine:1,hydra:1,dragoon:2,goliath:1,mutalisk:2,ultra:1,scourge:2,guardian:1,vulture:1,siegetank:4}}
+];
+const WAVE_COUNT=CAMPAIGN_WAVES.length;
+function startWave(){
+ time=0;interval=0;spawns=[];
+ const config=CAMPAIGN_WAVES[wave-1];
+ if(!config)throw Error('Invalid campaign wave '+wave);
+ const roster=[];
+ for(const [type,count] of Object.entries(config.ordinary))for(let i=0;i<count;i++)roster.push({type,hero:false});
+ for(const type of config.heroes)roster.push({type,hero:true});
+ // All members spawn on the same simulation tick, from different lanes.
+ for(let i=roster.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[roster[i],roster[j]]=[roster[j],roster[i]]}
+ const rows=8;let heroSlot=0;
+ roster.forEach((entry,i)=>{
+  const column=Math.floor(i/rows),row=i%rows;
+  // The prized red-aura targets lead the push so players can identify and capture them.
+   // Normal troops still spawn in full at the same instant, but slightly behind.
+   const x=entry.hero?W-335-heroSlot*52:W-92-column*52+rnd(-6,6);
+   const y=entry.hero?H/2+[0,-80,80,-145][heroSlot++]:82+row*(H-164)/(rows-1)+rnd(-6,6);
+  const u=spawn(entry.type,true,x,y,entry.hero);
+  u.order={type:'attackmove',x:HOME.x,y:HOME.y,target:null};
+ });
+ notify('웨이브 '+wave+'/'+WAVE_COUNT+' · 적 '+roster.length+'기 전원 동시 출현 · 붉은 영웅 '+config.heroes.length+'기! 정신 지배할 대상을 선택하세요');
+}
+
+function reset(){
+ units=[];selected.clear();hoveredUnitId=0;groups=Array.from({length:5},()=>[]);effects=[];storms=[];corpses=[];projectiles=[];wave=1;energy=enemyEnergy=250;nexus=enemyBase=750;kills=conversions=0;idCounter=0;mode='select';paused=over=false;drag=null;reviveTimer=enemyReviveTimer=centerTimer=0;activeTeam=false;$('teamSwitch').textContent='조작: 청록';
+ const hero=spawn('darkarchon',false,235,H/2);selected.add(hero.id);
+ for(const offset of [-105,105])spawn('cannon',false,HOME.x+130,HOME.y+offset);
+ if(battleMode==='duel'){spawn('darkarchon',true,W-235,H/2);for(const offset of [-105,105])spawn('cannon',true,AWAY.x-130,AWAY.y+offset);spawns=[];for(let i=0;i<5;i++)spawnNeutral();notify('대전 시작 · 전장 곳곳의 중립 유닛을 먼저 정신 지배하세요')}
+ else startWave();refreshSelection(true);updateUI();
+}
+function setMode(next){mode=next;updateCommands();notify(next==='move'?'순수 이동: 공격을 무시하고 지점으로 이동':next==='mind'?'정신 지배: 적 유닛 클릭 (150 에너지 · 다크 아콘 제외)':next==='mael'?'마엘스트롬: 지점 클릭 (100 에너지)':next==='storm'?'사이오닉 스톰: 지점 클릭 (75 에너지 · 아군 피해)':next==='feedback'?'피드백: 상대 다크 아콘 클릭 (50 에너지)':next==='attackmove'?'공격 이동: 지점 클릭':'명령 취소')}
+const getUnit=(p,filter=()=>true)=>units.filter(u=>u.hp>0&&filter(u)&&distance(u,p)<TYPES[u.type].r+12).sort((a,b)=>distance(a,p)-distance(b,p)-(a.hero?7:0)+(b.hero?7:0))[0];
+function setSelected(u,add=false){
+ if(!add)selected.clear();
+ if(u&&friendly(u)){if(add&&selected.has(u.id))selected.delete(u.id);else selected.add(u.id)}
+ refreshSelection(true);
+}
+function selectBox(a,b,add=false){
+ if(!add)selected.clear();
+ const x0=Math.min(a.x,b.x),x1=Math.max(a.x,b.x),y0=Math.min(a.y,b.y),y1=Math.max(a.y,b.y);
+ for(const u of units.filter(u=>u.hp>0&&friendly(u)))if(u.x>=x0&&u.x<=x1&&u.y>=y0&&u.y<=y1)selected.add(u.id);
+ refreshSelection(true);
+}
+function selectSame(type){
+ selected=new Set(units.filter(u=>u.hp>0&&friendly(u)&&u.type===type).map(u=>u.id));refreshSelection(true);
+}
+function completeOrder(u){
+ if(u.orders.length){u.order=u.orders.shift();return}
+ u.order={type:'guard',x:u.x,y:u.y};
+}
+function command(type,p,target=null,append=false){
+ const selection=chosen();if(!selection.length){notify('먼저 아군 유닛을 선택하세요');return}
+ const arr=selection.filter(u=>u.type!=='siegetank'||(!u.sieged&&u.siegeTransition<=0));
+ if(!arr.length){notify('시즈모드에서는 이동할 수 없습니다. O 키로 해제하세요');return}
+ const cols=Math.ceil(Math.sqrt(arr.length)),rows=Math.ceil(arr.length/cols);
+ arr.forEach((u,i)=>{
+  const spacing=Math.max(40,TYPES[u.type].r*2.1);
+  const o={type,x:clamp(p.x+(i%cols-(cols-1)/2)*spacing,30,W-30),y:clamp(p.y+(Math.floor(i/cols)-(rows-1)/2)*spacing,30,H-30),target:target?.id||null};
+  u.engagedTargetId=0;u.lastAttacker=0;u.retaliateFor=0;
+  if(append){if(u.orders.length<12)u.orders.push(o)}
+  else{u.order=o;u.orders=[]}
+ });
+ particle(p.x,p.y,type==='attackmove'?'#ffa58c':'#7bebc2',28);
+  playVoice(arr[0],type==='attack'?'attack':'move');
+ notify((append?'예약: ':'')+({move:'이동',attack:'집중 공격',attackmove:'공격 이동'}[type]||'명령')+' · '+arr.length+'기');
+ refreshSelection();
+}
+function toggleSiege(){
+ const tanks=chosen().filter(u=>u.type==='siegetank'&&u.hp>0);
+ if(!tanks.length){notify('아군 시즈 탱크를 선택하세요');return}
+ const ready=tanks.filter(u=>u.siegeTransition<=0);
+ if(!ready.length){notify('시즈모드 변환 중입니다');return}
+ const deploy=ready.some(u=>!u.sieged);
+ let changed=0;
+ for(const u of ready){
+  if(u.sieged===deploy)continue;
+  u.siegeTarget=deploy;u.siegeTransition=deploy?SIEGE_DEPLOY:SIEGE_UNDEPLOY;
+  u.order={type:'hold',x:u.x,y:u.y,target:null};u.orders=[];
+  u.cool=Math.max(u.cool,u.siegeTransition);u.attackTimer=0;changed++;
+ }
+ notify(deploy?'아군 탱크 '+changed+'기 시즈 배치 중 · 아군 지상 유닛도 포격에 맞습니다':'아군 탱크 '+changed+'기 퉁퉁포 모드로 복귀 중');
+ refreshSelection(true);
+}
+function flank(){
+ if(battleMode!=='duel'){notify('상단 우회 진격은 2인 쟁탈전에서 사용합니다');return}
+ const arr=chosen();if(!arr.length){notify('먼저 병력을 선택하세요');return}
+ for(const [i,u] of arr.entries()){
+  const base=u.enemy?HOME:AWAY,laneY=125+(i%3)*16;
+  u.order={type:'move',x:u.x,y:laneY,target:null};
+  u.orders=[{type:'move',x:u.enemy?315:W-315,y:laneY,target:null},{type:'attackmove',x:base.x,y:base.y,target:null}];
+ }
+ notify('상단 중립 없는 길로 우회 진격 · '+arr.length+'기');playVoice(arr[0],'move');refreshSelection();
+}
+function stop(type){
+ const arr=chosen();for(const u of arr){u.order={type,x:u.x,y:u.y};u.orders=[];u.engagedTargetId=0;u.retaliateFor=0}
+ notify((type==='stop'?'정지':'위치 사수')+' · '+arr.length+'기');playVoice(arr[0],'move');refreshSelection();
+}
+function mind(target){
+ const hero=units.find(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon');
+ if(!hero){notify('다크 아콘이 없습니다');return}
+ if(!target||!hostile(target)){notify('상대 유닛을 클릭하세요');return}
+ if(target.type==='darkarchon'||target.fixed){notify('다크 아콘과 건물은 정신 지배할 수 없습니다');return}
+ if(distance(hero,target)>264){notify('사거리 밖 · 다크 아콘 이동 필요');return}
+ if(currentEnergy()<150){notify('에너지 부족');return}
+ spendEnergy(150);target.enemy=activeTeam;target.neutral=false;target.stun=0;target.engagedTargetId=0;target.lastAttacker=0;target.retaliateFor=0;target.order={type:'guard',x:target.x,y:target.y};target.orders=[];conversions++;selected.clear();selected.add(target.id);
+ particle(target.x,target.y,'#ff77b4',115);playVoice(target,'ready',true);notify(TYPES[target.type].name+' 정신 지배 성공 · 우클릭으로 직접 지휘하세요');
+ mode='select';refreshSelection(true);
+}
+function mael(p){
+ const hero=units.find(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon');
+ if(!hero||distance(hero,p)>330){notify('마엘스트롬 사거리 밖');return}
+ if(currentEnergy()<100){notify('에너지 부족');return}
+ spendEnergy(100);for(const u of units.filter(u=>u.hp>0&&hostile(u)))if(distance(u,p)<90&&u.type!=='goliath')u.stun=4;
+ particle(p.x,p.y,'#b5a0ff',140);playVoice(hero,'attack');notify('마엘스트롬!');mode='select';updateCommands();
+}
+function storm(p){
+ const hero=units.find(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon');
+ if(!hero||distance(hero,p)>297){notify('사이오닉 스톰 사거리 밖');return}
+ if(currentEnergy()<75){notify('에너지 부족');return}
+ spendEnergy(75);storms.push({x:p.x,y:p.y,ttl:3.2,pulse:0,caster:hero.id});
+ particle(p.x,p.y,'#a8b8ff',96);playVoice(hero,'attack');notify('사이오닉 스톰 · 범위 안의 아군도 피해를 받습니다');mode='select';updateCommands();
+}
+function feedback(target){
+ const hero=units.find(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon');
+ if(!hero||!target||!hostile(target)||target.type!=='darkarchon'){notify('상대 다크 아콘을 클릭하세요');return}
+ if(distance(hero,target)>330){notify('피드백 사거리 밖');return}
+ if(currentEnergy()<50){notify('에너지 부족');return}
+ spendEnergy(50);const power=activeTeam?energy:enemyEnergy;if(activeTeam)energy=0;else enemyEnergy=0;
+ damage(target,power,hero);playVoice(hero,'attack');particle(target.x,target.y,'#e8a7ff',80);notify('피드백 · 상대 에너지 '+Math.floor(power)+' 피해');mode='select';updateCommands();
+}
+function spawnNeutral(){
+ const pool=['marine','zealot','hydra','goliath','ultra','archon'];
+ const type=pool[Math.floor(rnd(0,pool.length))],x=rnd(380,W-380),y=rnd(NEUTRAL_MIN_Y,H-85);
+ const u=spawn(type,true,x,y);u.neutral=true;u.order={type:'roam',x,y};u.roamFor=0;return u;
+}
+function startRevive(){
+ const base=activeTeam?enemyBase:nexus,timer=activeTeam?enemyReviveTimer:reviveTimer;
+ if(base<=0||units.some(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon')||timer>0){notify('자기 다크 아콘 사망 후, 기지가 살아 있을 때만 재생산할 수 있습니다');return}
+ if(activeTeam)enemyReviveTimer=60;else reviveTimer=60;
+ notify((activeTeam?'주홍':'청록')+' 기지에서 다크 아콘 재생산 시작 · 60초');updateCommands();
+}
+function coords(ev){
+ const r=cv.getBoundingClientRect();return{x:clamp((ev.clientX-r.left)*W/r.width,0,W),y:clamp((ev.clientY-r.top)*H/r.height,0,H)};
+}
+cv.addEventListener('pointerdown',ev=>{
+ if(ev.button===2){ev.preventDefault();if(over)return;const p=coords(ev),victim=getUnit(p,hostile);command(victim?'attack':'move',p,victim,ev.shiftKey);return}
+ if(ev.button!==0)return;
+ ev.preventDefault();const p=coords(ev);
+ if(mode==='mind'){mind(getUnit(p,hostile));return}
+ if(mode==='mael'){mael(p);return}
+ if(mode==='storm'){storm(p);return}
+ if(mode==='feedback'){feedback(getUnit(p,hostile));return}
+ if(mode==='move'||mode==='attackmove'){command(mode,p,null,ev.shiftKey);setMode('select');return}
+ drag={begin:p,end:p,add:ev.shiftKey,pointerId:ev.pointerId,started:performance.now()};
+ try{cv.setPointerCapture(ev.pointerId)}catch{}
+});
+cv.addEventListener('pointermove',ev=>{const p=coords(ev);hoverPoint=p;hoveredUnitId=getUnit(p,hostile)?.id||0;if(drag?.pointerId===ev.pointerId)drag.end=p});
+cv.addEventListener('pointerleave',()=>{hoveredUnitId=0});
+function releasePointer(ev){
+ if(!drag||ev.pointerId!==drag.pointerId)return;
+ const state=drag;drag=null;
+ const p=coords(ev);
+ if(distance(state.begin,p)>7){selectBox(state.begin,p,state.add);return}
+ const u=getUnit(p);
+ if(u&&friendly(u)&&clickMemory.id===u.id&&performance.now()-clickMemory.time<340&&!state.add){selectSame(u.type);clickMemory={id:0,time:0}}
+ else {setSelected(u,state.add);clickMemory={id:u?.id||0,time:performance.now()}}
+}
+cv.addEventListener('pointerup',releasePointer);
+cv.addEventListener('pointercancel',()=>{drag=null});
+cv.addEventListener('lostpointercapture',()=>{drag=null});
+cv.addEventListener('contextmenu',ev=>ev.preventDefault());
+const modifierKeys=new Set(['CONTROL','SHIFT','ALT','META']);
+window.addEventListener('keydown',ev=>{
+ if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName))return;
+ const k=ev.key.toLowerCase();
+ if([' ','arrowdown','arrowup','arrowleft','arrowright'].includes(k))ev.preventDefault();
+ if(ev.repeat||modifierKeys.has(ev.key.toUpperCase()))return;
+ if(ev.ctrlKey&&/^[1-5]$/.test(k)){
+  ev.preventDefault();
+  groups[+k-1]=chosen().map(u=>u.id);notify(k+'번 부대 저장: '+groups[+k-1].length+'기');updateGroups();return;
+ }
+ if(/^[1-5]$/.test(k)){selected=new Set(groups[+k-1].filter(id=>units.some(u=>u.hp>0&&friendly(u)&&u.id===id)));refreshSelection(true);return}
+ if(k==='a')setMode('attackmove');
+ if(k==='v')setMode('move');
+ if(k==='m')setMode('mind');
+ if(k==='e')setMode('mael');
+ if(k==='t')setMode('storm');
+ if(k==='f')setMode('feedback');
+ if(k==='r')flank();
+ if(k==='o')toggleSiege();
+ if(k==='s')stop('stop');
+ if(k==='h')stop('hold');
+ if(k==='escape')setMode('select');
+ if(k===' '){paused=!paused;notify(paused?'일시정지':'재개');$('pause').textContent=paused?'재개':'일시정지'}
+});
+$('pause').onclick=()=>{paused=!paused;notify(paused?'일시정지':'재개');$('pause').textContent=paused?'재개':'일시정지'};
+$('restart').onclick=reset;
+$('battleMode').onclick=()=>{battleMode=battleMode==='defense'?'duel':'defense';$('battleMode').textContent='모드: '+(battleMode==='duel'?'로컬 2인 쟁탈전':'디펜스');$('enemyBaseChip').hidden=battleMode!=='duel';$('teamSwitch').hidden=battleMode!=='duel';reset()};
+$('teamSwitch').onclick=()=>{activeTeam=!activeTeam;selected.clear();groups=Array.from({length:5},()=>[]);mode='select';$('teamSwitch').textContent='조작: '+(activeTeam?'주홍':'청록');notify((activeTeam?'주홍':'청록')+' 플레이어 조작 중');const hero=units.find(u=>u.hp>0&&u.enemy===activeTeam&&u.type==='darkarchon');if(hero)playVoice(hero,'ready',true);refreshSelection(true)};
+document.querySelectorAll('[data-command]').forEach(btn=>btn.onclick=()=>{
+ const cmd=btn.dataset.command;
+ if(cmd==='move'||cmd==='attackmove')setMode(cmd)
+ else if(cmd==='stop'||cmd==='hold')stop(cmd);
+ else if(cmd==='revive')startRevive();
+ else if(cmd==='siege')toggleSiege();
+ else if(cmd==='flank')flank();
+ else setMode(cmd);
+});
+function stepToward(u,p,dt){
+ if(u.type==='siegetank'&&(u.sieged||u.siegeTransition>0))return;
+ const d=distance(u,p),sp=u.speed??TYPES[u.type].speed;
+ if(d<Math.max(6,TYPES[u.type].r*.3)){if(u.order.type==='move'||u.order.type==='attackmove')completeOrder(u);return}
+ let vx=(p.x-u.x)/d,vy=(p.y-u.y)/d;
+ u.face=Math.atan2(vy,vx);
+ let x=u.x+vx*Math.min(d,sp*dt),y=u.y+vy*Math.min(d,sp*dt);
+ for(const v of units){if(v===u||v.hp<=0)continue;
+  const gap=Math.hypot(x-v.x,y-v.y),minGap=(TYPES[u.type].r+TYPES[v.type].r)*.68;
+  if(gap<minGap){const ax=gap<.001?Math.sin(u.id*2):((x-v.x)/gap),ay=gap<.001?Math.cos(u.id*2):((y-v.y)/gap);
+   x+=ax*(minGap-gap)*.24;y+=ay*(minGap-gap)*.24;
+  }
+ }
+ u.x=clamp(x,27,W-27);u.y=clamp(y,u.neutral?UPPER_LANE_BOTTOM+15:28,H-28);u.moving=true;
+}
+function canHit(u,target){
+ if(target.core)return true; // Bases are exposed strategic objectives, including to air-only raid units.
+ const d=TYPES[u.type];return target.type==='darkarchon'||(TYPES[target.type].flying?d.canAir!==false:d.canGround!==false);
+}
+function damage(t,n,source=null,weapon='normal'){
+ if(t.core){if(t.enemy)enemyBase=Math.max(0,enemyBase-n);else nexus=Math.max(0,nexus-n);return}
+ if(t.hp<=0)return;
+ if(source&&hostileFor(t,source)&&!['hold','stop','move'].includes(t.order.type)){t.lastAttacker=source.id;t.retaliateFor=4}
+ let amount=n;t.shieldDelay=7;
+ if(t.shield>0){const absorbed=Math.min(t.shield,amount);t.shield-=absorbed;amount-=absorbed}
+ if(amount>0){
+  const d=TYPES[t.type],size=d.size||'large',armor=t.armor??d.armor;
+  const multiplier=weapon==='explosive'?(size==='small'?.5:size==='medium'?.75:1):weapon==='concussive'?(size==='large'?.25:size==='medium'?.5:1):1;
+  t.hp-=Math.max(.5,(amount-armor)*multiplier);
+ }
+ if(t.hp<=0){if(!t.neutral&&t.enemy===activeTeam)playVoice(t,'death',true);corpses.push({type:t.type,x:t.x,y:t.y,face:t.face,age:0,hero:t.hero});if(t.enemy)kills++}
+}
+function siegeSplashMultiplier(radius){
+ return radius<=SIEGE_RADII[0]?1:radius<=SIEGE_RADII[1]?.5:radius<=SIEGE_RADII[2]?.25:0;
+}
+function siegeImpact(source,target,amount){
+ // StarCraft: Brood War radial rings, including friendly fire and explosive unit-size modifiers.
+ const blast={x:target.x,y:target.y};
+ if(target.core)damage(target,amount,source,'explosive');
+ for(const unit of units){
+  if(unit.hp<=0||TYPES[unit.type].flying)continue;
+  const falloff=unit===target?1:siegeSplashMultiplier(distance(unit,blast));
+  if(falloff)damage(unit,amount*falloff,source,'explosive');
+ }
+ effects.push({x:blast.x,y:blast.y,color:'#ffc373',r:SIEGE_RADII[2]*2,ttl:.52,total:.52});
+}
+function applyImpact(source,target,amount,weapon='normal',splash=0,bounce=false,pierce=false){
+ const impactPoint={x:target.x,y:target.y};
+ damage(target,amount,source,weapon);
+ if(!source)return;
+ const hostiles=units.filter(v=>v!==target&&v.hp>0&&hostileFor(source,v)&&canHit(source,v));
+ if(pierce){
+  const dx=impactPoint.x-source.x,dy=impactPoint.y-source.y,len=Math.max(1,Math.hypot(dx,dy)),nx=dx/len,ny=dy/len;
+  for(const v of hostiles){const along=(v.x-source.x)*nx+(v.y-source.y)*ny,side=Math.abs((v.x-source.x)*ny-(v.y-source.y)*nx);if(along>=0&&along<=Math.max(len,220)&&side<23)damage(v,amount*.78,source,weapon)}
+ }else if(bounce){
+  const near=hostiles.sort((a,b)=>distance(a,impactPoint)-distance(b,impactPoint)).slice(0,2);
+  near.forEach((v,i)=>{if(distance(v,impactPoint)<135)damage(v,amount*(i===0?1/3:1/9),source,weapon)});
+ }else if(splash){
+  for(const v of hostiles){const r=distance(v,impactPoint);if(r<splash)damage(v,amount*(1-r/splash)*.65,source,weapon)}
+ }
+}
+function strike(u,t){
+ const d=TYPES[u.type],air=!t.core&&!!TYPES[t.type].flying;
+ const amount=u.type==='siegetank'&&u.sieged?(u.siegeDamage??70):air?(u.airDamage??d.airDamage??u.damage??d.damage):(t.core&&d.canGround===false?Math.max(1,(u.airDamage??d.airDamage??u.damage??d.damage)*.5):(u.damage??d.damage));
+ const weapon=air?(d.airWeapon||d.weapon||'normal'):(d.weapon||'normal');
+ u.cool=u.type==='siegetank'&&u.sieged?75/24:(u.attackCool??d.cool);u.attackTimer=u.fixed?.58:.3;
+ if(u.type==='siegetank'&&t.x!==undefined)u.face=Math.atan2(t.y-u.y,t.x-u.x);
+ if(u.enemy===activeTeam&&!u.neutral)playVoice(u,'attack');
+ if(d.projectile||u.fixed){
+  // Carrier fire is represented by animated miniature interceptor salvos.
+  const count=u.type==='carrier'?6:1;
+  for(let i=0;i<count;i++)projectiles.push({x:u.x+rnd(-10,10),y:u.y-15+rnd(-10,10),targetId:t.core?null:t.id,core:t.core?{...t}:null,ownerId:u.id,damage:amount/count,weapon,siegeBlast:u.type==='siegetank'&&u.sieged,splash:i===0?d.splash||0:0,bounce:i===0&&!!d.bounce,pierce:i===0&&!!d.pierce,enemy:u.enemy,speed:u.type==='carrier'?560:630});
+  particle(u.x,u.y-10,u.enemy?'#ffb4a4':'#9cefff',15);
+ }else applyImpact(u,t,amount,weapon,d.splash||0,!!d.bounce,!!d.pierce);
+ if(d.suicide){u.hp=0;corpses.push({type:u.type,x:u.x,y:u.y,face:u.face,age:0,hero:u.hero})}
+ if(!d.projectile&&!u.fixed)particle(t.x,t.y,u.neutral?'#f4d66b':u.enemy?'#ff8d83':'#88e8f3',u.type==='ultra'?42:18);
+}
+
+function tick(dt){
+ if(over||paused)return;
+ time+=dt;energy=Math.min(250,energy+14*dt);enemyEnergy=Math.min(250,enemyEnergy+14*dt);
+ for(const c of corpses)c.age+=dt;corpses=corpses.filter(c=>c.age<.65);
+ if(reviveTimer>0){reviveTimer=Math.max(0,reviveTimer-dt);if(reviveTimer===0&&nexus>0&&!allies().some(u=>u.type==='darkarchon')){spawn('darkarchon',false,235,H/2);notify('다크 아콘 재생산 완료')}}
+ if(enemyReviveTimer>0){enemyReviveTimer=Math.max(0,enemyReviveTimer-dt);if(enemyReviveTimer===0&&enemyBase>0&&!enemies().some(u=>u.type==='darkarchon'&&!u.neutral)){spawn('darkarchon',true,W-235,H/2);notify('주홍 다크 아콘 재생산 완료')}}
+ for(const s of storms){s.ttl-=dt;s.pulse+=dt;while(s.pulse>=.4){s.pulse-=.4;const caster=units.find(u=>u.id===s.caster);for(const u of units)if(u.hp>0&&!u.fixed&&distance(u,s)<95)damage(u,14,caster)}}
+ storms=storms.filter(s=>s.ttl>0);
+ for(const p of projectiles){const target=p.core||units.find(u=>u.id===p.targetId&&u.hp>0);if(!target){p.done=true;continue}const gap=distance(p,target),move=(p.speed||520)*dt;if(gap<=move+10){p.done=true;const source=units.find(u=>u.id===p.ownerId);if(p.siegeBlast)siegeImpact(source,target,p.damage);else applyImpact(source,target,p.damage,p.weapon,p.splash,p.bounce,p.pierce);particle(target.x,target.y,p.siegeBlast?'#ffc66c':p.enemy?'#ffaba0':'#a9eaff',p.siegeBlast?60:34)}else{p.x+=(target.x-p.x)*move/gap;p.y+=(target.y-p.y)*move/gap}}
+ projectiles=projectiles.filter(p=>!p.done);
+ if(battleMode==='duel'){
+  centerTimer+=dt;
+  if(centerTimer>=8){centerTimer=0;const u=spawnNeutral();notify('전장에 중립 '+TYPES[u.type].name+' 등장')}
+ }else while(spawns.length&&spawns[0].t<=time){const s=spawns.shift();spawn(s.type,true,rnd(W-65,W-30),rnd(70,H-70))}
+ for(const u of units){
+  if(u.hp<=0)continue;u.cool-=dt;u.stun=Math.max(0,u.stun-dt);u.attackTimer=Math.max(0,u.attackTimer-dt);u.frameTime+=dt;u.moving=false;u.shieldDelay=Math.max(0,u.shieldDelay-dt);if(u.shieldDelay===0)u.shield=Math.min(u.maxShield,u.shield+2.55*dt);u.retaliateFor=Math.max(0,u.retaliateFor-dt);
+  if(u.type==='siegetank'){
+   if(battleMode==='defense'&&u.enemy){u.sieged=false;u.siegeTransition=0}
+   if(u.siegeTransition>0){
+    u.siegeTransition=Math.max(0,u.siegeTransition-dt);
+    if(u.siegeTransition===0){u.sieged=u.siegeTarget;u.cool=Math.max(u.cool,.25)}
+    continue;
+   }
+  }
+  if(u.stun>0)continue;
+  let o=u.order;const d=TYPES[u.type];
+  if(u.fixed){let target=null,near=d.range;for(const v of units)if(hostileFor(u,v)&&!v.fixed&&canHit(u,v)){const gap=distance(u,v);if(gap<near){near=gap;target=v}}if(target&&u.cool<=0)strike(u,target);continue}
+  if(u.type==='darkarchon'){if(['move','attackmove'].includes(o.type))stepToward(u,o,dt);continue}
+  if(u.neutral){u.roamFor-=dt;if(u.roamFor<=0){u.roamFor=rnd(4,8);u.order={type:'roam',x:rnd(350,W-350),y:rnd(NEUTRAL_MIN_Y,H-70)};o=u.order}}
+  // Pure MOVE/escape never attacks or retargets, even when shot from both flanks.
+  if(o.type==='move'){u.engagedTargetId=0;stepToward(u,o,dt);continue}
+  const opponents=units.filter(v=>hostileFor(u,v)&&canHit(u,v)&&(!u.neutral||v.y>UPPER_LANE_BOTTOM+15)&&(!(u.type==='siegetank'&&u.sieged)||distance(u,v)>=SIEGE_MIN_RANGE));
+  let target=null,td=Infinity,forced=false;
+  if(o.target){target=opponents.find(v=>v.id===o.target)||null;forced=!!target;if(!target){completeOrder(u);u.engagedTargetId=0;continue}}
+  // Lock onto a valid opponent until it dies or leaves the pursuit leash.
+  const leash=u.type==='siegetank'&&u.sieged?SIEGE_RANGE:Math.max(380,(d.sight||300)*1.22);
+  if(!target&&u.engagedTargetId){
+   const previous=opponents.find(v=>v.id===u.engagedTargetId);
+   if(previous&&distance(u,previous)<leash){target=previous;forced=true}
+   else u.engagedTargetId=0;
+  }
+  if(!target&&u.retaliateFor>0&&!['hold','stop'].includes(o.type)){
+   const aggressor=opponents.find(v=>v.id===u.lastAttacker);
+   if(aggressor&&distance(u,aggressor)<leash){target=aggressor;forced=true}
+  }
+  if(!target){
+   const sight=u.type==='siegetank'&&u.sieged?SIEGE_RANGE:(['hold','stop'].includes(o.type)?d.range+25:(d.sight||300));
+   for(const v of opponents){const gap=distance(u,v);if(gap<sight&&gap<td){td=gap;target=v}}
+  }
+  // Enemy AI only attacks the base if no defendable unit is in sight.
+  if(!u.neutral&&o.type==='attackmove'&&!target){
+   const core=u.enemy?{...HOME,core:true,enemy:false}:battleMode==='duel'?{...AWAY,core:true,enemy:true}:null;
+   if(core)target=core;
+  }
+  if(target){if(!target.core)u.engagedTargetId=target.id;
+   const sieged=u.type==='siegetank'&&u.sieged;
+   const range=(sieged?SIEGE_RANGE:d.range)+(target.core?23:TYPES[target.type].r*.35);
+   const gap=distance(u,target);
+   if(gap<=range&&(!sieged||gap>=SIEGE_MIN_RANGE)){if(u.cool<=0)strike(u,target)}
+   else if(!sieged&&!['hold','stop'].includes(o.type))stepToward(u,target,dt);
+  }else {u.engagedTargetId=0;if(['attackmove','roam'].includes(o.type))stepToward(u,o,dt)}
+ }
+ units=units.filter(u=>u.hp>0);const prev=selected.size;selected=new Set([...selected].filter(id=>units.some(u=>u.id===id&&friendly(u))));if(selected.size!==prev)refreshSelection(true);
+ if(nexus<=0){over=true;notify('패배 · 넥서스가 파괴됐습니다')}
+ if(battleMode==='duel'&&enemyBase<=0){over=true;notify('승리 · 상대 기지를 파괴했습니다')}
+ if(battleMode==='defense'&&!spawns.length&&!enemies().length){interval+=dt;if(interval>=8){if(wave===WAVE_COUNT){over=true;notify('승리! 마지막 영웅 웨이브까지 모두 방어했습니다')}else{wave++;energy=Math.min(250,energy+50);for(const u of allies()){u.hp=Math.min(u.max,u.hp+u.max*(u.type==='siegetank'&&!u.enemy?.5:.12));u.shield=Math.min(u.maxShield,u.shield+u.maxShield*.25)}startWave()}}}
+ else interval=0;
+}
+
+function drawUnitAccents(u,d){
+ const pulse=.5+.5*Math.sin(u.frameTime*5);
+ ctx.save();
+ ctx.lineCap='round';
+ if(u.type==='darkarchon'){
+  ctx.strokeStyle='rgba(239,66,105,'+(.35+.25*pulse)+')';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.ellipse(0,-5,d.r*(.82+.08*pulse),d.r*(.9+.08*pulse),0,0,Math.PI*2);ctx.stroke();
+ }else if(u.type==='zealot'){
+  ctx.rotate(u.face);ctx.strokeStyle='#8eeefa';ctx.shadowColor='#7ceaff';ctx.shadowBlur=8;ctx.lineWidth=3;
+  for(const sign of [-1,1]){ctx.beginPath();ctx.moveTo(8,sign*12);ctx.lineTo(34,sign*19);ctx.stroke()}
+ }else if(u.type==='archon'){
+  ctx.strokeStyle='rgba(133,220,255,'+(.37+.26*pulse)+')';ctx.shadowColor='#a3eaff';ctx.shadowBlur=10;
+  ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-4,d.r*(1+.12*pulse),0,Math.PI*2);ctx.stroke();
+ }else if(u.type==='hydra'){
+  ctx.strokeStyle='#81aa55';ctx.lineWidth=2;
+  for(const sign of [-1,1]){ctx.beginPath();ctx.moveTo(-9,sign*8);ctx.lineTo(-20,sign*20);ctx.stroke()}
+ }else if(u.type==='marine'&&u.attackTimer>0){
+  ctx.rotate(u.face);ctx.fillStyle='#d9f5fe';ctx.shadowColor='#b5efff';ctx.shadowBlur=8;
+  ctx.beginPath();ctx.arc(27,4,3.5,0,Math.PI*2);ctx.fill();
+ }else if(u.type==='goliath'&&u.attackTimer>0){
+  ctx.fillStyle='#f3b974';for(const sign of [-1,1]){ctx.fillRect(18,sign*11,9,3)}
+ }
+ ctx.restore();
+}
+
+function drawPrototypeUnit(u,d,w){
+ // Animated Canvas-based fallback silhouettes for roster members awaiting individual art atlases.
+ if(u.fixed||u.type==='darkarchon')return false;
+ ctx.save();const pulse=Math.sin(u.frameTime*8),r=Math.max(9,w*.37);
+ if(d.flying)ctx.translate(0,-8+Math.sin(u.frameTime*4)*3);
+ else ctx.translate(0,u.moving?Math.abs(pulse)*2:0);
+ ctx.rotate((u.face||0)+Math.PI/2);ctx.lineJoin='round';ctx.lineCap='round';
+ const bio=d.race==='zerg',gold=d.race==='protoss';
+ ctx.fillStyle=bio?'#342d36':gold?'#aa824b':'#505e6c';ctx.strokeStyle=d.color;ctx.lineWidth=3;
+ if(d.flying){
+  ctx.beginPath();ctx.moveTo(0,-r*1.55);ctx.lineTo(-r*1.7,r*.75);ctx.lineTo(-r*.48,r*.3);ctx.lineTo(0,r*.7);ctx.lineTo(r*.48,r*.3);ctx.lineTo(r*1.7,r*.75);ctx.closePath();ctx.fill();ctx.stroke();
+ }else if(['dragoon','goliath','siegetank','reaver','vulture'].includes(u.type)){
+  const legs=d.race==='protoss'?4:2;
+  for(let sign of [-1,1])for(let k=0;k<legs/2;k++){const y=(k? .7:-.7)*r;ctx.beginPath();ctx.moveTo(sign*r*.4,y);ctx.lineTo(sign*r*1.2,y+Math.sin(u.frameTime*5+sign+k)*3);ctx.stroke()}
+  ctx.fillRect(-r*.6,-r*.9,r*1.2,r*1.8);ctx.strokeRect(-r*.6,-r*.9,r*1.2,r*1.8);
+ }else if(bio){
+  ctx.beginPath();ctx.moveTo(0,-r*1.35);ctx.lineTo(-r*.7,-r*.35);ctx.lineTo(-r*.3,r);ctx.lineTo(r*.3,r);ctx.lineTo(r*.7,-r*.35);ctx.closePath();ctx.fill();ctx.stroke();
+  for(let sign of [-1,1]){ctx.beginPath();ctx.moveTo(sign*r*.4,0);ctx.lineTo(sign*r*1.2,-r*.55+(pulse*3));ctx.stroke()}
+ }else{
+  ctx.beginPath();ctx.ellipse(0,0,r*.7,r,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  for(let sign of [-1,1]){ctx.beginPath();ctx.moveTo(sign*r*.4,-r*.2);ctx.lineTo(sign*r*1.05,-r*.6);ctx.stroke()}
+ }
+ ctx.fillStyle=gold?'#7de9ff':bio?'#e38ca8':'#b9d3e8';ctx.beginPath();ctx.arc(0,-r*.3,r*.31,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle=gold?'#d3f8ff':bio?'#d0ff84':'#f1d9a3';ctx.lineWidth=3;
+ if(['dragoon','siegetank','reaver','battlecruiser','guardian'].includes(u.type)){
+  ctx.beginPath();ctx.moveTo(0,-r*.3);ctx.lineTo(0,-r*1.65);ctx.stroke();
+ }else if(['zergling','darktemplar','firebat','lurker','scourge'].includes(u.type)){
+  for(let sign of [-1,1]){ctx.beginPath();ctx.moveTo(sign*r*.45,-r*.2);ctx.lineTo(sign*r*1.06,-r*1.15);ctx.stroke()}
+ }else{ctx.beginPath();ctx.moveTo(0,-r*.25);ctx.lineTo(0,-r*1.18);ctx.stroke()}
+ if(u.attackTimer>0){ctx.fillStyle='#fff6ad';ctx.shadowColor='#ffdf72';ctx.shadowBlur=14;ctx.beginPath();ctx.arc(0,-r*1.7,4+Math.sin(u.frameTime*20)*2,0,Math.PI*2);ctx.fill()}
+ ctx.restore();return true;
+}
+function drawUnit(u){
+ const d=TYPES[u.type];ctx.save();ctx.translate(u.x,u.y);
+ ctx.fillStyle='#03050888';ctx.beginPath();ctx.ellipse(0,d.r*.65,d.r,Math.max(6,d.r*.35),0,0,Math.PI*2);ctx.fill();
+ const w=Math.min(d.r*3,88);
+ if(u.hero){const pulse=.7+.3*Math.sin(u.frameTime*7);ctx.save();ctx.strokeStyle='rgba(255,47,66,'+(.75*pulse)+')';ctx.shadowColor='#ff183c';ctx.shadowBlur=35;ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(0,4,d.r+16,d.r*.78+16,0,0,Math.PI*2);ctx.stroke();ctx.strokeStyle='rgba(255,170,160,'+(.55*pulse)+')';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,d.r+21,0,Math.PI*2);ctx.stroke();ctx.restore()}
+ if(u.fixed){
+  const recoil=u.attackTimer>0?Math.sin((.58-u.attackTimer)/.58*Math.PI):0;
+  const lift=8+recoil*15+Math.sin(u.frameTime*2)*2;
+  if(cannonCoreArt.complete&&cannonCoreArt.naturalWidth)ctx.drawImage(cannonCoreArt,-25,-59-lift,50,76);
+  if(cannonBaseArt.complete&&cannonBaseArt.naturalWidth)ctx.drawImage(cannonBaseArt,-55,-50,110,110);
+  else{ctx.fillStyle='#c8a66a';ctx.beginPath();ctx.arc(0,0,35,0,Math.PI*2);ctx.fill()}
+  if(u.attackTimer>0){ctx.fillStyle='#b9f7ff';ctx.shadowColor='#70d9ff';ctx.shadowBlur=20;ctx.beginPath();ctx.arc(0,-43-lift,5+recoil*7,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}
+ }
+ else if(spriteFrame(u,w)) {drawUnitAccents(u,d)}
+ else if(drawPrototypeUnit(u,d,w)) {drawUnitAccents(u,d)}
+ else {
+  ctx.shadowBlur=u.type==='darkarchon'?28:10;ctx.shadowColor=d.color;ctx.fillStyle=d.color;ctx.strokeStyle=u.enemy?'#ef9c90':'#a4e9ff';ctx.lineWidth=2;
+  ctx.beginPath();for(let i=0;i<8;i++){const a=i*Math.PI/4+u.face,r=d.r*(i%2?.82:1);ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.stroke();ctx.shadowBlur=0;
+  if(u.type==='darkarchon'){ctx.fillStyle='#1b1026';ctx.beginPath();ctx.moveTo(-17,-24);ctx.lineTo(0,-39);ctx.lineTo(17,-24);ctx.lineTo(0,27);ctx.closePath();ctx.fill();ctx.fillStyle='#ffb0d2';ctx.fillRect(-11,-14,8,4);ctx.fillRect(3,-14,8,4)}
+ }
+ if(u.type==='siegetank'&&(u.sieged||u.siegeTransition>0)){
+   const progress=u.siegeTransition>0?1-u.siegeTransition/(u.siegeTarget?SIEGE_DEPLOY:SIEGE_UNDEPLOY):1;
+   ctx.save();ctx.strokeStyle=u.siegeTransition>0?'#d8d7af':'#f4b460';ctx.lineWidth=4;ctx.shadowColor='#f6b14b';ctx.shadowBlur=u.sieged?9:2;
+   for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*12,-4);ctx.lineTo(side*(18+9*progress),7);ctx.lineTo(side*(23+7*progress),17);ctx.stroke()}
+   ctx.save();ctx.rotate((u.face||0)+Math.PI/2);ctx.fillStyle='#b8a17e';ctx.strokeStyle='#5c4b3d';ctx.lineWidth=2;
+   ctx.fillRect(-9,-13,18,25);ctx.strokeRect(-9,-13,18,25);
+   ctx.fillStyle='#d9bc86';ctx.fillRect(-4,-46,8,39);ctx.strokeRect(-4,-46,8,39);ctx.restore();ctx.restore();
+   if(u.siegeTransition>0){ctx.fillStyle='#fff3d5';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText(Math.ceil(u.siegeTransition)+'s',0,-d.r-34)}
+   else {ctx.fillStyle='#ffc879';ctx.strokeStyle='#582e0f';ctx.lineWidth=2;ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.strokeText('SIEGE',0,-d.r-33);ctx.fillText('SIEGE',0,-d.r-33)}
+ }
+ if(d.cloaked){ctx.save();ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillStyle='#b8b0ea';ctx.fillText('은신',0,-d.r-42);ctx.restore()}
+ if(u.hero){ctx.save();ctx.textAlign='center';ctx.font='900 13px sans-serif';ctx.shadowColor='#ff123f';ctx.shadowBlur=10;ctx.fillStyle='#ffe4c4';ctx.fillText('★ '+u.heroName,0,-d.r-52);ctx.restore()}
+ if(selected.has(u.id)){ctx.strokeStyle='#73ffd0';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,6,d.r+9,d.r*.56+6,0,0,Math.PI*2);ctx.stroke()}
+ if(u.maxShield>0){ctx.fillStyle='#102942';ctx.fillRect(-d.r,-d.r-23,d.r*2,5);ctx.fillStyle='#66beff';ctx.fillRect(-d.r,-d.r-23,d.r*2*clamp(u.shield/u.maxShield,0,1),5)}
+  if(u.type==='darkarchon'){const amount=u.enemy?enemyEnergy:energy,barW=Math.max(70,d.r*3);ctx.fillStyle='#131a37';ctx.fillRect(-barW/2,-d.r-37,barW,7);ctx.fillStyle='#75b9ff';ctx.fillRect(-barW/2,-d.r-37,barW*clamp(amount/250,0,1),7);for(const cost of [50,75,100,150]){ctx.fillStyle='#f7fcff';ctx.fillRect(-barW/2+barW*cost/250-1,-d.r-37,2,7)}ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillStyle='#d7efff';ctx.fillText(Math.floor(amount)+'/250',0,-d.r-42)}
+ ctx.fillStyle='#211c1f';ctx.fillRect(-d.r,-d.r-17,d.r*2,5);
+ ctx.fillStyle=u.neutral?'#f4d66b':u.enemy?'#f7878a':'#77ddc3';ctx.fillRect(-d.r,-d.r-17,d.r*2*clamp(u.hp/u.max,0,1),5);
+ if(d.flying){ctx.fillStyle='#bdeaff';ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillText('⌃',0,d.r+20)}
+ if(u.stun>0){ctx.fillStyle='#d5b9fa';ctx.font='bold 20px sans-serif';ctx.textAlign='center';ctx.fillText('✣',0,-d.r-24)}
+ ctx.restore();
+}
+function draw(){
+ ctx.fillStyle='#101924';ctx.fillRect(0,0,W,H);
+ const grd=ctx.createRadialGradient(520,290,30,520,290,770);
+ grd.addColorStop(0,'#344350');grd.addColorStop(1,'#0b131e');ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
+ ctx.strokeStyle='#a6bac414';ctx.lineWidth=1;
+ for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+ for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+ const rangeTank=chosen().find(u=>u.type==='siegetank'&&u.sieged&&u.siegeTransition<=0);
+ if(rangeTank){
+  ctx.save();ctx.strokeStyle='#f6b47866';ctx.lineWidth=2;ctx.setLineDash([10,13]);
+  ctx.beginPath();ctx.arc(rangeTank.x,rangeTank.y,SIEGE_RANGE,0,Math.PI*2);ctx.stroke();
+  ctx.strokeStyle='#ff6666aa';ctx.beginPath();ctx.arc(rangeTank.x,rangeTank.y,SIEGE_MIN_RANGE,0,Math.PI*2);ctx.stroke();
+  ctx.setLineDash([]);ctx.restore();
+ }
+ if(battleMode==='duel'){
+  const lane=ctx.createLinearGradient(0,55,0,UPPER_LANE_BOTTOM);lane.addColorStop(0,'#183447bb');lane.addColorStop(1,'#244359aa');ctx.fillStyle=lane;ctx.fillRect(0,55,W,UPPER_LANE_BOTTOM-55);
+  ctx.fillStyle='#506d7966';ctx.fillRect(0,UPPER_LANE_BOTTOM-12,W,14);
+  ctx.strokeStyle='#8bc5ce88';ctx.lineWidth=2;ctx.setLineDash([16,14]);ctx.beginPath();ctx.moveTo(220,140);ctx.lineTo(W-220,140);ctx.stroke();ctx.setLineDash([]);
+  for(const x of [230,W-230]){ctx.fillStyle='#48697888';ctx.beginPath();ctx.moveTo(x-95,UPPER_LANE_BOTTOM);ctx.lineTo(x+95,UPPER_LANE_BOTTOM);ctx.lineTo(x+55,H/2+65);ctx.lineTo(x-55,H/2+65);ctx.closePath();ctx.fill()}
+ }
+ if(nexusArt.complete&&nexusArt.naturalWidth){ctx.drawImage(nexusArt,HOME.x-66,HOME.y-68,132,136);if(battleMode==='duel')ctx.drawImage(nexusArt,AWAY.x-66,AWAY.y-68,132,136)}
+ else{ctx.fillStyle='#73d0e5';ctx.beginPath();ctx.arc(HOME.x,HOME.y,42,0,Math.PI*2);ctx.fill();if(battleMode==='duel'){ctx.beginPath();ctx.arc(AWAY.x,AWAY.y,42,0,Math.PI*2);ctx.fill()}}
+ ctx.strokeStyle='#ec7b8650';ctx.setLineDash([8,8]);ctx.beginPath();ctx.moveTo(W-135,0);ctx.lineTo(W-135,H);ctx.stroke();ctx.setLineDash([]);
+ for(const c of corpses){ctx.save();ctx.globalAlpha=1-c.age/.65;ctx.translate(c.x,c.y);const sheet=spriteSheets[c.type];
+  if(sheet?.complete&&sheet.naturalWidth){
+   const dir=atlasDirection(Math.round(((c.face%(2*Math.PI)+2*Math.PI)%(2*Math.PI))*8/Math.PI)%16),frame=13+Math.min(2,Math.floor(c.age/.22));
+   const cw=sheet.width/16,ch=sheet.height/16,width=Math.min(TYPES[c.type].r*3,88),height=width*ch/cw,center=spriteCenters[c.type]?.[dir]?.[frame]||{x:0,y:0};
+   const sx=Math.ceil(frame*cw+1),sy=Math.ceil(dir*ch+1),sw=Math.floor((frame+1)*cw-1)-sx,sh=Math.floor((dir+1)*ch-1)-sy;
+   ctx.imageSmoothingEnabled=LEGACY_ATLAS_TYPES.has(c.type);ctx.imageSmoothingQuality='high';
+   ctx.drawImage(sheet,sx,sy,sw,sh,-width/2-center.x*width/cw,-height*.73-center.y*height/ch,width,height);
+  }else{ctx.fillStyle=TYPES[c.type].color;ctx.beginPath();ctx.arc(0,0,TYPES[c.type].r*(1-c.age/.65),0,Math.PI*2);ctx.fill()}ctx.restore()}
+ for(const u of [...units].sort((a,b)=>a.y-b.y))drawUnit(u);
+ for(const p of projectiles){ctx.fillStyle=p.enemy?'#ffb6a9':'#c6f7ff';ctx.shadowColor=p.enemy?'#ff816f':'#70ddff';ctx.shadowBlur=22;ctx.beginPath();ctx.arc(p.x,p.y,8,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}
+ for(const e of effects){ctx.globalAlpha=clamp(e.ttl/e.total,0,1);ctx.strokeStyle=e.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(e.x,e.y,e.r*(1-e.ttl/e.total),0,Math.PI*2);ctx.stroke()}ctx.globalAlpha=1;
+ for(const s of storms){ctx.fillStyle='#a9b4ff35';ctx.strokeStyle='#c3d3ff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(s.x,s.y,95,0,Math.PI*2);ctx.fill();ctx.stroke()}
+ if(drag&&distance(drag.begin,drag.end)>7){
+  const a=drag.begin,b=drag.end,x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(a.x-b.x),h=Math.abs(a.y-b.y);
+  ctx.fillStyle='#6cf7c315';ctx.strokeStyle='#83f5bd';ctx.lineWidth=1;ctx.fillRect(x,y,w,h);ctx.strokeRect(x,y,w,h);
+ }
+ const hover=units.find(u=>u.id===hoveredUnitId&&u.hp>0);
+ if(hover?.hero&&!drag){
+  const w=250,h=88,x=clamp(hoverPoint.x+22,10,W-w-10),y=clamp(hoverPoint.y+16,10,H-h-10);
+  ctx.save();ctx.fillStyle='#140d1beb';ctx.strokeStyle='#ff3d5b';ctx.lineWidth=2;ctx.fillRect(x,y,w,h);ctx.strokeRect(x,y,w,h);
+  ctx.textAlign='left';ctx.fillStyle='#ffb7c2';ctx.font='bold 17px sans-serif';ctx.fillText('★ '+hover.heroName,x+10,y+24);
+  ctx.fillStyle='#e3dce7';ctx.font='14px sans-serif';ctx.fillText((hover.officialHero?'공식 영웅':'게임 전용 정예')+'  HP '+Math.ceil(hover.hp)+' / '+hover.max,x+10,y+45);
+  ctx.fillText('보호막 '+Math.ceil(hover.shield)+'  공격력 '+(hover.damage??TYPES[hover.type].damage),x+10,y+65);
+  ctx.restore();
+ }
+ if(mode!=='select'){ctx.textAlign='left';ctx.font='bold 17px sans-serif';ctx.fillStyle='#ffe6b6';ctx.fillText({mind:'정신 지배: 적을 클릭',mael:'마엘스트롬: 지점 클릭',storm:'사이오닉 스톰: 아군 피해',feedback:'피드백: 상대 다크 아콘 클릭',attackmove:'공격 이동: 지점 클릭'}[mode],20,34)}
+ if(interval>0&&!over&&battleMode==='defense'){ctx.font='bold 22px sans-serif';ctx.fillStyle='#dccca4';ctx.textAlign='center';ctx.fillText('WAVE CLEAR · 다음 출현까지 '+Math.ceil(Math.max(0,8-interval))+'초 · PSI +50 / 탱크 수리 50%',W/2,82)}
+ if(over||paused){ctx.fillStyle='#090a16d9';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.fillStyle='#f1b3d3';ctx.font='bold 44px sans-serif';ctx.fillText(paused?'PAUSED':nexus>0?'VICTORY':'DEFEAT',W/2,H/2);ctx.fillStyle='#d1c4b6';ctx.font='17px sans-serif';ctx.fillText('새 전투 버튼으로 재시작',W/2,H/2+42)}
+}
+function drawMinimap(){
+ mc.fillStyle='#0c1624';mc.fillRect(0,0,minimap.width,minimap.height);
+ if(battleMode==='duel'){mc.fillStyle='#285368';mc.fillRect(0,0,minimap.width,UPPER_LANE_BOTTOM/H*minimap.height)}
+ mc.strokeStyle='#5a778c';mc.lineWidth=1;mc.strokeRect(3,3,minimap.width-6,minimap.height-6);
+ mc.fillStyle='#78a9b3';mc.fillRect(14,minimap.height/2-4,9,8);if(battleMode==='duel'){mc.fillStyle='#f57569';mc.fillRect(minimap.width-23,minimap.height/2-4,9,8)}
+ for(const u of units){mc.fillStyle=u.neutral?'#f4d66b':u.enemy?'#f57569':'#7ce7c0';let x=u.x/W*minimap.width,y=u.y/H*minimap.height;
+ mc.fillRect(x-2,y-2,u.type==='ultra'?6:4,u.type==='ultra'?6:4);if(u.hero){mc.strokeStyle='#ff315c';mc.lineWidth=2;mc.strokeRect(x-4,y-4,9,9)}}
+}
+const tileIcon=t=>'<span class="glyph" style="color:'+TYPES[t].color+'">'+TYPES[t].glyph+'</span>';
+function updateGroups(){
+ const area=$('groupBar');area.innerHTML='';
+ for(let i=0;i<5;i++){
+  const alive=groups[i].filter(id=>units.some(u=>u.hp>0&&friendly(u)&&u.id===id)),btn=document.createElement('button');btn.className='groupbtn';
+  btn.textContent=(i+1)+' · '+alive.length;btn.title='클릭: 부대 선택 / Ctrl+'+(i+1)+': 부대 지정';
+  btn.onclick=()=>{selected=new Set(alive);refreshSelection(true)};area.appendChild(btn);
+ }
+}
+function refreshSelection(force=false){
+ const arr=chosen(),stamp=arr.map(u=>u.id).join(',');
+ if(stamp!==selectionStamp&&arr.length)playVoice(arr[0],'select');
+  if(stamp!==selectionStamp||force){
+  selectionStamp=stamp;
+  const grid=$('selectedList');grid.innerHTML='';
+  const visible=arr.slice(0,16);
+  for(const u of visible){
+   const tile=document.createElement('button');tile.className='unitTile'+(u.hero?' heroTile':'');tile.title=(u.hero?('★ '+u.heroName+' · 영웅 '+Math.ceil(u.hp)+'HP'):TYPES[u.type].name)+(u.type==='siegetank'?(u.sieged?' · SIEGE':u.siegeTransition>0?' · 변환 중':' · 퉁퉁포'):'');
+   if(spriteThumbs[u.type]){const img=document.createElement('img');img.src=spriteThumbs[u.type];img.alt=TYPES[u.type].name;tile.appendChild(img)}
+   else tile.innerHTML=tileIcon(u.type);
+   const text=document.createElement('span');text.className='short';text.textContent=(u.hero?'★ ':'')+Math.max(0,Math.ceil(u.hp+u.shield))+(u.type==='siegetank'&&u.sieged?' ⦿':'');tile.appendChild(text);
+   const bar=document.createElement('div');bar.className='uhp';bar.style.width=(clamp(u.hp/u.max,0,1)*100)+'%';tile.appendChild(bar);
+   if(u.maxShield){const shield=document.createElement('div');shield.className='ushield';shield.style.width=(clamp(u.shield/u.maxShield,0,1)*100)+'%';tile.appendChild(shield)}
+   tile.onclick=e=>{setSelected(u,e.shiftKey)};grid.appendChild(tile);
+  }
+  if(arr.length>16){const more=document.createElement('span');more.textContent='+'+(arr.length-16);grid.appendChild(more)}
+  updateGroups();
+ }
+ const first=arr[0],portrait=$('portraitVisual');
+ portrait.replaceChildren();
+ if(first){
+  if(spriteThumbs[first.type]){const img=document.createElement('img');img.src=spriteThumbs[first.type];img.alt=TYPES[first.type].name;portrait.appendChild(img)}
+  else {portrait.textContent=TYPES[first.type].glyph;portrait.style.color=TYPES[first.type].color}
+  $('portraitName').textContent=(first.hero?'★ '+first.heroName:TYPES[first.type].name)+(arr.length>1?' 외 '+(arr.length-1)+'기':'');$('portraitName').style.color=first.hero?'#ff7687':'#e5dbb8';
+  $('portraitHP').textContent=Math.ceil(first.hp)+' HP + '+Math.ceil(first.shield)+' 보호막'+(first.type==='siegetank'?(first.siegeTransition>0?' · 변환 '+Math.ceil(first.siegeTransition)+'초':first.sieged?' · 시즈모드':' · 퉁퉁포'):'');
+  $('portraitBar').style.width=clamp(first.hp/first.max*100,0,100)+'%';$('portraitShield').style.width=first.maxShield?clamp(first.shield/first.maxShield*100,0,100)+'%':'0%';
+ }else{
+  portrait.textContent='—';$('portraitName').textContent='유닛 미선택';$('portraitName').style.color='#e5dbb8';$('portraitHP').textContent='0 / 0';$('portraitBar').style.width='0%';$('portraitShield').style.width='0%';
+ }
+ updateCommands();
+}
+function updateCommands(){
+ const has=chosen().length>0,hero=units.some(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon');
+ for(const btn of document.querySelectorAll('[data-command]')){
+  let type=btn.dataset.command;
+   if(type==='siege'){
+    const tanks=chosen().filter(u=>u.type==='siegetank'),busy=tanks.length&&tanks.every(u=>u.siegeTransition>0),deployed=tanks.length&&tanks.every(u=>u.sieged);
+    btn.hidden=!tanks.length;btn.disabled=!tanks.length||!!busy;
+    btn.classList.toggle('sieged',!!deployed);btn.classList.toggle('deploying',!!busy);
+    btn.innerHTML=deployed?'◉ <small>O 시즈 해제</small>':busy?'◉ <small>변환 중...</small>':'◉ <small>O 시즈모드</small>';
+    btn.title=deployed?'퉁퉁포 복귀 (3.1초)':'아군만 시즈 전개 (3.3초 · 아군 오폭)';
+    continue;
+   }
+   btn.disabled=type==='revive'?(hero||(activeTeam?enemyReviveTimer:reviveTimer)>0||(activeTeam?enemyBase:nexus)<=0):type==='flank'?(battleMode!=='duel'||!has):type in SKILL_COSTS?(!hero||currentEnergy()<SKILL_COSTS[type]):!has;
+  btn.classList.toggle('active',mode===type);
+ }
+}
+function updateUI(){
+ $('wave').textContent=battleMode==='duel'?'쟁탈전':wave+' / '+WAVE_COUNT;$('energy').textContent=Math.floor(currentEnergy())+' / 250';$('nexusHP').textContent=Math.ceil(nexus)+' / 750';$('enemyBaseHP').textContent=Math.ceil(enemyBase)+' / 750';const activeTimer=activeTeam?enemyReviveTimer:reviveTimer;$('heroStatus').textContent=units.some(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon')?'전투 중':activeTimer>0?'생산 '+Math.ceil(activeTimer)+'초':'재생산 가능';
+ $('army').textContent=allies().filter(u=>!u.fixed).length+' / '+(enemies().filter(u=>!u.fixed).length+spawns.length);$('kills').textContent=kills+' / '+conversions;$('heroCount').textContent=units.filter(u=>u.enemy!==activeTeam&&!u.neutral&&u.hero&&u.hp>0).length;
+ refreshSelection();updateCommands();updateManaUI();drawMinimap();
+}
+minimap.addEventListener('contextmenu',e=>{e.preventDefault();const r=minimap.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;command('move',{x,y},null,e.shiftKey)});
+minimap.addEventListener('click',e=>{const r=minimap.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;notify('미니맵 위치: '+Math.round(x)+', '+Math.round(y)+' · 우클릭으로 이동 명령')});
+
+let last=0;
+function loop(now){
+ const dt=Math.min(.04,(now-last)/1000||.016);last=now;tick(dt);
+ for(const e of effects)e.ttl-=dt;effects=effects.filter(e=>e.ttl>0);
+ draw();
+ if(now-lastUI>170){updateUI();lastUI=now}
+ requestAnimationFrame(loop);
+}
+reset();requestAnimationFrame(loop);
+
+</script>
+</body></html>
+
