@@ -388,8 +388,8 @@ function reset(){
  if(battleMode==='duel'){spawn('darkarchon',true,W-235,H/2);for(const offset of [-105,105])spawn('cannon',true,AWAY.x-130,AWAY.y+offset);spawns=[];for(let i=0;i<5;i++)spawnNeutral();notify('대전 시작 · 전장 곳곳의 중립 유닛을 먼저 정신 지배하세요')}
  else startWave();refreshSelection(true);updateUI();
 }
-function setMode(next){mode=next;updateCommands();notify(next==='move'?'순수 이동: 공격을 무시하고 지점으로 이동':next==='mind'?'정신 지배: 적 유닛 클릭 (150 에너지 · 다크 아콘 제외)':next==='mael'?'마엘스트롬: 지점 클릭 (100 에너지)':next==='storm'?'사이오닉 스톰: 지점 클릭 (75 에너지 · 아군 피해)':next==='feedback'?'피드백: 상대 다크 아콘 클릭 (50 에너지)':next==='attackmove'?'공격 이동: 지점 클릭':'명령 취소')}
-const getUnit=(p,filter=()=>true)=>units.filter(u=>u.hp>0&&filter(u)&&distance(u,p)<TYPES[u.type].r+12).sort((a,b)=>distance(a,p)-distance(b,p)-(a.hero?7:0)+(b.hero?7:0))[0];
+function setMode(next){mode=next;updateCommands();notify(next==='move'?'순수 이동: 공격을 무시하고 지점으로 이동':next==='attack'?'집중 공격: 적을 터치하세요':next==='mind'?'정신 지배: 적 유닛 클릭 (150 에너지 · 다크 아콘 제외)':next==='mael'?'마엘스트롬: 지점 클릭 (100 에너지)':next==='storm'?'사이오닉 스톰: 지점 클릭 (75 에너지 · 아군 피해)':next==='feedback'?'피드백: 상대 다크 아콘 클릭 (50 에너지)':next==='attackmove'?'공격 이동: 지점 클릭':'명령 취소')}
+const getUnit=(p,filter=()=>true)=>units.filter(u=>u.hp>0&&filter(u)&&distance(u,p)<Math.max(44,TYPES[u.type].r+12)).sort((a,b)=>distance(a,p)-distance(b,p)-(a.hero?7:0)+(b.hero?7:0))[0];
 function setSelected(u,add=false){
  if(!add)selected.clear();
  if(u&&friendly(u)){if(add&&selected.has(u.id))selected.delete(u.id);else selected.add(u.id)}
@@ -502,7 +502,10 @@ function startRevive(){
 function coords(ev){
  const r=cv.getBoundingClientRect();return{x:clamp((ev.clientX-r.left)*W/r.width,0,W),y:clamp((ev.clientY-r.top)*H/r.height,0,H)};
 }
+const mobileViewport=$('touchViewport');
+let mobilePan=false,mobilePanDrag=null,mobileMultiSelect=false,mobileZoomed=true;
 cv.addEventListener('pointerdown',ev=>{
+ if(mobilePan){ev.preventDefault();mobilePanDrag={id:ev.pointerId,x:ev.clientX,y:ev.clientY,left:mobileViewport.scrollLeft,top:mobileViewport.scrollTop};try{cv.setPointerCapture(ev.pointerId)}catch{}return}
  if(ev.button===2){ev.preventDefault();if(over)return;const p=coords(ev),victim=getUnit(p,hostile);command(victim?'attack':'move',p,victim,ev.shiftKey);return}
  if(ev.button!==0)return;
  ev.preventDefault();const p=coords(ev);
@@ -510,13 +513,18 @@ cv.addEventListener('pointerdown',ev=>{
  if(mode==='mael'){mael(p);return}
  if(mode==='storm'){storm(p);return}
  if(mode==='feedback'){feedback(getUnit(p,hostile));return}
+ if(mode==='attack'){const victim=getUnit(p,hostile);if(victim)command('attack',p,victim,false);else notify('적 유닛을 터치하세요');setMode('select');return}
  if(mode==='move'||mode==='attackmove'){command(mode,p,null,ev.shiftKey);setMode('select');return}
- drag={begin:p,end:p,add:ev.shiftKey,pointerId:ev.pointerId,started:performance.now()};
+ drag={begin:p,end:p,add:ev.shiftKey||mobileMultiSelect,pointerId:ev.pointerId,started:performance.now()};
  try{cv.setPointerCapture(ev.pointerId)}catch{}
 });
-cv.addEventListener('pointermove',ev=>{const p=coords(ev);hoverPoint=p;hoveredUnitId=getUnit(p,hostile)?.id||0;if(drag?.pointerId===ev.pointerId)drag.end=p});
+cv.addEventListener('pointermove',ev=>{
+ if(mobilePanDrag?.id===ev.pointerId){ev.preventDefault();mobileViewport.scrollLeft=mobilePanDrag.left-(ev.clientX-mobilePanDrag.x);mobileViewport.scrollTop=mobilePanDrag.top-(ev.clientY-mobilePanDrag.y);return}
+ const p=coords(ev);hoverPoint=p;hoveredUnitId=getUnit(p,hostile)?.id||0;if(drag?.pointerId===ev.pointerId)drag.end=p
+});
 cv.addEventListener('pointerleave',()=>{hoveredUnitId=0});
 function releasePointer(ev){
+ if(mobilePanDrag?.id===ev.pointerId){mobilePanDrag=null;return}
  if(!drag||ev.pointerId!==drag.pointerId)return;
  const state=drag;drag=null;
  const p=coords(ev);
@@ -526,8 +534,8 @@ function releasePointer(ev){
  else {setSelected(u,state.add);clickMemory={id:u?.id||0,time:performance.now()}}
 }
 cv.addEventListener('pointerup',releasePointer);
-cv.addEventListener('pointercancel',()=>{drag=null});
-cv.addEventListener('lostpointercapture',()=>{drag=null});
+cv.addEventListener('pointercancel',()=>{drag=null;mobilePanDrag=null});
+cv.addEventListener('lostpointercapture',()=>{drag=null;mobilePanDrag=null});
 cv.addEventListener('contextmenu',ev=>ev.preventDefault());
 const modifierKeys=new Set(['CONTROL','SHIFT','ALT','META']);
 window.addEventListener('keydown',ev=>{
@@ -559,6 +567,7 @@ $('battleMode').onclick=()=>{battleMode=battleMode==='defense'?'duel':'defense';
 $('teamSwitch').onclick=()=>{activeTeam=!activeTeam;selected.clear();groups=Array.from({length:5},()=>[]);mode='select';$('teamSwitch').textContent='조작: '+(activeTeam?'주홍':'청록');notify((activeTeam?'주홍':'청록')+' 플레이어 조작 중');const hero=units.find(u=>u.hp>0&&u.enemy===activeTeam&&u.type==='darkarchon');if(hero)playVoice(hero,'ready',true);refreshSelection(true)};
 document.querySelectorAll('[data-command]').forEach(btn=>btn.onclick=()=>{
  const cmd=btn.dataset.command;
+ if(!['siege','hold','stop'].includes(cmd))setMobilePan(false);
  if(cmd==='move'||cmd==='attackmove')setMode(cmd)
  else if(cmd==='stop'||cmd==='hold')stop(cmd);
  else if(cmd==='revive')startRevive();
@@ -859,7 +868,7 @@ function draw(){
   ctx.fillText('보호막 '+Math.ceil(hover.shield)+'  공격력 '+(hover.damage??TYPES[hover.type].damage),x+10,y+65);
   ctx.restore();
  }
- if(mode!=='select'){ctx.textAlign='left';ctx.font='bold 17px sans-serif';ctx.fillStyle='#ffe6b6';ctx.fillText({mind:'정신 지배: 적을 클릭',mael:'마엘스트롬: 지점 클릭',storm:'사이오닉 스톰: 아군 피해',feedback:'피드백: 상대 다크 아콘 클릭',attackmove:'공격 이동: 지점 클릭'}[mode],20,34)}
+ if(mode!=='select'){ctx.textAlign='left';ctx.font='bold 17px sans-serif';ctx.fillStyle='#ffe6b6';ctx.fillText({mind:'정신 지배: 적을 클릭',mael:'마엘스트롬: 지점 클릭',storm:'사이오닉 스톰: 아군 피해',feedback:'피드백: 상대 다크 아콘 터치',attack:'집중 공격: 적 유닛 터치',move:'이동: 지점 터치',attackmove:'공격 이동: 지점 터치'}[mode],20,34)}
  if(interval>0&&!over&&battleMode==='defense'){ctx.font='bold 22px sans-serif';ctx.fillStyle='#dccca4';ctx.textAlign='center';ctx.fillText('WAVE CLEAR · 다음 출현까지 '+Math.ceil(Math.max(0,8-interval))+'초 · PSI +50 / 탱크 수리 50%',W/2,82)}
  if(over||paused){ctx.fillStyle='#090a16d9';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.fillStyle='#f1b3d3';ctx.font='bold 44px sans-serif';ctx.fillText(paused?'PAUSED':nexus>0?'VICTORY':'DEFEAT',W/2,H/2);ctx.fillStyle='#d1c4b6';ctx.font='17px sans-serif';ctx.fillText('새 전투 버튼으로 재시작',W/2,H/2+42)}
 }
@@ -934,16 +943,50 @@ function updateUI(){
  refreshSelection();updateCommands();updateManaUI();drawMinimap();
 }
 minimap.addEventListener('contextmenu',e=>{e.preventDefault();const r=minimap.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;command('move',{x,y},null,e.shiftKey)});
-minimap.addEventListener('click',e=>{const r=minimap.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;notify('미니맵 위치: '+Math.round(x)+', '+Math.round(y)+' · 우클릭으로 이동 명령')});
+minimap.addEventListener('click',e=>{const r=minimap.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;centerMobileCamera(x,y);notify('카메라 위치 변경 · 미니맵 터치로 이동')});
 
 let last=0;
 function loop(now){
+ if(now-last<29){requestAnimationFrame(loop);return} // Mobile: ~30 fps to limit GPU usage.
  const dt=Math.min(.04,(now-last)/1000||.016);last=now;tick(dt);
  for(const e of effects)e.ttl-=dt;effects=effects.filter(e=>e.ttl>0);
  draw();
  if(now-lastUI>170){updateUI();lastUI=now}
  requestAnimationFrame(loop);
 }
+function centerMobileCamera(worldX,worldY=H/2,behavior='smooth'){
+ const r=cv.getBoundingClientRect(),viewport=mobileViewport;
+ const left=worldX/W*r.width-viewport.clientWidth/2,top=worldY/H*r.height-viewport.clientHeight/2;
+ if(typeof viewport.scrollTo==='function')viewport.scrollTo({left:Math.max(0,left),top:Math.max(0,top),behavior});
+ else{viewport.scrollLeft=Math.max(0,left);viewport.scrollTop=Math.max(0,top)}
+}
+function setMobilePan(active){
+ mobilePan=active;mobilePanDrag=null;
+ $('mobilePan').setAttribute('aria-pressed',String(active));
+ $('mobilePan').textContent=active?'☝ 화면 이동 중':'✋ 화면 이동';
+}
+$('mobilePan').onclick=()=>setMobilePan(!mobilePan);
+$('mobileHome').onclick=()=>centerMobileCamera(HOME.x+190,H/2);
+$('mobileHero').onclick=()=>{const hero=units.find(u=>!u.enemy&&u.type==='darkarchon'&&u.hp>0);centerMobileCamera(hero?.x??HOME.x+150,hero?.y??H/2)};
+$('mobileFront').onclick=()=>{
+ const foes=units.filter(u=>u.enemy&&u.hp>0&&!u.neutral),front=foes.length?foes.reduce((v,u)=>v+u.x,0)/foes.length:W/2;
+ centerMobileCamera(Math.max(600,Math.min(W-300,front)),H/2)
+};
+$('mobileMulti').onclick=()=>{
+ mobileMultiSelect=!mobileMultiSelect;
+ $('mobileMulti').setAttribute('aria-pressed',String(mobileMultiSelect));
+ $('mobileMulti').textContent=mobileMultiSelect?'✓ 추가 선택 중':'＋ 다중 선택';
+};
+$('mobileZoom').onclick=()=>{
+ const r=cv.getBoundingClientRect();
+ const atX=(mobileViewport.scrollLeft+mobileViewport.clientWidth/2)/r.width*W;
+ const atY=(mobileViewport.scrollTop+mobileViewport.clientHeight/2)/r.height*H;
+ mobileZoomed=!mobileZoomed;
+ document.body.style.setProperty('--mobile-zoom',mobileZoomed?'1900px':'1330px');
+ $('mobileZoom').textContent=mobileZoomed?'🔎 확대/축소':'🔍 확대/축소';
+ requestAnimationFrame(()=>centerMobileCamera(atX,atY,'instant'));
+};
+requestAnimationFrame(()=>centerMobileCamera(330,H/2,'instant'));
 reset();requestAnimationFrame(loop);
 
 </script>
