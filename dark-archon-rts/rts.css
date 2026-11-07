@@ -17,3 +17,10 @@ main{max-width:1270px;margin:auto;padding:12px 14px 30px}header{display:flex;ali
 
 /* StarCraft Remastered-inspired, original CSS control-card treatment */
 a{color:#94c8f0}a:hover{color:#d6ecff}.unitTile:hover{border-color:#95d4ed}.unitTile:active{filter:brightness(1.4)}.groupbtn:hover{border-color:#a5c9f5}#message{background:#111927;border-left:3px solid #a87bc7;padding:8px 12px;letter-spacing:.02em}summary:hover{color:#fff!important}.portraitVisual{background:radial-gradient(circle at 50% 44%,#4c3b65,#19253c 58%,#0e1321)}
+
+.spriteControls{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.spriteControls label{font-size:11px;color:#b9cce2;display:flex;flex-direction:column;gap:4px}
+.spriteControls select,.spriteControls input[type=number],.spriteControls input[type=file]{background:#111724;color:#e3e8f5;border:1px solid #70839a;padding:7px;border-radius:4px;font-size:12px;max-width:100%}
+.spriteControls input[type=number]{width:80px}.spriteControls input[type=file]{width:240px}
+.spriteControls button{height:34px}
+@media(max-width:500px){.spriteControls{gap:6px}.spriteControls input[type=file]{width:170px}}
