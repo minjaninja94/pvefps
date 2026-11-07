@@ -12,7 +12,7 @@ const TYPES={
  goliath:{name:'골리앗',race:'terran',hp:230,damage:24,range:198,speed:44,r:23,cool:1.15,color:'#99bdaa',glyph:'▤'},
  archon:{name:'집정관',race:'protoss',hp:340,damage:36,range:154,speed:52,r:25,cool:1.2,color:'#aa9aea',glyph:'✧'}
 };
-const spriteImages={},spriteSheets={},spriteProblems={};
+const spriteImages={},spriteSheets={},spriteProblems={},spriteCrops={},spriteUrls={};
 for(const key in TYPES){
  const img=new Image();img.onload=()=>{spriteImages[key]=img};img.onerror=()=>{spriteProblems[key]=true};
  img.src='assets/units/'+key+'.png';
@@ -115,6 +115,7 @@ function coords(ev){
  const r=cv.getBoundingClientRect();return{x:clamp((ev.clientX-r.left)*W/r.width,0,W),y:clamp((ev.clientY-r.top)*H/r.height,0,H)};
 }
 cv.addEventListener('pointerdown',ev=>{
+ if(ev.button===2){ev.preventDefault();if(over)return;const p=coords(ev),victim=getUnit(p,u=>u.enemy);command(victim?'attack':'move',p,victim,ev.shiftKey);return}
  if(ev.button!==0)return;
  ev.preventDefault();const p=coords(ev);
  if(mode==='mind'){mind(getUnit(p,u=>u.enemy));return}
@@ -136,12 +137,7 @@ function releasePointer(ev){
 cv.addEventListener('pointerup',releasePointer);
 cv.addEventListener('pointercancel',()=>{drag=null});
 cv.addEventListener('lostpointercapture',()=>{drag=null});
-cv.addEventListener('contextmenu',ev=>{
- ev.preventDefault();
- if(over)return;
- const p=coords(ev),victim=getUnit(p,u=>u.enemy);
- command(victim?'attack':'move',p,victim,ev.shiftKey);
-});
+cv.addEventListener('contextmenu',ev=>ev.preventDefault());
 const modifierKeys=new Set(['CONTROL','SHIFT','ALT','META']);
 window.addEventListener('keydown',ev=>{
  if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName))return;
@@ -207,7 +203,7 @@ function tick(dt){
   if(o.target){target=opponents.find(v=>v.id===o.target)||null;forced=!!target;
    if(!target){completeOrder(u);continue}
   }
-  if(!target&&o.type!=='move'){
+  if(!target&&o.type!=='move'&&o.type!=='stop'){
    const aggro=(u.enemy||o.type==='attackmove')?225:d.range+15;
    for(const v of opponents){const gap=distance(u,v);if(gap<aggro&&gap<td){td=gap;target=v}}
   }
@@ -216,6 +212,7 @@ function tick(dt){
    const cdist=distance(u,core);
    if(!target||cdist<distance(u,target)-15)target=core;
   }
+  if(target&&o.type==='stop')target=null;
   if(target){
    const range=d.range+(target.core?23:TYPES[target.type].r*.35);
    if(distance(u,target)<=range){if(u.cool<=0)strike(u,target)}
@@ -244,7 +241,12 @@ function drawUnit(u){
  ctx.fillStyle='#03050888';ctx.beginPath();ctx.ellipse(0,d.r*.65,d.r,Math.max(6,d.r*.35),0,0,Math.PI*2);ctx.fill();
  const w=d.r*3;
  if(atlasDraw(u,w)){}
- else if(spriteImages[u.type])ctx.drawImage(spriteImages[u.type],-w/2,-w*.72,w,w);
+ else if(spriteImages[u.type]){
+  const crop=spriteCrops[u.type],im=spriteImages[u.type];
+  if(crop&&crop.w>0&&crop.h>0&&crop.x>=0&&crop.y>=0&&crop.x+crop.w<=im.width&&crop.y+crop.h<=im.height)
+   ctx.drawImage(im,crop.x,crop.y,crop.w,crop.h,-w/2,-w*.72,w,w);
+  else ctx.drawImage(im,-w/2,-w*.72,w,w);
+ }
  else {
   ctx.shadowBlur=u.type==='darkarchon'?28:10;ctx.shadowColor=d.color;ctx.fillStyle=d.color;ctx.strokeStyle=u.enemy?'#ef9c90':'#a4e9ff';ctx.lineWidth=2;
   ctx.beginPath();for(let i=0;i<8;i++){const a=i*Math.PI/4+u.face,r=d.r*(i%2?.82:1);ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.stroke();ctx.shadowBlur=0;
@@ -338,6 +340,37 @@ function updateUI(){
 }
 minimap.addEventListener('contextmenu',e=>{e.preventDefault();const r=minimap.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;command('move',{x,y},null,e.shiftKey)});
 minimap.addEventListener('click',e=>{const r=minimap.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;notify('미니맵 위치: '+Math.round(x)+', '+Math.round(y)+' · 우클릭으로 이동 명령')});
+
+function initSpriteImport(){
+ const type=$('spriteType'),file=$('spriteFile'),status=$('spriteStatus');
+ if(!type||!file)return;
+ function readCrop(){
+  const get=v=>Number($('crop'+v)?.value)||0;
+  return {x:get('X'),y:get('Y'),w:get('W'),h:get('H')};
+ }
+ async function apply(){
+  const f=file.files?.[0];if(!f){status.textContent='PNG 파일을 선택하세요';return}
+  const key=type.value;
+  if(!TYPES[key])return;
+  const url=URL.createObjectURL(f),im=new Image();
+  im.onload=()=>{
+   if(spriteUrls[key])URL.revokeObjectURL(spriteUrls[key]);
+   spriteUrls[key]=url;spriteImages[key]=im;delete spriteSheets[key];
+   spriteCrops[key]=readCrop();
+   status.textContent=TYPES[key].name+' 이미지 연결 완료 ('+im.width+'×'+im.height+') · 원본 전체 시트면 잘라낼 좌표를 설정하세요';
+   refreshSelection(true);
+  };
+  im.onerror=()=>{URL.revokeObjectURL(url);status.textContent='이미지 파일을 읽지 못했습니다'};
+  im.src=url;
+ }
+ $('spriteApply')?.addEventListener('click',apply);
+ $('cropSet')?.addEventListener('click',()=>{
+  const key=type.value;if(!spriteImages[key]){status.textContent='먼저 이미지를 불러오세요';return}
+  spriteCrops[key]=readCrop();status.textContent=TYPES[key].name+' 크롭 좌표 적용';refreshSelection(true);
+ });
+}
+initSpriteImport();
+
 let last=0;
 function loop(now){
  const dt=Math.min(.04,(now-last)/1000||.016);last=now;tick(dt);
