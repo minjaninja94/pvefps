@@ -1,17 +1,23 @@
-# Dark Archon Dominion RTS
+# Dark Archon Dominion RTS — 단일 프로젝트
 
-## Play in browser
+## 지금 플레이하기
 
-Development preview: https://raw.githack.com/minjaninja94/pvefps/main/dark-archon-rts/index.html
+- [브라우저 플레이 미리보기](https://raw.githack.com/minjaninja94/pvefps/main/dark-archon-rts/index.html) — GitHub에 올린 단일 HTML을 표시하는 외부 미리보기 서비스입니다. 실제 URL 접속은 외부 네트워크 제한 때문에 완전 검증하지 못했습니다.
+- [게임 코드 및 파일](https://github.com/minjaninja94/pvefps/tree/main/dark-archon-rts) — GitHub 프로젝트 폴더.
+- [게임 HTML](https://github.com/minjaninja94/pvefps/blob/main/dark-archon-rts/index.html) — GitHub의 코드 보기. 여기서는 HTML이 실행되지 않습니다.
+- 미리보기 서비스가 차단되면 [index.html 원본 다운로드](https://raw.githubusercontent.com/minjaninja94/pvefps/main/dark-archon-rts/index.html) 후 파일을 브라우저로 여세요. 게임 자체는 오프라인에서도 실행되도록 CSS/JS를 모두 포함합니다. 단, 외부 PNG를 자동으로 불러오려면 웹 서버가 필요할 수 있습니다.
 
-This uses a third-party GitHub HTML renderer; on first visit it may require a one-time security confirmation. It does not imply GitHub Pages or Cloudflare Pages has been deployed. The repository contains the game HTML itself, and the default fallback graphics should be available immediately. The URL is a candidate browser-play endpoint; full browser runtime verification has not been completed.
+## 프로젝트 구조
 
-To run without a third-party preview, download the directory or clone the repo, serve it with a simple local HTTP server, and open `dark-archon-rts/index.html`.
+```text
+pvefps/
+└── dark-archon-rts/     ← 다른 게임과 독립
+    ├── index.html       ← 전투, 조작, HUD, 미니맵, 이미지 불러오기 전부 포함
+    ├── README.md        ← 플레이 및 조작 가이드
+    └── SPRITE_SOURCES.md← 원작 스프라이트 참고 자료
+```
 
-Latest fixes: Shift+right-click command queues (up to 12 commands), clearer order completion and fallback rendering, Dark Archon selected on start. Keyboard 1..5 means control groups; A/M/E/S/H are command hotkeys.
-
-
-Standalone browser prototype; open `index.html` with an HTTP static server.
+별도 빌드 명령·Node 설치·CSS/JS 파일 연결이 필요하지 않습니다. 외부 서버 배포(GitHub Pages/Cloudflare Pages)는 아직 설정되지 않았습니다.
 
 ## Controls
 - Left click: select friendly unit
@@ -51,4 +57,4 @@ Atlas layout: one row per direction (direction 0 facing right, then counterclock
 For extracting original GRP/CASC assets from your own installation, see https://github.com/broodwar-live/assets-pipeline; this extraction utility is not a license grant.
 
 ## Status
-The RTS commands and sprite loading system are implemented. Browser gameplay, sprite alignment and performance still need end-to-end testing. The implementation is a prototype, not a frame-perfect replica of StarCraft.
+All playable logic and CSS are bundled in one standalone HTML file. The original Blizzard animation assets are not bundled. Structural checks and JavaScript syntax checks passed, but direct hosted-browser verification still needs to be completed.
