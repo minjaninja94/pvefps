@@ -144,12 +144,12 @@ const HERO_STATS={
  vulture:{name:'짐 레이너 (벌처)',hp:300,armor:3,damage:30,cool:.92},
  siegetank:{name:'에드먼드 듀크',hp:400,armor:3,damage:150},
  goliath:{name:'앨런 셰자르',hp:300,armor:3,damage:24,airDamage:40},
- wraith:{name:'톰 카잔스키'},
- battlecruiser:{name:'하이페리온'},
- scout:{name:'모조'},
- carrier:{name:'간트리서'},
- mutalisk:{name:'쿠쿨자 (뮤탈)'},
- guardian:{name:'쿠쿨자 (가디언)'},
+ wraith:{name:'톰 카잔스키',hp:500,armor:4,damage:16,airDamage:40,cool:.92},
+ battlecruiser:{name:'하이페리온',hp:850,armor:3,damage:30,cool:.92},
+ scout:{name:'모조',hp:400,shield:400,armor:3,damage:20,airDamage:56},
+ carrier:{name:'간트리서',hp:800,shield:500,armor:4,damage:48},
+ mutalisk:{name:'쿠쿨자 (뮤탈)',hp:300,armor:3,damage:18},
+ guardian:{name:'쿠쿨자 (가디언)',hp:400,armor:4,damage:40},
  archon:{name:'태사다르/제라툴',hp:100,shield:800,armor:3,damage:60},
  corsair:{name:'라자갈'}
 };
@@ -524,7 +524,7 @@ function applyImpact(source,target,amount,weapon='normal',splash=0,bounce=false,
   for(const v of hostiles){const along=(v.x-source.x)*nx+(v.y-source.y)*ny,side=Math.abs((v.x-source.x)*ny-(v.y-source.y)*nx);if(along>=0&&along<=Math.max(len,220)&&side<23)damage(v,amount*.78,source,weapon)}
  }else if(bounce){
   const near=hostiles.sort((a,b)=>distance(a,impactPoint)-distance(b,impactPoint)).slice(0,2);
-  near.forEach((v,i)=>{if(distance(v,impactPoint)<135)damage(v,amount*(i===0?.5:.25),source,weapon)});
+  near.forEach((v,i)=>{if(distance(v,impactPoint)<135)damage(v,amount*(i===0?1/3:1/9),source,weapon)});
  }else if(splash){
   for(const v of hostiles){const r=distance(v,impactPoint);if(r<splash)damage(v,amount*(1-r/splash)*.65,source,weapon)}
  }
