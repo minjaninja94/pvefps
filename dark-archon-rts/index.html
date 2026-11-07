@@ -547,6 +547,20 @@ function damage(t,n,source=null,weapon='normal'){
  }
  if(t.hp<=0){if(!t.neutral&&t.enemy===activeTeam)playVoice(t,'death',true);corpses.push({type:t.type,x:t.x,y:t.y,face:t.face,age:0,hero:t.hero});if(t.enemy)kills++}
 }
+function siegeSplashMultiplier(radius){
+ return radius<=SIEGE_RADII[0]?1:radius<=SIEGE_RADII[1]?.5:radius<=SIEGE_RADII[2]?.25:0;
+}
+function siegeImpact(source,target,amount){
+ // StarCraft: Brood War radial rings, including friendly fire and explosive unit-size modifiers.
+ const blast={x:target.x,y:target.y};
+ if(target.core)damage(target,amount,source,'explosive');
+ for(const unit of units){
+  if(unit.hp<=0||TYPES[unit.type].flying)continue;
+  const falloff=unit===target?1:siegeSplashMultiplier(distance(unit,blast));
+  if(falloff)damage(unit,amount*falloff,source,'explosive');
+ }
+ effects.push({x:blast.x,y:blast.y,color:'#ffc373',r:SIEGE_RADII[2]*2,ttl:.52,total:.52});
+}
 function applyImpact(source,target,amount,weapon='normal',splash=0,bounce=false,pierce=false){
  const impactPoint={x:target.x,y:target.y};
  damage(target,amount,source,weapon);
@@ -564,14 +578,14 @@ function applyImpact(source,target,amount,weapon='normal',splash=0,bounce=false,
 }
 function strike(u,t){
  const d=TYPES[u.type],air=!t.core&&!!TYPES[t.type].flying;
- const amount=air?(u.airDamage??d.airDamage??u.damage??d.damage):(t.core&&d.canGround===false?Math.max(1,(u.airDamage??d.airDamage??u.damage??d.damage)*.5):(u.damage??d.damage));
+ const amount=u.type==='siegetank'&&u.sieged?(u.siegeDamage??70):air?(u.airDamage??d.airDamage??u.damage??d.damage):(t.core&&d.canGround===false?Math.max(1,(u.airDamage??d.airDamage??u.damage??d.damage)*.5):(u.damage??d.damage));
  const weapon=air?(d.airWeapon||d.weapon||'normal'):(d.weapon||'normal');
- u.cool=u.attackCool??d.cool;u.attackTimer=u.fixed?.58:.3;
+ u.cool=u.type==='siegetank'&&u.sieged?75/24:(u.attackCool??d.cool);u.attackTimer=u.fixed?.58:.3;
  if(u.enemy===activeTeam&&!u.neutral)playVoice(u,'attack');
  if(d.projectile||u.fixed){
   // Carrier fire is represented by animated miniature interceptor salvos.
   const count=u.type==='carrier'?6:1;
-  for(let i=0;i<count;i++)projectiles.push({x:u.x+rnd(-10,10),y:u.y-15+rnd(-10,10),targetId:t.core?null:t.id,core:t.core?{...t}:null,ownerId:u.id,damage:amount/count,weapon,splash:i===0?d.splash||0:0,bounce:i===0&&!!d.bounce,pierce:i===0&&!!d.pierce,enemy:u.enemy,speed:u.type==='carrier'?560:630});
+  for(let i=0;i<count;i++)projectiles.push({x:u.x+rnd(-10,10),y:u.y-15+rnd(-10,10),targetId:t.core?null:t.id,core:t.core?{...t}:null,ownerId:u.id,damage:amount/count,weapon,siegeBlast:u.type==='siegetank'&&u.sieged,splash:i===0?d.splash||0:0,bounce:i===0&&!!d.bounce,pierce:i===0&&!!d.pierce,enemy:u.enemy,speed:u.type==='carrier'?560:630});
   particle(u.x,u.y-10,u.enemy?'#ffb4a4':'#9cefff',15);
  }else applyImpact(u,t,amount,weapon,d.splash||0,!!d.bounce,!!d.pierce);
  if(d.suicide){u.hp=0;corpses.push({type:u.type,x:u.x,y:u.y,face:u.face,age:0,hero:u.hero})}
@@ -586,7 +600,7 @@ function tick(dt){
  if(enemyReviveTimer>0){enemyReviveTimer=Math.max(0,enemyReviveTimer-dt);if(enemyReviveTimer===0&&enemyBase>0&&!enemies().some(u=>u.type==='darkarchon'&&!u.neutral)){spawn('darkarchon',true,W-235,H/2);notify('주홍 다크 아콘 재생산 완료')}}
  for(const s of storms){s.ttl-=dt;s.pulse+=dt;while(s.pulse>=.4){s.pulse-=.4;const caster=units.find(u=>u.id===s.caster);for(const u of units)if(u.hp>0&&!u.fixed&&distance(u,s)<95)damage(u,14,caster)}}
  storms=storms.filter(s=>s.ttl>0);
- for(const p of projectiles){const target=p.core||units.find(u=>u.id===p.targetId&&u.hp>0);if(!target){p.done=true;continue}const gap=distance(p,target),move=(p.speed||520)*dt;if(gap<=move+10){p.done=true;const source=units.find(u=>u.id===p.ownerId);applyImpact(source,target,p.damage,p.weapon,p.splash,p.bounce,p.pierce);particle(target.x,target.y,p.enemy?'#ffaba0':'#a9eaff',34)}else{p.x+=(target.x-p.x)*move/gap;p.y+=(target.y-p.y)*move/gap}}
+ for(const p of projectiles){const target=p.core||units.find(u=>u.id===p.targetId&&u.hp>0);if(!target){p.done=true;continue}const gap=distance(p,target),move=(p.speed||520)*dt;if(gap<=move+10){p.done=true;const source=units.find(u=>u.id===p.ownerId);if(p.siegeBlast)siegeImpact(source,target,p.damage);else applyImpact(source,target,p.damage,p.weapon,p.splash,p.bounce,p.pierce);particle(target.x,target.y,p.siegeBlast?'#ffc66c':p.enemy?'#ffaba0':'#a9eaff',p.siegeBlast?60:34)}else{p.x+=(target.x-p.x)*move/gap;p.y+=(target.y-p.y)*move/gap}}
  projectiles=projectiles.filter(p=>!p.done);
  if(battleMode==='duel'){
   centerTimer+=dt;
@@ -594,17 +608,25 @@ function tick(dt){
  }else while(spawns.length&&spawns[0].t<=time){const s=spawns.shift();spawn(s.type,true,rnd(W-65,W-30),rnd(70,H-70))}
  for(const u of units){
   if(u.hp<=0)continue;u.cool-=dt;u.stun=Math.max(0,u.stun-dt);u.attackTimer=Math.max(0,u.attackTimer-dt);u.frameTime+=dt;u.moving=false;u.shieldDelay=Math.max(0,u.shieldDelay-dt);if(u.shieldDelay===0)u.shield=Math.min(u.maxShield,u.shield+2.55*dt);u.retaliateFor=Math.max(0,u.retaliateFor-dt);
+  if(u.type==='siegetank'){
+   if(battleMode==='defense'&&u.enemy){u.sieged=false;u.siegeTransition=0}
+   if(u.siegeTransition>0){
+    u.siegeTransition=Math.max(0,u.siegeTransition-dt);
+    if(u.siegeTransition===0){u.sieged=u.siegeTarget;u.cool=Math.max(u.cool,.25)}
+    continue;
+   }
+  }
   if(u.stun>0)continue;
   let o=u.order;const d=TYPES[u.type];
   if(u.fixed){let target=null,near=d.range;for(const v of units)if(hostileFor(u,v)&&!v.fixed&&canHit(u,v)){const gap=distance(u,v);if(gap<near){near=gap;target=v}}if(target&&u.cool<=0)strike(u,target);continue}
   if(u.type==='darkarchon'){if(['move','attackmove'].includes(o.type))stepToward(u,o,dt);continue}
   if(u.neutral){u.roamFor-=dt;if(u.roamFor<=0){u.roamFor=rnd(4,8);u.order={type:'roam',x:rnd(350,W-350),y:rnd(NEUTRAL_MIN_Y,H-70)};o=u.order}}
-  const opponents=units.filter(v=>hostileFor(u,v)&&canHit(u,v)&&(!u.neutral||v.y>UPPER_LANE_BOTTOM+15));
+  const opponents=units.filter(v=>hostileFor(u,v)&&canHit(u,v)&&(!u.neutral||v.y>UPPER_LANE_BOTTOM+15)&&(!(u.type==='siegetank'&&u.sieged)||distance(u,v)>=SIEGE_MIN_RANGE));
   let target=null,td=Infinity,forced=false;
   if(o.target){target=opponents.find(v=>v.id===o.target)||null;forced=!!target;if(!target){completeOrder(u);continue}}
   if(!target&&u.retaliateFor>0&&o.type!=='hold'){target=opponents.find(v=>v.id===u.lastAttacker)||null;forced=!!target}
   if(!target&&o.type!=='move'){
-   const sight=o.type==='hold'?d.range+25:(d.sight||300);
+   const sight=u.type==='siegetank'&&u.sieged?SIEGE_RANGE:(o.type==='hold'?d.range+25:(d.sight||300));
    for(const v of opponents){const gap=distance(u,v);if(gap<sight&&gap<td){td=gap;target=v}}
   }
   if(!u.neutral&&o.type==='attackmove'&&!forced){
@@ -612,9 +634,11 @@ function tick(dt){
    if(core&&(!target||distance(u,core)<distance(u,target)-15))target=core;
   }
   if(target){
-   const range=d.range+(target.core?23:TYPES[target.type].r*.35);
-   if(distance(u,target)<=range){if(u.cool<=0)strike(u,target)}
-   else if(o.type!=='hold')stepToward(u,target,dt);
+   const sieged=u.type==='siegetank'&&u.sieged;
+   const range=(sieged?SIEGE_RANGE:d.range)+(target.core?23:TYPES[target.type].r*.35);
+   const gap=distance(u,target);
+   if(gap<=range&&(!sieged||gap>=SIEGE_MIN_RANGE)){if(u.cool<=0)strike(u,target)}
+   else if(!sieged&&o.type!=='hold')stepToward(u,target,dt);
   }else if(['move','attackmove','roam'].includes(o.type))stepToward(u,o,dt);
  }
  units=units.filter(u=>u.hp>0);const prev=selected.size;selected=new Set([...selected].filter(id=>units.some(u=>u.id===id&&friendly(u))));if(selected.size!==prev)refreshSelection(true);
