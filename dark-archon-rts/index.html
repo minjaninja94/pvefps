@@ -322,10 +322,13 @@ function startWave(){
  for(const type of config.heroes)roster.push({type,hero:true});
  // All members spawn on the same simulation tick, from different lanes.
  for(let i=roster.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[roster[i],roster[j]]=[roster[j],roster[i]]}
- const rows=8;
+ const rows=8;let heroSlot=0;
  roster.forEach((entry,i)=>{
   const column=Math.floor(i/rows),row=i%rows;
-  const x=W-92-column*52+rnd(-6,6),y=82+row*(H-164)/(rows-1)+rnd(-6,6);
+  // The prized red-aura targets lead the push so players can identify and capture them.
+   // Normal troops still spawn in full at the same instant, but slightly behind.
+   const x=entry.hero?W-335-heroSlot*52:W-92-column*52+rnd(-6,6);
+   const y=entry.hero?H/2+[0,-80,80,-145][heroSlot++]:82+row*(H-164)/(rows-1)+rnd(-6,6);
   const u=spawn(entry.type,true,x,y,entry.hero);
   u.order={type:'attackmove',x:HOME.x,y:HOME.y,target:null};
  });
@@ -645,7 +648,7 @@ function tick(dt){
  units=units.filter(u=>u.hp>0);const prev=selected.size;selected=new Set([...selected].filter(id=>units.some(u=>u.id===id&&friendly(u))));if(selected.size!==prev)refreshSelection(true);
  if(nexus<=0){over=true;notify('패배 · 넥서스가 파괴됐습니다')}
  if(battleMode==='duel'&&enemyBase<=0){over=true;notify('승리 · 상대 기지를 파괴했습니다')}
- if(battleMode==='defense'&&!spawns.length&&!enemies().length){interval+=dt;if(interval>=8){if(wave===WAVE_COUNT){over=true;notify('승리! 마지막 영웅 웨이브까지 모두 방어했습니다')}else{wave++;energy=Math.min(250,energy+50);for(const u of allies()){u.hp=Math.min(u.max,u.hp+u.max*.12);u.shield=Math.min(u.maxShield,u.shield+u.maxShield*.25)}startWave()}}}
+ if(battleMode==='defense'&&!spawns.length&&!enemies().length){interval+=dt;if(interval>=8){if(wave===WAVE_COUNT){over=true;notify('승리! 마지막 영웅 웨이브까지 모두 방어했습니다')}else{wave++;energy=Math.min(250,energy+50);for(const u of allies()){u.hp=Math.min(u.max,u.hp+u.max*(u.type==='siegetank'&&!u.enemy?.5:.12));u.shield=Math.min(u.maxShield,u.shield+u.maxShield*.25)}startWave()}}}
  else interval=0;
 }
 
@@ -796,7 +799,7 @@ function draw(){
   ctx.restore();
  }
  if(mode!=='select'){ctx.textAlign='left';ctx.font='bold 17px sans-serif';ctx.fillStyle='#ffe6b6';ctx.fillText({mind:'정신 지배: 적을 클릭',mael:'마엘스트롬: 지점 클릭',storm:'사이오닉 스톰: 아군 피해',feedback:'피드백: 상대 다크 아콘 클릭',attackmove:'공격 이동: 지점 클릭'}[mode],20,34)}
- if(interval>0&&!over&&battleMode==='defense'){ctx.font='bold 22px sans-serif';ctx.fillStyle='#dccca4';ctx.textAlign='center';ctx.fillText('WAVE CLEAR · 다음 출현까지 '+Math.ceil(Math.max(0,8-interval))+'초 · PSI +50 / 병력 회복',W/2,82)}
+ if(interval>0&&!over&&battleMode==='defense'){ctx.font='bold 22px sans-serif';ctx.fillStyle='#dccca4';ctx.textAlign='center';ctx.fillText('WAVE CLEAR · 다음 출현까지 '+Math.ceil(Math.max(0,8-interval))+'초 · PSI +50 / 탱크 수리 50%',W/2,82)}
  if(over||paused){ctx.fillStyle='#090a16d9';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.fillStyle='#f1b3d3';ctx.font='bold 44px sans-serif';ctx.fillText(paused?'PAUSED':nexus>0?'VICTORY':'DEFEAT',W/2,H/2);ctx.fillStyle='#d1c4b6';ctx.font='17px sans-serif';ctx.fillText('새 전투 버튼으로 재시작',W/2,H/2+42)}
 }
 function drawMinimap(){
