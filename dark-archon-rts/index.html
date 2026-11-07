@@ -66,7 +66,8 @@ a{color:#94c8f0}a:hover{color:#d6ecff}.unitTile:hover{border-color:#95d4ed}.unit
   </section>
   <section class="panel commandsPanel"><div class="panelTitle">COMMAND CARD</div>
    <div class="commandGrid">
-    <button class="command" data-command="move">◈ <small>A 공격이동</small></button>
+    <button class="command" data-command="move">➜ <small>V 이동 (회피)</small></button>
+     <button class="command" data-command="attackmove">⚔ <small>A 공격 이동</small></button>
     <button class="command" data-command="stop">■ <small>S 정지</small></button>
     <button class="command" data-command="hold">♜ <small>H 위치사수</small></button>
     <button class="command" data-command="mind">✦ <small>M 정신지배</small></button>
@@ -81,7 +82,7 @@ a{color:#94c8f0}a:hover{color:#d6ecff}.unitTile:hover{border-color:#95d4ed}.unit
  </div>
 </section>
 <div id="message" role="status">다크 아콘을 선택하고 정신 지배를 사용하십시오.</div>
-<p class="help">좌클릭 선택 · 드래그 다중 선택 · 우클릭 이동/공격 · A 공격 이동 · R 상단 우회 진격 · M 정신 지배(상대 다크 아콘 제외) · E 마엘스트롬 · T 사이오닉 스톰(아군 피해) · F 피드백 · O 아군 시즈탱크 배치/해제(아군 오폭 주의) · Esc 취소 · 다크 아콘 사망 후 넥서스 재생산 60초 · Space 일시정지 · BGM/VOICE 개별 음량 조절 · 브라우저 정책상 첫 클릭이나 키 입력 후 소리 시작</p>
+<p class="help">좌클릭 선택 · 드래그 다중 선택 · 우클릭 빈 땅 이동/적 공격 · V 순수 이동(전투 무시) · A 공격 이동 · R 상단 우회 진격 · M 정신 지배(상대 다크 아콘 제외) · E 마엘스트롬 · T 사이오닉 스톰(아군 피해) · F 피드백 · O 아군 시즈탱크 배치/해제(아군 오폭 주의) · Esc 취소 · 다크 아콘 사망 후 넥서스 재생산 60초 · Space 일시정지 · BGM/VOICE 개별 음량 조절 · 브라우저 정책상 첫 클릭이나 키 입력 후 소리 시작</p>
 </main>
 <script>
 
@@ -342,7 +343,7 @@ function reset(){
  if(battleMode==='duel'){spawn('darkarchon',true,W-235,H/2);for(const offset of [-105,105])spawn('cannon',true,AWAY.x-130,AWAY.y+offset);spawns=[];for(let i=0;i<5;i++)spawnNeutral();notify('대전 시작 · 전장 곳곳의 중립 유닛을 먼저 정신 지배하세요')}
  else startWave();refreshSelection(true);updateUI();
 }
-function setMode(next){mode=next;updateCommands();notify(next==='mind'?'정신 지배: 적 유닛 클릭 (150 에너지 · 다크 아콘 제외)':next==='mael'?'마엘스트롬: 지점 클릭 (100 에너지)':next==='storm'?'사이오닉 스톰: 지점 클릭 (75 에너지 · 아군 피해)':next==='feedback'?'피드백: 상대 다크 아콘 클릭 (50 에너지)':next==='attackmove'?'공격 이동: 지점 클릭':'명령 취소')}
+function setMode(next){mode=next;updateCommands();notify(next==='move'?'순수 이동: 공격을 무시하고 지점으로 이동':next==='mind'?'정신 지배: 적 유닛 클릭 (150 에너지 · 다크 아콘 제외)':next==='mael'?'마엘스트롬: 지점 클릭 (100 에너지)':next==='storm'?'사이오닉 스톰: 지점 클릭 (75 에너지 · 아군 피해)':next==='feedback'?'피드백: 상대 다크 아콘 클릭 (50 에너지)':next==='attackmove'?'공격 이동: 지점 클릭':'명령 취소')}
 const getUnit=(p,filter=()=>true)=>units.filter(u=>u.hp>0&&filter(u)&&distance(u,p)<TYPES[u.type].r+12).sort((a,b)=>distance(a,p)-distance(b,p)-(a.hero?7:0)+(b.hero?7:0))[0];
 function setSelected(u,add=false){
  if(!add)selected.clear();
@@ -370,6 +371,7 @@ function command(type,p,target=null,append=false){
  arr.forEach((u,i)=>{
   const spacing=Math.max(40,TYPES[u.type].r*2.1);
   const o={type,x:clamp(p.x+(i%cols-(cols-1)/2)*spacing,30,W-30),y:clamp(p.y+(Math.floor(i/cols)-(rows-1)/2)*spacing,30,H-30),target:target?.id||null};
+  u.engagedTargetId=0;u.lastAttacker=0;u.retaliateFor=0;
   if(append){if(u.orders.length<12)u.orders.push(o)}
   else{u.order=o;u.orders=[]}
  });
@@ -405,7 +407,7 @@ function flank(){
  notify('상단 중립 없는 길로 우회 진격 · '+arr.length+'기');playVoice(arr[0],'move');refreshSelection();
 }
 function stop(type){
- const arr=chosen();for(const u of arr){u.order={type,x:u.x,y:u.y};u.orders=[]}
+ const arr=chosen();for(const u of arr){u.order={type,x:u.x,y:u.y};u.orders=[];u.engagedTargetId=0;u.retaliateFor=0}
  notify((type==='stop'?'정지':'위치 사수')+' · '+arr.length+'기');playVoice(arr[0],'move');refreshSelection();
 }
 function mind(target){
@@ -415,7 +417,7 @@ function mind(target){
  if(target.type==='darkarchon'||target.fixed){notify('다크 아콘과 건물은 정신 지배할 수 없습니다');return}
  if(distance(hero,target)>264){notify('사거리 밖 · 다크 아콘 이동 필요');return}
  if(currentEnergy()<150){notify('에너지 부족');return}
- spendEnergy(150);target.enemy=activeTeam;target.neutral=false;target.stun=0;target.order={type:'guard',x:target.x,y:target.y};target.orders=[];conversions++;selected.clear();selected.add(target.id);
+ spendEnergy(150);target.enemy=activeTeam;target.neutral=false;target.stun=0;target.engagedTargetId=0;target.lastAttacker=0;target.retaliateFor=0;target.order={type:'guard',x:target.x,y:target.y};target.orders=[];conversions++;selected.clear();selected.add(target.id);
  particle(target.x,target.y,'#ff77b4',115);playVoice(target,'ready',true);notify(TYPES[target.type].name+' 정신 지배 성공 · 우클릭으로 직접 지휘하세요');
  mode='select';refreshSelection(true);
 }
@@ -463,7 +465,7 @@ cv.addEventListener('pointerdown',ev=>{
  if(mode==='mael'){mael(p);return}
  if(mode==='storm'){storm(p);return}
  if(mode==='feedback'){feedback(getUnit(p,hostile));return}
- if(mode==='attackmove'){command('attackmove',p,null,ev.shiftKey);setMode('select');return}
+ if(mode==='move'||mode==='attackmove'){command(mode,p,null,ev.shiftKey);setMode('select');return}
  drag={begin:p,end:p,add:ev.shiftKey,pointerId:ev.pointerId,started:performance.now()};
  try{cv.setPointerCapture(ev.pointerId)}catch{}
 });
@@ -494,6 +496,7 @@ window.addEventListener('keydown',ev=>{
  }
  if(/^[1-5]$/.test(k)){selected=new Set(groups[+k-1].filter(id=>units.some(u=>u.hp>0&&friendly(u)&&u.id===id)));refreshSelection(true);return}
  if(k==='a')setMode('attackmove');
+ if(k==='v')setMode('move');
  if(k==='m')setMode('mind');
  if(k==='e')setMode('mael');
  if(k==='t')setMode('storm');
@@ -511,7 +514,7 @@ $('battleMode').onclick=()=>{battleMode=battleMode==='defense'?'duel':'defense';
 $('teamSwitch').onclick=()=>{activeTeam=!activeTeam;selected.clear();groups=Array.from({length:5},()=>[]);mode='select';$('teamSwitch').textContent='조작: '+(activeTeam?'주홍':'청록');notify((activeTeam?'주홍':'청록')+' 플레이어 조작 중');const hero=units.find(u=>u.hp>0&&u.enemy===activeTeam&&u.type==='darkarchon');if(hero)playVoice(hero,'ready',true);refreshSelection(true)};
 document.querySelectorAll('[data-command]').forEach(btn=>btn.onclick=()=>{
  const cmd=btn.dataset.command;
- if(cmd==='move'){setMode('attackmove');notify('공격 이동: 지점 클릭')}
+ if(cmd==='move'||cmd==='attackmove')setMode(cmd)
  else if(cmd==='stop'||cmd==='hold')stop(cmd);
  else if(cmd==='revive')startRevive();
  else if(cmd==='siege')toggleSiege();
@@ -540,7 +543,7 @@ function canHit(u,target){
 function damage(t,n,source=null,weapon='normal'){
  if(t.core){if(t.enemy)enemyBase=Math.max(0,enemyBase-n);else nexus=Math.max(0,nexus-n);return}
  if(t.hp<=0)return;
- if(source&&hostileFor(t,source)&&t.order.type!=='hold'){t.lastAttacker=source.id;t.retaliateFor=4}
+ if(source&&hostileFor(t,source)&&!['hold','stop','move'].includes(t.order.type)){t.lastAttacker=source.id;t.retaliateFor=4}
  let amount=n;t.shieldDelay=7;
  if(t.shield>0){const absorbed=Math.min(t.shield,amount);t.shield-=absorbed;amount-=absorbed}
  if(amount>0){
@@ -625,25 +628,38 @@ function tick(dt){
   if(u.fixed){let target=null,near=d.range;for(const v of units)if(hostileFor(u,v)&&!v.fixed&&canHit(u,v)){const gap=distance(u,v);if(gap<near){near=gap;target=v}}if(target&&u.cool<=0)strike(u,target);continue}
   if(u.type==='darkarchon'){if(['move','attackmove'].includes(o.type))stepToward(u,o,dt);continue}
   if(u.neutral){u.roamFor-=dt;if(u.roamFor<=0){u.roamFor=rnd(4,8);u.order={type:'roam',x:rnd(350,W-350),y:rnd(NEUTRAL_MIN_Y,H-70)};o=u.order}}
+  // Pure MOVE/escape never attacks or retargets, even when shot from both flanks.
+  if(o.type==='move'){u.engagedTargetId=0;stepToward(u,o,dt);continue}
   const opponents=units.filter(v=>hostileFor(u,v)&&canHit(u,v)&&(!u.neutral||v.y>UPPER_LANE_BOTTOM+15)&&(!(u.type==='siegetank'&&u.sieged)||distance(u,v)>=SIEGE_MIN_RANGE));
   let target=null,td=Infinity,forced=false;
-  if(o.target){target=opponents.find(v=>v.id===o.target)||null;forced=!!target;if(!target){completeOrder(u);continue}}
-  if(!target&&u.retaliateFor>0&&o.type!=='hold'){target=opponents.find(v=>v.id===u.lastAttacker)||null;forced=!!target}
-  if(!target&&o.type!=='move'){
-   const sight=u.type==='siegetank'&&u.sieged?SIEGE_RANGE:(o.type==='hold'?d.range+25:(d.sight||300));
+  if(o.target){target=opponents.find(v=>v.id===o.target)||null;forced=!!target;if(!target){completeOrder(u);u.engagedTargetId=0;continue}}
+  // Lock onto a valid opponent until it dies or leaves the pursuit leash.
+  const leash=u.type==='siegetank'&&u.sieged?SIEGE_RANGE:Math.max(380,(d.sight||300)*1.22);
+  if(!target&&u.engagedTargetId){
+   const previous=opponents.find(v=>v.id===u.engagedTargetId);
+   if(previous&&distance(u,previous)<leash){target=previous;forced=true}
+   else u.engagedTargetId=0;
+  }
+  if(!target&&u.retaliateFor>0&&!['hold','stop'].includes(o.type)){
+   const aggressor=opponents.find(v=>v.id===u.lastAttacker);
+   if(aggressor&&distance(u,aggressor)<leash){target=aggressor;forced=true}
+  }
+  if(!target){
+   const sight=u.type==='siegetank'&&u.sieged?SIEGE_RANGE:(['hold','stop'].includes(o.type)?d.range+25:(d.sight||300));
    for(const v of opponents){const gap=distance(u,v);if(gap<sight&&gap<td){td=gap;target=v}}
   }
-  if(!u.neutral&&o.type==='attackmove'&&!forced){
+  // Enemy AI only attacks the base if no defendable unit is in sight.
+  if(!u.neutral&&o.type==='attackmove'&&!target){
    const core=u.enemy?{...HOME,core:true,enemy:false}:battleMode==='duel'?{...AWAY,core:true,enemy:true}:null;
-   if(core&&(!target||distance(u,core)<distance(u,target)-15))target=core;
+   if(core)target=core;
   }
-  if(target){
+  if(target){if(!target.core)u.engagedTargetId=target.id;
    const sieged=u.type==='siegetank'&&u.sieged;
    const range=(sieged?SIEGE_RANGE:d.range)+(target.core?23:TYPES[target.type].r*.35);
    const gap=distance(u,target);
    if(gap<=range&&(!sieged||gap>=SIEGE_MIN_RANGE)){if(u.cool<=0)strike(u,target)}
-   else if(!sieged&&o.type!=='hold')stepToward(u,target,dt);
-  }else if(['move','attackmove','roam'].includes(o.type))stepToward(u,o,dt);
+   else if(!sieged&&!['hold','stop'].includes(o.type))stepToward(u,target,dt);
+  }else {u.engagedTargetId=0;if(['attackmove','roam'].includes(o.type))stepToward(u,o,dt)}
  }
  units=units.filter(u=>u.hp>0);const prev=selected.size;selected=new Set([...selected].filter(id=>units.some(u=>u.id===id&&friendly(u))));if(selected.size!==prev)refreshSelection(true);
  if(nexus<=0){over=true;notify('패배 · 넥서스가 파괴됐습니다')}
@@ -864,7 +880,7 @@ function updateCommands(){
     continue;
    }
    btn.disabled=type==='revive'?(hero||(activeTeam?enemyReviveTimer:reviveTimer)>0||(activeTeam?enemyBase:nexus)<=0):type==='flank'?(battleMode!=='duel'||!has):type in SKILL_COSTS?(!hero||currentEnergy()<SKILL_COSTS[type]):!has;
-  btn.classList.toggle('active',mode===type||(type==='move'&&mode==='attackmove'));
+  btn.classList.toggle('active',mode===type);
  }
 }
 function updateUI(){
