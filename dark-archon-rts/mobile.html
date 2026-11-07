@@ -66,6 +66,7 @@ a{color:#94c8f0}a:hover{color:#d6ecff}.unitTile:hover{border-color:#95d4ed}.unit
 }
 @media(max-width:380px){.mobile-page .commandGrid{grid-template-columns:repeat(3,minmax(0,1fr))}.mobile-page .psiSkill{font-size:8px}}
 </style>
+<link rel="stylesheet" href="./campaign-70.css"/>
 </head>
 <body class="mobile-page">
 <main>
@@ -358,7 +359,7 @@ const CAMPAIGN_WAVES=[
  {heroes:['guardian','scout','ultra'],ordinary:{zergling:2,marine:1,hydra:2,dragoon:2,goliath:1,firebat:1,guardian:1,valkyrie:1,devourer:1,ultra:1,siegetank:3}},
  {heroes:['carrier','battlecruiser','reaver','dragoon'],ordinary:{zergling:4,marine:1,hydra:1,dragoon:2,goliath:1,mutalisk:2,ultra:1,scourge:2,guardian:1,vulture:1,siegetank:4}}
 ];
-const WAVE_COUNT=CAMPAIGN_WAVES.length;
+const WAVE_COUNT=70;
 function startWave(){
  time=0;interval=0;spawns=[];
  const config=CAMPAIGN_WAVES[wave-1];
@@ -990,5 +991,6 @@ requestAnimationFrame(()=>centerMobileCamera(330,H/2,'instant'));
 reset();requestAnimationFrame(loop);
 
 </script>
+<script src="./campaign-70.js"></script>
 </body></html>
 
