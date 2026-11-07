@@ -231,7 +231,7 @@ const spriteSheets={},spriteThumbs={},spriteCenters={};
 for(const key of SPRITE_TYPES){
  const img=new Image();spriteSheets[key]=img;
  img.onload=()=>{const thumb=document.createElement('canvas');thumb.width=thumb.height=72;
-  thumb.getContext('2d').drawImage(img,0,0,img.width/16,img.height/16,0,0,72,72);
+  const thumbCtx=thumb.getContext('2d');thumbCtx.imageSmoothingEnabled=LEGACY_ATLAS_TYPES.has(key);thumbCtx.drawImage(img,0,0,img.width/16,img.height/16,0,0,72,72);
   const scan=document.createElement('canvas');scan.width=img.width;scan.height=img.height;
   const sq=scan.getContext('2d',{willReadFrequently:true});sq.drawImage(img,0,0);
   const rgba=sq.getImageData(0,0,img.width,img.height).data,cw=img.width/16,ch=img.height/16;
@@ -245,7 +245,7 @@ for(const key of SPRITE_TYPES){
   });
   spriteThumbs[key]=thumb.toDataURL('image/png');refreshSelection(true)};
  img.onerror=()=>{spriteSheets[key]=null};
- img.src=key+'-atlas.'+(LEGACY_ATLAS_TYPES.has(key)?'avif':'webp');
+ img.src=key+'-atlas.'+(LEGACY_ATLAS_TYPES.has(key)?'avif':'png');
 }
 function spriteFrame(u,width){
  const sheet=spriteSheets[u.type];if(!sheet?.complete||!sheet.naturalWidth)return false;
@@ -257,7 +257,7 @@ function spriteFrame(u,width){
  // would cause large attacks/deaths to throw the sprite off its anchor point.
  const center=centers?{x:centers.slice(0,4).reduce((n,p)=>n+p.x,0)/4,y:centers.slice(0,4).reduce((n,p)=>n+p.y,0)/4}:{x:0,y:0};
  const sx=Math.ceil(frame*cw+1),sy=Math.ceil(dir*ch+1),sw=Math.floor((frame+1)*cw-1)-sx,sh=Math.floor((dir+1)*ch-1)-sy;
- const height=width*ch/cw;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+ const height=width*ch/cw;ctx.imageSmoothingEnabled=LEGACY_ATLAS_TYPES.has(u.type);ctx.imageSmoothingQuality='high';
  ctx.drawImage(sheet,sx,sy,sw,sh,-width/2-center.x*width/cw,-height*.73-center.y*height/ch,width,height);return true;
 }
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -700,7 +700,7 @@ function draw(){
    const dir=atlasDirection(Math.round(((c.face%(2*Math.PI)+2*Math.PI)%(2*Math.PI))*8/Math.PI)%16),frame=13+Math.min(2,Math.floor(c.age/.22));
    const cw=sheet.width/16,ch=sheet.height/16,width=Math.min(TYPES[c.type].r*3,88),height=width*ch/cw,center=spriteCenters[c.type]?.[dir]?.[frame]||{x:0,y:0};
    const sx=Math.ceil(frame*cw+1),sy=Math.ceil(dir*ch+1),sw=Math.floor((frame+1)*cw-1)-sx,sh=Math.floor((dir+1)*ch-1)-sy;
-   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+   ctx.imageSmoothingEnabled=LEGACY_ATLAS_TYPES.has(c.type);ctx.imageSmoothingQuality='high';
    ctx.drawImage(sheet,sx,sy,sw,sh,-width/2-center.x*width/cw,-height*.73-center.y*height/ch,width,height);
   }else{ctx.fillStyle=TYPES[c.type].color;ctx.beginPath();ctx.arc(0,0,TYPES[c.type].r*(1-c.age/.65),0,Math.PI*2);ctx.fill()}ctx.restore()}
  for(const u of [...units].sort((a,b)=>a.y-b.y))drawUnit(u);
