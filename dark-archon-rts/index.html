@@ -263,6 +263,7 @@ function spriteFrame(u,width){
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 let units=[],selected=new Set(),groups=Array.from({length:5},()=>[]),spawns=[],effects=[],storms=[],corpses=[],projectiles=[],wave=1,energy=250,enemyEnergy=250,nexus=750,enemyBase=750,kills=0,conversions=0,idCounter=0,time=0,interval=0,mode='select',paused=false,over=false,drag=null,clickMemory={id:0,time:0},lastUI=0,selectionStamp='',battleMode='defense',activeTeam=false,reviveTimer=0,enemyReviveTimer=0,centerTimer=0;
 const HOME={x:95,y:H/2},AWAY={x:W-95,y:H/2};
+let hoveredUnitId=0,hoverPoint={x:0,y:0};
 const UPPER_LANE_BOTTOM=245,NEUTRAL_MIN_Y=320;
 const nexusArt=new Image();nexusArt.src='nexus.webp';
 const cannonBaseArt=new Image();cannonBaseArt.src='photon-cannon-base.webp';
@@ -320,7 +321,7 @@ function startWave(){
 }
 
 function reset(){
- units=[];selected.clear();groups=Array.from({length:5},()=>[]);effects=[];storms=[];corpses=[];projectiles=[];wave=1;energy=enemyEnergy=250;nexus=enemyBase=750;kills=conversions=0;idCounter=0;mode='select';paused=over=false;drag=null;reviveTimer=enemyReviveTimer=centerTimer=0;activeTeam=false;$('teamSwitch').textContent='조작: 청록';
+ units=[];selected.clear();hoveredUnitId=0;groups=Array.from({length:5},()=>[]);effects=[];storms=[];corpses=[];projectiles=[];wave=1;energy=enemyEnergy=250;nexus=enemyBase=750;kills=conversions=0;idCounter=0;mode='select';paused=over=false;drag=null;reviveTimer=enemyReviveTimer=centerTimer=0;activeTeam=false;$('teamSwitch').textContent='조작: 청록';
  const hero=spawn('darkarchon',false,235,H/2);selected.add(hero.id);
  for(const offset of [-105,105])spawn('cannon',false,HOME.x+130,HOME.y+offset);
  if(battleMode==='duel'){spawn('darkarchon',true,W-235,H/2);for(const offset of [-105,105])spawn('cannon',true,AWAY.x-130,AWAY.y+offset);spawns=[];for(let i=0;i<5;i++)spawnNeutral();notify('대전 시작 · 전장 곳곳의 중립 유닛을 먼저 정신 지배하세요')}
@@ -433,7 +434,8 @@ cv.addEventListener('pointerdown',ev=>{
  drag={begin:p,end:p,add:ev.shiftKey,pointerId:ev.pointerId,started:performance.now()};
  try{cv.setPointerCapture(ev.pointerId)}catch{}
 });
-cv.addEventListener('pointermove',ev=>{if(drag?.pointerId===ev.pointerId)drag.end=coords(ev)});
+cv.addEventListener('pointermove',ev=>{const p=coords(ev);hoverPoint=p;hoveredUnitId=getUnit(p,hostile)?.id||0;if(drag?.pointerId===ev.pointerId)drag.end=p});
+cv.addEventListener('pointerleave',()=>{hoveredUnitId=0});
 function releasePointer(ev){
  if(!drag||ev.pointerId!==drag.pointerId)return;
  const state=drag;drag=null;
@@ -708,6 +710,15 @@ function draw(){
  if(drag&&distance(drag.begin,drag.end)>7){
   const a=drag.begin,b=drag.end,x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(a.x-b.x),h=Math.abs(a.y-b.y);
   ctx.fillStyle='#6cf7c315';ctx.strokeStyle='#83f5bd';ctx.lineWidth=1;ctx.fillRect(x,y,w,h);ctx.strokeRect(x,y,w,h);
+ }
+ const hover=units.find(u=>u.id===hoveredUnitId&&u.hp>0);
+ if(hover?.hero&&!drag){
+  const w=250,h=88,x=clamp(hoverPoint.x+22,10,W-w-10),y=clamp(hoverPoint.y+16,10,H-h-10);
+  ctx.save();ctx.fillStyle='#140d1beb';ctx.strokeStyle='#ff3d5b';ctx.lineWidth=2;ctx.fillRect(x,y,w,h);ctx.strokeRect(x,y,w,h);
+  ctx.textAlign='left';ctx.fillStyle='#ffb7c2';ctx.font='bold 17px sans-serif';ctx.fillText('★ '+hover.heroName,x+10,y+24);
+  ctx.fillStyle='#e3dce7';ctx.font='14px sans-serif';ctx.fillText((hover.officialHero?'공식 영웅':'게임 전용 정예')+'  HP '+Math.ceil(hover.hp)+' / '+hover.max,x+10,y+45);
+  ctx.fillText('보호막 '+Math.ceil(hover.shield)+'  공격력 '+(hover.damage??TYPES[hover.type].damage),x+10,y+65);
+  ctx.restore();
  }
  if(mode!=='select'){ctx.textAlign='left';ctx.font='bold 17px sans-serif';ctx.fillStyle='#ffe6b6';ctx.fillText({mind:'정신 지배: 적을 클릭',mael:'마엘스트롬: 지점 클릭',storm:'사이오닉 스톰: 아군 피해',feedback:'피드백: 상대 다크 아콘 클릭',attackmove:'공격 이동: 지점 클릭'}[mode],20,34)}
  if(interval>0&&!over&&battleMode==='defense'){ctx.font='bold 22px sans-serif';ctx.fillStyle='#dccca4';ctx.textAlign='center';ctx.fillText('WAVE CLEAR · +85 에너지',W/2,82)}
