@@ -174,8 +174,31 @@ const bgm=new Audio('Warping_the_Citadel.mp3');
 bgm.loop=true;bgm.preload='none';bgm.volume=.28;
 let audioUnlocked=false,soundMuted=false,voiceVolume=.88,lastVoiceAt=-1e9;
 const voiceClips=new Map(),voiceCooldown=new Map(),voiceMissing=new Set();
+let cueAudioContext=null;
+function playUnitCue(u,event){
+ const Ctor=window.AudioContext||window.webkitAudioContext;
+ if(!Ctor||voiceVolume<=0)return;
+ const key=u.type+'-'+event,now=performance.now(),gap=event==='attack'?1200:650;
+ if(now-(voiceCooldown.get(key)??-1e9)<gap||now-lastVoiceAt<150)return;
+ voiceCooldown.set(key,now);lastVoiceAt=now;
+ try{
+  const ac=cueAudioContext||(cueAudioContext=new Ctor());
+  if(ac.state==='suspended')ac.resume().catch(()=>{});
+  const osc=ac.createOscillator(),gain=ac.createGain();
+  const base={zerg:100,protoss:270,terran:155}[TYPES[u.type].race]||180;
+  const shift={ready:0,select:40,move:20,attack:110,death:-60}[event]||0;
+  osc.type=TYPES[u.type].race==='protoss'?'sine':TYPES[u.type].race==='terran'?'sawtooth':'triangle';
+  osc.frequency.setValueAtTime(base+shift,ac.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(45,(base+shift)*(event==='death'?.55:1.35)),ac.currentTime+.13);
+  gain.gain.setValueAtTime(.0001,ac.currentTime);
+  gain.gain.exponentialRampToValueAtTime(Math.max(.002,voiceVolume*.052),ac.currentTime+.012);
+  gain.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.19);
+  osc.connect(gain).connect(ac.destination);osc.start();osc.stop(ac.currentTime+.21);
+ }catch{}
+}
 function playVoice(u,event,force=false){
- if(!audioUnlocked||soundMuted||!u||!VOICE_TYPES.has(u.type)||!VOICE_EVENTS.has(event))return;
+ if(!audioUnlocked||soundMuted||!u||!VOICE_EVENTS.has(event))return;
+ if(!VOICE_TYPES.has(u.type)){playUnitCue(u,event);return}
  const key=u.type+'-'+event,now=performance.now(),gap=event==='attack'?3200:event==='move'?700:event==='select'?350:event==='death'?500:900;
  if(now-(voiceCooldown.get(key)??-1e9)<gap||(!force&&now-lastVoiceAt<220)||voiceMissing.has(key))return;
  voiceCooldown.set(key,now);lastVoiceAt=now;
@@ -640,6 +663,7 @@ function drawUnit(u){
   ctx.beginPath();for(let i=0;i<8;i++){const a=i*Math.PI/4+u.face,r=d.r*(i%2?.82:1);ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.stroke();ctx.shadowBlur=0;
   if(u.type==='darkarchon'){ctx.fillStyle='#1b1026';ctx.beginPath();ctx.moveTo(-17,-24);ctx.lineTo(0,-39);ctx.lineTo(17,-24);ctx.lineTo(0,27);ctx.closePath();ctx.fill();ctx.fillStyle='#ffb0d2';ctx.fillRect(-11,-14,8,4);ctx.fillRect(3,-14,8,4)}
  }
+ if(d.cloaked){ctx.save();ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillStyle='#b8b0ea';ctx.fillText('은신',0,-d.r-42);ctx.restore()}
  if(u.hero){ctx.save();ctx.textAlign='center';ctx.font='900 13px sans-serif';ctx.shadowColor='#ff123f';ctx.shadowBlur=10;ctx.fillStyle='#ffe4c4';ctx.fillText('★ '+u.heroName,0,-d.r-52);ctx.restore()}
  if(selected.has(u.id)){ctx.strokeStyle='#73ffd0';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,6,d.r+9,d.r*.56+6,0,0,Math.PI*2);ctx.stroke()}
  if(u.maxShield>0){ctx.fillStyle='#102942';ctx.fillRect(-d.r,-d.r-23,d.r*2,5);ctx.fillStyle='#66beff';ctx.fillRect(-d.r,-d.r-23,d.r*2*clamp(u.shield/u.maxShield,0,1),5)}
@@ -692,7 +716,7 @@ function drawMinimap(){
  mc.strokeStyle='#5a778c';mc.lineWidth=1;mc.strokeRect(3,3,minimap.width-6,minimap.height-6);
  mc.fillStyle='#78a9b3';mc.fillRect(14,minimap.height/2-4,9,8);if(battleMode==='duel'){mc.fillStyle='#f57569';mc.fillRect(minimap.width-23,minimap.height/2-4,9,8)}
  for(const u of units){mc.fillStyle=u.neutral?'#f4d66b':u.enemy?'#f57569':'#7ce7c0';let x=u.x/W*minimap.width,y=u.y/H*minimap.height;
- mc.fillRect(x-2,y-2,u.type==='ultra'?6:4,u.type==='ultra'?6:4)}
+ mc.fillRect(x-2,y-2,u.type==='ultra'?6:4,u.type==='ultra'?6:4);if(u.hero){mc.strokeStyle='#ff315c';mc.lineWidth=2;mc.strokeRect(x-4,y-4,9,9)}}
 }
 const tileIcon=t=>'<span class="glyph" style="color:'+TYPES[t].color+'">'+TYPES[t].glyph+'</span>';
 function updateGroups(){
@@ -744,7 +768,7 @@ function updateCommands(){
 }
 function updateUI(){
  $('wave').textContent=battleMode==='duel'?'쟁탈전':wave+' / 10';$('energy').textContent=Math.floor(currentEnergy())+' / 250';$('nexusHP').textContent=Math.ceil(nexus)+' / 750';$('enemyBaseHP').textContent=Math.ceil(enemyBase)+' / 750';const activeTimer=activeTeam?enemyReviveTimer:reviveTimer;$('heroStatus').textContent=units.some(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon')?'전투 중':activeTimer>0?'생산 '+Math.ceil(activeTimer)+'초':'재생산 가능';
- $('army').textContent=allies().filter(u=>!u.fixed).length+' / '+(enemies().filter(u=>!u.fixed).length+spawns.length);$('kills').textContent=kills+' / '+conversions;$('heroCount').textContent=units.filter(u=>u.enemy&&!u.neutral&&u.hero&&u.hp>0).length;
+ $('army').textContent=allies().filter(u=>!u.fixed).length+' / '+(enemies().filter(u=>!u.fixed).length+spawns.length);$('kills').textContent=kills+' / '+conversions;$('heroCount').textContent=units.filter(u=>u.enemy!==activeTeam&&!u.neutral&&u.hero&&u.hp>0).length;
  refreshSelection();updateCommands();updateManaUI();drawMinimap();
 }
 minimap.addEventListener('contextmenu',e=>{e.preventDefault();const r=minimap.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;command('move',{x,y},null,e.shiftKey)});
