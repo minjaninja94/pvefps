@@ -334,11 +334,45 @@ function tick(dt){
  if(!spawns.length&&!enemies().length){interval+=dt;if(interval>3){if(wave===10){over=true;notify('승리 · 10웨이브 격파')}else{wave++;energy=Math.min(250,energy+85);for(const u of allies())u.hp=Math.min(u.max,u.hp+u.max*.2);startWave()}}}
  else interval=0;
 }
+
+function drawUnitAccents(u,d){
+ const pulse=.5+.5*Math.sin(u.frameTime*5);
+ ctx.save();
+ ctx.lineCap='round';
+ if(u.type==='darkarchon'){
+  ctx.strokeStyle='rgba(239,66,105,'+(.35+.25*pulse)+')';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.ellipse(0,-5,d.r*(.82+.08*pulse),d.r*(.9+.08*pulse),0,0,Math.PI*2);ctx.stroke();
+ }else if(u.type==='ultra'){
+  // two long pale scythe tusks keep the heavy monster identifiable at RTS zoom
+  ctx.rotate(u.face);
+  ctx.strokeStyle='#e8d8af';ctx.lineWidth=3.2;
+  for(const sign of [-1,1]){
+   ctx.beginPath();ctx.moveTo(9,sign*8);ctx.quadraticCurveTo(28,sign*22,43,sign*31);
+   ctx.quadraticCurveTo(39,sign*13,24,sign*7);ctx.stroke();
+  }
+ }else if(u.type==='zealot'){
+  ctx.rotate(u.face);ctx.strokeStyle='#8eeefa';ctx.shadowColor='#7ceaff';ctx.shadowBlur=8;ctx.lineWidth=3;
+  for(const sign of [-1,1]){ctx.beginPath();ctx.moveTo(8,sign*12);ctx.lineTo(34,sign*19);ctx.stroke()}
+ }else if(u.type==='archon'){
+  ctx.strokeStyle='rgba(133,220,255,'+(.37+.26*pulse)+')';ctx.shadowColor='#a3eaff';ctx.shadowBlur=10;
+  ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-4,d.r*(1+.12*pulse),0,Math.PI*2);ctx.stroke();
+ }else if(u.type==='hydra'){
+  ctx.strokeStyle='#81aa55';ctx.lineWidth=2;
+  for(const sign of [-1,1]){ctx.beginPath();ctx.moveTo(-9,sign*8);ctx.lineTo(-20,sign*20);ctx.stroke()}
+ }else if(u.type==='marine'&&u.attackTimer>0){
+  ctx.rotate(u.face);ctx.fillStyle='#d9f5fe';ctx.shadowColor='#b5efff';ctx.shadowBlur=8;
+  ctx.beginPath();ctx.arc(27,4,3.5,0,Math.PI*2);ctx.fill();
+ }else if(u.type==='goliath'&&u.attackTimer>0){
+  ctx.fillStyle='#f3b974';for(const sign of [-1,1]){ctx.fillRect(18,sign*11,9,3)}
+ }
+ ctx.restore();
+}
+
 function drawUnit(u){
  const d=TYPES[u.type];ctx.save();ctx.translate(u.x,u.y);
  ctx.fillStyle='#03050888';ctx.beginPath();ctx.ellipse(0,d.r*.65,d.r,Math.max(6,d.r*.35),0,0,Math.PI*2);ctx.fill();
  const w=d.r*3;
- if(spriteFrame(u,w)) {}
+ if(spriteFrame(u,w)) {drawUnitAccents(u,d)}
  else {
   ctx.shadowBlur=u.type==='darkarchon'?28:10;ctx.shadowColor=d.color;ctx.fillStyle=d.color;ctx.strokeStyle=u.enemy?'#ef9c90':'#a4e9ff';ctx.lineWidth=2;
   ctx.beginPath();for(let i=0;i<8;i++){const a=i*Math.PI/4+u.face,r=d.r*(i%2?.82:1);ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.stroke();ctx.shadowBlur=0;
