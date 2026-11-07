@@ -1,0 +1,95 @@
+
+/* Mobile RTS cockpit v2 — no vertical page scrolling, accessible bottom actions. */
+html,body.mobile-page{margin:0;width:100%;height:100%;height:100dvh;overflow:hidden!important;overscroll-behavior:none}
+.mobile-page{--quick-h:54px;--sheet-h:122px;background:#08101b}
+.mobile-page main{display:flex;flex-direction:column;height:100%;height:100dvh;max-width:none;min-height:0;overflow:hidden;padding:env(safe-area-inset-top) max(3px,env(safe-area-inset-right)) env(safe-area-inset-bottom) max(3px,env(safe-area-inset-left))}
+.mobile-page header{display:flex;flex:0 0 auto;align-items:center;justify-content:space-between;gap:4px;padding:2px 3px;margin:0;min-height:37px;max-height:44px;flex-wrap:nowrap;overflow:hidden;background:#121f30}
+.mobile-page header>.brand,.mobile-page header>div:first-child{flex:0 0 auto}
+.mobile-page header .brand{font-size:13px;white-space:nowrap;letter-spacing:0}
+.mobile-page header .sub{display:none}
+.mobile-page header .topstat{flex:1;display:flex;flex-wrap:nowrap;gap:3px;justify-content:flex-end;min-width:0;overflow:hidden}
+.mobile-page header .chip{font-size:10px;padding:5px 4px;white-space:nowrap}
+.mobile-page header .chip:nth-child(n+4){display:none}
+.mobile-page header #pause{flex:0 0 auto;min-width:42px;max-width:58px;height:31px;border:1px solid #758aa4;padding:2px 3px;font-size:10px;text-overflow:ellipsis;overflow:hidden}
+.mobile-page .mobileTools{flex:0 0 39px;position:static;z-index:1;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:2px;min-height:0;padding:3px 1px;overflow:hidden;background:#131c2b}
+.mobile-page .mobileTools button{min-width:0;height:32px;min-height:32px;padding:2px 1px;font-size:10px;white-space:nowrap;overflow:hidden;border-radius:4px}
+.mobile-page .mobileHint{display:none}
+.mobile-page .frame{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;max-height:none!important;overflow:hidden;border:1px solid #56748d;box-shadow:none}
+.mobile-page .touchViewport{order:0;flex:1 1 auto;min-height:90px;height:0!important;width:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior:contain;background:#0b121e}
+.mobile-page .touchViewport::-webkit-scrollbar{display:none}
+.mobile-page #field{display:block;height:100%!important;min-height:100%;width:auto!important;max-width:none!important;aspect-ratio:2400/700;touch-action:none}
+.mobile-page .touchViewport.zoomActive{overflow-y:auto}
+.mobile-page .touchViewport.zoomActive #field{height:160%!important;min-height:160%}
+.mobile-page .mobileQuick{order:1;flex:0 0 var(--quick-h);display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px;padding:3px 3px;background:#111d32;border-top:1px solid #466888}
+.mobile-page .mobileQuick button{min-width:0;min-height:44px;border-radius:5px;background:linear-gradient(160deg,#30455e,#172235);border:1px solid #6b849e;font-weight:750;font-size:11px;color:#e8effa;line-height:1.1;padding:3px 1px;touch-action:manipulation}
+.mobile-page .mobileQuick button small{display:block;margin-top:3px;font-size:9px;color:#bdd0e6}
+.mobile-page .mobileQuick button.on{background:#573b61;border-color:#f0c4fa;color:white;box-shadow:0 0 6px #a351a077}
+.mobile-page .mobileQuick button:disabled{opacity:.36}
+.mobile-page .mobileQuick button.siegeReady{border-color:#f2b766;color:#ffe3ab}
+.mobile-page .mobileTabs{order:2;flex:0 0 31px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;padding:2px 3px;background:#111927}
+.mobile-page .mobileTabs button{min-width:0;padding:2px 1px;border:1px solid #4d627b;background:#1e2c40;color:#a8c4d7;font-size:11px;font-weight:700;border-radius:3px;touch-action:manipulation}
+.mobile-page .mobileTabs button[aria-selected=true]{background:#344b5e;color:#fff;border-color:#b0dcc5}
+.mobile-page .gamebar{order:3;flex:0 0 var(--sheet-h);display:block!important;height:var(--sheet-h)!important;min-height:0!important;max-height:var(--sheet-h)!important;padding:3px;overflow:hidden;background:#131f31;border-top:1px solid #5a728e}
+.mobile-page .gamebar>.panel,.mobile-page .gamebar>.campaignPanel{display:none!important;height:100%;max-height:100%;overflow:hidden}
+.mobile-page .gamebar>.mobileActive{display:block!important}
+.mobile-page .gamebar>.campaignPanel.mobileActive{display:flex!important}
+.mobile-page .gamebar>.panel{padding:3px 5px;border:1px solid #455e76;box-shadow:none}
+.mobile-page .panelTitle{display:none}
+.mobile-page .selectionPanel .unitrow{height:62px;min-height:0;gap:5px}
+.mobile-page .selectionPanel .portrait{width:74px;min-width:74px;height:62px;flex:0 0 74px;padding:2px;border-width:1px;gap:1px}
+.mobile-page .selectionPanel .portraitVisual{height:26px;font-size:15px}
+.mobile-page .selectionPanel .portrait .label{font-size:8px;line-height:1;white-space:nowrap;overflow:hidden}
+.mobile-page .selectionPanel .hpbar{height:3px}
+.mobile-page .selectionPanel #selectedList{display:flex;flex:1 1 auto;min-width:0;height:62px;overflow-x:auto;overflow-y:hidden;gap:3px;scrollbar-width:thin}
+.mobile-page .selectionPanel .unitTile{flex:0 0 44px;min-width:44px;height:59px}
+.mobile-page .selectionPanel #groupBar{display:flex;height:23px;min-height:0;margin:2px 0 0;flex-wrap:nowrap;gap:3px;overflow-x:auto;overflow-y:hidden}
+.mobile-page .selectionPanel #groupBar button{min-width:54px;padding:2px 4px;height:21px;font-size:10px}
+.mobile-page .selectionPanel .psiBlock{margin:2px 0 0;padding:0;height:30px;border:0}
+.mobile-page .selectionPanel .psiHead{display:none}
+.mobile-page .selectionPanel .psiTrack{height:11px}
+.mobile-page .selectionPanel .psiSkills{margin-top:2px}
+.mobile-page .selectionPanel .psiSkill{font-size:9px;padding:2px 0}
+.mobile-page .commandsPanel .commandGrid{height:100%;display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,minmax(0,1fr));grid-auto-columns:76px;gap:3px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+.mobile-page .commandsPanel .command{height:100%;min-height:0;min-width:0;font-size:17px;padding:1px}
+.mobile-page .commandsPanel .command small{font-size:9px}
+.mobile-page .mapPanel #minimap{width:100%;height:calc(100% - 16px);max-height:none;aspect-ratio:auto}
+.mobile-page .mapPanel #mapLegend{height:14px;margin:0;font-size:10px;text-align:center}
+.mobile-page .mobileSettings{display:none}
+.mobile-page .mobileSettings .soundbar{display:flex!important;align-content:start;justify-content:flex-start;gap:5px;max-height:100%;overflow-x:auto;overflow-y:hidden;padding:4px}
+.mobile-page .mobileSettings .soundbar button,.mobile-page .mobileSettings .soundbar a{height:38px;font-size:11px}
+.mobile-page .campaignPanel{padding:3px 6px;gap:4px}
+.mobile-page .campaignPanel .campaignHead{display:flex;flex-wrap:nowrap;gap:5px;white-space:nowrap;overflow:hidden;font-size:10px}
+.mobile-page .campaignPanel .campaignHead strong{font-size:11px}
+.mobile-page .campaignPanel .campaignHead .countdown{display:none}
+.mobile-page .campaignPanel .campaignChoices{flex:1;display:flex;flex-wrap:nowrap;gap:5px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+.mobile-page .campaignPanel .campaignChoices button{flex:0 0 147px;min-height:0;height:68px;padding:5px;font-size:11px}
+.mobile-page .campaignPanel .campaignChoices button small{font-size:10px;margin-top:4px}
+.mobile-page .campaignPanel .campaignChoices button b{margin-top:3px}
+.mobile-page .campaignPanel .campaignRecord{display:none}
+.mobile-page #message{order:4;flex:0 0 22px;height:22px;min-height:0;margin:0;padding:3px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;line-height:15px;border-left:0;background:#111927}
+.mobile-page .help{display:none}
+@media(orientation:landscape){
+ .mobile-page{--quick-h:48px;--sheet-h:74px}
+ .mobile-page header{min-height:28px;max-height:31px}
+ .mobile-page header .chip{font-size:10px;padding:3px 4px}
+ .mobile-page .mobileTools{flex-basis:32px;padding:1px}
+ .mobile-page .mobileTools button{height:29px;min-height:29px}
+ .mobile-page .mobileQuick button{min-height:38px;padding:2px;font-size:10px}
+ .mobile-page .mobileTabs{flex-basis:26px}
+ .mobile-page .selectionPanel .unitrow{height:49px}
+ .mobile-page .selectionPanel .portrait{height:47px}
+ .mobile-page .selectionPanel .portraitVisual{height:18px}
+ .mobile-page .selectionPanel #selectedList{height:48px}
+ .mobile-page .selectionPanel .unitTile{height:46px}
+ .mobile-page .selectionPanel #groupBar{display:none}
+ .mobile-page .selectionPanel .psiBlock{height:19px}
+ .mobile-page .selectionPanel .psiTrack{height:8px}
+ .mobile-page .selectionPanel .psiSkills{display:none}
+ .mobile-page .campaignPanel .campaignHead{display:none}
+ .mobile-page .campaignPanel .campaignChoices button{height:63px}
+}
+@media(max-width:360px){
+ .mobile-page .mobileQuick button{font-size:10px}
+ .mobile-page header .brand{font-size:12px}
+ .mobile-page header .chip{font-size:9px;padding:4px 2px}
+}
