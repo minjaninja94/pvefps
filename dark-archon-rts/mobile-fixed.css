@@ -113,3 +113,9 @@ html,body.mobile-page{margin:0;width:100%;height:100%;height:100dvh;overflow:hid
  .mobile-page .campaignPanel .campaignChoices button{height:48px}
  .mobile-page #message{flex-basis:16px;height:16px;padding:1px 6px;font-size:9px;line-height:12px}
 }
+
+@media(max-width:420px){
+ .mobile-page header>div:first-child{display:none}
+ .mobile-page header .topstat{justify-content:flex-start}
+ .mobile-page header .topstat .chip{flex:1 1 auto;text-align:center}
+}
