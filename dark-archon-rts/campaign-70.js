@@ -11,7 +11,13 @@
  };
  const ranks={regen:0,supply:0,repair:0,recover:0};
  let points=0,clearedWave=0,rewardTimer=0,overdriveUsed=0,lastRender=-1;
- const originalStartWave=startWave,originalTick=tick,originalReset=reset,originalUpdateUI=updateUI;
+ const originalStartWave=startWave,originalTick=tick,originalReset=reset,originalUpdateUI=updateUI,originalSpawn=spawn;
+ spawn=function(type,enemy,x,y,isHero=false){
+  const unit=originalSpawn(type,enemy,x,y,isHero);
+  // Reinforcements spawned by the original timer must march toward the Nexus.
+  if(enemy&&battleMode==='defense'&&wave>10&&!unit.fixed&&!unit.neutral)unit.order={type:'attackmove',x:HOME.x,y:HOME.y,target:null};
+  return unit;
+ };
  const phases=[
   {name:'저그 대군',pool:['zergling','zergling','hydra','lurker','ultra','mutalisk','guardian','scourge']},
   {name:'테란 기갑전',pool:['marine','firebat','vulture','siegetank','siegetank','goliath','wraith','battlecruiser']},
