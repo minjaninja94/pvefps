@@ -453,7 +453,7 @@ document.querySelectorAll('[data-command]').forEach(btn=>btn.onclick=()=>{
  else setMode(cmd);
 });
 function stepToward(u,p,dt){
- const d=distance(u,p),sp=TYPES[u.type].speed;
+ const d=distance(u,p),sp=u.speed??TYPES[u.type].speed;
  if(d<Math.max(6,TYPES[u.type].r*.3)){if(u.order.type==='move'||u.order.type==='attackmove')completeOrder(u);return}
  let vx=(p.x-u.x)/d,vy=(p.y-u.y)/d;
  u.face=Math.atan2(vy,vx);
@@ -466,21 +466,54 @@ function stepToward(u,p,dt){
  }
  u.x=clamp(x,27,W-27);u.y=clamp(y,u.neutral?UPPER_LANE_BOTTOM+15:28,H-28);u.moving=true;
 }
-function damage(t,n,source=null){
+function canHit(u,target){
+ if(target.core)return true; // Bases are exposed strategic objectives, including to air-only raid units.
+ const d=TYPES[u.type];return target.type==='darkarchon'||(TYPES[target.type].flying?d.canAir!==false:d.canGround!==false);
+}
+function damage(t,n,source=null,weapon='normal'){
  if(t.core){if(t.enemy)enemyBase=Math.max(0,enemyBase-n);else nexus=Math.max(0,nexus-n);return}
  if(t.hp<=0)return;
  if(source&&hostileFor(t,source)&&t.order.type!=='hold'){t.lastAttacker=source.id;t.retaliateFor=4}
- let amount=n;t.shieldDelay=7;if(t.shield>0){const absorbed=Math.min(t.shield,amount);t.shield-=absorbed;amount-=absorbed}
- if(amount>0)t.hp-=Math.max(1,amount-(TYPES[t.type].armor||0));
- if(t.hp<=0){if(!t.neutral&&t.enemy===activeTeam)playVoice(t,'death',true);corpses.push({type:t.type,x:t.x,y:t.y,face:t.face,age:0});if(t.enemy)kills++}
+ let amount=n;t.shieldDelay=7;
+ if(t.shield>0){const absorbed=Math.min(t.shield,amount);t.shield-=absorbed;amount-=absorbed}
+ if(amount>0){
+  const d=TYPES[t.type],size=d.size||'large',armor=t.armor??d.armor;
+  const multiplier=weapon==='explosive'?(size==='small'?.5:size==='medium'?.75:1):weapon==='concussive'?(size==='large'?.25:size==='medium'?.5:1):1;
+  t.hp-=Math.max(.5,(amount-armor)*multiplier);
+ }
+ if(t.hp<=0){if(!t.neutral&&t.enemy===activeTeam)playVoice(t,'death',true);corpses.push({type:t.type,x:t.x,y:t.y,face:t.face,age:0,hero:t.hero});if(t.enemy)kills++}
+}
+function applyImpact(source,target,amount,weapon='normal',splash=0,bounce=false,pierce=false){
+ const impactPoint={x:target.x,y:target.y};
+ damage(target,amount,source,weapon);
+ if(!source)return;
+ const hostiles=units.filter(v=>v!==target&&v.hp>0&&hostileFor(source,v)&&canHit(source,v));
+ if(pierce){
+  const dx=impactPoint.x-source.x,dy=impactPoint.y-source.y,len=Math.max(1,Math.hypot(dx,dy)),nx=dx/len,ny=dy/len;
+  for(const v of hostiles){const along=(v.x-source.x)*nx+(v.y-source.y)*ny,side=Math.abs((v.x-source.x)*ny-(v.y-source.y)*nx);if(along>=0&&along<=Math.max(len,220)&&side<23)damage(v,amount*.78,source,weapon)}
+ }else if(bounce){
+  const near=hostiles.sort((a,b)=>distance(a,impactPoint)-distance(b,impactPoint)).slice(0,2);
+  near.forEach((v,i)=>{if(distance(v,impactPoint)<135)damage(v,amount*(i===0?.5:.25),source,weapon)});
+ }else if(splash){
+  for(const v of hostiles){const r=distance(v,impactPoint);if(r<splash)damage(v,amount*(1-r/splash)*.65,source,weapon)}
+ }
 }
 function strike(u,t){
- const d=TYPES[u.type];u.cool=d.cool;u.attackTimer=u.fixed?.58:.3;
+ const d=TYPES[u.type],air=!t.core&&!!TYPES[t.type].flying;
+ const amount=air?(u.airDamage??d.airDamage??u.damage??d.damage):(u.damage??d.damage);
+ const weapon=air?(d.airWeapon||d.weapon||'normal'):(d.weapon||'normal');
+ u.cool=u.attackCool??d.cool;u.attackTimer=u.fixed?.58:.3;
  if(u.enemy===activeTeam&&!u.neutral)playVoice(u,'attack');
- if(u.fixed){projectiles.push({x:u.x,y:u.y-30,targetId:t.id,ownerId:u.id,damage:d.damage,enemy:u.enemy});particle(u.x,u.y-30,u.enemy?'#ffb4a4':'#9cefff',15);return}
- damage(t,d.damage,u);
- particle(t.x,t.y,u.neutral?'#f4d66b':u.enemy?'#ff8d83':'#88e8f3',u.type==='ultra'?42:18);
+ if(d.projectile||u.fixed){
+  // Carrier fire is represented by animated miniature interceptor salvos.
+  const count=u.type==='carrier'?6:1;
+  for(let i=0;i<count;i++)projectiles.push({x:u.x+rnd(-10,10),y:u.y-15+rnd(-10,10),targetId:t.core?null:t.id,core:t.core?{...t}:null,ownerId:u.id,damage:amount/count,weapon,splash:i===0?d.splash||0:0,bounce:i===0&&!!d.bounce,pierce:i===0&&!!d.pierce,enemy:u.enemy,speed:u.type==='carrier'?560:630});
+  particle(u.x,u.y-10,u.enemy?'#ffb4a4':'#9cefff',15);
+ }else applyImpact(u,t,amount,weapon,d.splash||0,!!d.bounce,!!d.pierce);
+ if(d.suicide){u.hp=0;corpses.push({type:u.type,x:u.x,y:u.y,face:u.face,age:0,hero:u.hero})}
+ if(!d.projectile&&!u.fixed)particle(t.x,t.y,u.neutral?'#f4d66b':u.enemy?'#ff8d83':'#88e8f3',u.type==='ultra'?42:18);
 }
+
 function tick(dt){
  if(over||paused)return;
  time+=dt;energy=Math.min(250,energy+14*dt);enemyEnergy=Math.min(250,enemyEnergy+14*dt);
@@ -489,7 +522,7 @@ function tick(dt){
  if(enemyReviveTimer>0){enemyReviveTimer=Math.max(0,enemyReviveTimer-dt);if(enemyReviveTimer===0&&enemyBase>0&&!enemies().some(u=>u.type==='darkarchon'&&!u.neutral)){spawn('darkarchon',true,W-235,H/2);notify('주홍 다크 아콘 재생산 완료')}}
  for(const s of storms){s.ttl-=dt;s.pulse+=dt;while(s.pulse>=.4){s.pulse-=.4;const caster=units.find(u=>u.id===s.caster);for(const u of units)if(u.hp>0&&!u.fixed&&distance(u,s)<95)damage(u,14,caster)}}
  storms=storms.filter(s=>s.ttl>0);
- for(const p of projectiles){const target=units.find(u=>u.id===p.targetId&&u.hp>0);if(!target){p.done=true;continue}const gap=distance(p,target),move=520*dt;if(gap<=move+10){p.done=true;damage(target,p.damage,units.find(u=>u.id===p.ownerId));particle(target.x,target.y,p.enemy?'#ffaba0':'#a9eaff',34)}else{p.x+=(target.x-p.x)*move/gap;p.y+=(target.y-p.y)*move/gap}}
+ for(const p of projectiles){const target=p.core||units.find(u=>u.id===p.targetId&&u.hp>0);if(!target){p.done=true;continue}const gap=distance(p,target),move=(p.speed||520)*dt;if(gap<=move+10){p.done=true;const source=units.find(u=>u.id===p.ownerId);applyImpact(source,target,p.damage,p.weapon,p.splash,p.bounce,p.pierce);particle(target.x,target.y,p.enemy?'#ffaba0':'#a9eaff',34)}else{p.x+=(target.x-p.x)*move/gap;p.y+=(target.y-p.y)*move/gap}}
  projectiles=projectiles.filter(p=>!p.done);
  if(battleMode==='duel'){
   centerTimer+=dt;
@@ -499,10 +532,10 @@ function tick(dt){
   if(u.hp<=0)continue;u.cool-=dt;u.stun=Math.max(0,u.stun-dt);u.attackTimer=Math.max(0,u.attackTimer-dt);u.frameTime+=dt;u.moving=false;u.shieldDelay=Math.max(0,u.shieldDelay-dt);if(u.shieldDelay===0)u.shield=Math.min(u.maxShield,u.shield+2.55*dt);u.retaliateFor=Math.max(0,u.retaliateFor-dt);
   if(u.stun>0)continue;
   let o=u.order;const d=TYPES[u.type];
-  if(u.fixed){let target=null,near=d.range;for(const v of units)if(hostileFor(u,v)&&!v.fixed){const gap=distance(u,v);if(gap<near){near=gap;target=v}}if(target&&u.cool<=0)strike(u,target);continue}
+  if(u.fixed){let target=null,near=d.range;for(const v of units)if(hostileFor(u,v)&&!v.fixed&&canHit(u,v)){const gap=distance(u,v);if(gap<near){near=gap;target=v}}if(target&&u.cool<=0)strike(u,target);continue}
   if(u.type==='darkarchon'){if(['move','attackmove'].includes(o.type))stepToward(u,o,dt);continue}
   if(u.neutral){u.roamFor-=dt;if(u.roamFor<=0){u.roamFor=rnd(4,8);u.order={type:'roam',x:rnd(350,W-350),y:rnd(NEUTRAL_MIN_Y,H-70)};o=u.order}}
-  const opponents=units.filter(v=>hostileFor(u,v)&&(!u.neutral||v.y>UPPER_LANE_BOTTOM+15));
+  const opponents=units.filter(v=>hostileFor(u,v)&&canHit(u,v)&&(!u.neutral||v.y>UPPER_LANE_BOTTOM+15));
   let target=null,td=Infinity,forced=false;
   if(o.target){target=opponents.find(v=>v.id===o.target)||null;forced=!!target;if(!target){completeOrder(u);continue}}
   if(!target&&u.retaliateFor>0&&o.type!=='hold'){target=opponents.find(v=>v.id===u.lastAttacker)||null;forced=!!target}
