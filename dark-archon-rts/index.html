@@ -14,14 +14,14 @@ main{max-width:1840px;margin:auto;padding:4px 10px 6px}header{display:flex;align
 .frame{border:3px ridge #65798d;background:#0b0f16;box-shadow:0 15px 45px #000b,0 0 25px #5e9dbb33;position:relative}#field{display:block;width:100%;height:auto;cursor:crosshair;touch-action:none;background:#111722}
 .gamebar{display:grid;grid-template-columns:minmax(170px,1fr) minmax(300px,2.55fr) minmax(210px,1.3fr);gap:8px;min-height:184px;padding:6px;background:linear-gradient(155deg,#303b4f,#111b2a 55%,#2b2037);border-top:3px ridge #8cabc1;box-shadow:inset 0 8px 24px #05070d99}
 .panel{border:2px ridge #657a93;background:linear-gradient(145deg,#152337,#222a39 55%,#171528);padding:8px;min-width:0;box-shadow:inset 0 0 18px #05050e99}.panelTitle{font-size:11px;letter-spacing:.17em;color:#c9def1;margin-bottom:7px;text-align:center;font-weight:800;border-bottom:1px solid #90a8c332;padding-bottom:5px}
-#minimap{display:block;width:100%;aspect-ratio:240/120;max-height:130px;border:2px solid #605f56;background:#0b1720;cursor:pointer}#mapLegend{font-size:11px;color:#94acbe;margin-top:5px}
-.unitrow{display:flex;gap:9px;min-height:132px}.portrait{width:124px;min-width:100px;display:flex;flex-direction:column;background:#0d121b;border:2px solid #6c6049;padding:6px;gap:4px}.portraitVisual{height:82px;display:grid;place-items:center;background:radial-gradient(circle,#4c394f,#121923);font-size:34px;font-weight:900;color:#dfa2d9;overflow:hidden}.portraitVisual img{width:100%;height:100%;object-fit:contain;image-rendering:auto}.portrait .label{font-size:11px;text-align:center;color:#e5dbb8}.hpbar{height:8px;background:#3e141d;border:1px solid #555}.hpbar>div{height:100%;background:linear-gradient(90deg,#2d9e5e,#9bde7e)}
+#minimap{display:block;width:100%;aspect-ratio:240/70;max-height:130px;border:2px solid #605f56;background:#0b1720;cursor:pointer}#mapLegend{font-size:11px;color:#94acbe;margin-top:5px}
+.unitrow{display:flex;gap:9px;min-height:132px}.portrait{width:124px;min-width:100px;display:flex;flex-direction:column;background:#0d121b;border:2px solid #6c6049;padding:6px;gap:4px}.portraitVisual{height:82px;display:grid;place-items:center;background:radial-gradient(circle,#4c394f,#121923);font-size:34px;font-weight:900;color:#dfa2d9;overflow:hidden}.portraitVisual img{width:100%;height:100%;object-fit:contain;image-rendering:auto}.portrait .label{font-size:11px;text-align:center;color:#e5dbb8}.hpbar{height:6px;background:#3e141d;border:1px solid #555}.hpbar>div{height:100%;background:linear-gradient(90deg,#2d9e5e,#9bde7e)}.shieldbar{background:#102942}.shieldbar>div{background:linear-gradient(90deg,#277de0,#8ce4ff)}
 #selectedList{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(2,58px);gap:4px;flex:1;align-content:start}
-.unitTile{background:#171a23;border:1px solid #68634f;position:relative;display:grid;place-items:center;padding:0;min-width:0;overflow:hidden}.unitTile.active{border-color:#77f3a8;box-shadow:inset 0 0 0 1px #77f3a8}.unitTile img{width:100%;height:100%;object-fit:contain}.unitTile .glyph{font-size:19px}.unitTile .uhp{position:absolute;bottom:0;left:0;height:3px;background:#68d68d}.unitTile .short{position:absolute;bottom:5px;font-size:9px;background:#0009;padding:1px 2px}
+.unitTile{background:#171a23;border:1px solid #68634f;position:relative;display:grid;place-items:center;padding:0;min-width:0;overflow:hidden}.unitTile.active{border-color:#77f3a8;box-shadow:inset 0 0 0 1px #77f3a8}.unitTile img{width:100%;height:100%;object-fit:contain}.unitTile .glyph{font-size:19px}.unitTile .uhp{position:absolute;bottom:0;left:0;height:3px;background:#68d68d}.unitTile .ushield{position:absolute;bottom:3px;left:0;height:3px;background:#63bcff}.unitTile .short{position:absolute;bottom:8px;font-size:9px;background:#0009;padding:1px 2px}
 #groupBar{display:flex;gap:5px;align-items:center;margin-top:6px;flex-wrap:wrap}.groupbtn{padding:5px 9px;border:1px solid #676352;background:#161923;color:#cfc8b4;font-size:11px}.groupbtn.active{border-color:#6ee6a6;color:#b9ffd0}
 .commandGrid{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,48px);gap:5px}.command{border:2px outset #7888a2;background:linear-gradient(145deg,#2f405c,#151c2e 66%,#2c2240);font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:inset 0 0 7px #607c9d55}.command:hover{filter:brightness(1.2)}.command.active{border-color:#f0a9d9;background:#5d3265;box-shadow:0 0 8px #c369f255,inset 0 0 14px #cc74ce55}.command small{font-size:10px;color:#c6b8d0}.command:disabled{opacity:.32;cursor:default}
 #message{min-height:24px;padding:6px 0;color:#dfcda5;font-size:13px}.help{color:#b1b5bf;font-size:12px;line-height:1.5;margin:4px 0 0}
-@media(min-width:1400px) and (min-height:850px){#field{height:min(65vh,710px)}.frame{max-height:calc(100vh - 125px)}.gamebar{height:190px}}
+@media(min-width:1400px) and (min-height:850px){#field{height:min(52vh,530px)}.frame{max-height:calc(100vh - 125px)}.gamebar{height:190px}}
 @media(max-width:820px){.gamebar{grid-template-columns:1fr 1fr;min-height:0}.mapPanel{grid-column:1}.selectionPanel{grid-column:1/-1;grid-row:2}.commandsPanel{grid-column:2;grid-row:1}.portrait{width:95px}.commandGrid{grid-template-rows:repeat(3,43px)}#selectedList{grid-template-columns:repeat(8,minmax(0,1fr))}.topstat{gap:4px}}
 
 /* StarCraft Remastered-inspired, original CSS control-card treatment */
@@ -45,13 +45,13 @@ a{color:#94c8f0}a:hover{color:#d6ecff}.unitTile:hover{border-color:#95d4ed}.unit
  <div><button id="battleMode" class="groupbtn">모드: 디펜스</button><button id="teamSwitch" class="groupbtn" hidden>조작: 청록</button><button id="pause" class="groupbtn">일시정지</button><button id="restart" class="groupbtn">새 전투</button></div>
 </header>
 <section class="frame" aria-label="RTS 게임 화면">
- <canvas id="field" width="1400" height="550" aria-label="마컨 디펜스 전장"></canvas>
+ <canvas id="field" width="2400" height="700" aria-label="마컨 디펜스 전장"></canvas>
  <div class="gamebar">
-  <section class="panel mapPanel"><div class="panelTitle">TACTICAL MAP</div><canvas id="minimap" width="240" height="136" aria-label="미니맵"></canvas><div id="mapLegend">● 아군 청록 · 적군 주홍</div></section>
+  <section class="panel mapPanel"><div class="panelTitle">TACTICAL MAP</div><canvas id="minimap" width="240" height="70" aria-label="미니맵"></canvas><div id="mapLegend">● 아군 청록 · 적군 주홍 · 중립 노랑</div></section>
   <section class="panel selectionPanel">
    <div class="panelTitle">UNIT SELECTION <span style="font-size:10px;color:#86d8ba">■ SELECTED FORCES</span></div>
    <div class="unitrow">
-    <div class="portrait"><div id="portraitVisual" class="portraitVisual">✦</div><div id="portraitName" class="label">암흑 집정관</div><div id="portraitHP" class="label">280 / 280</div><div class="hpbar"><div id="portraitBar" style="width:100%"></div></div></div>
+    <div class="portrait"><div id="portraitVisual" class="portraitVisual">✦</div><div id="portraitName" class="label">암흑 집정관</div><div id="portraitHP" class="label">25 HP + 200 보호막</div><div class="hpbar shieldbar"><div id="portraitShield" style="width:100%"></div></div><div class="hpbar"><div id="portraitBar" style="width:100%"></div></div></div>
     <div id="selectedList" aria-label="선택된 유닛 목록"></div>
    </div>
    <div id="groupBar" aria-label="컨트롤 그룹"></div>
@@ -66,14 +66,14 @@ a{color:#94c8f0}a:hover{color:#d6ecff}.unitTile:hover{border-color:#95d4ed}.unit
     <button class="command" data-command="storm">ϟ <small>T 사이오닉 스톰</small></button>
     <button class="command" data-command="revive">✦ <small>넥서스 재생산</small></button>
     <button class="command" data-command="select">↶ <small>Esc 취소</small></button>
-    <button class="command" disabled>◻ <small>—</small></button>
+    <button class="command" data-command="feedback">⚡ <small>F 피드백</small></button>
     <button class="command" disabled>◻ <small>—</small></button>
    </div>
   </section>
  </div>
 </section>
 <div id="message" role="status">다크 아콘을 선택하고 정신 지배를 사용하십시오.</div>
-<p class="help">좌클릭 선택 · 드래그 다중 선택 · 우클릭 이동/공격 · A 공격 이동 · M 정신 지배 · E 마엘스트롬 · T 사이오닉 스톰(아군 피해) · 다크 아콘 사망 후 넥서스 재생산 60초 · Space 일시정지</p>
+<p class="help">좌클릭 선택 · 드래그 다중 선택 · 우클릭 이동/공격 · A 공격 이동 · M 정신 지배(상대 다크 아콘 제외) · E 마엘스트롬 · T 사이오닉 스톰(아군 피해) · F 피드백 · 다크 아콘 사망 후 넥서스 재생산 60초 · Space 일시정지</p>
 </main>
 <script>
 
@@ -93,23 +93,36 @@ const TYPES={
 
 /* Original generated 16 x 16 atlases. Rows: direction. Columns: idle 0-3, move 4-9, attack 10-12, death 13-15. */
 const SPRITE_TYPES=['darkarchon','ultra','marine','zealot','hydra','goliath','archon'];
-const spriteSheets={},spriteThumbs={};
+const spriteSheets={},spriteThumbs={},spriteCenters={};
 for(const key of SPRITE_TYPES){
  const img=new Image();spriteSheets[key]=img;
  img.onload=()=>{const thumb=document.createElement('canvas');thumb.width=thumb.height=72;
   thumb.getContext('2d').drawImage(img,0,0,img.width/16,img.height/16,0,0,72,72);
+  const scan=document.createElement('canvas');scan.width=img.width;scan.height=img.height;
+  const sq=scan.getContext('2d',{willReadFrequently:true});sq.drawImage(img,0,0);
+  const rgba=sq.getImageData(0,0,img.width,img.height).data,cw=img.width/16,ch=img.height/16;
+  spriteCenters[key]=Array.from({length:16},(_,dir)=>{
+   const row=[];for(let frame=0;frame<16;frame++){
+    const x0=Math.ceil(frame*cw+2),x1=Math.floor((frame+1)*cw-2),y0=Math.ceil(dir*ch+2),y1=Math.floor((dir+1)*ch-2);
+    let sx=0,sy=0,weight=0;
+    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const a=rgba[(y*img.width+x)*4+3];if(a>96){sx+=x*a;sy+=y*a;weight+=a}}
+    row.push(weight?{x:sx/weight-(frame+.5)*cw,y:sy/weight-(dir+.5)*ch}:{x:0,y:0});
+   }return row;
+  });
   spriteThumbs[key]=thumb.toDataURL('image/png');refreshSelection(true)};
- img.src=key+'-atlas.webp';
+ img.src=key+'-atlas.avif';
 }
 function spriteFrame(u,width){
  const sheet=spriteSheets[u.type];if(!sheet?.complete||!sheet.naturalWidth)return false;
  const face=((u.face||0)%(2*Math.PI)+2*Math.PI)%(2*Math.PI),dir=Math.round(face*8/Math.PI)%16;
  const frame=u.attackTimer>0?10+Math.min(2,Math.floor((1-u.attackTimer/.3)*3)):u.moving?4+Math.floor(u.frameTime*10)%6:Math.floor(u.frameTime*4)%4;
- const cw=sheet.width/16,ch=sheet.height/16;ctx.imageSmoothingEnabled=false;
- ctx.drawImage(sheet,frame*cw,dir*ch,cw,ch,-width/2,-width*.73,width,width);return true;
+ const cw=sheet.width/16,ch=sheet.height/16,center=spriteCenters[u.type]?.[dir]?.[frame]||{x:0,y:0};
+ const sx=Math.ceil(frame*cw+1),sy=Math.ceil(dir*ch+1),sw=Math.floor((frame+1)*cw-1)-sx,sh=Math.floor((dir+1)*ch-1)-sy;
+ const height=width*ch/cw;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+ ctx.drawImage(sheet,sx,sy,sw,sh,-width/2-center.x*width/cw,-height*.73-center.y*height/ch,width,height);return true;
 }
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-let units=[],selected=new Set(),groups=Array.from({length:5},()=>[]),spawns=[],effects=[],storms=[],corpses=[],wave=1,energy=250,enemyEnergy=250,nexus=750,enemyBase=750,kills=0,conversions=0,idCounter=0,time=0,interval=0,mode='select',paused=false,over=false,drag=null,clickMemory={id:0,time:0},lastUI=0,selectionStamp='',battleMode='defense',activeTeam=false,reviveTimer=0,centerTimer=0;
+let units=[],selected=new Set(),groups=Array.from({length:5},()=>[]),spawns=[],effects=[],storms=[],corpses=[],wave=1,energy=250,enemyEnergy=250,nexus=750,enemyBase=750,kills=0,conversions=0,idCounter=0,time=0,interval=0,mode='select',paused=false,over=false,drag=null,clickMemory={id:0,time:0},lastUI=0,selectionStamp='',battleMode='defense',activeTeam=false,reviveTimer=0,enemyReviveTimer=0,centerTimer=0;
 const HOME={x:95,y:H/2},AWAY={x:W-95,y:H/2};
 const nexusArt=new Image();nexusArt.src='nexus.webp';
 const particle=(x,y,color,r=40)=>effects.push({x,y,color,r,ttl:.48,total:.48});
@@ -118,11 +131,12 @@ const allies=()=>units.filter(u=>!u.enemy&&u.hp>0);
 const enemies=()=>units.filter(u=>u.enemy&&u.hp>0);
 const friendly=u=>!u.neutral&&u.enemy===activeTeam;
 const hostile=u=>u.neutral||u.enemy!==activeTeam;
+const hostileFor=(a,b)=>a!==b&&b.hp>0&&(a.neutral?!b.neutral:b.neutral||a.enemy!==b.enemy);
 const chosen=()=>units.filter(u=>selected.has(u.id)&&friendly(u)&&u.hp>0);
 const currentEnergy=()=>activeTeam?enemyEnergy:energy;
 function spendEnergy(n){if(activeTeam)enemyEnergy-=n;else energy-=n}
 function spawn(type,enemy,x,y){
- const d=TYPES[type],u={id:++idCounter,type,enemy,x,y,hp:d.hp,max:d.hp,shield:d.shield||0,maxShield:d.shield||0,shieldDelay:0,face:0,attackTimer:0,cool:rnd(0,.4),stun:0,moving:false,order:{type:enemy?'attackmove':'hold',x,y},orders:[],frameTime:rnd(0,10)};
+ const d=TYPES[type],u={id:++idCounter,type,enemy,x,y,hp:d.hp,max:d.hp,shield:d.shield||0,maxShield:d.shield||0,shieldDelay:0,face:0,attackTimer:0,cool:rnd(0,.4),stun:0,moving:false,order:{type:enemy?'attackmove':'guard',x,y},orders:[],frameTime:rnd(0,10),lastAttacker:0,retaliateFor:0,roamFor:0};
  units.push(u);return u;
 }
 function startWave(){
@@ -137,12 +151,12 @@ function startWave(){
  notify('웨이브 '+wave+' 시작 · '+(wave===1?'울트라리스크를 정신 지배하세요':'병력을 지휘해 방어하세요'));
 }
 function reset(){
- units=[];selected.clear();groups=Array.from({length:5},()=>[]);effects=[];storms=[];corpses=[];wave=1;energy=enemyEnergy=250;nexus=enemyBase=750;kills=conversions=0;idCounter=0;mode='select';paused=over=false;drag=null;reviveTimer=centerTimer=0;activeTeam=false;$('teamSwitch').textContent='조작: 청록';
+ units=[];selected.clear();groups=Array.from({length:5},()=>[]);effects=[];storms=[];corpses=[];wave=1;energy=enemyEnergy=250;nexus=enemyBase=750;kills=conversions=0;idCounter=0;mode='select';paused=over=false;drag=null;reviveTimer=enemyReviveTimer=centerTimer=0;activeTeam=false;$('teamSwitch').textContent='조작: 청록';
  const hero=spawn('darkarchon',false,235,H/2);selected.add(hero.id);
- if(battleMode==='duel'){spawn('darkarchon',true,W-235,H/2);spawns=[];notify('대전 시작 · 가운데 유닛을 먼저 정신 지배하세요')}
+ if(battleMode==='duel'){spawn('darkarchon',true,W-235,H/2);spawns=[];for(let i=0;i<5;i++)spawnNeutral();notify('대전 시작 · 전장 곳곳의 중립 유닛을 먼저 정신 지배하세요')}
  else startWave();refreshSelection(true);updateUI();
 }
-function setMode(next){mode=next;updateCommands();notify(next==='mind'?'정신 지배: 적 유닛 클릭 (150 에너지)':next==='mael'?'마엘스트롬: 지점 클릭 (100 에너지)':next==='storm'?'사이오닉 스톰: 지점 클릭 (75 에너지 · 아군 피해)':next==='attackmove'?'공격 이동: 지점 클릭':'명령 취소')}
+function setMode(next){mode=next;updateCommands();notify(next==='mind'?'정신 지배: 적 유닛 클릭 (150 에너지 · 다크 아콘 제외)':next==='mael'?'마엘스트롬: 지점 클릭 (100 에너지)':next==='storm'?'사이오닉 스톰: 지점 클릭 (75 에너지 · 아군 피해)':next==='feedback'?'피드백: 상대 다크 아콘 클릭 (50 에너지)':next==='attackmove'?'공격 이동: 지점 클릭':'명령 취소')}
 const getUnit=(p,filter=()=>true)=>[...units].reverse().find(u=>u.hp>0&&filter(u)&&distance(u,p)<TYPES[u.type].r+12);
 function setSelected(u,add=false){
  if(!add)selected.clear();
@@ -160,7 +174,7 @@ function selectSame(type){
 }
 function completeOrder(u){
  if(u.orders.length){u.order=u.orders.shift();return}
- u.order={type:'hold',x:u.x,y:u.y};
+ u.order={type:'guard',x:u.x,y:u.y};
 }
 function command(type,p,target=null,append=false){
  const arr=chosen();if(!arr.length){notify('먼저 아군 유닛을 선택하세요');return}
@@ -183,9 +197,10 @@ function mind(target){
  const hero=units.find(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon');
  if(!hero){notify('다크 아콘이 없습니다');return}
  if(!target||!hostile(target)){notify('상대 유닛을 클릭하세요');return}
+ if(target.type==='darkarchon'){notify('상대 다크 아콘은 정신 지배할 수 없습니다');return}
  if(distance(hero,target)>264){notify('사거리 밖 · 다크 아콘 이동 필요');return}
  if(currentEnergy()<150){notify('에너지 부족');return}
- spendEnergy(150);hero.shield=0;hero.shieldDelay=7;target.enemy=activeTeam;target.neutral=false;target.stun=0;target.order={type:'hold',x:target.x,y:target.y};target.orders=[];conversions++;selected.clear();selected.add(target.id);
+ spendEnergy(150);target.enemy=activeTeam;target.neutral=false;target.stun=0;target.order={type:'guard',x:target.x,y:target.y};target.orders=[];conversions++;selected.clear();selected.add(target.id);
  particle(target.x,target.y,'#ff77b4',115);notify(TYPES[target.type].name+' 정신 지배 성공 · 우클릭으로 직접 지휘하세요');
  mode='select';refreshSelection(true);
 }
@@ -200,13 +215,27 @@ function storm(p){
  const hero=units.find(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon');
  if(!hero||distance(hero,p)>297){notify('사이오닉 스톰 사거리 밖');return}
  if(currentEnergy()<75){notify('에너지 부족');return}
- spendEnergy(75);storms.push({x:p.x,y:p.y,ttl:3.2,pulse:0});
+ spendEnergy(75);storms.push({x:p.x,y:p.y,ttl:3.2,pulse:0,caster:hero.id});
  particle(p.x,p.y,'#a8b8ff',96);notify('사이오닉 스톰 · 범위 안의 아군도 피해를 받습니다');mode='select';updateCommands();
 }
+function feedback(target){
+ const hero=units.find(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon');
+ if(!hero||!target||!hostile(target)||target.type!=='darkarchon'){notify('상대 다크 아콘을 클릭하세요');return}
+ if(distance(hero,target)>330){notify('피드백 사거리 밖');return}
+ if(currentEnergy()<50){notify('에너지 부족');return}
+ spendEnergy(50);const power=activeTeam?energy:enemyEnergy;if(activeTeam)energy=0;else enemyEnergy=0;
+ damage(target,power,hero);particle(target.x,target.y,'#e8a7ff',80);notify('피드백 · 상대 에너지 '+Math.floor(power)+' 피해');mode='select';updateCommands();
+}
+function spawnNeutral(){
+ const pool=['marine','zealot','hydra','goliath','ultra','archon'];
+ const type=pool[Math.floor(rnd(0,pool.length))],x=rnd(380,W-380),y=rnd(85,H-85);
+ const u=spawn(type,true,x,y);u.neutral=true;u.order={type:'roam',x,y};u.roamFor=0;return u;
+}
 function startRevive(){
- if(battleMode==='duel'){notify('대전에서는 다크 아콘을 재생산할 수 없습니다');return}
- if(nexus<=0||allies().some(u=>u.type==='darkarchon')||reviveTimer>0){notify('다크 아콘 사망 후에만 재생산할 수 있습니다');return}
- reviveTimer=60;notify('넥서스에서 다크 아콘 재생산 시작 · 60초');updateCommands();
+ const base=activeTeam?enemyBase:nexus,timer=activeTeam?enemyReviveTimer:reviveTimer;
+ if(base<=0||units.some(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon')||timer>0){notify('자기 다크 아콘 사망 후, 기지가 살아 있을 때만 재생산할 수 있습니다');return}
+ if(activeTeam)enemyReviveTimer=60;else reviveTimer=60;
+ notify((activeTeam?'주홍':'청록')+' 기지에서 다크 아콘 재생산 시작 · 60초');updateCommands();
 }
 function coords(ev){
  const r=cv.getBoundingClientRect();return{x:clamp((ev.clientX-r.left)*W/r.width,0,W),y:clamp((ev.clientY-r.top)*H/r.height,0,H)};
@@ -218,6 +247,7 @@ cv.addEventListener('pointerdown',ev=>{
  if(mode==='mind'){mind(getUnit(p,hostile));return}
  if(mode==='mael'){mael(p);return}
  if(mode==='storm'){storm(p);return}
+ if(mode==='feedback'){feedback(getUnit(p,hostile));return}
  if(mode==='attackmove'){command('attackmove',p,null,ev.shiftKey);setMode('select');return}
  drag={begin:p,end:p,add:ev.shiftKey,pointerId:ev.pointerId,started:performance.now()};
  try{cv.setPointerCapture(ev.pointerId)}catch{}
@@ -251,6 +281,7 @@ window.addEventListener('keydown',ev=>{
  if(k==='m')setMode('mind');
  if(k==='e')setMode('mael');
  if(k==='t')setMode('storm');
+ if(k==='f')setMode('feedback');
  if(k==='s')stop('stop');
  if(k==='h')stop('hold');
  if(k==='escape')setMode('select');
@@ -281,57 +312,54 @@ function stepToward(u,p,dt){
  }
  u.x=clamp(x,27,W-27);u.y=clamp(y,28,H-28);u.moving=true;
 }
-function damage(t,n){
+function damage(t,n,source=null){
  if(t.core){if(t.enemy)enemyBase=Math.max(0,enemyBase-n);else nexus=Math.max(0,nexus-n);return}
  if(t.hp<=0)return;
+ if(source&&hostileFor(t,source)&&t.order.type!=='hold'){t.lastAttacker=source.id;t.retaliateFor=4}
  let amount=n;t.shieldDelay=7;if(t.shield>0){const absorbed=Math.min(t.shield,amount);t.shield-=absorbed;amount-=absorbed}
  if(amount>0)t.hp-=Math.max(1,amount-(TYPES[t.type].armor||0));
  if(t.hp<=0){corpses.push({type:t.type,x:t.x,y:t.y,face:t.face,age:0});if(t.enemy)kills++}
 }
 function strike(u,t){
  const d=TYPES[u.type];u.cool=d.cool;u.attackTimer=.3;
- damage(t,d.damage);
- particle(t.x,t.y,u.enemy?'#ff8d83':'#88e8f3',u.type==='ultra'?42:18);
+ damage(t,d.damage,u);
+ particle(t.x,t.y,u.neutral?'#f4d66b':u.enemy?'#ff8d83':'#88e8f3',u.type==='ultra'?42:18);
 }
 function tick(dt){
  if(over||paused)return;
  time+=dt;energy=Math.min(250,energy+14*dt);enemyEnergy=Math.min(250,enemyEnergy+14*dt);
  for(const c of corpses)c.age+=dt;corpses=corpses.filter(c=>c.age<.65);
  if(reviveTimer>0){reviveTimer=Math.max(0,reviveTimer-dt);if(reviveTimer===0&&nexus>0&&!allies().some(u=>u.type==='darkarchon')){spawn('darkarchon',false,235,H/2);notify('다크 아콘 재생산 완료')}}
- for(const s of storms){s.ttl-=dt;s.pulse+=dt;while(s.pulse>=.4){s.pulse-=.4;for(const u of units)if(u.hp>0&&distance(u,s)<95)damage(u,14)}}
+ if(enemyReviveTimer>0){enemyReviveTimer=Math.max(0,enemyReviveTimer-dt);if(enemyReviveTimer===0&&enemyBase>0&&!enemies().some(u=>u.type==='darkarchon'&&!u.neutral)){spawn('darkarchon',true,W-235,H/2);notify('주홍 다크 아콘 재생산 완료')}}
+ for(const s of storms){s.ttl-=dt;s.pulse+=dt;while(s.pulse>=.4){s.pulse-=.4;const caster=units.find(u=>u.id===s.caster);for(const u of units)if(u.hp>0&&distance(u,s)<95)damage(u,14,caster)}}
  storms=storms.filter(s=>s.ttl>0);
  if(battleMode==='duel'){
   centerTimer+=dt;
-  if(centerTimer>=8){centerTimer=0;const pool=['marine','zealot','hydra','goliath','ultra','archon'];const type=pool[Math.floor(rnd(0,pool.length))];const u=spawn(type,true,W/2+rnd(-60,60),H/2+rnd(-130,130));u.neutral=true;u.order={type:'hold',x:u.x,y:u.y};notify('중앙에 '+TYPES[type].name+' 등장 · 먼저 정신 지배하세요')}
+  if(centerTimer>=8){centerTimer=0;const u=spawnNeutral();notify('전장에 중립 '+TYPES[u.type].name+' 등장')}
  }else while(spawns.length&&spawns[0].t<=time){const s=spawns.shift();spawn(s.type,true,rnd(W-65,W-30),rnd(70,H-70))}
  for(const u of units){
-  if(u.hp<=0)continue;u.cool-=dt;u.stun=Math.max(0,u.stun-dt);u.attackTimer=Math.max(0,u.attackTimer-dt);u.frameTime+=dt;u.moving=false;u.shieldDelay=Math.max(0,u.shieldDelay-dt);if(u.shieldDelay===0)u.shield=Math.min(u.maxShield,u.shield+2.55*dt);
+  if(u.hp<=0)continue;u.cool-=dt;u.stun=Math.max(0,u.stun-dt);u.attackTimer=Math.max(0,u.attackTimer-dt);u.frameTime+=dt;u.moving=false;u.shieldDelay=Math.max(0,u.shieldDelay-dt);if(u.shieldDelay===0)u.shield=Math.min(u.maxShield,u.shield+2.55*dt);u.retaliateFor=Math.max(0,u.retaliateFor-dt);
   if(u.stun>0)continue;
-  const o=u.order,d=TYPES[u.type];
+  let o=u.order;const d=TYPES[u.type];
   if(u.type==='darkarchon'){if(['move','attackmove'].includes(o.type))stepToward(u,o,dt);continue}
-  if(u.neutral)continue;
-  const opponents=units.filter(v=>v.hp>0&&!v.neutral&&v.enemy!==u.enemy);
+  if(u.neutral){u.roamFor-=dt;if(u.roamFor<=0){u.roamFor=rnd(4,8);u.order={type:'roam',x:rnd(350,W-350),y:rnd(70,H-70)};o=u.order}}
+  const opponents=units.filter(v=>hostileFor(u,v));
   let target=null,td=Infinity,forced=false;
-  if(o.target){target=opponents.find(v=>v.id===o.target)||null;forced=!!target;
-   if(!target){completeOrder(u);continue}
+  if(o.target){target=opponents.find(v=>v.id===o.target)||null;forced=!!target;if(!target){completeOrder(u);continue}}
+  if(!target&&u.retaliateFor>0&&o.type!=='hold'){target=opponents.find(v=>v.id===u.lastAttacker)||null;forced=!!target}
+  if(!target&&o.type!=='move'){
+   const sight=o.type==='hold'?d.range+25:(d.sight||300);
+   for(const v of opponents){const gap=distance(u,v);if(gap<sight&&gap<td){td=gap;target=v}}
   }
-  if(!target&&o.type!=='move'&&o.type!=='stop'){
-   const aggro=(u.enemy||o.type==='attackmove')?225:d.range+15;
-   for(const v of opponents){const gap=distance(u,v);if(gap<aggro&&gap<td){td=gap;target=v}}
+  if(!u.neutral&&o.type==='attackmove'&&!forced){
+   const core=u.enemy?{...HOME,core:true,enemy:false}:battleMode==='duel'?{...AWAY,core:true,enemy:true}:null;
+   if(core&&(!target||distance(u,core)<distance(u,target)-15))target=core;
   }
-  if(u.enemy&&o.type==='attackmove'&&!forced){
-   const core={...HOME,core:true,enemy:false};
-   const cdist=distance(u,core);
-   if(!target||cdist<distance(u,target)-15)target=core;
-  }
-  if(battleMode==='duel'&&!u.enemy&&o.type==='attackmove'&&!forced){const core={...AWAY,core:true,enemy:true};if(!target||distance(u,core)<distance(u,target)-15)target=core}
-  if(target&&o.type==='stop')target=null;
   if(target){
    const range=d.range+(target.core?23:TYPES[target.type].r*.35);
    if(distance(u,target)<=range){if(u.cool<=0)strike(u,target)}
-   else if(u.enemy||forced||o.type==='attackmove')stepToward(u,target,dt);
-   else if(o.type==='move')stepToward(u,o,dt);
-  }else if(o.type==='move'||o.type==='attackmove')stepToward(u,o,dt);
+   else if(o.type!=='hold')stepToward(u,target,dt);
+  }else if(['move','attackmove','roam'].includes(o.type))stepToward(u,o,dt);
  }
  units=units.filter(u=>u.hp>0);const prev=selected.size;selected=new Set([...selected].filter(id=>units.some(u=>u.id===id&&friendly(u))));if(selected.size!==prev)refreshSelection(true);
  if(nexus<=0){over=true;notify('패배 · 넥서스가 파괴됐습니다')}
@@ -347,14 +375,6 @@ function drawUnitAccents(u,d){
  if(u.type==='darkarchon'){
   ctx.strokeStyle='rgba(239,66,105,'+(.35+.25*pulse)+')';ctx.lineWidth=2.5;
   ctx.beginPath();ctx.ellipse(0,-5,d.r*(.82+.08*pulse),d.r*(.9+.08*pulse),0,0,Math.PI*2);ctx.stroke();
- }else if(u.type==='ultra'){
-  // two long pale scythe tusks keep the heavy monster identifiable at RTS zoom
-  ctx.rotate(u.face);
-  ctx.strokeStyle='#e8d8af';ctx.lineWidth=3.2;
-  for(const sign of [-1,1]){
-   ctx.beginPath();ctx.moveTo(9,sign*8);ctx.quadraticCurveTo(28,sign*22,43,sign*31);
-   ctx.quadraticCurveTo(39,sign*13,24,sign*7);ctx.stroke();
-  }
  }else if(u.type==='zealot'){
   ctx.rotate(u.face);ctx.strokeStyle='#8eeefa';ctx.shadowColor='#7ceaff';ctx.shadowBlur=8;ctx.lineWidth=3;
   for(const sign of [-1,1]){ctx.beginPath();ctx.moveTo(8,sign*12);ctx.lineTo(34,sign*19);ctx.stroke()}
@@ -376,17 +396,17 @@ function drawUnitAccents(u,d){
 function drawUnit(u){
  const d=TYPES[u.type];ctx.save();ctx.translate(u.x,u.y);
  ctx.fillStyle='#03050888';ctx.beginPath();ctx.ellipse(0,d.r*.65,d.r,Math.max(6,d.r*.35),0,0,Math.PI*2);ctx.fill();
- const w=d.r*3;
+ const w=Math.min(d.r*3,88);
  if(spriteFrame(u,w)) {drawUnitAccents(u,d)}
  else {
   ctx.shadowBlur=u.type==='darkarchon'?28:10;ctx.shadowColor=d.color;ctx.fillStyle=d.color;ctx.strokeStyle=u.enemy?'#ef9c90':'#a4e9ff';ctx.lineWidth=2;
   ctx.beginPath();for(let i=0;i<8;i++){const a=i*Math.PI/4+u.face,r=d.r*(i%2?.82:1);ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.stroke();ctx.shadowBlur=0;
-  if(u.type==='ultra'){ctx.fillStyle='#efe2ba';for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(12,side*8);ctx.lineTo(55,side*32);ctx.lineTo(28,side*24);ctx.closePath();ctx.fill()}}
   if(u.type==='darkarchon'){ctx.fillStyle='#1b1026';ctx.beginPath();ctx.moveTo(-17,-24);ctx.lineTo(0,-39);ctx.lineTo(17,-24);ctx.lineTo(0,27);ctx.closePath();ctx.fill();ctx.fillStyle='#ffb0d2';ctx.fillRect(-11,-14,8,4);ctx.fillRect(3,-14,8,4)}
  }
  if(selected.has(u.id)){ctx.strokeStyle='#73ffd0';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,6,d.r+9,d.r*.56+6,0,0,Math.PI*2);ctx.stroke()}
+ if(u.maxShield>0){ctx.fillStyle='#102942';ctx.fillRect(-d.r,-d.r-23,d.r*2,5);ctx.fillStyle='#66beff';ctx.fillRect(-d.r,-d.r-23,d.r*2*clamp(u.shield/u.maxShield,0,1),5)}
  ctx.fillStyle='#211c1f';ctx.fillRect(-d.r,-d.r-17,d.r*2,5);
- ctx.fillStyle=u.enemy?'#f7878a':'#77ddc3';ctx.fillRect(-d.r,-d.r-17,d.r*2*clamp(u.hp/u.max,0,1),5);
+ ctx.fillStyle=u.neutral?'#f4d66b':u.enemy?'#f7878a':'#77ddc3';ctx.fillRect(-d.r,-d.r-17,d.r*2*clamp(u.hp/u.max,0,1),5);
  if(u.stun>0){ctx.fillStyle='#d5b9fa';ctx.font='bold 20px sans-serif';ctx.textAlign='center';ctx.fillText('✣',0,-d.r-24)}
  ctx.restore();
 }
@@ -400,7 +420,14 @@ function draw(){
  if(nexusArt.complete&&nexusArt.naturalWidth){ctx.drawImage(nexusArt,HOME.x-66,HOME.y-68,132,136);if(battleMode==='duel')ctx.drawImage(nexusArt,AWAY.x-66,AWAY.y-68,132,136)}
  else{ctx.fillStyle='#73d0e5';ctx.beginPath();ctx.arc(HOME.x,HOME.y,42,0,Math.PI*2);ctx.fill();if(battleMode==='duel'){ctx.beginPath();ctx.arc(AWAY.x,AWAY.y,42,0,Math.PI*2);ctx.fill()}}
  ctx.strokeStyle='#ec7b8650';ctx.setLineDash([8,8]);ctx.beginPath();ctx.moveTo(W-135,0);ctx.lineTo(W-135,H);ctx.stroke();ctx.setLineDash([]);
- for(const c of corpses){ctx.save();ctx.globalAlpha=1-c.age/.65;ctx.translate(c.x,c.y);const sheet=spriteSheets[c.type];if(sheet?.complete&&sheet.naturalWidth){const dir=Math.round(((c.face%(2*Math.PI)+2*Math.PI)%(2*Math.PI))*8/Math.PI)%16,cellX=sheet.width/16,cellY=sheet.height/16,frame=13+Math.min(2,Math.floor(c.age/.22)),width=TYPES[c.type].r*3;ctx.drawImage(sheet,frame*cellX,dir*cellY,cellX,cellY,-width/2,-width*.73,width,width)}else{ctx.fillStyle=TYPES[c.type].color;ctx.beginPath();ctx.arc(0,0,TYPES[c.type].r*(1-c.age/.65),0,Math.PI*2);ctx.fill()}ctx.restore()}
+ for(const c of corpses){ctx.save();ctx.globalAlpha=1-c.age/.65;ctx.translate(c.x,c.y);const sheet=spriteSheets[c.type];
+  if(sheet?.complete&&sheet.naturalWidth){
+   const dir=Math.round(((c.face%(2*Math.PI)+2*Math.PI)%(2*Math.PI))*8/Math.PI)%16,frame=13+Math.min(2,Math.floor(c.age/.22));
+   const cw=sheet.width/16,ch=sheet.height/16,width=Math.min(TYPES[c.type].r*3,88),height=width*ch/cw,center=spriteCenters[c.type]?.[dir]?.[frame]||{x:0,y:0};
+   const sx=Math.ceil(frame*cw+1),sy=Math.ceil(dir*ch+1),sw=Math.floor((frame+1)*cw-1)-sx,sh=Math.floor((dir+1)*ch-1)-sy;
+   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+   ctx.drawImage(sheet,sx,sy,sw,sh,-width/2-center.x*width/cw,-height*.73-center.y*height/ch,width,height);
+  }else{ctx.fillStyle=TYPES[c.type].color;ctx.beginPath();ctx.arc(0,0,TYPES[c.type].r*(1-c.age/.65),0,Math.PI*2);ctx.fill()}ctx.restore()}
  for(const u of [...units].sort((a,b)=>a.y-b.y))drawUnit(u);
  for(const e of effects){ctx.globalAlpha=clamp(e.ttl/e.total,0,1);ctx.strokeStyle=e.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(e.x,e.y,e.r*(1-e.ttl/e.total),0,Math.PI*2);ctx.stroke()}ctx.globalAlpha=1;
  for(const s of storms){ctx.fillStyle='#a9b4ff35';ctx.strokeStyle='#c3d3ff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(s.x,s.y,95,0,Math.PI*2);ctx.fill();ctx.stroke()}
@@ -408,7 +435,7 @@ function draw(){
   const a=drag.begin,b=drag.end,x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(a.x-b.x),h=Math.abs(a.y-b.y);
   ctx.fillStyle='#6cf7c315';ctx.strokeStyle='#83f5bd';ctx.lineWidth=1;ctx.fillRect(x,y,w,h);ctx.strokeRect(x,y,w,h);
  }
- if(mode!=='select'){ctx.textAlign='left';ctx.font='bold 17px sans-serif';ctx.fillStyle='#ffe6b6';ctx.fillText({mind:'정신 지배: 적을 클릭',mael:'마엘스트롬: 지점 클릭',storm:'사이오닉 스톰: 아군 피해',attackmove:'공격 이동: 지점 클릭'}[mode],20,34)}
+ if(mode!=='select'){ctx.textAlign='left';ctx.font='bold 17px sans-serif';ctx.fillStyle='#ffe6b6';ctx.fillText({mind:'정신 지배: 적을 클릭',mael:'마엘스트롬: 지점 클릭',storm:'사이오닉 스톰: 아군 피해',feedback:'피드백: 상대 다크 아콘 클릭',attackmove:'공격 이동: 지점 클릭'}[mode],20,34)}
  if(interval>0&&!over&&battleMode==='defense'){ctx.font='bold 22px sans-serif';ctx.fillStyle='#dccca4';ctx.textAlign='center';ctx.fillText('WAVE CLEAR · +85 에너지',W/2,82)}
  if(over||paused){ctx.fillStyle='#090a16d9';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.fillStyle='#f1b3d3';ctx.font='bold 44px sans-serif';ctx.fillText(paused?'PAUSED':nexus>0?'VICTORY':'DEFEAT',W/2,H/2);ctx.fillStyle='#d1c4b6';ctx.font='17px sans-serif';ctx.fillText('새 전투 버튼으로 재시작',W/2,H/2+42)}
 }
@@ -416,7 +443,7 @@ function drawMinimap(){
  mc.fillStyle='#0c1624';mc.fillRect(0,0,minimap.width,minimap.height);
  mc.strokeStyle='#5a778c';mc.lineWidth=1;mc.strokeRect(3,3,minimap.width-6,minimap.height-6);
  mc.fillStyle='#78a9b3';mc.fillRect(14,minimap.height/2-4,9,8);if(battleMode==='duel'){mc.fillStyle='#f57569';mc.fillRect(minimap.width-23,minimap.height/2-4,9,8)}
- for(const u of units){mc.fillStyle=u.enemy?'#f57569':'#7ce7c0';let x=u.x/W*minimap.width,y=u.y/H*minimap.height;
+ for(const u of units){mc.fillStyle=u.neutral?'#f4d66b':u.enemy?'#f57569':'#7ce7c0';let x=u.x/W*minimap.width,y=u.y/H*minimap.height;
  mc.fillRect(x-2,y-2,u.type==='ultra'?6:4,u.type==='ultra'?6:4)}
 }
 const tileIcon=t=>'<span class="glyph" style="color:'+TYPES[t].color+'">'+TYPES[t].glyph+'</span>';
@@ -439,7 +466,8 @@ function refreshSelection(force=false){
    if(spriteThumbs[u.type]){const img=document.createElement('img');img.src=spriteThumbs[u.type];img.alt=TYPES[u.type].name;tile.appendChild(img)}
    else tile.innerHTML=tileIcon(u.type);
    const text=document.createElement('span');text.className='short';text.textContent=Math.max(0,Math.ceil(u.hp+u.shield));tile.appendChild(text);
-   const bar=document.createElement('div');bar.className='uhp';bar.style.width=(clamp((u.hp+u.shield)/(u.max+u.maxShield),0,1)*100)+'%';tile.appendChild(bar);
+   const bar=document.createElement('div');bar.className='uhp';bar.style.width=(clamp(u.hp/u.max,0,1)*100)+'%';tile.appendChild(bar);
+   if(u.maxShield){const shield=document.createElement('div');shield.className='ushield';shield.style.width=(clamp(u.shield/u.maxShield,0,1)*100)+'%';tile.appendChild(shield)}
    tile.onclick=e=>{setSelected(u,e.shiftKey)};grid.appendChild(tile);
   }
   if(arr.length>16){const more=document.createElement('span');more.textContent='+'+(arr.length-16);grid.appendChild(more)}
@@ -452,21 +480,21 @@ function refreshSelection(force=false){
   else {portrait.textContent=TYPES[first.type].glyph;portrait.style.color=TYPES[first.type].color}
   $('portraitName').textContent=arr.length>1?TYPES[first.type].name+' 외 '+(arr.length-1)+'기':TYPES[first.type].name;
   $('portraitHP').textContent=Math.ceil(first.hp)+' HP + '+Math.ceil(first.shield)+' 보호막';
-  $('portraitBar').style.width=clamp((first.hp+first.shield)/(first.max+first.maxShield)*100,0,100)+'%';
+  $('portraitBar').style.width=clamp(first.hp/first.max*100,0,100)+'%';$('portraitShield').style.width=first.maxShield?clamp(first.shield/first.maxShield*100,0,100)+'%':'0%';
  }else{
-  portrait.textContent='—';$('portraitName').textContent='유닛 미선택';$('portraitHP').textContent='0 / 0';$('portraitBar').style.width='0%';
+  portrait.textContent='—';$('portraitName').textContent='유닛 미선택';$('portraitHP').textContent='0 / 0';$('portraitBar').style.width='0%';$('portraitShield').style.width='0%';
  }
  updateCommands();
 }
 function updateCommands(){
  const has=chosen().length>0,hero=units.some(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon');
  for(const btn of document.querySelectorAll('[data-command]')){
-  let type=btn.dataset.command;btn.disabled=type==='revive'?(battleMode!=='defense'||hero||reviveTimer>0||nexus<=0):(type==='mind'||type==='mael'||type==='storm')?!hero:!has;
+  let type=btn.dataset.command;btn.disabled=type==='revive'?(hero||(activeTeam?enemyReviveTimer:reviveTimer)>0||(activeTeam?enemyBase:nexus)<=0):(type==='mind'||type==='mael'||type==='storm'||type==='feedback')?!hero:!has;
   btn.classList.toggle('active',mode===type||(type==='move'&&mode==='attackmove'));
  }
 }
 function updateUI(){
- $('wave').textContent=battleMode==='duel'?'쟁탈전':wave+' / 10';$('energy').textContent=Math.floor(currentEnergy())+' / 250';$('nexusHP').textContent=Math.ceil(nexus)+' / 750';$('enemyBaseHP').textContent=Math.ceil(enemyBase)+' / 750';$('heroStatus').textContent=units.some(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon')?'전투 중':reviveTimer>0?'생산 '+Math.ceil(reviveTimer)+'초':'재생산 가능';
+ $('wave').textContent=battleMode==='duel'?'쟁탈전':wave+' / 10';$('energy').textContent=Math.floor(currentEnergy())+' / 250';$('nexusHP').textContent=Math.ceil(nexus)+' / 750';$('enemyBaseHP').textContent=Math.ceil(enemyBase)+' / 750';const activeTimer=activeTeam?enemyReviveTimer:reviveTimer;$('heroStatus').textContent=units.some(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon')?'전투 중':activeTimer>0?'생산 '+Math.ceil(activeTimer)+'초':'재생산 가능';
  $('army').textContent=allies().length+' / '+(enemies().length+spawns.length);$('kills').textContent=kills+' / '+conversions;
  refreshSelection();drawMinimap();
 }
