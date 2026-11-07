@@ -31,6 +31,7 @@ a{color:#94c8f0}a:hover{color:#d6ecff}.unitTile:hover{border-color:#95d4ed}.unit
 
 .psiBlock{margin-top:6px;border-top:1px solid #7397b84d;padding:5px 4px 1px}.psiHead{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:#9cdbff;line-height:16px;margin-bottom:5px}.psiTrack{height:14px;position:relative;background:#12172b;border:1px solid #546ba5;box-shadow:inset 0 0 7px #000e;overflow:hidden}.psiFill{height:100%;width:100%;background:linear-gradient(90deg,#294cb4,#578be9,#a1f2ff);transition:width .16s linear}.psiTick{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 2px #111;transform:translateX(-1px)}.psiTick[data-cost="50"]{left:20%}.psiTick[data-cost="75"]{left:30%}.psiTick[data-cost="100"]{left:40%}.psiTick[data-cost="150"]{left:60%}.psiSkills{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;margin-top:5px}.psiSkill{border:1px solid #4f566d;border-radius:3px;text-align:center;font-size:10px;padding:4px 0;color:#778196;background:#101720;white-space:nowrap}.psiSkill.ready{color:#cbfce9;border-color:#438e87;background:#15332c;font-weight:800}.psiSkill.noHero{opacity:.4}
 </style>
+<link rel="stylesheet" href="./campaign-70.css"/>
 </head>
 <body>
 <main>
@@ -313,7 +314,7 @@ const CAMPAIGN_WAVES=[
  {heroes:['guardian','scout','ultra'],ordinary:{zergling:2,marine:1,hydra:2,dragoon:2,goliath:1,firebat:1,guardian:1,valkyrie:1,devourer:1,ultra:1,siegetank:3}},
  {heroes:['carrier','battlecruiser','reaver','dragoon'],ordinary:{zergling:4,marine:1,hydra:1,dragoon:2,goliath:1,mutalisk:2,ultra:1,scourge:2,guardian:1,vulture:1,siegetank:4}}
 ];
-const WAVE_COUNT=CAMPAIGN_WAVES.length;
+const WAVE_COUNT=70;
 function startWave(){
  time=0;interval=0;spawns=[];
  const config=CAMPAIGN_WAVES[wave-1];
@@ -902,5 +903,6 @@ function loop(now){
 reset();requestAnimationFrame(loop);
 
 </script>
+<script src="./campaign-70.js"></script>
 </body></html>
 
