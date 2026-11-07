@@ -55,11 +55,29 @@
  <div class="help">
   <a href="https://www.spriters-resource.com/pc_computer/starcraft/" target="_blank" rel="noopener noreferrer">StarCraft 스프라이트 목록 (The Spriters Resource)</a> ·
   <a href="https://www.spriters-resource.com/pc_computer/starcraft/asset/59999/" target="_blank" rel="noopener noreferrer">울트라리스크 원본 스프라이트 시트</a> ·
-  <a href="https://www.spriters-resource.com/pc_computer/starcraft/asset/59886/" target="_blank" rel="noopener noreferrer">암흑 집정관 초상화 프레임이 포함된 프로토스 초상화 목록</a> ·
-  <a href="https://github.com/broodwar-live/assets-pipeline" target="_blank" rel="noopener noreferrer">GRP 프레임 추출기</a>
+  <a href="https://www.spriters-resource.com/pc_computer/starcraft/asset/59886/" target="_blank" rel="noopener noreferrer">프로토스 초상화 스프라이트 시트</a> ·
+  <a href="https://github.com/broodwar-live/assets-pipeline" target="_blank" rel="noopener noreferrer">GRP 프레임 추출기</a> · <a href="https://www.spriters-resource.com/pc_computer/starcraft/asset/60077/" target="_blank" rel="noopener noreferrer">집정관 원본 시트 (60077)</a> · <a href="https://github.com/Wargus/stargus" target="_blank" rel="noopener noreferrer">Stargus 추출·변환 도구</a> · <a href="https://www.behance.net/gallery/66856541/Starcraft-Remastered-Redesign" target="_blank" rel="noopener noreferrer">RTS UI 디자인 참고</a>
  </div>
  <p class="help">원본 파일 경로: <code>marine.grp</code> · <code>ultra.grp</code> · <code>zealot.grp</code> · <code>hydra.grp</code> · <code>goliath.grp</code>+<code>goliatht.grp</code> · <code>archon.grp</code>. 위 스프라이트 시트를 추출한 후 <code>assets/units/</code>에 이미지와 JSON으로 배치하면 방향별 애니메이션이 적용됩니다.</p>
 </details>
+<section class="panel" style="display:block;margin-top:12px" aria-label="원작 스프라이트 직접 불러오기">
+ <div class="panelTitle">ORIGINAL SPRITE IMPORT · 개인용 이미지 연결</div>
+ <p class="help">Spriters Resource에서 받은 이미지 또는 Stargus로 직접 추출한 PNG를 여기서 선택해 현재 게임에 표시할 수 있습니다. 업로드는 사용자의 브라우저 안에서만 처리되며 GitHub에는 저장하지 않습니다. 전체 스프라이트 시트라면 한 프레임의 좌표(X/Y/너비/높이)를 입력해 지정할 수 있습니다.</p>
+ <div class="spriteControls">
+ <label>유닛 <select id="spriteType"><option value="darkarchon">다크 아콘</option><option value="ultra">울트라리스크</option><option value="marine">해병</option><option value="zealot">광전사</option><option value="hydra">히드라리스크</option><option value="goliath">골리앗</option><option value="archon">집정관</option></select></label>
+ <label>PNG / WebP <input type="file" id="spriteFile" accept="image/png,image/webp"/></label>
+ <button class="groupbtn" id="spriteApply">이미지 불러오기</button>
+ </div>
+ <div class="spriteControls" style="margin-top:8px">
+ <label>X <input id="cropX" type="number" min="0" value="0"/></label>
+ <label>Y <input id="cropY" type="number" min="0" value="0"/></label>
+ <label>너비 <input id="cropW" type="number" min="0" value="0"/></label>
+ <label>높이 <input id="cropH" type="number" min="0" value="0"/></label>
+ <button class="groupbtn" id="cropSet">프레임 적용</button>
+ </div>
+ <p class="help" id="spriteStatus">원본 스프라이트를 직접 불러오면 현재 플레이 중인 유닛에 적용됩니다. 새로고침하면 다시 선택해야 합니다.</p>
+</section>
+
 </main>
 <script src="./rts.js"></script>
 </body></html>
