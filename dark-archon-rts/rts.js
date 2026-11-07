@@ -23,13 +23,13 @@ for(const key in TYPES){
  }).catch(()=>{});
 }
 const catalog={
- darkarchon:{grp:'Brood War: Dark Archon unit graphic',source:'https://www.spriters-resource.com/pc_computer/starcraft/',portrait:'https://www.spriters-resource.com/pc_computer/starcraft/asset/59886/'},
+ darkarchon:{grp:'Stargus unit-protoss-dark-archon',source:'https://github.com/Wargus/stargus/blob/master/dataset/units.json'},
  ultra:{grp:'unit\\zerg\\ultra.grp',source:'https://www.spriters-resource.com/pc_computer/starcraft/asset/59999/'},
- marine:{grp:'unit\\terran\\marine.grp',source:'https://www.spriters-resource.com/pc_computer/starcraft/'},
- zealot:{grp:'unit\\protoss\\zealot.grp',source:'https://www.spriters-resource.com/pc_computer/starcraft/'},
- hydra:{grp:'unit\\zerg\\hydra.grp',source:'https://www.spriters-resource.com/pc_computer/starcraft/'},
- goliath:{grp:'unit\\terran\\goliath.grp + goliatht.grp',source:'https://github.com/broodwar-live/assets-pipeline'},
- archon:{grp:'unit\\protoss\\archon.grp',source:'https://www.spriters-resource.com/pc_computer/starcraft/'}
+ marine:{grp:'unit\\terran\\marine.grp',source:'https://www.spriters-resource.com/pc_computer/starcraft/asset/31462/'},
+ zealot:{grp:'unit\\protoss\\zealot.grp',source:'https://www.spriters-resource.com/pc_computer/starcraft/asset/59953/'},
+ hydra:{grp:'unit\\zerg\\hydra.grp',source:'https://www.spriters-resource.com/pc_computer/starcraft/asset/60014/'},
+ goliath:{grp:'unit\\terran\\goliath.grp + goliatht.grp',source:'https://github.com/Wargus/stargus'},
+ archon:{grp:'unit\\protoss\\archon.grp',source:'https://www.spriters-resource.com/pc_computer/starcraft/asset/60077/'}
 };
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 let units=[],selected=new Set(),groups=Array.from({length:5},()=>[]),spawns=[],effects=[],wave=1,energy=250,nexus=750,kills=0,conversions=0,idCounter=0,time=0,interval=0,mode='select',paused=false,over=false,drag=null,clickMemory={id:0,time:0},lastUI=0,selectionStamp='',viewOffset=0;
