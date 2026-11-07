@@ -1,5 +1,16 @@
 # Dark Archon Dominion RTS
 
+## Play in browser
+
+Development preview: https://raw.githack.com/minjaninja94/pvefps/main/dark-archon-rts/index.html
+
+This uses a third-party GitHub HTML renderer; on first visit it may require a one-time security confirmation. It does not imply GitHub Pages or Cloudflare Pages has been deployed. The repository contains the game HTML itself, and the default fallback graphics should be available immediately. The URL is a candidate browser-play endpoint; full browser runtime verification has not been completed.
+
+To run without a third-party preview, download the directory or clone the repo, serve it with a simple local HTTP server, and open `dark-archon-rts/index.html`.
+
+Latest fixes: Shift+right-click command queues (up to 12 commands), clearer order completion and fallback rendering, Dark Archon selected on start. Keyboard 1..5 means control groups; A/M/E/S/H are command hotkeys.
+
+
 Standalone browser prototype; open `index.html` with an HTTP static server.
 
 ## Controls
