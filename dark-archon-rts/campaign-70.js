@@ -30,9 +30,10 @@
  function rand(w,n){let x=(Math.imul(w,2654435761)+Math.imul(n,1597334677))>>>0;x^=x>>>16;x=Math.imul(x,2246822507);x^=x>>>13;return(x>>>0)/4294967296}
  function spec(n){
   if(n<=10)return {...CAMPAIGN_WAVES[n-1],name:n===10?'첫 번째 관문':'영웅 확보 작전',waves:0};
-  const chapter=Math.ceil(n/10),boss=n%10===0,theme=phases[(n+chapter)%phases.length],normal={};
+  const chapter=Math.ceil(n/10),boss=n%10===0,theme=n===70?phases[6]:phases[(n+chapter)%phases.length],normal={};
   const count=Math.min(119,Math.round(21+(n-10)*1.20+(boss?11:0)));
   for(let i=0;i<count;i++){const type=theme.pool[Math.floor(rand(n,i+29)*theme.pool.length)];normal[type]=(normal[type]||0)+1}
+  if(n===70){for(const type of COMBAT_TYPES)normal[type]=Math.max(1,normal[type]||0)}
   // Guarantee a large infantry front so that captured artillery remains useful.
   for(let i=0;i<Math.ceil(count*.16);i++){const type=['zergling','marine','hydra','zealot'][i%4];normal[type]=(normal[type]||0)+1}
   const heroCount=Math.min(8,4+Math.floor((n-11)/14)+(boss?1:0)),heroCandidates=[...(boss?['siegetank','carrier','ultra']:[]),...theme.pool,...COMBAT_TYPES],heroes=[];
@@ -84,6 +85,12 @@
   if(ranks[type]>=r.max||points<price(type))return;
   points-=price(type);ranks[type]++;
   notify(label[type]+' '+ranks[type]+'단계 구매 · '+points+' TP 남음');render(true);
+ }
+ function starterEscort(){
+  if(battleMode!=='defense'||wave!==1)return;
+  const has=u=>units.some(v=>!v.enemy&&v.type===u);
+  if(!has('marine')){const u=spawn('marine',false,HOME.x+240,H/2-72);u.order={type:'hold',x:u.x,y:u.y}}
+  if(!has('zealot')){const u=spawn('zealot',false,HOME.x+260,H/2+68);u.order={type:'hold',x:u.x,y:u.y}}
  }
  function supply(){
   if(!ranks.supply||wave%3!==0||battleMode!=='defense')return;
@@ -197,7 +204,7 @@
  reset=function(){
   points=0;clearedWave=0;rewardTimer=0;overdriveUsed=0;
   for(const k of Object.keys(ranks))ranks[k]=0;
-  reward.hidden=true;originalReset();render(true);
+  reward.hidden=true;originalReset();starterEscort();render(true);
  };
  $('restart').onclick=reset;
  for(const btn of panel.querySelectorAll('[data-buy]'))btn.onclick=()=>buy(btn.dataset.buy);
@@ -209,5 +216,5 @@
  $('campaignSkip').onclick=()=>{if(battleMode==='defense'&&interval>0&&!over)interval=7.99};
  $('campaignContinue').onclick=restore;
  $('campaignRewardClose').onclick=()=>{rewardTimer=0;reward.hidden=true};
- render(true);
+ starterEscort();render(true);
 })();
