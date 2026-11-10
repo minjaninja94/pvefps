@@ -7,9 +7,20 @@
   regen:{name:'PSI 발전',max:8,start:1},
   supply:{name:'지원 병력',max:5,start:2},
   repair:{name:'넥서스 보수',max:5,start:1},
-  recover:{name:'병력 정비',max:5,start:1}
+  recover:{name:'병력 정비',max:5,start:1},
+  rangeMarine:{name:'마린 사업',max:1,start:2},
+  rangeHydra:{name:'히드라 사업',max:1,start:2},
+  rangeDragoon:{name:'드라군 사업',max:1,start:3},
+  rangeGoliath:{name:'골리앗 대공 사업',max:1,start:3}
  };
- const ranks={regen:0,supply:0,repair:0,recover:0};
+ const ranks=Object.fromEntries(Object.keys(rules).map(kind=>[kind,0]));
+ const researchUnits=Object.freeze({rangeMarine:'marine',rangeHydra:'hydra',rangeDragoon:'dragoon',rangeGoliath:'goliath'});
+ const rangeResearch=window.DarkArchonRangeUpgrades;
+ if(!rangeResearch)throw Error('range-research.js must load before campaign-70.js');
+ function syncFriendlyRange(){
+  for(const [key,type] of Object.entries(researchUnits))
+   rangeResearch.setFriendly(type,ranks[key]===1);
+ }
  let points=0,clearedWave=0,rewardTimer=0,overdriveUsed=0,lastRender=-1;
  const originalStartWave=startWave,originalTick=tick,originalReset=reset,originalUpdateUI=updateUI,originalSpawn=spawn;
  spawn=function(type,enemy,x,y,isHero=false){
@@ -50,6 +61,10 @@
   '<button data-buy="supply">⚙ 지원 병력<small>3웨이브마다 추가 지원 · Lv. 0</small><b>2 TP</b></button>'+
   '<button data-buy="repair">✚ 넥서스 보수<small>웨이브 종료 기지 복구 · Lv. 0</small><b>1 TP</b></button>'+
   '<button data-buy="recover">✛ 병력 정비<small>생존 병력 체력 회복 · Lv. 0</small><b>1 TP</b></button>'+
+  '<button data-buy="rangeMarine">▣ 마린 사업<small>U-238 탄환 · 4 → 5칸</small><b>2 TP</b></button>'+
+  '<button data-buy="rangeHydra">♠ 히드라 사업<small>가시지느러미 · 4 → 5칸</small><b>2 TP</b></button>'+
+  '<button data-buy="rangeDragoon">✥ 드라군 사업<small>싱귤래리티 차지 · 4 → 6칸</small><b>3 TP</b></button>'+
+  '<button data-buy="rangeGoliath">▤ 골리앗 대공 사업<small>카론 부스터 · 대공 5 → 8칸</small><b>3 TP</b></button>'+
   '<button id="campaignBoost">⚡ 긴급 PSI 보급<small>마나 +150 · 현재 웨이브 1회</small><b>2 TP</b></button>'+
   '<button id="campaignSkip">▶ 다음 웨이브<small>준비 시간 단축</small><b>바로 시작</b></button>'+
   '<button id="campaignContinue">⤴ 체크포인트 이어하기<small>최근 클리어 웨이브부터</small><b>복원</b></button>'+
@@ -59,7 +74,8 @@
  reward.className='campaignToast';reward.hidden=true;reward.setAttribute('role','status');reward.setAttribute('aria-live','polite');
  reward.innerHTML='<div class="campaignPoster" id="campaignPoster">✦</div><div class="campaignToastCopy"><strong id="campaignRewardTitle">작전 완료</strong><span id="campaignRewardText">10단계 달성</span><small>기념 일러스트 슬롯 · 다음 승리를 향해</small></div><button id="campaignRewardClose" aria-label="기념 카드 닫기">×</button>';
  document.body.appendChild(reward);
- const label={regen:'PSI 발전',supply:'지원 병력',repair:'넥서스 보수',recover:'병력 정비'};
+ const label={regen:'PSI 발전',supply:'지원 병력',repair:'넥서스 보수',recover:'병력 정비',
+  rangeMarine:'마린 사업',rangeHydra:'히드라 사업',rangeDragoon:'드라군 사업',rangeGoliath:'골리앗 대공 사업'};
  function render(force=false){
   if(!force&&performance.now()-lastRender<140)return;
   lastRender=performance.now();
@@ -71,8 +87,18 @@
   for(const btn of panel.querySelectorAll('[data-buy]')){
    const kind=btn.dataset.buy,n=ranks[kind],rule=rules[kind];
    btn.disabled=battleMode!=='defense'||n>=rule.max||points<price(kind);
-   const detail=kind==='regen'?'현재 +'+(n*4)+'/초':kind==='supply'?'3웨이브마다 '+n+'기':kind==='repair'?'종료 시 +'+(n*40)+' HP':'종료 시 회복 +'+(n*7)+'%';
-   btn.querySelector('small').textContent=detail+' · Lv.'+n;
+   const details={
+    regen:'현재 +'+(n*4)+'/초',
+    supply:'3웨이브마다 '+n+'기',
+    repair:'종료 시 +'+(n*40)+' HP',
+    recover:'종료 시 회복 +'+(n*7)+'%',
+    rangeMarine:'U-238 탄환 · 마린 4 → 5칸',
+    rangeHydra:'가시지느러미 · 히드라 4 → 5칸',
+    rangeDragoon:'싱귤래리티 · 드라군 4 → 6칸',
+    rangeGoliath:'카론 부스터 · 대공 5 → 8칸'
+   };
+   const detail=details[kind];
+   btn.querySelector('small').textContent=detail+(researchUnits[kind]?(n?' · 연구 완료':' · 미연구'):' · Lv.'+n);
    btn.querySelector('b').textContent=n>=rule.max?'MAX':price(kind)+' TP';
   }
   $('campaignBoost').disabled=battleMode!=='defense'||over||points<2||overdriveUsed===wave||energy>=245;
@@ -84,7 +110,9 @@
   const r=rules[type];if(!r||battleMode!=='defense')return;
   if(ranks[type]>=r.max||points<price(type))return;
   points-=price(type);ranks[type]++;
-  notify(label[type]+' '+ranks[type]+'단계 구매 · '+points+' TP 남음');render(true);
+  if(researchUnits[type])syncFriendlyRange();
+  notify(label[type]+(researchUnits[type]?' 완료! 해당 병종 전체 사거리 증가':' '+ranks[type]+'단계 구매')+' · '+points+' TP 남음');
+  render(true);
  }
  function starterEscort(){
   if(battleMode!=='defense'||wave!==1)return;
@@ -129,6 +157,7 @@
   render(true);
  }
  startWave=function(){
+  rangeResearch.setEnemyWave(battleMode==='defense'?wave:0);
   if(wave<=10){originalStartWave();supply()}else advancedStartWave();
   render(true);
  };
@@ -158,6 +187,7 @@
   reset();battleMode='defense';
   units=[];selected.clear();spawns=[];effects=[];projectiles=[];storms=[];corpses=[];
   points=data.points||0;Object.keys(ranks).forEach(k=>ranks[k]=Math.max(0,Math.min(rules[k].max,data.ranks?.[k]||0)));
+  syncFriendlyRange();
   wave=data.wave;energy=Math.max(0,Math.min(250,data.energy||200));nexus=Math.max(1,Math.min(750,data.nexus||500));
   kills=data.kills||0;conversions=data.conversions||0;clearedWave=wave-1;overdriveUsed=0;
   for(const x of (data.roster||[]).slice(0,110)){
@@ -204,6 +234,7 @@
  reset=function(){
   points=0;clearedWave=0;rewardTimer=0;overdriveUsed=0;
   for(const k of Object.keys(ranks))ranks[k]=0;
+  rangeResearch.reset();
   reward.hidden=true;originalReset();starterEscort();render(true);
  };
  $('restart').onclick=reset;
