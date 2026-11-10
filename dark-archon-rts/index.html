@@ -247,7 +247,7 @@ $('voiceVol').oninput=e=>{voiceVolume=Number(e.target.value)/100;for(const clip 
 /* Original generated 16 x 16 atlases. The unfinished last row is excluded;
  * direction 15 reuses row 0. Columns: idle 0-3, move 4-9, attack 10-12, death 13-15. */
 const LEGACY_ATLAS_TYPES=new Set(['darkarchon','ultra','marine','zealot','hydra','goliath','archon']);
-const SPRITE_TYPES=[...new Set(['darkarchon',...COMBAT_TYPES])];
+const SPRITE_TYPES=[...new Set(['darkarchon',...COMBAT_TYPES,'scv','ghost','dropship','spidermine','medic','probe','shuttle','observer','interceptor','drone','overlord','infestedTerran','broodling'])];
 const atlasDirection=dir=>dir===15?0:dir;
 const spriteSheets={},spriteThumbs={},spriteCenters={};
 for(const key of SPRITE_TYPES){
