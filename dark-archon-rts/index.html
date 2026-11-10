@@ -132,6 +132,25 @@ Object.assign(TYPES.hydra,{size:'medium',weapon:'explosive',canGround:true,canAi
 Object.assign(TYPES.ultra,{size:'large',weapon:'normal',canGround:true,canAir:false});
 Object.assign(TYPES.archon,{size:'large',weapon:'normal',canGround:true,canAir:true,splash:58});
 Object.assign(TYPES.cannon,{size:'large',weapon:'normal',canGround:true,canAir:true,projectile:true});
+/* Shared StarCraft: Brood War range calibration, not independent pixel guesses.
+ * One original 32px range cell = 48px in this 2400px arena (1.5x).
+ * Heroes inherit their unit type; upgrades are not implicitly researched.
+ */
+const RANGE_PX_PER_TILE=48;
+const BW_ATTACK_RANGE_TILES={
+ darkarchon:0, ultra:1, marine:4, zealot:1, hydra:4,
+ goliath:6, archon:2, cannon:7,
+ zergling:1, dragoon:4, firebat:2, vulture:5, siegetank:7,
+ wraith:5, valkyrie:6, battlecruiser:6, darktemplar:1,
+ reaver:8, scout:4, corsair:5, carrier:8, lurker:6,
+ mutalisk:3, guardian:8, devourer:6, scourge:1
+};
+for(const type of Object.keys(TYPES)){
+ if(!(type in BW_ATTACK_RANGE_TILES))throw Error('Missing BW attack range: '+type);
+ TYPES[type].range=BW_ATTACK_RANGE_TILES[type]*RANGE_PX_PER_TILE;
+}
+// Goliath has 6 cells vs ground, 5 vs air; both are scaled identically.
+TYPES.goliath.airRange=5*RANGE_PX_PER_TILE;
 /* Official BW heroes have researched campaign stats below; when no official hero
  * exists for a combat type, a labeled custom elite is used instead. */
 const HERO_STATS={
@@ -281,7 +300,12 @@ const hostileFor=(a,b)=>a!==b&&b.hp>0&&(a.neutral?!b.neutral:b.neutral||a.enemy!
 const chosen=()=>units.filter(u=>selected.has(u.id)&&friendly(u)&&u.hp>0);
 const currentEnergy=()=>activeTeam?enemyEnergy:energy;
 const SKILL_COSTS={feedback:50,storm:75,mael:100,mind:150};
-const SIEGE_RANGE=384,SIEGE_MIN_RANGE=64,SIEGE_DEPLOY=79/24,SIEGE_UNDEPLOY=75/24,SIEGE_RADII=[10,25,40];
+const SIEGE_RANGE=12*RANGE_PX_PER_TILE,SIEGE_MIN_RANGE=2*RANGE_PX_PER_TILE,SIEGE_DEPLOY=79/24,SIEGE_UNDEPLOY=75/24,SIEGE_RADII=[10,25,40];
+function attackRange(u,target=null){
+ if(u.type==='siegetank'&&u.sieged)return SIEGE_RANGE;
+ if(u.type==='goliath'&&target&&!target.core&&TYPES[target.type]?.flying)return TYPES.goliath.airRange;
+ return TYPES[u.type].range;
+}
 function updateManaUI(){const value=clamp(currentEnergy(),0,250),hero=units.some(u=>u.hp>0&&friendly(u)&&u.type==='darkarchon');$('psiFill').style.width=(value/250*100)+'%';$('psiValue').textContent=Math.floor(value)+' / 250';$('psiBlock').setAttribute('aria-valuenow',String(Math.floor(value)));for(const el of document.querySelectorAll('[data-skill]')){el.classList.toggle('ready',hero&&value>=SKILL_COSTS[el.dataset.skill]);el.classList.toggle('noHero',!hero);el.title=!hero?'다크 아콘이 없습니다':value>=SKILL_COSTS[el.dataset.skill]?'사용 가능':'마나 부족'}}
 function spendEnergy(n){if(activeTeam)enemyEnergy-=n;else energy-=n}
 function spawn(type,enemy,x,y,isHero=false){
@@ -626,7 +650,10 @@ function tick(dt){
   }
   if(u.stun>0)continue;
   let o=u.order;const d=TYPES[u.type];
-  if(u.fixed){let target=null,near=d.range;for(const v of units)if(hostileFor(u,v)&&!v.fixed&&canHit(u,v)){const gap=distance(u,v);if(gap<near){near=gap;target=v}}if(target&&u.cool<=0)strike(u,target);continue}
+  if(u.fixed){let target=null,near=Infinity;for(const v of units)if(hostileFor(u,v)&&!v.fixed&&canHit(u,v)){
+   const gap=distance(u,v),maxRange=attackRange(u,v)+TYPES[v.type].r*.35;
+   if(gap<=maxRange&&gap<near){near=gap;target=v}
+  }if(target&&u.cool<=0)strike(u,target);continue}
   if(u.type==='darkarchon'){if(['move','attackmove'].includes(o.type))stepToward(u,o,dt);continue}
   if(u.neutral){u.roamFor-=dt;if(u.roamFor<=0){u.roamFor=rnd(4,8);u.order={type:'roam',x:rnd(350,W-350),y:rnd(NEUTRAL_MIN_Y,H-70)};o=u.order}}
   // Pure MOVE/escape never attacks or retargets, even when shot from both flanks.
@@ -635,19 +662,22 @@ function tick(dt){
   let target=null,td=Infinity,forced=false;
   if(o.target){target=opponents.find(v=>v.id===o.target)||null;forced=!!target;if(!target){completeOrder(u);u.engagedTargetId=0;continue}}
   // Lock onto a valid opponent until it dies or leaves the pursuit leash.
-  const leash=u.type==='siegetank'&&u.sieged?SIEGE_RANGE:Math.max(380,(d.sight||300)*1.22);
+  const leash=Math.max(380,(d.sight||300)*1.22,attackRange(u)*1.1);
   if(!target&&u.engagedTargetId){
    const previous=opponents.find(v=>v.id===u.engagedTargetId);
-   if(previous&&distance(u,previous)<leash){target=previous;forced=true}
+   if(previous&&distance(u,previous)<Math.max(leash,attackRange(u,previous)+40)){target=previous;forced=true}
    else u.engagedTargetId=0;
   }
   if(!target&&u.retaliateFor>0&&!['hold','stop'].includes(o.type)){
    const aggressor=opponents.find(v=>v.id===u.lastAttacker);
-   if(aggressor&&distance(u,aggressor)<leash){target=aggressor;forced=true}
+   if(aggressor&&distance(u,aggressor)<Math.max(leash,attackRange(u,aggressor)+40)){target=aggressor;forced=true}
   }
   if(!target){
-   const sight=u.type==='siegetank'&&u.sieged?SIEGE_RANGE:(['hold','stop'].includes(o.type)?d.range+25:(d.sight||300));
-   for(const v of opponents){const gap=distance(u,v);if(gap<sight&&gap<td){td=gap;target=v}}
+   for(const v of opponents){
+    const range=attackRange(u,v),sight=['hold','stop'].includes(o.type)?range+25:Math.max(d.sight||300,range+25);
+    const gap=distance(u,v);
+    if(gap<=sight&&gap<td){td=gap;target=v}
+   }
   }
   // Enemy AI only attacks the base if no defendable unit is in sight.
   if(!u.neutral&&o.type==='attackmove'&&!target){
@@ -656,7 +686,7 @@ function tick(dt){
   }
   if(target){if(!target.core)u.engagedTargetId=target.id;
    const sieged=u.type==='siegetank'&&u.sieged;
-   const range=(sieged?SIEGE_RANGE:d.range)+(target.core?23:TYPES[target.type].r*.35);
+   const range=attackRange(u,target)+(target.core?23:TYPES[target.type].r*.35);
    const gap=distance(u,target);
    if(gap<=range&&(!sieged||gap>=SIEGE_MIN_RANGE)){if(u.cool<=0)strike(u,target)}
    else if(!sieged&&!['hold','stop'].includes(o.type))stepToward(u,target,dt);
@@ -774,11 +804,19 @@ function draw(){
  ctx.strokeStyle='#a6bac414';ctx.lineWidth=1;
  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
- const rangeTank=chosen().find(u=>u.type==='siegetank'&&u.sieged&&u.siegeTransition<=0);
- if(rangeTank){
-  ctx.save();ctx.strokeStyle='#f6b47866';ctx.lineWidth=2;ctx.setLineDash([10,13]);
-  ctx.beginPath();ctx.arc(rangeTank.x,rangeTank.y,SIEGE_RANGE,0,Math.PI*2);ctx.stroke();
-  ctx.strokeStyle='#ff6666aa';ctx.beginPath();ctx.arc(rangeTank.x,rangeTank.y,SIEGE_MIN_RANGE,0,Math.PI*2);ctx.stroke();
+ const rangeSubject=chosen().find(u=>u.hp>0&&u.type!=='darkarchon'&&u.siegeTransition<=0);
+ if(rangeSubject){
+  const radius=attackRange(rangeSubject);
+  ctx.save();ctx.strokeStyle=rangeSubject.sieged?'#f6b478bb':'#92d4fa88';ctx.lineWidth=2;ctx.setLineDash([10,13]);
+  ctx.beginPath();ctx.arc(rangeSubject.x,rangeSubject.y,radius,0,Math.PI*2);ctx.stroke();
+  if(rangeSubject.type==='goliath'){
+   ctx.strokeStyle='#fbce83aa';ctx.setLineDash([4,8]);
+   ctx.beginPath();ctx.arc(rangeSubject.x,rangeSubject.y,attackRange(rangeSubject,{type:'wraith'}),0,Math.PI*2);ctx.stroke();
+  }
+  if(rangeSubject.type==='siegetank'&&rangeSubject.sieged){
+   ctx.strokeStyle='#ff6666aa';ctx.setLineDash([]);
+   ctx.beginPath();ctx.arc(rangeSubject.x,rangeSubject.y,SIEGE_MIN_RANGE,0,Math.PI*2);ctx.stroke();
+  }
   ctx.setLineDash([]);ctx.restore();
  }
  if(battleMode==='duel'){
