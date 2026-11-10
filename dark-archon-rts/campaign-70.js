@@ -174,10 +174,14 @@
  }
  function saveCheckpoint(){
   try{
-   const roster=allies().filter(u=>u.hp>0).map(u=>({
+   const saveUnit=(u,depth=0)=>({
     type:u.type,x:u.x,y:u.y,hp:u.hp,shield:u.shield,hero:!!u.hero,sieged:!!u.sieged,
-    max:u.max,maxShield:u.maxShield
-   }));
+    max:u.max,maxShield:u.maxShield,
+    minesRemaining:u.minesRemaining,healEnergy:u.healEnergy,
+    cloakOn:u.cloakOn,cloakEnergy:u.cloakEnergy,lifeRemaining:u.lifeRemaining,
+    cargo:depth===0?(u.cargo||[]).map(v=>saveUnit(v,1)):[]
+   });
+   const roster=allies().filter(u=>u.hp>0).map(u=>saveUnit(u));
    const snap={version:1,wave:Math.min(70,wave+1),points,ranks:{...ranks},energy,nexus,kills,conversions,roster};
    localStorage.setItem(storageKey,JSON.stringify(snap));
    localStorage.setItem(bestKey,String(Math.max(best(),wave)));
@@ -196,6 +200,21 @@
    const u=spawn(x.type,false,Math.max(28,Math.min(W-28,x.x)),Math.max(28,Math.min(H-28,x.y)),!!x.hero);
    u.hp=Math.max(.5,Math.min(u.max,x.hp));u.shield=Math.max(0,Math.min(u.maxShield,x.shield));
    if(u.type==='siegetank'){u.sieged=!!x.sieged;u.siegeTarget=u.sieged}
+   if(Number.isFinite(x.minesRemaining))u.minesRemaining=x.minesRemaining;
+   if(Number.isFinite(x.healEnergy))u.healEnergy=x.healEnergy;
+   if(Number.isFinite(x.cloakEnergy))u.cloakEnergy=x.cloakEnergy;
+   if(Number.isFinite(x.lifeRemaining))u.lifeRemaining=x.lifeRemaining;
+   if(u.type==='ghost')u.cloakOn=!!x.cloakOn;
+   if(u.capacity&&Array.isArray(x.cargo)){
+    for(const c of x.cargo.slice(0,8)){
+     if(!TYPES[c.type]||TYPES[c.type].flying||c.type==='darkarchon')continue;
+     const soldier=spawn(c.type,false,u.x,u.y,!!c.hero);
+     soldier.hp=Math.max(.5,Math.min(soldier.max,c.hp||soldier.max));
+     soldier.shield=Math.max(0,Math.min(soldier.maxShield,c.shield||0));
+     soldier.inTransport=u.id;u.cargo.push(soldier);
+     units=units.filter(v=>v.id!==soldier.id);
+    }
+   }
    u.order={type:'guard',x:u.x,y:u.y,target:null};
   }
   if(!units.some(u=>u.type==='darkarchon'))spawn('darkarchon',false,235,H/2);
