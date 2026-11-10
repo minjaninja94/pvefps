@@ -26,7 +26,7 @@
  spawn=function(type,enemy,x,y,isHero=false){
   const unit=originalSpawn(type,enemy,x,y,isHero);
   // Reinforcements spawned by the original timer must march toward the Nexus.
-  if(enemy&&battleMode==='defense'&&wave>10&&!unit.fixed&&!unit.neutral)unit.order={type:'attackmove',x:HOME.x,y:HOME.y,target:null};
+  if(enemy&&battleMode==='defense'&&wave>10&&!unit.fixed&&!unit.neutral&&!TYPES[type].support)unit.order={type:'attackmove',x:HOME.x,y:HOME.y,target:null};
   return unit;
  };
  const phases=[
@@ -47,7 +47,8 @@
   if(n===70){for(const type of COMBAT_TYPES)normal[type]=Math.max(1,normal[type]||0)}
   // Guarantee a large infantry front so that captured artillery remains useful.
   for(let i=0;i<Math.ceil(count*.16);i++){const type=['zergling','marine','hydra','zealot'][i%4];normal[type]=(normal[type]||0)+1}
-  const heroCount=Math.min(8,4+Math.floor((n-11)/14)+(boss?1:0)),heroCandidates=[...(boss?['siegetank','carrier','ultra']:[]),...theme.pool,...COMBAT_TYPES],heroes=[];
+  const heroCount=Math.min(8,4+Math.floor((n-11)/14)+(boss?1:0));
+  const heroCandidates=[...(boss?['siegetank','carrier','ultra']:[]),...theme.pool,...COMBAT_TYPES].filter(type=>!EXTRA_HERO_EXCLUDE.has(type)),heroes=[];
   for(let i=0;heroes.length<heroCount&&i<250;i++){const choice=heroCandidates[Math.floor(rand(n,900+i)*heroCandidates.length)];if(!heroes.includes(choice))heroes.push(choice)}
   return {heroes,ordinary:normal,name:boss?chapter+'장 결전 · 지휘관 습격':theme.name,waves:n<17?0:n<30?1:n<50?2:3};
  }
