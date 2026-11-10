@@ -24,7 +24,7 @@ for(const [key,stats] of Object.entries(EXTRA_UNIT_TYPES)){
  TYPES[key].range=BW_ATTACK_RANGE_TILES[key]*RANGE_PX_PER_TILE;
 }
 const EXTRA_UNIT_LIST=Object.keys(EXTRA_UNIT_TYPES);
-const EXTRA_HERO_EXCLUDE=new Set(['scv','probe','drone','medic','dropship','shuttle','overlord','observer','spidermine','interceptor','broodling']);
+const EXTRA_HERO_EXCLUDE=new Set(['scv','probe','drone','medic','dropship','shuttle','overlord','observer','spidermine','interceptor','broodling','infestedTerran']);
 const extraTier={
  0:['scv','probe','drone'],
  1:['ghost','medic','broodling'],
