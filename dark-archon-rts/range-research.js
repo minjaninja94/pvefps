@@ -30,7 +30,9 @@
  drawUnit=function(u){
   previousDrawUnit(u);
   if(u.hp<=0||!hasResearch(u))return;
-  // The research is visible on both captured units and researched enemy waves.
+  // Keep 70-wave battles readable: show research on selected, hovered and hero units.
+  if(!u.hero&&!selected.has(u.id)&&u.id!==hoveredUnitId)return;
+  // Research ownership follows the current team, including mind-controlled troops.
   const d=TYPES[u.type];
   ctx.save();
   ctx.textAlign='center';ctx.font='bold 11px sans-serif';
