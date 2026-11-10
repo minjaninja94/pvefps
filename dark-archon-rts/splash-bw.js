@@ -16,7 +16,7 @@
  }
  function flame(source,target){
   const x=target.x-source.x,y=target.y-source.y,len=Math.max(.001,Math.hypot(x,y));
-  const dx=x/len,dy=y/len,reach=Math.max(43,Math.min(70,len+18));
+  const dx=x/len,dy=y/len,reach=Math.max(43,Math.min(TYPES.firebat.range+20,len+18));
   const tip={x:source.x+dx*reach,y:source.y+dy*reach};
   if(target.core)damage(target,16,source,'concussive');
   for(const v of units){
