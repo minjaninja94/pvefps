@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#151713">
+  <title>FARPOINT — 리지 작전</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="white-jade.js"></script>
+  <script defer src="game.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><span class="mark" aria-hidden="true">⌖</span><span>FARPOINT<small>FIELD SIMULATION</small></span></div>
+    <div class="top-actions"><span class="live"><i></i> 작전 채널</span><button id="sound" aria-pressed="false">소리 끔</button><button id="reset">다시 시작</button></div>
+  </header>
+  <main>
+    <div class="heading"><div><span class="eyebrow" id="mission-label">STAGE 01 / 16</span><h1 id="mission-title">리지 작전</h1></div><p id="objective">협곡의 세 구역을 확보하세요.</p></div>
+    <div class="layout">
+      <section class="field" aria-label="3D 작전 구역">
+        <div class="viewport" id="viewport" tabindex="0" aria-label="조준 화면. 방향키로 조준하고 스페이스로 발사">
+          <canvas id="scene" aria-hidden="true"></canvas><div class="fps-crosshair" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></div>
+          <div class="optic" aria-hidden="true"><div class="lens">
+            <div class="cross cross-x"></div><div class="cross cross-y"></div><div class="dot"></div>
+            <div class="scale scale-x left"></div><div class="scale scale-x right"></div><div class="scale scale-y below"></div><div class="scale scale-y above"></div>
+          </div></div>
+          <div id="range-reticle" hidden aria-hidden="true"></div>
+          <div id="scope-range" hidden>— m</div>
+          <div class="view-top">
+            <div><span>거리</span><strong id="range">750 <small>m</small></strong></div>
+            <div><span>바람</span><strong id="wind">→ 2.4</strong></div>
+            <div><span>배율</span><strong id="zoom">8×</strong></div>
+            <div><span>남은 시간</span><strong id="timer">2:30</strong></div>
+          </div>
+          <button id="engage" class="engage">작전 시작</button>
+          <div class="lock-line"><button id="capture">마우스 고정 · F</button><span id="lock-state">드래그 조준 가능</span></div>
+          <div id="effect" class="effect" aria-hidden="true" hidden></div>
+          <div id="support-hud" class="support-hud" hidden><div id="support-ring" aria-hidden="true"></div><div id="support-status" aria-live="polite"></div></div>
+          <div id="notice" class="notice" role="status">사격 준비 완료</div>
+          <div class="view-bottom"><div class="breath"><span>호흡 안정</span><div class="meter"><i id="breathbar"></i></div></div><div class="ammo"><strong id="ammo">5 / 15</strong><span id="supplies">예비 탄창 3 · 체력 100</span></div><button id="hold" aria-pressed="false">숨 고르기</button></div>
+          <div id="graphics-error" hidden>이 브라우저에서 WebGL을 사용할 수 없습니다.</div>
+        </div>
+        <div class="controls"><div class="keys"><span><kbd>WASD</kbd> 이동</span><span><kbd>V</kbd> 스코프</span><span><kbd>우클릭</kbd> 고정 해제</span><span><kbd>좌클릭</kbd> 발사</span><span><kbd>Shift</kbd> 숨 고르기</span></div>
+          <div class="action"><button id="scope" aria-pressed="true">스코프</button><button id="out" aria-label="배율 낮추기">−</button><button id="in" aria-label="배율 높이기">+</button><button id="reload">장전 · R</button><button class="fire" id="fire">발사 <span aria-hidden="true">↗</span></button></div>
+        </div>
+      </section>
+      <aside>
+        <section class="panel"><div class="panel-head"><h2>장비 상점</h2><span id="credits">0 C</span></div>
+          <div id="gear" class="gear"></div>
+          <div class="gear-actions"><button id="ap">관통탄 · T</button><button id="ak">AK-47 · X</button><button id="resupply">보급 · E</button></div>
+          <button id="supply-waypoint" class="supply-waypoint">보급 위치 보기 · B</button>
+        </section>
+        <section class="panel"><div class="panel-head"><h2>작전 구역</h2><span>화이트 비취</span><span id="progress">0 / 6 제압</span></div>
+          <div id="stages" class="stages"></div>
+        </section>
+        <section class="panel score"><div class="panel-head"><h2>사격 기록</h2><span id="shots">0발</span></div>
+          <div class="stats"><div><span>명중</span><strong id="hits">00</strong></div><div><span>명중률</span><strong id="accuracy">—</strong></div></div>
+          <ol id="log"><li class="empty">발사하면 여기에 결과가 표시됩니다.</li></ol>
+        </section>
+        <p class="hint">휠 또는 +/−로 1×–16×, V로 스코프 전환. ` 키로 거리를 찍고 청록색 보정점으로 조준하세요. 전차는 4번 대장갑 장비로 차체를 조준하세요. F로 마우스 고정, X로 AK-47 전환.</p>
+      </aside>
+    </div>
+    <section class="panel campaign-panel" aria-labelledby="campaign-heading">
+      <div class="panel-head"><h2 id="campaign-heading">스테이지 선택</h2><span id="campaign-progress"></span></div>
+      <div id="campaign-stages" class="campaign-stages"></div>
+    </section>
+  </main>
+</body>
+</html>
