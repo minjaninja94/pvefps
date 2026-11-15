@@ -18,7 +18,8 @@ function runtime(){
   }
   return elements.get(id);
  }
- const ctx={window:{},document:{getElementById:el,addEventListener(){}},
+ const predictableMath=Object.create(Math);predictableMath.random=()=>0.99;
+ const ctx={Math:predictableMath,window:{},document:{getElementById:el,addEventListener(){}},
   localStorage:{getItem(){return null;},setItem(){}},confirm:()=>true,
   setTimeout:fn=>(timers.push(fn),timers.length),clearTimeout(){},console};
  vm.createContext(ctx);vm.runInContext(source('cards.js'),ctx,{filename:'cards.js'});vm.runInContext(source('game.js'),ctx,{filename:'game.js'});
@@ -71,4 +72,15 @@ test('HTML has all expected arena and deck UI mount points',()=>{
  const html=source('index.html');
  for(const id of ['factionGrid','gameScreen','myHand','enemyUnits','myUnits','myClash','enemyClash','inspector','reactionOverlay','resultOverlay','cardCatalog'])
  assert.match(html,new RegExp('id="'+id+'"'));
+});
+
+test('a summoned unit can enter the separate one-slot clash zone',()=>{
+ const r=runtime();r.el('startGame').listeners.click();const s=r.api.getState(),p=s.players[0];
+ let low=p.hand.findIndex(id=>r.data.byId[id].rank===0);
+ if(low<0){const ix=p.deck.findIndex(id=>r.data.byId[id].rank===0);assert.ok(ix>=0);[p.hand[0],p.deck[ix]]=[p.deck[ix],p.hand[0]];low=0;}
+ handClick(r,low);handClick(r,low);
+ const i=p.units.findIndex(Boolean);assert.ok(i>=0);
+ r.el('myUnits').listeners.click({target:{closest:selector=>selector==='[data-side]'?{dataset:{side:'0',zone:'units',index:String(i)}}:null}});
+ r.el('clashBtn').listeners.click();
+ assert.ok(p.clash);assert.equal(p.units[i],null);assert.equal(p.clashUsed,true);
 });
