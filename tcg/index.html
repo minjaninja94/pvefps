@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0d19">
+<meta name="description" content="차원전쟁 TCG — 8개 진영, 240종 카드, 격돌존과 조건 강림이 만나는 오리지널 전략 카드게임.">
+<title>차원전쟁 · DIMENSION WAR TCG</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='13' fill='%230e1429'/%3E%3Cpath d='M32 7L12 32l20 25 20-25L32 7zm0 13l11 12-11 12-11-12 11-12z' fill='%23e8bd75'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+<script src="cards.js" defer></script>
+<script src="game.js" defer></script>
+</head>
+<body>
+<div class="ambient a1"></div><div class="ambient a2"></div>
+<header class="global-nav">
+  <a href="../index.html" class="back-link" title="게임 선택으로 돌아가기">‹ GAME SELECT</a>
+  <div class="brand-mark"><span class="brand-gem">◇</span><span class="brand-text">차원전쟁 <small>DIMENSION WAR</small></span></div>
+  <span class="build-tag">TACTICAL CARD DUEL <em>ALPHA 0.1</em></span>
+</header>
+<main>
+<section id="lobbyScreen" class="lobby-screen">
+ <div class="lobby-hero">
+   <div class="eyebrow">EIGHT REALMS. ONE FRACTURE.</div>
+   <h1>여덟 세계가<br><i>격돌</i>하는 순간.</h1>
+   <p>무자원 강림, 생명력 100, 그리고 전장의 중심에서 벌어지는 격돌존 점령전. 진영을 선택하고 상대의 차원을 무너뜨리세요.</p>
+   <div class="lobby-stats"><span><strong>08</strong> 진영</span><span><strong>240</strong> 카드</span><span><strong>40</strong> 덱</span><span><strong>100</strong> LP</span></div>
+   <div class="version-note">싱글 AI 대전 · PvP 실험 규칙 기반 프로토타입</div>
+ </div>
+ <div class="lobby-panel">
+   <div class="panel-kicker">01 / 진영 선택</div>
+   <h2>당신의 차원을 고르세요</h2>
+   <div id="factionGrid" class="faction-grid"></div>
+   <div id="factionDetail" class="faction-detail"></div>
+   <div class="lobby-actions"><button id="editDeck" class="ghost-btn">덱 편집 <span id="deckCount">40 / 40</span></button><button id="startGame" class="primary-btn">AI 대전 시작 <span>➜</span></button></div>
+ </div>
+</section>
+<section id="gameScreen" class="game-screen hidden" aria-label="차원전쟁 플레이 필드">
+ <div class="hud">
+  <div class="fighter opponent-hud"><div id="enemyAvatar" class="avatar">◇</div><div class="fighter-meta"><div class="fighter-head"><small>CHALLENGER · AI</small><b id="enemyFactionLabel">—</b></div><div class="lp-rail"><div id="enemyHpFill" class="lp-fill"></div></div><div class="lp-label">LIFE POINTS <strong id="enemyHp">100</strong><small>/100</small></div></div></div>
+  <div class="turn-banner"><span>DIMENSION WAR</span><strong id="turnTitle">YOUR TURN</strong><em id="phaseLabel">전개 단계</em><small id="roundLabel">TURN 01</small></div>
+  <div class="fighter player-hud"><div class="fighter-meta"><div class="fighter-head"><small>PLAYER · YOU</small><b id="myFactionLabel">—</b></div><div class="lp-rail"><div id="myHpFill" class="lp-fill"></div></div><div class="lp-label">LIFE POINTS <strong id="myHp">100</strong><small>/100</small></div></div><div id="myAvatar" class="avatar">◇</div></div>
+ </div>
+ <div class="arena-body">
+   <aside class="battle-aside left-aside">
+     <div class="aside-heading">TACTICAL OVERVIEW</div>
+     <div class="pile-info"><div class="pile-symbol">▥</div><div>상대 덱<small><b id="enemyDeck">—</b>장</small></div></div>
+     <div class="pile-info"><div class="pile-symbol">✝</div><div>상대 데스존<small><b id="enemyGrave">—</b>장</small></div></div>
+     <div class="pile-info"><div class="pile-symbol">▧</div><div>상대 손패<small><b id="enemyHand">—</b>장</small></div></div>
+     <div class="aside-rule">격돌존은 중앙에서 서로 대치합니다. 상대가 없다면 다음 내 턴 종료부터 점령 피해를 줍니다.</div>
+     <div class="aside-heading player-pile-heading">YOUR RESOURCES</div>
+     <div class="pile-info"><div class="pile-symbol">▥</div><div>내 덱<small><b id="myDeck">—</b>장</small></div></div>
+     <div class="pile-info"><div class="pile-symbol">✝</div><div>내 데스존<small><b id="myGrave">—</b>장</small></div></div>
+     <div class="pile-info"><div class="pile-symbol">◇</div><div>단절된 이계<small><b id="myExile">—</b>장</small></div></div>
+   </aside>
+   <div class="field">
+     <div class="field-upper">
+       <div class="board-caption"><span>OPPONENT DOMAIN</span><span>전술 · 몬스터</span></div>
+       <div id="enemySpells" class="slots spells"></div>
+       <div id="enemyUnits" class="slots units"></div>
+     </div>
+     <div class="clash-band">
+       <div class="clash-title"><b>⚔ CLASH ZONE</b><span>격돌을 점령하고 승리를 쟁취하세요</span></div>
+       <div id="enemyClash" class="clash-slot"></div>
+       <div class="clash-pulse"><span>VS</span></div>
+       <div id="myClash" class="clash-slot"></div>
+       <div id="clashState" class="clash-state">중립</div>
+     </div>
+     <div class="field-lower">
+       <div id="myUnits" class="slots units"></div>
+       <div id="mySpells" class="slots spells"></div>
+       <div class="board-caption"><span>YOUR DOMAIN</span><span>몬스터 · 전술</span></div>
+     </div>
+   </div>
+   <aside class="battle-aside right-aside">
+     <div class="aside-heading">CARD INSPECTOR</div>
+     <div id="inspector" class="inspector"><div class="inspector-empty">카드를 선택하면<br>능력과 조작이 표시됩니다.</div></div>
+     <div class="aside-heading log-heading">BATTLE LOG</div>
+     <div id="battleLog" class="battle-log" aria-live="polite"></div>
+   </aside>
+ </div>
+ <div class="bottom-panel">
+  <div class="hand-heading"><div><span>YOUR HAND</span><small>클릭하여 카드 사용 · 전장 유닛 클릭 후 공격</small></div><span id="handSize">0 CARDS</span></div>
+  <div id="myHand" class="hand"></div>
+  <div class="action-bar"><div id="hint" class="action-hint">카드를 선택해 기본 배치 또는 전술을 사용하세요.</div><div class="actions"><button id="surrenderBtn" class="quiet-btn">기권</button><button id="attackCoreBtn" class="ghost-btn" disabled>본진 직접 공격</button><button id="clashBtn" class="ghost-btn" disabled>격돌존 진입</button><button id="withdrawBtn" class="ghost-btn" disabled>철수</button><button id="mainPhaseBtn" class="ghost-btn" disabled>전개 단계</button><button id="combatPhaseBtn" class="primary-btn">전투 단계</button><button id="endTurnBtn" class="primary-btn gold" disabled>턴 종료 ➜</button></div></div>
+ </div>
+</section>
+</main>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="reactionOverlay" class="modal-shade hidden">
+ <div class="reaction-modal"><div class="eyebrow">REACTION WINDOW</div><h2>상대 행동에 대응하시겠습니까?</h2><p id="reactionText"></p><div id="reactionOptions" class="reaction-options"></div><button id="reactionPass" class="ghost-btn">대응하지 않기 / 통과</button></div>
+</div>
+<div id="resultOverlay" class="modal-shade hidden">
+ <div class="result-modal"><div class="eyebrow">DUEL COMPLETE</div><div id="resultSymbol" class="result-symbol">◇</div><h2 id="resultHeading">VICTORY</h2><p id="resultMessage"></p><div id="resultSummary" class="result-summary"></div><button id="rematchBtn" class="primary-btn">같은 진영으로 다시 대전</button><button id="backLobbyBtn" class="ghost-btn">진영 선택으로 돌아가기</button></div>
+</div>
+<div id="deckOverlay" class="modal-shade hidden">
+ <div class="deck-modal"><div class="deck-head"><div><div class="eyebrow">DECK WORKSHOP</div><h2>덱 구성 <small>40장 · 카드명당 3장</small></h2></div><button id="closeDeck" class="quiet-btn">✕ 닫기</button></div>
+  <div class="deck-controls"><select id="typeFilter"><option value="all">전체 종류</option><option value="unit">몬스터</option><option value="tactic">전술</option><option value="reaction">반응</option><option value="gear">장비</option></select><input id="cardSearch" placeholder="카드 이름 검색"><span id="deckCurrent">40 / 40</span><button id="resetDeck" class="ghost-btn">추천 덱 초기화</button></div>
+  <div id="cardCatalog" class="card-catalog"></div><div class="deck-footer"><span id="deckWarning"></span><button id="saveDeck" class="primary-btn">40장 덱 저장</button></div>
+ </div>
+</div>
+<footer class="site-foot"><span>© DIMENSION WAR · ORIGINAL TCG PROTOTYPE</span><span>v5.0 RULES · v0.1 PLAYABLE ALPHA</span></footer>
+</body></html>
