@@ -619,7 +619,54 @@ function playNonUnit(side,index,chosenTarget,preferredSlot){
   log((side===0?'아군':'AI')+' '+(card.type==='gear'?'장비 부착':'함정 세트')+': '+card.name,side===0?'my':'enemy');
   if(target){p.metrics.gears=(p.metrics.gears||0)+1;if(side===0)PROGRESS.count('gear');triggerBoard('gear',side);}return true;
  }
- playCa�^��G����ƭy�e=>{
+ playCardFlight(side,id,index,document.querySelector?.('.field'));
+ p.hand.splice(index,1);p.grave.push(id);
+ p.metrics.tactics.add(id);p.metrics.turnTactics++;
+ (p.combo.spells??=new Set()).add(id);
+ log((side===0?'아군':'AI')+' 전술 발동: '+card.name,side===0?'my':'enemy');
+ if(side===0)PROGRESS.count('spell');
+ useEffect(side,card,chosenTarget);triggerBoard('spell',side);return true;
+}
+function availableReact(side,event){
+ const p=game.players[side],can=card=>{
+  if(card.type!=='reaction')return false;
+  if(card.faction===-1&&['negate','draw'].includes(card.effect)&&event.type!=='tactic')return false;
+  if(card.faction===-1&&card.effect==='challenge'&&event.type==='occupy')return false;
+  if(card.effect==='shield'&&event.type!=='attack')return false;
+  if(card.effect==='challenge'&&event.type!=='attack'&&event.type!=='occupy')return false;
+  return true;
+ };
+ return [...p.hand.map((cid,i)=>({cid,from:'hand',index:i})),...p.spells.map((s,i)=>s?({cid:s.cid,from:'spells',index:i}):null).filter(Boolean)].filter(item=>can(C(item.cid)));
+}
+function applyReaction(side,item,event){
+ const p=game.players[side],card=C(item.cid);
+ if(item.from==='hand')p.hand.splice(item.index,1);else p.spells[item.index]=null;
+ p.grave.push(item.cid);
+ if(side===0)PROGRESS.count('trap');
+ switch(card.effect){
+  case'negate':event.canceled=true;break;
+  case'shield':event.prevented=true;break;
+  case'challenge':{const u=p.units.find(Boolean);if(u&&!p.clash)moveToClash(side,u,true);else p.flags.shield++;break;}
+  case'guard':{const u=allUnits(side)[0];if(u)u.guard=true;else p.flags.shield++;break;}
+  case'counter':{const amount=card.faction===-1?3:4;applyCoreDamage(other(side),amount,card.name);heal(side,amount);break;}
+  case'draw':draw(side,1);break;
+ }
+ applySignature(side,card,null,event.type);
+ log((side===0?'플레이어':'AI')+' 반응 발동: '+card.name,'important');render();
+}
+function aiReaction(event){
+ if(game.winner!==null)return event;
+ const options=availableReact(1,event);
+ let choice=options.find(x=>C(x.cid).effect==='negate');
+ if(event.type==='attack')choice=options.find(x=>C(x.cid).effect==='shield')||choice;
+ if(!choice)choice=options[0];
+ if(choice&&Math.random()<.63)applyReaction(1,choice,event);
+ return event;
+}
+function humanReaction(event){
+ if(game.winner!==null)return Promise.resolve(event);
+ const options=availableReact(0,event);if(!options.length)return Promise.resolve(event);
+ return new Promise(resolve=>{
   pendingReact={event,resolve};
   $('reactionText').textContent=event.description;
   $('reactionOptions').innerHTML=options.map((x,i)=>'<button class="ghost-btn" data-card-type="reaction" data-ready="effect" data-react="'+i+'">'+C(x.cid).name+' · '+(C(x.cid).desc||'대응')+'</button>').join('');
