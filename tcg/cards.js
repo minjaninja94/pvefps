@@ -27,10 +27,12 @@
       if(!ability)throw new Error('Missing monster effect: '+card.id);
       card.ability=ability;
       card.desc=ability.timing+' · '+ability.rules;
+      const holdAbility=window.TCG_MONSTER_EFFECTS?.[card.id]?.holdAbility;
+      if(holdAbility)card.holdAbility=holdAbility;
     }
     cardList.push(card); byId[card.id]=card;return card;
   };
-  const effectLabel={draw:'카드 2장 드로우',heal:'아군 생명력 9 회복',blast:'상대 생명력 8 피해',buff:'아군 몬스터 공격력 +4',bounce:'상대 일반 몬스터 1기 손패로 귀환',recover:'데스존의 하수 1장 회수',banish:'상대 몬스터 1기 단절된 이계로 격리',shift:'아군 몬스터 위치 이동',challenge:'아군 몬스터를 격돌존에 투입',fog:'이번 턴 상대 점령 피해 봉쇄',dice:'D6 3개, 4+ 명중마다 격돌 몬스터 피해 6',guard:'아군에게 수호 부여',weaken:'적 공격력 -4',supply:'카드 1장 드로우·생명력 4 회복',strike:'상대 몬스터에게 피해 7',freeze:'상대 몬스터 공격 불가',deploy:'하수 1기를 데스존에서 소생'};
+  const effectLabel={draw:'카드 2장 드로우',heal:'본진 9 회복 · 아군 몬스터 2 내구도 회복',blast:'상대 생명력 8 피해',buff:'아군 몬스터 공격력 +4',bounce:'상대 일반 몬스터 1기 손패로 귀환',recover:'데스존의 하수 1장 회수',banish:'상대 몬스터 1기 단절된 이계로 격리',shift:'아군 몬스터 위치 이동',challenge:'아군 몬스터를 격돌존에 투입',fog:'이번 턴 상대 점령 피해 봉쇄',dice:'D6 3개, 4+ 명중마다 격돌 몬스터 피해 6',guard:'아군에게 수호 부여',weaken:'적 공격력 -4',supply:'카드 1장 드로우 · 본진 4 회복 · 아군 몬스터 1 내구도 회복',strike:'상대 몬스터에게 피해 7',freeze:'상대 몬스터 공격 불가',deploy:'하수 1기를 데스존에서 소생'};
   Object.assign(effectLabel,{
     buff:'내 몬스터 1기를 지정해 공격력 +4. 내 몬스터가 없으면 내 생명력 3 회복.',
     bounce:'상대 몬스터 1기를 지정해 상대 손패로 되돌립니다.',
@@ -79,7 +81,36 @@
   for(const card of cardList){
     if(card.type==='reaction')card.desc=trapRules[card.effect];
     if(card.type==='gear')card.desc=gearRules[card.effect];
+    if(card.faction===-1&&card.type==='reaction'&&card.effect==='counter')card.desc='상대 본진에 피해 3을 주고 내 생명력을 3 회복합니다.';
   }
+  const profileGate=[
+    ['손패가 4장 이상','hand4'],['손패가 2장 이하','hand2'],['아군 몬스터가 2기 이상','allies2'],['아군 몬스터가 1기뿐','ally1'],
+    ['상대 몬스터가 2기 이상','foes2'],['상대 몬스터가 1기 이하','foe1'],['내 데스존에 몬스터가 2장 이상','grave2'],['내 본진 생명력이 60 이하','life60'],
+    ['상대 본진 생명력이 60 이하','foeLife60'],['내 몬스터가 격돌존에 있음','myClash'],['상대 몬스터가 격돌존에 있음','foeClash'],['아군 마법·장비가 2장 이상','spells2'],
+    ['이번 턴 마법을 2회 이상 해결함','tactics2'],['내 턴이 3회 이상 진행됨','turn3'],['손상된 아군 몬스터가 있음','injured'],['아군 격돌 몬스터가 점령 피해를 줌','occupy']
+  ];
+  const profileAction=[
+    ['내구도','repair'],['드로우','draw'],['공격력','atk'],['본진 피해','core'],['약화','weaken'],['생명력·내구도 회복','restore'],['방패','shield'],['데스존 회수','recover']
+  ];
+  const duplicateCounts=new Map();
+  for(const card of cardList){
+    if(card.rank===2)continue;
+    const base=card.type==='unit'
+      ?'unit|'+card.ability.event+'|'+JSON.stringify(card.ability.actions)
+      :card.type+'|'+card.effect;
+    const ordinal=duplicateCounts.get(base)||0;duplicateCounts.set(base,ordinal+1);
+    if(ordinal===0)continue;
+    const gate=profileGate[ordinal%profileGate.length],action=profileAction[Math.floor(ordinal/profileGate.length)%profileAction.length];
+    const power=card.faction===-1?1:1+Math.min(1,Math.floor(ordinal/(profileGate.length*profileAction.length)));
+    card.effectProfile={gate:gate[1],action:action[1],power};
+    const clause='고유 연계 효과: '+gate[0]+'이면 '+action[0]+' '+power+' 발동.';
+    card.profileText=clause;
+    if(card.type==='unit')card.ability.signature=clause;
+  }
+  const commonLabel={draw:'카드 1장 드로우',heal:'본진 6 회복 · 아군 몬스터 1 내구도 회복',blast:'상대 본진 5 피해',buff:'아군 몬스터 공격력 +2',weaken:'적 공격력 -2',strike:'상대 몬스터 피해 5 (없으면 본진 피해 3)',supply:'카드 1장 드로우 · 본진 2 회복 · 아군 몬스터 1 내구도 회복',dice:'D6 3개, 4+ 명중마다 격돌 몬스터 피해 4'};
+  for(const card of cardList)if(card.faction===-1&&card.effect&&commonLabel[card.effect])card.desc=commonLabel[card.effect];
+  const aceCounts=Array(8).fill(0);
+  for(const card of cardList)if(card.rank===2)card.aceProfile=aceCounts[card.faction]++;
   function makeStarter(f){
     return [
       ...Array.from({length:5},(_,i)=>Array(3).fill('f'+f+'u'+i)).flat(),

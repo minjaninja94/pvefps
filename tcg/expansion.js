@@ -48,7 +48,7 @@
     const monsters=origins.map((art,n)=>{
       const rank=n<2?0:n===2?1:2;
       const name=theme+' '+suffixes[faction][n];
-      const event=n===3?['enter','occupy','end','in','start','spell','engage','direct'][branch]:events[(branch+n*3)%events.length];
+      const event=n===3?['enter','occupy','end','in','start','spell','engage','direct'][branch]:n===2&&branch%2===0?'hold':events[(branch+n*3)%events.length];
       const actions=n===3?[schools[faction][3],aceMoves[branch],['core',branch===0?5:7]]:
         [schools[faction][n],follow[(branch+n+faction)%follow.length]];
       if(faction===6&&branch===4&&n===0)actions[1]=['healCore',4];

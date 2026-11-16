@@ -110,7 +110,7 @@
     enter:'등장할 때', in:'격돌존에 진입할 때', out:'격돌존에서 철수할 때', death:'피해로 파괴될 때',
     engage:'몬스터를 공격하기 직전', direct:'직접 공격이 처리된 직후', occupy:'단독 점령 피해 처리 직후',
     spell:'내 턴에 마법 해결 후 첫 1회', gear:'내 턴에 장비 장착 후 첫 1회',
-    start:'내 턴 드로우 직후', end:'내 턴 종료 직전',
+    start:'내 턴 드로우 직후', end:'내 턴 종료 직전', hold:'내 턴 시작 · 격돌존 유지 중',
   };
   const targets = {
     self:'이 몬스터', ally:'내 다른 몬스터 중 내구도가 가장 낮은 1기', all:'내 몬스터 전부', allAllies:'내 다른 몬스터 전부',
@@ -140,6 +140,20 @@
   effects.forEach((faction,i) => faction.forEach(([name,event,...actions],n) => {
     const id='f'+i+(n<5?'u'+n:n<8?'m'+(n-5):'h'+(n-8));
     result[id]=ability(name,event,actions);
+  }));
+  const clashHold = [
+    [['홍련 진형 유지',[['atk','allAllies',1]]],['군령의 보급',[['recover','basic',1]]]],
+    [['무대의 잔향',[['draw',1]]],['앙코르 회복',[['repair','all',2],['healCore',2]]]],
+    [['철심 고정 장치',[['repair','self',3]]],['방벽 축전',[['shield',1]]]],
+    [['핏빛 점유',[['core',2],['healCore',2]]],['진조의 포식',[['atk','self',2]]]],
+    [['세계수의 그늘',[['repair','all',2]]],['뿌리의 숨결',[['healCore',3],['repair','self',2]]]],
+    [['군체의 견제',[['weaken','clashFoe',1]]],['심해의 포식',[['recover','reaction',1]]]],
+    [['항로 좌표 보정',[['draw',1]]],['기함의 방위',[['ward','self'],['repair','self',2]]]],
+    [['마도원의 억제진',[['weaken','clashFoe',1]]],['공명의 축적',[['recover','tactic',1]]]],
+  ];
+  clashHold.forEach((pair,f)=>pair.forEach(([name,actions],n)=>{
+    const id='f'+f+(n===0?'u4':'m2');
+    result[id].holdAbility=ability(name,'hold',actions,f===1&&n===0?{key:'handLow',value:3,text:'손패가 3장 이하'}:undefined);
   }));
   window.TCG_CREATE_ABILITY=ability;
   window.TCG_MONSTER_EFFECTS=result;

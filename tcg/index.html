@@ -22,6 +22,7 @@
 <script src="pack-reveal/reveal.js" defer></script>
 <script src="accounts.js" defer></script>
 <script src="progression.js" defer></script>
+<script src="audio.js" defer></script>
 <script src="game.js" defer></script>
 </head>
 <body>
@@ -127,7 +128,7 @@
 </div>
 <div id="deckOverlay" class="modal-shade hidden">
  <div class="deck-modal"><div class="deck-head"><div><div class="eyebrow">DECK WORKSHOP</div><h2>덱 구성 <small>40장 · 카드명당 3장</small></h2></div><button id="closeDeck" class="quiet-btn">✕ 닫기</button></div>
-  <div class="deck-controls"><select id="typeFilter"><option value="all">메인 덱 전체</option><option value="unit">몬스터</option><option value="tactic">마법</option><option value="reaction">함정</option><option value="gear">장비 마법</option><option value="ace">에이스 존</option></select><input id="cardSearch" placeholder="카드 이름 검색"><span id="deckCurrent">40 / 40</span><span id="aceDeckCurrent">에이스 0 / 15</span><button id="resetDeck" class="ghost-btn">추천 덱 초기화</button></div>
+  <div class="deck-controls"><select id="typeFilter"><option value="all">메인 덱 전체</option><option value="unit">몬스터</option><option value="tactic">마법</option><option value="reaction">함정</option><option value="gear">장비 마법</option><option value="ace">에이스 존</option></select><select id="deckSort" aria-label="카드 정렬"><option value="recent">최근 획득순</option><option value="faction">진영 카드 먼저</option><option value="name">이름순</option></select><label class="generic-filter"><input id="hideGeneric" type="checkbox"> 범용 제외</label><input id="cardSearch" placeholder="카드 이름 검색"><span id="deckCurrent">40 / 40</span><span id="aceDeckCurrent">에이스 0 / 15</span><button id="resetDeck" class="ghost-btn">추천 덱 초기화</button></div>
   <div id="cardCatalog" class="card-catalog"></div><div class="deck-footer"><span id="deckWarning"></span><button id="saveDeck" class="primary-btn">메인·에이스 덱 저장</button></div>
  </div>
 </div>
@@ -159,5 +160,6 @@
  <p id="accountError" role="status"></p>
 </dialog>
 <div id="packSound" hidden><button id="sound-toggle" type="button"><span id="sound-icon"></span></button></div>
+<aside class="audio-dock" aria-label="게임 소리 설정"><span>♬ 소리</span><button id="bgmToggle" type="button" aria-pressed="false">배경음 끔</button><button id="sfxToggle" type="button" aria-pressed="true">타격음 켬</button></aside>
 <footer class="site-foot"><span>© DIMENSION WAR · ORIGINAL TCG PROTOTYPE</span><span>v5.0 RULES · v0.1 PLAYABLE ALPHA</span></footer>
 </body></html>

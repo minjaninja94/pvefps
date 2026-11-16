@@ -6,6 +6,7 @@ const DATA=window.TCG_DATA;
 const PROGRESS=window.TCG_PROGRESS;
 const ACCOUNTS=window.TCG_ACCOUNTS;
 const COMBO=window.TCG_COMBO;
+const AUDIO=window.TCG_AUDIO||{init(){},start(){},hit(){},toggleMusic(){return false;},toggleSfx(){return false;}};
 const NEW_ART=new Set(window.TCG_NEW_ART||[]);
 if(!DATA)throw new Error('Missing card registry');
 const $=id=>document.getElementById(id), C=id=>DATA.byId[id];
@@ -36,15 +37,17 @@ function cardTypeLine(card){return typeK[card.type]+(card.tier?' · '+card.tier:
 function cardRules(card){
  if(card.rank===2){
   const style=COMBO.factions[card.faction];
-  return '<div class="rules-box ace-rules"><strong>'+style.name+'</strong><p>'+style.aceRule+'</p><strong>'+style.power+' · 소재 1장</strong><p>등장 다음 턴부터 내 턴에 1회. '+style.powerRule+' 추가로 '+aceBonusText[aceBonus(card)]+'.</p></div>';
+  return '<div class="rules-box ace-rules"><strong>'+style.name+' · '+['결전','수호','진형','추격','소재','보급','전술','봉쇄','격돌','압박','재생'][aceBonus(card)]+'</strong><p>'+style.aceRule+'</p><strong>'+style.power+' · 소재 1장</strong><p>등장 다음 턴부터 내 턴에 1회. '+style.powerRule+' 추가로 '+aceBonusText[aceBonus(card)]+'.</p></div>';
  }
  const a=card.ability;
  const flag={royal:'어명',performance:'공연',device:'차원 장치'}[card.flag];
  const heading=a?'<strong>'+a.name+'</strong><span class="rule-timing">'+a.timing+'</span>':'<strong>'+typeK[card.type]+' 효과'+(flag?' · '+flag:'')+'</strong>';
  const style=COMBO.factions[card.faction];
+ const signature=card.effectProfile?'<p class="signature-rule">'+card.profileText+'</p>':'';
+ const hold=card.holdAbility?'<p class="hold-rule"><b>격돌 유지 · '+card.holdAbility.timing+'</b> '+card.holdAbility.rules+'</p>':'';
  const extender=COMBO.relay(card)?'<div class="combo-rule"><strong>'+style.relay+'</strong><p>손패 특수 소환 · '+style.relayRule+' 이번 턴 서치가 2회 미만이면 추가 연계 카드 1장 서치.</p></div>':
   COMBO.opener(card)?'<div class="combo-rule"><strong>'+style.opening+'</strong><p>등장 시 덱에서 같은 진영의 연계 카드 1장을 서치. 연계 서치는 턴당 최대 2회.</p></div>':'';
- return '<div class="rules-box">'+heading+'<p>'+(a?.rules??card.desc)+'</p>'+extender+'</div>';
+ return '<div class="rules-box">'+heading+'<p>'+(a?.rules??card.desc)+'</p>'+signature+hold+extender+'</div>';
 }
 
 function showArtPreview(id,variant){
@@ -60,7 +63,7 @@ function showArtPreview(id,variant){
  $('artPreviewGold').textContent=!PROGRESS.state.gold[id]?'황금판은 팩에서 획득':!PROGRESS.state.owned[id]?'황금판 보유':gold?'일반판 보기':'황금판 사용';
  if(!dialog.open)dialog.showModal();
 }
-let pickedFaction=0,editDeckList=[],editAceList=[],filterType='all',searchText='';
+let pickedFaction=0,editDeckList=[],editAceList=[],filterType='all',searchText='',deckSort='recent',hideGeneric=false;
 let game=null,uidCounter=0,gameCounter=0,pendingReact=null,toastTimer=0,aiBusy=false,tutorialMatch=false,tutorialStep=0;
 function getSaved(f){try{const x=JSON.parse(localStorage.getItem(ACCOUNTS.key('dw-tcg-deck-'+f))||'null');if(PROGRESS.hasDeck(x,f))return x;}catch{}return PROGRESS.suggested(f);}
 function saveDeck(f,arr){try{localStorage.setItem(ACCOUNTS.key('dw-tcg-deck-'+f),JSON.stringify(arr));}catch{}}
@@ -89,7 +92,7 @@ function setTutorialStep(step){
  $('tutorialGuideTitle').textContent=title;$('tutorialGuideText').textContent=description;$('tutorialGuide').classList.remove('hidden');
 }
 const newComboTurn=()=>({special:0,searches:0,names:new Set(),spells:new Set(),lateral:0,lastSlot:null,echo:false});
-function makePlayer(side,f,deck,aces=[]){return{side,faction:f,hp:100,deck:shuffle(deck),aces:[...aces],hand:[],grave:[],exile:[],units:[null,null,null,null,null],spells:[null,null,null,null,null],clash:null,basicUsed:false,clashUsed:false,flags:{occupyBlock:false,shield:0},metrics:{seen:new Set(),tactics:new Set(),movement:0,turnMoves:0,turnSummons:0,traitUsed:false,turnTactics:0,lateral:0},combo:newComboTurn(),ownTurns:0};}
+function makePlayer(side,f,deck,aces=[]){return{side,faction:f,hp:100,deck:shuffle(deck),aces:[...aces],hand:[],grave:[],exile:[],units:[null,null,null,null,null],spells:[null,null,null,null,null],clash:null,basicUsed:false,clashUsed:false,flags:{occupyBlock:false,shield:0},metrics:{seen:new Set(),tactics:new Set(),movement:0,turnMoves:0,turnSummons:0,traitUsed:false,turnTactics:0,lateral:0,occupies:0},combo:newComboTurn(),ownTurns:0};}
 function allUnits(side){const p=game.players[side];return p.units.filter(Boolean).concat(p.clash?[p.clash]:[]);}
 function emptyUnitIndex(p){return p.units.findIndex(x=>!x);}
 function cardName(id){return C(id)?.name||'알 수 없는 카드';}
@@ -118,6 +121,7 @@ function playAttackLunge(unit,target){
  if(animation)animation.onfinish=()=>ghost.remove();else setTimeout(()=>ghost.remove(),380);
 }
 function playImpact(element,amount,kind='hit'){
+ AUDIO.hit(amount);
  const portal=$('battleVfx'),screen=$('gameScreen');if(!portal||!element?.getBoundingClientRect)return;
  const rect=element.getBoundingClientRect(),big=amount>=10,blast=amount>=15;
  const fx=document.createElement('div');fx.className='vfx-impact '+(blast?'blast':big?'heavy':'light');
@@ -160,12 +164,39 @@ function abilityCondition(side,ability){
  const {key,value}=ability.condition,p=game.players[side];
  const current={seen:p.metrics.seen.size,summons:p.metrics.turnSummons,gears:p.metrics.gears||0,
   guarded:allUnits(side).filter(u=>u.guard).length,grave:p.grave.filter(id=>C(id)?.type==='unit').length,
-  moved:p.metrics.movement,spells:p.metrics.tactics.size,life:p.hp}[key];
- return key==='life'?current<=value:current>=value;
+  moved:p.metrics.movement,spells:p.metrics.tactics.size,life:p.hp,handLow:p.hand.length}[key];
+ return key==='life'||key==='handLow'?current<=value:current>=value;
+}
+function signatureReady(side,card,event){
+ const profile=card.effectProfile;if(!profile)return false;
+ const p=game.players[side],enemy=game.players[other(side)],units=allUnits(side),foes=allUnits(other(side));
+ const gates={
+  hand4:()=>p.hand.length>=4,hand2:()=>p.hand.length<=2,allies2:()=>units.length>=2,ally1:()=>units.length===1,
+  foes2:()=>foes.length>=2,foe1:()=>foes.length<=1,grave2:()=>p.grave.filter(id=>C(id)?.type==='unit').length>=2,
+  life60:()=>p.hp<=60,foeLife60:()=>enemy.hp<=60,myClash:()=>!!p.clash,foeClash:()=>!!enemy.clash,
+  spells2:()=>p.spells.filter(Boolean).length>=2,tactics2:()=>p.metrics.turnTactics>=2,turn3:()=>p.ownTurns>=3,
+  injured:()=>units.some(u=>u.hp<u.maxHp),occupy:()=>p.metrics.occupies>0
+ };
+ return !!gates[profile.gate]?.();
+}
+function applySignature(side,card,target,event){
+ const profile=card.effectProfile;if(game.winner!==null||!profile||!signatureReady(side,card,event))return;
+ const p=game.players[side],foes=allUnits(other(side)),friends=allUnits(side),power=profile.power;
+ switch(profile.action){
+  case'repair':{const u=(target&&friends.includes(target)?target:null)||p.clash||friends.filter(x=>x.hp<x.maxHp).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];if(u)u.hp=Math.min(u.maxHp,u.hp+power);break;}
+  case'draw':draw(side,1);break;
+  case'atk':{const u=(target&&friends.includes(target)?target:null)||friends.slice().sort((a,b)=>b.atk-a.atk)[0];if(u)u.atk+=power;break;}
+  case'core':applyCoreDamage(other(side),power,card.name+' 고유 연계');break;
+  case'weaken':{const u=foes.slice().sort((a,b)=>b.atk-a.atk)[0];if(u)u.atk=Math.max(1,u.atk-power);break;}
+  case'restore':heal(side,power);repairAll(side,power);break;
+  case'shield':p.flags.shield++;break;
+  case'recover':{const i=p.grave.findIndex(id=>C(id)?.type==='unit'&&C(id)?.rank===0);if(i>=0)p.hand.push(p.grave.splice(i,1)[0]);break;}
+ }
+ log(card.name+' 고유 연계 효과 발동',side===0?'important':'enemy');
 }
 function triggerUnit(event,side,unit,target){
- const ability=C(unit.cid).ability;
- if(unit.ace||game.winner!==null||ability.event!==event||(event!=='death'&&!allUnits(side).includes(unit))||!abilityCondition(side,ability))return;
+ const card=C(unit.cid),ability=event==='hold'?(card.holdAbility||card.ability):card.ability;
+ if(unit.ace||game.winner!==null||!ability||ability.event!==event||(event!=='death'&&!allUnits(side).includes(unit))||!abilityCondition(side,ability))return;
  const p=game.players[side], foeSide=other(side);
  if(event==='spell'||event==='gear'){
   if(unit.lastAbilityTurn===game.serial)return;
@@ -208,6 +239,7 @@ function triggerUnit(event,side,unit,target){
    }
   }
  }
+ applySignature(side,card,target,event);
 }
 function triggerBoard(event,side){for(const u of allUnits(side))triggerUnit(event,side,u);}
 function moveToClash(side,unit,fromEffect=false){
@@ -462,8 +494,8 @@ function humanSummonAce(id){
  if(event.canceled)cancelAce(0,id);else summonAce(0,id);
  game.selected=null;game.pendingTarget=null;game.viewedEnemy=null;render();
 }
-const aceBonusText=['자신의 내구도 2 회복','내 본진 생명력 2 회복','내구도가 가장 낮은 다른 아군 공격력 +1','상대 본진에 추가 피해 2','자신에게 피해 흡수 보호막','내 데스존의 첫 함정 회수','카드 1장 추가 드로우','상대 최저 내구도 몬스터 공격 봉쇄'];
-function aceBonus(card){return Number(card.id.match(/b(\d)/)?.[1]??card.id.at(-1))%aceBonusText.length;}
+const aceBonusText=['자신의 내구도 2 회복','내 본진 생명력 2 회복 · 아군 내구도 1 회복','최저 내구도 다른 아군 공격력 +1','상대 본진 추가 피해 2','자신에게 피해 흡수 보호막','데스존 첫 함정 회수','카드 1장 추가 드로우','상대 최저 내구도 몬스터 공격 봉쇄','격돌 몬스터 공격력 +2 · 내구도 2 회복 (없으면 강제 진입)','상대 격돌 몬스터 공격력 -2 (없으면 본진 피해 2)','격돌 중이면 상대 본진 피해 3 · 아군 격돌 몬스터 내구도 1 회복 (없으면 방패 1회)'];
+function aceBonus(card){return card.aceProfile??0;}
 function canActivateAce(side,u){
  return !!(game.winner===null&&game.owner===side&&u?.ace&&u.materials.length&&u.entered!==game.serial&&u.lastAcePower!==game.serial&&allUnits(side).includes(u));
 }
@@ -518,10 +550,14 @@ function activateAce(side,uid,materialIndex){
   case 5:{const at=p.grave.findIndex(id=>C(id).type==='reaction');if(at>=0)p.hand.push(p.grave.splice(at,1)[0]);break;}
   case 6:draw(side);break;
   case 7:{const remaining=allUnits(enemySide).sort((a,b)=>a.hp-b.hp)[0];if(remaining)remaining.frozen=true;break;}
+  case 8:if(p.clash){p.clash.atk+=2;p.clash.hp=Math.min(p.clash.maxHp,p.clash.hp+2);}else{const first=p.units.find(Boolean);if(first&&!p.clashUsed)moveToClash(side,first,true);}break;
+  case 9:if(enemy.clash)enemy.clash.atk=Math.max(1,enemy.clash.atk-2);else applyCoreDamage(enemySide,2,style.power);break;
+  case 10:if(p.clash){applyCoreDamage(enemySide,3,style.power);p.clash.hp=Math.min(p.clash.maxHp,p.clash.hp+1);}else p.flags.shield++;break;
  }
  return true;
 }
 function ownHeal(side,amount){allUnits(side).forEach(u=>u.hp=Math.min(u.maxHp,u.hp+amount));}
+function repairAll(side,amount){let repaired=0;for(const u of allUnits(side)){const was=u.hp;u.hp=Math.min(u.maxHp,u.hp+amount);repaired+=u.hp-was;}if(repaired)log('아군 몬스터 내구도 회복 +'+repaired,side===0?'my':'enemy');}
 function targetsFor(side,card){
  if(!card)return [];
  const p=game.players[side],friend=allUnits(side),foe=allUnits(other(side));
@@ -544,14 +580,15 @@ function handAction(card){
 function useEffect(side,card,target){
  const p=game.players[side],enemy=game.players[other(side)],e=card.effect,friend=allUnits(side);
  const foe=allUnits(other(side));
+ const weak=card.faction===-1,scaled=n=>weak?Math.max(1,Math.floor(n*.7)):n;
  switch(e){
-  case'draw':draw(side,2);break;
-  case'supply':draw(side,1);heal(side,4);break;
-  case'heal':heal(side,9);break;
-  case'blast':applyCoreDamage(other(side),8,card.name);break;
-  case'buff':{const u=target||friend.sort((a,b)=>b.atk-a.atk)[0];if(u)u.atk+=4;else heal(side,3);break;}
-  case'weaken':{const u=target||foe.sort((a,b)=>b.atk-a.atk)[0];if(u)u.atk=Math.max(1,u.atk-4);break;}
-  case'strike':{const u=target||foe.sort((a,b)=>a.hp-b.hp)[0];if(u)wound(other(side),u,7,card.name);else applyCoreDamage(other(side),4,card.name);break;}
+  case'draw':draw(side,weak?1:2);break;
+  case'supply':draw(side,1);heal(side,scaled(4));repairAll(side,scaled(1));break;
+  case'heal':heal(side,scaled(9));repairAll(side,scaled(2));break;
+  case'blast':applyCoreDamage(other(side),scaled(8),card.name);break;
+  case'buff':{const u=target||friend.sort((a,b)=>b.atk-a.atk)[0];if(u)u.atk+=scaled(4);else heal(side,scaled(3));break;}
+  case'weaken':{const u=target||foe.sort((a,b)=>b.atk-a.atk)[0];if(u)u.atk=Math.max(1,u.atk-scaled(4));break;}
+  case'strike':{const u=target||foe.sort((a,b)=>a.hp-b.hp)[0];if(u)wound(other(side),u,scaled(7),card.name);else applyCoreDamage(other(side),scaled(4),card.name);break;}
   case'freeze':{const u=target||foe.find(x=>!x.frozen);if(u)u.frozen=true;break;}
   case'bounce':{const u=target||enemy.clash||enemy.units.find(Boolean);if(u)removeUnit(other(side),u,'hand');break;}
   case'banish':{const u=target||enemy.units.find(Boolean);if(u)removeUnit(other(side),u,'exile');break;}
@@ -561,10 +598,11 @@ function useEffect(side,card,target){
   case'challenge':{const u=target||p.units.find(Boolean);if(u&&!p.clash)moveToClash(side,u,true);else p.flags.shield++;break;}
   case'fog':enemy.flags.occupyBlock=true;break;
   case'guard':{const u=target||friend[0];if(u)u.guard=true;else p.flags.shield++;break;}
-  case'dice':{const rolls=[1+random(6),1+random(6),1+random(6)],hits=rolls.filter(n=>n>=4).length;log('D6 포격 ['+rolls.join(' · ')+'] · 명중 '+hits,'important');const u=target||enemy.clash||foe[0];if(u)wound(other(side),u,hits*6,card.name);else applyCoreDamage(other(side),hits*3,card.name);break;}
+  case'dice':{const rolls=[1+random(6),1+random(6),1+random(6)],hits=rolls.filter(n=>n>=4).length;log('D6 포격 ['+rolls.join(' · ')+'] · 명중 '+hits,'important');const u=target||enemy.clash||foe[0];if(u)wound(other(side),u,hits*scaled(6),card.name);else applyCoreDamage(other(side),hits*scaled(3),card.name);break;}
   default:draw(side,1);
  }
  if(p.faction===7&&p.combo.spells?.size>=2&&!p.metrics.traitUsed){p.metrics.traitUsed=true;applyCoreDamage(other(side),3,'유리 마도원 공명');}
+ applySignature(side,card,target,'spell');
 }
 function playNonUnit(side,index,chosenTarget,preferredSlot){
  const p=game.players[side],id=p.hand[index],card=C(id);if(!card)return false;
@@ -576,55 +614,14 @@ function playNonUnit(side,index,chosenTarget,preferredSlot){
   playCardFlight(side,id,index,destination);
   p.hand.splice(index,1);
   p.spells[idx]={cid:id,faceDown:card.type==='reaction',target:target?.uid??null};
-  if(card.type==='gear'&&target){target.atk+=card.effect==='power'?3:0;target.maxHp+=card.effect==='ward'?5:0;target.hp+=card.effect==='ward'?5:0;target.guard=card.effect==='ward'?true:target.guard;}
+  if(card.type==='gear'&&target){target.atk+=card.effect==='power'?3:0;target.maxHp+=card.effect==='ward'?5:0;target.hp+=card.effect==='ward'?5:0;target.guard=card.effect==='ward'?true:target.guard;applySignature(side,card,target,'gear');}
   log((side===0?'아군':'AI')+' '+(card.type==='gear'?'장비 부착':'함정 세트')+': '+card.name,side===0?'my':'enemy');
   if(target){p.metrics.gears=(p.metrics.gears||0)+1;if(side===0)PROGRESS.count('gear');triggerBoard('gear',side);}return true;
  }
  playCardFlight(side,id,index,document.querySelector?.('.field'));
  p.hand.splice(index,1);p.grave.push(id);
  p.metrics.tactics.add(id);p.metrics.turnTactics++;
- (p.combo.spells??=new Set()).add(id);
- log((side===0?'아군':'AI')+' 전술 발동: '+card.name,side===0?'my':'enemy');
- if(side===0)PROGRESS.count('spell');
- useEffect(side,card,chosenTarget);triggerBoard('spell',side);return true;
-}
-function availableReact(side,event){
- const p=game.players[side],can=card=>{
-  if(card.type!=='reaction')return false;
-  if(card.effect==='shield'&&event.type!=='attack')return false;
-  if(card.effect==='challenge'&&event.type!=='attack'&&event.type!=='occupy')return false;
-  return true;
- };
- return [...p.hand.map((cid,i)=>({cid,from:'hand',index:i})),...p.spells.map((s,i)=>s?({cid:s.cid,from:'spells',index:i}):null).filter(Boolean)].filter(item=>can(C(item.cid)));
-}
-function applyReaction(side,item,event){
- const p=game.players[side],card=C(item.cid);
- if(item.from==='hand')p.hand.splice(item.index,1);else p.spells[item.index]=null;
- p.grave.push(item.cid);
- if(side===0)PROGRESS.count('trap');
- switch(card.effect){
-  case'negate':event.canceled=true;break;
-  case'shield':event.prevented=true;break;
-  case'challenge':{const u=p.units.find(Boolean);if(u&&!p.clash)moveToClash(side,u,true);else p.flags.shield++;break;}
-  case'guard':{const u=allUnits(side)[0];if(u)u.guard=true;else p.flags.shield++;break;}
-  case'counter':applyCoreDamage(other(side),4,card.name);heal(side,4);break;
-  case'draw':draw(side,1);break;
- }
- log((side===0?'플레이어':'AI')+' 반응 발동: '+card.name,'important');render();
-}
-function aiReaction(event){
- if(game.winner!==null)return event;
- const options=availableReact(1,event);
- let choice=options.find(x=>C(x.cid).effect==='negate');
- if(event.type==='attack')choice=options.find(x=>C(x.cid).effect==='shield')||choice;
- if(!choice)choice=options[0];
- if(choice&&Math.random()<.63)applyReaction(1,choice,event);
- return event;
-}
-function humanReaction(event){
- if(game.winner!==null)return Promise.resolve(event);
- const options=availableReact(0,event);if(!options.length)return Promise.resolve(event);
- return new Promise(resolve=>{
+ (p.combo.spell�m�G����ƭy�=>{
   pendingReact={event,resolve};
   $('reactionText').textContent=event.description;
   $('reactionOptions').innerHTML=options.map((x,i)=>'<button class="ghost-btn" data-card-type="reaction" data-ready="effect" data-react="'+i+'">'+C(x.cid).name+' · '+(C(x.cid).desc||'대응')+'</button>').join('');
@@ -703,6 +700,7 @@ function occupy(side){
  if(!u||enemy.clash||u.clashEntered>=game.serial)return;
  if(p.flags.occupyBlock){log('봉쇄 연막: 점령 피해가 취소되었습니다.','important');p.flags.occupyBlock=false;return;}
  if(side===0)PROGRESS.count('occupy');
+ p.metrics.occupies++;
  const c=C(u.cid),value=u.ace?8:c.occupation||(c.rank===2?12:c.rank===1?7:4);
  applyCoreDamage(other(side),value,c.name+' 단독 점령');
  triggerUnit('occupy',side,u);
@@ -726,6 +724,7 @@ function finishTurn(side){
  if(q.faction===4){ownHeal(game.owner,2);for(const plant of allUnits(game.owner))if(!plant.ace)plant.atk++;}
  draw(game.owner,1);
  triggerBoard('start',game.owner);
+ if(game.players[game.owner].clash)triggerUnit('hold',game.owner,game.players[game.owner].clash);
  game.round=Math.ceil(game.serial/2);log((game.owner===0?'플레이어':'AI')+' 턴 시작','important');if(tutorialMatch&&game.owner===0)setTutorialStep(6);render();
  if(game.owner===1&&game.winner===null){aiBusy=true;const current=gameCounter;setTimeout(()=>runAiTurn(current),700);}
 }
@@ -832,6 +831,7 @@ function startTutorial(){
  pickedFaction=PROGRESS.state.starter;tutorialStep=0;return initGame(true);
 }
 function initGame(training=false){
+ AUDIO.start();
  if(PROGRESS.state.starter===null){PROGRESS.screen('starter');return;}
  const f=pickedFaction,enemyChoices=[...Array(8).keys()].filter(x=>x!==f),ef=training?(f+1)%8:enemyChoices[random(enemyChoices.length)],ourDeck=training?DATA.makeStarter(f):getSaved(f),enemyDeck=training?DATA.makeStarter(ef):DATA.makeComboDeck(ef);
  if(!PROGRESS.hasDeck(ourDeck,f)){toast('덱 편집에서 보유 카드로 40장을 채우세요.');return;}
@@ -997,17 +997,19 @@ function showZone(side,zone){
  $('zoneCards').innerHTML=ids.length?ids.map((id,i)=>{const c=C(id),f=F(c.faction),glyph=f?.glyph||'◇';return '<button class="zone-card" data-art-preview="'+id+'"><span class="zone-card-image">'+cardArtwork(c,glyph,{animate:false,lazy:true,gold:false})+'</span><strong>'+c.name+'</strong><small>'+cardTypeLine(c)+' · '+c.rarity+(zone==='extra'?' · 강림 조건 확인':'')+'</small></button>';}).join(''):'<div class="inspector-empty">이 영역에 카드가 없습니다.</div>';
  $('zoneDialog').showModal();
 }
-function openDeck(){if(PROGRESS.state.starter===null){PROGRESS.screen('starter');return;}editDeckList=getSaved(pickedFaction).slice();editAceList=getAceDeck(pickedFaction);filterType='all';searchText='';$('cardSearch').value='';$('typeFilter').value='all';$('deckOverlay').classList.remove('hidden');renderCatalog();}
+function openDeck(){if(PROGRESS.state.starter===null){PROGRESS.screen('starter');return;}editDeckList=getSaved(pickedFaction).slice();editAceList=getAceDeck(pickedFaction);filterType='all';searchText='';deckSort='recent';hideGeneric=false;$('cardSearch').value='';$('typeFilter').value='all';$('deckSort').value=deckSort;$('hideGeneric').checked=false;$('deckOverlay').classList.remove('hidden');renderCatalog();}
 function deckQty(cid){return editDeckList.filter(x=>x===cid).length;}
 function renderCatalog(){
  const f=pickedFaction,query=searchText.toLowerCase();
- const cards=DATA.cards.filter(c=>(c.faction===-1||c.faction===f)&&(filterType==='all'||filterType==='ace'&&c.rank===2||c.type===filterType)&&c.name.toLowerCase().includes(query));
+ const cards=DATA.cards.filter(c=>(c.faction===-1||c.faction===f)&&(!hideGeneric||c.faction!==-1)&&(filterType==='all'||filterType==='ace'&&c.rank===2||c.type===filterType)&&c.name.toLowerCase().includes(query));
+ const recent=PROGRESS.state.recent||{};
+ cards.sort((a,b)=>deckSort==='name'?a.name.localeCompare(b.name,'ko'):deckSort==='faction'?(Number(b.faction===f)-Number(a.faction===f))||Number(recent[b.id]||0)-Number(recent[a.id]||0):Number(recent[b.id]||0)-Number(recent[a.id]||0));
  $('cardCatalog').innerHTML=cards.map(c=>{
   const count=deckQty(c.id),owned=PROGRESS.owned(c.id),fc=c.faction===-1?{glyph:'◇',color:'#d6c491'}:F(c.faction);
   const enrolled=editAceList.includes(c.id);
   const buttons=c.rank===2?'<button type="button" class="catalog-ace" data-register-ace="'+c.id+'" aria-pressed="'+enrolled+'" '+(!owned||!enrolled&&editAceList.length>=COMBO.maxAces?'disabled':'')+'>'+(enrolled?'해제':'등록')+'</button>':
    '<button data-minus="'+c.id+'" '+(count===0?'disabled':'')+'>−</button><b>'+count+'</b><button data-plus="'+c.id+'" '+(count>=Math.min(3,owned)||editDeckList.length>=40?'disabled':'')+'>+</button>';
-  return '<div class="catalog-row" data-card-type="'+c.type+'" style="--c:'+fc.color+'"><button class="catalog-art '+(usesGold(c.id)?'gold-art':'')+'" data-art-preview="'+c.id+'" aria-label="'+c.name+' 일러스트·황금 버전 보기">'+cardArtwork(c,fc.glyph,{animate:false,lazy:true})+'</button><div class="catalog-info"><b title="'+c.name+'">'+c.name+'</b><small>'+cardTypeLine(c)+' · '+c.rarity+' · 보유 '+owned+' · '+(c.type==='unit'?c.atk+' / '+c.hp:c.desc)+'</small></div><div class="catalog-buttons">'+buttons+'</div></div>';
+  return '<div class="catalog-row" data-card-type="'+c.type+'" style="--c:'+fc.color+'"><button class="catalog-art '+(usesGold(c.id)?'gold-art':'')+'" data-art-preview="'+c.id+'" aria-label="'+c.name+' 일러스트·황금 버전 보기">'+cardArtwork(c,fc.glyph,{animate:false,lazy:true})+'</button><div class="catalog-info"><b title="'+c.name+'">'+c.name+'</b><small>'+cardTypeLine(c)+' · '+c.rarity+' · 보유 '+owned+' · '+(c.type==='unit'?c.atk+' / '+c.hp:c.desc)+(c.profileText?' · '+c.profileText:'')+(c.holdAbility?' · 격돌 유지: '+c.holdAbility.rules:'')+'</small></div><div class="catalog-buttons">'+buttons+'</div></div>';
  }).join('');
  $('deckCurrent').textContent=editDeckList.length+' / 40';
  $('aceDeckCurrent').textContent='에이스 '+editAceList.length+' / '+COMBO.maxAces;
@@ -1075,10 +1077,14 @@ function wireDrag(){
 function onEvent(){
  $('factionGrid').addEventListener('click',ev=>{const b=ev.target.closest('[data-faction]');if(!b)return;pickedFaction=Number(b.dataset.faction);renderFactionLobby();});
  $('startGame').addEventListener('click',initGame);
+ $('bgmToggle').addEventListener('click',()=>{const enabled=AUDIO.toggleMusic();$('bgmToggle').textContent=enabled?'배경음 켬':'배경음 끔';$('bgmToggle').setAttribute('aria-pressed',String(enabled));});
+ $('sfxToggle').addEventListener('click',()=>{const enabled=AUDIO.toggleSfx();$('sfxToggle').textContent=enabled?'타격음 켬':'타격음 끔';$('sfxToggle').setAttribute('aria-pressed',String(enabled));if(enabled)AUDIO.hit(5);});
  $('editDeck').addEventListener('click',openDeck);
  $('closeDeck').addEventListener('click',()=>$('deckOverlay').classList.add('hidden'));
  $('cardSearch').addEventListener('input',ev=>{searchText=ev.target.value;renderCatalog();});
  $('typeFilter').addEventListener('change',ev=>{filterType=ev.target.value;renderCatalog();});
+ $('deckSort').addEventListener('change',ev=>{deckSort=ev.target.value;renderCatalog();});
+ $('hideGeneric').addEventListener('change',ev=>{hideGeneric=ev.target.checked;renderCatalog();});
  $('cardCatalog').addEventListener('click',ev=>{
   const register=ev.target.closest('[data-register-ace]');
   if(register){
@@ -1167,6 +1173,7 @@ if(PROGRESS.state.starter!==null)pickedFaction=PROGRESS.state.starter;
 onEvent();
 PROGRESS.init({preview:showArtPreview,change:renderFactionLobby});
  ACCOUNTS.init();
+AUDIO.init();
 if(ACCOUNTS.active&&PROGRESS.state.starter===null)PROGRESS.screen('starter');
 // Lightweight public diagnostic hook for smoke testing card/deck constraints.
 window.DimensionWar={data:DATA,getState:()=>game,validateDeck:DATA.isValidDeck,startTutorial};

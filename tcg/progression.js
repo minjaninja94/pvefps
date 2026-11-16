@@ -2,18 +2,18 @@
   const data=window.TCG_DATA, $=id=>document.getElementById(id);
   const newArt=new Set(window.TCG_NEW_ART||[]);
   const key=window.TCG_ACCOUNTS.key('dimension-war-collection-v1'), price=100;
-  const fresh=()=>({starter:null,starterPacks:{},coins:0,tutorialCoins:0,owned:{},gold:{},dust:{},tutorial:0,tutorialDone:false,beginnerClaimed:[],progressCounts:{},packs:0,day:{date:'',counts:{},claimed:[]}});
+  const fresh=()=>({starter:null,starterPacks:{},coins:0,tutorialCoins:0,owned:{},gold:{},dust:{},recent:{},acquiredSeq:0,tutorial:0,tutorialDone:false,beginnerClaimed:[],progressCounts:{},packs:0,day:{date:'',counts:{},claimed:[]}});
   function load(){
     try{
       const value=JSON.parse(localStorage.getItem(key)||'null');
-      if(value&&Number.isInteger(value.coins)&&value.coins>=0&&value.owned&&value.gold&&value.day){value.dust??={};value.starterPacks??={};value.tutorialCoins??=0;value.tutorialDone??=value.tutorial>=6||!!value.comboReward;value.beginnerClaimed??=[];value.progressCounts??={};if(value.starter!==null)value.starterPacks[value.starter]=true;return value;}
+      if(value&&Number.isInteger(value.coins)&&value.coins>=0&&value.owned&&value.gold&&value.day){value.dust??={};value.starterPacks??={};value.tutorialCoins??=0;value.tutorialDone??=value.tutorial>=6||!!value.comboReward;value.beginnerClaimed??=[];value.progressCounts??={};if(!value.recent||typeof value.recent!=='object'||Array.isArray(value.recent))value.recent={};if(!Number.isInteger(value.acquiredSeq)||value.acquiredSeq<0)value.acquiredSeq=0;if(value.starter!==null)value.starterPacks[value.starter]=true;return value;}
     }catch{}
     return fresh();
   }
   const state=load();
   function starterAce(){
     if(state.starter===null||!state.tutorialDone||state.comboReward)return;
-    for(const id of data.makeAceDeck(state.starter).slice(0,3))state.owned[id]=Math.max(1,state.owned[id]||0);
+    for(const id of data.makeAceDeck(state.starter).slice(0,3)){if(!state.owned[id])markAcquired(id);state.owned[id]=Math.max(1,state.owned[id]||0);}
     state.comboReward=true;save();
   }
   const plates=[
@@ -53,6 +53,7 @@
   let mode='', results=[], opened=0, chosenPack=0, preview=()=>{}, change=()=>{}, revealRun=0, sequence=false;
   let drag=null,skipClick=false;
   function save(){try{localStorage.setItem(key,JSON.stringify(state));}catch{}}
+  function markAcquired(id){state.acquiredSeq=(state.acquiredSeq||0)+1;state.recent[id]=state.acquiredSeq;}
   function dateKey(){const d=new Date();return [d.getFullYear(),d.getMonth()+1,d.getDate()].join('-');}
   function today(){const date=dateKey();if(state.day.date!==date){state.day={date,counts:{},claimed:[]};save();}return state.day;}
   function count(metric,n=1){const day=today();day.counts[metric]=(day.counts[metric]||0)+n;state.progressCounts[metric]=(state.progressCounts[metric]||0)+n;save();}
@@ -61,13 +62,13 @@
     if(!window.TCG_ACCOUNTS.active||state.starter!==null||!data.factions[faction])return false;
     state.starter=faction;
     state.starterPacks[faction]=true;
-    for(const id of data.makeStarter(faction))state.owned[id]=(state.owned[id]||0)+1;
+    for(const id of data.makeStarter(faction)){state.owned[id]=(state.owned[id]||0)+1;markAcquired(id);}
     notify();change(faction);return true;
   }
   function buyStarter(faction){
     if(!Number.isInteger(faction)||!data.factions[faction]||state.starterPacks[faction]||state.coins<500)return false;
     state.coins-=500;state.starterPacks[faction]=true;
-    for(const id of data.makeStarter(faction))state.owned[id]=(state.owned[id]||0)+1;
+    for(const id of data.makeStarter(faction)){state.owned[id]=(state.owned[id]||0)+1;markAcquired(id);}
     notify();change(faction);return true;
   }
   function hasStarter(faction){return !!state.starterPacks[faction];}
@@ -98,7 +99,7 @@
       const gold=rank(card)>=2&&random()<.10, book=gold?state.gold:state.owned;
       const previousCopies=owned(card.id),overflow=previousCopies>=3;
       if(overflow)state.dust[rank(card)]=(state.dust[rank(card)]||0)+1;
-      else book[card.id]=(book[card.id]||0)+1;
+      else {book[card.id]=(book[card.id]||0)+1;markAcquired(card.id);}
       return {card,gold:overflow?false:gold,newCopy:!overflow&&previousCopies===0,overflow,revealed:false};
     });
     state.packs+=n;count('pack',n);notify();return draws;
@@ -147,7 +148,7 @@
   function craft(id,faction){
     const card=data.byId[id];if(!card||(card.faction!==-1&&card.faction!==faction)||owned(id)>=3)return false;
     const tier=rank(card);if((state.dust[tier]||0)<3)return false;
-    state.dust[tier]-=3;state.owned[id]=(state.owned[id]||0)+1;notify();return true;
+    state.dust[tier]-=3;state.owned[id]=(state.owned[id]||0)+1;markAcquired(id);notify();return true;
   }
   function screen(name){
     mode=name;render();if(!$('progressDialog').open)$('progressDialog').showModal();

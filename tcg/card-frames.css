@@ -63,3 +63,6 @@
   .card-face .rules-box { font-size: 7px; }
   .inspection-card .inspect-art { height: 90px; }
 }
+.signature-rule{color:#f3d48e!important;border-left:2px solid #d7ad65;padding-left:6px}
+.hold-rule{color:#aee2df!important;border-left:2px solid #59b6b0;padding-left:6px}
+.hold-rule b{color:#8fe1d8}
