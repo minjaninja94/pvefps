@@ -47,7 +47,7 @@
    <div id="factionDetail" class="faction-detail"></div>
    <div class="lobby-actions"><button id="editDeck" class="ghost-btn">덱 편집 <span id="deckCount">40 / 40</span></button><button id="startGame" class="primary-btn">AI 대전 시작 <span>➜</span></button></div>
    <div class="lobby-actions progression-actions">
-    <button id="tutorialOpen" class="ghost-btn">튜토리얼</button><button id="questOpen" class="ghost-btn">일일 퀘스트</button><button id="craftOpen" class="ghost-btn">카드 제작·분해</button>
+    <button id="tutorialOpen" class="ghost-btn">튜토리얼</button><button id="questOpen" class="ghost-btn">뉴비·일일 미션</button><button id="starterShopOpen" class="ghost-btn">스타터 팩 · 500 ◆</button><button id="craftOpen" class="ghost-btn">카드 제작·분해</button>
     <button id="shopOpen" class="primary-btn">진영 팩 <span id="coinBalance"></span></button><button id="baseShopOpen" class="ghost-btn">본진 장식</button>
    </div>
  </div>
@@ -69,7 +69,7 @@
      <div class="pile-info"><div class="pile-symbol">▥</div><div>내 덱<small><b id="myDeck">—</b>장</small></div></div>
      <button class="pile-info pile-open" data-zone-view="grave" data-side="0"><span class="pile-symbol">✝</span><span>내 데스존<small><b id="myGrave">—</b>장 · 내용 보기</small></span></button>
      <button class="pile-info pile-open" data-zone-view="exile" data-side="0"><span class="pile-symbol">◇</span><span>단절된 이계<small><b id="myExile">—</b>장 · 내용 보기</small></span></button>
-     <button class="pile-info pile-open" data-zone-view="extra" data-side="0"><span class="pile-symbol">▣</span><span>내 엑스트라 덱<small><b id="myExtra">—</b>장 · 편성 보기</small></span></button>
+     <button class="pile-info pile-open" data-zone-view="extra" data-side="0"><span class="pile-symbol">▣</span><span>내 에이스 존<small><b id="myExtra">—</b>장 · 편성 보기</small></span></button>
    </aside>
    <div class="field">
      <div class="field-upper">
@@ -111,6 +111,7 @@
   <div id="myHand" class="hand"></div>
   <div class="action-bar"><div id="hint" class="action-hint">카드를 선택해 기본 배치 또는 전술을 사용하세요.</div><div class="actions"><button id="surrenderBtn" class="quiet-btn">기권</button><button id="attackCoreBtn" class="ghost-btn" disabled>본진 직접 공격</button><button id="clashBtn" class="ghost-btn" disabled>격돌존 진입</button><button id="withdrawBtn" class="ghost-btn" disabled>철수</button></div></div>
  </div>
+ <aside id="tutorialGuide" class="tutorial-guide hidden" aria-live="polite"><small>실전 튜토리얼</small><strong id="tutorialGuideTitle"></strong><p id="tutorialGuideText"></p></aside>
 </section>
 </main>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -118,13 +119,16 @@
 <div id="reactionOverlay" class="modal-shade hidden">
  <div class="reaction-modal"><div class="eyebrow">REACTION WINDOW</div><h2>상대 행동에 대응하시겠습니까?</h2><p id="reactionText"></p><div id="reactionOptions" class="reaction-options"></div><button id="reactionPass" class="ghost-btn">대응하지 않기 / 통과</button></div>
 </div>
+<div id="searchOverlay" class="modal-shade search-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="searchTitle">
+ <section class="search-modal"><div class="eyebrow">DECK SEARCH</div><h2 id="searchTitle">연계 카드를 골라 서치</h2><p id="searchReason"></p><div id="searchCandidates" class="search-candidates"></div></section>
+</div>
 <div id="resultOverlay" class="modal-shade hidden">
  <div class="result-modal"><div class="eyebrow">DUEL COMPLETE</div><div id="resultSymbol" class="result-symbol">◇</div><h2 id="resultHeading">VICTORY</h2><p id="resultMessage"></p><div id="resultSummary" class="result-summary"></div><button id="rematchBtn" class="primary-btn">같은 진영으로 다시 대전</button><button id="backLobbyBtn" class="ghost-btn">진영 선택으로 돌아가기</button></div>
 </div>
 <div id="deckOverlay" class="modal-shade hidden">
  <div class="deck-modal"><div class="deck-head"><div><div class="eyebrow">DECK WORKSHOP</div><h2>덱 구성 <small>40장 · 카드명당 3장</small></h2></div><button id="closeDeck" class="quiet-btn">✕ 닫기</button></div>
-  <div class="deck-controls"><select id="typeFilter"><option value="all">메인 덱 전체</option><option value="unit">몬스터</option><option value="tactic">마법</option><option value="reaction">함정</option><option value="gear">장비 마법</option><option value="ace">엑스트라 덱</option></select><input id="cardSearch" placeholder="카드 이름 검색"><span id="deckCurrent">40 / 40</span><span id="aceDeckCurrent">엑스트라 0 / 15</span><button id="resetDeck" class="ghost-btn">추천 덱 초기화</button></div>
-  <div id="cardCatalog" class="card-catalog"></div><div class="deck-footer"><span id="deckWarning"></span><button id="saveDeck" class="primary-btn">메인·엑스트라 덱 저장</button></div>
+  <div class="deck-controls"><select id="typeFilter"><option value="all">메인 덱 전체</option><option value="unit">몬스터</option><option value="tactic">마법</option><option value="reaction">함정</option><option value="gear">장비 마법</option><option value="ace">에이스 존</option></select><input id="cardSearch" placeholder="카드 이름 검색"><span id="deckCurrent">40 / 40</span><span id="aceDeckCurrent">에이스 0 / 15</span><button id="resetDeck" class="ghost-btn">추천 덱 초기화</button></div>
+  <div id="cardCatalog" class="card-catalog"></div><div class="deck-footer"><span id="deckWarning"></span><button id="saveDeck" class="primary-btn">메인·에이스 덱 저장</button></div>
  </div>
 </div>
 <dialog id="artPreview" class="art-dialog" aria-labelledby="artPreviewTitle">

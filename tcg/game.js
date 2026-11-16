@@ -61,7 +61,7 @@ function showArtPreview(id,variant){
  if(!dialog.open)dialog.showModal();
 }
 let pickedFaction=0,editDeckList=[],editAceList=[],filterType='all',searchText='';
-let game=null,uidCounter=0,gameCounter=0,pendingReact=null,toastTimer=0,aiBusy=false;
+let game=null,uidCounter=0,gameCounter=0,pendingReact=null,toastTimer=0,aiBusy=false,tutorialMatch=false,tutorialStep=0;
 function getSaved(f){try{const x=JSON.parse(localStorage.getItem(ACCOUNTS.key('dw-tcg-deck-'+f))||'null');if(PROGRESS.hasDeck(x,f))return x;}catch{}return PROGRESS.suggested(f);}
 function saveDeck(f,arr){try{localStorage.setItem(ACCOUNTS.key('dw-tcg-deck-'+f),JSON.stringify(arr));}catch{}}
 function getAceDeck(f){
@@ -72,6 +72,22 @@ function getAceDeck(f){
 function saveAces(f,aces){try{localStorage.setItem(ACCOUNTS.key('dw-tcg-aces-'+f),JSON.stringify(aces));}catch{}}
 function log(text,kind='info'){if(!game)return;game.logs.unshift({text,kind});game.logs.length=Math.min(game.logs.length,28);}
 function toast(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2100);}
+function setTutorialStep(step){
+ if(!tutorialMatch)return;tutorialStep=step;
+ const copy=[
+  ['1 · 첫 소환','손패에서 이름이 다른 하수 몬스터를 골라 필드에 배치하세요. 튜토리얼 손패를 준비해 두었습니다.'],
+  ['2 · 덱 서치','서치 창에서 다음에 전개할 카드를 직접 고르세요. 선택한 카드만 덱에서 손패로 옵니다.'],
+  ['3 · 특수 소환','방금 가져온 연계 몬스터를 손패에서 다시 내세요. 조건을 만족하면 기본 소환을 소비하지 않습니다.'],
+  ['4 · 후속 연계','두 번째 서치에서는 중수 몬스터나 진영 지원을 고를 수 있습니다. 골라 온 중수를 특수 소환해 보세요.'],
+  ['5 · 턴 넘기기','전개를 마쳤으면 중앙의 턴 종료를 눌러 AI의 대응을 확인하세요.'],
+  ['6 · AI의 대응','AI가 짧게 전개하고 턴을 마칩니다. AI가 한 번 행동하면 다시 내 턴으로 돌아옵니다.'],
+  ['7 · 전투 준비','AI 턴이 끝났습니다. 중앙의 전투 진입 버튼을 눌러 전투 단계를 여세요.'],
+  ['8 · 공격하기','아군 몬스터를 선택하고 상대 몬스터나 본진을 눌러 공격하세요. 새로 소환한 몬스터는 다음 턴부터 공격합니다.'],
+  ['완료','짧은 대전에서 배치, 서치, 특수 소환, 전투를 익혔습니다. 상대 본진을 쓰러뜨리면 보상을 받습니다.'],
+ ];
+ const [title,description]=copy[Math.min(step,copy.length-1)];
+ $('tutorialGuideTitle').textContent=title;$('tutorialGuideText').textContent=description;$('tutorialGuide').classList.remove('hidden');
+}
 const newComboTurn=()=>({special:0,searches:0,names:new Set(),spells:new Set(),lateral:0,lastSlot:null,echo:false});
 function makePlayer(side,f,deck,aces=[]){return{side,faction:f,hp:100,deck:shuffle(deck),aces:[...aces],hand:[],grave:[],exile:[],units:[null,null,null,null,null],spells:[null,null,null,null,null],clash:null,basicUsed:false,clashUsed:false,flags:{occupyBlock:false,shield:0},metrics:{seen:new Set(),tactics:new Set(),movement:0,turnMoves:0,turnSummons:0,traitUsed:false,turnTactics:0,lateral:0},combo:newComboTurn(),ownTurns:0};}
 function allUnits(side){const p=game.players[side];return p.units.filter(Boolean).concat(p.clash?[p.clash]:[]);}
@@ -124,6 +140,10 @@ function removeUnit(side,unit,destination='grave'){
  if(destination==='grave')p.grave.push(id);
  if(destination!=='material'&&unit.materials?.length){p.grave.push(...unit.materials.map(m=>m.id));unit.materials=[];}
  for(let i=0;i<p.spells.length;i++){if(p.spells[i]?.target===unit.uid){p.grave.push(p.spells[i].cid);p.spells[i]=null;}}
+ if(destination==='grave'&&unit.token&&p.faction===5&&!p.flags.tokenReplacement){
+  const slot=emptyUnitIndex(p);
+  if(slot>=0){const token=makeUnit('f5u0');token.token=true;token.atk=2;token.hp=token.maxHp=4;p.units[slot]=token;p.flags.tokenReplacement=true;if(side===0)PROGRESS.count('summon');log('심해 군체 특성 · 첫 토큰 파괴로 유생체 생성',side===0?'important':'enemy');}
+ }
  log(cardName(unit.cid)+' → '+({grave:'데스존',hand:'손패',exile:'단절된 이계'}[destination]||'필드 이탈'),side===0?'my':'enemy');
  return true;
 }
@@ -199,7 +219,7 @@ function moveToClash(side,unit,fromEffect=false){
  moveTrait(side);triggerUnit('in',side,unit);return true;
 }
 function retreat(side){const p=game.players[side];if(!p.clash||emptyUnitIndex(p)<0)return false;const u=p.clash;p.clash=null;p.units[emptyUnitIndex(p)]=u;u.used=true;p.metrics.movement++;p.metrics.turnMoves++;log(cardName(u.cid)+' 격돌존 철수',side===0?'my':'enemy');moveTrait(side);triggerUnit('out',side,u);return true;}
-function moveTrait(side){const p=game.players[side];if(p.faction===6&&p.metrics.turnMoves===1){draw(side,1);if(p.hand.length){p.grave.push(p.hand.shift());log('성운 항해단 특성: 1장 드로우 후 1장 버림','important');}}}
+function moveTrait(side){const p=game.players[side];if(p.faction===6&&p.metrics.turnMoves===1){draw(side,1);if(p.hand.length>5){p.grave.push(p.hand.shift());log('성운 항해단 특성: 과잉 손패 1장 순환','important');}else log('성운 항해단 특성: 첫 위치 이동 · 1장 드로우','important');}}
 function relaySlots(side){
  const p=game.players[side];
  const anchors=p.combo.lastSlot!==null?[p.combo.lastSlot]:p.units.flatMap((u,i)=>u?[i]:[]);
@@ -227,28 +247,59 @@ function summonMethod(side,card,method='auto'){
 function rankCheck(side,card,method='auto',slot){
  const p=game.players[side];
  if(!card||card.type!=='unit'||card.faction!==p.faction)return '내 진영의 몬스터 카드가 필요합니다.';
- if(card.rank===2)return '고수 몬스터는 에이스 존에서 소재를 사용해 강림합니다.';
+ if(card.rank===2)return '고수 몬스터는 에이스 존의 소재를 사용해 강림합니다.';
  if(emptyUnitIndex(p)<0||slot!==undefined&&(slot<0||slot>=p.units.length||p.units[slot]))return '빈 몬스터 슬롯이 필요합니다.';
  if(summonMethod(side,card,method)==='normal')return card.rank!==0?'하수 몬스터만 기본 배치할 수 있습니다.':p.basicUsed?'이번 턴 기본 배치를 이미 사용했습니다.':null;
  return specialCheck(side,card,slot);
 }
-function searchRelay(side,unit,method){
+function searchCandidates(side,unit,method){
  const p=game.players[side],card=C(unit.cid);
- if(p.combo.searches>=2||game.winner!==null)return;
- if(!COMBO.opener(card)&&!(method==='special'&&COMBO.relay(card)))return;
- const available=id=>C(id)?.faction===p.faction&&COMBO.relay(C(id))&&id!==card.id&&
-   !p.combo.names.has(id)&&!p.hand.includes(id)&&!allUnits(side).some(u=>u.cid===id);
- const reserveType=p.combo.searches>0?({0:'royal',2:'gear',5:'reaction',7:'tactic'})[p.faction]:null;
- const alternative=id=>{
-  const c=C(id);return c?.faction===p.faction&&!p.hand.includes(id)&&
-   (reserveType==='royal'?c.flag==='royal'&&![...p.metrics.tactics].some(key=>C(key)?.flag==='royal'):
-    c.type===reserveType&&(reserveType!=='tactic'||!p.metrics.tactics.has(id)));
- };
- let at=reserveType?p.deck.findLastIndex(alternative):-1;
- if(at<0)at=p.deck.findLastIndex(available);
- if(at<0)return;
- const id=p.deck.splice(at,1)[0];p.hand.push(id);p.combo.searches++;
- log(card.name+' · '+COMBO.factions[p.faction].opening+' → '+cardName(id)+' 서치',side===0?'my':'enemy');
+ if(p.combo.searches>=2||game.winner!==null||(!COMBO.opener(card)&&!(method==='special'&&COMBO.relay(card))))return[];
+ const ownedIds=new Set([...p.hand,...allUnits(side).map(u=>u.cid),...p.combo.names]);
+ const inDeck=id=>p.deck.includes(id)&&!ownedIds.has(id)&&id!==card.id;
+ const summonable=c=>c?.type==='unit'&&c.faction===p.faction&&c.rank<2&&inDeck(c.id)&&!specialCheck(side,c,undefined);
+ const relays=DATA.cards.filter(c=>c.faction===p.faction&&COMBO.relay(c)&&summonable(c));
+ if(p.combo.searches===0)return relays.filter(c=>c.rank===0);
+ const reserveType=({0:'royal',1:'performance',2:'gear',3:'reaction',4:'reaction',5:'reaction',6:'device',7:'tactic'})[p.faction];
+ const reserve=DATA.cards.filter(c=>c.faction===p.faction&&inDeck(c.id)&&
+  (reserveType==='royal'?c.flag==='royal'&&![...p.metrics.tactics].some(key=>C(key)?.flag==='royal'):
+   reserveType==='performance'?c.flag==='performance':
+   reserveType==='device'?c.flag==='device':c.type===reserveType&&(c.type!=='tactic'||!p.metrics.tactics.has(c.id))));
+ const mids=DATA.cards.filter(c=>c.faction===p.faction&&c.type==='unit'&&c.rank===1&&summonable(c));
+ return [...new Map([...relays,...mids,...reserve].map(c=>[c.id,c])).values()];
+}
+function chooseAiSearch(candidates,side){
+ const p=game.players[side],unitCount=allUnits(side).length;
+ return candidates.slice().sort((a,b)=>{
+  const score=c=>c.type==='unit'?(c.rank===1&&unitCount>=2?100:c.rank===0&&COMBO.relay(c)?70:30):
+   c.type==='gear'&&!allUnits(side).some(u=>!u.gear)?55:c.type==='tactic'?45:35;
+  return score(b)-score(a)||b.atk-a.atk;
+ })[0];
+}
+function searchRelay(side,unit,method){
+ const p=game.players[side],card=C(unit.cid),candidates=searchCandidates(side,unit,method);
+ if(!candidates.length)return;
+ const searchNo=++p.combo.searches;
+ if(side===0&&typeof document.querySelector==='function'){
+  game.pendingSearch={side,source:card.id,candidates:candidates.map(c=>c.id),searchNo};
+  $('searchTitle').textContent=searchNo===1?'연계 카드를 골라 서치':'후속 전개 카드를 골라 서치';
+  $('searchReason').textContent=card.name+' · '+COMBO.factions[p.faction].opening+' 효과 ('+searchNo+'/2) — 덱에 남은 카드를 직접 선택하세요.';
+  $('searchCandidates').innerHTML=candidates.map(c=>'<article class="search-option" style="--search-color:'+(F(c.faction)?.color||'#ddc184')+'"><img src="art/normal/'+encodeURIComponent(c.artRef&&!NEW_ART.has(c.id)?c.artRef:c.id)+'.webp" alt="" loading="lazy"><div><strong>'+c.name+'</strong><small>'+cardTypeLine(c)+' · '+c.rarity+(c.type==='unit'?' · ⚔ '+c.atk+' / ♥ '+c.hp:'')+'</small><p>'+c.desc+'</p></div><button type="button" class="primary-btn" data-search-choice="'+c.id+'">덱에서 가져오기</button></article>').join('');
+  $('searchOverlay').classList.remove('hidden');return;
+ }
+ const choice=chooseAiSearch(candidates,side);
+ if(choice)resolveSearchChoice(side,choice.id);
+}
+function resolveSearchChoice(side,id){
+ const pending=game?.pendingSearch;
+ if(!pending||pending.side!==side||!pending.candidates.includes(id))return false;
+ const p=game.players[side],index=p.deck.indexOf(id);
+ if(index<0){game.pendingSearch=null;$('searchOverlay').classList.add('hidden');render();return false;}
+ p.hand.push(p.deck.splice(index,1)[0]);game.pendingSearch=null;
+ $('searchOverlay').classList.add('hidden');
+ log(cardName(pending.source)+' · '+COMBO.factions[p.faction].opening+' → '+cardName(id)+' 서치',side===0?'my':'enemy');
+ if(side===0){PROGRESS.count('search');toast(cardName(id)+'을(를) 덱에서 가져왔습니다.');if(tutorialMatch)setTutorialStep(pending.searchNo===1?2:4);}
+ render();return true;
 }
 function summon(side,handIndex,preferredSlot,method='auto'){
  const p=game.players[side],cid=p.hand[handIndex],card=C(cid);
@@ -267,6 +318,7 @@ function summon(side,handIndex,preferredSlot,method='auto'){
   if(p.faction===3&&COMBO.relay(card))p.hp-=2;
  }
  p.metrics.seen.add(cid);p.metrics.turnSummons++;
+ if(tutorialMatch&&side===0){if(way==='normal'&&tutorialStep===0)setTutorialStep(1);else if(way==='special')setTutorialStep(card.rank===1?4:3);}
  if(p.faction===0&&p.metrics.seen.size>=2&&!p.metrics.traitUsed){u.atk+=2;p.metrics.traitUsed=true;log('조선 특성 발동: 공격력 +2','important');}
  if(p.faction===1&&p.metrics.turnSummons===3&&!p.metrics.traitUsed){draw(side,1);p.metrics.traitUsed=true;}
  log((way==='normal'?'기본 배치: ':'특수 소환: ')+card.name,side===0?'my':'enemy');
@@ -288,12 +340,12 @@ function reposition(side,uid,slot){
 }
 function raiseEcho(side){
  const p=game.players[side],slot=emptyUnitIndex(p);
- if(p.faction!==5||slot<0||p.combo.echo||p.combo.special>=COMBO.maxSpecial||game.winner!==null||game.owner!==side||game.stage!=='main')return false;
+ if(p.faction!==5||slot<0||p.combo.echo||p.ownTurns-(p.flags.echoTurn??-2)<3||p.combo.special>=COMBO.maxSpecial||game.winner!==null||game.owner!==side||game.stage!=='main')return false;
  const at=p.grave.findIndex(id=>C(id)?.type==='reaction');
  if(at<0)return false;
  const id=p.grave.splice(at,1)[0],u=makeUnit('f5u0');
- u.originCid=id;u.atk=4;u.hp=u.maxHp=5;p.units[slot]=u;
- p.combo.echo=true;p.combo.special++;p.metrics.turnSummons++;
+ u.originCid=id;u.token=true;u.atk=2;u.hp=u.maxHp=4;p.units[slot]=u;
+ p.combo.echo=true;p.combo.special++;p.metrics.turnSummons++;p.flags.echoTurn=p.ownTurns;
  if(side===0){PROGRESS.count('summon');PROGRESS.count('special');}
  log(cardName(id)+' → 함정 유생으로 특수 소환',side===0?'my':'enemy');
  return true;
@@ -320,7 +372,7 @@ function aceMaterials(side){
   }
   case 2:{
    const index=p.spells.findIndex(s=>s?.target!=null&&C(s.cid)?.type==='gear');
-   return battlefield.length>=2&&index>=0?[...battlefield.slice(0,2),{id:p.spells[index].cid,index,source:'장착'}]:[];
+   return battlefield.length>=1&&index>=0?[...battlefield.slice(0,2),{id:p.spells[index].cid,index,source:'장착'}]:[];
   }
   case 3:{
    if(!battlefield.length||p.hp<=4)return [];
@@ -432,7 +484,7 @@ function activateAce(side,uid,materialIndex){
    const dancer=allUnits(side).find(m=>m!==u&&m.used&&m.entered!==game.serial&&p.clash!==m);
    if(dancer)dancer.used=false;draw(side);break;
   }
-  case 2:if(weak)wound(enemySide,weak,type==='gear'?14:10,style.power);else p.flags.shield++;break;
+  case 2:if(weak)wound(enemySide,weak,type==='gear'?16:12,style.power);else p.flags.shield++;break;
   case 3:applyCoreDamage(enemySide,7,style.power);if(game.winner===null)heal(side,7);break;
   case 4:{
    ownHeal(side,4);if(friend)friend.ward=true;wound(enemySide,weak,4,style.power);
@@ -444,7 +496,7 @@ function activateAce(side,uid,materialIndex){
    }
    break;
   }
-  case 5:if(type==='reaction')foes.forEach(m=>wound(enemySide,m,4,style.power));else wound(enemySide,game.players[enemySide].clash||weak,8,style.power);break;
+  case 5:if(type==='reaction')foes.forEach(m=>wound(enemySide,m,3,style.power));else wound(enemySide,game.players[enemySide].clash||weak,7,style.power);break;
   case 6:{
    const same=game.players[enemySide].units[p.units.indexOf(u)];
    if(same)same.frozen=true;wound(enemySide,same||weak,same?6:5,style.power);break;
@@ -616,6 +668,7 @@ function attack(side,attacker,targetSide,target,core=false,prevented=false){
  if(p.clash?.uid===attacker.uid&&game.players[other(side)].clash&&target?.uid!==game.players[other(side)].clash.uid)return false;
  if(core&&activeGuards(other(side)).length)return false;
  attacker.used=true;
+ if(tutorialMatch&&side===0)setTutorialStep(8);
  if(prevented){log('반응 카드가 공격을 무효화했습니다.','important');return true;}
  if(side===0)PROGRESS.count('attack');
  if(core){const base=$(other(side)===0?'myBasePlate':'enemyBasePlate');playAttackLunge(attacker,base);applyCoreDamage(other(side),attacker.atk,cardName(attacker.cid)+' 직접 공격');triggerUnit('direct',side,attacker);return true;}
@@ -654,10 +707,11 @@ function occupy(side){
  applyCoreDamage(other(side),value,c.name+' 단독 점령');
  triggerUnit('occupy',side,u);
 }
-function finishGame(winner,reason){if(game.winner!==null)return;game.winner=winner;game.stage='finished';$('resultHeading').textContent=winner===0?'VICTORY':'DEFEAT';$('resultSymbol').textContent=winner===0?'✦':'◇';$('resultMessage').textContent=(winner===0?'상대 차원을 무너뜨렸습니다.':'차원 연결이 끊어졌습니다.')+' · '+reason;$('resultSummary').innerHTML='<span>나의 생명력<b>'+game.players[0].hp+'</b></span><span>AI 생명력<b>'+game.players[1].hp+'</b></span><span>진행 턴<b>'+game.serial+'</b></span>';$('resultOverlay').classList.remove('hidden');if(reason!=='기권')PROGRESS.payDuel(winner===0,game.serial);render();}
+function finishGame(winner,reason){if(game.winner!==null)return;const wasTutorial=tutorialMatch;game.winner=winner;game.stage='finished';if(wasTutorial&&winner===0)PROGRESS.completeTutorial();tutorialMatch=false;$('tutorialGuide').classList.add('hidden');$('resultHeading').textContent=winner===0?'VICTORY':'DEFEAT';$('resultSymbol').textContent=winner===0?'✦':'◇';$('resultMessage').textContent=(winner===0?'상대 차원을 무너뜨렸습니다.':'차원 연결이 끊어졌습니다.')+' · '+reason+(wasTutorial&&winner===0?' · 튜토리얼 보상: 선택 진영 전용 1,000 ◆ + 에이스 3장':wasTutorial?' · 튜토리얼에서 패배해도 보상 없이 다시 도전할 수 있습니다.':'');$('resultSummary').innerHTML='<span>나의 생명력<b>'+game.players[0].hp+'</b></span><span>AI 생명력<b>'+game.players[1].hp+'</b></span><span>진행 턴<b>'+game.serial+'</b></span>';$('resultOverlay').classList.remove('hidden');if(reason!=='기권')PROGRESS.payDuel(winner===0,game.serial);render();}
 function testVictory(){if(!game||game.winner!==null)return;if(game.players[0].hp<=0)finishGame(1,'생명력 0');else if(game.players[1].hp<=0)finishGame(0,'생명력 0');}
 function finishTurn(side){
  if(!game||game.winner!==null||game.owner!==side)return;
+ if(tutorialMatch&&side===0)setTutorialStep(5);
  if(side===0)PROGRESS.count('turn');
  occupy(side);testVictory();if(game.winner!==null){render();return;}
  triggerBoard('end',side);if(game.winner!==null){render();return;}
@@ -672,7 +726,7 @@ function finishTurn(side){
  if(q.faction===4){ownHeal(game.owner,2);for(const plant of allUnits(game.owner))if(!plant.ace)plant.atk++;}
  draw(game.owner,1);
  triggerBoard('start',game.owner);
- game.round=Math.ceil(game.serial/2);log((game.owner===0?'플레이어':'AI')+' 턴 시작','important');render();
+ game.round=Math.ceil(game.serial/2);log((game.owner===0?'플레이어':'AI')+' 턴 시작','important');if(tutorialMatch&&game.owner===0)setTutorialStep(6);render();
  if(game.owner===1&&game.winner===null){aiBusy=true;const current=gameCounter;setTimeout(()=>runAiTurn(current),700);}
 }
 function pause(ms){return new Promise(r=>setTimeout(r,ms));}
@@ -694,6 +748,18 @@ async function runAiTurn(token){
  if(gameCounter!==token||game.owner!==1||game.winner!==null)return;
  let p=game.players[1];
  const live=()=>gameCounter===token&&game.winner===null;
+ if(tutorialMatch){
+  const low=p.hand.findIndex(id=>C(id).rank===0&&!rankCheck(1,C(id),'normal'));
+  if(low>=0&&!p.basicUsed)await aiTryAction('summon',low,token);
+  if(!live())return;
+  game.stage='combat';
+  const attacker=allUnits(1).find(u=>u.entered!==game.serial&&!u.used&&!u.frozen),defenders=allUnits(0);
+  if(attacker){
+   const target=defenders.slice().sort((a,b)=>a.hp-b.hp)[0];
+   attack(1,attacker,target?0:1,target||null,!target,false);
+  }
+  render();await pause(250);if(live())finishTurn(1);return;
+ }
  const opener=p.hand.findIndex(id=>COMBO.opener(C(id))&&!rankCheck(1,C(id),'normal'));
  const low=opener>=0?opener:p.hand.findIndex(id=>C(id).rank===0&&!rankCheck(1,C(id),'normal'));
  if(low>=0)await aiTryAction('summon',low,token);
@@ -756,17 +822,28 @@ async function runAiTurn(token){
  }catch(err){console.error('AI turn',err);if(game&&game.owner===1&&game.winner===null){log('AI 처리 오류 복구: 턴 종료','important');finishTurn(1);}}
  finally{aiBusy=false;}
 }
-function initGame(){
+function tutorialOpening(player,faction){
+ const planned=[`f${faction}u0`,`f${faction}u1`,`f${faction}u0`,`f${faction}m0`,`f${faction}t0`];
+ for(const id of planned){const index=player.deck.indexOf(id);if(index>=0)player.deck.splice(index,1);}
+ player.deck.push(...planned.slice().reverse());
+}
+function startTutorial(){
+ if(PROGRESS.state.starter===null){PROGRESS.screen('starter');return false;}
+ pickedFaction=PROGRESS.state.starter;tutorialStep=0;return initGame(true);
+}
+function initGame(training=false){
  if(PROGRESS.state.starter===null){PROGRESS.screen('starter');return;}
- const f=pickedFaction,enemyChoices=[...Array(8).keys()].filter(x=>x!==f),ef=enemyChoices[random(enemyChoices.length)],ourDeck=getSaved(f),enemyDeck=DATA.makeComboDeck(ef);
+ const f=pickedFaction,enemyChoices=[...Array(8).keys()].filter(x=>x!==f),ef=training?(f+1)%8:enemyChoices[random(enemyChoices.length)],ourDeck=training?DATA.makeStarter(f):getSaved(f),enemyDeck=training?DATA.makeStarter(ef):DATA.makeComboDeck(ef);
  if(!PROGRESS.hasDeck(ourDeck,f)){toast('덱 편집에서 보유 카드로 40장을 채우세요.');return;}
  gameCounter++;uidCounter=0;pendingReact=null;aiBusy=false;
  game={players:[makePlayer(0,f,ourDeck,getAceDeck(f)),makePlayer(1,ef,enemyDeck,DATA.makeAceDeck(ef).slice(0,3))],owner:0,serial:1,round:1,stage:'main',selected:null,winner:null,logs:[]};
+ tutorialMatch=training;game.tutorial=training;
+ if(training){tutorialOpening(game.players[0],f);game.players[1].hp=28;}
  game.players[0].ownTurns=1;
  draw(0,5);draw(1,5);
  log('결투 개시! 선공은 첫 턴 드로우와 공격을 건너뜁니다.','important');
  $('lobbyScreen').classList.add('hidden');$('resultOverlay').classList.add('hidden');$('gameScreen').classList.remove('hidden');
- render();toast('DUEL START · '+F(f).name+' VS '+F(ef).name);
+ render();if(training)setTutorialStep(0);else $('tutorialGuide').classList.add('hidden');toast((training?'TUTORIAL · ':'DUEL START · ')+F(f).name+' VS '+F(ef).name);return true;
 }
 function materialChips(unit){
  return (unit.materials||[]).map((m,i)=>{
@@ -776,7 +853,7 @@ function materialChips(unit){
 }
 function renderCombo(){
  const p=game.players[0],style=COMBO.factions[p.faction],choices=aceOptions(0);
- const echo=p.faction===5&&game.owner===0&&game.stage==='main'&&!p.combo.echo&&
+ const echo=p.faction===5&&game.owner===0&&game.stage==='main'&&!p.combo.echo&&p.ownTurns-(p.flags.echoTurn??-2)>=3&&
   p.combo.special<COMBO.maxSpecial&&emptyUnitIndex(p)>=0&&p.grave.some(id=>C(id)?.type==='reaction');
  $('comboRail').innerHTML='<div class="combo-count"><strong>'+style.name+'</strong><span>서치 '+p.combo.searches+'/2 · 특수 '+p.combo.special+'/'+COMBO.maxSpecial+'</span></div>'+
   '<div class="ace-choices">'+(choices.length?choices.map(({id,reason,materials})=>{
@@ -906,7 +983,7 @@ function enterClash(){const s=game?.selected;if(!s||game.owner!==0||game.stage!=
 function withdraw(){if(game?.owner===0&&game.stage==='main'&&retreat(0)){game.selected=null;render();}}
 function renderFactionLobby(starterPicked){
  if(Number.isInteger(starterPicked))pickedFaction=starterPicked;
- $('factionGrid').innerHTML=DATA.factions.map((f,i)=>'<button class="faction-tile '+(i===pickedFaction?'active':'')+'" style="--fcolor:'+f.color+'" data-faction="'+i+'"><span class="f-glyph">'+f.glyph+'</span><b>'+f.name+'</b><small>'+f.short+'</small></button>').join('');
+ $('factionGrid').innerHTML=DATA.factions.map((f,i)=>'<button class="faction-tile '+(i===pickedFaction?'active':'')+'" style="--fcolor:'+f.color+'" data-faction="'+i+'" '+(PROGRESS.hasStarter(i)?'':'disabled title="스타터 팩을 먼저 구매하세요 · 500 ◆"')+'><span class="f-glyph">'+f.glyph+'</span><b>'+f.name+'</b><small>'+f.short+(PROGRESS.hasStarter(i)?'':' · 잠김')+'</small></button>').join('');
  const f=F(pickedFaction);$('factionDetail').style.setProperty('--fcolor',f.color);
  $('factionDetail').innerHTML='<div><strong>'+f.name+'</strong><p>'+f.trait+'</p></div><div class="tier-text">'+f.tiers.join('<br>↓<br>')+'</div>';
  $('deckCount').textContent=getSaved(pickedFaction).length+' / 40';
@@ -915,7 +992,7 @@ function renderFactionLobby(starterPicked){
 function showZone(side,zone){
  if(!game)return;
  const p=game.players[side],ids=zone==='grave'?p.grave:zone==='exile'?p.exile:p.aces;
- const names={grave:'데스존',exile:'단절된 이계',extra:'엑스트라 덱'};
+ const names={grave:'데스존',exile:'단절된 이계',extra:'에이스 존'};
  $('zoneTitle').textContent=(side===0?'내 ':'상대 ')+names[zone]+' · '+ids.length+'장';
  $('zoneCards').innerHTML=ids.length?ids.map((id,i)=>{const c=C(id),f=F(c.faction),glyph=f?.glyph||'◇';return '<button class="zone-card" data-art-preview="'+id+'"><span class="zone-card-image">'+cardArtwork(c,glyph,{animate:false,lazy:true,gold:false})+'</span><strong>'+c.name+'</strong><small>'+cardTypeLine(c)+' · '+c.rarity+(zone==='extra'?' · 강림 조건 확인':'')+'</small></button>';}).join(''):'<div class="inspector-empty">이 영역에 카드가 없습니다.</div>';
  $('zoneDialog').showModal();
@@ -933,7 +1010,7 @@ function renderCatalog(){
   return '<div class="catalog-row" data-card-type="'+c.type+'" style="--c:'+fc.color+'"><button class="catalog-art '+(usesGold(c.id)?'gold-art':'')+'" data-art-preview="'+c.id+'" aria-label="'+c.name+' 일러스트·황금 버전 보기">'+cardArtwork(c,fc.glyph,{animate:false,lazy:true})+'</button><div class="catalog-info"><b title="'+c.name+'">'+c.name+'</b><small>'+cardTypeLine(c)+' · '+c.rarity+' · 보유 '+owned+' · '+(c.type==='unit'?c.atk+' / '+c.hp:c.desc)+'</small></div><div class="catalog-buttons">'+buttons+'</div></div>';
  }).join('');
  $('deckCurrent').textContent=editDeckList.length+' / 40';
- $('aceDeckCurrent').textContent='엑스트라 '+editAceList.length+' / '+COMBO.maxAces;
+ $('aceDeckCurrent').textContent='에이스 '+editAceList.length+' / '+COMBO.maxAces;
  $('deckWarning').textContent=editDeckList.length===40?'대전용 40장 덱이 완성되었습니다.':'40장이 되도록 카드를 조정해 주세요.';
  $('saveDeck').disabled=!PROGRESS.hasDeck(editDeckList,f);
 }
@@ -1041,7 +1118,7 @@ function onEvent(){
   if(game&&!$('gameScreen').classList.contains('hidden'))render();
  });
  $('resetDeck').addEventListener('click',()=>{editDeckList=PROGRESS.suggested(pickedFaction);renderCatalog();});
- $('saveDeck').addEventListener('click',()=>{if(!PROGRESS.hasDeck(editDeckList,pickedFaction))return;saveDeck(pickedFaction,editDeckList);saveAces(pickedFaction,editAceList);$('deckOverlay').classList.add('hidden');renderFactionLobby();toast('메인 덱 40장과 엑스트라 덱 '+editAceList.length+'장 저장');});
+ $('saveDeck').addEventListener('click',()=>{if(!PROGRESS.hasDeck(editDeckList,pickedFaction))return;saveDeck(pickedFaction,editDeckList);saveAces(pickedFaction,editAceList);$('deckOverlay').classList.add('hidden');renderFactionLobby();toast('메인 덱 40장과 에이스 존 '+editAceList.length+'장 저장');});
  $('myHand').addEventListener('click',ev=>{const b=ev.target.closest('[data-hand]');if(b)selectHand(Number(b.dataset.hand));});
  const clickField=ev=>{
   const s=ev.target.closest('[data-side]');if(s)selectField(Number(s.dataset.side),s.dataset.zone,Number(s.dataset.index));
@@ -1063,6 +1140,10 @@ function onEvent(){
   const ace=ev.target.closest('[data-summon-ace]');if(ace)humanSummonAce(ace.dataset.summonAce);
   if(ev.target.closest('[data-raise-echo]')&&raiseEcho(0))render();
  });
+ $('searchOverlay').addEventListener('click',ev=>{
+  const choice=ev.target.closest('[data-search-choice]');
+  if(choice)resolveSearchChoice(0,choice.dataset.searchChoice);
+ });
  $('attackCoreBtn').addEventListener('click',()=>humanAttack(true));
  $('enemyBasePlate').addEventListener('click',()=>humanAttack(true));
  $('clashBtn').addEventListener('click',enterClash);
@@ -1072,7 +1153,7 @@ function onEvent(){
  $('endTurnBtn').addEventListener('click',()=>{if(game?.owner===0&&game.stage==='combat')finishTurn(0);});
  $('reactionPass').addEventListener('click',endReaction);
  $('surrenderBtn').addEventListener('click',()=>{if(game&&game.winner===null&&confirm('정말 기권하시겠습니까?'))finishGame(1,'기권');});
- $('rematchBtn').addEventListener('click',initGame);
+ $('rematchBtn').addEventListener('click',()=>game?.tutorial&&!PROGRESS.state.tutorialDone?startTutorial():initGame());
  $('backLobbyBtn').addEventListener('click',()=>{$('resultOverlay').classList.add('hidden');$('gameScreen').classList.add('hidden');$('lobbyScreen').classList.remove('hidden');renderFactionLobby();});
  document.addEventListener('keydown',ev=>{
   if($('artPreview').open)return;
@@ -1088,5 +1169,5 @@ PROGRESS.init({preview:showArtPreview,change:renderFactionLobby});
  ACCOUNTS.init();
 if(ACCOUNTS.active&&PROGRESS.state.starter===null)PROGRESS.screen('starter');
 // Lightweight public diagnostic hook for smoke testing card/deck constraints.
-window.DimensionWar={data:DATA,getState:()=>game,validateDeck:DATA.isValidDeck};
+window.DimensionWar={data:DATA,getState:()=>game,validateDeck:DATA.isValidDeck,startTutorial};
 })();

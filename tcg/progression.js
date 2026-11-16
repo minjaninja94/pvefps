@@ -2,17 +2,17 @@
   const data=window.TCG_DATA, $=id=>document.getElementById(id);
   const newArt=new Set(window.TCG_NEW_ART||[]);
   const key=window.TCG_ACCOUNTS.key('dimension-war-collection-v1'), price=100;
-  const fresh=()=>({starter:null,coins:0,owned:{},gold:{},dust:{},tutorial:0,packs:0,day:{date:'',counts:{},claimed:[]}});
+  const fresh=()=>({starter:null,starterPacks:{},coins:0,tutorialCoins:0,owned:{},gold:{},dust:{},tutorial:0,tutorialDone:false,beginnerClaimed:[],progressCounts:{},packs:0,day:{date:'',counts:{},claimed:[]}});
   function load(){
     try{
       const value=JSON.parse(localStorage.getItem(key)||'null');
-      if(value&&Number.isInteger(value.coins)&&value.coins>=0&&value.owned&&value.gold&&value.day){value.dust??={};return value;}
+      if(value&&Number.isInteger(value.coins)&&value.coins>=0&&value.owned&&value.gold&&value.day){value.dust??={};value.starterPacks??={};value.tutorialCoins??=0;value.tutorialDone??=value.tutorial>=6||!!value.comboReward;value.beginnerClaimed??=[];value.progressCounts??={};if(value.starter!==null)value.starterPacks[value.starter]=true;return value;}
     }catch{}
     return fresh();
   }
   const state=load();
   function starterAce(){
-    if(state.starter===null||state.tutorial<6||state.comboReward)return;
+    if(state.starter===null||!state.tutorialDone||state.comboReward)return;
     for(const id of data.makeAceDeck(state.starter).slice(0,3))state.owned[id]=Math.max(1,state.owned[id]||0);
     state.comboReward=true;save();
   }
@@ -36,6 +36,12 @@
     ['clash','격돌존 진입',3,150],['occupy','격돌존 단독 점령',2,165],['trap','함정 발동',2,150],
     ['turn','내 턴 종료',6,140],['high','고수 강림 성공',1,185],['pack','진영 팩 개봉',2,100],
   ];
+  const beginnerMissions=[
+    ['duel-one','첫 AI 대전 완료','duel',1,250],['special-five','특수 소환 5회','special',5,350],
+    ['search-three','덱에서 카드 3회 서치','search',3,300],['spell-five','마법 5회 해결','spell',5,300],
+    ['attack-eight','공격 8회 처리','attack',8,350],['win-one','AI 대전 첫 승리','win',1,450],
+    ['ace-one','에이스 강림 1회','high',1,500],['duel-three','AI 대전 3회 완주','duel',3,500],
+  ];
   const lessons=[
     ['손패와 카드 프레임','노란 몬스터는 전장에 남아 싸웁니다. 파란 마법은 발동하면 해결되고, 장비 마법은 장착된 채 유지됩니다. 붉은 함정은 상대 행동에 대응합니다. 카드 이미지나 전장에 공개된 카드의 설명에서 효과를 확인할 수 있습니다.','상대 공격에 대응할 카드는?',['몬스터','함정','일반 마법'],1],
     ['배치와 강림','하수는 기본 배치로 내 턴에 1기까지 놓습니다. 중수는 아군 몬스터 2기 또는 이번 턴 마법 1회 해결이 필요합니다. 고수는 첫 턴 이후 진영 고유 조건과 대가를 만족해야 합니다.','마법을 아직 쓰지 않았다면 중수 강림에 필요한 아군 몬스터는?',['1기','2기','5기'],1],
@@ -49,14 +55,22 @@
   function save(){try{localStorage.setItem(key,JSON.stringify(state));}catch{}}
   function dateKey(){const d=new Date();return [d.getFullYear(),d.getMonth()+1,d.getDate()].join('-');}
   function today(){const date=dateKey();if(state.day.date!==date){state.day={date,counts:{},claimed:[]};save();}return state.day;}
-  function count(metric,n=1){const day=today();day.counts[metric]=(day.counts[metric]||0)+n;save();}
+  function count(metric,n=1){const day=today();day.counts[metric]=(day.counts[metric]||0)+n;state.progressCounts[metric]=(state.progressCounts[metric]||0)+n;save();}
   function notify(){save();if($('coinBalance'))$('coinBalance').textContent=state.coins.toLocaleString()+' ◆';change();}
   function chooseStarter(faction){
     if(!window.TCG_ACCOUNTS.active||state.starter!==null||!data.factions[faction])return false;
     state.starter=faction;
+    state.starterPacks[faction]=true;
     for(const id of data.makeStarter(faction))state.owned[id]=(state.owned[id]||0)+1;
     notify();change(faction);return true;
   }
+  function buyStarter(faction){
+    if(!Number.isInteger(faction)||!data.factions[faction]||state.starterPacks[faction]||state.coins<500)return false;
+    state.coins-=500;state.starterPacks[faction]=true;
+    for(const id of data.makeStarter(faction))state.owned[id]=(state.owned[id]||0)+1;
+    notify();change(faction);return true;
+  }
+  function hasStarter(faction){return !!state.starterPacks[faction];}
   function owned(id){return (state.owned[id]||0)+(state.gold[id]||0);}
   function hasDeck(deck,faction){
     if(!data.isValidDeck(deck,faction))return false;
@@ -64,17 +78,18 @@
     return deck.every(id=>(qty[id]=(qty[id]||0)+1)<=owned(id));
   }
   function suggested(faction){
-    if(state.starter===faction&&hasDeck(data.makeStarter(faction),faction))return data.makeStarter(faction);
+    if(state.starterPacks[faction]&&hasDeck(data.makeStarter(faction),faction))return data.makeStarter(faction);
     return data.cards.filter(c=>c.rank!==2&&(c.faction===faction||c.faction===-1)).flatMap(c=>Array(Math.min(3,owned(c.id))).fill(c.id)).slice(0,40);
   }
   function payDuel(won,turns){
-    if(turns<3&&!won)return;
     count('duel');if(won)count('win');
-    state.coins+=won?140:Math.min(80,turns*10);notify();
+    state.coins+=won?140:Math.min(80,Math.max(20,turns*10));notify();
   }
   function pull(faction,n,random=Math.random){
-    if(state.starter===null||!pool[faction]||![1,10].includes(n)||state.coins<n*price)return [];
-    state.coins-=n*price;
+    if(state.starter===null||!pool[faction]||![1,10].includes(n))return [];
+    const cost=n*price,tutorialSpend=faction===state.starter?Math.min(cost,state.tutorialCoins):0;
+    if(state.coins+tutorialSpend<cost)return [];
+    state.tutorialCoins-=tutorialSpend;state.coins-=cost-tutorialSpend;
     const draws=Array.from({length:n*5},(_,i)=>{
       const weights=i%5===4?[0,72,24,4]:[70,23,6,1];
       let value=random()*100;
@@ -97,10 +112,11 @@
     if(!mission||day.claimed.includes(metric)||(day.counts[metric]||0)<mission[2])return false;
     day.claimed.push(metric);state.coins+=mission[3];notify();return true;
   }
-  function answer(index){
-    if(state.starter===null||lessons[state.tutorial]?.[4]!==index)return false;
-    state.tutorial++;if(state.tutorial===lessons.length){state.coins+=1000;starterAce();}
-    notify();return true;
+  function completeTutorial(){if(state.starter===null||state.tutorialDone)return false;state.tutorialDone=true;state.tutorialCoins+=1000;starterAce();notify();return true;}
+  function claimBeginner(id){
+    const mission=beginnerMissions.find(item=>item[0]===id);
+    if(!mission||state.beginnerClaimed.includes(id)||(state.progressCounts[mission[2]]||0)<mission[3])return false;
+    state.beginnerClaimed.push(id);state.coins+=mission[4];notify();return true;
   }
   function plate(){return plates.find(item=>item[0]===state.plate)||plates[0];}
   function pullPlate(){
@@ -141,18 +157,23 @@
     const body=$('progressBody');
     if(mode==='starter'){
       $('progressTitle').textContent='첫 스타터 덱';
-      body.innerHTML='<p>선택한 한 진영의 기본 덱 40장만 처음에 지급됩니다. 이후 모든 진영 팩을 열 수 있습니다.</p><div class="progress-factions">'+data.factions.map((f,i)=>'<button class="ghost-btn" data-starter="'+i+'">'+f.glyph+' '+f.name+'</button>').join('')+'</div>';return;
+      body.innerHTML='<p>무료 스타터 진영 하나를 고르세요. 다른 진영은 진영별 스타터 팩을 각각 500 ◆에 구매해 덱을 열 수 있습니다.</p><div class="progress-factions">'+data.factions.map((f,i)=>'<button class="ghost-btn" data-starter="'+i+'">'+f.glyph+' '+f.name+'</button>').join('')+'</div>';return;
     }
     if(mode==='tutorial'){
       $('progressTitle').textContent='첫 대전 튜토리얼';
-      const lesson=lessons[state.tutorial];
-      if(!lesson){body.innerHTML='<p>튜토리얼 완료 · 균열석 1,000개 (10팩)와 선택한 진영의 엑스트라 덱 몬스터 3장 수령</p><button data-open-shop class="primary-btn">진영 팩 열기</button>';return;}
-      body.innerHTML='<p class="progress-subtitle">'+(state.tutorial+1)+' / '+lessons.length+' · '+lesson[0]+'</p><p>'+lesson[1]+'</p><p><b>'+lesson[2]+'</b></p><div class="lesson-answers">'+lesson[3-0].map((option,i)=>'<button class="ghost-btn" data-answer="'+i+'">'+option+'</button>').join('')+'</div><p id="tutorialFeedback" role="status"></p>';return;
+      body.innerHTML='<p>퀴즈 없이 선택한 진영으로 AI와 짧게 대전합니다. 필드에서 일반 소환, 덱에서 직접 카드 선택, 특수 소환, 전투를 단계별로 안내합니다.</p><p class="tutorial-reward">완료 보상: 선택 진영 팩에만 쓸 수 있는 1,000 ◆'+(state.tutorialDone?' · 이미 받음':'')+' · 에이스 3장</p><button data-start-tutorial class="primary-btn">'+(state.tutorialDone?'튜토리얼 다시 하기':'AI 튜토리얼 시작')+'</button>';return;
+    }
+    if(mode==='starters'){
+      $('progressTitle').textContent='진영별 스타터 팩';
+      body.innerHTML='<p>각 스타터 팩은 해당 진영의 기본 덱 40장을 한 번 지급합니다. 게임 재화 500 ◆ · 실제 결제 없음.</p><div class="progress-factions starter-shop-grid">'+data.factions.map((f,i)=>'<article class="starter-shop-card"><strong>'+f.glyph+' '+f.name+'</strong><small>메인 덱 40장</small><button class="ghost-btn" data-buy-starter="'+i+'" '+(state.starterPacks[i]||state.coins<500?'disabled':'')+'>'+(state.starterPacks[i]?'보유 중':'스타터 구매 · 500 ◆')+'</button></article>').join('')+'</div>';return;
     }
     if(mode==='quests'){
       $('progressTitle').textContent='일일 퀘스트';
-      const day=today();
-      body.innerHTML='<p>매일 자정에 갱신됩니다. 대전 승리에도 140 균열석을 지급합니다.</p><ul class="quest-list">'+dailyList().map(([metric,title,goal,coins])=>{
+      const day=today(),beginnerTotal=beginnerMissions.reduce((sum,m)=>sum+m[4],0);
+      body.innerHTML='<h3>초보자 미션 · 누적 보상 '+beginnerTotal.toLocaleString()+' ◆</h3><p>서치·강림·전투를 익히며 보상을 모으세요. 일반 AI 대전 3~5회, 약 1시간 플레이를 목표로 구성했습니다.</p><ul class="quest-list">'+beginnerMissions.map(([id,title,metric,goal,coins])=>{
+        const n=Math.min(goal,state.progressCounts[metric]||0),claimed=state.beginnerClaimed.includes(id);
+        return '<li><div><strong>'+title+'</strong><small>'+n+' / '+goal+' · 보상 '+coins+' ◆</small></div><button class="ghost-btn" data-claim-beginner="'+id+'" '+(n<goal||claimed?'disabled':'')+'>'+(claimed?'수령 완료':'받기')+'</button></li>';
+      }).join('')+'</ul><h3>일일 미션</h3><p>매일 자정 갱신 · AI 대전 승리 보너스 140 ◆</p><ul class="quest-list">'+dailyList().map(([metric,title,goal,coins])=>{
         const n=Math.min(goal,day.counts[metric]||0),claimed=day.claimed.includes(metric);
         return '<li><div><strong>'+title+'</strong><small>'+n+' / '+goal+' · 보상 '+coins+' ◆</small></div><button class="ghost-btn" data-claim="'+metric+'" '+(n<goal||claimed?'disabled':'')+'>'+(claimed?'수령 완료':'받기')+'</button></li>';
       }).join('')+'</ul>';return;
@@ -174,8 +195,9 @@
       return;
     }
     $('progressTitle').textContent='진영 카드팩';
+    const availableCoins=state.coins+(chosenPack===state.starter?state.tutorialCoins:0);
     body.innerHTML='<div class="pack-shopbar"><label>진영 팩<select id="packFaction">'+data.factions.map((f,i)=>'<option value="'+i+'" '+(i===chosenPack?'selected':'')+'>'+f.name+'</option>').join('')+'</select></label><strong>'+state.coins.toLocaleString()+' ◆</strong></div>'+
-      '<p>팩마다 5장 · 마지막 카드는 희귀 이상 · 희귀 이상 카드의 10% 확률로 황금판 · 모든 팩에 범용 80종 포함</p><div class="pack-controls"><button data-pull="1" class="primary-btn" '+(state.coins<price?'disabled':'')+'>1팩 · 100 ◆</button><button data-pull="10" class="ghost-btn" '+(state.coins<price*10?'disabled':'')+'>10팩 · 1,000 ◆</button><button data-sound class="ghost-btn">연출 소리 켜기 / 끄기</button><button id="packRevealAll" class="ghost-btn" '+(!results.some(r=>!r.revealed)?'disabled':'')+'>순차 공개</button></div><p id="packResultsStatus" aria-live="polite"></p><div id="packResults"></div>';
+      '<p>팩마다 5장 · 마지막 카드는 희귀 이상 · 희귀 이상 카드의 10% 확률로 황금판 · 모든 팩에 범용 80종 포함</p><p class="tutorial-wallet">선택 진영 전용 튜토리얼 재화: <b>'+state.tutorialCoins.toLocaleString()+' ◆</b>'+(chosenPack===state.starter?' · 이 진영 팩에서만 자동 사용':' · 다른 진영 팩에는 쓸 수 없음')+'</p><div class="pack-controls"><button data-pull="1" class="primary-btn" '+(availableCoins<price?'disabled':'')+'>1팩 · 100 ◆</button><button data-pull="10" class="ghost-btn" '+(availableCoins<price*10?'disabled':'')+'>10팩 · 1,000 ◆</button><button data-sound class="ghost-btn">연출 소리 켜기 / 끄기</button><button id="packRevealAll" class="ghost-btn" '+(!results.some(r=>!r.revealed)?'disabled':'')+'>순차 공개</button></div><p id="packResultsStatus" aria-live="polite"></p><div id="packResults"></div>';
     renderResults();
   }
   function art(card,gold){
@@ -218,6 +240,7 @@
     starterAce();
     $('tutorialOpen').onclick=()=>screen(state.starter===null?'starter':'tutorial');
     $('questOpen').onclick=()=>screen(state.starter===null?'starter':'quests');
+    $('starterShopOpen').onclick=()=>screen(state.starter===null?'starter':'starters');
     $('shopOpen').onclick=()=>screen(state.starter===null?'starter':'shop');
     $('baseShopOpen').onclick=()=>screen(state.starter===null?'starter':'plates');
     $('craftOpen').onclick=()=>screen(state.starter===null?'starter':'craft');
@@ -243,7 +266,9 @@
       const button=e.target.closest('button');if(!button)return;
       const d=button.dataset;
       if(d.starter!==undefined&&chooseStarter(Number(d.starter))){chosenPack=state.starter;screen('tutorial');}
-      if(d.answer!==undefined){if(Number(d.answer)===lessons[state.tutorial]?.[4]&&answer(Number(d.answer)))render();else $('tutorialFeedback').textContent='위 설명을 다시 읽고 골라 주세요.';}
+      if(d.startTutorial!==undefined){$('progressDialog').close();window.DimensionWar?.startTutorial?.();}
+      if(d.buyStarter!==undefined&&buyStarter(Number(d.buyStarter)))render();
+      if(d.claimBeginner!==undefined&&claimBeginner(d.claimBeginner))render();
       if(d.claim!==undefined&&claim(d.claim))render();
       if(d.openShop!==undefined)screen('shop');
       if(d.platePull!==undefined&&pullPlate())render();
@@ -263,5 +288,5 @@
     notify();
   }
   let chosenCraftTarget='';
-  window.TCG_PROGRESS={state,owned,hasDeck,suggested,payDuel,count,init,screen,chooseStarter,pull,answer,dailyList,claim,plate,pullPlate,dismantle,craft};
+  window.TCG_PROGRESS={state,owned,hasDeck,hasStarter,suggested,payDuel,count,init,screen,chooseStarter,buyStarter,pull,completeTutorial,claimBeginner,dailyList,claim,plate,pullPlate,dismantle,craft};
 })();
