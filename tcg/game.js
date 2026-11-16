@@ -1121,7 +1121,7 @@ function wireDrag(){
 }
 function onEvent(){
  $('factionGrid').addEventListener('click',ev=>{const b=ev.target.closest('[data-faction]');if(!b)return;pickedFaction=Number(b.dataset.faction);renderFactionLobby();});
- $('startGame').addEventListener('click',initGame);
+ $('startGame').addEventListener('click',()=>initGame(false));
  $('bgmToggle').addEventListener('click',()=>{const enabled=AUDIO.toggleMusic();$('bgmToggle').textContent=enabled?'배경음 켬':'배경음 끔';$('bgmToggle').setAttribute('aria-pressed',String(enabled));});
  $('sfxToggle').addEventListener('click',()=>{const enabled=AUDIO.toggleSfx();$('sfxToggle').textContent=enabled?'타격음 켬':'타격음 끔';$('sfxToggle').setAttribute('aria-pressed',String(enabled));if(enabled)AUDIO.hit(5);});
  $('editDeck').addEventListener('click',openDeck);
