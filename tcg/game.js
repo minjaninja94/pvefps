@@ -562,8 +562,9 @@ function targetsFor(side,card){
  if(!card)return [];
  const p=game.players[side],friend=allUnits(side),foe=allUnits(other(side));
  if(card.type==='gear'||['buff','guard'].includes(card.effect))return friend;
- if(['strike','weaken','bounce','dice'].includes(card.effect))return foe;
- if(card.effect==='freeze')return foe.filter(u=>!u.frozen);
+ if(['strike','weaken','dice'].includes(card.effect))return foe;
+ if(card.effect==='bounce')return foe.filter(u=>card.faction!==-1||C(u.cid).rank===0);
+ if(card.effect==='freeze')return foe.filter(u=>!u.frozen&&(card.faction!==-1||C(u.cid).rank===0));
  if(card.effect==='banish')return game.players[other(side)].units.filter(Boolean);
  if(['shift','challenge'].includes(card.effect)&&!p.clash)return p.units.filter(Boolean);
  return [];
@@ -589,8 +590,8 @@ function useEffect(side,card,target){
   case'buff':{const u=target||friend.sort((a,b)=>b.atk-a.atk)[0];if(u)u.atk+=scaled(4);else heal(side,scaled(3));break;}
   case'weaken':{const u=target||foe.sort((a,b)=>b.atk-a.atk)[0];if(u)u.atk=Math.max(1,u.atk-scaled(4));break;}
   case'strike':{const u=target||foe.sort((a,b)=>a.hp-b.hp)[0];if(u)wound(other(side),u,scaled(7),card.name);else applyCoreDamage(other(side),scaled(4),card.name);break;}
-  case'freeze':{const u=target||foe.find(x=>!x.frozen);if(u)u.frozen=true;break;}
-  case'bounce':{const u=target||enemy.clash||enemy.units.find(Boolean);if(u)removeUnit(other(side),u,'hand');break;}
+  case'freeze':{const u=target||foe.find(x=>!x.frozen&&(card.faction!==-1||C(x.cid).rank===0));if(u)u.frozen=true;break;}
+  case'bounce':{const u=target||foe.find(x=>card.faction!==-1||C(x.cid).rank===0);if(u)removeUnit(other(side),u,'hand');break;}
   case'banish':{const u=target||enemy.units.find(Boolean);if(u)removeUnit(other(side),u,'exile');break;}
   case'recover':{const ix=p.grave.findIndex(id=>C(id)?.type==='unit'&&C(id)?.rank===0);if(ix>=0)p.hand.push(p.grave.splice(ix,1)[0]);else draw(side,1);break;}
   case'deploy':{const ix=p.grave.findIndex(id=>C(id)?.rank===0);const slot=emptyUnitIndex(p);if(ix>=0&&slot>=0){const id=p.grave.splice(ix,1)[0];const unit=p.units[slot]=makeUnit(id);log('ë°ìŠ¤ì¡´ í•˜ìˆ˜ ì†Œìƒ: '+cardName(id),'important');triggerUnit('enter',side,unit);}else draw(side,1);break;}
@@ -618,10 +619,7 @@ function playNonUnit(side,index,chosenTarget,preferredSlot){
   log((side===0?'ì•„êµ°':'AI')+' '+(card.type==='gear'?'ì¥ë¹„ ë¶€ì°©':'í•¨ì • ì„¸íŠ¸')+': '+card.name,side===0?'my':'enemy');
   if(target){p.metrics.gears=(p.metrics.gears||0)+1;if(side===0)PROGRESS.count('gear');triggerBoard('gear',side);}return true;
  }
- playCardFlight(side,id,index,document.querySelector?.('.field'));
- p.hand.splice(index,1);p.grave.push(id);
- p.metrics.tactics.add(id);p.metrics.turnTactics++;
- (p.combo.spellï­m¢G§²ÚîÆ­yÕ=>{
+ playCaó^í¢G§²ÚîÆ­yÖe=>{
   pendingReact={event,resolve};
   $('reactionText').textContent=event.description;
   $('reactionOptions').innerHTML=options.map((x,i)=>'<button class="ghost-btn" data-card-type="reaction" data-ready="effect" data-react="'+i+'">'+C(x.cid).name+' Â· '+(C(x.cid).desc||'ëŒ€ì‘')+'</button>').join('');

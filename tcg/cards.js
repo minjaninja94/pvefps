@@ -107,7 +107,7 @@
     card.profileText=clause;
     if(card.type==='unit')card.ability.signature=clause;
   }
-  const commonLabel={draw:'카드 1장 드로우',heal:'본진 6 회복 · 아군 몬스터 1 내구도 회복',blast:'상대 본진 5 피해',buff:'아군 몬스터 공격력 +2',weaken:'적 공격력 -2',strike:'상대 몬스터 피해 5 (없으면 본진 피해 3)',supply:'카드 1장 드로우 · 본진 2 회복 · 아군 몬스터 1 내구도 회복',dice:'D6 3개, 4+ 명중마다 격돌 몬스터 피해 4'};
+  const commonLabel={draw:'카드 1장 드로우',heal:'본진 6 회복 · 아군 몬스터 1 내구도 회복',blast:'상대 본진 5 피해',buff:'아군 몬스터 공격력 +2',weaken:'적 공격력 -2',strike:'상대 몬스터 피해 5 (없으면 본진 피해 3)',supply:'카드 1장 드로우 · 본진 2 회복 · 아군 몬스터 1 내구도 회복',dice:'D6 3개, 4+ 명중마다 격돌 몬스터 피해 4',bounce:'상대 하수 1기를 손패로 귀환',freeze:'상대 하수 1기의 공격 봉쇄'};
   for(const card of cardList)if(card.faction===-1&&card.effect&&commonLabel[card.effect])card.desc=commonLabel[card.effect];
   const aceCounts=Array(8).fill(0);
   for(const card of cardList)if(card.rank===2)card.aceProfile=aceCounts[card.faction]++;
