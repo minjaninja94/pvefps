@@ -4,27 +4,40 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0a0d19">
-<meta name="description" content="차원전쟁 TCG — 8개 진영, 240종 카드, 격돌존과 조건 강림이 만나는 오리지널 전략 카드게임.">
+<meta name="description" content="차원전쟁 TCG — 8개 진영, 752종 카드, 격돌존과 조건 강림이 만나는 오리지널 전략 카드게임.">
 <title>차원전쟁 · DIMENSION WAR TCG</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='13' fill='%230e1429'/%3E%3Cpath d='M32 7L12 32l20 25 20-25L32 7zm0 13l11 12-11 12-11-12 11-12z' fill='%23e8bd75'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="card-art.css">
+<link rel="stylesheet" href="card-frames.css">
+<link rel="stylesheet" href="combo.css">
+<link rel="stylesheet" href="battle-vfx.css">
+<link rel="stylesheet" href="pack-reveal/reveal.css">
+<link rel="stylesheet" href="progression.css">
+<script src="monster-effects.js" defer></script>
+<script src="expansion.js" defer></script>
 <script src="cards.js" defer></script>
+<script src="combo-rules.js" defer></script>
+<script src="art/expansion-ready.js" defer></script>
+<script src="pack-reveal/reveal.js" defer></script>
+<script src="accounts.js" defer></script>
+<script src="progression.js" defer></script>
 <script src="game.js" defer></script>
 </head>
 <body>
 <div class="ambient a1"></div><div class="ambient a2"></div>
 <header class="global-nav">
-  <a href="../index.html" class="back-link" title="게임 선택으로 돌아가기">‹ GAME SELECT</a>
+  <a href="https://minjaninja94.github.io/pvefps/" class="back-link" title="GitHub Pages 게임 선택으로 이동">‹ GAME SELECT</a>
   <div class="brand-mark"><span class="brand-gem">◇</span><span class="brand-text">차원전쟁 <small>DIMENSION WAR</small></span></div>
-  <span class="build-tag">TACTICAL CARD DUEL <em>ALPHA 0.1</em></span>
+  <button id="accountOpen" class="quiet-btn">로컬 계정</button>
 </header>
 <main>
 <section id="lobbyScreen" class="lobby-screen">
  <div class="lobby-hero">
    <div class="eyebrow">EIGHT REALMS. ONE FRACTURE.</div>
    <h1>여덟 세계가<br><i>격돌</i>하는 순간.</h1>
-   <p>무자원 강림, 생명력 100, 그리고 전장의 중심에서 벌어지는 격돌존 점령전. 진영을 선택하고 상대의 차원을 무너뜨리세요.</p>
-   <div class="lobby-stats"><span><strong>08</strong> 진영</span><span><strong>240</strong> 카드</span><span><strong>40</strong> 덱</span><span><strong>100</strong> LP</span></div>
+   <p>초동 몬스터로 파트너를 서치하고 특수 소환을 이어가세요. 모은 소재로 에이스를 강림시키고, 그 소재를 떼어 결전 효과를 발동하세요.</p>
+   <div class="lobby-stats"><span><strong>08</strong> 진영</span><span><strong id="totalCards">752</strong> 카드</span><span><strong>40</strong> 덱</span><span><strong>100</strong> LP</span></div>
    <div class="version-note">싱글 AI 대전 · PvP 실험 규칙 기반 프로토타입</div>
  </div>
  <div class="lobby-panel">
@@ -33,6 +46,10 @@
    <div id="factionGrid" class="faction-grid"></div>
    <div id="factionDetail" class="faction-detail"></div>
    <div class="lobby-actions"><button id="editDeck" class="ghost-btn">덱 편집 <span id="deckCount">40 / 40</span></button><button id="startGame" class="primary-btn">AI 대전 시작 <span>➜</span></button></div>
+   <div class="lobby-actions progression-actions">
+    <button id="tutorialOpen" class="ghost-btn">튜토리얼</button><button id="questOpen" class="ghost-btn">일일 퀘스트</button><button id="craftOpen" class="ghost-btn">카드 제작·분해</button>
+    <button id="shopOpen" class="primary-btn">진영 팩 <span id="coinBalance"></span></button><button id="baseShopOpen" class="ghost-btn">본진 장식</button>
+   </div>
  </div>
 </section>
 <section id="gameScreen" class="game-screen hidden" aria-label="차원전쟁 플레이 필드">
@@ -45,17 +62,19 @@
    <aside class="battle-aside left-aside">
      <div class="aside-heading">TACTICAL OVERVIEW</div>
      <div class="pile-info"><div class="pile-symbol">▥</div><div>상대 덱<small><b id="enemyDeck">—</b>장</small></div></div>
-     <div class="pile-info"><div class="pile-symbol">✝</div><div>상대 데스존<small><b id="enemyGrave">—</b>장</small></div></div>
+     <button class="pile-info pile-open" data-zone-view="grave" data-side="1"><span class="pile-symbol">✝</span><span>상대 데스존<small><b id="enemyGrave">—</b>장 · 내용 보기</small></span></button>
      <div class="pile-info"><div class="pile-symbol">▧</div><div>상대 손패<small><b id="enemyHand">—</b>장</small></div></div>
      <div class="aside-rule">격돌존은 중앙에서 서로 대치합니다. 상대가 없다면 다음 내 턴 종료부터 점령 피해를 줍니다.</div>
      <div class="aside-heading player-pile-heading">YOUR RESOURCES</div>
      <div class="pile-info"><div class="pile-symbol">▥</div><div>내 덱<small><b id="myDeck">—</b>장</small></div></div>
-     <div class="pile-info"><div class="pile-symbol">✝</div><div>내 데스존<small><b id="myGrave">—</b>장</small></div></div>
-     <div class="pile-info"><div class="pile-symbol">◇</div><div>단절된 이계<small><b id="myExile">—</b>장</small></div></div>
+     <button class="pile-info pile-open" data-zone-view="grave" data-side="0"><span class="pile-symbol">✝</span><span>내 데스존<small><b id="myGrave">—</b>장 · 내용 보기</small></span></button>
+     <button class="pile-info pile-open" data-zone-view="exile" data-side="0"><span class="pile-symbol">◇</span><span>단절된 이계<small><b id="myExile">—</b>장 · 내용 보기</small></span></button>
+     <button class="pile-info pile-open" data-zone-view="extra" data-side="0"><span class="pile-symbol">▣</span><span>내 엑스트라 덱<small><b id="myExtra">—</b>장 · 편성 보기</small></span></button>
    </aside>
    <div class="field">
      <div class="field-upper">
        <div class="board-caption"><span>OPPONENT DOMAIN</span><span>전술 · 몬스터</span></div>
+       <button id="enemyBasePlate" type="button" class="base-plate battle-base" data-base="enemy"><span>상대 본진</span><small id="enemyBaseHp">100 LP</small></button>
        <div id="enemySpells" class="slots spells"></div>
        <div id="enemyUnits" class="slots units"></div>
      </div>
@@ -66,9 +85,17 @@
        <div id="myClash" class="clash-slot"></div>
        <div id="clashState" class="clash-state">중립</div>
      </div>
+     <div id="phaseDock" class="phase-dock" data-phase-drop="combat" aria-label="전투 페이즈 조작">
+       <span class="phase-dock-label">PHASE CONTROL · 몬스터를 끌어 놓아 전투 시작</span>
+       <button id="mainPhaseBtn" class="ghost-btn" disabled>전개</button>
+       <button id="combatPhaseBtn" class="primary-btn">⚔ 전투 진입</button>
+       <button id="endTurnBtn" class="primary-btn gold" disabled>턴 종료 ➜</button>
+     </div>
      <div class="field-lower">
+       <div id="comboRail" class="combo-rail" aria-label="연계와 에이스 존"></div>
        <div id="myUnits" class="slots units"></div>
        <div id="mySpells" class="slots spells"></div>
+       <button id="myBasePlate" type="button" class="base-plate battle-base" data-base="self"><span id="myBaseName">균열 전초기지</span><small id="myBaseHp">100 LP</small></button>
        <div class="board-caption"><span>YOUR DOMAIN</span><span>몬스터 · 전술</span></div>
      </div>
    </div>
@@ -82,11 +109,12 @@
  <div class="bottom-panel">
   <div class="hand-heading"><div><span>YOUR HAND</span><small>클릭하여 카드 사용 · 전장 유닛 클릭 후 공격</small></div><span id="handSize">0 CARDS</span></div>
   <div id="myHand" class="hand"></div>
-  <div class="action-bar"><div id="hint" class="action-hint">카드를 선택해 기본 배치 또는 전술을 사용하세요.</div><div class="actions"><button id="surrenderBtn" class="quiet-btn">기권</button><button id="attackCoreBtn" class="ghost-btn" disabled>본진 직접 공격</button><button id="clashBtn" class="ghost-btn" disabled>격돌존 진입</button><button id="withdrawBtn" class="ghost-btn" disabled>철수</button><button id="mainPhaseBtn" class="ghost-btn" disabled>전개 단계</button><button id="combatPhaseBtn" class="primary-btn">전투 단계</button><button id="endTurnBtn" class="primary-btn gold" disabled>턴 종료 ➜</button></div></div>
+  <div class="action-bar"><div id="hint" class="action-hint">카드를 선택해 기본 배치 또는 전술을 사용하세요.</div><div class="actions"><button id="surrenderBtn" class="quiet-btn">기권</button><button id="attackCoreBtn" class="ghost-btn" disabled>본진 직접 공격</button><button id="clashBtn" class="ghost-btn" disabled>격돌존 진입</button><button id="withdrawBtn" class="ghost-btn" disabled>철수</button></div></div>
  </div>
 </section>
 </main>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="battleVfx" class="battle-vfx" aria-hidden="true"></div>
 <div id="reactionOverlay" class="modal-shade hidden">
  <div class="reaction-modal"><div class="eyebrow">REACTION WINDOW</div><h2>상대 행동에 대응하시겠습니까?</h2><p id="reactionText"></p><div id="reactionOptions" class="reaction-options"></div><button id="reactionPass" class="ghost-btn">대응하지 않기 / 통과</button></div>
 </div>
@@ -95,9 +123,37 @@
 </div>
 <div id="deckOverlay" class="modal-shade hidden">
  <div class="deck-modal"><div class="deck-head"><div><div class="eyebrow">DECK WORKSHOP</div><h2>덱 구성 <small>40장 · 카드명당 3장</small></h2></div><button id="closeDeck" class="quiet-btn">✕ 닫기</button></div>
-  <div class="deck-controls"><select id="typeFilter"><option value="all">전체 종류</option><option value="unit">몬스터</option><option value="tactic">전술</option><option value="reaction">반응</option><option value="gear">장비</option></select><input id="cardSearch" placeholder="카드 이름 검색"><span id="deckCurrent">40 / 40</span><button id="resetDeck" class="ghost-btn">추천 덱 초기화</button></div>
-  <div id="cardCatalog" class="card-catalog"></div><div class="deck-footer"><span id="deckWarning"></span><button id="saveDeck" class="primary-btn">40장 덱 저장</button></div>
+  <div class="deck-controls"><select id="typeFilter"><option value="all">메인 덱 전체</option><option value="unit">몬스터</option><option value="tactic">마법</option><option value="reaction">함정</option><option value="gear">장비 마법</option><option value="ace">엑스트라 덱</option></select><input id="cardSearch" placeholder="카드 이름 검색"><span id="deckCurrent">40 / 40</span><span id="aceDeckCurrent">엑스트라 0 / 15</span><button id="resetDeck" class="ghost-btn">추천 덱 초기화</button></div>
+  <div id="cardCatalog" class="card-catalog"></div><div class="deck-footer"><span id="deckWarning"></span><button id="saveDeck" class="primary-btn">메인·엑스트라 덱 저장</button></div>
  </div>
 </div>
+<dialog id="artPreview" class="art-dialog" aria-labelledby="artPreviewTitle">
+ <div class="art-dialog-head"><h2 id="artPreviewTitle"></h2><form method="dialog"><button class="quiet-btn" autofocus>닫기</button></form></div>
+ <div id="artPreviewFrame" class="card-preview-frame">
+  <div id="artPreviewImage" class="art-preview-image"></div>
+  <div id="artPreviewRules" class="card-preview-rules"></div>
+ </div>
+ <button type="button" id="artPreviewGold" class="ghost-btn" aria-pressed="false">황금 버전</button>
+</dialog>
+<dialog id="zoneDialog" class="zone-dialog" aria-labelledby="zoneTitle">
+ <div class="progress-head"><h2 id="zoneTitle">카드 영역</h2><form method="dialog"><button class="quiet-btn">닫기</button></form></div>
+ <div id="zoneCards" class="zone-cards"></div>
+</dialog>
+<dialog id="progressDialog" class="progress-dialog" aria-labelledby="progressTitle">
+ <div class="progress-head"><h2 id="progressTitle"></h2><form method="dialog"><button class="quiet-btn" autofocus>닫기</button></form></div>
+ <div id="progressBody"></div>
+ <div id="reveal-effects" aria-hidden="true"></div>
+</dialog>
+<dialog id="accountDialog" class="progress-dialog account-dialog" aria-labelledby="accountTitle">
+ <div class="progress-head"><h2 id="accountTitle">로컬 계정</h2><button id="accountClose" class="quiet-btn">닫기</button></div>
+ <p>계정별로 카드, 덱, 재화, 본진 장식을 이 브라우저에 저장합니다.</p>
+ <form id="accountForm" class="pack-controls">
+  <label>새 계정 이름 <input id="accountName" minlength="2" maxlength="24" required autocomplete="off"></label>
+  <button class="primary-btn">계정 만들기</button>
+ </form>
+ <div class="pack-controls account-switch"><select id="accountSelect" aria-label="저장된 계정"></select><button id="accountUse" class="ghost-btn">선택한 계정으로 입장</button></div>
+ <p id="accountError" role="status"></p>
+</dialog>
+<div id="packSound" hidden><button id="sound-toggle" type="button"><span id="sound-icon"></span></button></div>
 <footer class="site-foot"><span>© DIMENSION WAR · ORIGINAL TCG PROTOTYPE</span><span>v5.0 RULES · v0.1 PLAYABLE ALPHA</span></footer>
 </body></html>

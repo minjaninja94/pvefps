@@ -1,0 +1,93 @@
+.card-picture {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.card-picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.art-placeholder {
+  font-size: 1.5em;
+  color: var(--c, #b7bdfc);
+  text-shadow: 0 0 20px currentColor;
+}
+
+.unit-glyph, .inspect-art, .catalog-art, .art-preview-image {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.unit-glyph {
+  flex: 1;
+  width: 100%;
+  margin: 0;
+  border-radius: 3px;
+}
+
+.summon-rank, .status-mark { z-index: 2; }
+
+.inspect-art, .catalog-art {
+  border: 1px solid #ffffff2e;
+  border-radius: 4px;
+  background: #131a2f;
+  cursor: zoom-in;
+  padding: 0;
+}
+
+.inspect-art {
+  width: 100%;
+  height: clamp(70px, 11vh, 126px);
+}
+
+.catalog-art {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 54px;
+}
+
+.card-face.gold-art, .unit-mini.gold-art, .inspect-art.gold-art,
+.catalog-art.gold-art, .art-preview-image.gold-art {
+  border-color: #efc37e;
+  box-shadow: 0 0 9px #efb45455;
+}
+
+.art-dialog {
+  box-sizing: border-box;
+  width: min(94vw, 500px);
+  max-height: 94vh;
+  padding: 15px;
+  border: 1px solid #777493;
+  border-radius: 12px;
+  color: #e9ecff;
+  background: #11182d;
+  box-shadow: 0 14px 80px #000b;
+}
+
+.art-dialog::backdrop { background: #050711c9; }
+.art-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.art-dialog-head h2 { font-size: 1rem; margin: 0; }
+
+.art-preview-image {
+  width: min(100%, calc(min(64vh, 545px) * 0.7692));
+  aspect-ratio: 10 / 13;
+  margin: 12px auto;
+  border: 1px solid #ffffff28;
+  border-radius: 6px;
+  background: #080e1c;
+}
+
+.art-preview-image .card-picture img { object-fit: contain; }
+#artPreviewGold { display: block; margin: 0 auto; }
+#artPreviewGold[aria-pressed="true"] { border-color: #efc37e; color: #ffdc9c; }

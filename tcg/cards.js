@@ -20,8 +20,34 @@
       units:['공명 견습생','유리 정찰사','주문 필경사','거울 사도','마력 관측자'],mids:['결계 집행관','수정 소환사','공명 심판관'],highs:['유리 대현자','천면의 현현','마도회의 정점'],tactics:['공명 발동','유리 파동','의식 봉인','프리즘 인장'],reactions:['반사 주문','봉인의 이면','마력 차단선'],gears:['공명 수정구','프리즘 지팡이']}
   ];
   const cardList=[], byId={};
-  const add = (obj) => { const card={...obj, rarity:obj.rarity||'C'}; cardList.push(card); byId[card.id]=card;return card; };
+  const add = (obj) => {
+    const card={...obj, rarity:obj.rarity||'C'};
+    if(card.type==='unit'){
+      const ability=obj.ability||window.TCG_MONSTER_EFFECTS?.[card.id];
+      if(!ability)throw new Error('Missing monster effect: '+card.id);
+      card.ability=ability;
+      card.desc=ability.timing+' · '+ability.rules;
+    }
+    cardList.push(card); byId[card.id]=card;return card;
+  };
   const effectLabel={draw:'카드 2장 드로우',heal:'아군 생명력 9 회복',blast:'상대 생명력 8 피해',buff:'아군 몬스터 공격력 +4',bounce:'상대 일반 몬스터 1기 손패로 귀환',recover:'데스존의 하수 1장 회수',banish:'상대 몬스터 1기 단절된 이계로 격리',shift:'아군 몬스터 위치 이동',challenge:'아군 몬스터를 격돌존에 투입',fog:'이번 턴 상대 점령 피해 봉쇄',dice:'D6 3개, 4+ 명중마다 격돌 몬스터 피해 6',guard:'아군에게 수호 부여',weaken:'적 공격력 -4',supply:'카드 1장 드로우·생명력 4 회복',strike:'상대 몬스터에게 피해 7',freeze:'상대 몬스터 공격 불가',deploy:'하수 1기를 데스존에서 소생'};
+  Object.assign(effectLabel,{
+    buff:'내 몬스터 1기를 지정해 공격력 +4. 내 몬스터가 없으면 내 생명력 3 회복.',
+    bounce:'상대 몬스터 1기를 지정해 상대 손패로 되돌립니다.',
+    recover:'내 데스존의 첫 하수 몬스터를 손패로 회수합니다. 없다면 카드 1장 드로우.',
+    banish:'상대 일반 몬스터존의 몬스터 1기를 지정해 단절된 이계로 보냅니다.',
+    shift:'아군 몬스터 1기를 지정해 빈 격돌존에 이동합니다. 내 격돌존이 차 있고 빈 몬스터존이 있으면 철수합니다. 둘 다 불가능하면 1장 드로우.',
+    challenge:'아군 몬스터 1기를 지정해 빈 격돌존에 투입합니다. 불가능하면 내 본진이 다음 피해 1회를 막습니다.',
+    fog:'상대의 다음 턴 종료 시 단독 점령 피해를 1회 막습니다.',
+    dice:'6면 주사위 3개를 굴립니다. 4 이상마다 지정한 상대 몬스터에 피해 6. 몬스터가 없으면 상대 본진에 피해 3씩.',
+    guard:'아군 몬스터 1기를 지정해 수호를 부여합니다. 아군 몬스터가 없으면 내 본진이 다음 피해 1회를 막습니다.',
+    weaken:'상대 몬스터 1기를 지정해 공격력 −4 (최소 1).',
+    strike:'상대 몬스터 1기를 지정해 피해 7. 상대 몬스터가 없으면 본진에 피해 4.',
+    freeze:'아직 봉쇄되지 않은 상대 몬스터 1기를 지정해 상대 턴 종료까지 공격을 봉쇄합니다.',
+    deploy:'내 데스존의 첫 하수 몬스터를 빈 몬스터존에 소생시킵니다. 소생할 수 없으면 카드 1장 드로우.',
+  });
+  const trapRules={negate:'상대가 선언한 배치·강림, 마법 또는 공격을 무효화합니다.',shield:'상대 공격에 대응해 해당 공격의 피해를 막습니다.',challenge:'상대 공격에 대응합니다. 첫 아군 몬스터를 빈 격돌존에 투입하고, 불가능하면 내 본진이 다음 피해 1회를 막습니다.',guard:'첫 아군 몬스터에 수호를 부여합니다. 아군 몬스터가 없으면 내 본진이 다음 피해 1회를 막습니다.',counter:'상대 본진에 피해 4를 주고 내 생명력을 4 회복합니다.',draw:'대응할 때 카드 1장을 드로우합니다.'};
+  const gearRules={power:'아군 몬스터 1기를 지정해 장착합니다. 공격력 +3.',ward:'아군 몬스터 1기를 지정해 장착합니다. 최대 내구도와 현재 내구도 +5, 수호 부여.'};
   function addFactionCards(f,i){
     const effects=['buff','draw','strike','heal','shift','recover','guard','blast'];
     f.units.forEach((name,n)=>add({id:'f'+i+'u'+n,name,faction:i,type:'unit',rank:0,tier:f.tiers[0],atk:[6,7,5,8,6][n]+(i===5?1:0),hp:[9,8,10,7,9][n],rarity:n===0?'R':'C',tag:n,role:['선봉','사격','지원','전위','탐사'][n],desc:n===0?'진영 콤보의 시작이 되는 선봉 유닛.':'필드에 배치하여 상위 강림을 준비합니다.',art:n}));
@@ -47,6 +73,21 @@
   commons.heal.forEach((name,n)=>{const e=n%3===0?'heal':n%3===1?'guard':'supply';add({id:'ch'+n,name,faction:-1,type:'tactic',effect:e,rarity:n%3===0?'R':'C',desc:effectLabel[e],art:n+7});});
   commons.dice.forEach((name,n)=>{const e=n%2===0?'dice':'strike';add({id:'cd'+n,name,faction:-1,type:'tactic',effect:e,rarity:'R',desc:effectLabel[e],art:n+10});});
   commons.clash.forEach((name,n)=>{const effects=['challenge','fog','recover','dice','deploy','bounce','fog','shift','supply','buff'];const e=effects[n];add({id:'cc'+n,name,faction:-1,type:'tactic',effect:e,rarity:n===3?'SR':'R',desc:effectLabel[e]||'격돌존을 지원하는 전술 카드.',art:n+14});});
+  for(const card of window.TCG_EXPANSION){
+    add({...card,tier:card.type==='unit'?factions[card.faction].tiers[card.rank]:undefined,desc:effectLabel[card.effect]});
+  }
+  for(const card of cardList){
+    if(card.type==='reaction')card.desc=trapRules[card.effect];
+    if(card.type==='gear')card.desc=gearRules[card.effect];
+  }
+  function makeStarter(f){
+    return [
+      ...Array.from({length:5},(_,i)=>Array(3).fill('f'+f+'u'+i)).flat(),
+      ...Array.from({length:3},(_,i)=>Array(3).fill('f'+f+'m'+i)).flat(),
+      ...Array.from({length:4},(_,i)=>Array(2).fill('f'+f+'t'+i)).flat(),
+      'f'+f+'r0','f'+f+'r1','f'+f+'r2','f'+f+'g0','f'+f+'g1','ce0','ch0','cc0',
+    ];
+  }
   function makeDeck(faction){
     const id=(s,n)=>'f'+faction+s+n, deck=[];
     const put=(code,n)=>{for(let k=0;k<n;k++)deck.push(code);};
@@ -59,7 +100,18 @@
     ['ce0','ce1','cc0','cc1'].forEach(x=>put(x,1));
     return deck;
   }
-  const isValidDeck=(arr,faction)=>Array.isArray(arr)&&arr.length===40&&arr.every(id=>byId[id]&&(byId[id].faction===-1||byId[id].faction===faction))&&Object.values(arr.reduce((o,id)=>(o[id]=(o[id]||0)+1,o),{})).every(n=>n<=3);
-  if(cardList.length!==240)throw new Error('Card pool must contain exactly 240 different cards: '+cardList.length);
-  window.TCG_DATA={factions,cards:cardList,byId,makeDeck,isValidDeck};
+  function makeComboDeck(f){
+    const small=Array.from({length:5},(_,i)=>Array(2).fill('f'+f+'u'+i)).flat();
+    const cards=[
+      ['b0u0',2],['b1u0',2],['b2u1',2],['b3u1',2],['b4u2',1],['b5u2',1],
+      ['b0s0',2],['b1s1',2],['b4r',2],['b2g',1],['b3g',1],
+    ].flatMap(([key,n])=>Array(n).fill('p'+f+key));
+    const support=[['t0',3],['t1',2],['t2',1],['r0',2],['r1',1],['g0',2]]
+      .flatMap(([key,n])=>Array(n).fill('f'+f+key));
+    return [...small,...cards,...support,'cr0'];
+  }
+  const makeAceDeck=f=>cardList.filter(card=>card.faction===f&&card.rank===2).map(card=>card.id);
+  const isValidDeck=(arr,faction)=>Array.isArray(arr)&&arr.length===40&&arr.every(id=>byId[id]&&byId[id].rank!==2&&(byId[id].faction===-1||byId[id].faction===faction))&&Object.values(arr.reduce((o,id)=>(o[id]=(o[id]||0)+1,o),{})).every(n=>n<=3);
+  if(cardList.length!==752||Object.keys(byId).length!==cardList.length)throw new Error('Card registry count or IDs are invalid');
+  window.TCG_DATA={factions,cards:cardList,byId,makeDeck:makeComboDeck,makeComboDeck,makeAceDeck,makeStarter,isValidDeck};
 })();
