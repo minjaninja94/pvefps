@@ -62,7 +62,9 @@ GitHub → Settings → Developer settings → Personal access tokens → Fine-g
 
 ### 2-2. Cloudflare Worker 배포
 
-Node.js가 설치된 PC에서 저장소를 내려받은 뒤 아래 디렉터리로 이동합니다.
+Knowledge Hub의 교차 기기 동기화 API가 추가되었으므로 Worker 코드를 업데이트한 뒤 반드시 재배포해야 합니다. 이미 Worker를 운영 중이어도 아래 배포 명령을 다시 실행하세요.
+
+Node.js가 설치된 PC에서 저장소 최신 `main`을 내려받은 뒤 아래 디렉터리로 이동합니다.
 
 ~~~powershell
 cd whiteboard-worker
