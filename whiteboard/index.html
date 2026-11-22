@@ -579,7 +579,7 @@
   const knowledgeHub = await import("./knowledge-hub.js?v=supabase-20261122-2");
   knowledgeHub.mountKnowledgeHub();
   window.__knowledgeHubOpen = knowledgeHub.openKnowledgeHub;
-  const knowledgeCloud = await import("./supabase-sync.js?v=20261122-2");
+  const knowledgeCloud = await import("./supabase-sync.js?v=20261122-3");
   knowledgeCloud.mountKnowledgeSupabase();
   } catch (error) {
     console.error("Whiteboard boot failed:", error);
