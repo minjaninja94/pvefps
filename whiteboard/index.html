@@ -380,7 +380,8 @@
 
     return h("div", { className: "shell" },
       h("header", { className: "topbar" },
-        h("div", { className: "brand" }, h("span", { className: "brand-mark" }, "✎"), h("span", { className: "brand-text" }, "WHITEBOARD")),
+        h("a", { className: "brand", href: "../", style: { color: "inherit", textDecoration: "none" }, "aria-label": "메인 게임 선택으로 돌아가기" }, h("span", { className: "brand-mark" }, "✎"), h("span", { className: "brand-text" }, "WHITEBOARD")),
+        h("a", { className: "btn", href: "../", style: { textDecoration: "none" } }, "← 메인으로"),
         activeDoc ? h("input", {
           className: "doc-title", value: activeDoc.title,
           onChange: function(event) { updateDoc(Object.assign({}, activeRef.current, { title: event.target.value, updatedAt: Date.now() })); },
