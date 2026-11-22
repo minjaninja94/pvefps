@@ -67,9 +67,9 @@ async function exportSlides(api) {
 }
 
 async function printPdf(api) {
-  const slides = await exportSlides(api);
   const win = window.open("", "_blank");
   if (!win) throw new Error("팝업이 차단되었습니다. 이 사이트의 팝업을 허용해주세요.");
+  const slides = await exportSlides(api);
   const body = slides.map((slide, i) => '<section class="slide"><header>' + escapeHtml(slide.title) + '</header>' + slide.svg + '<footer>' + (i+1) + ' / ' + slides.length + '</footer></section>').join("");
   win.document.write('<!doctype html><html><head><meta charset="utf-8"><title>화이트보드 PDF</title><style>@page{size:landscape;margin:12mm}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif}.slide{height:185mm;page-break-after:always;display:flex;flex-direction:column;align-items:stretch}.slide:last-child{page-break-after:auto}.slide header,.slide footer{font-size:10px;color:#777;padding:5px}.slide svg{width:100%;height:100%;min-height:0;object-fit:contain}</style></head><body>' + body + '<script>window.onload=()=>setTimeout(()=>window.print(),400)<\/script></body></html>');
   win.document.close();
