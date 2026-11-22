@@ -168,6 +168,15 @@
       setToast(message);
       setTimeout(function() { setToast(""); }, 3200);
     }
+    async function flushPending() {
+      const pending = activeRef.current;
+      clearTimeout(localTimer.current);
+      clearTimeout(cloudTimer.current);
+      if (!pending) return;
+      try { await dbPut(pending); } catch (_) {}
+      if (config.endpoint && config.key) await saveCloud(pending, false);
+    }
+
     function updateDoc(next) {
       activeRef.current = next;
       setActiveDoc(next);
@@ -241,7 +250,8 @@
         }
       }
     }
-    function createNew() {
+    async function createNew() {
+      await flushPending();
       const doc = newDocument("새 드로잉");
       dbPut(doc).catch(function() {});
       setDocs(function(items) { return [doc].concat(items); });
@@ -250,7 +260,7 @@
       setStatus("새 드로잉 · 로컬 저장"); setStatusKind("ok");
     }
     async function openLocal(doc) {
-      clearTimeout(localTimer.current); clearTimeout(cloudTimer.current);
+      await flushPending();
       setActiveId(doc.id); setActiveDoc(doc); activeRef.current = doc;
       lastCloudFingerprint.current = "";
       setStatus(doc.cloudName ? "GitHub 동기화 문서" : "이 기기 로컬 문서");
@@ -275,6 +285,7 @@
       }
       await dbDelete(activeDoc.id);
       const rest = docs.filter(function(item) { return item.id !== activeDoc.id; });
+      activeRef.current = null;
       if (rest.length) { setDocs(rest); openLocal(rest[0]); }
       else { setDocs([]); setActiveId(""); setActiveDoc(null); createNew(); }
       notify("드로잉을 삭제했습니다.");
@@ -338,6 +349,7 @@
     }
     async function openCloud(item) {
       try {
+        await flushPending();
         setBusy(true);
         const result = await requestCloud(config, "/api/drawings/" + encodeURIComponent(item.name) + ".excalidraw", "GET");
         const existing = docs.find(function(doc) { return doc.cloudName === item.name; });
