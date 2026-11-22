@@ -134,6 +134,8 @@
     const cloudTimer = React.useRef(null);
     const activeRef = React.useRef(null);
     const lastCloudFingerprint = React.useRef("");
+    const cloudBusy = React.useRef(false);
+    const cloudQueued = React.useRef(null);
     const [busy, setBusy] = React.useState(false);
 
     React.useEffect(function() {
@@ -191,10 +193,15 @@
     }
 
     async function saveCloud(doc, showMessage) {
-      const targetName = doc.desiredCloudName || doc.cloudName || safeName(doc.title, "drawing-" + doc.id.slice(0,8));
-      const fingerprint = JSON.stringify(doc.document);
-      if (doc.cloudName === targetName && lastCloudFingerprint.current === doc.id + ":" + fingerprint) return;
+      if (cloudBusy.current) {
+        cloudQueued.current = { doc: doc, showMessage: showMessage };
+        return;
+      }
+      cloudBusy.current = true;
       try {
+        const targetName = doc.desiredCloudName || doc.cloudName || safeName(doc.title, "drawing-" + doc.id.slice(0,8));
+        const fingerprint = JSON.stringify(doc.document);
+        if (doc.cloudName === targetName && lastCloudFingerprint.current === doc.id + ":" + fingerprint) return;
         setStatus("GitHub 저장 중"); setStatusKind("");
         let saved;
         if (doc.cloudName && doc.cloudName !== targetName) {
@@ -206,13 +213,14 @@
             sha: doc.cloudSha || undefined
           });
         }
-        const updated = Object.assign({}, doc, {
+        lastCloudFingerprint.current = doc.id + ":" + fingerprint;
+        const latest = activeRef.current && activeRef.current.id === doc.id ? activeRef.current : doc;
+        const updated = Object.assign({}, latest, {
           cloudName: targetName,
-          desiredCloudName: "",
+          desiredCloudName: latest.desiredCloudName === targetName ? "" : (latest.desiredCloudName || ""),
           cloudSha: saved.sha,
           updatedAt: Date.now()
         });
-        lastCloudFingerprint.current = doc.id + ":" + fingerprint;
         await dbPut(updated);
         if (activeRef.current && activeRef.current.id === doc.id) {
           activeRef.current = updated; setActiveDoc(updated);
@@ -223,9 +231,16 @@
       } catch (error) {
         setStatus("GitHub 저장 대기 · 로컬 보관 중"); setStatusKind("warn");
         if (showMessage) notify(error.message);
+      } finally {
+        cloudBusy.current = false;
+        const queued = cloudQueued.current;
+        cloudQueued.current = null;
+        if (queued) {
+          const latest = activeRef.current && activeRef.current.id === queued.doc.id ? activeRef.current : queued.doc;
+          saveCloud(latest, queued.showMessage);
+        }
       }
     }
-
     function createNew() {
       const doc = newDocument("새 드로잉");
       dbPut(doc).catch(function() {});
