@@ -1,0 +1,333 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.80.0";
+
+const SUPABASE_URL = "https://abqwyxtghsvkwedhqcyv.supabase.co";
+const SUPABASE_KEY = "sb_publishable_vflJpQgec7RCkclQbBi_RQ_mrUVOsj-";
+const DB_NAME = "pvefps-knowledge-hub";
+const BUCKET = "knowledge-files";
+const client = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+});
+
+let syncTimer = null;
+let syncing = false;
+let lastUserId = null;
+const $ = (s) => document.querySelector(s);
+const iso = (v) => v ? new Date(v).toISOString() : new Date().toISOString();
+const stamp = (v) => Date.parse(v || 0) || 0;
+const strip = (html) => {
+  const node = document.createElement("div");
+  node.innerHTML = html || "";
+  return (node.textContent || node.innerText || "").trim();
+};
+const safeName = (s) => String(s || "file").replace(/[\\/:*?"<>|]/g, "_").slice(0, 160);
+
+function db() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function all(store) {
+  const d = await db();
+  return new Promise((resolve, reject) => {
+    const req = d.transaction(store, "readonly").objectStore(store).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function replaceAll(store, rows) {
+  const d = await db();
+  return new Promise((resolve, reject) => {
+    const tx = d.transaction(store, "readwrite");
+    const os = tx.objectStore(store);
+    os.clear();
+    rows.forEach((row) => os.put(row));
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error || new Error("로컬 저장소 갱신 실패"));
+  });
+}
+async function status(message, good = false) {
+  const node = $("#kh-syncstatus");
+  if (node) {
+    node.textContent = message;
+    node.style.color = good ? "#16834a" : "#68717d";
+  }
+  const cloud = $("#kh-cloudstatus");
+  if (cloud) cloud.textContent = message;
+}
+function announce() {
+  window.dispatchEvent(new CustomEvent("knowledge-cloud-updated"));
+}
+function queueSync() {
+  if (!lastUserId || syncing) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => syncAll(false), 1800);
+}
+
+async function upsertNotebookMap(userId, localNotes, remoteNotebooks) {
+  const names = [...new Set(localNotes.map(n => n.book || "기본 노트북"))];
+  const rows = names.map(name => ({ user_id: userId, name }));
+  if (rows.length) {
+    const { error } = await client.from("notebooks").upsert(rows, { onConflict: "user_id,name" });
+    if (error) throw error;
+  }
+  const { data, error } = await client.from("notebooks").select("id,name").eq("user_id", userId);
+  if (error) throw error;
+  return new Map((data || []).map(x => [x.name, x.id]));
+}
+async function upsertTagMap(userId, localNotes) {
+  const names = [...new Set(localNotes.flatMap(n => Array.isArray(n.tags) ? n.tags : []))];
+  if (names.length) {
+    const { error } = await client.from("tags").upsert(names.map(name => ({ user_id: userId, name })), { onConflict: "user_id,name" });
+    if (error) throw error;
+  }
+  const { data, error } = await client.from("tags").select("id,name").eq("user_id", userId);
+  if (error) throw error;
+  return new Map((data || []).map(x => [x.name, x.id]));
+}
+function localNoteToRow(n, userId, notebookMap) {
+  return {
+    id: n.id, user_id: userId, notebook_id: notebookMap.get(n.book || "기본 노트북") || null,
+    title: n.title || "새 노트", content: { html: n.body || "" },
+    content_text: strip(n.body || ""), note_type: n.url ? "web_clip" : "note",
+    source_url: n.url || null, source_title: n.url ? (n.title || null) : null,
+    excerpt: null, is_favorite: !!n.favorite, is_archived: !!n.archived,
+    is_pinned: !!n.pinned, created_at: iso(n.created), updated_at: iso(n.updated)
+  };
+}
+function rowToLocalNote(row, notebookNames, tagNames) {
+  const content = row.content && typeof row.content === "object" ? row.content : {};
+  return {
+    id: row.id, title: row.title || "새 노트", body: content.html || "",
+    book: notebookNames.get(row.notebook_id) || "기본 노트북",
+    tags: tagNames || [], url: row.source_url || "",
+    favorite: !!row.is_favorite, archived: !!row.is_archived, pinned: !!row.is_pinned,
+    created: row.created_at, updated: row.updated_at
+  };
+}
+function localTaskToRow(t, userId) {
+  const due = t.due && /^\\d{4}-\\d{2}-\\d{2}$/.test(t.due) ? t.due + "T00:00:00.000Z" : null;
+  return {
+    id: t.id, user_id: userId, title: t.title || "할 일", description: t.description || null,
+    status: t.done ? "done" : (t.status || "todo"), priority: t.priority || "normal",
+    due_at: due, completed_at: t.done ? iso(t.updated || t.created) : null,
+    created_at: iso(t.created), updated_at: iso(t.updated || t.created)
+  };
+}
+function rowToLocalTask(t) {
+  return {
+    id: t.id, title: t.title, description: t.description || "",
+    due: t.due_at ? t.due_at.slice(0, 10) : "", done: t.status === "done",
+    status: t.status, priority: t.priority, created: t.created_at, updated: t.updated_at
+  };
+}
+async function uploadLocalFiles(userId, localFiles, remoteFiles) {
+  const remoteById = new Map((remoteFiles || []).map(f => [f.id, f]));
+  const result = [];
+  for (const file of localFiles) {
+    if (!file.blob) continue;
+    const existing = remoteById.get(file.id);
+    if (existing && stamp(existing.created_at) >= stamp(file.updated || file.created)) {
+      result.push(file);
+      continue;
+    }
+    const path = userId + "/" + file.id + "/" + safeName(file.name);
+    const { error: uploadError } = await client.storage.from(BUCKET).upload(path, file.blob, {
+      contentType: file.type || "application/octet-stream", upsert: true
+    });
+    if (uploadError) throw uploadError;
+    const row = {
+      id: file.id, user_id: userId, note_id: file.noteId || null, storage_path: path,
+      file_name: file.name, mime_type: file.type || null, size_bytes: file.size || file.blob.size,
+      created_at: iso(file.created)
+    };
+    const { error } = await client.from("attachments").upsert(row, { onConflict: "id" });
+    if (error) throw error;
+    result.push(file);
+  }
+  return result;
+}
+async function downloadRemoteFiles(remoteFiles, localFiles) {
+  const localIds = new Set(localFiles.map(f => f.id));
+  const result = [...localFiles];
+  for (const row of remoteFiles || []) {
+    if (localIds.has(row.id)) continue;
+    const { data, error } = await client.storage.from(BUCKET).download(row.storage_path);
+    if (error) throw error;
+    result.push({
+      id: row.id, noteId: row.note_id, name: row.file_name, type: row.mime_type || data.type,
+      size: row.size_bytes || data.size, created: row.created_at, blob: data
+    });
+  }
+  return result;
+}
+async function syncAll(showToast = true) {
+  if (syncing) return;
+  const { data: auth } = await client.auth.getUser();
+  const user = auth && auth.user;
+  if (!user) { lastUserId = null; await status("로그인하면 클라우드 동기화"); return; }
+  syncing = true;
+  lastUserId = user.id;
+  await status("Supabase 동기화 중…");
+  try {
+    const [localNotes, localTasks, localFiles] = await Promise.all([all("notes"), all("tasks"), all("files")]);
+    const { data: remoteNotes, error: nErr } = await client.from("notes").select("*").eq("user_id", user.id);
+    if (nErr) throw nErr;
+    const { data: remoteTasks, error: tErr } = await client.from("tasks").select("*").eq("user_id", user.id);
+    if (tErr) throw tErr;
+    const { data: remoteFiles, error: fErr } = await client.from("attachments").select("*").eq("user_id", user.id);
+    if (fErr) throw fErr;
+    const { data: remoteNotebooks, error: bErr } = await client.from("notebooks").select("id,name").eq("user_id", user.id);
+    if (bErr) throw bErr;
+    const notebookNames = new Map((remoteNotebooks || []).map(x => [x.id, x.name]));
+    const { data: remoteTags, error: gErr } = await client.from("tags").select("id,name").eq("user_id", user.id);
+    if (gErr) throw gErr;
+    const tagNames = new Map((remoteTags || []).map(x => [x.id, x.name]));
+    const { data: remoteNoteTags, error: ntErr } = await client.from("note_tags").select("note_id,tag_id").eq("user_id", user.id);
+    if (ntErr) throw ntErr;
+    const tagsByNote = new Map();
+    for (const x of remoteNoteTags || []) {
+      if (!tagsByNote.has(x.note_id)) tagsByNote.set(x.note_id, []);
+      const name = tagNames.get(x.tag_id); if (name) tagsByNote.get(x.note_id).push(name);
+    }
+    const remoteLocalNotes = (remoteNotes || []).map(x => rowToLocalNote(x, notebookNames, tagsByNote.get(x.id) || []));
+    const localNoteMap = new Map(localNotes.map(x => [x.id, x]));
+    const remoteNoteMap = new Map(remoteLocalNotes.map(x => [x.id, x]));
+    const mergedNotes = new Map();
+    for (const id of new Set([...localNoteMap.keys(), ...remoteNoteMap.keys()])) {
+      const l = localNoteMap.get(id), r = remoteNoteMap.get(id);
+      mergedNotes.set(id, !l ? r : !r ? l : stamp(l.updated) > stamp(r.updated) ? l : r);
+    }
+    const notes = [...mergedNotes.values()];
+    const notebookMap = await upsertNotebookMap(user.id, notes, remoteNotebooks);
+    const tagMap = await upsertTagMap(user.id, notes);
+    const noteRows = notes.map(n => localNoteToRow(n, user.id, notebookMap));
+    if (noteRows.length) {
+      const { error } = await client.from("notes").upsert(noteRows, { onConflict: "id" });
+      if (error) throw error;
+    }
+    const { error: clearTagsError } = await client.from("note_tags").delete().eq("user_id", user.id);
+    if (clearTagsError) throw clearTagsError;
+    const links = [];
+    for (const n of notes) for (const name of n.tags || []) {
+      const tagId = tagMap.get(name); if (tagId) links.push({ user_id: user.id, note_id: n.id, tag_id: tagId });
+    }
+    if (links.length) {
+      const { error } = await client.from("note_tags").upsert(links, { onConflict: "note_id,tag_id" });
+      if (error) throw error;
+    }
+    const localTaskMap = new Map(localTasks.map(x => [x.id, x]));
+    const remoteTaskMap = new Map((remoteTasks || []).map(x => [x.id, rowToLocalTask(x)]));
+    const mergedTasks = [];
+    for (const id of new Set([...localTaskMap.keys(), ...remoteTaskMap.keys()])) {
+      const l = localTaskMap.get(id), r = remoteTaskMap.get(id);
+      mergedTasks.push(!l ? r : !r ? l : stamp(l.updated) > stamp(r.updated) ? l : r);
+    }
+    const taskRows = mergedTasks.map(t => localTaskToRow(t, user.id));
+    if (taskRows.length) {
+      const { error } = await client.from("tasks").upsert(taskRows, { onConflict: "id" });
+      if (error) throw error;
+    }
+    let mergedFiles = await uploadLocalFiles(user.id, localFiles, remoteFiles);
+    mergedFiles = await downloadRemoteFiles(remoteFiles, mergedFiles);
+    const tombstones = JSON.parse(localStorage.getItem("pvefps-kh-deleted") || "[]");
+    for (const tomb of tombstones) {
+      if (tomb.store === "notes") await client.from("notes").delete().eq("id", tomb.id).eq("user_id", user.id);
+      if (tomb.store === "tasks") await client.from("tasks").delete().eq("id", tomb.id).eq("user_id", user.id);
+      if (tomb.store === "files") {
+        const row = (remoteFiles || []).find(x => x.id === tomb.id);
+        if (row) {
+          await client.storage.from(BUCKET).remove([row.storage_path]);
+          await client.from("attachments").delete().eq("id", tomb.id).eq("user_id", user.id);
+        }
+      }
+    }
+    localStorage.removeItem("pvefps-kh-deleted");
+    await Promise.all([replaceAll("notes", notes), replaceAll("tasks", mergedTasks), replaceAll("files", mergedFiles)]);
+    announce();
+    await status("Supabase 동기화 완료 · " + new Date().toLocaleTimeString("ko-KR"), true);
+    if (showToast && $("#kh-toast")) {
+      $("#kh-toast").textContent = "클라우드 동기화가 완료됐습니다.";
+      $("#kh-toast").style.display = "block";
+      setTimeout(() => { const x = $("#kh-toast"); if (x) x.style.display = "none"; }, 2600);
+    }
+  } catch (error) {
+    console.error("Knowledge Hub Supabase sync failed:", error);
+    await status("동기화 실패 · " + (error.message || "오류"));
+  } finally {
+    syncing = false;
+  }
+}
+
+function mountAuthUI() {
+  const head = $("#kh-head");
+  if (!head || $("#kh-cloudlogin")) return;
+  const button = document.createElement("button");
+  button.id = "kh-cloudlogin";
+  button.textContent = "클라우드 로그인";
+  button.style.cssText = "white-space:nowrap";
+  const panel = document.createElement("div");
+  panel.id = "kh-cloudpanel";
+  panel.style.cssText = "display:none;position:fixed;z-index:3100;inset:0;background:#0007;place-items:center;padding:16px";
+  panel.innerHTML = '<section style="background:white;color:#20242b;width:min(420px,100%);padding:22px;border-radius:14px;box-shadow:0 16px 60px #0003"><h2 style="margin:0 0 8px">개인 클라우드 저장소</h2><p style="font-size:12px;color:#667085;line-height:1.6">이메일 계정으로 로그인하면 노트·할 일·첨부파일이 Supabase에 동기화됩니다. 다른 PC에서도 같은 계정으로 로그인하세요.</p><label style="display:block;font-size:12px;margin:12px 0 5px">이메일</label><input id="kh-cloudemail" type="email" autocomplete="username" placeholder="name@example.com" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:7px"><label style="display:block;font-size:12px;margin:12px 0 5px">비밀번호</label><input id="kh-cloudpassword" type="password" autocomplete="current-password" placeholder="8자 이상 권장" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:7px"><p id="kh-cloudmessage" style="font-size:12px;color:#667085;min-height:18px"></p><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><button id="kh-cloudsignup">회원가입</button><button id="kh-cloudsignin" style="background:#242a33;color:white">로그인</button><button id="kh-cloudlogout" style="display:none">로그아웃</button><button id="kh-cloudclose">닫기</button></div></section>';
+  head.insertBefore(button, $("#kh-syncnow"));
+  document.body.append(panel);
+  const message = (s) => { const x = $("#kh-cloudmessage"); if (x) x.textContent = s; };
+  const open = async () => {
+    const { data } = await client.auth.getUser();
+    const loggedIn = !!data.user;
+    $("#kh-cloudlogout").style.display = loggedIn ? "inline-block" : "none";
+    $("#kh-cloudsignup").style.display = loggedIn ? "none" : "inline-block";
+    $("#kh-cloudsignin").style.display = loggedIn ? "none" : "inline-block";
+    message(loggedIn ? data.user.email + " 계정으로 연결되어 있습니다." : "이메일과 비밀번호로 가입하거나 로그인하세요.");
+    panel.style.display = "grid";
+  };
+  button.onclick = open;
+  $("#kh-cloudclose").onclick = () => panel.style.display = "none";
+  panel.addEventListener("click", e => { if (e.target === panel) panel.style.display = "none"; });
+  $("#kh-cloudsignup").onclick = async () => {
+    const email = $("#kh-cloudemail").value.trim(), password = $("#kh-cloudpassword").value;
+    if (!email || password.length < 8) return message("이메일과 8자 이상의 비밀번호를 입력해주세요.");
+    message("회원가입 처리 중…");
+    const { error } = await client.auth.signUp({ email, password });
+    message(error ? error.message : "가입 요청 완료. 이메일 인증 안내가 도착하면 인증 후 로그인해주세요.");
+  };
+  $("#kh-cloudsignin").onclick = async () => {
+    const email = $("#kh-cloudemail").value.trim(), password = $("#kh-cloudpassword").value;
+    message("로그인 중…");
+    const { error } = await client.auth.signInWithPassword({ email, password });
+    message(error ? error.message : "로그인 성공. 동기화를 시작합니다.");
+    if (!error) { await syncAll(true); await open(); }
+  };
+  $("#kh-cloudlogout").onclick = async () => {
+    const { error } = await client.auth.signOut();
+    message(error ? error.message : "로그아웃했습니다.");
+    lastUserId = null;
+    await status("로그인하면 클라우드 동기화");
+    await open();
+  };
+}
+export function mountKnowledgeSupabase() {
+  mountAuthUI();
+  client.auth.onAuthStateChange((event, session) => {
+    if (session && session.user) {
+      lastUserId = session.user.id;
+      if (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") syncAll(false);
+    } else {
+      lastUserId = null;
+      status("로그인하면 클라우드 동기화");
+    }
+  });
+  window.addEventListener("knowledge-local-change", queueSync);
+  window.addEventListener("online", queueSync);
+  window.addEventListener("knowledge-cloud-updated", () => {
+    if (window.__knowledgeHubReload) window.__knowledgeHubReload();
+  });
+  client.auth.getSession().then(({ data }) => {
+    if (data.session) { lastUserId = data.session.user.id; syncAll(false); }
+    else status("로그인하면 클라우드 동기화");
+  });
+  window.__knowledgeSupabaseSync = () => syncAll(true);
+}
