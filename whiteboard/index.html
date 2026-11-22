@@ -53,6 +53,27 @@
   const React = await import("https://esm.sh/react@19.0.0");
   const ReactDOMClient = await import("https://esm.sh/react-dom@19.0.0/client?deps=react@19.0.0");
   const ExcalidrawLib = await import("https://esm.sh/@excalidraw/excalidraw@0.18.0/dist/dev/index.js?external=react,react-dom");
+  let sharedPayload = null;
+  try {
+    const match = window.location.hash.match(/(?:^#|&)shared=([^&]+)/);
+    if (match) {
+      let encoded = match[1].replace(/-/g, "+").replace(/_/g, "/");
+      encoded += "=".repeat((4 - encoded.length % 4) % 4);
+      const decoded = decodeURIComponent(escape(atob(encoded)));
+      const parsed = JSON.parse(decoded);
+      if (parsed && parsed.type === "excalidraw" && parsed.document && Array.isArray(parsed.document.elements)) sharedPayload = parsed;
+    }
+  } catch (shareError) {
+    console.warn("Invalid shared drawing link:", shareError);
+  }
+  const sharedDoc = sharedPayload ? {
+    id: "shared-" + crypto.randomUUID(),
+    title: sharedPayload.title || "공유 드로잉",
+    document: sharedPayload.document,
+    cloudName: "",
+    cloudSha: "",
+    updatedAt: Date.now()
+  } : null;
   const createRoot = ReactDOMClient.createRoot;
   if (!React || !createRoot || !ExcalidrawLib.Excalidraw) {
     throw new Error("필수 모듈을 불러왔지만 Excalidraw 구성 요소를 찾을 수 없습니다.");
@@ -165,6 +186,7 @@
     const localTimer = React.useRef(null);
     const cloudTimer = React.useRef(null);
     const activeRef = React.useRef(null);
+    const canvasApiRef = React.useRef(null);
     const lastCloudFingerprint = React.useRef("");
     const cloudBusy = React.useRef(false);
     const cloudQueued = React.useRef([]);
@@ -172,6 +194,12 @@
 
     React.useEffect(function() {
       let alive = true;
+      if (sharedDoc) {
+        activeRef.current = sharedDoc;
+        setDocs([sharedDoc]); setActiveId(sharedDoc.id); setActiveDoc(sharedDoc);
+        setStatus("읽기 전용 공유 문서"); setStatusKind("ok");
+        return function() { alive = false; };
+      }
       dbAll().then(async function(items) {
         if (!alive) return;
         const sorted = items.sort(function(a,b) { return b.updatedAt - a.updatedAt; });
@@ -335,6 +363,7 @@
     // Keep canvas changes in refs and debounce persistence; do not set React
     // state from this callback, which can create a parent <-> Zustand update loop.
     const onCanvasChange = React.useCallback(function(elements, appState, files) {
+      if (sharedDoc) return;
       const current = activeRef.current;
       if (!current) return;
       const document = {
@@ -424,6 +453,15 @@
       finally { setBusy(false); }
     }
 
+    window.__whiteboardPro = {
+      getDoc: function() { return activeRef.current; },
+      getDocs: function() { return docs; },
+      updateDoc: updateDoc,
+      getCanvas: function() { return canvasApiRef.current; },
+      getLib: function() { return ExcalidrawLib; },
+      notify: notify,
+      isShared: function() { return !!sharedDoc; }
+    };
     const Excalidraw = ExcalidrawLib.Excalidraw;
     const canvasInitialData = React.useMemo(function() {
       return activeDoc ? {
@@ -436,6 +474,8 @@
       key: activeDoc.id,
       initialData: canvasInitialData,
       onChange: onCanvasChange,
+      excalidrawAPI: function(api) { canvasApiRef.current = api; },
+      viewModeEnabled: !!sharedDoc,
       langCode: "ko-KR",
       UIOptions: { canvasActions: { loadScene: false } }
     }) : h("div", { className: "empty-cloud" }, "새 드로잉을 만들어주세요.");
@@ -518,6 +558,8 @@
   }
 
   createRoot(document.getElementById("root")).render(h(App));
+  const proFeatures = await import("./pro-features.js");
+  proFeatures.mount();
   } catch (error) {
     console.error("Whiteboard boot failed:", error);
     showRuntimeError("화이트보드를 불러오지 못했습니다.", error && (error.stack || error.message) || error);
