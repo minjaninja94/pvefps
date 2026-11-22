@@ -419,9 +419,9 @@
           if (item.size > 50 * 1024 * 1024) throw new Error("50MB를 초과하는 드로잉이 있어 전체 백업을 시작하지 않았습니다: " + item.doc.title);
           projected = projected - (current.get(item.doc.id) || 0) + item.size;
         }
-        if (projected > 700 * 1024 * 1024) {
+        if (projected > 650 * 1024 * 1024) {
           localStorage.setItem("pvefps-whiteboard-cloud-paused", "1"); setCloudPaused(true);
-          throw new Error("전체 백업 예상량이 무료 저장 한도 700MB를 초과합니다. 로컬 백업을 이용해주세요.");
+          throw new Error("전체 백업 예상량이 무료 저장 한도 650MB를 초과합니다. 로컬 백업을 이용해주세요.");
         }
         setBusy(true); let savedCount = 0;
         for (const item of sizes) {
@@ -541,7 +541,7 @@
             }),
             h("div", { className: "cloud-list" },
               h("div", { className: "side-head" }, "SUPABASE 클라우드", h("button", { className: "btn", onClick: refreshCloud, disabled: busy }, "새로고침")),
-              h("div", { className: "empty-cloud" }, "사용량 " + (cloudUsage / 1048576).toFixed(1) + " / 700MB" + (cloudPaused ? " · 동기화 중단" : "")),
+              h("div", { className: "empty-cloud" }, "사용량 " + (cloudUsage / 1048576).toFixed(1) + " / 650MB" + (cloudPaused ? " · 동기화 중단" : "")),
               cloudItems.length ? cloudItems.map(function(item) {
                 return h("div", { key: item.id, className: "doc-row", onClick: function() { openCloud(item); } },
                   h("span", { className: "doc-icon" }, "☁"), h("span", { className: "doc-name" }, item.title || "이름 없는 드로잉"));
@@ -560,8 +560,8 @@
         h("section", { className: "modal" },
           h("h2", null, "무료 클라우드 저장 설정"),
           h("p", null, "기존 Supabase Free 계정으로 화이트보드를 백업합니다. 별도의 Google Drive, Dropbox, 유료 저장소는 연결하지 않습니다."),
-          h("div", { className: "hint" }, "화이트보드 전용 자체 제한: 700MB · 사전 경고: 560MB · 파일당 50MB. 한도에 도달하면 업로드를 자동 중단하고 이 PC의 로컬 저장은 계속합니다."),
-          h("div", { className: "hint" }, "현재 클라우드 사용량: " + (cloudUsage / 1048576).toFixed(1) + "MB / 700MB"),
+          h("div", { className: "hint" }, "화이트보드 전용 자체 제한: 650MB · 사전 경고: 520MB · 파일당 50MB. 한도에 도달하면 업로드를 자동 중단하고 이 PC의 로컬 저장은 계속합니다."),
+          h("div", { className: "hint" }, "현재 클라우드 사용량: " + (cloudUsage / 1048576).toFixed(1) + "MB / 650MB"),
           h("div", { className: "modal-actions" },
             h("button", { className: "btn", onClick: function() { setShowSettings(false); } }, "닫기"),
             h("button", { className: "btn", onClick: function() { setShowSettings(false); if (window.__openKnowledgeCloudAuth) window.__openKnowledgeCloudAuth(); else if (window.__knowledgeHubOpen) window.__knowledgeHubOpen(); } }, "로그인 / 회원가입"),
@@ -587,7 +587,7 @@
   const knowledgeHub = await import("./knowledge-hub.js?v=supabase-20261122-4");
   knowledgeHub.mountKnowledgeHub();
   window.__knowledgeHubOpen = knowledgeHub.openKnowledgeHub;
-  const knowledgeCloud = await import("./supabase-sync.js?v=20261122-4");
+  const knowledgeCloud = await import("./supabase-sync.js?v=20261122-5");
   knowledgeCloud.mountKnowledgeSupabase();
   } catch (error) {
     console.error("Whiteboard boot failed:", error);
