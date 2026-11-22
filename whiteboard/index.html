@@ -192,7 +192,7 @@
     async function saveCloud(doc, showMessage, syncConfig) {
       if (cloudBusy.current) {
         const index = cloudQueued.current.findIndex(function(item) { return item.doc.id === doc.id; });
-        const queuedItem = { doc: doc, showMessage: showMessage };
+        const queuedItem = { doc: doc, showMessage: showMessage, syncConfig: syncConfig || config };
         if (index >= 0) cloudQueued.current[index] = queuedItem;
         else cloudQueued.current.push(queuedItem);
         return;
@@ -237,7 +237,7 @@
         const queued = cloudQueued.current.shift();
         if (queued) {
           const latest = activeRef.current && activeRef.current.id === queued.doc.id ? activeRef.current : queued.doc;
-          saveCloud(latest, queued.showMessage);
+          saveCloud(latest, queued.showMessage, queued.syncConfig);
         }
       }
     }
