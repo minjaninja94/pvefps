@@ -382,7 +382,7 @@
               h("span", { className: "doc-meta" }, doc.cloudName ? "☁" : ""));
             }),
             h("div", { className: "cloud-list" },
-              h("div", { className: "side-head" }, "GITHUB 저장소"),
+              h("div", { className: "side-head" }, "GITHUB 저장소", h("button", { className: "btn", onClick: refreshCloud, disabled: busy }, "새로고침")),
               cloudItems.length ? cloudItems.map(function(item) {
                 return h("div", { key: item.name, className: "doc-row", onClick: function() { openCloud(item); } },
                   h("span", { className: "doc-icon" }, "☁"),
