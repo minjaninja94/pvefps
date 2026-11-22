@@ -124,8 +124,8 @@ export default {
         if (!body || !body.document || body.document.type !== "excalidraw" || !Array.isArray(body.document.elements)) {
           return response({ error: "Invalid Excalidraw document" }, 400, origin);
         }
-        if (JSON.stringify(body.document).length > 8 * 1024 * 1024) {
-          return response({ error: "Drawing exceeds the 8 MB limit" }, 413, origin);
+        if (new TextEncoder().encode(JSON.stringify(body.document)).length > 900 * 1024) {
+          return response({ error: "Drawing exceeds the 900 KB GitHub Contents API safety limit. Export the file locally or reduce embedded images." }, 413, origin);
         }
         const payload = {
           message: "whiteboard: save " + name,
