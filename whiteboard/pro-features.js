@@ -211,22 +211,7 @@ function mountPanel() {
 }
 
 export function mount() {
-  const install = () => {
-    if (!getApi()) return;
-    mountPanel();
-    // Never inject controls into React-owned descendants such as .topbar.
-    // External DOM mutations inside the Excalidraw/React tree can destabilize
-    // its portal and Zustand subscription lifecycle.
-    if (!document.getElementById("whiteboard-pro-button")) {
-      const button=el("button",{id:"whiteboard-pro-button",className:"btn primary",onclick:()=>{
-        const panel=document.getElementById("whiteboard-pro-panel");
-        if(panel){panel.classList.add("open");panel._refresh&&panel._refresh();}
-      }},"PRO 도구");
-      button.style.cssText="position:fixed;right:16px;bottom:16px;z-index:900;background:#252525;color:#fff;border:0;box-shadow:0 4px 18px #0003";
-      document.body.append(button);
-    }
-  };
-  const observer=new MutationObserver(install);
-  observer.observe(document.body,{childList:true});
-  install();
+  // The trigger is rendered by the React-owned toolbar in index.html.
+  // Only mount the independent PRO panel here; do not mutate React's DOM tree.
+  mountPanel();
 }
