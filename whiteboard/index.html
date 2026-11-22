@@ -10,10 +10,10 @@
   <script type="importmap">
     {
       "imports": {
-        "react": "https://esm.sh/react@19.0.0",
-        "react/jsx-runtime": "https://esm.sh/react@19.0.0/jsx-runtime",
-        "react-dom": "https://esm.sh/react-dom@19.0.0",
-        "react-dom/client": "https://esm.sh/react-dom@19.0.0/client"
+        "react": "https://esm.sh/react@18.3.1",
+        "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+        "react-dom": "https://esm.sh/react-dom@18.3.1",
+        "react-dom/client": "https://esm.sh/react-dom@18.3.1/client"
       }
     }
   </script>
@@ -49,8 +49,8 @@
     showRuntimeError("화이트보드 내부 작업이 중단되었습니다.", reason && (reason.stack || reason.message) || reason);
   });
   try {
-  const React = await import("https://esm.sh/react@19.0.0");
-  const ReactDOMClient = await import("https://esm.sh/react-dom@19.0.0/client?external=react");
+  const React = await import("https://esm.sh/react@18.3.1");
+  const ReactDOMClient = await import("https://esm.sh/react-dom@18.3.1/client?external=react");
   const ExcalidrawLib = await import("https://esm.sh/@excalidraw/excalidraw@0.18.0?external=react,react-dom");
   const createRoot = ReactDOMClient.createRoot;
   if (!React || !createRoot || !ExcalidrawLib.Excalidraw) {
