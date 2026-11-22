@@ -11,6 +11,7 @@ function stamp(x){return Date.parse(x.updated||x.updatedAt||x.created||x.deleted
 function mergeById(local,remote){const map=new Map();for(const x of local||[])map.set(x.id,x);for(const x of remote||[]){const old=map.get(x.id);if(!old||stamp(x)>=stamp(old))map.set(x.id,x);}return [...map.values()];}
 async function packCloud(){return {version:1,notes,tasks,files:await Promise.all(files.map(async f=>({id:f.id,noteId:f.noteId,name:f.name,type:f.type,size:f.size,created:f.created,updated:f.updated||f.created,data:await b64(f.blob)}))),deleted:JSON.parse(localStorage.getItem(DELETED_KEY)||"[]")};}
 async function syncRemote(){
+ if(window.__knowledgeSupabaseSync){syncStatus("Supabase 클라우드 동기화 사용 중");return;}
  if(syncBusy)return;const cfg=syncConfig();if(!cfg.endpoint||!cfg.key){if(!window.__knowledgeSupabaseSync)syncStatus("동기화 미설정");return;}
  syncBusy=true;syncStatus("GitHub 동기화 중…");
  try{
