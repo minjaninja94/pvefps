@@ -249,7 +249,7 @@
     }
 
     async function saveCloud(doc, showMessage) {
-      if (cloudPaused) { setStatus("무료 클라우드 한도 도달 · 동기화 중단"); setStatusKind("warn"); if (showMessage) setShowSettings(true); return; }
+      if (localStorage.getItem("pvefps-whiteboard-cloud-paused") === "1") { setStatus("무료 클라우드 한도 도달 · 동기화 중단"); setStatusKind("warn"); if (showMessage) setShowSettings(true); return; }
       if (cloudBusy.current) {
         const index = cloudQueued.current.findIndex(function(item) { return item.doc.id === doc.id; });
         const queuedItem = { doc: doc, showMessage: showMessage };
@@ -385,6 +385,14 @@
         notify("전체 드로잉 " + drawings.length + "개를 백업했습니다.");
       } catch (error) { notify("백업 실패: " + error.message); }
     }
+    async function exportAll() {
+      try {
+        const drawings = await dbAll();
+        const backup = { format: "pvefps-whiteboard-backup", version: 1, exportedAt: new Date().toISOString(), drawings: drawings };
+        downloadText("whiteboard-backup-" + new Date().toISOString().slice(0,10) + ".json", JSON.stringify(backup));
+        notify("전체 드로잉 " + drawings.length + "개를 백업했습니다.");
+      } catch (error) { notify("백업 실패: " + error.message); }
+    }
     async function importFile(event) {
       const file = event.target.files && event.target.files[0];
       event.target.value = "";
@@ -394,20 +402,47 @@
         if (parsed.format === "pvefps-whiteboard-backup" && Array.isArray(parsed.drawings)) {
           const valid = parsed.drawings.filter(function(doc) { return doc && doc.id && doc.document && doc.document.type === "excalidraw" && Array.isArray(doc.document.elements); });
           for (const doc of valid) await dbPut(doc);
-          const all = await dbAll();
-          setDocs(all.sort(function(a,b) { return b.updatedAt - a.updatedAt; }));
+          const all = await dbAll(); setDocs(all.sort(function(a,b) { return b.updatedAt - a.updatedAt; }));
           if (valid.length) { setActiveId(valid[0].id); setActiveDoc(valid[0]); activeRef.current = valid[0]; }
-          notify("전체 백업에서 드로잉 " + valid.length + "개를 복원했습니다.");
-          return;
+          notify("전체 백업에서 드로잉 " + valid.length + "개를 복원했습니다."); return;
         }
         if (parsed.type !== "excalidraw" || !Array.isArray(parsed.elements)) throw new Error("유효한 .excalidraw 또는 전체 백업 파일이 아닙니다.");
-        const doc = newDocument(file.name.replace(/\.excalidraw$/i, "") || "가져온 드로잉");
-        doc.document = parsed;
-        await dbPut(doc);
+        const doc = newDocument(file.name.replace(/\\.excalidraw$/i, "") || "가져온 드로잉");
+        doc.document = parsed; await dbPut(doc);
         setDocs(function(items) { return [doc].concat(items); });
         setActiveId(doc.id); setActiveDoc(doc); activeRef.current = doc;
         notify("드로잉을 가져왔습니다.");
       } catch (error) { notify(error.message); }
+    }
+    async function backupAllToCloud() {
+      const api = window.__whiteboardCloud;
+      if (!api) return notify("클라우드 모듈을 아직 불러오지 못했습니다.");
+      try {
+        const localDocs = await dbAll();
+        const remote = await api.list();
+        const current = new Map(remote.map(function(item) { return [item.id, Number(item.size_bytes || 0)]; }));
+        let projected = (await api.usage()).bytes;
+        const sizes = localDocs.map(function(doc) { return { doc: doc, size: new Blob([JSON.stringify(doc.document)], { type: "application/json" }).size }; });
+        for (const item of sizes) {
+          if (item.size > 50 * 1024 * 1024) throw new Error("50MB를 초과하는 드로잉이 있어 전체 백업을 시작하지 않았습니다: " + item.doc.title);
+          projected = projected - (current.get(item.doc.id) || 0) + item.size;
+        }
+        if (projected > 700 * 1024 * 1024) {
+          localStorage.setItem("pvefps-whiteboard-cloud-paused", "1"); setCloudPaused(true);
+          throw new Error("전체 백업 예상량이 무료 저장 한도 700MB를 초과합니다. 로컬 백업을 이용해주세요.");
+        }
+        setBusy(true); let savedCount = 0;
+        for (const item of sizes) {
+          const result = await api.save(item.doc);
+          const updated = Object.assign({}, item.doc, { cloudName: "supabase", cloudSizeBytes: result.sizeBytes, cloudUpdatedAt: Date.now() });
+          await dbPut(updated); savedCount++;
+          setDocs(function(items) { return items.map(function(doc) { return doc.id === updated.id ? updated : doc; }); });
+        }
+        notify("현재 PC의 드로잉 " + savedCount + "개를 클라우드에 백업했습니다."); await refreshCloud();
+      } catch (error) {
+        if (error.code === "WHITEBOARD_QUOTA") { localStorage.setItem("pvefps-whiteboard-cloud-paused", "1"); setCloudPaused(true); }
+        notify(error.message);
+      } finally { setBusy(false); }
     }
     async function refreshCloud() {
       const api = window.__whiteboardCloud;
@@ -417,7 +452,7 @@
         const usage = await api.usage();
         setCloudItems(items); setCloudUsage(usage.bytes || 0);
         setStatus("Supabase 클라우드 " + items.length + "개 · " + (usage.bytes / 1048576).toFixed(1) + "MB");
-        setStatusKind(cloudPaused ? "warn" : "ok");
+        setStatusKind(localStorage.getItem("pvefps-whiteboard-cloud-paused") === "1" ? "warn" : "ok");
       } catch (error) {
         if (error.code === "AUTH_REQUIRED") { setCloudItems([]); setStatus("이 기기 로컬 저장 · 로그인하면 클라우드 백업"); setStatusKind(""); }
         else { setStatus("클라우드 확인 실패 · 로컬 저장 중"); setStatusKind("warn"); }
@@ -480,6 +515,7 @@
         h("div", { className: "spacer" }),
         h("button", { className: "btn", onClick: exportActive, disabled: !activeDoc }, "드로잉 내보내기"),
         h("button", { className: "btn", onClick: exportAll, disabled: !docs.length }, "전체 백업"),
+        h("button", { className: "btn", onClick: exportAll, disabled: !docs.length }, "전체 백업"),
         h("button", { className: "btn primary", onClick: function() { if (activeRef.current) saveCloud(activeRef.current, true); }, disabled: !activeDoc }, cloudPaused ? "동기화 중단됨" : "클라우드 저장")
       ),
       h("div", { className: "workspace" },
@@ -537,6 +573,7 @@
           h("div", { className: "modal-actions" },
             h("button", { className: "btn", onClick: function() { setShowSettings(false); } }, "닫기"),
             h("button", { className: "btn", onClick: function() { setShowSettings(false); if (window.__openKnowledgeCloudAuth) window.__openKnowledgeCloudAuth(); else if (window.__knowledgeHubOpen) window.__knowledgeHubOpen(); } }, "로그인 / 회원가입"),
+            h("button", { className: "btn", onClick: backupAllToCloud, disabled: busy }, "현재 PC 그림 전체 백업"),
             h("button", { className: "btn primary", onClick: function() { localStorage.removeItem("pvefps-whiteboard-cloud-paused"); setCloudPaused(false); setShowSettings(false); refreshCloud(); } }, "동기화 재개")
           )
         )
