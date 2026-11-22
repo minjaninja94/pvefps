@@ -292,7 +292,7 @@
         if (queued) { const latest = activeRef.current && activeRef.current.id === queued.doc.id ? activeRef.current : queued.doc; saveCloud(latest, queued.showMessage); }
       }
     }
-    async function createNew()    async function createNew() {
+    async function createNew() {
       await flushPending();
       const doc = newDocument("새 드로잉");
       dbPut(doc).catch(function() {});
@@ -376,14 +376,6 @@
       const current = activeRef.current;
       if (!current) return;
       downloadText(safeName(current.title, "drawing") + ".excalidraw", JSON.stringify(current.document, null, 2));
-    }
-    async function exportAll() {
-      try {
-        const drawings = await dbAll();
-        const backup = { format: "pvefps-whiteboard-backup", version: 1, exportedAt: new Date().toISOString(), drawings: drawings };
-        downloadText("whiteboard-backup-" + new Date().toISOString().slice(0,10) + ".json", JSON.stringify(backup));
-        notify("전체 드로잉 " + drawings.length + "개를 백업했습니다.");
-      } catch (error) { notify("백업 실패: " + error.message); }
     }
     async function exportAll() {
       try {
