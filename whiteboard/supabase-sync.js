@@ -91,8 +91,7 @@ async function upsertNotebookMap(userId, localNotes, remoteNotebooks) {
   const names = [...new Set(localNotes.map(n => n.book || "기본 노트북"))];
   const rows = names.map(name => ({ user_id: userId, name }));
   if (rows.length) {
-    const { error } = await client.from("notebooks").upsert(rows, { onConflict: "user_id,name" });
-    if (error) throw error;
+    await upsertChunks("notebooks", rows, "user_id,name");
   }
   const { data, error } = await client.from("notebooks").select("id,name").eq("user_id", userId);
   if (error) throw error;
@@ -101,8 +100,7 @@ async function upsertNotebookMap(userId, localNotes, remoteNotebooks) {
 async function upsertTagMap(userId, localNotes) {
   const names = [...new Set(localNotes.flatMap(n => Array.isArray(n.tags) ? n.tags : []))];
   if (names.length) {
-    const { error } = await client.from("tags").upsert(names.map(name => ({ user_id: userId, name })), { onConflict: "user_id,name" });
-    if (error) throw error;
+    await upsertChunks("tags", names.map(name => ({ user_id: userId, name })), "user_id,name");
   }
   const { data, error } = await client.from("tags").select("id,name").eq("user_id", userId);
   if (error) throw error;
@@ -256,8 +254,7 @@ async function syncAll(showToast = true) {
     mergedFiles = await downloadRemoteFiles((remoteFiles || []).filter(x => !deadFiles.has(x.id)), mergedFiles);
     if (tombstones.length) {
       const rows = tombstones.map(x => ({ user_id: user.id, store: x.store, item_id: x.id, deleted_at: iso(x.deletedAt) }));
-      const { error } = await client.from("sync_deletions").upsert(rows, { onConflict: "user_id,store,item_id" });
-      if (error) throw error;
+      await upsertChunks("sync_deletions", rows, "user_id,store,item_id");
     }
     for (const tomb of tombstones) {
       if (tomb.store === "notes") await client.from("notes").delete().eq("id", tomb.id).eq("user_id", user.id);
