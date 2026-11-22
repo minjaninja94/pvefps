@@ -9,6 +9,10 @@ GitHub Pages에서 제공하는 개인용 Excalidraw 작업 공간입니다.
 - GitHub 토큰은 Cloudflare Worker Secret에만 저장하며 브라우저 코드에 포함하지 않음
 - Excalidraw 0.18.0을 버전 고정해 ESM CDN에서 불러옴
 - PRO 도구: 로컬 폴더 분류, 읽기 전용 공유 링크, 개인 메모/댓글, Mermaid 다이어그램 변환
+- Knowledge Hub: 리치 텍스트 노트, 노트북/태그, 즐겨찾기/보관함, 통합 검색, 웹 클리핑, 첨부파일 보관, PDF/DOCX 텍스트 추출 및 이미지/PDF OCR
+- 생산성 도구: 할 일/마감일, 월간 캘린더, 오늘의 노트, 회의록·기획·독서·아이디어 템플릿
+- 지식 연결: `[[문서 제목]]` 백링크 감지, 문서 연결 그래프, Markdown형 편집 도구
+- 전체 Knowledge Hub 데이터 JSON 백업/복원
 - 프레임 기반 슬라이드 쇼, PDF 인쇄 저장, PPTX 내보내기
 
 ## 주소
