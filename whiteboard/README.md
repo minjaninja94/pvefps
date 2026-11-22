@@ -10,6 +10,7 @@ GitHub Pages에서 제공하는 개인용 Excalidraw 작업 공간입니다.
 - Excalidraw 0.18.0을 버전 고정해 ESM CDN에서 불러옴
 - PRO 도구: 로컬 폴더 분류, 읽기 전용 공유 링크, 개인 메모/댓글, Mermaid 다이어그램 변환
 - Knowledge Hub: 리치 텍스트 노트, 노트북/태그, 즐겨찾기/보관함, 통합 검색, 웹 클리핑, 첨부파일 보관, PDF/DOCX 텍스트 추출 및 이미지/PDF OCR
+- Supabase 개인 클라우드: 이메일 계정 로그인, PC 간 노트/태스크/첨부파일 동기화, 사용자별 RLS, 비공개 Storage
 - 생산성 도구: 할 일/마감일, 월간 캘린더, 오늘의 노트, 회의록·기획·독서·아이디어 템플릿
 - 지식 연결: `[[문서 제목]]` 백링크 감지, 문서 연결 그래프, Markdown형 편집 도구
 - 전체 Knowledge Hub 데이터 JSON 백업/복원
@@ -132,9 +133,11 @@ wrangler.toml에는 저장소, 브랜치, 저장 폴더 및 허용 Origin이 이
 - GitHub PAT는 pvefps 저장소 하나에만 Contents: Read and write 권한으로 발급하세요. 토큰은 만료 기간을 설정하고 필요할 때 회수/재발급하세요.
 - GitHub Contents API의 안전한 파일 크기 한도에 맞춰 동기화 파일은 900 KB로 제한합니다. 이미지가 큰 작업은 로컬 IndexedDB에 보관하고 .excalidraw 파일로 내보내세요.
 - GitHub 동기화에는 인터넷 연결이 필요합니다. 연결 실패 시 로컬 저장은 계속되며 상태 표시가 동기화 대기 상태로 바뀝니다.
-- Knowledge Hub의 노트·할 일·첨부파일도 동일한 Worker와 SYNC_KEY를 사용해 `whiteboard/knowledge/knowledge-hub.json`에 자동 동기화됩니다. 별도 연결 설정은 필요하지 않습니다.
-- Knowledge Hub는 최초 동기화 시 로컬 자료와 GitHub 자료를 ID 및 수정 시각 기준으로 병합하고, 삭제 내역도 tombstone으로 동기화합니다. 동시 수정 충돌은 다음 동기화에서 다시 병합을 시도합니다.
-- GitHub Contents API의 900 KB 제한은 Knowledge Hub 전체 백업 JSON에도 적용됩니다. 대용량 첨부파일은 동기화되지 않을 수 있으므로 별도 백업을 유지하세요.
+- Knowledge Hub의 노트·할 일·첨부파일은 별도 Supabase 프로젝트(`personal-knowledge-hub`)에 저장합니다. 화이트보드 드로잉의 GitHub Worker 동기화와 분리되어 있습니다.
+- Knowledge Hub에서 **클라우드 로그인**을 선택해 이메일/비밀번호로 가입하거나 로그인하세요. 이메일 인증이 요구되면 받은 편지함의 인증 링크를 먼저 열어야 합니다. 다른 PC에서도 같은 계정으로 로그인하면 클라우드 자료가 내려옵니다.
+- 노트와 태스크는 사용자 ID 기준으로 동기화하며, 첨부파일은 비공개 `knowledge-files` 버킷에 저장됩니다. 파일 1개당 최대 50MB입니다. 브라우저에는 Supabase publishable key만 포함하며 service-role/secret key는 포함하지 않습니다.
+- Supabase는 Free 요금제로 생성했으며 사용량 한도를 넘거나 유료 기능을 켜면 비용이 발생할 수 있습니다. 저장공간·대역폭 사용량을 주기적으로 확인하세요.
+- 최초 로그인 시 현재 브라우저의 IndexedDB 자료와 클라우드 자료를 ID/수정 시각 기준으로 병합합니다. 삭제 내역은 tombstone으로 반영합니다. 중요한 자료는 Knowledge Hub의 JSON 백업도 별도로 보관하세요.
 - Excalidraw 엔진, CSS 및 글꼴은 esm.sh CDN에서 가져옵니다. 첫 로딩에는 인터넷 연결이 필요합니다.
 - 브라우저 IndexedDB 데이터는 브라우저/기기 간 자동 공유되지 않습니다.
 - 이 Worker는 개인 저장소 전용으로 설계했습니다. 여러 사용자가 함께 쓰는 공개 서비스로 전환하려면 사용자별 인증, 접근 제어, 요청 제한을 추가해야 합니다.
