@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f7f7f5">
   <title>Whiteboard — 개인 드로잉</title>
-  <link rel="stylesheet" href="https://esm.sh/@excalidraw/excalidraw@0.18.0/dist/dev/index.css">
+  <link rel="stylesheet" href="https://esm.sh/@excalidraw/excalidraw@0.18.0/dist/prod/index.css">
   <script>window.EXCALIDRAW_ASSET_PATH = "https://esm.sh/@excalidraw/excalidraw@0.18.0/dist/prod/";</script>
   <script type="importmap">
     {
       "imports": {
-        "react": "https://esm.sh/react@19.0.0",
-        "react/jsx-runtime": "https://esm.sh/react@19.0.0/jsx-runtime",
-        "react-dom": "https://esm.sh/react-dom@19.0.0",
-        "react-dom/client": "https://esm.sh/react-dom@19.0.0/client?deps=react@19.0.0"
+        "react": "https://esm.sh/react@18.3.1",
+        "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+        "react-dom": "https://esm.sh/react-dom@18.3.1",
+        "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?deps=react@18.3.1"
       }
     }
   </script>
@@ -49,10 +49,10 @@
     showRuntimeError("화이트보드 내부 작업이 중단되었습니다.", reason && (reason.stack || reason.message) || reason);
   });
   try {
-  // Follow Excalidraw 0.18.0's documented browser setup.
-  const React = await import("https://esm.sh/react@19.0.0");
-  const ReactDOMClient = await import("https://esm.sh/react-dom@19.0.0/client?deps=react@19.0.0");
-  const ExcalidrawLib = await import("https://esm.sh/@excalidraw/excalidraw@0.18.0/dist/dev/index.js?external=react,react-dom");
+  // Pin every Excalidraw peer dependency to one React 18 runtime to avoid mixed React stores.
+  const React = await import("https://esm.sh/react@18.3.1");
+  const ReactDOMClient = await import("https://esm.sh/react-dom@18.3.1/client?deps=react@18.3.1");
+  const ExcalidrawLib = await import("https://esm.sh/@excalidraw/excalidraw@0.18.0?deps=react@18.3.1,react-dom@18.3.1");
   let sharedPayload = null;
   try {
     const match = window.location.hash.match(/(?:^#|&)shared=([^&]+)/);
