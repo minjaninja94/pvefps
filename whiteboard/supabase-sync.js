@@ -317,7 +317,7 @@ function mountAuthUI() {
     const email = $("#kh-cloudemail").value.trim(), password = $("#kh-cloudpassword").value;
     if (!email || password.length < 8) return message("이메일과 8자 이상의 비밀번호를 입력해주세요.");
     message("회원가입 처리 중…");
-    const { error } = await client.auth.signUp({ email, password });
+    const { error } = await client.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin + window.location.pathname } });
     message(error ? error.message : "가입 요청 완료. 이메일 인증 안내가 도착하면 인증 후 로그인해주세요.");
   };
   $("#kh-cloudsignin").onclick = async () => {
