@@ -11,6 +11,7 @@ const client = createClient(SUPABASE_URL, SUPABASE_KEY, {
 
 let syncTimer = null;
 let syncing = false;
+let syncAgain = false;
 let lastUserId = null;
 const $ = (s) => document.querySelector(s);
 const iso = (v) => v ? new Date(v).toISOString() : new Date().toISOString();
@@ -62,7 +63,8 @@ function announce() {
   window.dispatchEvent(new CustomEvent("knowledge-cloud-updated"));
 }
 function queueSync() {
-  if (!lastUserId || syncing) return;
+  if (!lastUserId) return;
+  if (syncing) { syncAgain = true; return; }
   clearTimeout(syncTimer);
   syncTimer = setTimeout(() => syncAll(false), 1800);
 }
@@ -271,6 +273,7 @@ async function syncAll(showToast = true) {
     await status("동기화 실패 · " + (error.message || "오류"));
   } finally {
     syncing = false;
+    if (syncAgain) { syncAgain = false; queueSync(); }
   }
 }
 
