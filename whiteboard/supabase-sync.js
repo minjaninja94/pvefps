@@ -145,6 +145,9 @@ function rowToLocalTask(t) {
 async function uploadLocalFiles(userId, localFiles, remoteFiles) {
   const remoteById = new Map((remoteFiles || []).map(f => [f.id, f]));
   const result = [];
+  const pending = [];
+  const attachmentLimitBytes = 250 * 1024 * 1024;
+  let projectedBytes = (remoteFiles || []).reduce((sum, file) => sum + Number(file.size_bytes || 0), 0);
   for (const file of localFiles) {
     if (!file.blob) continue;
     const existing = remoteById.get(file.id);
@@ -152,6 +155,17 @@ async function uploadLocalFiles(userId, localFiles, remoteFiles) {
       result.push(file);
       continue;
     }
+    const size = file.blob.size;
+    projectedBytes = projectedBytes - Number(existing?.size_bytes || 0) + size;
+    pending.push({ file, size });
+  }
+  if (projectedBytes > attachmentLimitBytes) {
+    const error = new Error("지식관리 첨부파일 무료 저장 예산 250MB에 도달했습니다. 로컬 파일은 유지하고 클라우드 업로드를 중단했습니다.");
+    error.code = "WHITEBOARD_QUOTA";
+    throw error;
+  }
+  for (const item of pending) {
+    const file = item.file;
     const path = userId + "/" + file.id + "/" + safeName(file.name);
     const { error: uploadError } = await client.storage.from(BUCKET).upload(path, file.blob, {
       contentType: file.type || "application/octet-stream", upsert: true
@@ -159,7 +173,7 @@ async function uploadLocalFiles(userId, localFiles, remoteFiles) {
     if (uploadError) throw uploadError;
     const row = {
       id: file.id, user_id: userId, note_id: file.noteId || null, storage_path: path,
-      file_name: file.name, mime_type: file.type || null, size_bytes: file.size || file.blob.size,
+      file_name: file.name, mime_type: file.type || null, size_bytes: item.size,
       created_at: iso(file.created)
     };
     const { error } = await client.from("attachments").upsert(row, { onConflict: "id" });
@@ -318,7 +332,7 @@ async function whiteboardSave(doc) {
   const serialized = JSON.stringify(doc.document);
   const blob = new Blob([serialized], { type: "application/json" });
   const maxFileBytes = 50 * 1024 * 1024;
-  const appLimitBytes = 700 * 1024 * 1024;
+  const appLimitBytes = 650 * 1024 * 1024;
   if (blob.size > maxFileBytes) {
     const error = new Error("드로잉 파일이 50MB를 초과합니다. 로컬 저장과 내보내기는 가능하지만 클라우드에는 저장할 수 없습니다.");
     error.code = "WHITEBOARD_FILE_LIMIT";
@@ -353,7 +367,7 @@ async function whiteboardSave(doc) {
   };
   const { error: rowError } = await client.from("whiteboard_drawings").upsert(row, { onConflict: "id" });
   if (rowError) throw rowError;
-  return { sizeBytes: blob.size, usedBytes: projectedBytes, warning: projectedBytes >= 560 * 1024 * 1024 };
+  return { sizeBytes: blob.size, usedBytes: projectedBytes, warning: projectedBytes >= 520 * 1024 * 1024 };
 }
 async function whiteboardLoad(item) {
   const user = await whiteboardUser();
