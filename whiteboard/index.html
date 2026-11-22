@@ -179,16 +179,13 @@
       clearTimeout(localTimer.current);
       localTimer.current = setTimeout(async function() {
         try {
-          const latest = activeRef.current;
-          if (!latest || latest.id !== next.id) return;
-          await dbPut(latest);
+          await dbPut(next);
           setStatus("로컬 저장 완료"); setStatusKind("ok");
         } catch (error) { setStatus("로컬 저장 실패"); setStatusKind("warn"); }
       }, 500);
       clearTimeout(cloudTimer.current);
       cloudTimer.current = setTimeout(function() {
-        const latest = activeRef.current;
-        if (latest && latest.id === next.id && config.endpoint && config.key) saveCloud(latest, false);
+        if (config.endpoint && config.key) saveCloud(next, false);
       }, 6500);
     }
 
