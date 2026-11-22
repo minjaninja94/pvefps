@@ -22,11 +22,22 @@
   </style>
 </head>
 <body>
+<div id="boot-error" style="padding:24px;font:14px/1.6 system-ui;color:#222">
+  화이트보드를 불러오는 중입니다. 잠시만 기다려주세요.
+</div>
 <div id="root"></div>
 <script type="module">
-  import React from "react";
-  import { createRoot } from "react-dom/client";
-  import * as ExcalidrawLib from "https://esm.sh/@excalidraw/excalidraw@0.18.0/dist/dev/index.js?external=react,react-dom";
+(async function bootWhiteboard() {
+  const errorBox = document.getElementById("boot-error");
+  try {
+  const React = await import("https://esm.sh/react@19.0.0");
+  const ReactDOMClient = await import("https://esm.sh/react-dom@19.0.0/client?external=react");
+  const ExcalidrawLib = await import("https://esm.sh/@excalidraw/excalidraw@0.18.0?external=react,react-dom");
+  const createRoot = ReactDOMClient.createRoot;
+  if (!React || !createRoot || !ExcalidrawLib.Excalidraw) {
+    throw new Error("필수 모듈을 불러왔지만 Excalidraw 구성 요소를 찾을 수 없습니다.");
+  }
+  errorBox.style.display = "none";
 
   const h = React.createElement;
   const DB_NAME = "pvefps-whiteboard";
@@ -457,6 +468,14 @@
   }
 
   createRoot(document.getElementById("root")).render(h(App));
+  } catch (error) {
+    console.error("Whiteboard boot failed:", error);
+    errorBox.style.display = "block";
+    errorBox.innerHTML = "<h2>화이트보드를 불러오지 못했습니다.</h2><p>아래 오류 내용을 확인해 주세요.</p><pre style='white-space:pre-wrap;background:#f3f3f3;padding:12px;border-radius:8px'>" +
+      String(error && (error.stack || error.message) || error).replace(/[&<>]/g, function(c) { return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c]; }) +
+      "</pre><p>페이지를 새로고침하거나 잠시 후 다시 시도해 주세요.</p>";
+  }
+})();
 </script>
 </body>
 </html>
