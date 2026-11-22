@@ -206,6 +206,9 @@
       clearTimeout(cloudTimer.current);
       if (!pending) return;
       try { await dbPut(pending); } catch (_) {}
+      setDocs(function(items) {
+        return items.map(function(item) { return item.id === pending.id ? pending : item; });
+      });
       if (config.endpoint && config.key) await saveCloud(pending, false);
     }
 
@@ -293,19 +296,25 @@
     }
     async function openLocal(doc) {
       await flushPending();
-      setActiveId(doc.id); setActiveDoc(doc); activeRef.current = doc;
+      const storedDocs = await dbAll().catch(function() { return []; });
+      const selected = storedDocs.find(function(item) { return item.id === doc.id; }) || doc;
+      setDocs(function(items) {
+        return items.map(function(item) { return item.id === selected.id ? selected : item; });
+      });
+      setActiveId(selected.id); setActiveDoc(selected); activeRef.current = selected;
       lastCloudFingerprint.current = "";
-      setStatus(doc.cloudName ? "GitHub 동기화 문서" : "이 기기 로컬 문서");
-      setStatusKind(doc.cloudName ? "ok" : "");
+      setStatus(selected.cloudName ? "GitHub 동기화 문서" : "이 기기 로컬 문서");
+      setStatusKind(selected.cloudName ? "ok" : "");
     }
     async function renameActive() {
-      if (!activeDoc) return;
-      const title = prompt("드로잉 이름", activeDoc.title);
+      const current = activeRef.current;
+      if (!current) return;
+      const title = prompt("드로잉 이름", current.title);
       if (title === null) return;
       const clean = title.trim().slice(0, 80);
       if (!clean) return notify("이름을 입력해주세요.");
-      const cloudName = safeName(clean, "drawing-" + activeDoc.id.slice(0,8));
-      const updated = Object.assign({}, activeDoc, { title: clean, desiredCloudName: cloudName, updatedAt: Date.now() });
+      const cloudName = safeName(clean, "drawing-" + current.id.slice(0,8));
+      const updated = Object.assign({}, current, { title: clean, desiredCloudName: cloudName, updatedAt: Date.now() });
       updateDoc(updated);
       if (config.endpoint && config.key) saveCloud(updated, true);
     }
