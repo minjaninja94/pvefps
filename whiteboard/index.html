@@ -576,7 +576,7 @@
   createRoot(document.getElementById("root")).render(h(App));
   const proFeatures = await import("./pro-features.js");
   proFeatures.mount();
-  const knowledgeHub = await import("./knowledge-hub.js?v=supabase-20261122-3");
+  const knowledgeHub = await import("./knowledge-hub.js?v=supabase-20261122-4");
   knowledgeHub.mountKnowledgeHub();
   window.__knowledgeHubOpen = knowledgeHub.openKnowledgeHub;
   const knowledgeCloud = await import("./supabase-sync.js?v=20261122-3");
