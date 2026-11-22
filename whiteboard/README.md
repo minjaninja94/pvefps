@@ -130,6 +130,9 @@ wrangler.toml에는 저장소, 브랜치, 저장 폴더 및 허용 Origin이 이
 - GitHub PAT는 pvefps 저장소 하나에만 Contents: Read and write 권한으로 발급하세요. 토큰은 만료 기간을 설정하고 필요할 때 회수/재발급하세요.
 - GitHub Contents API의 안전한 파일 크기 한도에 맞춰 동기화 파일은 900 KB로 제한합니다. 이미지가 큰 작업은 로컬 IndexedDB에 보관하고 .excalidraw 파일로 내보내세요.
 - GitHub 동기화에는 인터넷 연결이 필요합니다. 연결 실패 시 로컬 저장은 계속되며 상태 표시가 동기화 대기 상태로 바뀝니다.
+- Knowledge Hub의 노트·할 일·첨부파일도 동일한 Worker와 SYNC_KEY를 사용해 `whiteboard/knowledge/knowledge-hub.json`에 자동 동기화됩니다. 별도 연결 설정은 필요하지 않습니다.
+- Knowledge Hub는 최초 동기화 시 로컬 자료와 GitHub 자료를 ID 및 수정 시각 기준으로 병합하고, 삭제 내역도 tombstone으로 동기화합니다. 동시 수정 충돌은 다음 동기화에서 다시 병합을 시도합니다.
+- GitHub Contents API의 900 KB 제한은 Knowledge Hub 전체 백업 JSON에도 적용됩니다. 대용량 첨부파일은 동기화되지 않을 수 있으므로 별도 백업을 유지하세요.
 - Excalidraw 엔진, CSS 및 글꼴은 esm.sh CDN에서 가져옵니다. 첫 로딩에는 인터넷 연결이 필요합니다.
 - 브라우저 IndexedDB 데이터는 브라우저/기기 간 자동 공유되지 않습니다.
 - 이 Worker는 개인 저장소 전용으로 설계했습니다. 여러 사용자가 함께 쓰는 공개 서비스로 전환하려면 사용자별 인증, 접근 제어, 요청 제한을 추가해야 합니다.
