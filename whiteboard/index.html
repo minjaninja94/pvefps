@@ -322,8 +322,12 @@
       else { setDocs([]); setActiveId(""); setActiveDoc(null); createNew(); }
       notify("드로잉을 삭제했습니다.");
     }
-    function onCanvasChange(elements, appState, files) {
-      if (!activeRef.current) return;
+    // Excalidraw can emit onChange during its own store/portal updates.
+    // Keep canvas changes in refs and debounce persistence; do not set React
+    // state from this callback, which can create a parent <-> Zustand update loop.
+    const onCanvasChange = React.useCallback(function(elements, appState, files) {
+      const current = activeRef.current;
+      if (!current) return;
       const document = {
         type: "excalidraw",
         version: 2,
@@ -336,12 +340,26 @@
         },
         files: files || {}
       };
-      const updated = Object.assign({}, activeRef.current, { document: document, updatedAt: Date.now() });
-      updateDoc(updated);
-    }
+      const updated = Object.assign({}, current, { document: document, updatedAt: Date.now() });
+      activeRef.current = updated;
+      clearTimeout(localTimer.current);
+      localTimer.current = setTimeout(async function() {
+        const latest = activeRef.current && activeRef.current.id === updated.id ? activeRef.current : updated;
+        try {
+          await dbPut(latest);
+          setStatus("로컬 저장 완료"); setStatusKind("ok");
+        } catch (_) { setStatus("로컬 저장 실패"); setStatusKind("warn"); }
+      }, 500);
+      clearTimeout(cloudTimer.current);
+      cloudTimer.current = setTimeout(function() {
+        const latest = activeRef.current && activeRef.current.id === updated.id ? activeRef.current : updated;
+        if (config.endpoint && config.key) saveCloud(latest, false);
+      }, 6500);
+    }, [config.endpoint, config.key]);
     function exportActive() {
-      if (!activeDoc) return;
-      downloadText(safeName(activeDoc.title, "drawing") + ".excalidraw", JSON.stringify(activeDoc.document, null, 2));
+      const current = activeRef.current;
+      if (!current) return;
+      downloadText(safeName(current.title, "drawing") + ".excalidraw", JSON.stringify(current.document, null, 2));
     }
     async function importFile(event) {
       const file = event.target.files && event.target.files[0];
@@ -398,13 +416,16 @@
     }
 
     const Excalidraw = ExcalidrawLib.Excalidraw;
-    const canvas = activeDoc ? h(Excalidraw, {
-      key: activeDoc.id,
-      initialData: {
+    const canvasInitialData = React.useMemo(function() {
+      return activeDoc ? {
         elements: activeDoc.document.elements || [],
         appState: activeDoc.document.appState || { viewBackgroundColor: "#ffffff" },
         files: activeDoc.document.files || {}
-      },
+      } : null;
+    }, [activeDoc && activeDoc.id, activeDoc && activeDoc.document]);
+    const canvas = activeDoc ? h(Excalidraw, {
+      key: activeDoc.id,
+      initialData: canvasInitialData,
       onChange: onCanvasChange,
       langCode: "ko-KR",
       UIOptions: { canvasActions: { loadScene: false } }
