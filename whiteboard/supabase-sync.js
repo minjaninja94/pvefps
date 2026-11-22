@@ -38,6 +38,24 @@ async function all(store) {
     req.onerror = () => reject(req.error);
   });
 }
+async function fetchAll(table, columns, userId) {
+  const rows = [];
+  const pageSize = 500;
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await client.from(table).select(columns).eq("user_id", userId).range(offset, offset + pageSize - 1);
+    if (error) throw error;
+    rows.push(...(data || []));
+    if (!data || data.length < pageSize) break;
+  }
+  return rows;
+}
+async function upsertChunks(table, rows, onConflict) {
+  const chunkSize = 200;
+  for (let i = 0; i < rows.length; i += chunkSize) {
+    const { error } = await client.from(table).upsert(rows.slice(i, i + chunkSize), { onConflict });
+    if (error) throw error;
+  }
+}
 async function replaceAll(store, rows) {
   const d = await db();
   return new Promise((resolve, reject) => {
@@ -182,14 +200,10 @@ async function syncAll(showToast = true) {
   await status("Supabase 동기화 중…");
   try {
     const [localNotes, localTasks, localFiles] = await Promise.all([all("notes"), all("tasks"), all("files")]);
-    const { data: remoteNotes, error: nErr } = await client.from("notes").select("*").eq("user_id", user.id);
-    if (nErr) throw nErr;
-    const { data: remoteTasks, error: tErr } = await client.from("tasks").select("*").eq("user_id", user.id);
-    if (tErr) throw tErr;
-    const { data: remoteFiles, error: fErr } = await client.from("attachments").select("*").eq("user_id", user.id);
-    if (fErr) throw fErr;
-    const { data: remoteDeletes, error: dErr } = await client.from("sync_deletions").select("*").eq("user_id", user.id);
-    if (dErr) throw dErr;
+    const remoteNotes = await fetchAll("notes", "*", user.id);
+    const remoteTasks = await fetchAll("tasks", "*", user.id);
+    const remoteFiles = await fetchAll("attachments", "*", user.id);
+    const remoteDeletes = await fetchAll("sync_deletions", "*", user.id);
     const localTombstones = JSON.parse(localStorage.getItem("pvefps-kh-deleted") || "[]");
     const tombstoneMap = new Map();
     for (const x of remoteDeletes || []) tombstoneMap.set(x.store + ":" + x.item_id, { store: x.store, id: x.item_id, deletedAt: x.deleted_at });
@@ -198,14 +212,11 @@ async function syncAll(showToast = true) {
     const deadNotes = new Set(tombstones.filter(x => x.store === "notes").map(x => x.id));
     const deadTasks = new Set(tombstones.filter(x => x.store === "tasks").map(x => x.id));
     const deadFiles = new Set(tombstones.filter(x => x.store === "files").map(x => x.id));
-    const { data: remoteNotebooks, error: bErr } = await client.from("notebooks").select("id,name").eq("user_id", user.id);
-    if (bErr) throw bErr;
+    const remoteNotebooks = await fetchAll("notebooks", "id,name", user.id);
     const notebookNames = new Map((remoteNotebooks || []).map(x => [x.id, x.name]));
-    const { data: remoteTags, error: gErr } = await client.from("tags").select("id,name").eq("user_id", user.id);
-    if (gErr) throw gErr;
+    const remoteTags = await fetchAll("tags", "id,name", user.id);
     const tagNames = new Map((remoteTags || []).map(x => [x.id, x.name]));
-    const { data: remoteNoteTags, error: ntErr } = await client.from("note_tags").select("note_id,tag_id").eq("user_id", user.id);
-    if (ntErr) throw ntErr;
+    const remoteNoteTags = await fetchAll("note_tags", "note_id,tag_id", user.id);
     const tagsByNote = new Map();
     for (const x of remoteNoteTags || []) {
       if (!tagsByNote.has(x.note_id)) tagsByNote.set(x.note_id, []);
@@ -223,20 +234,14 @@ async function syncAll(showToast = true) {
     const notebookMap = await upsertNotebookMap(user.id, notes, remoteNotebooks);
     const tagMap = await upsertTagMap(user.id, notes);
     const noteRows = notes.map(n => localNoteToRow(n, user.id, notebookMap));
-    if (noteRows.length) {
-      const { error } = await client.from("notes").upsert(noteRows, { onConflict: "id" });
-      if (error) throw error;
-    }
+    await upsertChunks("notes", noteRows, "id");
     const { error: clearTagsError } = await client.from("note_tags").delete().eq("user_id", user.id);
     if (clearTagsError) throw clearTagsError;
     const links = [];
     for (const n of notes) for (const name of n.tags || []) {
       const tagId = tagMap.get(name); if (tagId) links.push({ user_id: user.id, note_id: n.id, tag_id: tagId });
     }
-    if (links.length) {
-      const { error } = await client.from("note_tags").upsert(links, { onConflict: "note_id,tag_id" });
-      if (error) throw error;
-    }
+    await upsertChunks("note_tags", links, "note_id,tag_id");
     const localTaskMap = new Map(localTasks.filter(x => !deadTasks.has(x.id)).map(x => [x.id, x]));
     const remoteTaskMap = new Map((remoteTasks || []).filter(x => !deadTasks.has(x.id)).map(x => [x.id, rowToLocalTask(x)]));
     const mergedTasks = [];
@@ -246,10 +251,7 @@ async function syncAll(showToast = true) {
     }
     const keptTasks = mergedTasks;
     const taskRows = keptTasks.map(t => localTaskToRow(t, user.id));
-    if (taskRows.length) {
-      const { error } = await client.from("tasks").upsert(taskRows, { onConflict: "id" });
-      if (error) throw error;
-    }
+    await upsertChunks("tasks", taskRows, "id");
     let mergedFiles = await uploadLocalFiles(user.id, localFiles.filter(x => !deadFiles.has(x.id)), remoteFiles);
     mergedFiles = await downloadRemoteFiles((remoteFiles || []).filter(x => !deadFiles.has(x.id)), mergedFiles);
     if (tombstones.length) {
