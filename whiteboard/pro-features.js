@@ -38,7 +38,7 @@ function getApi() {
 function shareUrl(doc) {
   const payload = { type: "excalidraw", version: 2, document: doc.document, title: doc.title || "공유 드로잉" };
   const raw = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-  const safe = raw.replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=+$/g, "");
+  const safe = raw.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
   return window.location.origin + window.location.pathname + "#shared=" + safe;
 }
 
