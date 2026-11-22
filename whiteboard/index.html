@@ -173,6 +173,7 @@
 
   function App() {
     const [docs, setDocs] = React.useState([]);
+    const [folderFilter, setFolderFilter] = React.useState("");
     const [activeId, setActiveId] = React.useState("");
     const [activeDoc, setActiveDoc] = React.useState(null);
     const [status, setStatus] = React.useState("로컬 저장소 확인 중");
@@ -503,8 +504,20 @@
             h("button", { className: "btn", onClick: function() { document.getElementById("import-file").click(); } }, "가져오기")
           ),
           h("input", { id: "import-file", className: "file-input", type: "file", accept: ".excalidraw,.json,application/json", onChange: importFile }),
+          h("div", { style: { padding: "0 10px 8px" } },
+            h("select", {
+              className: "btn", value: folderFilter,
+              style: { width: "100%", textAlign: "left" },
+              onChange: function(event) { setFolderFilter(event.target.value); }
+            },
+              h("option", { value: "" }, "모든 폴더"),
+              Array.from(new Set(docs.map(function(item) { return item.folder || ""; }).filter(Boolean))).sort().map(function(folder) {
+                return h("option", { key: folder, value: folder }, folder);
+              })
+            )
+          ),
           h("div", { className: "doc-list" },
-            docs.map(function(doc) {
+            docs.filter(function(doc) { return !folderFilter || (doc.folder || "") === folderFilter; }).map(function(doc) {
               return h("div", {
                 key: doc.id, className: "doc-row" + (doc.id === activeId ? " active" : ""),
                 onClick: function() { openLocal(doc); }, title: doc.title
