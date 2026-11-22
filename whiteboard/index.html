@@ -413,7 +413,10 @@
     async function backupAllToCloud() {
       const api = window.__whiteboardCloud;
       if (!api) return notify("클라우드 모듈을 아직 불러오지 못했습니다.");
+      if (localStorage.getItem("pvefps-whiteboard-cloud-paused") === "1") return notify("무료 한도 초과로 동기화가 중단되어 있습니다. 저장 공간을 정리한 뒤 동기화를 재개해주세요.");
       try {
+        clearTimeout(localTimer.current);
+        if (activeRef.current) await dbPut(activeRef.current);
         const localDocs = await dbAll();
         const remote = await api.list();
         const current = new Map(remote.map(function(item) { return [item.id, Number(item.size_bytes || 0)]; }));
