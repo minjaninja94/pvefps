@@ -224,7 +224,7 @@
       setDocs(function(items) {
         return items.map(function(item) { return item.id === pending.id ? pending : item; });
       });
-      if (config.endpoint && config.key) await saveCloud(pending, false);
+      if (window.__whiteboardCloud) await saveCloud(pending, false);
     }
 
     function updateDoc(next) {
@@ -320,13 +320,16 @@
       if (title === null) return;
       const clean = title.trim().slice(0, 80);
       if (!clean) return notify("이름을 입력해주세요.");
-      const cloudName = safeName(clean, "drawing-" + current.id.slice(0,8));
-      const updated = Object.assign({}, current, { title: clean, desiredCloudName: cloudName, updatedAt: Date.now() });
+      const updated = Object.assign({}, current, { title: clean, updatedAt: Date.now() });
       updateDoc(updated);
       if (window.__whiteboardCloud) saveCloud(updated, true);
     }
     async function deleteActive() {
       if (!activeDoc || !confirm("'" + activeDoc.title + "' 드로잉을 삭제할까요?")) return;
+      if (activeDoc.cloudName === "supabase" && window.__whiteboardCloud) {
+        try { await window.__whiteboardCloud.delete(activeDoc.id); }
+        catch (error) { return notify("클라우드 삭제 실패: " + error.message); }
+      }
       await dbDelete(activeDoc.id);
       const rest = docs.filter(function(item) { return item.id !== activeDoc.id; });
       activeRef.current = null;
@@ -374,13 +377,30 @@
       if (!current) return;
       downloadText(safeName(current.title, "drawing") + ".excalidraw", JSON.stringify(current.document, null, 2));
     }
+    async function exportAll() {
+      try {
+        const drawings = await dbAll();
+        const backup = { format: "pvefps-whiteboard-backup", version: 1, exportedAt: new Date().toISOString(), drawings: drawings };
+        downloadText("whiteboard-backup-" + new Date().toISOString().slice(0,10) + ".json", JSON.stringify(backup));
+        notify("전체 드로잉 " + drawings.length + "개를 백업했습니다.");
+      } catch (error) { notify("백업 실패: " + error.message); }
+    }
     async function importFile(event) {
       const file = event.target.files && event.target.files[0];
       event.target.value = "";
       if (!file) return;
       try {
         const parsed = JSON.parse(await file.text());
-        if (parsed.type !== "excalidraw" || !Array.isArray(parsed.elements)) throw new Error("유효한 .excalidraw 파일이 아닙니다.");
+        if (parsed.format === "pvefps-whiteboard-backup" && Array.isArray(parsed.drawings)) {
+          const valid = parsed.drawings.filter(function(doc) { return doc && doc.id && doc.document && doc.document.type === "excalidraw" && Array.isArray(doc.document.elements); });
+          for (const doc of valid) await dbPut(doc);
+          const all = await dbAll();
+          setDocs(all.sort(function(a,b) { return b.updatedAt - a.updatedAt; }));
+          if (valid.length) { setActiveId(valid[0].id); setActiveDoc(valid[0]); activeRef.current = valid[0]; }
+          notify("전체 백업에서 드로잉 " + valid.length + "개를 복원했습니다.");
+          return;
+        }
+        if (parsed.type !== "excalidraw" || !Array.isArray(parsed.elements)) throw new Error("유효한 .excalidraw 또는 전체 백업 파일이 아닙니다.");
         const doc = newDocument(file.name.replace(/\.excalidraw$/i, "") || "가져온 드로잉");
         doc.document = parsed;
         await dbPut(doc);
@@ -416,34 +436,6 @@
         setStatus("Supabase 클라우드 문서 열기 완료"); setStatusKind("ok");
       } catch (error) { notify(error.message); } finally { setBusy(false); }
     }
-    async function refreshCloud() {
-      if (!config.endpoint || !config.key) { setShowSettings(true); return; }
-      try {
-        setBusy(true);
-        const result = await requestCloud(config, "/api/drawings", "GET");
-        setCloudItems(result.drawings || []);
-        notify("GitHub 드로잉 " + (result.drawings || []).length + "개를 찾았습니다.");
-      } catch (error) { notify(error.message); }
-      finally { setBusy(false); }
-    }
-    async function openCloud(item) {
-      try {
-        await flushPending();
-        setBusy(true);
-        const result = await requestCloud(config, "/api/drawings/" + encodeURIComponent(item.name) + ".excalidraw", "GET");
-        const existing = docs.find(function(doc) { return doc.cloudName === item.name; });
-        const doc = existing || newDocument(item.name.replace(/-/g, " "));
-        doc.title = item.name.replace(/-/g, " ");
-        doc.cloudName = item.name; doc.cloudSha = result.sha; doc.document = result.document; doc.updatedAt = Date.now();
-        await dbPut(doc);
-        setDocs(function(items) { return [doc].concat(items.filter(function(d) { return d.id !== doc.id; })); });
-        setActiveId(doc.id); setActiveDoc(doc); activeRef.current = doc;
-        lastCloudFingerprint.current = doc.id + ":" + JSON.stringify(doc.document);
-        setStatus("GitHub 문서 열기 완료"); setStatusKind("ok");
-      } catch (error) { notify(error.message); }
-      finally { setBusy(false); }
-    }
-
     window.__whiteboardPro = {
       getDoc: function() { return activeRef.current; },
       getDocs: function() { return docs; },
@@ -487,6 +479,7 @@
         h("button", { className: "btn", onClick: function() { if (window.__knowledgeHubOpen) window.__knowledgeHubOpen(); }, type: "button" }, "지식관리"),
         h("div", { className: "spacer" }),
         h("button", { className: "btn", onClick: exportActive, disabled: !activeDoc }, "드로잉 내보내기"),
+        h("button", { className: "btn", onClick: exportAll, disabled: !docs.length }, "전체 백업"),
         h("button", { className: "btn primary", onClick: function() { if (activeRef.current) saveCloud(activeRef.current, true); }, disabled: !activeDoc }, cloudPaused ? "동기화 중단됨" : "클라우드 저장")
       ),
       h("div", { className: "workspace" },
@@ -548,7 +541,7 @@
           )
         )
       ) : null,
-      toast ? h("div", { className: "toast" }, toast) : null      toast ? h("div", { className: "toast" }, toast) : null
+      toast ? h("div", { className: "toast" }, toast) : null
     );
 
     function renameTitleSync() {
