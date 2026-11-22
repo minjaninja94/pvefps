@@ -4,6 +4,7 @@ const SUPABASE_URL = "https://abqwyxtghsvkwedhqcyv.supabase.co";
 const SUPABASE_KEY = "sb_publishable_vflJpQgec7RCkclQbBi_RQ_mrUVOsj-";
 const DB_NAME = "pvefps-knowledge-hub";
 const BUCKET = "knowledge-files";
+const OWNER_KEY = "pvefps-kh-cloud-owner";
 const client = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
 });
@@ -170,6 +171,12 @@ async function syncAll(showToast = true) {
   if (!user) { lastUserId = null; await status("로그인하면 클라우드 동기화"); return; }
   syncing = true;
   lastUserId = user.id;
+  const previousOwner = localStorage.getItem(OWNER_KEY);
+  if (previousOwner && previousOwner !== user.id) {
+    await status("다른 계정의 로컬 자료가 남아 있습니다. 기존 계정으로 로그인하거나 백업 후 브라우저 자료를 정리해주세요.");
+    syncing = false;
+    return;
+  }
   await status("Supabase 동기화 중…");
   try {
     const [localNotes, localTasks, localFiles] = await Promise.all([all("notes"), all("tasks"), all("files")]);
@@ -251,6 +258,7 @@ async function syncAll(showToast = true) {
     }
     localStorage.removeItem("pvefps-kh-deleted");
     await Promise.all([replaceAll("notes", notes), replaceAll("tasks", keptTasks), replaceAll("files", mergedFiles)]);
+    localStorage.setItem(OWNER_KEY, user.id);
     announce();
     await status("Supabase 동기화 완료 · " + new Date().toLocaleTimeString("ko-KR"), true);
     if (showToast && $("#kh-toast")) {
