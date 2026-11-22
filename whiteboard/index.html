@@ -494,6 +494,7 @@
         }) : null,
         h("div", { className: "status" }, h("i", { className: "dot " + statusKind }), h("span", null, status)),
         h("button", { className: "btn primary", onClick: function() { const panel = document.getElementById("whiteboard-pro-panel"); if (panel) { panel.classList.add("open"); if (panel._refresh) panel._refresh(); } }, type: "button" }, "PRO 도구"),
+        h("button", { className: "btn", onClick: function() { if (window.__knowledgeHubOpen) window.__knowledgeHubOpen(); }, type: "button" }, "지식관리"),
         h("div", { className: "spacer" }),
         h("button", { className: "btn", onClick: exportActive, disabled: !activeDoc }, "내보내기"),
         h("button", { className: "btn primary", onClick: function() { if (activeRef.current) saveCloud(activeRef.current, true); }, disabled: !config.endpoint || !activeDoc }, "GitHub 저장")
@@ -575,6 +576,9 @@
   createRoot(document.getElementById("root")).render(h(App));
   const proFeatures = await import("./pro-features.js");
   proFeatures.mount();
+  const knowledgeHub = await import("./knowledge-hub.js");
+  knowledgeHub.mountKnowledgeHub();
+  window.__knowledgeHubOpen = knowledgeHub.openKnowledgeHub;
   } catch (error) {
     console.error("Whiteboard boot failed:", error);
     showRuntimeError("화이트보드를 불러오지 못했습니다.", error && (error.stack || error.message) || error);
