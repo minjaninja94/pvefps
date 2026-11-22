@@ -49,9 +49,11 @@
     showRuntimeError("화이트보드 내부 작업이 중단되었습니다.", reason && (reason.stack || reason.message) || reason);
   });
   try {
-  const React = await import("https://esm.sh/react@18.3.1");
-  const ReactDOMClient = await import("https://esm.sh/react-dom@18.3.1/client?external=react");
-  const ExcalidrawLib = await import("https://esm.sh/@excalidraw/excalidraw@0.18.0?external=react,react-dom");
+  // Pin every peer dependency to the same React 18 instance. Excalidraw 0.18
+  // must not resolve a second React/ReactDOM version through esm.sh.
+  const React = await import("https://esm.sh/react@18.3.1?target=es2022");
+  const ReactDOMClient = await import("https://esm.sh/react-dom@18.3.1/client?target=es2022&external=react&deps=react@18.3.1");
+  const ExcalidrawLib = await import("https://esm.sh/@excalidraw/excalidraw@0.18.0?target=es2022&external=react,react-dom&deps=react@18.3.1,react-dom@18.3.1");
   const createRoot = ReactDOMClient.createRoot;
   if (!React || !createRoot || !ExcalidrawLib.Excalidraw) {
     throw new Error("필수 모듈을 불러왔지만 Excalidraw 구성 요소를 찾을 수 없습니다.");
