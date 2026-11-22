@@ -29,6 +29,25 @@
 <script type="module">
 (async function bootWhiteboard() {
   const errorBox = document.getElementById("boot-error");
+  function showRuntimeError(title, detail) {
+    errorBox.style.display = "block";
+    errorBox.replaceChildren();
+    const heading = document.createElement("h2");
+    heading.textContent = title;
+    const paragraph = document.createElement("p");
+    paragraph.textContent = "오류 내용을 복사하거나 화면을 캡처해 보내주세요.";
+    const pre = document.createElement("pre");
+    pre.style.cssText = "white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f3f3;padding:12px;border-radius:8px";
+    pre.textContent = String(detail || "원인을 확인할 수 없는 오류");
+    errorBox.append(heading, paragraph, pre);
+  }
+  window.addEventListener("error", function(event) {
+    showRuntimeError("화이트보드 실행 중 오류가 발생했습니다.", event.error && (event.error.stack || event.error.message) || event.message);
+  });
+  window.addEventListener("unhandledrejection", function(event) {
+    const reason = event.reason;
+    showRuntimeError("화이트보드 내부 작업이 중단되었습니다.", reason && (reason.stack || reason.message) || reason);
+  });
   try {
   const React = await import("https://esm.sh/react@19.0.0");
   const ReactDOMClient = await import("https://esm.sh/react-dom@19.0.0/client?external=react");
@@ -470,10 +489,7 @@
   createRoot(document.getElementById("root")).render(h(App));
   } catch (error) {
     console.error("Whiteboard boot failed:", error);
-    errorBox.style.display = "block";
-    errorBox.innerHTML = "<h2>화이트보드를 불러오지 못했습니다.</h2><p>아래 오류 내용을 확인해 주세요.</p><pre style='white-space:pre-wrap;background:#f3f3f3;padding:12px;border-radius:8px'>" +
-      String(error && (error.stack || error.message) || error).replace(/[&<>]/g, function(c) { return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c]; }) +
-      "</pre><p>페이지를 새로고침하거나 잠시 후 다시 시도해 주세요.</p>";
+    showRuntimeError("화이트보드를 불러오지 못했습니다.", error && (error.stack || error.message) || error);
   }
 })();
 </script>
