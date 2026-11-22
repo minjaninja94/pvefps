@@ -135,7 +135,7 @@
     const activeRef = React.useRef(null);
     const lastCloudFingerprint = React.useRef("");
     const cloudBusy = React.useRef(false);
-    const cloudQueued = React.useRef(null);
+    const cloudQueued = React.useRef([]);
     const [busy, setBusy] = React.useState(false);
 
     React.useEffect(function() {
@@ -189,12 +189,16 @@
       }, 6500);
     }
 
-    async function saveCloud(doc, showMessage) {
+    async function saveCloud(doc, showMessage, syncConfig) {
       if (cloudBusy.current) {
-        cloudQueued.current = { doc: doc, showMessage: showMessage };
+        const index = cloudQueued.current.findIndex(function(item) { return item.doc.id === doc.id; });
+        const queuedItem = { doc: doc, showMessage: showMessage };
+        if (index >= 0) cloudQueued.current[index] = queuedItem;
+        else cloudQueued.current.push(queuedItem);
         return;
       }
       cloudBusy.current = true;
+      const connection = syncConfig || config;
       try {
         const targetName = doc.desiredCloudName || doc.cloudName || safeName(doc.title, "drawing-" + doc.id.slice(0,8));
         const fingerprint = JSON.stringify(doc.document);
@@ -202,10 +206,10 @@
         setStatus("GitHub 저장 중"); setStatusKind("");
         let saved;
         if (doc.cloudName && doc.cloudName !== targetName) {
-          saved = await requestCloud(config, "/api/drawings/" + encodeURIComponent(targetName) + ".excalidraw", "PUT", { document: doc.document });
-          await requestCloud(config, "/api/drawings/" + encodeURIComponent(doc.cloudName) + ".excalidraw", "DELETE", { sha: doc.cloudSha });
+          saved = await requestCloud(connection, "/api/drawings/" + encodeURIComponent(targetName) + ".excalidraw", "PUT", { document: doc.document });
+          await requestCloud(connection, "/api/drawings/" + encodeURIComponent(doc.cloudName) + ".excalidraw", "DELETE", { sha: doc.cloudSha });
         } else {
-          saved = await requestCloud(config, "/api/drawings/" + encodeURIComponent(targetName) + ".excalidraw", "PUT", {
+          saved = await requestCloud(connection, "/api/drawings/" + encodeURIComponent(targetName) + ".excalidraw", "PUT", {
             document: doc.document,
             sha: doc.cloudSha || undefined
           });
@@ -230,8 +234,7 @@
         if (showMessage) notify(error.message);
       } finally {
         cloudBusy.current = false;
-        const queued = cloudQueued.current;
-        cloudQueued.current = null;
+        const queued = cloudQueued.current.shift();
         if (queued) {
           const latest = activeRef.current && activeRef.current.id === queued.doc.id ? activeRef.current : queued.doc;
           saveCloud(latest, queued.showMessage);
@@ -320,7 +323,7 @@
       if (!!next.endpoint !== !!next.key) return notify("Worker 주소와 동기화 키를 모두 입력해주세요.");
       localStorage.setItem(CONFIG_KEY, JSON.stringify(next));
       setConfig(next); setShowSettings(false);
-      if (next.endpoint && activeRef.current) saveCloud(activeRef.current, true);
+      if (next.endpoint && activeRef.current) saveCloud(activeRef.current, true, next);
       else { setStatus("로컬 전용 저장"); setStatusKind("ok"); }
     }
     async function refreshCloud() {
