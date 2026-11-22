@@ -200,7 +200,9 @@ async function syncAll(showToast = true) {
       const l = localNoteMap.get(id), r = remoteNoteMap.get(id);
       mergedNotes.set(id, !l ? r : !r ? l : stamp(l.updated) > stamp(r.updated) ? l : r);
     }
-    const notes = [...mergedNotes.values()];
+    const tombstones = JSON.parse(localStorage.getItem("pvefps-kh-deleted") || "[]");
+    const deadNotes = new Set(tombstones.filter(x => x.store === "notes").map(x => x.id));
+    const notes = [...mergedNotes.values()].filter(x => !deadNotes.has(x.id));
     const notebookMap = await upsertNotebookMap(user.id, notes, remoteNotebooks);
     const tagMap = await upsertTagMap(user.id, notes);
     const noteRows = notes.map(n => localNoteToRow(n, user.id, notebookMap));
@@ -225,14 +227,17 @@ async function syncAll(showToast = true) {
       const l = localTaskMap.get(id), r = remoteTaskMap.get(id);
       mergedTasks.push(!l ? r : !r ? l : stamp(l.updated) > stamp(r.updated) ? l : r);
     }
-    const taskRows = mergedTasks.map(t => localTaskToRow(t, user.id));
+    const deadTasks = new Set(tombstones.filter(x => x.store === "tasks").map(x => x.id));
+    const keptTasks = mergedTasks.filter(x => !deadTasks.has(x.id));
+    const taskRows = keptTasks.map(t => localTaskToRow(t, user.id));
     if (taskRows.length) {
       const { error } = await client.from("tasks").upsert(taskRows, { onConflict: "id" });
       if (error) throw error;
     }
     let mergedFiles = await uploadLocalFiles(user.id, localFiles, remoteFiles);
     mergedFiles = await downloadRemoteFiles(remoteFiles, mergedFiles);
-    const tombstones = JSON.parse(localStorage.getItem("pvefps-kh-deleted") || "[]");
+    const deadFiles = new Set(tombstones.filter(x => x.store === "files").map(x => x.id));
+    mergedFiles = mergedFiles.filter(x => !deadFiles.has(x.id));
     for (const tomb of tombstones) {
       if (tomb.store === "notes") await client.from("notes").delete().eq("id", tomb.id).eq("user_id", user.id);
       if (tomb.store === "tasks") await client.from("tasks").delete().eq("id", tomb.id).eq("user_id", user.id);
@@ -245,7 +250,7 @@ async function syncAll(showToast = true) {
       }
     }
     localStorage.removeItem("pvefps-kh-deleted");
-    await Promise.all([replaceAll("notes", notes), replaceAll("tasks", mergedTasks), replaceAll("files", mergedFiles)]);
+    await Promise.all([replaceAll("notes", notes), replaceAll("tasks", keptTasks), replaceAll("files", mergedFiles)]);
     announce();
     await status("Supabase 동기화 완료 · " + new Date().toLocaleTimeString("ko-KR"), true);
     if (showToast && $("#kh-toast")) {
