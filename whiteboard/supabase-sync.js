@@ -21,7 +21,7 @@ const strip = (html) => {
   node.innerHTML = html || "";
   return (node.textContent || node.innerText || "").trim();
 };
-const safeName = (s) => String(s || "file").replace(/[\\/:*?"<>|]/g, "_").slice(0, 160);
+const safeName = (s) => String(s || "file").replace(/[\\\/:*?"<>|]/g, "_").slice(0, 160);
 
 function db() {
   return new Promise((resolve, reject) => {
