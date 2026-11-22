@@ -145,7 +145,7 @@
       .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 64);
     return normalized || fallback;
   }
-  function downloadText  function downloadText(filename, text) {
+  function downloadText(filename, text) {
     const blob = new Blob([text], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
