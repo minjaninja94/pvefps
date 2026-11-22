@@ -1,0 +1,11 @@
+name = "pvefps-whiteboard-sync"
+main = "index.js"
+compatibility_date = "2026-11-22"
+workers_dev = true
+
+[vars]
+GITHUB_OWNER = "minjaninja94"
+GITHUB_REPO = "pvefps"
+GITHUB_BRANCH = "main"
+GITHUB_PATH = "whiteboard/drawings"
+ALLOWED_ORIGIN = "https://minjaninja94.github.io"
