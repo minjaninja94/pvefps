@@ -446,10 +446,11 @@ function mountAuthUI() {
   };
   $("#kh-cloudsignin").onclick = async () => {
     const id = normalizeId(), password = $("#kh-cloudpassword").value;
-    if (!validId(id)) return message("아이디는 영문 소문자·숫자·밑줄 3~24자로 입력해주세요.");
+    const legacyEmail = id.includes("@");
+    if (!legacyEmail && !validId(id)) return message("아이디는 영문 소문자·숫자·밑줄 3~24자로 입력해주세요.");
     if (!password) return message("비밀번호를 입력해주세요.");
     message("로그인 중…");
-    const { error } = await client.auth.signInWithPassword({ email: accountEmail(id), password });
+    const { error } = await client.auth.signInWithPassword({ email: legacyEmail ? id : accountEmail(id), password });
     message(error ? "아이디 또는 비밀번호를 확인해주세요." : "로그인 성공. 동기화를 시작합니다.");
     if (!error) { await syncAll(true); await open(); }
   };
