@@ -576,10 +576,10 @@
   createRoot(document.getElementById("root")).render(h(App));
   const proFeatures = await import("./pro-features.js");
   proFeatures.mount();
-  const knowledgeHub = await import("./knowledge-hub.js?v=supabase-20261122");
+  const knowledgeHub = await import("./knowledge-hub.js?v=supabase-20261122-2");
   knowledgeHub.mountKnowledgeHub();
   window.__knowledgeHubOpen = knowledgeHub.openKnowledgeHub;
-  const knowledgeCloud = await import("./supabase-sync.js?v=1");
+  const knowledgeCloud = await import("./supabase-sync.js?v=20261122-2");
   knowledgeCloud.mountKnowledgeSupabase();
   } catch (error) {
     console.error("Whiteboard boot failed:", error);
