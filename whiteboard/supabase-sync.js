@@ -286,6 +286,99 @@ async function syncAll(showToast = true) {
   }
 }
 
+async function whiteboardUser() {
+  const { data, error } = await client.auth.getUser();
+  if (error) throw error;
+  if (!data.user) {
+    const error = new Error("클라우드 계정에 로그인해야 동기화할 수 있습니다.");
+    error.code = "AUTH_REQUIRED";
+    throw error;
+  }
+  return data.user;
+}
+async function whiteboardList() {
+  const user = await whiteboardUser();
+  const { data, error } = await client.from("whiteboard_drawings")
+    .select("id,title,storage_path,size_bytes,created_at,updated_at")
+    .eq("user_id", user.id).is("deleted_at", null)
+    .order("updated_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+async function whiteboardUsage() {
+  const user = await whiteboardUser();
+  const { data, error } = await client.from("whiteboard_drawings")
+    .select("size_bytes").eq("user_id", user.id).is("deleted_at", null);
+  if (error) throw error;
+  const rows = data || [];
+  return { bytes: rows.reduce((sum, row) => sum + Number(row.size_bytes || 0), 0), files: rows.length };
+}
+async function whiteboardSave(doc) {
+  const user = await whiteboardUser();
+  const serialized = JSON.stringify(doc.document);
+  const blob = new Blob([serialized], { type: "application/json" });
+  const maxFileBytes = 50 * 1024 * 1024;
+  const appLimitBytes = 700 * 1024 * 1024;
+  if (blob.size > maxFileBytes) {
+    const error = new Error("드로잉 파일이 50MB를 초과합니다. 로컬 저장과 내보내기는 가능하지만 클라우드에는 저장할 수 없습니다.");
+    error.code = "WHITEBOARD_FILE_LIMIT";
+    throw error;
+  }
+  const { data: currentRows, error: listError } = await client.from("whiteboard_drawings")
+    .select("id,size_bytes").eq("user_id", user.id).is("deleted_at", null);
+  if (listError) throw listError;
+  const rows = currentRows || [];
+  const current = rows.find(row => row.id === doc.id);
+  const usedBytes = rows.reduce((sum, row) => sum + Number(row.size_bytes || 0), 0);
+  const projectedBytes = usedBytes - Number(current?.size_bytes || 0) + blob.size;
+  if (projectedBytes > appLimitBytes) {
+    const error = new Error("화이트보드 클라우드 자체 한도(700MB)에 도달했습니다. 추가 업로드를 중단했습니다. 기존 그림은 로컬에 보존됩니다.");
+    error.code = "WHITEBOARD_QUOTA";
+    throw error;
+  }
+  const path = user.id + "/" + doc.id + ".json";
+  const { error: uploadError } = await client.storage.from("whiteboard-drawings").upload(path, blob, {
+    contentType: "application/json", upsert: true, cacheControl: "3600"
+  });
+  if (uploadError) {
+    if (/quota|limit|storage|size|payload|413/i.test(uploadError.message || "")) {
+      uploadError.code = "WHITEBOARD_QUOTA";
+    }
+    throw uploadError;
+  }
+  const row = {
+    id: doc.id, user_id: user.id, title: doc.title || "새 드로잉",
+    storage_path: path, size_bytes: blob.size,
+    updated_at: new Date().toISOString()
+  };
+  const { error: rowError } = await client.from("whiteboard_drawings").upsert(row, { onConflict: "id" });
+  if (rowError) throw rowError;
+  return { sizeBytes: blob.size, usedBytes: projectedBytes, warning: projectedBytes >= 560 * 1024 * 1024 };
+}
+async function whiteboardLoad(item) {
+  const user = await whiteboardUser();
+  const { data, error } = await client.storage.from("whiteboard-drawings").download(item.storage_path);
+  if (error) throw error;
+  const document = JSON.parse(await data.text());
+  return {
+    id: item.id, title: item.title || "클라우드 드로잉", document,
+    cloudName: "supabase", cloudSha: "", cloudSizeBytes: Number(item.size_bytes || data.size),
+    updatedAt: Date.parse(item.updated_at || item.created_at) || Date.now()
+  };
+}
+async function whiteboardDelete(id) {
+  const user = await whiteboardUser();
+  const { data: row, error: readError } = await client.from("whiteboard_drawings")
+    .select("storage_path").eq("id", id).eq("user_id", user.id).maybeSingle();
+  if (readError) throw readError;
+  if (row?.storage_path) {
+    const { error } = await client.storage.from("whiteboard-drawings").remove([row.storage_path]);
+    if (error) throw error;
+  }
+  const { error } = await client.from("whiteboard_drawings").delete().eq("id", id).eq("user_id", user.id);
+  if (error) throw error;
+}
+
 function mountAuthUI() {
   const head = $("#kh-head");
   if (!head || $("#kh-cloudlogin")) return;
@@ -310,6 +403,7 @@ function mountAuthUI() {
     panel.style.display = "grid";
   };
   button.onclick = open;
+  window.__openKnowledgeCloudAuth = open;
   $("#kh-cloudclose").onclick = () => panel.style.display = "none";
   panel.addEventListener("click", e => { if (e.target === panel) panel.style.display = "none"; });
   $("#kh-cloudsignup").onclick = async () => {
@@ -336,12 +430,16 @@ function mountAuthUI() {
 }
 export function mountKnowledgeSupabase() {
   mountAuthUI();
+  window.__whiteboardCloud = { user: whiteboardUser, list: whiteboardList, usage: whiteboardUsage, save: whiteboardSave, load: whiteboardLoad, delete: whiteboardDelete };
+  window.dispatchEvent(new Event("whiteboard-cloud-ready"));
   client.auth.onAuthStateChange((event, session) => {
     if (session && session.user) {
       lastUserId = session.user.id;
+      window.dispatchEvent(new Event("whiteboard-cloud-auth-changed"));
       if (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") syncAll(false);
     } else {
       lastUserId = null;
+      window.dispatchEvent(new Event("whiteboard-cloud-auth-changed"));
       status("로그인하면 클라우드 동기화");
     }
   });
