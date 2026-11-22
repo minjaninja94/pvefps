@@ -12,8 +12,8 @@
       "imports": {
         "react": "https://esm.sh/react@18.3.1",
         "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
-        "react-dom": "https://esm.sh/react-dom@18.3.1",
-        "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?deps=react@18.3.1"
+        "react-dom": "https://esm.sh/react-dom@18.3.1?external=react",
+        "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?external=react"
       }
     }
   </script>
@@ -49,10 +49,10 @@
     showRuntimeError("화이트보드 내부 작업이 중단되었습니다.", reason && (reason.stack || reason.message) || reason);
   });
   try {
-  // Pin every Excalidraw peer dependency to one React 18 runtime to avoid mixed React stores.
+  // Keep Excalidraw, ReactDOM, and the application on one shared React 18 module graph.
   const React = await import("https://esm.sh/react@18.3.1");
-  const ReactDOMClient = await import("https://esm.sh/react-dom@18.3.1/client?deps=react@18.3.1");
-  const ExcalidrawLib = await import("https://esm.sh/@excalidraw/excalidraw@0.18.0?deps=react@18.3.1,react-dom@18.3.1");
+  const ReactDOMClient = await import("react-dom/client");
+  const ExcalidrawLib = await import("https://esm.sh/@excalidraw/excalidraw@0.18.0/dist/prod/index.js?external=react,react-dom");
   let sharedPayload = null;
   try {
     const match = window.location.hash.match(/(?:^#|&)shared=([^&]+)/);
@@ -464,6 +464,7 @@
       isShared: function() { return !!sharedDoc; }
     };
     const Excalidraw = ExcalidrawLib.Excalidraw;
+    const onExcalidrawAPI = React.useCallback(function(api) { canvasApiRef.current = api; }, []);
     const canvasInitialData = React.useMemo(function() {
       return activeDoc ? {
         elements: activeDoc.document.elements || [],
@@ -475,7 +476,7 @@
       key: activeDoc.id,
       initialData: canvasInitialData,
       onChange: onCanvasChange,
-      excalidrawAPI: function(api) { canvasApiRef.current = api; },
+      excalidrawAPI: onExcalidrawAPI,
       viewModeEnabled: !!sharedDoc,
       langCode: "ko-KR",
       UIOptions: { canvasActions: { loadScene: false } }
@@ -492,6 +493,7 @@
           "aria-label": "드로잉 이름"
         }) : null,
         h("div", { className: "status" }, h("i", { className: "dot " + statusKind }), h("span", null, status)),
+        h("button", { className: "btn primary", onClick: function() { const panel = document.getElementById("whiteboard-pro-panel"); if (panel) { panel.classList.add("open"); if (panel._refresh) panel._refresh(); } }, type: "button" }, "PRO 도구"),
         h("div", { className: "spacer" }),
         h("button", { className: "btn", onClick: exportActive, disabled: !activeDoc }, "내보내기"),
         h("button", { className: "btn primary", onClick: function() { if (activeRef.current) saveCloud(activeRef.current, true); }, disabled: !config.endpoint || !activeDoc }, "GitHub 저장")
