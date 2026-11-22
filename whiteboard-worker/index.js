@@ -86,6 +86,45 @@ export default {
       return response({ error: "Sync key is invalid" }, 401, origin);
     }
 
+    if (url.pathname === "/api/knowledge") {
+      const knowledgePath = "whiteboard/knowledge/knowledge-hub.json";
+      const branch = env.GITHUB_BRANCH || "main";
+      try {
+        if (request.method === "GET") {
+          try {
+            const file = await github(env, knowledgePath + "?ref=" + encodeURIComponent(branch));
+            return response({ sha: file.sha, document: JSON.parse(decodeBase64(file.content)) }, 200, origin);
+          } catch (error) {
+            if (error.status === 404) return response({ sha: "", document: { version: 1, notes: [], tasks: [], files: [] } }, 200, origin);
+            throw error;
+          }
+        }
+        if (request.method === "PUT") {
+          const body = await request.json();
+          const document = body && body.document;
+          if (!document || document.version !== 1 || !Array.isArray(document.notes) || !Array.isArray(document.tasks) || !Array.isArray(document.files)) {
+            return response({ error: "Invalid Knowledge Hub document" }, 400, origin);
+          }
+          const serialized = JSON.stringify(document, null, 2);
+          if (new TextEncoder().encode(serialized).length > 900 * 1024) {
+            return response({ error: "Knowledge Hub backup exceeds the 900 KB GitHub Contents API safety limit. Reduce attachments or split large files." }, 413, origin);
+          }
+          const payload = {
+            message: "knowledge-hub: synchronize notes and files",
+            content: encodeBase64(serialized),
+            branch: branch,
+          };
+          if (typeof body.sha === "string" && body.sha) payload.sha = body.sha;
+          const saved = await github(env, knowledgePath, { method: "PUT", body: payload });
+          return response({ saved: true, sha: saved.content.sha, commit: saved.commit.sha }, 200, origin);
+        }
+        return response({ error: "Method not allowed" }, 405, origin);
+      } catch (error) {
+        const status = error.status === 404 ? 404 : error.status === 409 || error.status === 422 ? 409 : 502;
+        return response({ error: status === 409 ? "Knowledge data changed on another device; synchronize again" : error.message }, status, origin);
+      }
+    }
+
     const prefix = "/api/drawings";
     if (url.pathname !== prefix && !url.pathname.startsWith(prefix + "/")) {
       return response({ error: "Not found" }, 404, origin);
