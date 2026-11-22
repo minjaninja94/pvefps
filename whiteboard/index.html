@@ -83,7 +83,6 @@
   const h = React.createElement;
   const DB_NAME = "pvefps-whiteboard";
   const STORE = "drawings";
-  const CONFIG_KEY = "pvefps-whiteboard-config";
   let dbPromise;
 
   function openDb() {
@@ -146,24 +145,7 @@
       .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 64);
     return normalized || fallback;
   }
-  function configRead() {
-    try { return JSON.parse(localStorage.getItem(CONFIG_KEY) || "{}"); } catch (_) { return {}; }
-  }
-  async function requestCloud(config, path, method, body) {
-    if (!config.endpoint || !config.key) throw new Error("GitHub 동기화 설정이 필요합니다.");
-    const response = await fetch(config.endpoint.replace(/\/+$/, "") + path, {
-      method: method || "GET",
-      headers: {
-        "Authorization": "Bearer " + config.key,
-        ...(body ? { "Content-Type": "application/json" } : {})
-      },
-      body: body ? JSON.stringify(body) : undefined
-    });
-    const data = await response.json().catch(function() { return {}; });
-    if (!response.ok) throw new Error(data.error || "동기화에 실패했습니다. (" + response.status + ")");
-    return data;
-  }
-  function downloadText(filename, text) {
+  function downloadText  function downloadText(filename, text) {
     const blob = new Blob([text], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -179,10 +161,9 @@
     const [status, setStatus] = React.useState("로컬 저장소 확인 중");
     const [statusKind, setStatusKind] = React.useState("");
     const [cloudItems, setCloudItems] = React.useState([]);
-    const [config, setConfig] = React.useState(configRead());
     const [showSettings, setShowSettings] = React.useState(false);
-    const [endpointDraft, setEndpointDraft] = React.useState(config.endpoint || "");
-    const [keyDraft, setKeyDraft] = React.useState(config.key || "");
+    const [cloudPaused, setCloudPaused] = React.useState(localStorage.getItem("pvefps-whiteboard-cloud-paused") === "1");
+    const [cloudUsage, setCloudUsage] = React.useState(0);
     const [toast, setToast] = React.useState("");
     const localTimer = React.useRef(null);
     const cloudTimer = React.useRef(null);
@@ -201,6 +182,11 @@
         setStatus("읽기 전용 공유 문서"); setStatusKind("ok");
         return function() { alive = false; };
       }
+      if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function() {});
+      const onCloudReady = function() { refreshCloud(); };
+      window.addEventListener("whiteboard-cloud-ready", onCloudReady);
+      window.addEventListener("whiteboard-cloud-auth-changed", onCloudReady);
+      if (window.__whiteboardCloud) onCloudReady();
       dbAll().then(async function(items) {
         if (!alive) return;
         const sorted = items.sort(function(a,b) { return b.updatedAt - a.updatedAt; });
@@ -220,7 +206,7 @@
       }).catch(function(error) {
         setStatus("로컬 저장소 오류"); setStatusKind("warn"); notify(error.message);
       });
-      return function() { alive = false; clearTimeout(localTimer.current); clearTimeout(cloudTimer.current); };
+      return function() { alive = false; window.removeEventListener("whiteboard-cloud-ready", onCloudReady); window.removeEventListener("whiteboard-cloud-auth-changed", onCloudReady); clearTimeout(localTimer.current); clearTimeout(cloudTimer.current); };
     }, []);
 
     React.useEffect(function() { activeRef.current = activeDoc; }, [activeDoc]);
@@ -258,63 +244,55 @@
       }, 500);
       clearTimeout(cloudTimer.current);
       cloudTimer.current = setTimeout(function() {
-        if (config.endpoint && config.key) saveCloud(next, false);
+        if (window.__whiteboardCloud) saveCloud(next, false);
       }, 6500);
     }
 
-    async function saveCloud(doc, showMessage, syncConfig) {
+    async function saveCloud(doc, showMessage) {
+      if (cloudPaused) { setStatus("무료 클라우드 한도 도달 · 동기화 중단"); setStatusKind("warn"); if (showMessage) setShowSettings(true); return; }
       if (cloudBusy.current) {
         const index = cloudQueued.current.findIndex(function(item) { return item.doc.id === doc.id; });
-        const queuedItem = { doc: doc, showMessage: showMessage, syncConfig: syncConfig || config };
-        if (index >= 0) cloudQueued.current[index] = queuedItem;
-        else cloudQueued.current.push(queuedItem);
+        const queuedItem = { doc: doc, showMessage: showMessage };
+        if (index >= 0) cloudQueued.current[index] = queuedItem; else cloudQueued.current.push(queuedItem);
         return;
       }
       cloudBusy.current = true;
-      const connection = syncConfig || config;
       try {
-        const targetName = doc.desiredCloudName || doc.cloudName || safeName(doc.title, "drawing-" + doc.id.slice(0,8));
+        const api = window.__whiteboardCloud;
+        if (!api) throw new Error("클라우드 모듈을 아직 불러오지 못했습니다.");
         const fingerprint = JSON.stringify(doc.document);
-        if (doc.cloudName === targetName && lastCloudFingerprint.current === doc.id + ":" + fingerprint) return;
-        setStatus("GitHub 저장 중"); setStatusKind("");
-        let saved;
-        if (doc.cloudName && doc.cloudName !== targetName) {
-          saved = await requestCloud(connection, "/api/drawings/" + encodeURIComponent(targetName) + ".excalidraw", "PUT", { document: doc.document });
-          await requestCloud(connection, "/api/drawings/" + encodeURIComponent(doc.cloudName) + ".excalidraw", "DELETE", { sha: doc.cloudSha });
-        } else {
-          saved = await requestCloud(connection, "/api/drawings/" + encodeURIComponent(targetName) + ".excalidraw", "PUT", {
-            document: doc.document,
-            sha: doc.cloudSha || undefined
-          });
-        }
+        if (doc.cloudName === "supabase" && lastCloudFingerprint.current === doc.id + ":" + fingerprint) return;
+        setStatus("Supabase 무료 저장소에 저장 중…"); setStatusKind("");
+        const saved = await api.save(doc);
         lastCloudFingerprint.current = doc.id + ":" + fingerprint;
         const latest = activeRef.current && activeRef.current.id === doc.id ? activeRef.current : doc;
-        const updated = Object.assign({}, latest, {
-          cloudName: targetName,
-          desiredCloudName: latest.desiredCloudName === targetName ? "" : (latest.desiredCloudName || ""),
-          cloudSha: saved.sha,
-          updatedAt: Date.now()
-        });
+        const updated = Object.assign({}, latest, { cloudName: "supabase", cloudSha: "", cloudSizeBytes: saved.sizeBytes, cloudUpdatedAt: Date.now() });
         await dbPut(updated);
-        if (activeRef.current && activeRef.current.id === doc.id) {
-          activeRef.current = updated; setActiveDoc(updated);
-        }
+        if (activeRef.current && activeRef.current.id === doc.id) { activeRef.current = updated; setActiveDoc(updated); }
         setDocs(function(items) { return items.map(function(item) { return item.id === doc.id ? updated : item; }); });
-        setStatus("GitHub 자동 저장 완료"); setStatusKind("ok");
-        if (showMessage) notify("GitHub에 저장했습니다.");
+        setCloudUsage(saved.usedBytes || 0);
+        setStatus(saved.warning ? "클라우드 저장 완료 · 사용량 80% 경고" : "Supabase 클라우드 저장 완료");
+        setStatusKind(saved.warning ? "warn" : "ok");
+        if (showMessage) notify("Supabase 클라우드에 저장했습니다.");
       } catch (error) {
-        setStatus("GitHub 저장 대기 · 로컬 보관 중"); setStatusKind("warn");
-        if (showMessage) notify(error.message);
+        if (error.code === "WHITEBOARD_QUOTA") {
+          localStorage.setItem("pvefps-whiteboard-cloud-paused", "1"); setCloudPaused(true);
+          setStatus("무료 저장 한도 도달 · 클라우드 동기화 중단"); setStatusKind("warn");
+          notify("무료 저장 한도에 도달했습니다. 로컬 저장은 계속됩니다.");
+        } else if (error.code === "AUTH_REQUIRED") {
+          setStatus("이 기기 로컬 저장 · 클라우드 로그인 필요"); setStatusKind("warn");
+          if (showMessage && window.__openKnowledgeCloudAuth) window.__openKnowledgeCloudAuth();
+        } else {
+          setStatus("클라우드 저장 실패 · 로컬 보관 중"); setStatusKind("warn");
+          if (showMessage) notify(error.message);
+        }
       } finally {
         cloudBusy.current = false;
         const queued = cloudQueued.current.shift();
-        if (queued) {
-          const latest = activeRef.current && activeRef.current.id === queued.doc.id ? activeRef.current : queued.doc;
-          saveCloud(latest, queued.showMessage, queued.syncConfig);
-        }
+        if (queued) { const latest = activeRef.current && activeRef.current.id === queued.doc.id ? activeRef.current : queued.doc; saveCloud(latest, queued.showMessage); }
       }
     }
-    async function createNew() {
+    async function createNew()    async function createNew() {
       await flushPending();
       const doc = newDocument("새 드로잉");
       dbPut(doc).catch(function() {});
@@ -345,14 +323,10 @@
       const cloudName = safeName(clean, "drawing-" + current.id.slice(0,8));
       const updated = Object.assign({}, current, { title: clean, desiredCloudName: cloudName, updatedAt: Date.now() });
       updateDoc(updated);
-      if (config.endpoint && config.key) saveCloud(updated, true);
+      if (window.__whiteboardCloud) saveCloud(updated, true);
     }
     async function deleteActive() {
       if (!activeDoc || !confirm("'" + activeDoc.title + "' 드로잉을 삭제할까요?")) return;
-      if (activeDoc.cloudName && config.endpoint && config.key) {
-        try { await requestCloud(config, "/api/drawings/" + encodeURIComponent(activeDoc.cloudName) + ".excalidraw", "DELETE", { sha: activeDoc.cloudSha }); }
-        catch (error) { return notify("GitHub 삭제 실패: " + error.message); }
-      }
       await dbDelete(activeDoc.id);
       const rest = docs.filter(function(item) { return item.id !== activeDoc.id; });
       activeRef.current = null;
@@ -392,9 +366,9 @@
       clearTimeout(cloudTimer.current);
       cloudTimer.current = setTimeout(function() {
         const latest = activeRef.current && activeRef.current.id === updated.id ? activeRef.current : updated;
-        if (config.endpoint && config.key) saveCloud(latest, false);
+        if (window.__whiteboardCloud) saveCloud(latest, false);
       }, 6500);
-    }, [config.endpoint, config.key]);
+    }, []);
     function exportActive() {
       const current = activeRef.current;
       if (!current) return;
@@ -415,16 +389,32 @@
         notify("드로잉을 가져왔습니다.");
       } catch (error) { notify(error.message); }
     }
-    function saveSettings() {
-      const next = { endpoint: endpointDraft.trim().replace(/\/+$/, ""), key: keyDraft.trim() };
-      if (next.endpoint && !/^https:\/\/[a-z0-9.-]+\.workers\.dev$/i.test(next.endpoint)) {
-        return notify("https://이름.계정.workers.dev 형식의 Worker 주소를 입력해주세요.");
+    async function refreshCloud() {
+      const api = window.__whiteboardCloud;
+      if (!api) return;
+      try {
+        const items = await api.list();
+        const usage = await api.usage();
+        setCloudItems(items); setCloudUsage(usage.bytes || 0);
+        setStatus("Supabase 클라우드 " + items.length + "개 · " + (usage.bytes / 1048576).toFixed(1) + "MB");
+        setStatusKind(cloudPaused ? "warn" : "ok");
+      } catch (error) {
+        if (error.code === "AUTH_REQUIRED") { setCloudItems([]); setStatus("이 기기 로컬 저장 · 로그인하면 클라우드 백업"); setStatusKind(""); }
+        else { setStatus("클라우드 확인 실패 · 로컬 저장 중"); setStatusKind("warn"); }
       }
-      if (!!next.endpoint !== !!next.key) return notify("Worker 주소와 동기화 키를 모두 입력해주세요.");
-      localStorage.setItem(CONFIG_KEY, JSON.stringify(next));
-      setConfig(next); setShowSettings(false);
-      if (next.endpoint && activeRef.current) saveCloud(activeRef.current, true, next);
-      else { setStatus("로컬 전용 저장"); setStatusKind("ok"); }
+    }
+    async function openCloud(item) {
+      try {
+        await flushPending(); setBusy(true);
+        const loaded = await window.__whiteboardCloud.load(item);
+        const existing = docs.find(function(doc) { return doc.id === loaded.id; });
+        const doc = Object.assign(existing || newDocument(loaded.title), loaded);
+        await dbPut(doc);
+        setDocs(function(items) { return [doc].concat(items.filter(function(d) { return d.id !== doc.id; })); });
+        setActiveId(doc.id); setActiveDoc(doc); activeRef.current = doc;
+        lastCloudFingerprint.current = doc.id + ":" + JSON.stringify(doc.document);
+        setStatus("Supabase 클라우드 문서 열기 완료"); setStatusKind("ok");
+      } catch (error) { notify(error.message); } finally { setBusy(false); }
     }
     async function refreshCloud() {
       if (!config.endpoint || !config.key) { setShowSettings(true); return; }
@@ -496,8 +486,8 @@
         h("button", { className: "btn primary", onClick: function() { const panel = document.getElementById("whiteboard-pro-panel"); if (panel) { panel.classList.add("open"); if (panel._refresh) panel._refresh(); } }, type: "button" }, "PRO 도구"),
         h("button", { className: "btn", onClick: function() { if (window.__knowledgeHubOpen) window.__knowledgeHubOpen(); }, type: "button" }, "지식관리"),
         h("div", { className: "spacer" }),
-        h("button", { className: "btn", onClick: exportActive, disabled: !activeDoc }, "내보내기"),
-        h("button", { className: "btn primary", onClick: function() { if (activeRef.current) saveCloud(activeRef.current, true); }, disabled: !config.endpoint || !activeDoc }, "GitHub 저장")
+        h("button", { className: "btn", onClick: exportActive, disabled: !activeDoc }, "드로잉 내보내기"),
+        h("button", { className: "btn primary", onClick: function() { if (activeRef.current) saveCloud(activeRef.current, true); }, disabled: !activeDoc }, cloudPaused ? "동기화 중단됨" : "클라우드 저장")
       ),
       h("div", { className: "workspace" },
         h("aside", { className: "sidebar" },
@@ -529,47 +519,43 @@
               h("span", { className: "doc-meta" }, doc.cloudName ? "☁" : ""));
             }),
             h("div", { className: "cloud-list" },
-              h("div", { className: "side-head" }, "GITHUB 저장소", h("button", { className: "btn", onClick: refreshCloud, disabled: busy }, "새로고침")),
+              h("div", { className: "side-head" }, "SUPABASE 클라우드", h("button", { className: "btn", onClick: refreshCloud, disabled: busy }, "새로고침")),
+              h("div", { className: "empty-cloud" }, "사용량 " + (cloudUsage / 1048576).toFixed(1) + " / 700MB" + (cloudPaused ? " · 동기화 중단" : "")),
               cloudItems.length ? cloudItems.map(function(item) {
-                return h("div", { key: item.name, className: "doc-row", onClick: function() { openCloud(item); } },
-                  h("span", { className: "doc-icon" }, "☁"),
-                  h("span", { className: "doc-name" }, item.name));
-              }) : h("div", { className: "empty-cloud" }, config.endpoint ? "GitHub 목록을 새로고침하세요." : "연결하면 저장된 파일이 표시됩니다.")
+                return h("div", { key: item.id, className: "doc-row", onClick: function() { openCloud(item); } },
+                  h("span", { className: "doc-icon" }, "☁"), h("span", { className: "doc-name" }, item.title || "이름 없는 드로잉"));
+              }) : h("div", { className: "empty-cloud" }, "로그인하면 클라우드 드로잉이 표시됩니다.")
             )
           ),
           h("div", { className: "side-foot" },
             h("button", { className: "btn", onClick: renameActive, disabled: !activeDoc }, "이름 변경"),
             h("button", { className: "btn", onClick: deleteActive, disabled: !activeDoc }, "삭제"),
-            h("button", { className: "btn", onClick: function() { setEndpointDraft(config.endpoint || ""); setKeyDraft(config.key || ""); setShowSettings(true); } }, "설정")
+            h("button", { className: "btn", onClick: function() { setShowSettings(true); } }, "클라우드 설정")
           )
         ),
         h("main", { className: "canvas-wrap" }, canvas)
       ),
       showSettings ? h("div", { className: "modal-backdrop", onClick: function(event) { if (event.target === event.currentTarget) setShowSettings(false); } },
         h("section", { className: "modal" },
-          h("h2", null, "GitHub 자동 저장 연결"),
-          h("p", null, "별도 회원가입이나 앱 로그인을 만들지 않습니다. Cloudflare Worker가 GitHub에 대신 저장하며, GitHub 토큰은 서버 비밀 변수로만 보관됩니다. 최초 1회 Worker 배포와 동기화 키 설정이 필요합니다."),
-          h("div", { className: "field" }, h("label", null, "Cloudflare Worker 주소"), h("input", { value: endpointDraft, onChange: function(e) { setEndpointDraft(e.target.value); }, placeholder: "https://pvefps-whiteboard-sync.<계정>.workers.dev" })),
-          h("div", { className: "field" }, h("label", null, "동기화 키"), h("input", { type: "password", value: keyDraft, onChange: function(e) { setKeyDraft(e.target.value); }, placeholder: "Cloudflare에 등록한 SYNC_KEY" })),
-          h("div", { className: "hint" }, "동기화 키는 이 브라우저의 로컬 저장소에 저장됩니다. GitHub PAT를 여기에 입력하지 마세요. 연결하지 않아도 이 기기에서는 자동 저장됩니다."),
+          h("h2", null, "무료 클라우드 저장 설정"),
+          h("p", null, "기존 Supabase Free 계정으로 화이트보드를 백업합니다. 별도의 Google Drive, Dropbox, 유료 저장소는 연결하지 않습니다."),
+          h("div", { className: "hint" }, "화이트보드 전용 자체 제한: 700MB · 사전 경고: 560MB · 파일당 50MB. 한도에 도달하면 업로드를 자동 중단하고 이 PC의 로컬 저장은 계속합니다."),
+          h("div", { className: "hint" }, "현재 클라우드 사용량: " + (cloudUsage / 1048576).toFixed(1) + "MB / 700MB"),
           h("div", { className: "modal-actions" },
-            h("button", { className: "btn", onClick: function() { setShowSettings(false); } }, "취소"),
-            h("button", { className: "btn primary", onClick: saveSettings }, "연결 저장")
+            h("button", { className: "btn", onClick: function() { setShowSettings(false); } }, "닫기"),
+            h("button", { className: "btn", onClick: function() { setShowSettings(false); if (window.__openKnowledgeCloudAuth) window.__openKnowledgeCloudAuth(); else if (window.__knowledgeHubOpen) window.__knowledgeHubOpen(); } }, "로그인 / 회원가입"),
+            h("button", { className: "btn primary", onClick: function() { localStorage.removeItem("pvefps-whiteboard-cloud-paused"); setCloudPaused(false); setShowSettings(false); refreshCloud(); } }, "동기화 재개")
           )
         )
       ) : null,
-      toast ? h("div", { className: "toast" }, toast) : null
+      toast ? h("div", { className: "toast" }, toast) : null      toast ? h("div", { className: "toast" }, toast) : null
     );
 
     function renameTitleSync() {
       const current = activeRef.current;
       if (!current || !current.title.trim()) return;
       const desired = safeName(current.title, "drawing-" + current.id.slice(0,8));
-      if (current.cloudName && current.cloudName !== desired && config.endpoint && config.key) {
-        const next = Object.assign({}, current, { desiredCloudName: desired });
-        activeRef.current = next; setActiveDoc(next);
-        saveCloud(next, false);
-      }
+      if (current.cloudName === "supabase") saveCloud(current, false);
     }
   }
 
@@ -579,7 +565,7 @@
   const knowledgeHub = await import("./knowledge-hub.js?v=supabase-20261122-4");
   knowledgeHub.mountKnowledgeHub();
   window.__knowledgeHubOpen = knowledgeHub.openKnowledgeHub;
-  const knowledgeCloud = await import("./supabase-sync.js?v=20261122-3");
+  const knowledgeCloud = await import("./supabase-sync.js?v=20261122-4");
   knowledgeCloud.mountKnowledgeSupabase();
   } catch (error) {
     console.error("Whiteboard boot failed:", error);
