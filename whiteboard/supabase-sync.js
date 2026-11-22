@@ -405,17 +405,21 @@ function mountAuthUI() {
   const panel = document.createElement("div");
   panel.id = "kh-cloudpanel";
   panel.style.cssText = "display:none;position:fixed;z-index:3100;inset:0;background:#0007;place-items:center;padding:16px";
-  panel.innerHTML = '<section style="background:white;color:#20242b;width:min(420px,100%);padding:22px;border-radius:14px;box-shadow:0 16px 60px #0003"><h2 style="margin:0 0 8px">개인 클라우드 저장소</h2><p style="font-size:12px;color:#667085;line-height:1.6">이메일 계정으로 로그인하면 노트·할 일·첨부파일이 Supabase에 동기화됩니다. 다른 PC에서도 같은 계정으로 로그인하세요.</p><label style="display:block;font-size:12px;margin:12px 0 5px">이메일</label><input id="kh-cloudemail" type="email" autocomplete="username" placeholder="name@example.com" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:7px"><label style="display:block;font-size:12px;margin:12px 0 5px">비밀번호</label><input id="kh-cloudpassword" type="password" autocomplete="current-password" placeholder="8자 이상 권장" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:7px"><p id="kh-cloudmessage" style="font-size:12px;color:#667085;min-height:18px"></p><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><button id="kh-cloudsignup">회원가입</button><button id="kh-cloudsignin" style="background:#242a33;color:white">로그인</button><button id="kh-cloudlogout" style="display:none">로그아웃</button><button id="kh-cloudclose">닫기</button></div></section>';
+  panel.innerHTML = '<section style="background:white;color:#20242b;width:min(420px,100%);padding:22px;border-radius:14px;box-shadow:0 16px 60px #0003"><h2 style="margin:0 0 8px">개인 클라우드 저장소</h2><p style="font-size:12px;color:#667085;line-height:1.6">이메일 없이 아이디와 비밀번호만으로 가입·로그인합니다. 다른 PC에서도 같은 아이디를 사용하세요.</p><label style="display:block;font-size:12px;margin:12px 0 5px">아이디</label><input id="kh-cloudid" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="영문 소문자·숫자·_ (3~24자)" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:7px"><label style="display:block;font-size:12px;margin:12px 0 5px">비밀번호</label><input id="kh-cloudpassword" type="password" autocomplete="current-password" placeholder="8자 이상" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:7px"><p style="font-size:11px;color:#9a6700;line-height:1.5">주의: 이메일을 사용하지 않으므로 비밀번호를 잊으면 계정을 복구할 수 없습니다. 안전한 곳에 보관하세요.</p><p id="kh-cloudmessage" style="font-size:12px;color:#667085;min-height:18px"></p><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><button id="kh-cloudsignup">아이디 만들기</button><button id="kh-cloudsignin" style="background:#242a33;color:white">로그인</button><button id="kh-cloudlogout" style="display:none">로그아웃</button><button id="kh-cloudclose">닫기</button></div></section>';
   head.insertBefore(button, $("#kh-syncnow"));
   document.body.append(panel);
-  const message = (s) => { const x = $("#kh-cloudmessage"); if (x) x.textContent = s; };
+  const message = (value) => { const x = $("#kh-cloudmessage"); if (x) x.textContent = value; };
+  const normalizeId = () => $("#kh-cloudid").value.trim().toLowerCase();
+  const accountEmail = (id) => id + "@accounts.pvefps.github.io";
+  const validId = (id) => /^[a-z0-9_]{3,24}$/.test(id);
   const open = async () => {
     const { data } = await client.auth.getUser();
     const loggedIn = !!data.user;
     $("#kh-cloudlogout").style.display = loggedIn ? "inline-block" : "none";
     $("#kh-cloudsignup").style.display = loggedIn ? "none" : "inline-block";
     $("#kh-cloudsignin").style.display = loggedIn ? "none" : "inline-block";
-    message(loggedIn ? data.user.email + " 계정으로 연결되어 있습니다." : "이메일과 비밀번호로 가입하거나 로그인하세요.");
+    const currentId = data.user?.user_metadata?.username || "연결됨";
+    message(loggedIn ? currentId + " 아이디로 연결되어 있습니다." : "아이디와 비밀번호를 입력하세요.");
     panel.style.display = "grid";
   };
   button.onclick = open;
@@ -423,17 +427,30 @@ function mountAuthUI() {
   $("#kh-cloudclose").onclick = () => panel.style.display = "none";
   panel.addEventListener("click", e => { if (e.target === panel) panel.style.display = "none"; });
   $("#kh-cloudsignup").onclick = async () => {
-    const email = $("#kh-cloudemail").value.trim(), password = $("#kh-cloudpassword").value;
-    if (!email || password.length < 8) return message("이메일과 8자 이상의 비밀번호를 입력해주세요.");
-    message("회원가입 처리 중…");
-    const { error } = await client.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin + window.location.pathname } });
-    message(error ? error.message : "가입 요청 완료. 이메일 인증 안내가 도착하면 인증 후 로그인해주세요.");
+    const id = normalizeId(), password = $("#kh-cloudpassword").value;
+    if (!validId(id)) return message("아이디는 영문 소문자·숫자·밑줄 3~24자로 입력해주세요.");
+    if (password.length < 8) return message("비밀번호는 8자 이상 입력해주세요.");
+    message("아이디 생성 중…");
+    const { data, error } = await client.auth.signUp({
+      email: accountEmail(id), password,
+      options: { data: { username: id } }
+    });
+    if (error) return message(error.message);
+    if (data.session) {
+      message("아이디 생성 및 로그인 완료. 클라우드 동기화를 시작합니다.");
+      await syncAll(true);
+      await open();
+    } else {
+      message("가입 요청은 완료됐지만 Supabase 이메일 확인이 켜져 있습니다. 프로젝트 Authentication 설정에서 이메일 확인(Confirm email)을 꺼야 이메일 없이 바로 로그인할 수 있습니다.");
+    }
   };
   $("#kh-cloudsignin").onclick = async () => {
-    const email = $("#kh-cloudemail").value.trim(), password = $("#kh-cloudpassword").value;
+    const id = normalizeId(), password = $("#kh-cloudpassword").value;
+    if (!validId(id)) return message("아이디는 영문 소문자·숫자·밑줄 3~24자로 입력해주세요.");
+    if (!password) return message("비밀번호를 입력해주세요.");
     message("로그인 중…");
-    const { error } = await client.auth.signInWithPassword({ email, password });
-    message(error ? error.message : "로그인 성공. 동기화를 시작합니다.");
+    const { error } = await client.auth.signInWithPassword({ email: accountEmail(id), password });
+    message(error ? "아이디 또는 비밀번호를 확인해주세요." : "로그인 성공. 동기화를 시작합니다.");
     if (!error) { await syncAll(true); await open(); }
   };
   $("#kh-cloudlogout").onclick = async () => {
