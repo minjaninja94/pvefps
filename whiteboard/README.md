@@ -55,7 +55,11 @@ npx wrangler@latest secret put GITHUB_TOKEN
 동기화 키를 생성합니다. PowerShell에서 다음 명령을 실행합니다.
 
 ~~~powershell
-$syncKey = [Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)).ToLowerInvariant()
+$bytes = New-Object byte[] 32
+$rng = [Security.Cryptography.RandomNumberGenerator]::Create()
+$rng.GetBytes($bytes)
+$syncKey = -join ($bytes | ForEach-Object { $_.ToString("x2") })
+$rng.Dispose()
 $syncKey
 ~~~
 
