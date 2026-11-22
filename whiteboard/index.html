@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f7f7f5">
+  <title>Whiteboard — 개인 드로잉</title>
+  <link rel="stylesheet" href="https://esm.sh/@excalidraw/excalidraw@0.18.0/dist/dev/index.css">
+  <script>window.EXCALIDRAW_ASSET_PATH = "https://esm.sh/@excalidraw/excalidraw@0.18.0/dist/prod/";</script>
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@19.0.0",
+        "react/jsx-runtime": "https://esm.sh/react@19.0.0/jsx-runtime",
+        "react-dom": "https://esm.sh/react-dom@19.0.0"
+      }
+    }
+  </script>
+  <style>
+    *{box-sizing:border-box}html,body,#root{height:100%;width:100%;margin:0}body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Noto Sans KR",sans-serif;color:#242424;background:#f7f7f5}.shell{height:100%;display:flex;flex-direction:column}.topbar{height:54px;flex:0 0 54px;background:#fff;border-bottom:1px solid #e8e8e5;display:flex;align-items:center;gap:12px;padding:0 14px;z-index:5}.brand{font-size:14px;font-weight:750;letter-spacing:-.3px;white-space:nowrap}.brand-mark{display:inline-grid;place-items:center;width:25px;height:25px;border-radius:7px;background:#262626;color:#fff;margin-right:8px;font-size:14px}.doc-title{min-width:100px;max-width:260px;border:1px solid transparent;border-radius:7px;padding:7px 9px;font:inherit;font-size:13px;font-weight:600;background:transparent}.doc-title:hover,.doc-title:focus{border-color:#ddd;background:#fafafa;outline:none}.status{font-size:11px;color:#777;white-space:nowrap;display:flex;align-items:center;gap:6px}.dot{width:7px;height:7px;border-radius:50%;background:#bbb}.dot.ok{background:#24a36a}.dot.warn{background:#d28a22}.spacer{flex:1}.btn{border:1px solid #dededb;background:#fff;border-radius:7px;padding:7px 10px;font:inherit;font-size:12px;color:#333;cursor:pointer;white-space:nowrap}.btn:hover{background:#f4f4f1}.btn.primary{background:#262626;color:#fff;border-color:#262626}.btn.primary:hover{background:#444}.btn:disabled{opacity:.45;cursor:not-allowed}.workspace{flex:1;min-height:0;display:flex}.sidebar{width:235px;flex:0 0 235px;background:#fff;border-right:1px solid #e8e8e5;display:flex;flex-direction:column;min-height:0}.side-head{padding:15px 13px 9px;display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:750;color:#777;letter-spacing:.5px}.side-actions{display:flex;gap:6px;padding:0 12px 12px}.side-actions .btn{flex:1}.doc-list{overflow:auto;padding:0 8px 12px}.doc-row{display:flex;align-items:center;gap:7px;padding:9px 9px;border-radius:7px;cursor:pointer;font-size:12px;color:#444}.doc-row:hover{background:#f5f5f2}.doc-row.active{background:#efefeb;color:#111;font-weight:650}.doc-icon{color:#888;font-size:14px}.doc-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.doc-meta{font-size:10px;color:#999}.side-foot{margin-top:auto;border-top:1px solid #eee;padding:11px 12px;display:flex;gap:6px}.side-foot .btn{flex:1}.canvas-wrap{flex:1;min-width:0;min-height:0;position:relative}.canvas-wrap .excalidraw{height:100%;width:100%}.empty-cloud{padding:10px;color:#999;font-size:11px;line-height:1.5}.cloud-list{border-top:1px solid #eee;margin-top:8px;padding-top:5px}.modal-backdrop{position:fixed;inset:0;background:#0005;display:grid;place-items:center;z-index:20;padding:16px}.modal{width:min(520px,100%);background:#fff;border-radius:12px;box-shadow:0 18px 60px #0002;padding:20px}.modal h2{font-size:17px;margin:0 0 7px}.modal p{font-size:12px;color:#666;line-height:1.6;margin:0 0 15px}.field{display:grid;gap:6px;margin:12px 0}.field label{font-size:11px;font-weight:700;color:#555}.field input{width:100%;border:1px solid #ddd;border-radius:7px;padding:10px;font:inherit;font-size:12px}.modal-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:18px}.hint{font-size:10px;color:#888;line-height:1.5}.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#242424;color:white;padding:9px 13px;border-radius:8px;font-size:12px;z-index:30;box-shadow:0 5px 20px #0002;max-width:90vw}.hidden{display:none!important}.file-input{display:none}@media(max-width:760px){.sidebar{width:185px;flex-basis:185px}.topbar{gap:7px;padding:0 8px}.brand{font-size:12px}.doc-title{max-width:125px}.status{font-size:10px}.btn{padding:7px 8px;font-size:11px}}@media(max-width:560px){.sidebar{width:48px;flex-basis:48px}.side-head{padding:13px 0;justify-content:center;font-size:0}.side-head:after{content:"파일";font-size:10px}.side-actions{padding:0 5px 8px;flex-direction:column}.side-actions .btn{font-size:0;padding:7px 2px}.side-actions .btn:after{content:"+";font-size:16px}.doc-list{padding:0 4px}.doc-row{justify-content:center;padding:10px 2px}.doc-name,.doc-meta{display:none}.doc-icon{font-size:16px}.side-foot{padding:7px 4px;flex-direction:column}.side-foot .btn{font-size:0;padding:7px 1px}.side-foot .btn:after{content:"⚙";font-size:14px}.topbar .brand-text{display:none}.topbar .status{max-width:88px;overflow:hidden}.topbar .status span:last-child{display:none}.topbar .btn{padding:7px 7px}.doc-title{min-width:50px;max-width:105px}}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module">
+  import React from "react";
+  import ReactDOM from "react-dom";
+  import * as ExcalidrawLib from "https://esm.sh/@excalidraw/excalidraw@0.18.0/dist/dev/index.js?external=react,react-dom";
+
+  const h = React.createElement;
+  const DB_NAME = "pvefps-whiteboard";
+  const STORE = "drawings";
+  const CONFIG_KEY = "pvefps-whiteboard-config";
+  let dbPromise;
+
+  function openDb() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise(function(resolve, reject) {
+      const request = indexedDB.open(DB_NAME, 1);
+      request.onupgradeneeded = function() {
+        if (!request.result.objectStoreNames.contains(STORE)) request.result.createObjectStore(STORE, { keyPath: "id" });
+      };
+      request.onsuccess = function() { resolve(request.result); };
+      request.onerror = function() { reject(request.error); };
+    });
+    return dbPromise;
+  }
+  async function dbAll() {
+    const db = await openDb();
+    return new Promise(function(resolve, reject) {
+      const request = db.transaction(STORE, "readonly").objectStore(STORE).getAll();
+      request.onsuccess = function() { resolve(request.result || []); };
+      request.onerror = function() { reject(request.error); };
+    });
+  }
+  async function dbPut(doc) {
+    const db = await openDb();
+    return new Promise(function(resolve, reject) {
+      const request = db.transaction(STORE, "readwrite").objectStore(STORE).put(doc);
+      request.onsuccess = function() { resolve(); };
+      request.onerror = function() { reject(request.error); };
+    });
+  }
+  async function dbDelete(id) {
+    const db = await openDb();
+    return new Promise(function(resolve, reject) {
+      const request = db.transaction(STORE, "readwrite").objectStore(STORE).delete(id);
+      request.onsuccess = function() { resolve(); };
+      request.onerror = function() { reject(request.error); };
+    });
+  }
+  function newDocument(title) {
+    const id = crypto.randomUUID();
+    return {
+      id: id,
+      title: title || "새 드로잉",
+      cloudName: "",
+      cloudSha: "",
+      desiredCloudName: "",
+      updatedAt: Date.now(),
+      document: {
+        type: "excalidraw",
+        version: 2,
+        source: "https://excalidraw.com",
+        elements: [],
+        appState: { viewBackgroundColor: "#ffffff", gridSize: null },
+        files: {}
+      }
+    };
+  }
+  function safeName(value, fallback) {
+    const normalized = String(value || "").normalize("NFKD").toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 64);
+    return normalized || fallback;
+  }
+  function configRead() {
+    try { return JSON.parse(localStorage.getItem(CONFIG_KEY) || "{}"); } catch (_) { return {}; }
+  }
+  async function requestCloud(config, path, method, body) {
+    if (!config.endpoint || !config.key) throw new Error("GitHub 동기화 설정이 필요합니다.");
+    const response = await fetch(config.endpoint.replace(/\/+$/, "") + path, {
+      method: method || "GET",
+      headers: {
+        "Authorization": "Bearer " + config.key,
+        ...(body ? { "Content-Type": "application/json" } : {})
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    const data = await response.json().catch(function() { return {}; });
+    if (!response.ok) throw new Error(data.error || "동기화에 실패했습니다. (" + response.status + ")");
+    return data;
+  }
+  function downloadText(filename, text) {
+    const blob = new Blob([text], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename; a.click();
+    setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function App() {
+    const [docs, setDocs] = React.useState([]);
+    const [activeId, setActiveId] = React.useState("");
+    const [activeDoc, setActiveDoc] = React.useState(null);
+    const [status, setStatus] = React.useState("로컬 저장소 확인 중");
+    const [statusKind, setStatusKind] = React.useState("");
+    const [cloudItems, setCloudItems] = React.useState([]);
+    const [config, setConfig] = React.useState(configRead());
+    const [showSettings, setShowSettings] = React.useState(false);
+    const [endpointDraft, setEndpointDraft] = React.useState(config.endpoint || "");
+    const [keyDraft, setKeyDraft] = React.useState(config.key || "");
+    const [toast, setToast] = React.useState("");
+    const localTimer = React.useRef(null);
+    const cloudTimer = React.useRef(null);
+    const activeRef = React.useRef(null);
+    const lastCloudFingerprint = React.useRef("");
+    const [busy, setBusy] = React.useState(false);
+
+    React.useEffect(function() {
+      let alive = true;
+      dbAll().then(async function(items) {
+        if (!alive) return;
+        const sorted = items.sort(function(a,b) { return b.updatedAt - a.updatedAt; });
+        if (sorted.length) {
+          setDocs(sorted);
+          setActiveId(sorted[0].id);
+          setActiveDoc(sorted[0]);
+          setStatus("이 기기 로컬 저장 완료");
+          setStatusKind("ok");
+        } else {
+          const doc = newDocument("첫 번째 드로잉");
+          await dbPut(doc);
+          if (!alive) return;
+          setDocs([doc]); setActiveId(doc.id); setActiveDoc(doc);
+          setStatus("이 기기 로컬 저장 완료"); setStatusKind("ok");
+        }
+      }).catch(function(error) {
+        setStatus("로컬 저장소 오류"); setStatusKind("warn"); notify(error.message);
+      });
+      return function() { alive = false; clearTimeout(localTimer.current); clearTimeout(cloudTimer.current); };
+    }, []);
+
+    React.useEffect(function() { activeRef.current = activeDoc; }, [activeDoc]);
+
+    function notify(message) {
+      setToast(message);
+      setTimeout(function() { setToast(""); }, 3200);
+    }
+    function updateDoc(next) {
+      activeRef.current = next;
+      setActiveDoc(next);
+      setDocs(function(items) {
+        const exists = items.some(function(item) { return item.id === next.id; });
+        const updated = exists ? items.map(function(item) { return item.id === next.id ? next : item; }) : [next].concat(items);
+        return updated.sort(function(a,b) { return b.updatedAt - a.updatedAt; });
+      });
+      clearTimeout(localTimer.current);
+      localTimer.current = setTimeout(async function() {
+        try {
+          const latest = activeRef.current;
+          if (!latest || latest.id !== next.id) return;
+          await dbPut(latest);
+          setStatus("로컬 저장 완료"); setStatusKind("ok");
+        } catch (error) { setStatus("로컬 저장 실패"); setStatusKind("warn"); }
+      }, 500);
+      clearTimeout(cloudTimer.current);
+      cloudTimer.current = setTimeout(function() {
+        const latest = activeRef.current;
+        if (latest && latest.id === next.id && config.endpoint && config.key) saveCloud(latest, false);
+      }, 6500);
+    }
+
+    async function saveCloud(doc, showMessage) {
+      const targetName = doc.desiredCloudName || doc.cloudName || safeName(doc.title, "drawing-" + doc.id.slice(0,8));
+      const fingerprint = JSON.stringify(doc.document);
+      if (doc.cloudName === targetName && lastCloudFingerprint.current === doc.id + ":" + fingerprint) return;
+      try {
+        setStatus("GitHub 저장 중"); setStatusKind("");
+        let saved;
+        if (doc.cloudName && doc.cloudName !== targetName) {
+          saved = await requestCloud(config, "/api/drawings/" + encodeURIComponent(targetName) + ".excalidraw", "PUT", { document: doc.document });
+          await requestCloud(config, "/api/drawings/" + encodeURIComponent(doc.cloudName) + ".excalidraw", "DELETE", { sha: doc.cloudSha });
+        } else {
+          saved = await requestCloud(config, "/api/drawings/" + encodeURIComponent(targetName) + ".excalidraw", "PUT", {
+            document: doc.document,
+            sha: doc.cloudSha || undefined
+          });
+        }
+        const updated = Object.assign({}, doc, {
+          cloudName: targetName,
+          desiredCloudName: "",
+          cloudSha: saved.sha,
+          updatedAt: Date.now()
+        });
+        lastCloudFingerprint.current = doc.id + ":" + fingerprint;
+        await dbPut(updated);
+        if (activeRef.current && activeRef.current.id === doc.id) {
+          activeRef.current = updated; setActiveDoc(updated);
+        }
+        setDocs(function(items) { return items.map(function(item) { return item.id === doc.id ? updated : item; }); });
+        setStatus("GitHub 자동 저장 완료"); setStatusKind("ok");
+        if (showMessage) notify("GitHub에 저장했습니다.");
+      } catch (error) {
+        setStatus("GitHub 저장 대기 · 로컬 보관 중"); setStatusKind("warn");
+        if (showMessage) notify(error.message);
+      }
+    }
+
+    function createNew() {
+      const doc = newDocument("새 드로잉");
+      dbPut(doc).catch(function() {});
+      setDocs(function(items) { return [doc].concat(items); });
+      setActiveId(doc.id); setActiveDoc(doc); activeRef.current = doc;
+      lastCloudFingerprint.current = "";
+      setStatus("새 드로잉 · 로컬 저장"); setStatusKind("ok");
+    }
+    async function openLocal(doc) {
+      clearTimeout(localTimer.current); clearTimeout(cloudTimer.current);
+      setActiveId(doc.id); setActiveDoc(doc); activeRef.current = doc;
+      lastCloudFingerprint.current = "";
+      setStatus(doc.cloudName ? "GitHub 동기화 문서" : "이 기기 로컬 문서");
+      setStatusKind(doc.cloudName ? "ok" : "");
+    }
+    async function renameActive() {
+      if (!activeDoc) return;
+      const title = prompt("드로잉 이름", activeDoc.title);
+      if (title === null) return;
+      const clean = title.trim().slice(0, 80);
+      if (!clean) return notify("이름을 입력해주세요.");
+      const cloudName = safeName(clean, "drawing-" + activeDoc.id.slice(0,8));
+      const updated = Object.assign({}, activeDoc, { title: clean, desiredCloudName: cloudName, updatedAt: Date.now() });
+      updateDoc(updated);
+      if (config.endpoint && config.key) saveCloud(updated, true);
+    }
+    async function deleteActive() {
+      if (!activeDoc || !confirm("'" + activeDoc.title + "' 드로잉을 삭제할까요?")) return;
+      if (activeDoc.cloudName && config.endpoint && config.key) {
+        try { await requestCloud(config, "/api/drawings/" + encodeURIComponent(activeDoc.cloudName) + ".excalidraw", "DELETE", { sha: activeDoc.cloudSha }); }
+        catch (error) { return notify("GitHub 삭제 실패: " + error.message); }
+      }
+      await dbDelete(activeDoc.id);
+      const rest = docs.filter(function(item) { return item.id !== activeDoc.id; });
+      if (rest.length) { setDocs(rest); openLocal(rest[0]); }
+      else { setDocs([]); setActiveId(""); setActiveDoc(null); createNew(); }
+      notify("드로잉을 삭제했습니다.");
+    }
+    function onCanvasChange(elements, appState, files) {
+      if (!activeRef.current) return;
+      const document = {
+        type: "excalidraw",
+        version: 2,
+        source: "https://excalidraw.com",
+        elements: elements,
+        appState: {
+          viewBackgroundColor: appState.viewBackgroundColor || "#ffffff",
+          gridSize: appState.gridSize === undefined ? null : appState.gridSize,
+          theme: appState.theme || "light"
+        },
+        files: files || {}
+      };
+      const updated = Object.assign({}, activeRef.current, { document: document, updatedAt: Date.now() });
+      updateDoc(updated);
+    }
+    function exportActive() {
+      if (!activeDoc) return;
+      downloadText(safeName(activeDoc.title, "drawing") + ".excalidraw", JSON.stringify(activeDoc.document, null, 2));
+    }
+    async function importFile(event) {
+      const file = event.target.files && event.target.files[0];
+      event.target.value = "";
+      if (!file) return;
+      try {
+        const parsed = JSON.parse(await file.text());
+        if (parsed.type !== "excalidraw" || !Array.isArray(parsed.elements)) throw new Error("유효한 .excalidraw 파일이 아닙니다.");
+        const doc = newDocument(file.name.replace(/\.excalidraw$/i, "") || "가져온 드로잉");
+        doc.document = parsed;
+        await dbPut(doc);
+        setDocs(function(items) { return [doc].concat(items); });
+        setActiveId(doc.id); setActiveDoc(doc); activeRef.current = doc;
+        notify("드로잉을 가져왔습니다.");
+      } catch (error) { notify(error.message); }
+    }
+    function saveSettings() {
+      const next = { endpoint: endpointDraft.trim().replace(/\/+$/, ""), key: keyDraft.trim() };
+      if (next.endpoint && !/^https:\/\/[a-z0-9.-]+\.workers\.dev$/i.test(next.endpoint)) {
+        return notify("https://이름.계정.workers.dev 형식의 Worker 주소를 입력해주세요.");
+      }
+      if (!!next.endpoint !== !!next.key) return notify("Worker 주소와 동기화 키를 모두 입력해주세요.");
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(next));
+      setConfig(next); setShowSettings(false);
+      if (next.endpoint && activeRef.current) saveCloud(activeRef.current, true);
+      else { setStatus("로컬 전용 저장"); setStatusKind("ok"); }
+    }
+    async function refreshCloud() {
+      if (!config.endpoint || !config.key) { setShowSettings(true); return; }
+      try {
+        setBusy(true);
+        const result = await requestCloud(config, "/api/drawings", "GET");
+        setCloudItems(result.drawings || []);
+        notify("GitHub 드로잉 " + (result.drawings || []).length + "개를 찾았습니다.");
+      } catch (error) { notify(error.message); }
+      finally { setBusy(false); }
+    }
+    async function openCloud(item) {
+      try {
+        setBusy(true);
+        const result = await requestCloud(config, "/api/drawings/" + encodeURIComponent(item.name) + ".excalidraw", "GET");
+        const existing = docs.find(function(doc) { return doc.cloudName === item.name; });
+        const doc = existing || newDocument(item.name.replace(/-/g, " "));
+        doc.title = item.name.replace(/-/g, " ");
+        doc.cloudName = item.name; doc.cloudSha = result.sha; doc.document = result.document; doc.updatedAt = Date.now();
+        await dbPut(doc);
+        setDocs(function(items) { return [doc].concat(items.filter(function(d) { return d.id !== doc.id; })); });
+        setActiveId(doc.id); setActiveDoc(doc); activeRef.current = doc;
+        lastCloudFingerprint.current = doc.id + ":" + JSON.stringify(doc.document);
+        setStatus("GitHub 문서 열기 완료"); setStatusKind("ok");
+      } catch (error) { notify(error.message); }
+      finally { setBusy(false); }
+    }
+
+    const Excalidraw = ExcalidrawLib.Excalidraw;
+    const canvas = activeDoc ? h(Excalidraw, {
+      key: activeDoc.id,
+      initialData: {
+        elements: activeDoc.document.elements || [],
+        appState: activeDoc.document.appState || { viewBackgroundColor: "#ffffff" },
+        files: activeDoc.document.files || {}
+      },
+      onChange: onCanvasChange,
+      UIOptions: { canvasActions: { loadScene: false } }
+    }) : h("div", { className: "empty-cloud" }, "새 드로잉을 만들어주세요.");
+
+    return h("div", { className: "shell" },
+      h("header", { className: "topbar" },
+        h("div", { className: "brand" }, h("span", { className: "brand-mark" }, "✎"), h("span", { className: "brand-text" }, "WHITEBOARD")),
+        activeDoc ? h("input", {
+          className: "doc-title", value: activeDoc.title,
+          onChange: function(event) { updateDoc(Object.assign({}, activeRef.current, { title: event.target.value, updatedAt: Date.now() })); },
+          onBlur: function() { if (activeRef.current && activeRef.current.title.trim()) renameTitleSync(); },
+          "aria-label": "드로잉 이름"
+        }) : null,
+        h("div", { className: "status" }, h("i", { className: "dot " + statusKind }), h("span", null, status)),
+        h("div", { className: "spacer" }),
+        h("button", { className: "btn", onClick: exportActive, disabled: !activeDoc }, "내보내기"),
+        h("button", { className: "btn primary", onClick: function() { if (activeRef.current) saveCloud(activeRef.current, true); }, disabled: !config.endpoint || !activeDoc }, "GitHub 저장")
+      ),
+      h("div", { className: "workspace" },
+        h("aside", { className: "sidebar" },
+          h("div", { className: "side-head" }, "내 드로잉", h("span", { className: "doc-meta" }, docs.length + "개")),
+          h("div", { className: "side-actions" },
+            h("button", { className: "btn", onClick: createNew }, "＋ 새로 만들기"),
+            h("button", { className: "btn", onClick: function() { document.getElementById("import-file").click(); } }, "가져오기")
+          ),
+          h("input", { id: "import-file", className: "file-input", type: "file", accept: ".excalidraw,.json,application/json", onChange: importFile }),
+          h("div", { className: "doc-list" },
+            docs.map(function(doc) {
+              return h("div", {
+                key: doc.id, className: "doc-row" + (doc.id === activeId ? " active" : ""),
+                onClick: function() { openLocal(doc); }, title: doc.title
+              }, h("span", { className: "doc-icon" }, "▱"),
+              h("span", { className: "doc-name" }, doc.title || "이름 없는 드로잉"),
+              h("span", { className: "doc-meta" }, doc.cloudName ? "☁" : ""));
+            }),
+            h("div", { className: "cloud-list" },
+              h("div", { className: "side-head" }, "GITHUB 저장소"),
+              cloudItems.length ? cloudItems.map(function(item) {
+                return h("div", { key: item.name, className: "doc-row", onClick: function() { openCloud(item); } },
+                  h("span", { className: "doc-icon" }, "☁"),
+                  h("span", { className: "doc-name" }, item.name));
+              }) : h("div", { className: "empty-cloud" }, config.endpoint ? "GitHub 목록을 새로고침하세요." : "연결하면 저장된 파일이 표시됩니다.")
+            )
+          ),
+          h("div", { className: "side-foot" },
+            h("button", { className: "btn", onClick: renameActive, disabled: !activeDoc }, "이름 변경"),
+            h("button", { className: "btn", onClick: deleteActive, disabled: !activeDoc }, "삭제"),
+            h("button", { className: "btn", onClick: function() { setEndpointDraft(config.endpoint || ""); setKeyDraft(config.key || ""); setShowSettings(true); } }, "설정")
+          )
+        ),
+        h("main", { className: "canvas-wrap" }, canvas)
+      ),
+      showSettings ? h("div", { className: "modal-backdrop", onClick: function(event) { if (event.target === event.currentTarget) setShowSettings(false); } },
+        h("section", { className: "modal" },
+          h("h2", null, "GitHub 자동 저장 연결"),
+          h("p", null, "별도 회원가입이나 앱 로그인을 만들지 않습니다. Cloudflare Worker가 GitHub에 대신 저장하며, GitHub 토큰은 서버 비밀 변수로만 보관됩니다. 최초 1회 Worker 배포와 동기화 키 설정이 필요합니다."),
+          h("div", { className: "field" }, h("label", null, "Cloudflare Worker 주소"), h("input", { value: endpointDraft, onChange: function(e) { setEndpointDraft(e.target.value); }, placeholder: "https://pvefps-whiteboard-sync.<계정>.workers.dev" })),
+          h("div", { className: "field" }, h("label", null, "동기화 키"), h("input", { type: "password", value: keyDraft, onChange: function(e) { setKeyDraft(e.target.value); }, placeholder: "Cloudflare에 등록한 SYNC_KEY" })),
+          h("div", { className: "hint" }, "동기화 키는 이 브라우저의 로컬 저장소에 저장됩니다. GitHub PAT를 여기에 입력하지 마세요. 연결하지 않아도 이 기기에서는 자동 저장됩니다."),
+          h("div", { className: "modal-actions" },
+            h("button", { className: "btn", onClick: function() { setShowSettings(false); } }, "취소"),
+            h("button", { className: "btn primary", onClick: saveSettings }, "연결 저장")
+          )
+        )
+      ) : null,
+      toast ? h("div", { className: "toast" }, toast) : null
+    );
+
+    function renameTitleSync() {
+      const current = activeRef.current;
+      if (!current || !current.title.trim()) return;
+      const desired = safeName(current.title, "drawing-" + current.id.slice(0,8));
+      if (current.cloudName && current.cloudName !== desired && config.endpoint && config.key) {
+        const next = Object.assign({}, current, { desiredCloudName: desired });
+        activeRef.current = next; setActiveDoc(next);
+        saveCloud(next, false);
+      }
+    }
+  }
+
+  ReactDOM.createRoot(document.getElementById("root")).render(h(App));
+</script>
+</body>
+</html>
