@@ -183,6 +183,10 @@
         return function() { alive = false; };
       }
       if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function() {});
+      const persistActive = function() { const current = activeRef.current; if (current) dbPut(current).catch(function() {}); };
+      const onVisibilityChange = function() { if (document.visibilityState === "hidden") persistActive(); };
+      window.addEventListener("pagehide", persistActive);
+      document.addEventListener("visibilitychange", onVisibilityChange);
       const onCloudReady = function() { refreshCloud(); };
       window.addEventListener("whiteboard-cloud-ready", onCloudReady);
       window.addEventListener("whiteboard-cloud-auth-changed", onCloudReady);
@@ -576,7 +580,6 @@
     function renameTitleSync() {
       const current = activeRef.current;
       if (!current || !current.title.trim()) return;
-      const desired = safeName(current.title, "drawing-" + current.id.slice(0,8));
       if (current.cloudName === "supabase") saveCloud(current, false);
     }
   }
