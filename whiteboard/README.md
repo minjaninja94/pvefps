@@ -2,7 +2,7 @@
 
 GitHub Pages에서 제공하는 개인용 Excalidraw 작업 공간입니다.
 
-- 앱 별도 회원가입/로그인 없음
+- 드로잉 편집은 별도 회원가입/로그인 없이 이용 가능 (Knowledge Hub 클라우드 동기화는 이메일 계정 로그인 필요)
 - 브라우저 IndexedDB에 자동 임시 저장
 - .excalidraw 파일 가져오기/내보내기
 - Cloudflare Worker를 연결하면 GitHub 저장소 whiteboard/drawings/에 자동 동기화
@@ -135,7 +135,7 @@ wrangler.toml에는 저장소, 브랜치, 저장 폴더 및 허용 Origin이 이
 - GitHub 동기화에는 인터넷 연결이 필요합니다. 연결 실패 시 로컬 저장은 계속되며 상태 표시가 동기화 대기 상태로 바뀝니다.
 - Knowledge Hub의 노트·할 일·첨부파일은 별도 Supabase 프로젝트(`personal-knowledge-hub`)에 저장합니다. 화이트보드 드로잉의 GitHub Worker 동기화와 분리되어 있습니다.
 - Knowledge Hub에서 **클라우드 로그인**을 선택해 이메일/비밀번호로 가입하거나 로그인하세요. 이메일 인증이 요구되면 받은 편지함의 인증 링크를 먼저 열어야 합니다. 다른 PC에서도 같은 계정으로 로그인하면 클라우드 자료가 내려옵니다.
-- 노트와 태스크는 사용자 ID 기준으로 동기화하며, 첨부파일은 비공개 `knowledge-files` 버킷에 저장됩니다. 파일 1개당 최대 50MB입니다. 브라우저에는 Supabase publishable key만 포함하며 service-role/secret key는 포함하지 않습니다.
+- 노트와 태스크는 사용자 ID 기준으로 동기화하며, 첨부파일은 비공개 `knowledge-files` 버킷에 저장됩니다. 파일 형식 제한 없이 파일 1개당 최대 50MB까지 비공개 저장할 수 있습니다. 브라우저에는 Supabase publishable key만 포함하며 service-role/secret key는 포함하지 않습니다.
 - Supabase는 Free 요금제로 생성했으며 사용량 한도를 넘거나 유료 기능을 켜면 비용이 발생할 수 있습니다. 저장공간·대역폭 사용량을 주기적으로 확인하세요.
 - 최초 로그인 시 현재 브라우저의 IndexedDB 자료와 클라우드 자료를 ID/수정 시각 기준으로 병합합니다. 삭제 내역은 tombstone으로 반영합니다. 중요한 자료는 Knowledge Hub의 JSON 백업도 별도로 보관하세요.
 - Excalidraw 엔진, CSS 및 글꼴은 esm.sh CDN에서 가져옵니다. 첫 로딩에는 인터넷 연결이 필요합니다.
