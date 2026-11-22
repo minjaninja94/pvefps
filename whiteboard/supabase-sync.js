@@ -346,7 +346,7 @@ async function whiteboardSave(doc) {
   const usedBytes = rows.reduce((sum, row) => sum + Number(row.size_bytes || 0), 0);
   const projectedBytes = usedBytes - Number(current?.size_bytes || 0) + blob.size;
   if (projectedBytes > appLimitBytes) {
-    const error = new Error("화이트보드 클라우드 자체 한도(700MB)에 도달했습니다. 추가 업로드를 중단했습니다. 기존 그림은 로컬에 보존됩니다.");
+    const error = new Error("화이트보드 클라우드 자체 한도(650MB)에 도달했습니다. 추가 업로드를 중단했습니다. 기존 그림은 로컬에 보존됩니다.");
     error.code = "WHITEBOARD_QUOTA";
     throw error;
   }
@@ -355,8 +355,10 @@ async function whiteboardSave(doc) {
     contentType: "application/json", upsert: true, cacheControl: "3600"
   });
   if (uploadError) {
-    if (/quota|limit|storage|size|payload|413/i.test(uploadError.message || "")) {
-      uploadError.code = "WHITEBOARD_QUOTA";
+    if (/quota|limit|maximum|exceed|payload|413|507/i.test(uploadError.message || "") || String(uploadError.statusCode || "") === "413") {
+      const quotaError = new Error(uploadError.message || "클라우드 저장 한도에 도달했습니다.");
+      quotaError.code = "WHITEBOARD_QUOTA";
+      throw quotaError;
     }
     throw uploadError;
   }
