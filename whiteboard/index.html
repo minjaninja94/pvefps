@@ -576,7 +576,7 @@
   createRoot(document.getElementById("root")).render(h(App));
   const proFeatures = await import("./pro-features.js");
   proFeatures.mount();
-  const knowledgeHub = await import("./knowledge-hub.js?v=87dc07da");
+  const knowledgeHub = await import("./knowledge-hub.js?v=b3692c15");
   knowledgeHub.mountKnowledgeHub();
   window.__knowledgeHubOpen = knowledgeHub.openKnowledgeHub;
   } catch (error) {
